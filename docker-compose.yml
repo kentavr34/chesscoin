@@ -1,0 +1,127 @@
+version: "3.9"
+
+services:
+  # ─── PostgreSQL ───────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: chesscoin_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: chesscoin
+      POSTGRES_USER: chesscoin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chesscoin"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Redis ───────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: chesscoin_redis
+    restart: always
+    command: redis-server --requirepass ${REDIS_PASSWORD} --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Backend (Stockfish встроен через npm) ─
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: chesscoin_backend
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      SERVER_PORT: 3000
+      DATABASE_URL: postgresql://chesscoin:${POSTGRES_PASSWORD}@postgres:5432/chesscoin
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      BOT_TOKEN: ${BOT_TOKEN}
+      BOT_API_SECRET: ${BOT_API_SECRET}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      FRONTEND_URL: https://${DOMAIN}
+      ADMIN_IDS: ${ADMIN_IDS:-254450353}
+      # Stockfish встроен в npm пакет — отдельный контейнер не нужен
+      MAX_ATTEMPTS: 3
+      ATTEMPT_PRICE: 1000
+    expose:
+      - "3000"
+    networks:
+      - app-network
+
+  # ─── Frontend ────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: chesscoin_frontend
+    restart: always
+    expose:
+      - "80"
+    networks:
+      - app-network
+
+  # ─── Telegram Bot ────────────────────────
+  bot:
+    build:
+      context: ./bot
+      dockerfile: Dockerfile
+    container_name: chesscoin_bot
+    restart: always
+    environment:
+      BOT_TOKEN: ${BOT_TOKEN}
+      BOT_API_SECRET: ${BOT_API_SECRET}
+      BACKEND_URL: http://backend:3000/api/v1
+      WEBAPP_URL: https://${DOMAIN}
+      BOT_USERNAME: chessgamecoin_bot
+      ADMIN_IDS: ${ADMIN_IDS:-254450353}
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  # ─── Nginx ───────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: chesscoin_nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/chesscoin.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/certbot:/var/www/certbot:ro
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:

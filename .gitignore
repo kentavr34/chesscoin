@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+build/
+**/dist/
+**/build/
+
+# Environment files — НИКОГДА не коммитить
+.env
+.env.local
+.env.production
+**/.env
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Prisma
+prisma/migrations/dev/
+
+# Temp
+*.tmp
+*.temp

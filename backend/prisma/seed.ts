@@ -1,0 +1,271 @@
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
+
+async function main() {
+  console.log("🌱 Seed started...");
+
+  // ─── PlatformConfig ─────────────────────────────────────────────────────────
+  await prisma.platformConfig.upsert({
+    where: { id: "singleton" },
+    create: { id: "singleton" },
+    update: {},
+  });
+  console.log("✅ PlatformConfig");
+
+  // ─── Bot J.A.R.V.I.S ────────────────────────────────────────────────────────
+  await prisma.user.upsert({
+    where: { telegramId: "0" },
+    create: {
+      telegramId: "0",
+      firstName: "J.A.R.V.I.S",
+      username: "jarvis_chess_bot",
+      isBot: true,
+      balance: BigInt("999999999999"),
+      elo: 3000,
+    },
+    update: {},
+  });
+  console.log("✅ J.A.R.V.I.S bot");
+
+  // ─── Clans (сборные) ─────────────────────────────────────────────────────────
+  const clans = [
+    { name: "Россия",       countryCode: "RU", flag: "🇷🇺", description: "Сборная России" },
+    { name: "Бразилия",     countryCode: "BR", flag: "🇧🇷", description: "Seleção do Brasil" },
+    { name: "Германия",     countryCode: "DE", flag: "🇩🇪", description: "Mannschaft" },
+    { name: "Индия",        countryCode: "IN", flag: "🇮🇳", description: "Team India" },
+    { name: "США",          countryCode: "US", flag: "🇺🇸", description: "Team USA" },
+    { name: "Китай",        countryCode: "CN", flag: "🇨🇳", description: "中国队" },
+    { name: "Франция",      countryCode: "FR", flag: "🇫🇷", description: "Les Bleus" },
+    { name: "Испания",      countryCode: "ES", flag: "🇪🇸", description: "La Roja" },
+    { name: "Аргентина",    countryCode: "AR", flag: "🇦🇷", description: "La Albiceleste" },
+    { name: "Япония",       countryCode: "JP", flag: "🇯🇵", description: "侍ジャパン" },
+    { name: "Южная Корея",  countryCode: "KR", flag: "🇰🇷", description: "대한민국" },
+    { name: "Украина",      countryCode: "UA", flag: "🇺🇦", description: "Збірна України" },
+    { name: "Казахстан",    countryCode: "KZ", flag: "🇰🇿", description: "Қазақстан" },
+    { name: "Беларусь",     countryCode: "BY", flag: "🇧🇾", description: "Беларусь" },
+    { name: "Польша",       countryCode: "PL", flag: "🇵🇱", description: "Polska" },
+  ];
+
+  for (const clan of clans) {
+    await prisma.clan.upsert({
+      where: { countryCode: clan.countryCode },
+      create: clan,
+      update: { flag: clan.flag, name: clan.name },
+    });
+  }
+  console.log(`✅ ${clans.length} Clans`);
+
+  // ─── Shop Items — Avatar Frames ───────────────────────────────────────────
+  const avatarFrames = [
+    {
+      name: "Золотая рамка",
+      description: "Сверкающая золотая рамка для чемпионов",
+      type: "AVATAR_FRAME" as const,
+      category: "PREMIUM" as const,
+      rarity: "RARE" as const,
+      priceCoins: BigInt(50_000),
+      sortOrder: 1,
+    },
+    {
+      name: "Алмазная рамка",
+      description: "Кристально чистая рамка из алмазного льда",
+      type: "AVATAR_FRAME" as const,
+      category: "PREMIUM" as const,
+      rarity: "EPIC" as const,
+      priceCoins: BigInt(200_000),
+      sortOrder: 2,
+    },
+    {
+      name: "Огненная рамка",
+      description: "Пламенная рамка для агрессивных игроков",
+      type: "AVATAR_FRAME" as const,
+      category: "PREMIUM" as const,
+      rarity: "EPIC" as const,
+      priceCoins: BigInt(200_000),
+      sortOrder: 3,
+    },
+    {
+      name: "Легендарная рамка ♟",
+      description: "Только для тех, кто достиг вершины",
+      type: "AVATAR_FRAME" as const,
+      category: "PREMIUM" as const,
+      rarity: "LEGENDARY" as const,
+      priceCoins: BigInt(1_000_000),
+      sortOrder: 4,
+    },
+  ];
+
+  // ─── Shop Items — Board Skins ─────────────────────────────────────────────
+  const boardSkins = [
+    {
+      name: "Классика",
+      description: "Деревянная доска в традиционном стиле",
+      type: "BOARD_SKIN" as const,
+      category: "BASIC" as const,
+      rarity: "COMMON" as const,
+      priceCoins: BigInt(10_000),
+      sortOrder: 10,
+    },
+    {
+      name: "Мрамор",
+      description: "Доска из белого и чёрного мрамора",
+      type: "BOARD_SKIN" as const,
+      category: "PREMIUM" as const,
+      rarity: "RARE" as const,
+      priceCoins: BigInt(75_000),
+      sortOrder: 11,
+    },
+    {
+      name: "Неон",
+      description: "Киберпанк стиль с неоновой подсветкой",
+      type: "BOARD_SKIN" as const,
+      category: "PREMIUM" as const,
+      rarity: "EPIC" as const,
+      priceCoins: BigInt(300_000),
+      sortOrder: 12,
+    },
+  ];
+
+  // ─── Shop Items — Piece Skins ─────────────────────────────────────────────
+  const pieceSkins = [
+    {
+      name: "Стандарт",
+      description: "Классические фигуры Staunton",
+      type: "PIECE_SKIN" as const,
+      category: "BASIC" as const,
+      rarity: "COMMON" as const,
+      priceCoins: BigInt(5_000),
+      sortOrder: 20,
+    },
+    {
+      name: "Золотые фигуры",
+      description: "Все фигуры покрыты золотом",
+      type: "PIECE_SKIN" as const,
+      category: "PREMIUM" as const,
+      rarity: "RARE" as const,
+      priceCoins: BigInt(150_000),
+      sortOrder: 21,
+    },
+    {
+      name: "Кристальные фигуры",
+      description: "Прозрачные фигуры с внутренней подсветкой",
+      type: "PIECE_SKIN" as const,
+      category: "PREMIUM" as const,
+      rarity: "EPIC" as const,
+      priceCoins: BigInt(500_000),
+      sortOrder: 22,
+    },
+  ];
+
+  // ─── Shop Items — Move Animations ────────────────────────────────────────
+  const moveAnimations = [
+    {
+      name: "Молния",
+      description: "Быстрая молния при каждом ходу",
+      type: "MOVE_ANIMATION" as const,
+      category: "PREMIUM" as const,
+      rarity: "RARE" as const,
+      priceCoins: BigInt(30_000),
+      sortOrder: 30,
+    },
+    {
+      name: "Огонь",
+      description: "Огненный след за движущейся фигурой",
+      type: "MOVE_ANIMATION" as const,
+      category: "PREMIUM" as const,
+      rarity: "EPIC" as const,
+      priceCoins: BigInt(120_000),
+      sortOrder: 31,
+    },
+  ];
+
+  const allItems = [...avatarFrames, ...boardSkins, ...pieceSkins, ...moveAnimations];
+
+  for (const item of allItems) {
+    const existing = await prisma.item.findFirst({
+      where: { name: item.name, type: item.type },
+    });
+    if (!existing) {
+      await prisma.item.create({ data: item });
+    }
+  }
+  console.log(`✅ ${allItems.length} Shop items`);
+
+  // ─── Tasks ────────────────────────────────────────────────────────────────
+  const tasks = [
+    {
+      taskType: "SUBSCRIBE_TELEGRAM" as const,
+      icon: "📢",
+      title: "Подписаться на канал ChessCoin",
+      description: "Подпишись на официальный канал и получи монеты",
+      metadata: { url: "https://t.me/chesscoin_official", channelId: "@chesscoin_official" },
+      winningAmount: BigInt(5_000),
+    },
+    {
+      taskType: "FOLLOW_LINK" as const,
+      icon: "🐦",
+      title: "Подписаться на Twitter/X",
+      description: "Подпишись на наш Twitter и получи монеты",
+      metadata: { url: "https://x.com/chesscoin" },
+      winningAmount: BigInt(3_000),
+    },
+    {
+      taskType: "REFERRAL" as const,
+      icon: "👥",
+      title: "Пригласить 1 друга",
+      description: "Пригласи друга, который сыграет первую игру",
+      metadata: { referralCount: 1 },
+      winningAmount: BigInt(3_000),
+    },
+    {
+      taskType: "REFERRAL" as const,
+      icon: "🤝",
+      title: "Пригласить 5 друзей",
+      description: "Пригласи 5 друзей, которые сыграют хотя бы одну игру",
+      metadata: { referralCount: 5 },
+      winningAmount: BigInt(25_000),
+    },
+    {
+      taskType: "REFERRAL" as const,
+      icon: "👑",
+      title: "Пригласить 20 друзей",
+      description: "Создай армию из 20 рефералов",
+      metadata: { referralCount: 20 },
+      winningAmount: BigInt(150_000),
+    },
+    {
+      taskType: "FOLLOW_LINK" as const,
+      icon: "💬",
+      title: "Вступить в чат ChessCoin",
+      description: "Присоединись к нашему сообществу в Telegram",
+      metadata: { url: "https://t.me/chesscoin_chat" },
+      winningAmount: BigInt(2_000),
+    },
+    {
+      taskType: "FOLLOW_LINK" as const,
+      icon: "▶️",
+      title: "Посмотреть видео-гайд",
+      description: "Узнай как зарабатывать больше в ChessCoin",
+      metadata: { url: "https://youtube.com/@chesscoin" },
+      winningAmount: BigInt(1_000),
+    },
+  ];
+
+  for (const task of tasks) {
+    const existing = await prisma.task.findFirst({ where: { title: task.title } });
+    if (!existing) {
+      await prisma.task.create({ data: task });
+    }
+  }
+  console.log(`✅ ${tasks.length} Tasks`);
+
+  console.log("🎉 Seed completed!");
+}
+
+main()
+  .catch((e) => {
+    console.error("❌ Seed error:", e);
+    process.exit(1);
+  })
+  .finally(() => prisma.$disconnect());

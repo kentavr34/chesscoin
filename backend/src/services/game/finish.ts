@@ -1,0 +1,283 @@
+import { SessionStatus, SessionType, SessionSideStatus, TransactionType } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+import config from "@/config";
+import { updateBalance, canEmit, getCurrentPhase } from "@/services/economy";
+import { activateReferral, applyReferralIncome } from "@/services/referral";
+import { deleteCachedSession } from "./session";
+
+// ─────────────────────────────────────────
+// Завершить сессию
+// ─────────────────────────────────────────
+export const finishSession = async (
+  sessionId: string,
+  status: SessionStatus,
+  opts: {
+    winnerSideId?: string;
+    loserSideId?: string;
+    isDraw?: boolean;
+  } = {}
+) => {
+  const session = await prisma.session.findUniqueOrThrow({
+    where: { id: sessionId },
+    include: { sides: { include: { player: true } } },
+  });
+
+  if (session.status === SessionStatus.FINISHED ||
+      session.status === SessionStatus.DRAW ||
+      session.status === SessionStatus.TIME_EXPIRED) {
+    return session; // уже завершена
+  }
+
+  const { winnerSideId, loserSideId, isDraw = false } = opts;
+
+  // 1. Рассчитываем выплаты
+  await processPayouts(session, winnerSideId, loserSideId, isDraw);
+
+  // 2. Обновляем стороны
+  if (isDraw) {
+    await prisma.sessionSide.updateMany({
+      where: { sessionId },
+      data: { status: SessionSideStatus.DRAW },
+    });
+  } else if (winnerSideId && loserSideId) {
+    await prisma.sessionSide.update({
+      where: { id: winnerSideId },
+      data: { status: SessionSideStatus.WON },
+    });
+    await prisma.sessionSide.update({
+      where: { id: loserSideId },
+      data: { status: SessionSideStatus.LOST },
+    });
+  }
+
+  // 3. Обновляем сессию
+  const finished = await prisma.session.update({
+    where: { id: sessionId },
+    data: {
+      status,
+      finishedAt: new Date(),
+      winnerSideId: isDraw ? null : winnerSideId,
+    },
+    include: { sides: { include: { player: true } } },
+  });
+
+  // 4. Убираем из активных сессий пользователей
+  for (const side of session.sides) {
+    if (!side.isBot) {
+      await prisma.user.update({
+        where: { id: side.playerId },
+        data: { activeSessions: { disconnect: { id: sessionId } } },
+      });
+    }
+  }
+
+  // 5. Обновляем ELO (для батлов)
+  if (session.type === SessionType.BATTLE && !isDraw && winnerSideId) {
+    const winnerSide = session.sides.find(s => s.id === winnerSideId);
+    const loserSide = session.sides.find(s => s.id === loserSideId);
+    if (winnerSide && loserSide) {
+      await updateElo(winnerSide.playerId, loserSide.playerId);
+    }
+  }
+
+  // 6. Активируем реферала (при первой завершённой партии)
+  for (const side of session.sides) {
+    if (!side.isBot) {
+      // fire-and-forget — не блокирует ответ клиенту
+      setImmediate(() => activateReferral(side.playerId).catch(console.error));
+    }
+  }
+
+  // 7. Чистим Redis кеш
+  await deleteCachedSession(sessionId);
+
+  return finished;
+};
+
+// ─────────────────────────────────────────
+// Расчёт выплат по типу игры
+// ─────────────────────────────────────────
+const processPayouts = async (
+  session: any,
+  winnerSideId?: string,
+  loserSideId?: string,
+  isDraw: boolean = false
+) => {
+  const phase = await getCurrentPhase();
+
+  switch (session.type) {
+    case SessionType.BOT:
+      await processBotPayouts(session, winnerSideId, loserSideId, isDraw, phase);
+      break;
+
+    case SessionType.BATTLE:
+      await processBattlePayouts(session, winnerSideId, loserSideId, isDraw);
+      break;
+
+    case SessionType.FRIENDLY:
+      // Дружеские игры: только монеты за фигуры (Фаза 1)
+      // Уже начислены в процессе игры
+      break;
+  }
+};
+
+// ─────────────────────────────────────────
+// Выплаты за игру с ботом
+// ─────────────────────────────────────────
+const processBotPayouts = async (
+  session: any,
+  winnerSideId?: string,
+  loserSideId?: string,
+  isDraw: boolean = false,
+  phase: number = 1
+) => {
+  if (isDraw) return;
+
+  const winnerSide = session.sides.find((s: any) => s.id === winnerSideId);
+  const loserSide = session.sides.find((s: any) => s.id === loserSideId);
+  if (!winnerSide || !loserSide) return;
+
+  const humanSide = winnerSide.isBot ? loserSide : winnerSide;
+  const humanWon = !winnerSide.isBot;
+
+  if (phase === 1) {
+    // Фаза 1: победа над ботом = монеты из эмиссии
+    if (humanWon && session.botLevel) {
+      const botReward = config.economy.botRewards[session.botLevel] ?? 1000n;
+      // Монеты за фигуры уже начислены во время игры
+      // Здесь начисляем только финальный бонус за победу
+      await updateBalance(
+        humanSide.playerId,
+        botReward,
+        TransactionType.BOT_WIN,
+        { sessionId: session.id, botLevel: session.botLevel },
+        { isEmission: true }
+      );
+
+      // fire-and-forget — не блокирует завершение игры
+      setImmediate(() => applyReferralIncome(humanSide.playerId, botReward).catch(console.error));
+    }
+    // Проигрыш боту в фазе 1 — ничего не снимаем
+  } else {
+    // Фаза 2+: как батл — победитель берёт из резерва, проигравший теряет
+    if (session.botLevel && humanWon) {
+      const botReward = config.economy.botRewards[session.botLevel] ?? 1000n;
+      await updateBalance(
+        humanSide.playerId,
+        botReward,
+        TransactionType.BOT_WIN,
+        { sessionId: session.id },
+        { isEmission: false }
+      );
+    } else if (!humanWon) {
+      // Проигрыш боту — платформа забирает ставку
+      const botPenalty = config.economy.botRewards[session.botLevel ?? 1] ?? 1000n;
+      if (humanSide.player.balance >= botPenalty) {
+        await updateBalance(
+          humanSide.playerId,
+          -botPenalty,
+          TransactionType.BOT_LOSS,
+          { sessionId: session.id }
+        );
+      }
+    }
+  }
+};
+
+// ─────────────────────────────────────────
+// Выплаты за батл
+// ─────────────────────────────────────────
+const processBattlePayouts = async (
+  session: any,
+  winnerSideId?: string,
+  loserSideId?: string,
+  isDraw: boolean = false
+) => {
+  const bet = session.bet ?? 0n;
+  const totalPot = bet * 2n;
+  const commission = (totalPot * BigInt(config.economy.battleCommissionPercent)) / 100n;
+  const winnerPayout = totalPot - commission;
+
+  if (isDraw) {
+    // Ничья: каждый получает свою ставку обратно (без комиссии)
+    for (const side of session.sides) {
+      await updateBalance(
+        side.playerId,
+        bet,
+        TransactionType.BATTLE_WIN,
+        { sessionId: session.id, result: "draw" }
+      );
+    }
+    return;
+  }
+
+  const winnerSide = session.sides.find((s: any) => s.id === winnerSideId);
+  if (!winnerSide) return;
+
+  // Победитель получает весь банк минус комиссия
+  await updateBalance(
+    winnerSide.playerId,
+    winnerPayout,
+    TransactionType.BATTLE_WIN,
+    {
+      sessionId: session.id,
+      totalPot: totalPot.toString(),
+      commission: commission.toString(),
+    }
+  );
+
+  // Записываем winningAmount в SessionSide (для GameResultModal)
+  await prisma.sessionSide.update({
+    where: { id: winnerSide.id },
+    data: { winningAmount: winnerPayout },
+  });
+
+  // Комиссия идёт на счёт платформы (platform_reserve увеличивается)
+  await prisma.platformConfig.update({
+    where: { id: "singleton" },
+    data: { platformReserve: { increment: commission } },
+  });
+
+  // Уведомление победителю через бота (MP-6)
+  const winnerPlayer = winnerSide.player;
+  if (winnerPlayer?.telegramId) {
+    await prisma.adminNotification.create({
+      data: {
+        type: "GAME_WIN",
+        payload: {
+          winnerTelegramId: winnerPlayer.telegramId,
+          winnerName: winnerPlayer.firstName,
+          amount: winnerPayout.toString(),
+          commission: commission.toString(),
+          gameType: "BATTLE",
+        },
+      },
+    }).catch(() => {}); // не критично — игра должна завершиться
+  }
+
+  // Реферальный % — fire-and-forget, не блокирует выплату
+  setImmediate(() => applyReferralIncome(winnerSide.playerId, winnerPayout).catch(console.error));
+};
+
+// ─────────────────────────────────────────
+// Обновление ELO (упрощённая формула К=32)
+// ─────────────────────────────────────────
+const updateElo = async (winnerId: string, loserId: string) => {
+  const K = 32;
+
+  const [winner, loser] = await Promise.all([
+    prisma.user.findUniqueOrThrow({ where: { id: winnerId }, select: { elo: true } }),
+    prisma.user.findUniqueOrThrow({ where: { id: loserId }, select: { elo: true } }),
+  ]);
+
+  const expectedWinner = 1 / (1 + Math.pow(10, (loser.elo - winner.elo) / 400));
+  const expectedLoser = 1 - expectedWinner;
+
+  const newWinnerElo = Math.round(winner.elo + K * (1 - expectedWinner));
+  const newLoserElo = Math.max(100, Math.round(loser.elo + K * (0 - expectedLoser)));
+
+  await Promise.all([
+    prisma.user.update({ where: { id: winnerId }, data: { elo: newWinnerElo } }),
+    prisma.user.update({ where: { id: loserId }, data: { elo: newLoserElo } }),
+  ]);
+};
