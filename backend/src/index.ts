@@ -98,7 +98,7 @@ const start = async () => {
     setupSocketHandlers(io);
     startTimerWatcher();
     startAttemptsCron();
-startCleanupCron();
+    startCleanupCron();
 
     httpServer.listen(config.server.port, () => {
       console.log(`[Server] ✅ Port ${config.server.port} · ${config.server.nodeEnv}`);

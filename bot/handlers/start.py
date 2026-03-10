@@ -2,14 +2,14 @@ import os
 import logging
 from aiogram import Router, F
 from aiogram.filters import CommandStart, CommandObject
-from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
+from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo, CallbackQuery
 
 from services.backend import BackendClient
 
 logger = logging.getLogger(__name__)
 router = Router()
 
-FRONTEND_URL = os.getenv("FRONTEND_URL", "https://chesscoin.app")
+FRONTEND_URL = os.getenv("WEBAPP_URL", "https://chesscoin.app")
 
 
 def play_keyboard() -> InlineKeyboardMarkup:
@@ -35,6 +35,24 @@ def play_keyboard() -> InlineKeyboardMarkup:
     )
 
 
+def welcome_text(name: str, is_referred: bool = False) -> str:
+    bonus_line = "🎁 Твой реферальный бонус +3 000 ᚙ начислится когда ты сыграешь первую партию!\n\n" if is_referred else ""
+    return (
+        f"♟ <b>Добро пожаловать в ChessCoin, {name}!</b>\n\n"
+        f"Ты получил приветственный бонус:\n"
+        f"<b>┌─────────────────────────┐</b>\n"
+        f"<b>│  🎁  +5 000 ᚙ  на старт  │</b>\n"
+        f"<b>└─────────────────────────┘</b>\n\n"
+        f"{bonus_line}"
+        f"Что тебя ждёт:\n"
+        f"⚔️  Батлы на ставку с живыми игроками\n"
+        f"🤖  Игры с J.A.R.V.I.S — до <b>+20 000 ᚙ</b>\n"
+        f"🌍  Войны сборных стран\n"
+        f"👥  Реферальная программа: <b>50%</b> с побед друзей\n\n"
+        f"<i>Твои монеты уже зачислены. Открой приложение и начинай!</i>"
+    )
+
+
 # ─────────────────────────────────────────
 # /start с реферальной ссылкой
 # ─────────────────────────────────────────
@@ -47,26 +65,12 @@ async def cmd_start_with_ref(message: Message, command: CommandObject):
     user = message.from_user
     name = user.first_name or "Игрок"
 
-    # ── Красивое Welcome уведомление ──
-    await message.answer_photo(
-        photo="https://chesscoin.app/banner.png",
-        caption=(
-            f"♟ <b>Добро пожаловать в ChessCoin, {name}!</b>\n\n"
-            f"Ты получил приветственный бонус:\n"
-            f"<b>┌─────────────────────────┐</b>\n"
-            f"<b>│  🎁  +5 000 ᚙ  на старт  │</b>\n"
-            f"<b>└─────────────────────────┘</b>\n\n"
-            f"Что тебя ждёт:\n"
-            f"⚔️  Батлы на ставку с живыми игроками\n"
-            f"🤖  Игры с J.A.R.V.I.S — до <b>+20 000 ᚙ</b>\n"
-            f"🌍  Войны сборных стран\n"
-            f"👥  Реферальная программа: <b>50%</b> с побед друзей\n\n"
-            f"<i>Твои монеты уже зачислены. Открой приложение и начинай!</i>"
-        ),
+    await message.answer(
+        welcome_text(name, is_referred=bool(referrer_id)),
         reply_markup=play_keyboard(),
     )
 
-    # Уведомляем бэкенд о реферере (бэкенд сохранит связь при auth/login)
+    # Уведомляем бэкенд о реферере
     if referrer_id:
         try:
             async with BackendClient() as client:
@@ -86,21 +90,8 @@ async def cmd_start(message: Message):
     user = message.from_user
     name = user.first_name or "Игрок"
 
-    await message.answer_photo(
-        photo="https://chesscoin.app/banner.png",
-        caption=(
-            f"♟ <b>Добро пожаловать в ChessCoin, {name}!</b>\n\n"
-            f"Ты получил приветственный бонус:\n"
-            f"<b>┌─────────────────────────┐</b>\n"
-            f"<b>│  🎁  +5 000 ᚙ  на старт  │</b>\n"
-            f"<b>└─────────────────────────┘</b>\n\n"
-            f"Что тебя ждёт:\n"
-            f"⚔️  Батлы на ставку с живыми игроками\n"
-            f"🤖  Игры с J.A.R.V.I.S — до <b>+20 000 ᚙ</b>\n"
-            f"🌍  Войны сборных стран\n"
-            f"👥  Реферальная программа: <b>50%</b> с побед друзей\n\n"
-            f"<i>Твои монеты уже зачислены. Открой приложение и начинай!</i>"
-        ),
+    await message.answer(
+        welcome_text(name),
         reply_markup=play_keyboard(),
     )
 
@@ -109,7 +100,7 @@ async def cmd_start(message: Message):
 # Кнопка «Рефералы»
 # ─────────────────────────────────────────
 @router.callback_query(F.data == "referral_info")
-async def referral_info(callback):
+async def referral_info(callback: CallbackQuery):
     user = callback.from_user
     bot_username = (await callback.bot.get_me()).username
     ref_link = f"https://t.me/{bot_username}?start=ref_{user.id}"
@@ -127,3 +118,23 @@ async def referral_info(callback):
         f"<i>Нажми на ссылку чтобы скопировать</i>",
     )
     await callback.answer()
+
+
+# ─────────────────────────────────────────
+# /invite — отправить реферальную ссылку
+# ─────────────────────────────────────────
+@router.message(F.text == "/invite")
+async def cmd_invite(message: Message):
+    user = message.from_user
+    bot_username = (await message.bot.get_me()).username
+    ref_link = f"https://t.me/{bot_username}?start=ref_{user.id}"
+    share_url = f"https://t.me/share/url?url={ref_link}&text=♟ Играй в ChessCoin — зарабатывай монеты в шахматах!"
+
+    await message.answer(
+        f"👥 <b>Твоя реферальная ссылка:</b>\n\n"
+        f"<code>{ref_link}</code>\n\n"
+        f"Отправь другу — когда он сыграет первую игру, ты получишь <b>+3 000 ᚙ</b> "
+        f"и <b>50%</b> от каждой его победы навсегда!\n\n"
+        f"<a href=\"{share_url}\">📤 Поделиться в Telegram</a>",
+        disable_web_page_preview=True,
+    )

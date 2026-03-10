@@ -1,5 +1,3 @@
-declare global { interface Window { __pendingGameCode?: string; } }
-
 import { useEffect } from 'react';
 import { authApi } from '@/api';
 import { setTokens, clearTokens, getAccessToken } from '@/api/client';

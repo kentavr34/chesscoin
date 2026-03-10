@@ -9,6 +9,7 @@ from aiogram.client.default import DefaultBotProperties
 
 from handlers.start import router as start_router
 from handlers.admin import router as admin_router
+from handlers.notifications import start_notifications_loop
 
 load_dotenv()
 
@@ -36,6 +37,10 @@ async def main():
     logger.info("ChessCoin Bot запущен ♟")
 
     await bot.delete_webhook(drop_pending_updates=True)
+
+    # Запускаем фоновый цикл уведомлений (AdminNotification polling)
+    asyncio.create_task(start_notifications_loop(bot))
+
     await dp.start_polling(bot)
 
 

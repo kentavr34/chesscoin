@@ -93,9 +93,9 @@ router.get("/:userId", authMiddleware, async (req: Request, res: Response) => {
         elo: true, league: true, totalEarned: true, createdAt: true,
         isBanned: true,
         sides: {
-          select: { status: true },
+          select: { result: true },
           take: 100,
-          orderBy: { updatedAt: "desc" },
+          orderBy: { session: { finishedAt: "desc" } },
         },
       },
     });
@@ -105,9 +105,9 @@ router.get("/:userId", authMiddleware, async (req: Request, res: Response) => {
     }
 
     // Считаем статистику
-    const wins   = user.sides.filter(s => s.status === "WON").length;
-    const losses = user.sides.filter(s => s.status === "LOST").length;
-    const draws  = user.sides.filter(s => s.status === "DRAW").length;
+    const wins   = user.sides.filter(s => s.result === "WIN").length;
+    const losses = user.sides.filter(s => s.result === "LOSS").length;
+    const draws  = user.sides.filter(s => s.result === "DRAW").length;
 
     res.json({
       id: user.id,

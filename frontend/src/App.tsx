@@ -54,11 +54,11 @@ const SplashScreen: React.FC = () => {
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       flexDirection: 'column', gap: 24,
     }}>
-      <style>{`
+      <style>{\`
         @keyframes spin { to { transform: rotate(360deg) } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes pulse { 0%,100% { opacity: .7; } 50% { opacity: 1; } }
-      `}</style>
+      \`}</style>
 
       {/* Логотип */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
