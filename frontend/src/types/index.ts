@@ -148,6 +148,8 @@ export interface Task {
   completed?: boolean;
   status?: string;
   metadata?: Record<string, unknown>;
+  progress?: number;
+  maxProgress?: number;
 }
 
 // Реферальная программа
