@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { redis } from "@/lib/redis";
 import config from "@/config";
 import { useAttempt } from "@/services/attempts";
-import { updateBalance, processReferralFirstGame } from "@/services/economy";
+import { updateBalance } from "@/services/economy";
 
 const SESSION_CACHE_TTL = 60 * 60 * 24; // 24 часа в Redis
 
@@ -78,7 +78,7 @@ export const createBotSession = async (
   await useAttempt(userId);
 
   // Активируем реферальную систему при первой игре
-  await processReferralFirstGame(userId);
+  // referral activation handled in finish.ts via activateReferral()
 
   const session = await prisma.session.create({
     data: {

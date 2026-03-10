@@ -84,7 +84,7 @@ export const updateBalance = async (
         userId,
         amount,
         type,
-        payload,
+        payload: payload as any,
       },
     });
 

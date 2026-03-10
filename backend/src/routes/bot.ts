@@ -161,7 +161,7 @@ botRouter.post("/ban", async (req: Request, res: Response) => {
 // ── AdminNotification polling ──────────────────────────────────────────────
 
 // GET /api/v1/bot/notifications/pending
-router.get("/notifications/pending", botAuth, async (_req, res) => {
+botRouter.get("/notifications/pending", async (_req, res) => {
   try {
     const notifications = await prisma.adminNotification.findMany({
       where: { sentAt: null },
@@ -175,7 +175,7 @@ router.get("/notifications/pending", botAuth, async (_req, res) => {
 });
 
 // POST /api/v1/bot/notifications/:id/sent
-router.post("/notifications/:id/sent", botAuth, async (req, res) => {
+botRouter.post("/notifications/:id/sent", async (req, res) => {
   try {
     await prisma.adminNotification.update({
       where: { id: req.params.id },
@@ -190,7 +190,7 @@ router.post("/notifications/:id/sent", botAuth, async (req, res) => {
 // ── Referral start ──────────────────────────────────────────────────────────
 
 // POST /api/v1/bot/referral-start
-router.post("/referral-start", botAuth, async (req, res) => {
+botRouter.post("/referral-start", async (req, res) => {
   try {
     const { newTelegramId, referrerTelegramId } = req.body;
     if (!newTelegramId || !referrerTelegramId) {
@@ -206,5 +206,3 @@ router.post("/referral-start", botAuth, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
-export default router;
