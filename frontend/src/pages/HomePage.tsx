@@ -6,6 +6,7 @@ import { useUserStore } from '@/store/useUserStore';
 import { useGameStore } from '@/store/useGameStore';
 import { fmtBalance, fmtTime, leagueEmoji } from '@/utils/format';
 import { AttemptsModal } from '@/components/ui/AttemptsModal';
+import { getSocket } from '@/api/socket';
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -32,7 +33,21 @@ export const HomePage: React.FC = () => {
     return () => clearInterval(t);
   }, [(user as any)?.nextRestoreSeconds, user?.attempts]);
 
-  if (!user) return null;
+  const [startingBot, setStartingBot] = useState(false);
+
+  const startBotGame = () => {
+    if (startingBot) return;
+    if (!user || user.attempts <= 0) { setShowAttempts(true); return; }
+    setStartingBot(true);
+    getSocket().emit('game:create:bot', { color: 'white', botLevel: 3 }, (res: any) => {
+      setStartingBot(false);
+      if (res?.ok && res?.session) {
+        navigate('/game/' + res.session.id);
+      }
+    });
+    // Timeout fallback
+    setTimeout(() => setStartingBot(false), 5000);
+  };
 
   const rightAction = (
     <button onClick={() => navigate('/shop')} style={tbaStyle}>🛍</button>
@@ -131,12 +146,12 @@ export const HomePage: React.FC = () => {
       <div style={secStyle}>Разделы</div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '0 18px' }}>
         {[
-          { ico: '🤖', title: 'J.A.R.V.I.S', sub: 'Ур. 3', tag: '+3.0K ᚙ', tc: '#9B85FF', path: '/game' },
-          { ico: '⚔️', title: 'Батлы', sub: 'На ставку', tag: '5 LIVE', tc: '#FF4D6A', path: '/battles' },
-          { ico: '🏆', title: 'Турниры', sub: 'Чемпион месяца', tag: '2 открытых', tc: '#F5C842', path: '/battles' },
-          { ico: '🌍', title: 'Клановые войны', sub: 'Россия ведёт', tag: '3:1', tc: '#00D68F', path: '/nations' },
+          { ico: '🤖', title: 'J.A.R.V.I.S', sub: 'Ур. 3', tag: '+3.0K ᚙ', tc: '#9B85FF', path: null, action: startBotGame },
+          { ico: '⚔️', title: 'Батлы', sub: 'На ставку', tag: '5 LIVE', tc: '#FF4D6A', path: '/battles', action: null },
+          { ico: '🏆', title: 'Турниры', sub: 'Чемпион месяца', tag: '2 открытых', tc: '#F5C842', path: '/battles', action: null },
+          { ico: '🌍', title: 'Клановые войны', sub: 'Россия ведёт', tag: '3:1', tc: '#00D68F', path: '/nations', action: null },
         ].map((item) => (
-          <div key={item.title} onClick={() => navigate(item.path)} style={gameCardStyle}>
+          <div key={item.title} onClick={() => item.action ? item.action() : navigate(item.path!)} style={{...gameCardStyle, opacity: item.action && startingBot ? 0.6 : 1}}>
             <span style={{ fontSize: 32, marginBottom: 10, display: 'block' }}>{item.ico}</span>
             <div style={{ fontSize: 13, fontWeight: 700, color: '#F0F2F8', marginBottom: 4 }}>{item.title}</div>
             <div style={{ fontSize: 11, color: '#8B92A8', marginBottom: 8 }}>{item.sub}</div>
