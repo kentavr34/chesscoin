@@ -221,7 +221,7 @@ export const GamePage: React.FC = () => {
             <div style={modalSub}>Соперник предлагает ничью. Принять?</div>
             <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
               <button onClick={() => {
-                getSocket().emit('game:accept_draw', { sessionId: session.id });
+                getSocket().emit('game:accept_draw', { sessionId: session.id }, () => {});
                 setDrawOffered(null);
               }} style={btnGold}>Принять</button>
               <button onClick={() => {

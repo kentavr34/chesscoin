@@ -5,7 +5,6 @@ import { redis } from "@/lib/redis";
 import config from "@/config";
 import { useAttempt } from "@/services/attempts";
 import { updateBalance } from "@/services/economy";
-import { activateReferral } from "@/services/referral";
 
 const SESSION_CACHE_TTL = 60 * 60 * 24; // 24 часа в Redis
 
@@ -78,8 +77,8 @@ export const createBotSession = async (
   // Тратим попытку
   await useAttempt(userId);
 
-  // Активируем реферал при первой игре (fire-and-forget)
-  setImmediate(() => activateReferral(userId).catch(console.error));
+  // Активируем реферальную систему при первой игре
+  // referral activation handled in finish.ts via activateReferral()
 
   const session = await prisma.session.create({
     data: {

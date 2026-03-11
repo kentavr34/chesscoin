@@ -27,8 +27,7 @@ export interface User extends UserPublic {
   totalSpent: string;
   attempts: number;
   maxAttempts: number;
-  attemptSlots: string[];
-  nextRestoreSeconds: number;   // секунд до следующего +1 попытки (глобальный cron) // DateTime[]
+  attemptSlots: string[]; // DateTime[]
   isBanned: boolean;
   referrerId?: string | null;
   activeSessions: ActiveSessionRef[];
@@ -149,6 +148,8 @@ export interface Task {
   completed?: boolean;
   status?: string;
   metadata?: Record<string, unknown>;
+  progress?: number;
+  maxProgress?: number;
 }
 
 // Реферальная программа
