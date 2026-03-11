@@ -570,57 +570,58 @@ const getStockfishMove = (
 ): Promise<{ from: string; to: string } | null> => {
   return new Promise((resolve) => {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const StockfishModule = require("stockfish");
-      const engine = StockfishModule();
-      const depth = levelToDepth(level);
-      let resolved = false;
-
-      const timeout = setTimeout(() => {
-        if (!resolved) {
-          resolved = true;
-          console.warn("[Stockfish] Timeout — fallback to random");
-          engine.terminate?.();
-          resolve(getRandomMove(fen));
-        }
-      }, 8000);
-
-      engine.onmessage = (event: string | { data: string }) => {
-        const line = typeof event === "string" ? event : event.data;
-
-        // bestmove e2e4 / bestmove e2e4 ponder c7c5
-        if (line.startsWith("bestmove") && !resolved) {
-          resolved = true;
-          clearTimeout(timeout);
-          engine.terminate?.();
-
-          const parts = line.split(" ");
-          const moveStr = parts[1];
-
-          if (!moveStr || moveStr === "(none)") {
-            resolve(getRandomMove(fen));
-            return;
-          }
-
-          const from = moveStr.slice(0, 2);
-          const to   = moveStr.slice(2, 4);
-          console.debug(`[Stockfish] bestmove ← ${from}${to} (depth=${depth})`);
-          resolve({ from, to });
-        }
-      };
-
-      console.debug(`[Stockfish] → depth=${depth}, fen=${fen.slice(0, 40)}...`);
-      engine.postMessage("uci");
-      engine.postMessage("ucinewgame");
-      engine.postMessage(`position fen ${fen}`);
-      engine.postMessage(`go depth ${depth}`);
+      const { Chess } = require("chess.js");
+      const depth = Math.min(level || 1, 3);
+      const chess = new Chess(fen);
+      const moves = chess.moves({ verbose: true });
+      if (moves.length === 0) return resolve(null);
+      if (depth === 1) {
+        const m = moves[Math.floor(Math.random() * moves.length)];
+        return resolve({ from: m.from, to: m.to });
+      }
+      let best: any = null;
+      let bestScore = -99999;
+      for (const m of moves) {
+        chess.move(m);
+        const score = -chessMinimaxFn(chess, depth - 1, -99999, 99999);
+        chess.undo();
+        if (score > bestScore) { bestScore = score; best = m; }
+      }
+      resolve(best ? { from: best.from, to: best.to } : null);
     } catch (err) {
-      console.warn(`[Stockfish] Init error: ${(err as Error).message} — fallback`);
+      console.warn("[Stockfish] Error:", (err as Error).message);
       resolve(getRandomMove(fen));
     }
   });
 };
 
+function chessMinimaxFn(chess: any, depth: number, alpha: number, beta: number): number {
+  if (depth === 0 || chess.isGameOver()) return chessEvalBoardFn(chess);
+  const moves = chess.moves({ verbose: true });
+  let best = -99999;
+  for (const m of moves) {
+    chess.move(m);
+    const score = -chessMinimaxFn(chess, depth - 1, -beta, -alpha);
+    chess.undo();
+    if (score > best) best = score;
+    if (score > alpha) alpha = score;
+    if (alpha >= beta) break;
+  }
+  return best;
+}
+
+function chessEvalBoardFn(chess: any): number {
+  const vals: Record<string, number> = { p: 10, n: 30, b: 30, r: 50, q: 90, k: 900 };
+  let score = 0;
+  for (const row of chess.board()) {
+    for (const sq of row) {
+      if (sq === null) continue;
+      const v = vals[sq.type] || 0;
+      score += sq.color === "w" ? v : -v;
+    }
+  }
+  return score;
+}
 const getRandomMove = (fen: string): { from: string; to: string } | null => {
   try {
     const chess = new Chess(fen);
