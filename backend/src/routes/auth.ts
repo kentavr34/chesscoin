@@ -2,7 +2,7 @@ import { Router, Request, Response } from "express";
 import { z } from "zod";
 import { loginWithTelegram, refreshAccessToken } from "@/services/auth";
 import { authMiddleware, AuthRequest } from "@/middleware/auth";
-import { checkAndRestoreUserAttempts, getSecondsUntilNextRestore } from "@/services/attempts";
+import { checkAndRestoreUserAttempts } from "@/services/attempts";
 import { prisma } from "@/lib/prisma";
 
 const router = Router();
@@ -97,10 +97,11 @@ const formatUser = (user: any) => ({
   attempts: user.attempts,
   maxAttempts: user.maxAttempts,
   attemptSlots: user.attemptSlots,
-  nextRestoreSeconds: getSecondsUntilNextRestore(),
   elo: user.elo,
   league: user.league,
   activeSessions: user.activeSessions ?? [],
+  jarvisLevel: user.jarvisLevel ?? 1,
+  jarvisBadges: user.jarvisBadges ?? [],
   createdAt: user.createdAt,
 });
 

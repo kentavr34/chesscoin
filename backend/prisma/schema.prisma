@@ -93,6 +93,10 @@ model User {
   tonWalletAddress  String?  // подключается в v6
   tonConnectedAt    DateTime?
 
+  // JARVIS прогрессия
+  jarvisLevel  Int      @default(1)   // текущий разблокированный уровень (1-10)
+  jarvisBadges String[] @default([])  // список пройденных уровней ["Beginner","Player",...]
+
   // Служебное
   isBot     Boolean @default(false)
   isBanned  Boolean @default(false)

@@ -156,6 +156,32 @@ const processBotPayouts = async (
 
       // fire-and-forget — не блокирует завершение игры
       setImmediate(() => applyReferralIncome(humanSide.playerId, botReward).catch(console.error));
+
+      // Начислить JARVIS бейдж за победу над этим уровнем
+      setImmediate(async () => {
+        try {
+          const JARVIS_NAMES: Record<number, string> = {
+            1: 'Beginner', 2: 'Player', 3: 'Fighter', 4: 'Warrior', 5: 'Expert',
+            6: 'Master', 7: 'Professional', 8: 'Epic', 9: 'Legendary', 10: 'Mystic',
+          };
+          const lvl = session.botLevel ?? 1;
+          const badgeName = JARVIS_NAMES[lvl] ?? 'Beginner';
+          const player = await prisma.user.findUnique({ where: { id: humanSide.playerId } });
+          if (!player) return;
+          const alreadyHas = player.jarvisBadges.includes(badgeName);
+          const nextLevel = Math.min(10, lvl + 1);
+          await prisma.user.update({
+            where: { id: humanSide.playerId },
+            data: {
+              jarvisLevel: player.jarvisLevel <= lvl ? nextLevel : player.jarvisLevel,
+              jarvisBadges: alreadyHas ? undefined : { push: badgeName },
+            },
+          });
+          console.log(\`[JARVIS] Badge '${badgeName}' awarded to ${humanSide.playerId}, next level: ${nextLevel}\`);
+        } catch (e) {
+          console.error('[JARVIS] Badge error:', e);
+        }
+      });
     }
     // Проигрыш боту в фазе 1 — ничего не снимаем
   } else {

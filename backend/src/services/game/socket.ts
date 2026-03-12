@@ -564,6 +564,20 @@ const makeBotMove = async (socket: AuthSocket, io: Server, sessionId: string) =>
 const levelToDepth = (level: number): number =>
   Math.max(1, Math.min(20, level));
 
+// Уровни JARVIS
+const JARVIS_LEVELS = [
+  { level: 1,  name: 'Beginner',     reward: 1000,  errorRate: 20, depth: 1 },
+  { level: 2,  name: 'Player',       reward: 3000,  errorRate: 17, depth: 2 },
+  { level: 3,  name: 'Fighter',      reward: 5000,  errorRate: 14, depth: 2 },
+  { level: 4,  name: 'Warrior',      reward: 7000,  errorRate: 11, depth: 3 },
+  { level: 5,  name: 'Expert',       reward: 10000, errorRate: 9,  depth: 3 },
+  { level: 6,  name: 'Master',       reward: 13000, errorRate: 7,  depth: 4 },
+  { level: 7,  name: 'Professional', reward: 17000, errorRate: 5,  depth: 5 },
+  { level: 8,  name: 'Epic',         reward: 21000, errorRate: 3,  depth: 6 },
+  { level: 9,  name: 'Legendary',    reward: 26000, errorRate: 1,  depth: 8 },
+  { level: 10, name: 'Mystic',       reward: 30000, errorRate: 0,  depth: 10 },
+];
+
 const getStockfishMove = (
   fen: string,
   level: number
@@ -571,14 +585,26 @@ const getStockfishMove = (
   return new Promise((resolve) => {
     try {
       const { Chess } = require("chess.js");
-      const depth = Math.min(level || 1, 3);
+      const jarvisConfig = JARVIS_LEVELS[Math.max(0, Math.min(9, level - 1))];
+      const depth = jarvisConfig.depth;
+      const errorRate = jarvisConfig.errorRate;
+
       const chess = new Chess(fen);
       const moves = chess.moves({ verbose: true });
       if (moves.length === 0) return resolve(null);
-      if (depth === 1) {
+
+      // Делаем случайный ход с вероятностью errorRate%
+      if (errorRate > 0 && Math.random() * 100 < errorRate) {
+        const m = moves[Math.floor(Math.random() * moves.length)];
+        console.debug(\`[JARVIS] Level \${level} — random move (error simulation)\`);
+        return resolve({ from: m.from, to: m.to });
+      }
+
+      if (depth <= 1) {
         const m = moves[Math.floor(Math.random() * moves.length)];
         return resolve({ from: m.from, to: m.to });
       }
+
       let best: any = null;
       let bestScore = -99999;
       for (const m of moves) {
@@ -587,9 +613,10 @@ const getStockfishMove = (
         chess.undo();
         if (score > bestScore) { bestScore = score; best = m; }
       }
+      console.debug(\`[JARVIS] Level \${level} depth \${depth} — bestmove \${best?.from}\${best?.to}\`);
       resolve(best ? { from: best.from, to: best.to } : null);
     } catch (err) {
-      console.warn("[Stockfish] Error:", (err as Error).message);
+      console.warn("[JARVIS] Error:", (err as Error).message);
       resolve(getRandomMove(fen));
     }
   });

@@ -7,6 +7,9 @@ import { useGameStore } from '@/store/useGameStore';
 import { fmtBalance, fmtTime, leagueEmoji } from '@/utils/format';
 import { AttemptsModal } from '@/components/ui/AttemptsModal';
 import { getSocket } from '@/api/socket';
+import { JarvisModal, JARVIS_LEVELS } from '@/components/ui/JarvisModal';
+import { GameSetupModal } from '@/components/ui/GameSetupModal';
+import type { JarvisLevel } from '@/components/ui/JarvisModal';
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -34,18 +37,36 @@ export const HomePage: React.FC = () => {
   }, [(user as any)?.nextRestoreSeconds, user?.attempts]);
 
   const [startingBot, setStartingBot] = useState(false);
+  const [showJarvis, setShowJarvis] = useState(false);
+  const [selectedLevel, setSelectedLevel] = useState<JarvisLevel | null>(null);
+
+  // Текущий JARVIS уровень игрока (из user или дефолт 1)
+  const jarvisLevel = (user as any)?.jarvisLevel ?? 1;
 
   const startBotGame = () => {
-    if (startingBot) return;
     if (!user || user.attempts <= 0) { setShowAttempts(true); return; }
+    setShowJarvis(true);
+  };
+
+  const handleLevelSelect = (level: JarvisLevel) => {
+    setSelectedLevel(level);
+    setShowJarvis(false);
+  };
+
+  const handleGameStart = (color: 'white' | 'black', timeMinutes: number) => {
+    if (!selectedLevel || startingBot) return;
     setStartingBot(true);
-    getSocket().emit('game:create:bot', { color: 'white', botLevel: 3 }, (res: any) => {
+    setSelectedLevel(null);
+    getSocket().emit('game:create:bot', {
+      color,
+      botLevel: selectedLevel.level,
+      timeSeconds: timeMinutes * 60,
+    }, (res: any) => {
       setStartingBot(false);
       if (res?.ok && res?.session) {
         navigate('/game/' + res.session.id);
       }
     });
-    // Timeout fallback
     setTimeout(() => setStartingBot(false), 5000);
   };
 
@@ -174,6 +195,20 @@ export const HomePage: React.FC = () => {
       </div>
 
       {showAttempts && <AttemptsModal user={user} onClose={() => setShowAttempts(false)} />}
+      {showJarvis && (
+        <JarvisModal
+          currentJarvisLevel={jarvisLevel}
+          onSelect={handleLevelSelect}
+          onClose={() => setShowJarvis(false)}
+        />
+      )}
+      {selectedLevel && (
+        <GameSetupModal
+          selectedLevel={selectedLevel}
+          onStart={handleGameStart}
+          onBack={() => { setSelectedLevel(null); setShowJarvis(true); }}
+        />
+      )}
     </PageLayout>
   );
 };
