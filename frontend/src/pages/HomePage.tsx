@@ -111,6 +111,15 @@ export const HomePage: React.FC = () => {
           </div>
         </div>
 
+        {/* Streak */}
+        {((user as any).loginStreak ?? 0) >= 2 && (
+          <div style={{ marginTop: 10, marginBottom: -2, position: 'relative', zIndex: 1 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: '#FF9F43', background: 'rgba(255,159,67,0.12)', padding: '3px 10px', borderRadius: 8, letterSpacing: '.04em' }}>
+              🔥 {(user as any).loginStreak} дней подряд
+            </span>
+          </div>
+        )}
+
         {/* Попытки */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, position: 'relative', zIndex: 1 }}>
           <div>
@@ -174,7 +183,7 @@ export const HomePage: React.FC = () => {
         {[
           { ico: '🤖', title: 'J.A.R.V.I.S', sub: JARVIS_LEVELS[Math.max(0, jarvisLevel - 1)].name, tag: `+${(JARVIS_LEVELS[Math.max(0, jarvisLevel - 1)].reward / 1000).toFixed(0)}K ᚙ`, tc: '#9B85FF', path: null, action: startBotGame },
           { ico: '⚔️', title: 'Батлы', sub: 'На ставку', tag: '5 LIVE', tc: '#FF4D6A', path: '/battles', action: null },
-          { ico: '🏆', title: 'Турниры', sub: 'Чемпион месяца', tag: '2 открытых', tc: '#F5C842', path: '/battles', action: null },
+          { ico: '🏆', title: 'Турниры', sub: 'Чемпион месяца', tag: '2 открытых', tc: '#F5C842', path: '/tournaments', action: null },
           { ico: '🌍', title: 'Клановые войны', sub: 'Россия ведёт', tag: '3:1', tc: '#00D68F', path: '/nations', action: null },
         ].map((item) => (
           <div key={item.title} onClick={() => item.action ? item.action() : navigate(item.path!)} style={{...gameCardStyle, opacity: item.action && startingBot ? 0.6 : 1}}>

@@ -42,6 +42,7 @@ export interface User extends UserPublic {
   losses?: number;
   draws?: number;
   winStreak?: number;
+  loginStreak?: number;
 }
 
 export interface ActiveSessionRef {

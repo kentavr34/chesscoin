@@ -89,6 +89,9 @@ model User {
   // Транзакции
   transactions Transaction[] @relation("UserTransactions")
 
+  // Турниры
+  tournaments TournamentPlayer[]
+
   // v6: TON кошелёк
   tonWalletAddress  String?  // подключается в v6
   tonConnectedAt    DateTime?
@@ -97,6 +100,10 @@ model User {
   jarvisLevel      Int    @default(1)   // текущий разблокированный уровень (1-10)
   jarvisBadges     String[] @default([])  // список пройденных уровней ["Beginner","Player",...]
   jarvisBadgeDates Json?  @default("{}") // даты получения: {"Beginner":"2026-03-14",...}
+
+  // Login streak
+  loginStreak   Int       @default(0)
+  lastLoginDate DateTime?
 
   // Служебное
   isBot     Boolean @default(false)
@@ -356,6 +363,70 @@ model ClanWar {
   finishedAt DateTime?
 
   @@map("clan_wars")
+}
+
+// ─────────────────────────────────────────
+// TOURNAMENTS (v6)
+// ─────────────────────────────────────────
+model Tournament {
+  id          String            @id @default(cuid())
+  name        String
+  description String?
+  entryFee    BigInt            @default(0)
+  maxPlayers  Int               @default(8)
+  status      TournamentStatus  @default(REGISTRATION)
+  startAt     DateTime?
+  prizePool   BigInt            @default(0)
+  createdBy   String?           // userId создателя
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  players TournamentPlayer[]
+  matches TournamentMatch[]
+
+  @@index([status])
+  @@map("tournaments")
+}
+
+model TournamentPlayer {
+  id           String     @id @default(cuid())
+  tournamentId String
+  userId       String
+  seed         Int?
+  eliminated   Boolean    @default(false)
+  joinedAt     DateTime   @default(now())
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id])
+
+  @@unique([tournamentId, userId])
+  @@index([tournamentId])
+  @@index([userId])
+  @@map("tournament_players")
+}
+
+model TournamentMatch {
+  id           String   @id @default(cuid())
+  tournamentId String
+  player1Id    String?
+  player2Id    String?
+  winnerId     String?
+  round        Int      @default(1)
+  matchOrder   Int      @default(1)
+  sessionId    String?  // связанная игровая сессия
+  status       String   @default("PENDING") // PENDING | IN_PROGRESS | FINISHED
+  createdAt    DateTime @default(now())
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  @@index([tournamentId])
+  @@map("tournament_matches")
+}
+
+enum TournamentStatus {
+  REGISTRATION
+  IN_PROGRESS
+  FINISHED
 }
 
 // ─────────────────────────────────────────

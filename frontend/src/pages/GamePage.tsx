@@ -11,6 +11,7 @@ import { useGameStore } from '@/store/useGameStore';
 import { useUserStore } from '@/store/useUserStore';
 import { getSocket } from '@/api/socket';
 import { fmtTime, fmtBalance } from '@/utils/format';
+import { JARVIS_LEVELS } from '@/components/ui/JarvisModal';
 
 export const GamePage: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -251,6 +252,8 @@ export const GamePage: React.FC = () => {
           earned={resultData.earned}
           commission={resultData.commission}
           pieceCoins={resultData.pieceCoins}
+          botLevelName={isBotGame && session?.botLevel ? JARVIS_LEVELS[Math.max(0, (session.botLevel ?? 1) - 1)].name : undefined}
+          userTelegramId={(user as any)?.telegramId}
           onClose={handleResultClose}
         />
       )}

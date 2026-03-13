@@ -9,6 +9,8 @@ interface GameResultModalProps {
   earned: string;       // bigint строка — финальный бонус за победу
   commission: string;   // bigint строка — комиссия (только батл)
   pieceCoins?: string;  // bigint строка — монеты за фигуры (только бот-игра)
+  botLevelName?: string; // название уровня JARVIS (для share)
+  userTelegramId?: string;
   onClose: () => void;
 }
 
@@ -46,6 +48,8 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
   earned,
   commission,
   pieceCoins,
+  botLevelName,
+  userTelegramId,
   onClose,
 }) => {
   const [countdown, setCountdown] = useState(AUTO_CLOSE_SEC);
@@ -256,11 +260,37 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
           </div>
         )}
 
+        {/* Кнопка Share (только победа над ботом) */}
+        {result === 'win' && botLevelName && userTelegramId && (
+          <button
+            onClick={() => {
+              const total = (earnedBig + pieceBig).toString();
+              const shareText = `♟ Я победил J.A.R.V.I.S ${botLevelName} в ChessCoin!\nВыиграл ${fmtBalance(total)} ᚙ\nПопробуй и ты:`;
+              const botUrl = `https://t.me/chessgamecoin_bot?start=ref_${userTelegramId}`;
+              try {
+                (window as any).Telegram?.WebApp?.openTelegramLink?.(
+                  `https://t.me/share/url?url=${encodeURIComponent(botUrl)}&text=${encodeURIComponent(shareText)}`
+                );
+              } catch {}
+            }}
+            style={{
+              width: '100%', marginTop: 14,
+              padding: '11px', background: 'rgba(123,97,255,0.12)',
+              border: '1px solid rgba(123,97,255,0.25)',
+              borderRadius: 14, color: '#9B85FF',
+              fontSize: 13, fontWeight: 600,
+              cursor: 'pointer', fontFamily: 'inherit',
+            }}
+          >
+            📤 Поделиться победой
+          </button>
+        )}
+
         {/* Кнопка в лобби */}
         <button
           onClick={handleClose}
           style={{
-            width: '100%', marginTop: 18,
+            width: '100%', marginTop: 10,
             padding: '12px', background: '#1C2030',
             border: '1px solid rgba(255,255,255,0.1)',
             borderRadius: 14, color: '#F0F2F8',

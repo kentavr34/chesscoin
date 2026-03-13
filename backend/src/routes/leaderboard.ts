@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { redis } from "@/lib/redis";
 import { authMiddleware, AuthRequest } from "@/middleware/auth";
 
 const router = Router();
@@ -30,6 +31,22 @@ router.get("/", authMiddleware, async (req: Request, res: Response) => {
       } : {}),
     };
 
+    // Redis cache — only for non-search queries (cache key includes league/sort/limit/offset)
+    const cacheKey = search
+      ? null
+      : `leaderboard:${sort}:${league ?? "all"}:${limit}:${offset}`;
+
+    if (cacheKey) {
+      const cached = await redis.get(cacheKey);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        // myRank is always fresh (user-specific)
+        const myElo = (await prisma.user.findUnique({ where: { id: userId }, select: { elo: true } }))?.elo ?? 0;
+        const myRank = await prisma.user.count({ where: { isBanned: false, isBot: false, elo: { gt: myElo } } });
+        return res.json({ ...parsed, myRank: myRank + 1 });
+      }
+    }
+
     const [users, total, myRank] = await Promise.all([
       prisma.user.findMany({
         where,
@@ -52,11 +69,17 @@ router.get("/", authMiddleware, async (req: Request, res: Response) => {
       }),
     ]);
 
-    res.json({
+    const payload = {
       total,
       myRank: myRank + 1,
       users: users.map(u => ({ ...u, balance: u.balance.toString() })),
-    });
+    };
+
+    if (cacheKey) {
+      await redis.set(cacheKey, JSON.stringify({ total, users: payload.users }), "EX", 60);
+    }
+
+    res.json(payload);
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }

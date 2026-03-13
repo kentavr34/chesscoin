@@ -97,6 +97,29 @@ export const shopApi = {
     api.post<{ attempts: number; balance: string }>('/attempts/purchase', { count }),
 };
 
+// ── TOURNAMENTS ───────────────────────────────────────
+export const tournamentsApi = {
+  list: () =>
+    api.get<{ tournaments: TournamentItem[] }>('/tournaments'),
+  get: (id: string) =>
+    api.get<{ tournament: any }>(`/tournaments/${id}`),
+  join: (id: string) =>
+    api.post<{ ok: boolean }>(`/tournaments/${id}/join`),
+};
+
+export interface TournamentItem {
+  id: string;
+  name: string;
+  description?: string | null;
+  entryFee: string;
+  maxPlayers: number;
+  currentPlayers: number;
+  status: 'REGISTRATION' | 'IN_PROGRESS' | 'FINISHED';
+  startAt?: string | null;
+  prizePool: string;
+  isJoined: boolean;
+}
+
 export interface ShopItem {
   id: string;
   name: string;
