@@ -14,12 +14,12 @@ export const JARVIS_LEVELS: JarvisLevel[] = [
   { level: 2,  name: 'Player',       reward: 3000,  errorRate: 17, depth: 2 },
   { level: 3,  name: 'Fighter',      reward: 5000,  errorRate: 14, depth: 2 },
   { level: 4,  name: 'Warrior',      reward: 7000,  errorRate: 11, depth: 3 },
-  { level: 5,  name: 'Expert',       reward: 10000, errorRate: 9,  depth: 3 },
-  { level: 6,  name: 'Master',       reward: 13000, errorRate: 7,  depth: 4 },
-  { level: 7,  name: 'Professional', reward: 17000, errorRate: 5,  depth: 5 },
-  { level: 8,  name: 'Epic',         reward: 21000, errorRate: 3,  depth: 6 },
-  { level: 9,  name: 'Legendary',    reward: 26000, errorRate: 1,  depth: 8 },
-  { level: 10, name: 'Mystic',       reward: 30000, errorRate: 0,  depth: 10 },
+  { level: 5,  name: 'Expert',       reward: 9000,  errorRate: 9,  depth: 3 },
+  { level: 6,  name: 'Master',       reward: 12000, errorRate: 7,  depth: 4 },
+  { level: 7,  name: 'Professional', reward: 15000, errorRate: 5,  depth: 5 },
+  { level: 8,  name: 'Epic',         reward: 20000, errorRate: 3,  depth: 6 },
+  { level: 9,  name: 'Legendary',    reward: 30000, errorRate: 1,  depth: 8 },
+  { level: 10, name: 'Mystic',       reward: 50000, errorRate: 0,  depth: 10 },
 ];
 
 interface JarvisModalProps {
