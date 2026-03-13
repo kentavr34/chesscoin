@@ -61,7 +61,7 @@ export const HomePage: React.FC = () => {
       color,
       botLevel: selectedLevel.level,
       timeSeconds: timeMinutes * 60,
-    } as any, (res: any) => {
+    }, (res: any) => {
       setStartingBot(false);
       if (res?.ok && res?.session) {
         navigate('/game/' + res.session.id);
