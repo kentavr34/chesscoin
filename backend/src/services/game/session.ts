@@ -86,6 +86,7 @@ export const createBotSession = async (
     data: {
       type: SessionType.BOT,
       duration: timeSeconds,
+
       status: SessionStatus.IN_PROGRESS,
       fen: chess.fen(),
       pgn: chess.pgn(),
@@ -177,7 +178,7 @@ export const createBattleSession = async (
           playerId: userId,
           isWhite: color === "white",
           status: SessionSideStatus.WAITING_FOR_OPPONENT,
-          timeLeft: timeSeconds,
+          timeLeft: duration,
         },
       },
     },
@@ -294,7 +295,7 @@ export const createFriendlySession = async (
           playerId: userId,
           isWhite: color === "white",
           status: SessionSideStatus.WAITING_FOR_OPPONENT,
-          timeLeft: timeSeconds,
+          timeLeft: duration,
         },
       },
     },
