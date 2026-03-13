@@ -528,8 +528,8 @@ const makeBotMove = async (socket: AuthSocket, io: Server, sessionId: string) =>
       const humanSide = session.sides.find(s => !s.isBot);
       const status = chess.isDraw() ? SessionStatus.DRAW : SessionStatus.FINISHED;
       const finished = await finishSession(sessionId, status, {
-        winnerSideId: chess.isDraw() ? undefined : botSide?.id,
-        loserSideId: chess.isDraw() ? undefined : humanSide?.id,
+        winnerSideId: chess.isDraw() ? undefined : (chess.isCheckmate() ? botSide?.id : humanSide?.id),
+        loserSideId: chess.isDraw() ? undefined : (chess.isCheckmate() ? humanSide?.id : botSide?.id),
         isDraw: chess.isDraw(),
       });
       const uid = humanSide?.playerId ?? null;

@@ -110,14 +110,14 @@ const sectionLbl: React.CSSProperties = {
   marginBottom: 10,
 };
 const colorBtnStyle = (active: boolean, c: ColorChoice): React.CSSProperties => ({
-  padding: '12px 8px', borderRadius: 14, cursor: 'pointer',
+  padding: '18px 8px', borderRadius: 14, cursor: 'pointer',
   background: active ? 'rgba(245,200,66,0.1)' : '#1C2030',
   border: `1px solid ${active ? 'rgba(245,200,66,0.4)' : 'rgba(255,255,255,0.07)'}`,
   color: active ? '#F5C842' : '#8B92A8',
   textAlign: 'center', transition: 'all .15s', fontFamily: 'inherit',
 });
 const timeBtnStyle = (active: boolean): React.CSSProperties => ({
-  padding: '8px 14px', borderRadius: 10, cursor: 'pointer',
+  padding: '12px 18px', borderRadius: 10, cursor: 'pointer',
   background: active ? 'rgba(123,97,255,0.15)' : '#1C2030',
   border: `1px solid ${active ? 'rgba(123,97,255,0.4)' : 'rgba(255,255,255,0.07)'}`,
   color: active ? '#9B85FF' : '#8B92A8',

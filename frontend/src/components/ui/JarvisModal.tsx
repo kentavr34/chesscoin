@@ -47,7 +47,7 @@ export const JarvisModal: React.FC<JarvisModalProps> = ({ currentJarvisLevel, on
 
         {/* Levels */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: '65vh', overflowY: 'auto', paddingBottom: 8 }}>
-          {JARVIS_LEVELS.map((lvl) => {
+          {[...JARVIS_LEVELS].reverse().map((lvl) => {
             const unlocked = lvl.level <= currentJarvisLevel;
             const completed = lvl.level < currentJarvisLevel;
             const isActive = lvl.level === currentJarvisLevel;
