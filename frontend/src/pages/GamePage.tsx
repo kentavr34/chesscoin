@@ -184,7 +184,7 @@ export const GamePage: React.FC = () => {
       {/* Кнопки */}
       {!isGameOver ? (
         <div style={{ display: 'flex', gap: 6, padding: '6px 12px', flexShrink: 0 }}>
-          <button onClick={() => navigate(-1)} style={actionBtn()}>← Назад</button>
+          <button onClick={() => { if (window.confirm('Выйти из партии? Игра продолжится.')) navigate('/'); }} style={actionBtn()}>← Назад</button>
           <button onClick={() => getSocket().emit('game:offer_draw', { sessionId: session.id })}
             style={actionBtn()}>½ Ничья</button>
           <button onClick={() => setConfirmSurrender(true)}
@@ -207,7 +207,9 @@ export const GamePage: React.FC = () => {
           fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: '#C8CDE0',
           whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 4,
         }}>
-          {session.pgn || '— партия началась —'}
+          {session.pgn
+            ? session.pgn.replace(/\[.*?\]\s*/g, '').trim() || '— партия началась —'
+            : '— партия началась —'}
         </div>
       </div>
 

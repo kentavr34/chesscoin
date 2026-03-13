@@ -177,7 +177,7 @@ const processBotPayouts = async (
               jarvisBadges: alreadyHas ? undefined : { push: badgeName },
             },
           });
-          console.log(\`[JARVIS] Badge '${badgeName}' awarded to ${humanSide.playerId}, next level: ${nextLevel}\`);
+          console.log(`[JARVIS] Badge '` + badgeName + `' awarded, next level: ` + nextLevel);
         } catch (e) {
           console.error('[JARVIS] Badge error:', e);
         }

@@ -152,11 +152,11 @@ export const setupSocketHandlers = (io: Server) => {
     socket.on(
       "game:create:bot",
       async (
-        data: { color: "white" | "black"; botLevel: number },
+        data: { color: "white" | "black"; botLevel: number; timeSeconds?: number },
         callback?: Function
       ) => {
         try {
-          const session = await createBotSession(userId, data.color, data.botLevel);
+          const session = await createBotSession(userId, data.color, data.botLevel, data.timeSeconds ?? 600);
           socket.join(session.id);
           const formatted = formatSession(session, userId);
 
@@ -596,7 +596,7 @@ const getStockfishMove = (
       // Делаем случайный ход с вероятностью errorRate%
       if (errorRate > 0 && Math.random() * 100 < errorRate) {
         const m = moves[Math.floor(Math.random() * moves.length)];
-        console.debug(\`[JARVIS] Level \${level} — random move (error simulation)\`);
+        console.debug("[JARVIS] Level " + level + " — random move (error simulation)");
         return resolve({ from: m.from, to: m.to });
       }
 
@@ -613,7 +613,7 @@ const getStockfishMove = (
         chess.undo();
         if (score > bestScore) { bestScore = score; best = m; }
       }
-      console.debug(\`[JARVIS] Level \${level} depth \${depth} — bestmove \${best?.from}\${best?.to}\`);
+      console.debug("[JARVIS] Level " + level + " depth " + depth + " — bestmove " + (best?.from ?? "") + (best?.to ?? ""));
       resolve(best ? { from: best.from, to: best.to } : null);
     } catch (err) {
       console.warn("[JARVIS] Error:", (err as Error).message);

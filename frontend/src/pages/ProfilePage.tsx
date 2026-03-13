@@ -6,6 +6,7 @@ import { useUserStore } from '@/store/useUserStore';
 import { profileApi } from '@/api';
 import { fmtBalance, fmtDate, leagueEmoji } from '@/utils/format';
 import type { Transaction } from '@/types';
+import { JARVIS_LEVELS } from '@/components/ui/JarvisModal';
 
 type Tab = 'info' | 'games' | 'saves' | 'ach';
 
@@ -51,6 +52,7 @@ export const ProfilePage: React.FC = () => {
           <span style={tagGold}>{leagueEmoji[user.league]} #1</span>
           <span style={tagVi}>ELO {user.elo}</span>
           <span style={tagGr}>🇷🇺 {user.nationRank ?? 'Участник'}</span>
+          <span style={tagRobot}>🤖 {JARVIS_LEVELS[Math.max(0, ((user as any).jarvisLevel ?? 1) - 1)].name}</span>
         </div>
       </div>
 
@@ -156,20 +158,40 @@ export const ProfilePage: React.FC = () => {
 
       {tab === 'ach' && (
         <>
-          <div style={secStyle}>Достижения</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, padding: '0 18px' }}>
-            {[
-              { ico: '💎', lbl: 'Алмаз #1', gold: true },
-              { ico: '⚔️', lbl: 'Воин', gold: false },
-              { ico: '🏆', lbl: 'Победитель', gold: false },
-              { ico: '👑', lbl: 'Офицер', gold: true },
-            ].map((a) => (
-              <div key={a.lbl} style={{ background: '#1C2030', border: `1px solid ${a.gold ? 'rgba(245,200,66,0.3)' : 'rgba(255,255,255,0.07)'}`, borderRadius: 12, padding: 12, textAlign: 'center', minWidth: 80 }}>
-                <div style={{ fontSize: 28 }}>{a.ico}</div>
-                <div style={{ fontSize: 10, color: a.gold ? '#F5C842' : '#8B92A8', fontWeight: a.gold ? 700 : 600, marginTop: 4 }}>{a.lbl}</div>
-              </div>
-            ))}
-          </div>
+          <div style={secStyle}>JARVIS Сертификаты</div>
+          {((user as any).jarvisBadges?.length ?? 0) === 0 ? (
+            <div style={{ textAlign: 'center', color: '#4A5270', padding: 32, fontSize: 13 }}>
+              🤖 Победите J.A.R.V.I.S чтобы получить первый сертификат
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '0 18px' }}>
+              {[...((user as any).jarvisBadges ?? [])].reverse().map((badgeName: string, i: number) => {
+                const lvlData = JARVIS_LEVELS.find(l => l.name === badgeName);
+                const colors: Record<string, string> = {
+                  Beginner: '#8B92A8', Rookie: '#00D68F', Fighter: '#00B4D8',
+                  Warrior: '#4CAF50', Expert: '#9B85FF', Master: '#F5C842',
+                  Professional: '#FF9F43', Epic: '#FF6B6B', Legendary: '#E040FB', Mystic: '#F5C842',
+                };
+                const color = colors[badgeName] ?? '#9B85FF';
+                return (
+                  <div key={i} style={{ background: 'linear-gradient(135deg,#1C2030,#13161F)', border: `1px solid ${color}40`, borderRadius: 18, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
+                    <div style={{ width: 52, height: 52, borderRadius: 14, background: `${color}18`, border: `2px solid ${color}60`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <span style={{ fontSize: 22 }}>🤖</span>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: color, marginBottom: 3 }}>JARVIS CERTIFICATE</div>
+                      <div style={{ fontSize: 16, fontWeight: 800, color: '#F0F2F8' }}>{badgeName}</div>
+                      <div style={{ fontSize: 11, color: '#8B92A8', marginTop: 2 }}>Уровень {lvlData?.level ?? '?'} · +{((lvlData?.reward ?? 0) / 1000).toFixed(0)}K ᚙ</div>
+                    </div>
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <div style={{ fontSize: 18 }}>✓</div>
+                      <div style={{ fontSize: 9, color: '#4A5270', marginTop: 2 }}>Пройден</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </>
       )}
     </PageLayout>
@@ -215,4 +237,5 @@ const goldBtn: React.CSSProperties = { padding: '8px 14px', background: '#F5C842
 const tagGold: React.CSSProperties = { display: 'inline-flex', padding: '3px 8px', background: 'rgba(245,200,66,0.12)', color: '#F5C842', borderRadius: 6, fontSize: 10, fontWeight: 700 };
 const tagVi: React.CSSProperties = { ...tagGold, background: 'rgba(123,97,255,0.12)', color: '#9B85FF' };
 const tagGr: React.CSSProperties = { ...tagGold, background: 'rgba(0,214,143,0.10)', color: '#00D68F' };
+const tagRobot: React.CSSProperties = { ...tagGold, background: 'rgba(123,97,255,0.12)', color: '#9B85FF' };
 const avatarRingStyle: React.CSSProperties = { position: 'absolute', inset: -4, borderRadius: '50%', border: '2px solid #F5C842', opacity: .4, animation: 'ring-pulse 3s ease-in-out infinite' };

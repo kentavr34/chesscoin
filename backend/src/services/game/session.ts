@@ -66,9 +66,11 @@ export const getBot = async () => {
 export const createBotSession = async (
   userId: string,
   color: "white" | "black",
-  botLevel: number
+  botLevel: number,
+  timeSeconds: number = 600
 ) => {
   if (botLevel < 1 || botLevel > 20) throw new Error("Invalid bot level");
+  if (timeSeconds < 60 || timeSeconds > 3600) timeSeconds = 600;
 
   const user = await validateCanStartSession(userId, SessionType.BOT);
   const bot = await getBot();
@@ -83,6 +85,7 @@ export const createBotSession = async (
   const session = await prisma.session.create({
     data: {
       type: SessionType.BOT,
+      duration: timeSeconds,
       status: SessionStatus.IN_PROGRESS,
       fen: chess.fen(),
       pgn: chess.pgn(),
@@ -174,7 +177,7 @@ export const createBattleSession = async (
           playerId: userId,
           isWhite: color === "white",
           status: SessionSideStatus.WAITING_FOR_OPPONENT,
-          timeLeft: duration,
+          timeLeft: timeSeconds,
         },
       },
     },
@@ -291,7 +294,7 @@ export const createFriendlySession = async (
           playerId: userId,
           isWhite: color === "white",
           status: SessionSideStatus.WAITING_FOR_OPPONENT,
-          timeLeft: duration,
+          timeLeft: timeSeconds,
         },
       },
     },

@@ -167,7 +167,7 @@ export const HomePage: React.FC = () => {
       <div style={secStyle}>Разделы</div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '0 18px' }}>
         {[
-          { ico: '🤖', title: 'J.A.R.V.I.S', sub: 'Ур. 3', tag: '+3.0K ᚙ', tc: '#9B85FF', path: null, action: startBotGame },
+          { ico: '🤖', title: 'J.A.R.V.I.S', sub: JARVIS_LEVELS[Math.max(0, jarvisLevel - 1)].name, tag: `+${(JARVIS_LEVELS[Math.max(0, jarvisLevel - 1)].reward / 1000).toFixed(0)}K ᚙ`, tc: '#9B85FF', path: null, action: startBotGame },
           { ico: '⚔️', title: 'Батлы', sub: 'На ставку', tag: '5 LIVE', tc: '#FF4D6A', path: '/battles', action: null },
           { ico: '🏆', title: 'Турниры', sub: 'Чемпион месяца', tag: '2 открытых', tc: '#F5C842', path: '/battles', action: null },
           { ico: '🌍', title: 'Клановые войны', sub: 'Россия ведёт', tag: '3:1', tc: '#00D68F', path: '/nations', action: null },
