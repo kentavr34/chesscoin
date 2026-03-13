@@ -35,10 +35,10 @@ CREATE UNIQUE INDEX IF NOT EXISTS "tournament_players_tournamentId_userId_key" O
 CREATE INDEX IF NOT EXISTS "tournament_players_tournamentId_idx" ON "tournament_players"("tournamentId");
 CREATE INDEX IF NOT EXISTS "tournament_players_userId_idx" ON "tournament_players"("userId");
 
-ALTER TABLE "tournament_players" ADD CONSTRAINT IF NOT EXISTS "tournament_players_tournamentId_fkey"
+ALTER TABLE "tournament_players" ADD CONSTRAINT "tournament_players_tournamentId_fkey"
     FOREIGN KEY ("tournamentId") REFERENCES "tournaments"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
-ALTER TABLE "tournament_players" ADD CONSTRAINT IF NOT EXISTS "tournament_players_userId_fkey"
+ALTER TABLE "tournament_players" ADD CONSTRAINT "tournament_players_userId_fkey"
     FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddTable: tournament_matches
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS "tournament_matches" (
 
 CREATE INDEX IF NOT EXISTS "tournament_matches_tournamentId_idx" ON "tournament_matches"("tournamentId");
 
-ALTER TABLE "tournament_matches" ADD CONSTRAINT IF NOT EXISTS "tournament_matches_tournamentId_fkey"
+ALTER TABLE "tournament_matches" ADD CONSTRAINT "tournament_matches_tournamentId_fkey"
     FOREIGN KEY ("tournamentId") REFERENCES "tournaments"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- CreateEnum: TournamentStatus (Prisma handles this internally, PostgreSQL uses TEXT for status)
