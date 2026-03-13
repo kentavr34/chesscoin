@@ -168,7 +168,7 @@ export const startTimerWatcher = () => {
       io.to(session.id).emit("game", formatSession(finished, null));
       io.to(session.id).emit("game:over", {
         status: "TIME_EXPIRED",
-        winnerSideId: winnerSide?.id,
+        winnerSideId,
       });
 
     } catch (err) {
