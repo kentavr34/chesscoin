@@ -101,8 +101,13 @@ export const HomePage: React.FC = () => {
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 20, fontWeight: 700, color: '#9B85FF' }}>{user.elo}</div>
-            <div style={{ fontSize: 9, color: '#4A5270', marginTop: 1 }}>ELO рейтинг</div>
+            <div style={{ fontSize: 10, color: '#4A5270', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 4 }}>JARVIS</div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#9B85FF' }}>
+              {JARVIS_LEVELS[Math.max(0, jarvisLevel - 1)].name}
+            </div>
+            <div style={{ fontSize: 9, color: '#4A5270', marginTop: 2 }}>
+              Lv.{jarvisLevel} / 10
+            </div>
           </div>
         </div>
 

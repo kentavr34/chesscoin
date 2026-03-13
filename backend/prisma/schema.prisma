@@ -94,8 +94,9 @@ model User {
   tonConnectedAt    DateTime?
 
   // JARVIS прогрессия
-  jarvisLevel  Int      @default(1)   // текущий разблокированный уровень (1-10)
-  jarvisBadges String[] @default([])  // список пройденных уровней ["Beginner","Player",...]
+  jarvisLevel      Int    @default(1)   // текущий разблокированный уровень (1-10)
+  jarvisBadges     String[] @default([])  // список пройденных уровней ["Beginner","Player",...]
+  jarvisBadgeDates Json?  @default("{}") // даты получения: {"Beginner":"2026-03-14",...}
 
   // Служебное
   isBot     Boolean @default(false)

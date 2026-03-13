@@ -89,6 +89,7 @@ export interface GameSession {
   sides: SessionSide[];
   isMyTurn: boolean | null;
   mySideId: string | null;
+  pieceCoins?: string | null; // монеты за взятые фигуры (только бот-игры, при завершении)
 }
 
 export interface BattleLobbyItem {

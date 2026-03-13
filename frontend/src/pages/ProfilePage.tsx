@@ -8,6 +8,42 @@ import { fmtBalance, fmtDate, leagueEmoji } from '@/utils/format';
 import type { Transaction } from '@/types';
 import { JARVIS_LEVELS } from '@/components/ui/JarvisModal';
 
+// ── BadgeDetailModal — детали сертификата при нажатии ─────────────────────────
+const BadgeDetailModal: React.FC<{
+  badgeName: string;
+  date?: string;
+  onClose: () => void;
+}> = ({ badgeName, date, onClose }) => {
+  const lvlData = JARVIS_LEVELS.find(l => l.name === badgeName);
+  const colors: Record<string, string> = {
+    Beginner: '#8B92A8', Player: '#00B4D8', Fighter: '#00D68F',
+    Warrior: '#4CAF50', Expert: '#9B85FF', Master: '#F5C842',
+    Professional: '#FF9F43', Epic: '#FF6B6B', Legendary: '#E040FB', Mystic: '#F5C842',
+  };
+  const color = colors[badgeName] ?? '#9B85FF';
+  const formattedDate = date ? new Date(date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) : null;
+
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 400, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 320, background: 'linear-gradient(160deg,#13161F,#0B0D11)', border: `1px solid ${color}40`, borderRadius: 24, padding: '32px 24px 24px', textAlign: 'center', boxShadow: `0 0 60px ${color}20` }}>
+        <div style={{ fontSize: 56, lineHeight: 1, marginBottom: 16 }}>🤖</div>
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: '#4A5270', marginBottom: 8 }}>JARVIS CERTIFICATE</div>
+        <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 22, fontWeight: 800, color, marginBottom: 8 }}>{badgeName}</div>
+        <div style={{ fontSize: 13, color: '#8B92A8', marginBottom: 20 }}>
+          Уровень {lvlData?.level ?? '?'} · +{(lvlData?.reward ?? 0).toLocaleString()} ᚙ
+        </div>
+        {formattedDate && (
+          <div style={{ fontSize: 14, color: '#8B92A8', marginBottom: 8 }}>📅 {formattedDate}</div>
+        )}
+        <div style={{ fontSize: 12, color: '#00D68F', marginBottom: 24 }}>✓ Подтверждено ChessCoin</div>
+        <button onClick={onClose} style={{ width: '100%', padding: 12, background: '#1C2030', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, color: '#F0F2F8', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+          Закрыть
+        </button>
+      </div>
+    </div>
+  );
+};
+
 type Tab = 'info' | 'games' | 'saves' | 'ach';
 
 export const ProfilePage: React.FC = () => {
@@ -15,6 +51,7 @@ export const ProfilePage: React.FC = () => {
   const { user } = useUserStore();
   const [tab, setTab] = useState<Tab>('info');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [selectedBadge, setSelectedBadge] = useState<{ name: string; date?: string } | null>(null);
 
   useEffect(() => {
     if (tab === 'games') {
@@ -167,14 +204,16 @@ export const ProfilePage: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '0 18px' }}>
               {[...((user as any).jarvisBadges ?? [])].reverse().map((badgeName: string, i: number) => {
                 const lvlData = JARVIS_LEVELS.find(l => l.name === badgeName);
+                const badgeDates = (user as any).jarvisBadgeDates as Record<string, string> | null;
+                const dateStr = badgeDates?.[badgeName];
                 const colors: Record<string, string> = {
-                  Beginner: '#8B92A8', Rookie: '#00D68F', Fighter: '#00B4D8',
+                  Beginner: '#8B92A8', Player: '#00B4D8', Fighter: '#00D68F',
                   Warrior: '#4CAF50', Expert: '#9B85FF', Master: '#F5C842',
                   Professional: '#FF9F43', Epic: '#FF6B6B', Legendary: '#E040FB', Mystic: '#F5C842',
                 };
                 const color = colors[badgeName] ?? '#9B85FF';
                 return (
-                  <div key={i} style={{ background: 'linear-gradient(135deg,#1C2030,#13161F)', border: `1px solid ${color}40`, borderRadius: 18, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <div key={i} onClick={() => setSelectedBadge({ name: badgeName, date: dateStr })} style={{ background: 'linear-gradient(135deg,#1C2030,#13161F)', border: `1px solid ${color}40`, borderRadius: 18, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', transition: 'border-color .15s' }}>
                     <div style={{ width: 52, height: 52, borderRadius: 14, background: `${color}18`, border: `2px solid ${color}60`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <span style={{ fontSize: 22 }}>🤖</span>
                     </div>
@@ -182,6 +221,11 @@ export const ProfilePage: React.FC = () => {
                       <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: color, marginBottom: 3 }}>JARVIS CERTIFICATE</div>
                       <div style={{ fontSize: 16, fontWeight: 800, color: '#F0F2F8' }}>{badgeName}</div>
                       <div style={{ fontSize: 11, color: '#8B92A8', marginTop: 2 }}>Уровень {lvlData?.level ?? '?'} · +{((lvlData?.reward ?? 0) / 1000).toFixed(0)}K ᚙ</div>
+                      {dateStr && (
+                        <div style={{ fontSize: 10, color: '#4A5270', marginTop: 4 }}>
+                          📅 {new Date(dateStr).toLocaleDateString('ru-RU')}
+                        </div>
+                      )}
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
                       <div style={{ fontSize: 18 }}>✓</div>
@@ -193,6 +237,14 @@ export const ProfilePage: React.FC = () => {
             </div>
           )}
         </>
+      )}
+      {/* Модал деталей бейджа */}
+      {selectedBadge && (
+        <BadgeDetailModal
+          badgeName={selectedBadge.name}
+          date={selectedBadge.date}
+          onClose={() => setSelectedBadge(null)}
+        />
       )}
     </PageLayout>
   );

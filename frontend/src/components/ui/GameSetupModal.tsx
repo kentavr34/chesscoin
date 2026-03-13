@@ -110,24 +110,29 @@ const sectionLbl: React.CSSProperties = {
   marginBottom: 10,
 };
 const colorBtnStyle = (active: boolean, c: ColorChoice): React.CSSProperties => ({
-  padding: '18px 8px', borderRadius: 14, cursor: 'pointer',
+  padding: '20px 8px', borderRadius: 14, cursor: 'pointer',
+  minHeight: 80,
   background: active ? 'rgba(245,200,66,0.1)' : '#1C2030',
-  border: `1px solid ${active ? 'rgba(245,200,66,0.4)' : 'rgba(255,255,255,0.07)'}`,
+  border: `2px solid ${active ? '#F5C842' : 'rgba(255,255,255,0.07)'}`,
   color: active ? '#F5C842' : '#8B92A8',
   textAlign: 'center', transition: 'all .15s', fontFamily: 'inherit',
+  transform: active ? 'scale(1.05)' : 'scale(1)',
 });
 const timeBtnStyle = (active: boolean): React.CSSProperties => ({
-  padding: '12px 18px', borderRadius: 10, cursor: 'pointer',
+  padding: '17px 18px', borderRadius: 10, cursor: 'pointer',
+  minHeight: 52,
   background: active ? 'rgba(123,97,255,0.15)' : '#1C2030',
   border: `1px solid ${active ? 'rgba(123,97,255,0.4)' : 'rgba(255,255,255,0.07)'}`,
   color: active ? '#9B85FF' : '#8B92A8',
-  fontSize: 12, fontWeight: 700, transition: 'all .15s', fontFamily: 'inherit',
+  fontSize: 15, fontWeight: 700, transition: 'all .15s', fontFamily: 'inherit',
 });
 const startBtnStyle: React.CSSProperties = {
-  width: '100%', padding: '14px',
-  background: 'linear-gradient(135deg,#F5C842,#FFD966)',
+  width: '100%', padding: '19px 14px',
+  marginTop: 20,
+  minHeight: 56,
+  background: '#F5C842',
   border: 'none', borderRadius: 14,
-  color: '#0B0D11', fontSize: 15, fontWeight: 800,
+  color: '#0B0D11', fontSize: 17, fontWeight: 800,
   cursor: 'pointer', fontFamily: 'inherit',
   boxShadow: '0 4px 20px rgba(245,200,66,0.3)',
 };

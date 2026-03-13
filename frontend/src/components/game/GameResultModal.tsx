@@ -6,8 +6,9 @@ type ResultType = 'win' | 'lose' | 'draw';
 
 interface GameResultModalProps {
   result: ResultType;
-  earned: string;       // bigint строка — сколько заработано ДО комиссии
-  commission: string;   // bigint строка — сколько снято комиссии
+  earned: string;       // bigint строка — финальный бонус за победу
+  commission: string;   // bigint строка — комиссия (только батл)
+  pieceCoins?: string;  // bigint строка — монеты за фигуры (только бот-игра)
   onClose: () => void;
 }
 
@@ -44,6 +45,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
   result,
   earned,
   commission,
+  pieceCoins,
   onClose,
 }) => {
   const [countdown, setCountdown] = useState(AUTO_CLOSE_SEC);
@@ -84,8 +86,12 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
   const cfg = CONFIG[result];
   const earnedBig = BigInt(earned || '0');
   const commBig   = BigInt(commission || '0');
-  const netBig    = earnedBig - commBig;
-  const showCoins = earnedBig > 0n;
+  const pieceBig  = BigInt(pieceCoins || '0');
+  const isBotGame = pieceCoins !== undefined;
+  // Для бот-игры: итого = победный бонус + монеты за фигуры
+  // Для батла: итого = earned - комиссия
+  const netBig    = isBotGame ? earnedBig + pieceBig : earnedBig - commBig;
+  const showCoins = earnedBig > 0n || pieceBig > 0n;
 
   return (
     <div
@@ -168,18 +174,46 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
             borderRadius: 16, padding: '14px 16px',
             display: 'flex', flexDirection: 'column', gap: 8,
           }}>
-            {/* Заработано */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: 12, color: '#8B92A8' }}>Заработано</span>
-              <span style={{
-                fontFamily: "'JetBrains Mono',monospace",
-                fontSize: 14, fontWeight: 700, color: '#F0F2F8',
-              }}>
-                +{fmtBalance(earnedBig.toString())} ᚙ
-              </span>
-            </div>
+            {/* Бот-игра: бонус за победу */}
+            {isBotGame && earnedBig > 0n && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: 12, color: '#8B92A8' }}>За победу</span>
+                <span style={{
+                  fontFamily: "'JetBrains Mono',monospace",
+                  fontSize: 14, fontWeight: 700, color: '#F0F2F8',
+                }}>
+                  +{fmtBalance(earnedBig.toString())} ᚙ
+                </span>
+              </div>
+            )}
 
-            {/* Комиссия */}
+            {/* Бот-игра: монеты за фигуры */}
+            {isBotGame && pieceBig > 0n && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: 12, color: '#8B92A8' }}>За фигуры</span>
+                <span style={{
+                  fontFamily: "'JetBrains Mono',monospace",
+                  fontSize: 14, fontWeight: 700, color: '#F0F2F8',
+                }}>
+                  +{fmtBalance(pieceBig.toString())} ᚙ
+                </span>
+              </div>
+            )}
+
+            {/* Батл-игра: заработано */}
+            {!isBotGame && earnedBig > 0n && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: 12, color: '#8B92A8' }}>Заработано</span>
+                <span style={{
+                  fontFamily: "'JetBrains Mono',monospace",
+                  fontSize: 14, fontWeight: 700, color: '#F0F2F8',
+                }}>
+                  +{fmtBalance(earnedBig.toString())} ᚙ
+                </span>
+              </div>
+            )}
+
+            {/* Комиссия (только батл) */}
             {commBig > 0n && (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: 12, color: '#8B92A8' }}>Комиссия стола (10%)</span>
@@ -193,7 +227,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
             )}
 
             {/* Разделитель */}
-            {commBig > 0n && (
+            {(commBig > 0n || (isBotGame && earnedBig > 0n && pieceBig > 0n)) && (
               <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', margin: '2px 0' }} />
             )}
 

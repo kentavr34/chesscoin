@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { fmtBalance } from '@/utils/format';
 
 export interface JarvisLevel {
@@ -29,6 +29,15 @@ interface JarvisModalProps {
 }
 
 export const JarvisModal: React.FC<JarvisModalProps> = ({ currentJarvisLevel, onSelect, onClose }) => {
+  // Авто-скролл к текущему уровню при открытии
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const el = document.getElementById(`jarvis-level-${currentJarvisLevel}`);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 300);
+    return () => clearTimeout(t);
+  }, []);
+
   return (
     <div style={overlayStyle} onClick={onClose}>
       <div style={sheetStyle} onClick={(e) => e.stopPropagation()}>
@@ -55,6 +64,7 @@ export const JarvisModal: React.FC<JarvisModalProps> = ({ currentJarvisLevel, on
             return (
               <div
                 key={lvl.level}
+                id={`jarvis-level-${lvl.level}`}
                 onClick={() => unlocked && !completed && onSelect(lvl)}
                 style={levelCardStyle(unlocked, completed, isActive)}
               >
@@ -94,8 +104,8 @@ export const JarvisModal: React.FC<JarvisModalProps> = ({ currentJarvisLevel, on
         </div>
 
         {/* Footer hint */}
-        <div style={{ marginTop: 16, padding: '10px 14px', background: 'rgba(123,97,255,0.08)', border: '1px solid rgba(123,97,255,0.15)', borderRadius: 12 }}>
-          <div style={{ fontSize: 11, color: '#8B92A8', lineHeight: 1.5 }}>
+        <div style={{ marginTop: 16, padding: '16px', background: 'rgba(123,97,255,0.08)', border: '1px solid rgba(123,97,255,0.15)', borderRadius: 14 }}>
+          <div style={{ fontSize: 15, color: '#8B92A8', lineHeight: 1.6 }}>
             🏆 Побеждайте уровни по очереди. За каждый пройденный уровень вы получаете бейдж J.A.R.V.I.S в профиле.
           </div>
         </div>

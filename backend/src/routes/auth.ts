@@ -102,6 +102,7 @@ const formatUser = (user: any) => ({
   activeSessions: user.activeSessions ?? [],
   jarvisLevel: user.jarvisLevel ?? 1,
   jarvisBadges: user.jarvisBadges ?? [],
+  jarvisBadgeDates: user.jarvisBadgeDates ?? {},
   createdAt: user.createdAt,
 });
 

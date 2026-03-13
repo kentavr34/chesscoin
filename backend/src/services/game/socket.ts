@@ -280,6 +280,9 @@ export const setupSocketHandlers = (io: Server) => {
                 await updateBalance(userId, piecePrice, TransactionType.BOT_PIECE, {
                   piece: moveResult.captured, sessionId,
                 }, { isEmission: true });
+                // Трекинг монет за фигуры для отображения в модале результата
+                await redis.incrby(`session:${sessionId}:pieceCoins:${userId}`, Number(piecePrice));
+                await redis.expire(`session:${sessionId}:pieceCoins:${userId}`, 86400);
               }
             }
           }
@@ -294,10 +297,12 @@ export const setupSocketHandlers = (io: Server) => {
               isDraw: chess.isDraw() || chess.isStalemate(),
             });
             await stopAllTimers(sessionId);
-            const formatted = formatSession(finished, userId);
-            io.to(sessionId).emit("game", formatted);
+            // Включаем pieceCoins в данные для отображения в модале результата
+            const pieceCoinsRaw = await redis.get(`session:${sessionId}:pieceCoins:${userId}`);
+            const formattedFinished = { ...formatSession(finished, userId), pieceCoins: pieceCoinsRaw ?? '0' };
+            io.to(sessionId).emit("game", formattedFinished);
             io.to(sessionId).emit("game:over", { status: finished.status });
-            if (callback) callback({ ok: true, session: formatted });
+            if (callback) callback({ ok: true, session: formattedFinished });
             return;
           }
 
@@ -308,7 +313,8 @@ export const setupSocketHandlers = (io: Server) => {
             data: { currentSideId: nextSide?.id },
           });
 
-          if (session.type === SessionType.BATTLE && nextSide) {
+          // Переключаем таймер для батлов и игр с ботом
+          if ((session.type === SessionType.BATTLE || session.type === SessionType.BOT) && nextSide) {
             await switchTimer(sessionId, mySide.id, nextSide.id);
           }
 
@@ -532,8 +538,12 @@ const makeBotMove = async (socket: AuthSocket, io: Server, sessionId: string) =>
         loserSideId: chess.isDraw() ? undefined : (chess.isCheckmate() ? humanSide?.id : botSide?.id),
         isDraw: chess.isDraw(),
       });
+      await stopAllTimers(sessionId);
       const uid = humanSide?.playerId ?? null;
-      io.to(sessionId).emit("game", formatSession(finished, uid));
+      // Включаем pieceCoins в данные для отображения в модале результата
+      const pieceCoinsRaw = uid ? await redis.get(`session:${sessionId}:pieceCoins:${uid}`) : null;
+      const formattedFinished = { ...formatSession(finished, uid), pieceCoins: pieceCoinsRaw ?? '0' };
+      io.to(sessionId).emit("game", formattedFinished);
       io.to(sessionId).emit("game:over", { status: finished.status });
       return;
     }
@@ -543,6 +553,11 @@ const makeBotMove = async (socket: AuthSocket, io: Server, sessionId: string) =>
       where: { id: sessionId },
       data: { currentSideId: humanSide?.id },
     });
+
+    // Переключаем таймер обратно к человеку после хода бота
+    if (botSide && humanSide) {
+      await switchTimer(sessionId, botSide.id, humanSide.id);
+    }
 
     const updatedSession = await prisma.session.findUnique({
       where: { id: sessionId },
