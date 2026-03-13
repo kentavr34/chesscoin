@@ -1,0 +1,39 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy via SSH
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy on server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            set -e
+            cd /opt/chesscoin
+
+            echo "==> Pulling latest code..."
+            git fetch origin main
+            git reset --hard origin/main
+
+            echo "==> Building and restarting containers..."
+            docker compose up -d --build backend frontend bot
+
+            echo "==> Running DB migrations..."
+            docker exec chesscoin_backend npx prisma migrate deploy
+
+            echo "==> Health check..."
+            sleep 5
+            curl -sf http://localhost:3000/health || (echo "Health check failed!" && exit 1)
+
+            echo "==> Deploy complete!"
