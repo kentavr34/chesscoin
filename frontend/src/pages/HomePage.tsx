@@ -4,7 +4,7 @@ import { PageLayout } from '@/components/layout/PageLayout';
 import { Avatar } from '@/components/ui/Avatar';
 import { useUserStore } from '@/store/useUserStore';
 import { useGameStore } from '@/store/useGameStore';
-import { fmtBalance, fmtTime, leagueEmoji } from '@/utils/format';
+import { fmtBalance, fmtTime, fmtCountdown, leagueEmoji } from '@/utils/format';
 import { AttemptsModal } from '@/components/ui/AttemptsModal';
 import { getSocket } from '@/api/socket';
 import { JarvisModal, JARVIS_LEVELS } from '@/components/ui/JarvisModal';
@@ -139,11 +139,22 @@ export const HomePage: React.FC = () => {
               )}
             </div>
           </div>
-          {user.attempts < user.maxAttempts && attemptTimer > 0 && (
-            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: '#8B92A8' }}>
-              ⏱ {fmtTime(attemptTimer)} до +1
-            </div>
-          )}
+          {/* Таймер восстановления попыток — всегда виден */}
+          <div style={{ textAlign: 'right' }}>
+            {user.attempts >= user.maxAttempts ? (
+              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: '#4A5270' }}>
+                ⏱ 00:00
+              </div>
+            ) : (
+              <div
+                onClick={() => setShowAttempts(true)}
+                style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: '#F5C842', cursor: 'pointer' }}
+              >
+                ⏱ {attemptTimer > 0 ? fmtCountdown(attemptTimer) : '...'}
+                <div style={{ fontSize: 9, color: '#8B92A8', marginTop: 1 }}>до +1 ★</div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

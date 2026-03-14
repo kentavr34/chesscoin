@@ -4,9 +4,21 @@ import { PageLayout } from '@/components/layout/PageLayout';
 import { Avatar } from '@/components/ui/Avatar';
 import { useGameStore } from '@/store/useGameStore';
 import { useUserStore } from '@/store/useUserStore';
+import { useSettingsStore } from '@/store/useSettingsStore';
 import { getSocket } from '@/api/socket';
 import { fmtBalance, fmtTime } from '@/utils/format';
+import { translations } from '@/i18n/translations';
 import type { BattleLobbyItem } from '@/types';
+
+const showToast = (text: string, type: 'error' | 'info' = 'error') => {
+  window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text, type } }));
+};
+
+const getErrText = (code: string): string => {
+  const lang = useSettingsStore.getState().lang;
+  const errT = (translations[lang]?.errors ?? {}) as Record<string, string>;
+  return errT[code] ?? code;
+};
 
 // Донат зрителя в батл
 const donateToBattle = (sessionId: string, amount: string, cb: (ok: boolean) => void) => {
@@ -33,7 +45,7 @@ export const BattlesPage: React.FC = () => {
         upsertSession(res.session);
         navigate('/game/' + res.session.id);
       } else {
-        alert(res.error ?? 'Ошибка');
+        showToast(getErrText(res.error ?? ''), 'error');
       }
     });
   };
@@ -165,27 +177,40 @@ const BPlayer: React.FC<{ user?: any; name: string; right?: boolean }> = ({ user
   </div>
 );
 
+const MIN_BET = 10000;
+
 const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const navigate = useNavigate();
   const { upsertSession } = useGameStore();
-  const [bet, setBet] = useState(10000);
+  const { user } = useUserStore();
+
+  // Максимальная ставка = баланс пользователя (но не меньше MIN_BET и не больше 5M)
+  const userBalance = Number(BigInt(user?.balance ?? '0'));
+  const maxBet = Math.max(MIN_BET, Math.min(userBalance, 5_000_000));
+  const canCreate = userBalance >= MIN_BET;
+
+  const [bet, setBet] = useState(Math.min(MIN_BET, maxBet));
   const [duration, setDuration] = useState(300);
   const [color, setColor] = useState<'white' | 'black' | 'random'>('random');
   const [isPublic, setIsPublic] = useState(true);
   const [loading, setLoading] = useState(false);
 
   const DURATIONS = [
-    { label: '1 мин', value: 60 },
-    { label: '3 мин', value: 180 },
-    { label: '5 мин', value: 300 },
-    { label: '10 мин', value: 600 },
-    { label: '20 мин', value: 1200 },
-    { label: '30 мин', value: 1800 },
+    { label: '1 мин', value: 60, icon: '⚡' },
+    { label: '3 мин', value: 180, icon: '🔥' },
+    { label: '5 мин', value: 300, icon: '♟' },
+    { label: '10 мин', value: 600, icon: '🎯' },
+    { label: '20 мин', value: 1200, icon: '🏆' },
+    { label: '30 мин', value: 1800, icon: '👑' },
   ];
 
-  const { user } = useUserStore();
+  const QUICK_BETS = [10000, 50000, 100000, 500000];
 
   const handleCreate = () => {
+    if (!canCreate) {
+      showToast('Недостаточно монет. Нужно минимум ' + fmtBalance(MIN_BET) + ' ᚙ', 'error');
+      return;
+    }
     setLoading(true);
     const socket = getSocket();
     const selectedColor = color === 'random' ? (Math.random() > 0.5 ? 'white' : 'black') : color;
@@ -194,12 +219,11 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       duration,
       bet: String(bet),
       isPrivate: !isPublic,
-    }, (res) => {
+    }, (res: any) => {
       setLoading(false);
       if (res.ok && res.session) {
         upsertSession(res.session);
         onClose();
-        // Для приватного батла — предлагаем поделиться
         if (!isPublic && res.session.code) {
           const myRef = (user as any)?.referralCode ?? user?.telegramId;
           const shareText = `⚔️ Вызываю тебя на шахматный батл!\n💰 Ставка: ${fmtBalance(String(bet))} ᚙ\n\nПрими вызов:`;
@@ -212,51 +236,112 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         }
         navigate('/game/' + res.session.id);
       } else {
-        alert(res.error ?? 'Ошибка создания батла');
+        showToast(getErrText(res.error ?? ''), 'error');
       }
     });
   };
 
   return (
-    <div onClick={(e) => e.target === e.currentTarget && onClose()} style={overlayStyle}>
-      <div style={modalStyle}>
-        <div style={handleStyle} />
-        <div style={modalTitle}>⚔ Создать батл</div>
-        <div style={modalLbl}>Ставка</div>
-        <div style={{ fontFamily: 'Inter,sans-serif', fontSize: 28, fontWeight: 800, color: '#F5C842', textAlign: 'center', margin: '8px 0 12px' }}>
+    <div onClick={(e) => e.target === e.currentTarget && onClose()} style={bmOverlayStyle}>
+      <div style={bmSheetStyle}>
+        <div style={bmHandleStyle} />
+
+        {/* Заголовок */}
+        <div style={{ fontSize: 18, fontWeight: 800, color: '#F0F2F8', marginBottom: 20 }}>⚔ Создать батл</div>
+
+        {/* Ставка */}
+        <div style={bmSectionLbl}>Ставка</div>
+        <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 30, fontWeight: 800, color: '#F5C842', textAlign: 'center', marginBottom: 12 }}>
           {fmtBalance(bet)} ᚙ
         </div>
-        <input type="range" min={10000} max={5000000} step={10000} value={bet}
-          onChange={(e) => setBet(Number(e.target.value))}
-          style={{ width: '100%', marginBottom: 10, accentColor: '#F5C842' }}
-        />
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
-          {[10000, 50000, 100000, 500000].map((v) => (
-            <button key={v} onClick={() => setBet(v)} style={chip(bet === v)}>{fmtBalance(v)}</button>
+
+        {canCreate ? (
+          <>
+            <input
+              type="range" min={MIN_BET} max={maxBet} step={1000} value={bet}
+              onChange={(e) => setBet(Number(e.target.value))}
+              style={{ width: '100%', marginBottom: 12, accentColor: '#F5C842' }}
+            />
+            {/* Быстрый выбор — 4 кнопки в один ряд */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 6, marginBottom: 20 }}>
+              {QUICK_BETS.map((v) => {
+                const capped = Math.min(v, maxBet);
+                const active = bet === capped && bet === v;
+                const unavailable = v > maxBet;
+                return (
+                  <button
+                    key={v}
+                    onClick={() => setBet(capped)}
+                    style={{
+                      padding: '8px 4px', borderRadius: 10, fontSize: 11, fontWeight: 700,
+                      cursor: 'pointer', border: '1px solid',
+                      background: active ? 'rgba(245,200,66,0.12)' : '#1C2030',
+                      color: unavailable ? '#3A3F58' : active ? '#F5C842' : '#8B92A8',
+                      borderColor: active ? 'rgba(245,200,66,0.3)' : 'rgba(255,255,255,0.07)',
+                      fontFamily: 'inherit', textAlign: 'center' as const,
+                    }}
+                  >
+                    {fmtBalance(v)}
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        ) : (
+          <div style={{ textAlign: 'center', color: '#FF4D6A', fontSize: 13, padding: '8px 0 20px', marginBottom: 4 }}>
+            Нужно минимум {fmtBalance(MIN_BET)} ᚙ для батла
+          </div>
+        )}
+
+        {/* Цвет — 3 колонки как в GameSetupModal */}
+        <div style={bmSectionLbl}>Выбор цвета</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 20 }}>
+          {(['random', 'white', 'black'] as const).map((c) => (
+            <button key={c} onClick={() => setColor(c)} style={bmColorBtn(color === c)}>
+              <span style={{ fontSize: 22, display: 'block', marginBottom: 5 }}>
+                {c === 'random' ? '🎲' : c === 'white' ? '♔' : '♚'}
+              </span>
+              <span style={{ fontSize: 11, fontWeight: 700 }}>
+                {c === 'random' ? 'Случайно' : c === 'white' ? 'Белые' : 'Чёрные'}
+              </span>
+            </button>
           ))}
         </div>
-        <div style={modalLbl}>Контроль времени</div>
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
+
+        {/* Время — 3×2 сетка как в GameSetupModal */}
+        <div style={bmSectionLbl}>Контроль времени</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 20 }}>
           {DURATIONS.map((d) => (
-            <button key={d.value} onClick={() => setDuration(d.value)} style={chip(duration === d.value)}>
+            <button key={d.value} onClick={() => setDuration(d.value)} style={bmTimeBtn(duration === d.value)}>
+              <span style={{ fontSize: 16, display: 'block', marginBottom: 2 }}>{d.icon}</span>
               {d.label}
             </button>
           ))}
         </div>
-        <div style={modalLbl}>Цвет</div>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-          {(['white', 'black', 'random'] as const).map((c) => (
-            <button key={c} onClick={() => setColor(c)} style={{ ...typeBtn, ...(color === c ? typeBtnActive : {}) }}>
-              {c === 'white' ? '☀️ Белые' : c === 'black' ? '🌙 Чёрные' : '🎲 Случайно'}
-            </button>
-          ))}
+
+        {/* Публичный / Приватный */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 20 }}>
+          <button onClick={() => setIsPublic(true)} style={bmTypeBtn(isPublic)}>🌍 Публичный</button>
+          <button onClick={() => setIsPublic(false)} style={bmTypeBtn(!isPublic)}>🔒 Приватный</button>
         </div>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-          <button onClick={() => setIsPublic(true)} style={{ ...typeBtn, ...(isPublic ? typeBtnActive : {}) }}>🌍 Публичный</button>
-          <button onClick={() => setIsPublic(false)} style={{ ...typeBtn, ...(!isPublic ? typeBtnActive : {}) }}>🔒 Приватный</button>
-        </div>
-        <button onClick={handleCreate} disabled={loading} style={{ ...buyBtn, opacity: loading ? .6 : 1 }}>
-          {loading ? 'Создаём...' : 'Создать батл'}
+
+        {/* Кнопка создания */}
+        <button
+          onClick={handleCreate}
+          disabled={loading || !canCreate}
+          style={{
+            width: '100%', padding: '18px 14px',
+            background: canCreate ? '#F5C842' : '#2A2F48',
+            border: 'none', borderRadius: 14,
+            color: canCreate ? '#0B0D11' : '#4A5270',
+            fontSize: 16, fontWeight: 800,
+            cursor: canCreate && !loading ? 'pointer' : 'not-allowed',
+            fontFamily: 'inherit',
+            opacity: loading ? 0.7 : 1,
+            boxShadow: canCreate ? '0 4px 20px rgba(245,200,66,0.25)' : 'none',
+          }}
+        >
+          {loading ? 'Создаём...' : '⚔ Создать батл'}
         </button>
       </div>
     </div>
@@ -326,45 +411,51 @@ const tbaStyle: React.CSSProperties = {
   alignItems: 'center', justifyContent: 'center', fontSize: 16,
   cursor: 'pointer', color: '#8B92A8',
 };
-const overlayStyle: React.CSSProperties = {
-  position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)',
-  backdropFilter: 'blur(6px)', zIndex: 200, display: 'flex', alignItems: 'flex-end',
+// ── Стили модала создания батла (соответствует GameSetupModal) ──
+const bmOverlayStyle: React.CSSProperties = {
+  position: 'fixed', inset: 0, zIndex: 200,
+  background: 'rgba(0,0,0,0.70)',
+  backdropFilter: 'blur(8px)',
+  WebkitBackdropFilter: 'blur(8px)',
+  display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
 };
-const modalStyle: React.CSSProperties = {
-  width: '100%', background: '#161927', borderRadius: '24px 24px 0 0',
-  padding: 20, borderTop: '1px solid rgba(255,255,255,0.13)',
-  maxHeight: '85vh', overflowY: 'auto',
+const bmSheetStyle: React.CSSProperties = {
+  width: '100%', maxWidth: 480,
+  background: '#13161F',
+  border: '1px solid rgba(255,255,255,0.1)',
+  borderBottom: 'none',
+  borderRadius: '24px 24px 0 0',
+  padding: '20px 18px',
+  paddingBottom: 'max(20px, env(safe-area-inset-bottom, 20px))',
+  maxHeight: '90vh', overflowY: 'auto',
 };
-const handleStyle: React.CSSProperties = {
+const bmHandleStyle: React.CSSProperties = {
   width: 36, height: 4, background: '#2A2F48', borderRadius: 2, margin: '0 auto 16px',
 };
-const modalTitle: React.CSSProperties = {
-  fontFamily: 'Inter,sans-serif', fontSize: 17, fontWeight: 700, color: '#F0F2F8', marginBottom: 16,
+const bmSectionLbl: React.CSSProperties = {
+  fontSize: 10, fontWeight: 700, letterSpacing: '.09em',
+  textTransform: 'uppercase', color: '#4A5270', marginBottom: 10,
 };
-const modalLbl: React.CSSProperties = {
-  fontSize: 10, fontWeight: 700, color: '#4A5270', letterSpacing: '.08em',
-  textTransform: 'uppercase', marginBottom: 8,
-};
-const chip = (active: boolean): React.CSSProperties => ({
-  padding: '7px 14px', borderRadius: 10, fontSize: 12, fontWeight: 600,
-  cursor: 'pointer', border: '1px solid',
-  background: active ? 'rgba(245,200,66,0.12)' : '#232840',
+const bmColorBtn = (active: boolean): React.CSSProperties => ({
+  padding: '18px 8px', borderRadius: 14, cursor: 'pointer', minHeight: 76,
+  background: active ? 'rgba(245,200,66,0.1)' : '#1C2030',
+  border: `2px solid ${active ? '#F5C842' : 'rgba(255,255,255,0.07)'}`,
   color: active ? '#F5C842' : '#8B92A8',
-  borderColor: active ? 'rgba(245,200,66,0.3)' : 'rgba(255,255,255,0.07)',
-  fontFamily: 'inherit',
+  textAlign: 'center', transition: 'all .15s', fontFamily: 'inherit',
+  transform: active ? 'scale(1.04)' : 'scale(1)',
 });
-const typeBtn: React.CSSProperties = {
-  flex: 1, padding: 11, borderRadius: 12, background: '#232840',
-  color: '#8B92A8', fontSize: 12, fontWeight: 600, cursor: 'pointer',
-  border: '1px solid rgba(255,255,255,0.07)', transition: 'all .2s', textAlign: 'center',
-  fontFamily: 'inherit',
-};
-const typeBtnActive: React.CSSProperties = {
-  background: 'rgba(245,200,66,0.12)', color: '#F5C842',
-  borderColor: 'rgba(245,200,66,0.3)',
-};
-const buyBtn: React.CSSProperties = {
-  width: '100%', padding: '12px 18px', background: '#F5C842', color: '#0B0D11',
-  border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 600,
-  cursor: 'pointer', fontFamily: 'inherit',
-};
+const bmTimeBtn = (active: boolean): React.CSSProperties => ({
+  padding: '14px 8px', borderRadius: 12, cursor: 'pointer', minHeight: 68,
+  background: active ? 'rgba(123,97,255,0.15)' : '#1C2030',
+  border: `1px solid ${active ? 'rgba(123,97,255,0.4)' : 'rgba(255,255,255,0.07)'}`,
+  color: active ? '#9B85FF' : '#8B92A8',
+  fontSize: 13, fontWeight: 700, transition: 'all .15s', fontFamily: 'inherit',
+  textAlign: 'center' as const,
+});
+const bmTypeBtn = (active: boolean): React.CSSProperties => ({
+  padding: 12, borderRadius: 12, cursor: 'pointer',
+  background: active ? 'rgba(245,200,66,0.1)' : '#1C2030',
+  border: `1px solid ${active ? 'rgba(245,200,66,0.3)' : 'rgba(255,255,255,0.07)'}`,
+  color: active ? '#F5C842' : '#8B92A8',
+  fontSize: 12, fontWeight: 600, fontFamily: 'inherit', textAlign: 'center' as const,
+});

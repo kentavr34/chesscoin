@@ -406,9 +406,21 @@ export const setupSocketHandlers = (io: Server) => {
           }
 
           if (session.type === SessionType.BATTLE && session.bet) {
+            // Возвращаем ставку
             await updateBalance(userId, session.bet, TransactionType.BATTLE_BET, {
               reason: "battle_cancelled", sessionId: session.id,
             });
+            // Возвращаем попытку (батл отменён до старта — попытка не должна сгорать)
+            const cancellingUser = await prisma.user.findUnique({
+              where: { id: userId },
+              select: { attempts: true, maxAttempts: true },
+            });
+            if (cancellingUser && cancellingUser.attempts < cancellingUser.maxAttempts) {
+              await prisma.user.update({
+                where: { id: userId },
+                data: { attempts: { increment: 1 } },
+              });
+            }
           }
 
           await prisma.session.update({
