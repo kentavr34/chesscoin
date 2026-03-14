@@ -24,7 +24,7 @@ export const AttemptsModal: React.FC<Props> = ({ user, onClose }) => {
       setUser(updated);
       onClose();
     } catch (err: any) {
-      alert(err.message);
+      window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text: err.message ?? 'Ошибка', type: 'error' } }));
     } finally {
       setLoading(false);
     }
@@ -34,8 +34,11 @@ export const AttemptsModal: React.FC<Props> = ({ user, onClose }) => {
     <div onClick={(e) => e.target === e.currentTarget && onClose()} style={overlayStyle}>
       <div style={modalStyle}>
         <div style={handleStyle} />
-        <div style={{ fontFamily: 'Inter,sans-serif', fontSize: 17, fontWeight: 700, color: '#F0F2F8', marginBottom: 16 }}>
-          Купить попытки
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <div style={{ fontFamily: 'Inter,sans-serif', fontSize: 17, fontWeight: 700, color: '#F0F2F8' }}>
+            Купить попытки
+          </div>
+          <button onClick={onClose} style={closeBtnStyle}>✕</button>
         </div>
         <div style={{ display: 'flex', gap: 8, justifyContent: 'center', margin: '12px 0 8px' }}>
           {Array.from({ length: user.maxAttempts }).map((_, i) => (
@@ -98,4 +101,12 @@ const buyBtn: React.CSSProperties = {
   width: '100%', padding: '12px 18px', background: '#F5C842', color: '#0B0D11',
   border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 600,
   cursor: 'pointer', fontFamily: 'inherit',
+};
+const closeBtnStyle: React.CSSProperties = {
+  width: 32, height: 32, borderRadius: '50%',
+  background: 'rgba(255,255,255,0.07)',
+  border: '1px solid rgba(255,255,255,0.1)',
+  color: '#8B92A8', fontSize: 14, cursor: 'pointer',
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  fontFamily: 'inherit', flexShrink: 0,
 };

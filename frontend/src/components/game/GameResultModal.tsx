@@ -90,8 +90,6 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
         WebkitBackdropFilter: 'blur(8px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: 24,
-        transition: 'opacity .22s',
-        opacity: visible ? 1 : 0,
       }}
     >
       <div
@@ -104,7 +102,8 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
           padding: '28px 24px 22px',
           boxShadow: `0 0 60px ${cfg.glow}, 0 20px 60px rgba(0,0,0,0.5)`,
           transform: visible ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.96)',
-          transition: 'transform .25s cubic-bezier(.34,1.56,.64,1)',
+          opacity: visible ? 1 : 0,
+          transition: 'transform .25s cubic-bezier(.34,1.56,.64,1), opacity .22s',
           position: 'relative',
         }}
       >

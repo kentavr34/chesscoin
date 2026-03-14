@@ -49,7 +49,7 @@ export const TasksPage: React.FC = () => {
       const updated = await authApi.me();
       setUser(updated);
     } catch (e: any) {
-      alert(e.message);
+      window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text: e.message ?? 'Ошибка', type: 'error' } }));
     } finally {
       setClaiming(null);
     }

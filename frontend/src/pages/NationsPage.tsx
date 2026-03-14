@@ -6,6 +6,10 @@ import { nationsApi, clanBattlesApi } from '@/api';
 import { fmtBalance } from '@/utils/format';
 import type { Nation, ClanWar, ClanMemberData, ClanBattle } from '@/types';
 
+const showToast = (text: string, type: 'error' | 'info' = 'error') => {
+  window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text, type } }));
+};
+
 type Tab = 'clan' | 'wars' | 'battles' | 'members' | 'ranking';
 
 export const NationsPage: React.FC = () => {
@@ -454,7 +458,7 @@ const ContributeModal: React.FC<{ clanName: string; clanFlag: string; onClose: (
     try {
       await nationsApi.contribute(amount);
       onSuccess();
-    } catch (e: any) { alert(e.message); }
+    } catch (e: any) { showToast(e.message ?? 'Ошибка'); }
     finally { setLoading(false); }
   };
   return (
@@ -494,12 +498,12 @@ const WarChallengeModal: React.FC<{ nations: Nation[]; onClose: () => void; onSu
   const [loading, setLoading] = useState(false);
   const DURATIONS = [{ v: 3600, l: '1 час' }, { v: 86400, l: '1 день' }, { v: 604800, l: '1 неделя' }, { v: 2592000, l: '1 месяц' }];
   const handleSubmit = async () => {
-    if (!targetId) { alert('Выберите страну'); return; }
+    if (!targetId) { showToast('Выберите страну'); return; }
     setLoading(true);
     try {
       await nationsApi.challengeWar(targetId, duration);
       onSuccess();
-    } catch (e: any) { alert(e.message); }
+    } catch (e: any) { showToast(e.message ?? 'Ошибка'); }
     finally { setLoading(false); }
   };
   return (
@@ -539,9 +543,9 @@ const JoinClanModal: React.FC<{ clanId: string; clan?: Nation; onClose: () => vo
     setLoading(true);
     try {
       const res = await nationsApi.join(clanId, Number(contribution));
-      if (res.pending) alert('Ваша заявка отправлена на рассмотрение лидера клана');
+      if (res.pending) showToast('Ваша заявка отправлена на рассмотрение лидера клана', 'info');
       onSuccess();
-    } catch (e: any) { alert(e.message); }
+    } catch (e: any) { showToast(e.message ?? 'Ошибка'); }
     finally { setLoading(false); }
   };
   return (
@@ -592,12 +596,12 @@ const BattleChallengeModal: React.FC<{
   ];
 
   const handleSubmit = async () => {
-    if (!targetId) { alert('Выберите противника'); return; }
+    if (!targetId) { showToast('Выберите противника'); return; }
     setLoading(true);
     try {
       await clanBattlesApi.challenge(targetId, duration, bet);
       onSuccess();
-    } catch (e: any) { alert(e.message); }
+    } catch (e: any) { showToast(e.message ?? 'Ошибка'); }
     finally { setLoading(false); }
   };
 
@@ -668,7 +672,7 @@ const JoinBattleModal: React.FC<{
     try {
       await clanBattlesApi.join(battle.id, bet);
       onSuccess();
-    } catch (e: any) { alert(e.message); }
+    } catch (e: any) { showToast(e.message ?? 'Ошибка'); }
     finally { setLoading(false); }
   };
 

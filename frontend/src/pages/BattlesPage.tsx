@@ -108,8 +108,8 @@ export const BattlesPage: React.FC = () => {
                   const amt = prompt('Сумма доната (ᚙ):');
                   if (amt && Number(amt) > 0) {
                     donateToBattle(s.id, amt, (ok) => {
-                      if (ok) alert('Донат отправлен! Удачи в бою!');
-                      else alert('Ошибка доната');
+                      if (ok) showToast('Донат отправлен! Удачи в бою!', 'info');
+                      else showToast('Ошибка доната', 'error');
                     });
                   }
                 }}

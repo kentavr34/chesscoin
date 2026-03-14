@@ -5,6 +5,10 @@ import { tournamentsApi } from '@/api';
 import { fmtBalance } from '@/utils/format';
 import type { TournamentFull } from '@/types';
 
+const showToast = (text: string, type: 'error' | 'info' = 'error') => {
+  window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text, type } }));
+};
+
 const TYPE_ICONS: Record<string, string> = {
   WORLD: '🌍', COUNTRY: '🏴', WEEKLY: '📅', MONTHLY: '🗓️', SEASONAL: '🌸', YEARLY: '🏆',
 };
@@ -40,7 +44,7 @@ export const TournamentsPage: React.FC = () => {
       await tournamentsApi.join(id);
       await load();
     } catch (e: any) {
-      alert(e.message ?? 'Ошибка вступления');
+      showToast(e.message ?? 'Ошибка вступления');
     } finally {
       setJoiningId(null);
     }
@@ -52,7 +56,7 @@ export const TournamentsPage: React.FC = () => {
       await tournamentsApi.leave(id);
       await load();
     } catch (e: any) {
-      alert(e.message);
+      showToast(e.message ?? 'Ошибка');
     }
   };
 
@@ -232,7 +236,7 @@ const DonateModal: React.FC<{ tournamentId: string; onClose: () => void; onSucce
   const handleSubmit = async () => {
     setLoading(true);
     try { await tournamentsApi.donate(tournamentId, amount); onSuccess(); }
-    catch (e: any) { alert(e.message); }
+    catch (e: any) { showToast(e.message ?? 'Ошибка'); }
     finally { setLoading(false); }
   };
   return (

@@ -95,7 +95,7 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 22 }}>
           <button onClick={onBack} style={backBtnStyle}>←</button>
-          <div>
+          <div style={{ flex: 1 }}>
             <div style={{ fontSize: 18, fontWeight: 800, color: '#F0F2F8' }}>
               🤖 {selectedLevel.name}
             </div>
@@ -103,6 +103,7 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
               Уровень {selectedLevel.level} · +{selectedLevel.reward.toLocaleString()} ᚙ за победу
             </div>
           </div>
+          <button onClick={onBack} style={backBtnStyle}>✕</button>
         </div>
 
         {/* Color selection */}
