@@ -59,18 +59,24 @@ def welcome_text(name: str, is_referred: bool = False) -> str:
 @router.message(CommandStart(deep_link=True))
 async def cmd_start_with_ref(message: Message, command: CommandObject):
     referrer_id = None
-    if command.args and command.args.startswith("ref_"):
-        referrer_id = command.args[4:]
+    battle_code = None
+
+    args = command.args or ""
+
+    # Format: battle_CODE_ref_TELEGRAMID
+    if args.startswith("battle_"):
+        parts = args.split("_ref_", 1)
+        battle_code = parts[0][len("battle_"):]  # strip "battle_" prefix
+        if len(parts) == 2:
+            referrer_id = parts[1]
+    # Format: ref_TELEGRAMID
+    elif args.startswith("ref_"):
+        referrer_id = args[4:]
 
     user = message.from_user
     name = user.first_name or "Игрок"
 
-    await message.answer(
-        welcome_text(name, is_referred=bool(referrer_id)),
-        reply_markup=play_keyboard(),
-    )
-
-    # Уведомляем бэкенд о реферере
+    # Register referral with backend
     if referrer_id:
         try:
             async with BackendClient() as client:
@@ -80,6 +86,41 @@ async def cmd_start_with_ref(message: Message, command: CommandObject):
                 )
         except Exception as e:
             logger.warning(f"register_referral_start failed: {e}")
+
+    # If came via battle invite, show battle-specific welcome
+    if battle_code:
+        battle_url = f"{FRONTEND_URL}/battles?join={battle_code}"
+        await message.answer(
+            f"♟ <b>Добро пожаловать в ChessCoin, {name}!</b>\n\n"
+            f"Тебя пригласили на <b>приватный батл</b>!\n\n"
+            f"Ты получил приветственный бонус:\n"
+            f"<b>┌─────────────────────────┐</b>\n"
+            f"<b>│  🎁  +5 000 ᚙ  на старт  │</b>\n"
+            f"<b>└─────────────────────────┘</b>\n\n"
+            f"{'🎁 Реферальный бонус +3 000 ᚙ начислится после первой партии!'+chr(10)+chr(10) if referrer_id else ''}"
+            f"<i>Нажми кнопку ниже чтобы присоединиться к батлу:</i>",
+            reply_markup=InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [
+                        InlineKeyboardButton(
+                            text="⚔️ Войти в батл",
+                            web_app=WebAppInfo(url=battle_url),
+                        )
+                    ],
+                    [
+                        InlineKeyboardButton(
+                            text="♟ Играть в ChessCoin",
+                            web_app=WebAppInfo(url=FRONTEND_URL),
+                        )
+                    ],
+                ]
+            ),
+        )
+    else:
+        await message.answer(
+            welcome_text(name, is_referred=bool(referrer_id)),
+            reply_markup=play_keyboard(),
+        )
 
 
 # ─────────────────────────────────────────

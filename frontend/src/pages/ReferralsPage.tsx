@@ -6,6 +6,19 @@ import { profileApi } from '@/api';
 import { fmtBalance, fmtDate } from '@/utils/format';
 import { toast } from '@/components/ui/Toast';
 
+const RANK_THRESHOLDS = [
+  { rank: 'PRESIDENT', label: 'Президент', emoji: '🏛️', minReferrals: 1_000_000 },
+  { rank: 'MARSHAL',   label: 'Маршал',    emoji: '⭐⭐⭐', minReferrals: 5_000 },
+  { rank: 'GENERAL',   label: 'Генерал',   emoji: '⭐⭐',   minReferrals: 1_000 },
+  { rank: 'COLONEL',   label: 'Полковник', emoji: '⭐',     minReferrals: 300 },
+  { rank: 'MAJOR',     label: 'Майор',     emoji: '🔰',    minReferrals: 150 },
+  { rank: 'CAPTAIN',   label: 'Капитан',   emoji: '🎖️',    minReferrals: 75 },
+  { rank: 'LIEUTENANT',label: 'Лейтенант', emoji: '🏅',    minReferrals: 30 },
+  { rank: 'SERGEANT',  label: 'Сержант',   emoji: '🎯',    minReferrals: 15 },
+  { rank: 'CORPORAL',  label: 'Ефрейтор',  emoji: '🔹',    minReferrals: 5 },
+  { rank: 'PRIVATE',   label: 'Рядовой',   emoji: '🪖',    minReferrals: 0 },
+];
+
 interface Referral {
   id: string;
   firstName: string;
@@ -96,6 +109,61 @@ export const ReferralsPage: React.FC = () => {
           ↗ Поделиться в Telegram
         </button>
       </div>
+
+      {/* Military Rank Progress */}
+      {(() => {
+        const referralCount = user?.referralCount ?? (data?.total ?? 0);
+        const currentRankIdx = RANK_THRESHOLDS.findIndex(r => referralCount >= r.minReferrals);
+        const currentRank = RANK_THRESHOLDS[Math.max(0, currentRankIdx)];
+        const nextRank = currentRankIdx > 0 ? RANK_THRESHOLDS[currentRankIdx - 1] : null;
+        const progress = nextRank
+          ? Math.min(100, ((referralCount - currentRank.minReferrals) / (nextRank.minReferrals - currentRank.minReferrals)) * 100)
+          : 100;
+
+        return (
+          <div style={{ margin: '12px 18px 0', padding: '16px', background: '#13161E', border: '1px solid rgba(123,97,255,0.25)', borderRadius: 18 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.09em', textTransform: 'uppercase', color: '#4A5270', marginBottom: 10 }}>Военное звание</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+              <div style={{ fontSize: 28 }}>{currentRank.emoji}</div>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: '#F5C842' }}>{currentRank.label}</div>
+                <div style={{ fontSize: 11, color: '#8B92A8', marginTop: 2 }}>{referralCount} рефералов</div>
+              </div>
+              {nextRank && (
+                <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
+                  <div style={{ fontSize: 9, color: '#4A5270', marginBottom: 2 }}>Следующий ранг</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#7B61FF' }}>{nextRank.emoji} {nextRank.label}</div>
+                  <div style={{ fontSize: 10, color: '#4A5270' }}>{nextRank.minReferrals.toLocaleString()} реф.</div>
+                </div>
+              )}
+            </div>
+            {nextRank && (
+              <>
+                <div style={{ height: 6, background: 'rgba(255,255,255,0.07)', borderRadius: 999, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${progress}%`, background: 'linear-gradient(90deg,#7B61FF,#F5C842)', borderRadius: 999, transition: 'width .5s' }} />
+                </div>
+                <div style={{ fontSize: 10, color: '#4A5270', marginTop: 6, textAlign: 'right' }}>
+                  {nextRank.minReferrals - referralCount} до следующего звания
+                </div>
+              </>
+            )}
+            {/* Rank ladder */}
+            <div style={{ marginTop: 12, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {RANK_THRESHOLDS.slice().reverse().map(r => (
+                <span key={r.rank} style={{
+                  fontSize: 10, padding: '3px 8px', borderRadius: 8,
+                  background: referralCount >= r.minReferrals ? 'rgba(245,200,66,0.12)' : 'rgba(255,255,255,0.04)',
+                  color: referralCount >= r.minReferrals ? '#F5C842' : '#4A5270',
+                  border: `1px solid ${referralCount >= r.minReferrals ? 'rgba(245,200,66,0.3)' : 'rgba(255,255,255,0.07)'}`,
+                  fontWeight: 600,
+                }}>
+                  {r.emoji} {r.label}
+                </span>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Условия программы */}
       <div style={secLbl}>Как это работает</div>

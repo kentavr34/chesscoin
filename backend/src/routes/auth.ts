@@ -4,6 +4,7 @@ import { loginWithTelegram, refreshAccessToken } from "@/services/auth";
 import { authMiddleware, AuthRequest } from "@/middleware/auth";
 import { checkAndRestoreUserAttempts } from "@/services/attempts";
 import { prisma } from "@/lib/prisma";
+import { getMilitaryRank } from "@/utils/militaryRank";
 
 const router = Router();
 
@@ -121,6 +122,15 @@ const formatUser = (user: any) => ({
   jarvisBadges: user.jarvisBadges ?? [],
   jarvisBadgeDates: user.jarvisBadgeDates ?? {},
   loginStreak: user.loginStreak ?? 0,
+  referralCode: user.referralCode,
+  nationId: user.nationId,
+  // Военное звание
+  referralCount: user.referralCount ?? 0,
+  militaryRank: (() => {
+    const count = user.referralCount ?? 0;
+    const r = getMilitaryRank(count);
+    return { rank: r.rank, label: r.label, emoji: r.emoji };
+  })(),
   createdAt: user.createdAt,
 });
 

@@ -17,6 +17,7 @@ import { startAttemptsCron } from "@/services/attempts";
 import { startCleanupCron } from "@/services/cleanup";
 import { startTimerWatcher } from "@/services/game/timer";
 import { setupSocketHandlers } from "@/services/game/socket";
+import { startGameCrons } from "@/services/crons";
 
 // Routes
 import authRoutes from "@/routes/auth";
@@ -69,7 +70,7 @@ app.use(`${API}/screenshotter`, screenshotterRouter);
 app.get("/health", async (_req, res) => {
   const cfg = await prisma.platformConfig.findUnique({ where: { id: "singleton" } });
   res.json({
-    status: "ok", version: "5.8.1",
+    status: "ok", version: "6.0.0",
     phase: cfg?.currentPhase ?? 1,
     totalEmitted: cfg?.totalEmitted?.toString() ?? "0",
     emissionCap: cfg?.emissionCap?.toString() ?? "0",
@@ -103,6 +104,7 @@ const start = async () => {
     startTimerWatcher();
     startAttemptsCron();
     startCleanupCron();
+    startGameCrons();
 
     httpServer.listen(config.server.port, () => {
       console.log(`[Server] ✅ Port ${config.server.port} · ${config.server.nodeEnv}`);

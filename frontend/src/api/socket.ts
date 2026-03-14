@@ -29,6 +29,7 @@ interface ClientToServer {
   'unspectate': (data: { sessionId: string }) => void;
   'battles:subscribe': () => void;
   'battles:unsubscribe': () => void;
+  'battle:donate': (data: { sessionId: string; amount: string }, cb: SocketCallback<{ donationPool: string }>) => void;
   'ping': () => void;
 }
 

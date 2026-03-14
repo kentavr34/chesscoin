@@ -1,7 +1,7 @@
 import { api } from './client';
 import type {
   User, GameSession, BattleLobbyItem, LeaderboardUser,
-  Nation, Transaction, Task, ShopItem,
+  Nation, Transaction, Task, ShopItem, ClanWar, ClanMemberData, TournamentFull,
 } from '@/types';
 
 // ── AUTH ──────────────────────────────────────────────
@@ -71,14 +71,24 @@ export const leaderboardApi = {
 
 // ── NATIONS ───────────────────────────────────────────
 export const nationsApi = {
-  list: () =>
-    api.get<{ clans: Nation[] }>('/nations/clans'),
-  getWars: () =>
-    api.get<{ wars: any[] }>('/nations/wars'),
-  join: (clanId: string) =>
-    api.post<{ success: boolean }>('/nations/join', { clanId }),
-  leave: () =>
-    api.post<{ success: boolean }>('/nations/leave'),
+  list: () => api.get<{ clans: Nation[] }>('/nations/clans'),
+  getMy: () => api.get<{ clan: any; membership: any; activeWar: ClanWar | null }>('/nations/my'),
+  getMembers: () => api.get<{ members: ClanMemberData[] }>('/nations/members'),
+  getWars: () => api.get<{ wars: ClanWar[] }>('/nations/wars'),
+  getChallenges: () => api.get<{ challenges: any[] }>('/nations/war-challenges'),
+  join: (clanId: string, contribution?: number) =>
+    api.post<{ success: boolean; pending: boolean }>('/nations/join', { clanId, contribution }),
+  leave: () => api.post<{ success: boolean }>('/nations/leave'),
+  contribute: (amount: string) =>
+    api.post<{ success: boolean }>('/nations/contribute', { amount }),
+  approveMember: (memberId: string, approve: boolean) =>
+    api.post<{ success: boolean }>(`/nations/members/${memberId}/approve`, { approve }),
+  kickMember: (targetUserId: string) =>
+    api.post<{ success: boolean }>(`/nations/members/${targetUserId}/kick`),
+  challengeWar: (defenderClanId: string, duration: number) =>
+    api.post<{ success: boolean; war: any }>('/nations/war/challenge', { defenderClanId, duration }),
+  acceptWar: (warId: string) =>
+    api.post<{ success: boolean }>(`/nations/war/${warId}/accept`),
 };
 
 // ── TASKS ─────────────────────────────────────────────
@@ -106,12 +116,12 @@ export const shopApi = {
 
 // ── TOURNAMENTS ───────────────────────────────────────
 export const tournamentsApi = {
-  list: () =>
-    api.get<{ tournaments: TournamentItem[] }>('/tournaments'),
-  get: (id: string) =>
-    api.get<{ tournament: any }>(`/tournaments/${id}`),
-  join: (id: string) =>
-    api.post<{ ok: boolean }>(`/tournaments/${id}/join`),
+  list: () => api.get<{ tournaments: TournamentFull[] }>('/tournaments'),
+  get: (id: string) => api.get<{ tournament: any }>(`/tournaments/${id}`),
+  join: (id: string) => api.post<{ ok: boolean }>(`/tournaments/${id}/join`),
+  leave: (id: string) => api.post<{ ok: boolean }>(`/tournaments/${id}/leave`),
+  donate: (id: string, amount: string) =>
+    api.post<{ ok: boolean }>(`/tournaments/${id}/donate`, { amount }),
 };
 
 export interface TournamentItem {

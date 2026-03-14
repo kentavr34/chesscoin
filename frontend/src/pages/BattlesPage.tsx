@@ -8,6 +8,12 @@ import { getSocket } from '@/api/socket';
 import { fmtBalance, fmtTime } from '@/utils/format';
 import type { BattleLobbyItem } from '@/types';
 
+// Донат зрителя в батл
+const donateToBattle = (sessionId: string, amount: string, cb: (ok: boolean) => void) => {
+  const socket = getSocket();
+  socket.emit('battle:donate', { sessionId, amount }, (res: any) => cb(res?.ok));
+};
+
 type Tab = 'active' | 'waiting';
 
 export const BattlesPage: React.FC = () => {
@@ -84,7 +90,20 @@ export const BattlesPage: React.FC = () => {
                   <span style={{ fontSize: 11, color: '#8B92A8' }}>
                     {s.isMyTurn ? '▶ Ваш ход' : '⏳ Ход соперника'}
                   </span>
-                  <button style={watchBtn}>Перейти →</button>
+                  <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const amt = prompt('Сумма доната (ᚙ):');
+                  if (amt && Number(amt) > 0) {
+                    donateToBattle(s.id, amt, (ok) => {
+                      if (ok) alert('Донат отправлен! Удачи в бою!');
+                      else alert('Ошибка доната');
+                    });
+                  }
+                }}
+                style={{ ...watchBtn, color: '#9B85FF', borderColor: 'rgba(123,97,255,0.3)', background: 'rgba(123,97,255,0.08)' }}
+              >💸 Донат</button>
+              <button style={watchBtn}>→</button>
                 </div>
               </div>
             );
@@ -164,6 +183,8 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     { label: '30 мин', value: 1800 },
   ];
 
+  const { user } = useUserStore();
+
   const handleCreate = () => {
     setLoading(true);
     const socket = getSocket();
@@ -178,6 +199,17 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       if (res.ok && res.session) {
         upsertSession(res.session);
         onClose();
+        // Для приватного батла — предлагаем поделиться
+        if (!isPublic && res.session.code) {
+          const myRef = (user as any)?.referralCode ?? user?.telegramId;
+          const shareText = `⚔️ Вызываю тебя на шахматный батл!\n💰 Ставка: ${fmtBalance(String(bet))} ᚙ\n\nПрими вызов:`;
+          const botUrl = `https://t.me/chessgamecoin_bot?start=battle_${res.session.code}_ref_${myRef}`;
+          try {
+            (window as any).Telegram?.WebApp?.openTelegramLink?.(
+              `https://t.me/share/url?url=${encodeURIComponent(botUrl)}&text=${encodeURIComponent(shareText)}`
+            );
+          } catch {}
+        }
         navigate('/game/' + res.session.id);
       } else {
         alert(res.error ?? 'Ошибка создания батла');

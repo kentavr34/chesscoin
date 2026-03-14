@@ -96,6 +96,10 @@ model User {
   tonWalletAddress  String?  // подключается в v6
   tonConnectedAt    DateTime?
 
+  // Военные звания (по числу рефералов)
+  militaryRank      String   @default("PRIVATE")
+  referralCount     Int      @default(0)
+
   // JARVIS прогрессия
   jarvisLevel      Int    @default(1)   // текущий разблокированный уровень (1-10)
   jarvisBadges     String[] @default([])  // список пройденных уровней ["Beginner","Player",...]
@@ -142,6 +146,10 @@ model Session {
 
   bet      BigInt? // ставка в батле
   botLevel Int?    // уровень бота 1-20
+
+  // Stage 2: донаты зрителей и реферальная ссылка
+  donationPool      BigInt  @default(0)
+  referralCreatorId String?
 
   sides SessionSide[] @relation("SessionSides")
 
@@ -314,6 +322,14 @@ model Clan {
   wins        Int     @default(0)
   losses      Int     @default(0)
 
+  // Stage 3
+  leaderId          String?
+  maxMembers        Int      @default(100)
+  totalWarWins      Int      @default(0)
+  totalWarLosses    Int      @default(0)
+  achievements      Json     @default("[]")
+  lastPostedBattleId String?
+
   members     ClanMember[] @relation("ClanMembers")
 
   warsAsAttacker ClanWar[] @relation("AttackerClan")
@@ -337,6 +353,12 @@ model ClanMember {
   role      ClanRole  @default(SOLDIER)
   contribution BigInt @default(0) // сколько внёс в казну
 
+  // Stage 3
+  warWins             Int      @default(0)
+  warLosses           Int      @default(0)
+  isPending           Boolean  @default(false)
+  pendingContribution BigInt   @default(0)
+
   joinedAt DateTime @default(now())
 
   @@index([clanId])
@@ -357,7 +379,17 @@ model ClanWar {
   defenderWins Int          @default(0)
   totalRounds  Int          @default(5)
 
-  betPerPlayer BigInt // ставка каждого участника
+  betPerPlayer BigInt @default(0) // ставка каждого участника
+
+  // Stage 3 extensions
+  isPending        Boolean  @default(false)    // ожидает принятия лидером
+  duration         Int      @default(86400)    // в секундах
+  endAt            DateTime?
+  prize            BigInt   @default(0)
+  attackerTreasury BigInt   @default(0)
+  defenderTreasury BigInt   @default(0)
+  isPublished      Boolean  @default(false)
+  winnerClanId     String?
 
   startedAt  DateTime  @default(now())
   finishedAt DateTime?
@@ -372,12 +404,20 @@ model Tournament {
   id          String            @id @default(cuid())
   name        String
   description String?
-  entryFee    BigInt            @default(0)
-  maxPlayers  Int               @default(8)
+  entryFee    BigInt            @default(10000)
+  maxPlayers  Int               @default(256)
   status      TournamentStatus  @default(REGISTRATION)
   startAt     DateTime?
+  endAt       DateTime?
   prizePool   BigInt            @default(0)
+  donationPool BigInt           @default(0)
   createdBy   String?           // userId создателя
+  // Stage 4: тип и период
+  type         String           @default("WORLD")   // WORLD | COUNTRY | WEEKLY | MONTHLY | SEASONAL | YEARLY
+  period       String?                              // "2026-W12", "2026-03", "2026-Q1", "2026"
+  winnerId     String?
+  isPublished  Boolean          @default(false)
+  lastPublishedAt DateTime?
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
 
@@ -395,6 +435,14 @@ model TournamentPlayer {
   seed         Int?
   eliminated   Boolean    @default(false)
   joinedAt     DateTime   @default(now())
+  // Stage 4 stats
+  wins         Int        @default(0)
+  losses       Int        @default(0)
+  draws        Int        @default(0)
+  points       Float      @default(0)
+  skippedMatches Int      @default(0)
+  isActive     Boolean    @default(true)
+  contribution BigInt     @default(0)
 
   tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   user       User       @relation(fields: [userId], references: [id])
@@ -449,6 +497,26 @@ model WithdrawalRequest {
   @@index([userId])
   @@index([status])
   @@map("withdrawal_requests")
+}
+
+// ─────────────────────────────────────────
+// TON TRANSACTIONS (v6)
+// ─────────────────────────────────────────
+model TonTransaction {
+  id           String   @id @default(uuid())
+  userId       String
+  type         String   // DEPOSIT | WITHDRAWAL | PURCHASE
+  amountTon    Float
+  amountCoins  BigInt   @default(0)
+  txHash       String?
+  status       String   @default("PENDING") // PENDING | COMPLETED | FAILED
+  itemId       String?
+  createdAt    DateTime @default(now())
+  processedAt  DateTime?
+
+  @@index([userId])
+  @@index([status])
+  @@map("ton_transactions")
 }
 
 // ─────────────────────────────────────────
@@ -540,6 +608,11 @@ enum TransactionType {
   CLAN_CONTRIBUTION  // взнос в казну клана
   TOURNAMENT_ENTRY   // взнос в турнир
   WITHDRAWAL         // вывод (v6)
+  BATTLE_DONATION    // донат зрителя в батл
+  CLAN_WAR_WIN       // выигрыш в клановой войне
+  TOURNAMENT_WIN     // выигрыш в турнире
+  TON_DEPOSIT        // пополнение через TON
+  WALLET_UNLOCK      // разовый платёж за подключение кошелька
 }
 
 enum TaskType {

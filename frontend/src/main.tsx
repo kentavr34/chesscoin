@@ -11,6 +11,10 @@ style.textContent = `
   body { background: #0B0D11; font-family: 'Inter', sans-serif; font-size: 15px; color: #F0F2F8; }
   ::-webkit-scrollbar { display: none; }
   @keyframes ring-pulse { 0%,100%{opacity:.4;transform:scale(1)} 50%{opacity:.7;transform:scale(1.03)} }
+  @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+  @keyframes pulse-glow { 0%,100%{box-shadow:0 0 20px rgba(245,200,66,0.3)} 50%{box-shadow:0 0 40px rgba(245,200,66,0.6)} }
+  @keyframes slide-up { from{transform:translateY(30px);opacity:0} to{transform:translateY(0);opacity:1} }
+  @keyframes fade-in { from{opacity:0} to{opacity:1} }
   button { font-family: inherit; }
   input { font-family: inherit; }
 `;

@@ -488,6 +488,75 @@ export const setupSocketHandlers = (io: Server) => {
       socket.leave("lobby");
     });
 
+    // ── Донат зрителя в батл ─────────────────────────────
+    socket.on(
+      "battle:donate",
+      async (data: { sessionId: string; amount: string }, callback?: Function) => {
+        try {
+          const session = await prisma.session.findUnique({
+            where: { id: data.sessionId },
+            select: { id: true, type: true, status: true, donationPool: true },
+          });
+          if (!session || session.type !== SessionType.BATTLE || session.status !== SessionStatus.IN_PROGRESS) {
+            throw new Error("BATTLE_NOT_FOUND");
+          }
+
+          const amountBig = BigInt(data.amount);
+          if (amountBig <= 0n) throw new Error("INVALID_AMOUNT");
+
+          const user = await prisma.user.findUnique({ where: { id: userId }, select: { balance: true } });
+          if (!user || user.balance < amountBig) throw new Error("INSUFFICIENT_BALANCE");
+
+          // Снимаем с баланса донора
+          await updateBalance(userId, -amountBig, TransactionType.BATTLE_DONATION, {
+            sessionId: data.sessionId, reason: "spectator_donation",
+          });
+
+          // Добавляем в пул доната сессии
+          await prisma.session.update({
+            where: { id: data.sessionId },
+            data: { donationPool: { increment: amountBig } },
+          });
+
+          // Уведомляем всех в комнате
+          io.to(data.sessionId).emit("battle:donated", {
+            donorId: userId,
+            amount: amountBig.toString(),
+            totalPool: (session.donationPool + amountBig).toString(),
+          });
+          if (callback) callback({ ok: true });
+        } catch (err: any) {
+          if (callback) callback({ ok: false, error: err.message });
+        }
+      }
+    );
+
+    // ── Вызов игрока из клана ─────────────────────────────
+    socket.on(
+      "clan:challenge_player",
+      async (data: { targetUserId: string; bet: string }, callback?: Function) => {
+        try {
+          const bet = BigInt(data.bet);
+          if (bet <= 0n) throw new Error("INVALID_BET");
+          // Создаём приватный батл и отправляем ссылку целевому игроку
+          const session = await createBattleSession(userId, "white", 600, bet, true);
+          socket.join(session.id);
+          const formatted = formatSession(session, userId);
+          if (callback) callback({ ok: true, session: formatted });
+
+          // Уведомляем целевого игрока
+          io.emit(`user:${data.targetUserId}`, {
+            type: "battle:challenge",
+            from: userId,
+            sessionCode: session.code,
+            bet: bet.toString(),
+          });
+        } catch (err: any) {
+          if (callback) callback({ ok: false, error: err.message });
+        }
+      }
+    );
+
     // ── Ping ─────────────────────────────────────────────
     socket.on("ping", () => socket.emit("pong"));
   });

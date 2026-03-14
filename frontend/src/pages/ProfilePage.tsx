@@ -173,7 +173,11 @@ export const ProfilePage: React.FC = () => {
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8, justifyContent: 'center' }}>
           <span style={tagGold}>{leagueEmoji[user.league]} #1</span>
           <span style={tagVi}>ELO {user.elo}</span>
-          <span style={tagGr}>🇷🇺 {user.nationRank ?? 'Участник'}</span>
+          {(user as any).militaryRank && (
+            <span style={{ ...tagGr, background: 'rgba(255,159,67,0.1)', color: '#FF9F43', borderColor: 'rgba(255,159,67,0.2)' }}>
+              {(user as any).militaryRank.emoji} {(user as any).militaryRank.label}
+            </span>
+          )}
           <span style={tagRobot}>🤖 {JARVIS_LEVELS[Math.max(0, ((user as any).jarvisLevel ?? 1) - 1)].name}</span>
         </div>
       </div>

@@ -43,6 +43,8 @@ export interface User extends UserPublic {
   draws?: number;
   winStreak?: number;
   loginStreak?: number;
+  referralCount?: number;
+  militaryRank?: MilitaryRankInfo;
 }
 
 export interface ActiveSessionRef {
@@ -171,6 +173,74 @@ export interface Task {
   metadata?: Record<string, unknown>;
   progress?: number;
   maxProgress?: number;
+}
+
+// Военное звание
+export type MilitaryRankType = 'PRIVATE' | 'CORPORAL' | 'SERGEANT' | 'LIEUTENANT' | 'CAPTAIN' | 'MAJOR' | 'COLONEL' | 'GENERAL' | 'MARSHAL' | 'PRESIDENT';
+export interface MilitaryRankInfo { rank: MilitaryRankType; label: string; emoji: string; }
+
+// Клановые войны
+export interface ClanWar {
+  id: string;
+  attackerClanId: string;
+  defenderClanId: string;
+  attackerClan: { name: string; flag: string; countryCode: string; elo?: number; treasury?: string; };
+  defenderClan: { name: string; flag: string; countryCode: string; elo?: number; treasury?: string; };
+  status: 'IN_PROGRESS' | 'FINISHED';
+  attackerWins: number;
+  defenderWins: number;
+  prize: string;
+  duration: number;
+  endAt?: string | null;
+  isPending: boolean;
+  isPublished: boolean;
+  winnerClanId?: string | null;
+  startedAt: string;
+  finishedAt?: string | null;
+}
+
+export interface ClanMemberData {
+  id: string;
+  userId: string;
+  clanId: string;
+  role: 'SOLDIER' | 'OFFICER' | 'COMMANDER';
+  contribution: string;
+  warWins: number;
+  warLosses: number;
+  isPending: boolean;
+  pendingContribution?: string;
+  joinedAt: string;
+  user?: {
+    id: string;
+    firstName: string;
+    username?: string | null;
+    avatar?: string | null;
+    avatarGradient?: string | null;
+    elo: number;
+    league: League;
+    referralCount?: number;
+  };
+}
+
+// Расширенный тип турнира
+export interface TournamentFull {
+  id: string;
+  name: string;
+  type: string;
+  typeLabel: string;
+  description?: string | null;
+  entryFee: string;
+  maxPlayers: number;
+  currentPlayers: number;
+  status: 'REGISTRATION' | 'IN_PROGRESS' | 'FINISHED';
+  startAt?: string | null;
+  endAt?: string | null;
+  period?: string | null;
+  prizePool: string;
+  donationPool: string;
+  totalPool: string;
+  isJoined: boolean;
+  myStats?: { wins: number; losses: number; draws: number; points: number } | null;
 }
 
 // Реферальная программа

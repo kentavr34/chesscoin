@@ -1,175 +1,269 @@
 import React, { useEffect, useState } from 'react';
 import { PageLayout } from '@/components/layout/PageLayout';
-import { useUserStore } from '@/store/useUserStore';
-import { tournamentsApi, type TournamentItem } from '@/api';
+import { Avatar } from '@/components/ui/Avatar';
+import { tournamentsApi } from '@/api';
 import { fmtBalance } from '@/utils/format';
+import type { TournamentFull } from '@/types';
+
+const TYPE_ICONS: Record<string, string> = {
+  WORLD: '🌍', COUNTRY: '🏴', WEEKLY: '📅', MONTHLY: '🗓️', SEASONAL: '🌸', YEARLY: '🏆',
+};
+const TYPE_COLORS: Record<string, string> = {
+  WORLD: '#F5C842', COUNTRY: '#00D68F', WEEKLY: '#9B85FF',
+  MONTHLY: '#FF9F43', SEASONAL: '#FF6B9D', YEARLY: '#F5C842',
+};
+
+type TFilter = 'all' | 'joined';
 
 export const TournamentsPage: React.FC = () => {
-  const { user, setUser } = useUserStore();
-  const [tournaments, setTournaments] = useState<TournamentItem[]>([]);
+  const [tournaments, setTournaments] = useState<TournamentFull[]>([]);
   const [loading, setLoading] = useState(true);
-  const [joining, setJoining] = useState<string | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const [filter, setFilter] = useState<TFilter>('all');
+  const [selected, setSelected] = useState<string | null>(null);
+  const [donateModal, setDonateModal] = useState<string | null>(null);
+  const [joiningId, setJoiningId] = useState<string | null>(null);
 
-  const load = () => {
-    setLoading(true);
-    tournamentsApi.list()
-      .then((r) => setTournaments(r.tournaments))
-      .catch(() => {})
-      .finally(() => setLoading(false));
+  const load = async () => {
+    try {
+      const res = await tournamentsApi.list();
+      setTournaments(res.tournaments);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { load(); }, []);
 
-  const showToast = (msg: string) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3000);
-  };
-
-  const handleJoin = async (t: TournamentItem) => {
-    if (joining || t.isJoined) return;
-    setJoining(t.id);
+  const handleJoin = async (id: string) => {
+    setJoiningId(id);
     try {
-      await tournamentsApi.join(t.id);
-      showToast('✅ Вы вступили в турнир!');
-      load();
+      await tournamentsApi.join(id);
+      await load();
     } catch (e: any) {
-      const msg: Record<string, string> = {
-        INSUFFICIENT_BALANCE: 'Недостаточно монет',
-        ALREADY_JOINED: 'Вы уже участвуете',
-        TOURNAMENT_FULL: 'Турнир заполнен',
-        REGISTRATION_CLOSED: 'Регистрация закрыта',
-      };
-      showToast('❌ ' + (msg[e?.message] ?? 'Ошибка'));
+      alert(e.message ?? 'Ошибка вступления');
     } finally {
-      setJoining(null);
+      setJoiningId(null);
     }
   };
 
-  const statusLabel: Record<string, string> = {
-    REGISTRATION: 'Регистрация',
-    IN_PROGRESS: 'Идёт',
-    FINISHED: 'Завершён',
+  const handleLeave = async (id: string) => {
+    if (!confirm('Выйти из турнира? Взнос не возвращается!')) return;
+    try {
+      await tournamentsApi.leave(id);
+      await load();
+    } catch (e: any) {
+      alert(e.message);
+    }
   };
-  const statusColor: Record<string, string> = {
-    REGISTRATION: '#F5C842',
-    IN_PROGRESS: '#00D68F',
-    FINISHED: '#4A5270',
-  };
+
+  const filtered = filter === 'joined' ? tournaments.filter(t => t.isJoined) : tournaments;
+  const grouped = filtered.reduce<Record<string, TournamentFull[]>>((acc, t) => {
+    (acc[t.type] = acc[t.type] ?? []).push(t);
+    return acc;
+  }, {});
+  const typeOrder = ['WORLD', 'YEARLY', 'SEASONAL', 'MONTHLY', 'WEEKLY', 'COUNTRY'];
 
   return (
-    <PageLayout backTo="/" logo={false}>
-      <div style={{ padding: '12px 18px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 18, fontWeight: 800, color: '#F0F2F8' }}>
-          🏆 Турниры
-        </div>
-        <div style={{ fontSize: 11, color: '#8B92A8' }}>Баланс: {fmtBalance(user?.balance ?? '0')} ᚙ</div>
+    <PageLayout title="Турниры" backTo="/">
+      <div style={segStyle}>
+        <button style={segBtn(filter === 'all')} onClick={() => setFilter('all')}>🏆 Все</button>
+        <button style={segBtn(filter === 'joined')} onClick={() => setFilter('joined')}>⚔️ Мои</button>
       </div>
 
-      {loading ? (
-        <div style={{ textAlign: 'center', color: '#4A5270', padding: 48, fontSize: 13 }}>Загрузка...</div>
-      ) : tournaments.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 48 }}>
-          <div style={{ fontSize: 48, marginBottom: 12 }}>🏆</div>
-          <div style={{ fontSize: 15, fontWeight: 700, color: '#F0F2F8', marginBottom: 8 }}>Нет активных турниров</div>
-          <div style={{ fontSize: 12, color: '#8B92A8' }}>Скоро появятся новые турниры. Следите за обновлениями!</div>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '0 18px 24px' }}>
-          {tournaments.map((t) => (
-            <div key={t.id} style={cardStyle}>
-              {/* Статус */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', color: statusColor[t.status] ?? '#8B92A8', background: `${statusColor[t.status] ?? '#8B92A8'}18`, padding: '3px 8px', borderRadius: 6 }}>
-                  {statusLabel[t.status] ?? t.status}
-                </span>
-                <span style={{ fontSize: 10, color: '#4A5270' }}>
-                  {t.currentPlayers} / {t.maxPlayers} игроков
-                </span>
-              </div>
+      {loading && <div style={{ textAlign: 'center', color: '#4A5270', padding: 32 }}>Загрузка...</div>}
 
-              {/* Название */}
-              <div style={{ fontSize: 17, fontWeight: 800, color: '#F0F2F8', marginBottom: 4 }}>{t.name}</div>
-              {t.description && (
-                <div style={{ fontSize: 12, color: '#8B92A8', marginBottom: 10, lineHeight: 1.5 }}>{t.description}</div>
-              )}
-
-              {/* Призовой фонд */}
-              <div style={{ display: 'flex', gap: 12, marginBottom: 14 }}>
-                <div style={infoChip}>
-                  <div style={{ fontSize: 9, color: '#4A5270', marginBottom: 2, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>Приз</div>
-                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 800, color: '#F5C842' }}>
-                    {fmtBalance(t.prizePool)} ᚙ
-                  </div>
-                </div>
-                <div style={infoChip}>
-                  <div style={{ fontSize: 9, color: '#4A5270', marginBottom: 2, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>Взнос</div>
-                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 800, color: BigInt(t.entryFee) > 0n ? '#9B85FF' : '#00D68F' }}>
-                    {BigInt(t.entryFee) > 0n ? fmtBalance(t.entryFee) + ' ᚙ' : 'Бесплатно'}
-                  </div>
-                </div>
-              </div>
-
-              {/* Прогресс игроков */}
-              <div style={{ height: 3, background: '#232840', borderRadius: 2, marginBottom: 14, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${(t.currentPlayers / t.maxPlayers) * 100}%`, background: 'linear-gradient(90deg,#7B61FF,#9B85FF)', borderRadius: 2, transition: 'width .3s' }} />
-              </div>
-
-              {/* Кнопка */}
-              {t.status === 'REGISTRATION' && (
-                <button
-                  onClick={() => handleJoin(t)}
-                  disabled={t.isJoined || joining === t.id || t.currentPlayers >= t.maxPlayers}
-                  style={joinBtnStyle(t.isJoined, joining === t.id)}
-                >
-                  {t.isJoined ? '✓ Вы участвуете' : joining === t.id ? 'Регистрация...' : t.currentPlayers >= t.maxPlayers ? 'Мест нет' : '→ Вступить'}
-                </button>
-              )}
-              {t.status === 'IN_PROGRESS' && t.isJoined && (
-                <div style={{ textAlign: 'center', fontSize: 12, fontWeight: 700, color: '#00D68F', padding: '10px 0 0' }}>⚔ Вы участвуете в этом турнире</div>
-              )}
-              {t.startAt && t.status === 'REGISTRATION' && (
-                <div style={{ textAlign: 'center', fontSize: 10, color: '#4A5270', marginTop: 8 }}>
-                  Старт: {new Date(t.startAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
-                </div>
-              )}
-            </div>
-          ))}
+      {!loading && filtered.length === 0 && (
+        <div style={{ textAlign: 'center', color: '#4A5270', padding: 32, fontSize: 13 }}>
+          {filter === 'joined' ? 'Вы не участвуете в турнирах' : 'Нет активных турниров'}
         </div>
       )}
 
-      {toast && (
-        <div style={{ position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)', background: '#232840', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 14, padding: '12px 20px', fontSize: 13, fontWeight: 600, color: '#F0F2F8', zIndex: 500, whiteSpace: 'nowrap', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
-          {toast}
-        </div>
+      {typeOrder.map(type => {
+        const items = grouped[type];
+        if (!items?.length) return null;
+        return (
+          <div key={type}>
+            <div style={{ ...secStyle, color: TYPE_COLORS[type] }}>
+              {TYPE_ICONS[type]} {items[0].typeLabel}
+            </div>
+            {items.map(t => (
+              <TournamentCard
+                key={t.id}
+                t={t}
+                onJoin={() => handleJoin(t.id)}
+                onLeave={() => handleLeave(t.id)}
+                onView={() => setSelected(t.id)}
+                onDonate={() => setDonateModal(t.id)}
+                joining={joiningId === t.id}
+              />
+            ))}
+          </div>
+        );
+      })}
+
+      {selected && (
+        <TournamentDetailModal tournamentId={selected} onClose={() => setSelected(null)} />
+      )}
+      {donateModal && (
+        <DonateModal
+          tournamentId={donateModal}
+          onClose={() => setDonateModal(null)}
+          onSuccess={() => { setDonateModal(null); load(); }}
+        />
       )}
     </PageLayout>
   );
 };
 
-const cardStyle: React.CSSProperties = {
-  background: '#1C2030',
-  border: '1px solid rgba(255,255,255,0.07)',
-  borderRadius: 20,
-  padding: '18px 16px',
+const TournamentCard: React.FC<{
+  t: TournamentFull; onJoin: () => void; onLeave: () => void;
+  onView: () => void; onDonate: () => void; joining: boolean;
+}> = ({ t, onJoin, onLeave, onView, onDonate, joining }) => {
+  const color = TYPE_COLORS[t.type] ?? '#F5C842';
+  const icon = TYPE_ICONS[t.type] ?? '🏆';
+  const endDate = t.endAt ? new Date(t.endAt).toLocaleDateString('ru-RU') : null;
+
+  return (
+    <div style={{ margin: '0 18px 10px', background: '#1C2030', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 20, overflow: 'hidden' }}>
+      <div style={{ padding: '14px 16px 10px', background: `linear-gradient(135deg,${color}12,transparent)`, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 28 }}>{icon}</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color }}>{t.name}</div>
+            {t.period && <div style={{ fontSize: 10, color: '#8B92A8', marginTop: 2 }}>Период: {t.period}</div>}
+          </div>
+          {t.isJoined && (
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#00D68F', background: 'rgba(0,214,143,0.1)', padding: '3px 8px', borderRadius: 6 }}>
+              ✓ Участник
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', padding: '10px 16px', gap: 16 }}>
+        <div>
+          <div style={{ fontSize: 10, color: '#4A5270' }}>Участники</div>
+          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 700, color: '#F0F2F8', marginTop: 2 }}>
+            {t.currentPlayers.toLocaleString()}
+          </div>
+        </div>
+        <div>
+          <div style={{ fontSize: 10, color: '#4A5270' }}>Взнос</div>
+          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 700, color: '#F5C842', marginTop: 2 }}>
+            {fmtBalance(t.entryFee)} ᚙ
+          </div>
+        </div>
+        <div>
+          <div style={{ fontSize: 10, color: '#4A5270' }}>Призовой фонд</div>
+          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 700, color, marginTop: 2 }}>
+            {fmtBalance(t.totalPool ?? t.prizePool)} ᚙ
+          </div>
+        </div>
+      </div>
+
+      {t.isJoined && t.myStats && (
+        <div style={{ margin: '0 14px 10px', padding: '8px 12px', background: 'rgba(0,214,143,0.06)', border: '1px solid rgba(0,214,143,0.15)', borderRadius: 12 }}>
+          <div style={{ fontSize: 10, color: '#00D68F', fontWeight: 700, marginBottom: 4 }}>Мои результаты</div>
+          <div style={{ display: 'flex', gap: 14 }}>
+            <span style={{ fontSize: 13, color: '#00D68F' }}>✓ {t.myStats.wins}</span>
+            <span style={{ fontSize: 13, color: '#FF4D6A' }}>✗ {t.myStats.losses}</span>
+            <span style={{ fontSize: 13, color: '#8B92A8' }}>= {t.myStats.draws}</span>
+            <span style={{ fontSize: 13, color: '#F5C842', marginLeft: 'auto' }}>Очки: {t.myStats.points.toFixed(1)}</span>
+          </div>
+        </div>
+      )}
+
+      {endDate && <div style={{ padding: '0 16px 4px', fontSize: 10, color: '#4A5270' }}>До: {endDate}</div>}
+
+      <div style={{ display: 'flex', gap: 8, padding: '10px 16px 14px' }}>
+        <button onClick={onView} style={viewBtn}>Топ-лист</button>
+        <button onClick={onDonate} style={donateBtn}>💸 Донат</button>
+        {!t.isJoined ? (
+          <button onClick={onJoin} disabled={joining} style={{ ...joinBtnStyle, opacity: joining ? 0.6 : 1 }}>
+            {joining ? '...' : `Вступить`}
+          </button>
+        ) : (
+          <button onClick={onLeave} style={leaveBtnStyle}>Выйти</button>
+        )}
+      </div>
+    </div>
+  );
 };
-const infoChip: React.CSSProperties = {
-  flex: 1,
-  background: '#232840',
-  borderRadius: 12,
-  padding: '8px 12px',
+
+const TournamentDetailModal: React.FC<{ tournamentId: string; onClose: () => void }> = ({ tournamentId, onClose }) => {
+  const [data, setData] = useState<any>(null);
+  useEffect(() => {
+    tournamentsApi.get(tournamentId).then(r => setData(r.tournament)).catch(console.error);
+  }, [tournamentId]);
+  return (
+    <div style={overlayStyle} onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div style={modalStyle}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <div style={{ fontSize: 16, fontWeight: 700, color: '#F0F2F8' }}>🏆 Лидерборд</div>
+          <button onClick={onClose} style={closeBtn}>✕</button>
+        </div>
+        {!data && <div style={{ textAlign: 'center', color: '#4A5270', padding: 24 }}>Загрузка...</div>}
+        {data?.players?.map((p: any, i: number) => (
+          <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: i === 0 ? '#F5C842' : i === 1 ? '#C0C0C0' : i === 2 ? '#CD7F32' : '#4A5270', width: 24, textAlign: 'center' }}>
+              {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
+            </span>
+            <Avatar user={p.user} size="s" />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#F0F2F8' }}>{p.user?.firstName}</div>
+              <div style={{ fontSize: 10, color: '#8B92A8' }}>{p.wins}W {p.losses}L {p.draws}D</div>
+            </div>
+            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14, fontWeight: 700, color: '#F5C842' }}>
+              {p.points?.toFixed(1) ?? '0.0'}
+            </span>
+          </div>
+        ))}
+        {!data?.players?.length && data && (
+          <div style={{ textAlign: 'center', color: '#4A5270', padding: 16 }}>Нет участников</div>
+        )}
+      </div>
+    </div>
+  );
 };
-const joinBtnStyle = (joined: boolean, loading: boolean): React.CSSProperties => ({
-  width: '100%',
-  padding: '13px',
-  background: joined ? 'rgba(0,214,143,0.1)' : loading ? '#232840' : '#7B61FF',
-  border: `1px solid ${joined ? 'rgba(0,214,143,0.3)' : loading ? 'rgba(255,255,255,0.1)' : 'transparent'}`,
-  borderRadius: 14,
-  color: joined ? '#00D68F' : '#F0F2F8',
-  fontSize: 14,
-  fontWeight: 700,
-  cursor: joined || loading ? 'default' : 'pointer',
-  fontFamily: 'inherit',
-  opacity: loading ? 0.6 : 1,
-  transition: 'all .15s',
-});
+
+const DonateModal: React.FC<{ tournamentId: string; onClose: () => void; onSuccess: () => void }> = ({ tournamentId, onClose, onSuccess }) => {
+  const [amount, setAmount] = useState('10000');
+  const [loading, setLoading] = useState(false);
+  const handleSubmit = async () => {
+    setLoading(true);
+    try { await tournamentsApi.donate(tournamentId, amount); onSuccess(); }
+    catch (e: any) { alert(e.message); }
+    finally { setLoading(false); }
+  };
+  return (
+    <div style={overlayStyle} onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div style={modalStyle}>
+        <div style={handleBar} />
+        <div style={{ fontSize: 17, fontWeight: 700, color: '#F0F2F8', marginBottom: 8 }}>💸 Донат в кассу</div>
+        <div style={{ fontSize: 11, color: '#8B92A8', marginBottom: 16 }}>Все монеты идут победителям турнира!</div>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+          {['10000', '50000', '100000', '500000'].map(v => (
+            <button key={v} onClick={() => setAmount(v)} style={chipBtn(amount === v)}>{fmtBalance(v)}</button>
+          ))}
+        </div>
+        <button onClick={handleSubmit} disabled={loading} style={goldBtnFull}>
+          {loading ? '...' : `Задонатить ${fmtBalance(amount)} ᚙ`}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const segStyle: React.CSSProperties = { display: 'flex', margin: '4px 18px 10px', background: '#1C2030', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: 3 };
+const segBtn = (active: boolean): React.CSSProperties => ({ flex: 1, padding: 8, border: 'none', borderRadius: 8, fontFamily: 'inherit', fontSize: 12, fontWeight: 600, color: active ? '#F0F2F8' : '#8B92A8', background: active ? '#232840' : 'transparent', cursor: 'pointer' });
+const secStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, letterSpacing: '.09em', textTransform: 'uppercase', padding: '16px 18px 8px' };
+const viewBtn: React.CSSProperties = { padding: '8px 12px', background: '#232840', color: '#F0F2F8', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' };
+const donateBtn: React.CSSProperties = { padding: '8px 12px', background: 'rgba(123,97,255,0.12)', color: '#9B85FF', border: '1px solid rgba(123,97,255,0.25)', borderRadius: 10, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' };
+const joinBtnStyle: React.CSSProperties = { flex: 1, padding: '8px 12px', background: '#F5C842', color: '#0B0D11', border: 'none', borderRadius: 10, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' };
+const leaveBtnStyle: React.CSSProperties = { flex: 1, padding: '8px 12px', background: 'rgba(255,77,106,0.1)', color: '#FF4D6A', border: '1px solid rgba(255,77,106,0.2)', borderRadius: 10, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' };
+const overlayStyle: React.CSSProperties = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', zIndex: 300, display: 'flex', alignItems: 'flex-end' };
+const modalStyle: React.CSSProperties = { width: '100%', background: '#161927', borderRadius: '24px 24px 0 0', padding: 20, borderTop: '1px solid rgba(255,255,255,0.1)', maxHeight: '85vh', overflowY: 'auto' };
+const handleBar: React.CSSProperties = { width: 36, height: 4, background: '#2A2F48', borderRadius: 2, margin: '0 auto 16px' };
+const closeBtn: React.CSSProperties = { width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: '#8B92A8', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' };
+const chipBtn = (active: boolean): React.CSSProperties => ({ flex: 1, padding: '7px 8px', borderRadius: 10, fontSize: 11, fontWeight: 600, cursor: 'pointer', border: '1px solid', background: active ? 'rgba(245,200,66,0.12)' : '#232840', color: active ? '#F5C842' : '#8B92A8', borderColor: active ? 'rgba(245,200,66,0.3)' : 'rgba(255,255,255,0.07)', fontFamily: 'inherit' });
+const goldBtnFull: React.CSSProperties = { width: '100%', padding: '13px', background: '#F5C842', color: '#0B0D11', border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' };
