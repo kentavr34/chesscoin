@@ -30,6 +30,9 @@ jobs:
             echo "==> Building and restarting containers..."
             docker compose up -d --build backend frontend bot
 
+            echo "==> Reloading nginx (pick up new backend IP after container redeploy)..."
+            docker exec chesscoin_nginx nginx -s reload || docker compose restart nginx
+
             echo "==> Resolving any previously failed migrations..."
             docker exec chesscoin_backend npx prisma migrate resolve --rolled-back 20260313_tournaments_streak 2>/dev/null || true
 
