@@ -19,6 +19,96 @@ const router = Router();
 // ВАЖНО: /transactions и /referrals ДОЛЖНЫ быть ДО /:userId
 // иначе Express поймает слово "transactions" как userId
 
+// GET /profile/games — история завершённых партий
+router.get("/games", authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as AuthRequest).userId;
+    const { limit, offset } = z.object({
+      limit:  z.coerce.number().min(1).max(50).default(20),
+      offset: z.coerce.number().min(0).default(0),
+    }).parse(req.query);
+
+    const sides = await prisma.sessionSide.findMany({
+      where: {
+        playerId: userId,
+        isBot: false,
+        session: { status: { in: ["FINISHED", "DRAW"] } },
+      },
+      orderBy: { updatedAt: "desc" },
+      take: limit,
+      skip: offset,
+      select: {
+        id: true,
+        status: true,
+        isWhite: true,
+        winningAmount: true,
+        session: {
+          select: {
+            id: true,
+            type: true,
+            status: true,
+            pgn: true,
+            botLevel: true,
+            bet: true,
+            duration: true,
+            startedAt: true,
+            finishedAt: true,
+            sides: {
+              select: {
+                isBot: true,
+                isWhite: true,
+                status: true,
+                player: { select: { id: true, firstName: true, lastName: true, username: true, avatar: true, avatarGradient: true, avatarType: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const total = await prisma.sessionSide.count({
+      where: {
+        playerId: userId,
+        isBot: false,
+        session: { status: { in: ["FINISHED", "DRAW"] } },
+      },
+    });
+
+    const games = sides.map(side => {
+      const session = side.session;
+      const opponent = session.sides.find(s => s.player.id !== userId && !s.isBot);
+      const botSide = session.sides.find(s => s.isBot);
+      return {
+        sessionId: session.id,
+        type: session.type,
+        result: side.status, // WON / LOST / DRAW
+        isWhite: side.isWhite,
+        winningAmount: side.winningAmount?.toString() ?? null,
+        bet: session.bet?.toString() ?? null,
+        botLevel: session.botLevel,
+        pgn: session.pgn,
+        duration: session.duration,
+        startedAt: session.startedAt,
+        finishedAt: session.finishedAt,
+        opponent: opponent ? {
+          id: opponent.player.id,
+          firstName: opponent.player.firstName,
+          lastName: opponent.player.lastName,
+          username: opponent.player.username,
+          avatar: opponent.player.avatar,
+          avatarGradient: opponent.player.avatarGradient,
+          avatarType: opponent.player.avatarType,
+        } : null,
+        hasBot: !!botSide,
+      };
+    });
+
+    res.json({ total, games });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /profile/transactions — история транзакций
 router.get("/transactions", authMiddleware, async (req: Request, res: Response) => {
   try {
