@@ -27,11 +27,6 @@ RUN npm install --omit=dev
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-# Copy tsx and tsconfig-paths for running seed.ts in production
-COPY --from=builder /app/node_modules/tsx ./node_modules/tsx
-COPY --from=builder /app/node_modules/tsconfig-paths ./node_modules/tsconfig-paths
-COPY --from=builder /app/node_modules/.bin/tsx ./node_modules/.bin/tsx
-COPY --from=builder /app/node_modules/esbuild ./node_modules/esbuild
 COPY prisma ./prisma
 COPY tsconfig.json ./
 
