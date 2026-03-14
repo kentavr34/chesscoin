@@ -43,8 +43,13 @@ jobs:
             sleep 5
             docker exec chesscoin_backend node -e "require('http').get('http://localhost:3000/health',r=>{process.exit(r.statusCode===200?0:1)}).on('error',e=>{console.error(e.message);process.exit(1)})" || (echo "Health check failed! Backend logs:" && docker logs --tail 80 chesscoin_backend && exit 1)
 
+            echo "==> Waiting 30s to check backend stability..."
+            sleep 30
             echo "==> Post-deploy container status..."
             docker inspect chesscoin_backend --format '{{.State.Status}} restarts={{.RestartCount}}' || true
-            docker logs --tail 20 chesscoin_backend 2>&1 | tail -20 || true
+            docker logs --tail 30 chesscoin_backend 2>&1 | tail -30 || true
+
+            echo "==> Checking public API health..."
+            curl -sf https://chesscoin.app/health && echo "Public health OK" || echo "WARNING: Public health returned non-200"
 
             echo "==> Deploy complete! Branch: ${{ github.ref_name }}"
