@@ -1,7 +1,18 @@
 import { Router, Request, Response } from "express";
 import { z } from "zod";
+import multer from "multer";
 import { prisma } from "@/lib/prisma";
 import { authMiddleware, AuthRequest } from "@/middleware/auth";
+import { uploadToS3, deleteFromS3 } from "@/lib/s3";
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) cb(null, true);
+    else cb(new Error("Only image files are allowed"));
+  },
+});
 
 const router = Router();
 
@@ -77,6 +88,65 @@ router.get("/referrals", authMiddleware, async (req: Request, res: Response) => 
       refLink: `https://t.me/chessgamecoin_bot?start=ref_${user.telegramId}`,
       referrals: user.referrals,
     });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /profile/avatar — загрузка кастомного аватара
+router.post(
+  "/avatar",
+  authMiddleware,
+  upload.single("avatar"),
+  async (req: Request, res: Response) => {
+    try {
+      const userId = (req as AuthRequest).userId;
+      if (!req.file) return res.status(400).json({ error: "Файл не передан" });
+
+      const ext = req.file.mimetype.split("/")[1]?.replace("jpeg", "jpg") || "jpg";
+      const key = `avatars/${userId}.${ext}`;
+
+      // Delete old custom avatar from S3 if exists
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { avatar: true, avatarType: true },
+      });
+      if (user?.avatarType === "UPLOAD" && user.avatar) {
+        const oldKey = user.avatar.split(".ru/")[1]?.split("/").slice(1).join("/");
+        if (oldKey) await deleteFromS3(oldKey).catch(() => {});
+      }
+
+      const url = await uploadToS3(key, req.file.buffer, req.file.mimetype);
+
+      await prisma.user.update({
+        where: { id: userId },
+        data: { avatar: url, avatarType: "UPLOAD" },
+      });
+
+      res.json({ success: true, avatar: url });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  },
+);
+
+// DELETE /profile/avatar — удалить кастомный аватар (вернуть gradient)
+router.delete("/avatar", authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as AuthRequest).userId;
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { avatar: true, avatarType: true },
+    });
+    if (user?.avatarType === "UPLOAD" && user.avatar) {
+      const oldKey = user.avatar.split(".ru/")[1]?.split("/").slice(1).join("/");
+      if (oldKey) await deleteFromS3(oldKey).catch(() => {});
+    }
+    await prisma.user.update({
+      where: { id: userId },
+      data: { avatar: null, avatarType: "GRADIENT" },
+    });
+    res.json({ success: true });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

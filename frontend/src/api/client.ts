@@ -83,6 +83,19 @@ export const api = {
   get: <T>(path: string) => apiFetch<T>(path),
   post: <T>(path: string, body?: unknown) =>
     apiFetch<T>(path, { method: 'POST', body: JSON.stringify(body) }),
+  postForm: <T>(path: string, form: FormData) => {
+    // For multipart, don't set Content-Type (browser sets it with boundary)
+    const headers: Record<string, string> = {};
+    if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
+    return fetch(`${BASE}${path}`, { method: 'POST', headers, body: form })
+      .then(async (res) => {
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ error: res.statusText }));
+          throw new Error(err.error ?? `HTTP ${res.status}`);
+        }
+        return res.json() as Promise<T>;
+      });
+  },
   put: <T>(path: string, body?: unknown) =>
     apiFetch<T>(path, { method: 'PUT', body: JSON.stringify(body) }),
   delete: <T>(path: string) => apiFetch<T>(path, { method: 'DELETE' }),

@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Avatar } from '@/components/ui/Avatar';
 import { useUserStore } from '@/store/useUserStore';
-import { profileApi } from '@/api';
+import { profileApi, authApi } from '@/api';
 import { fmtBalance, fmtDate, leagueEmoji } from '@/utils/format';
 import type { Transaction } from '@/types';
 import { JARVIS_LEVELS } from '@/components/ui/JarvisModal';
@@ -48,10 +48,50 @@ type Tab = 'info' | 'games' | 'saves' | 'ach';
 
 export const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useUserStore();
+  const { user, setUser } = useUserStore();
   const [tab, setTab] = useState<Tab>('info');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [selectedBadge, setSelectedBadge] = useState<{ name: string; date?: string } | null>(null);
+  const [avatarLoading, setAvatarLoading] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2500);
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarLoading(true);
+    try {
+      await profileApi.uploadAvatar(file);
+      const updated = await authApi.me();
+      setUser(updated);
+      showToast('Аватар обновлён');
+    } catch (err: any) {
+      showToast(err.message || 'Ошибка загрузки');
+    } finally {
+      setAvatarLoading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleAvatarDelete = async () => {
+    if (!confirm('Удалить кастомный аватар?')) return;
+    setAvatarLoading(true);
+    try {
+      await profileApi.deleteAvatar();
+      const updated = await authApi.me();
+      setUser(updated);
+      showToast('Аватар удалён');
+    } catch (err: any) {
+      showToast(err.message || 'Ошибка');
+    } finally {
+      setAvatarLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (tab === 'games') {
@@ -75,11 +115,56 @@ export const ProfilePage: React.FC = () => {
 
   return (
     <PageLayout backTo="/" rightAction={rightAction}>
+      {/* Toast */}
+      {toast && (
+        <div style={{ position: 'fixed', top: 60, left: '50%', transform: 'translateX(-50%)', background: '#232840', border: '1px solid #F5C842', borderRadius: 12, padding: '10px 20px', fontSize: 13, color: '#F5C842', zIndex: 9999, fontWeight: 600, whiteSpace: 'nowrap' }}>
+          {toast}
+        </div>
+      )}
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={handleAvatarUpload}
+      />
       {/* Шапка */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 18px 0' }}>
-        <div onClick={() => navigate('/shop')} style={{ position: 'relative', marginBottom: 12, cursor: 'pointer' }}>
+        <div style={{ position: 'relative', marginBottom: 12 }}>
           <div style={avatarRingStyle} />
           <Avatar user={user} size="xl" gold />
+          {/* Camera upload button */}
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={avatarLoading}
+            style={{
+              position: 'absolute', bottom: -2, right: -2,
+              width: 28, height: 28, borderRadius: '50%',
+              background: '#F5C842', border: '2px solid #0B0D11',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', fontSize: 13, lineHeight: 1,
+            }}
+            title="Загрузить аватар"
+          >
+            {avatarLoading ? '…' : '📷'}
+          </button>
+          {/* Delete button if custom avatar */}
+          {user.avatarType === 'UPLOAD' && !avatarLoading && (
+            <button
+              onClick={handleAvatarDelete}
+              style={{
+                position: 'absolute', top: -2, right: -2,
+                width: 22, height: 22, borderRadius: '50%',
+                background: '#FF4D6A', border: '2px solid #0B0D11',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', fontSize: 10, color: '#fff',
+              }}
+              title="Удалить аватар"
+            >
+              ✕
+            </button>
+          )}
         </div>
         <div style={{ fontFamily: 'Inter,sans-serif', fontSize: 18, fontWeight: 700, color: '#F0F2F8', letterSpacing: '-.02em', textAlign: 'center' }}>
           {user.firstName} {user.lastName ?? ''}

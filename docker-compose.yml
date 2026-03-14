@@ -64,6 +64,11 @@ services:
       # Stockfish встроен в npm пакет — отдельный контейнер не нужен
       MAX_ATTEMPTS: 3
       ATTEMPT_PRICE: 1000
+      S3_ENDPOINT: ${S3_ENDPOINT:-https://s3.twcstorage.ru}
+      S3_REGION: ${S3_REGION:-ru-1}
+      S3_BUCKET: ${S3_BUCKET:-799d3c02-99e72b95-3b78-492f-af40-bfc39c0f8bb7}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-GBZQW3Q2QMSLFBY6IXOH}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-IDo7bC66zeCTEMDgaTd8AMBiAD6CqGnakAz1Pv8z}
     expose:
       - "3000"
     networks:

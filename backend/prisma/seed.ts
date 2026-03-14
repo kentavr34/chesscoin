@@ -56,6 +56,8 @@ async function main() {
   }
   console.log(`✅ ${clans.length} Clans`);
 
+  const S3 = "https://s3.twcstorage.ru/799d3c02-99e72b95-3b78-492f-af40-bfc39c0f8bb7/items";
+
   // ─── Shop Items — Avatar Frames ───────────────────────────────────────────
   const avatarFrames = [
     {
@@ -66,6 +68,8 @@ async function main() {
       rarity: "RARE" as const,
       priceCoins: BigInt(50_000),
       sortOrder: 1,
+      imageUrl: `${S3}/avatar_frame_gold.svg`,
+      previewUrl: `${S3}/avatar_frame_gold.svg`,
     },
     {
       name: "Алмазная рамка",
@@ -75,6 +79,8 @@ async function main() {
       rarity: "EPIC" as const,
       priceCoins: BigInt(200_000),
       sortOrder: 2,
+      imageUrl: `${S3}/avatar_frame_diamond.svg`,
+      previewUrl: `${S3}/avatar_frame_diamond.svg`,
     },
     {
       name: "Огненная рамка",
@@ -84,6 +90,8 @@ async function main() {
       rarity: "EPIC" as const,
       priceCoins: BigInt(200_000),
       sortOrder: 3,
+      imageUrl: `${S3}/avatar_frame_fire.svg`,
+      previewUrl: `${S3}/avatar_frame_fire.svg`,
     },
     {
       name: "Легендарная рамка ♟",
@@ -93,6 +101,8 @@ async function main() {
       rarity: "LEGENDARY" as const,
       priceCoins: BigInt(1_000_000),
       sortOrder: 4,
+      imageUrl: `${S3}/avatar_frame_legendary.svg`,
+      previewUrl: `${S3}/avatar_frame_legendary.svg`,
     },
   ];
 
@@ -106,6 +116,8 @@ async function main() {
       rarity: "COMMON" as const,
       priceCoins: BigInt(10_000),
       sortOrder: 10,
+      imageUrl: `${S3}/board_classic.svg`,
+      previewUrl: `${S3}/board_classic.svg`,
     },
     {
       name: "Мрамор",
@@ -115,6 +127,8 @@ async function main() {
       rarity: "RARE" as const,
       priceCoins: BigInt(75_000),
       sortOrder: 11,
+      imageUrl: `${S3}/board_marble.svg`,
+      previewUrl: `${S3}/board_marble.svg`,
     },
     {
       name: "Неон",
@@ -124,6 +138,8 @@ async function main() {
       rarity: "EPIC" as const,
       priceCoins: BigInt(300_000),
       sortOrder: 12,
+      imageUrl: `${S3}/board_neon.svg`,
+      previewUrl: `${S3}/board_neon.svg`,
     },
   ];
 
@@ -137,6 +153,8 @@ async function main() {
       rarity: "COMMON" as const,
       priceCoins: BigInt(5_000),
       sortOrder: 20,
+      imageUrl: `${S3}/pieces_standard.svg`,
+      previewUrl: `${S3}/pieces_standard.svg`,
     },
     {
       name: "Золотые фигуры",
@@ -146,6 +164,8 @@ async function main() {
       rarity: "RARE" as const,
       priceCoins: BigInt(150_000),
       sortOrder: 21,
+      imageUrl: `${S3}/pieces_gold.svg`,
+      previewUrl: `${S3}/pieces_gold.svg`,
     },
     {
       name: "Кристальные фигуры",
@@ -155,6 +175,8 @@ async function main() {
       rarity: "EPIC" as const,
       priceCoins: BigInt(500_000),
       sortOrder: 22,
+      imageUrl: `${S3}/pieces_crystal.svg`,
+      previewUrl: `${S3}/pieces_crystal.svg`,
     },
   ];
 
@@ -168,6 +190,8 @@ async function main() {
       rarity: "RARE" as const,
       priceCoins: BigInt(30_000),
       sortOrder: 30,
+      imageUrl: `${S3}/anim_lightning.svg`,
+      previewUrl: `${S3}/anim_lightning.svg`,
     },
     {
       name: "Огонь",
@@ -177,6 +201,8 @@ async function main() {
       rarity: "EPIC" as const,
       priceCoins: BigInt(120_000),
       sortOrder: 31,
+      imageUrl: `${S3}/anim_fire.svg`,
+      previewUrl: `${S3}/anim_fire.svg`,
     },
   ];
 
@@ -186,7 +212,13 @@ async function main() {
     const existing = await prisma.item.findFirst({
       where: { name: item.name, type: item.type },
     });
-    if (!existing) {
+    if (existing) {
+      // Update imageUrl/previewUrl for existing items
+      await prisma.item.update({
+        where: { id: existing.id },
+        data: { imageUrl: item.imageUrl, previewUrl: item.previewUrl },
+      });
+    } else {
       await prisma.item.create({ data: item });
     }
   }

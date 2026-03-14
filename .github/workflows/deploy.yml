@@ -36,6 +36,9 @@ jobs:
             echo "==> Running DB migrations..."
             docker exec chesscoin_backend npx prisma migrate deploy
 
+            echo "==> Running seed (update shop item images)..."
+            docker exec chesscoin_backend npm run seed
+
             echo "==> Health check..."
             sleep 5
             docker exec chesscoin_backend node -e "require('http').get('http://localhost:3000/health',r=>{process.exit(r.statusCode===200?0:1)}).on('error',e=>{console.error(e.message);process.exit(1)})" || (echo "Health check failed! Backend logs:" && docker logs --tail 50 chesscoin_backend && exit 1)

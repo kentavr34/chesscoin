@@ -138,6 +138,25 @@ export interface Transaction {
   payload?: Record<string, unknown> | null;
 }
 
+export type ItemType = 'AVATAR_FRAME' | 'BOARD_SKIN' | 'PIECE_SKIN' | 'MOVE_ANIMATION';
+export type ItemRarity = 'COMMON' | 'RARE' | 'EPIC' | 'LEGENDARY';
+
+export interface ShopItem {
+  id: string;
+  name: string;
+  description?: string | null;
+  type: ItemType;
+  category: string;
+  rarity: ItemRarity;
+  priceCoins: string;
+  imageUrl?: string | null;
+  previewUrl?: string | null;
+  isActive: boolean;
+  sortOrder: number;
+  owned: boolean;
+  equipped: boolean;
+}
+
 export interface Task {
   id: string;
   type: string;
