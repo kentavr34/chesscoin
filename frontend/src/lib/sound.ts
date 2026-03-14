@@ -8,8 +8,22 @@ let ctx: AudioContext | null = null;
 function getCtx(): AudioContext {
   if (!ctx) ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
   // Resume if suspended (browser autoplay policy)
-  if (ctx.state === 'suspended') ctx.resume();
+  if (ctx.state === 'suspended') ctx.resume().catch(() => {});
   return ctx;
+}
+
+// Разблокируем AudioContext при первом касании/клике пользователя.
+// Без этого на мобильных браузерах (особенно iOS) звуки могут не воспроизводиться.
+if (typeof window !== 'undefined') {
+  const _unlock = () => {
+    try {
+      const c = getCtx();
+      if (c.state !== 'running') c.resume().catch(() => {});
+    } catch {}
+  };
+  document.addEventListener('touchstart', _unlock, { once: true, passive: true });
+  document.addEventListener('touchend', _unlock, { once: true, passive: true });
+  document.addEventListener('click', _unlock, { once: true, passive: true });
 }
 
 function isSoundEnabled(): boolean {

@@ -290,10 +290,11 @@ export const setupSocketHandlers = (io: Server) => {
           // Конец игры
           if (chess.isGameOver()) {
             const status = chess.isDraw() ? SessionStatus.DRAW : SessionStatus.FINISHED;
-            const nextSide = session.sides.find(s => s.id !== session.currentSideId && !s.isBot);
+            // mySide — тот, кто только что сделал ход. Если isGameOver() после его хода — он победил.
+            const opponentSide = session.sides.find(s => s.id !== mySide.id);
             const finished = await finishSession(sessionId, status, {
-              winnerSideId: chess.isDraw() ? undefined : nextSide?.id,
-              loserSideId: chess.isDraw() ? undefined : mySide.id,
+              winnerSideId: chess.isDraw() ? undefined : mySide.id,
+              loserSideId: chess.isDraw() ? undefined : opponentSide?.id,
               isDraw: chess.isDraw() || chess.isStalemate(),
             });
             await stopAllTimers(sessionId);
@@ -644,22 +645,19 @@ const makeBotMove = async (socket: AuthSocket, io: Server, sessionId: string) =>
 // level 1–20 → depth 1–20
 // ─────────────────────────────────────────
 
-// Уровень 1-20 → глубина поиска 1-20
-const levelToDepth = (level: number): number =>
-  Math.max(1, Math.min(20, level));
-
-// Уровни JARVIS
+// Уровни JARVIS: thinkMs — время на размышление (мс), maxDepth — потолок глубины.
+// Iterative deepening: углубляемся пока есть время → естественный рост силы.
 const JARVIS_LEVELS = [
-  { level: 1,  name: 'Beginner',     reward: 1000,  errorRate: 20, depth: 1 },
-  { level: 2,  name: 'Player',       reward: 3000,  errorRate: 17, depth: 2 },
-  { level: 3,  name: 'Fighter',      reward: 5000,  errorRate: 14, depth: 2 },
-  { level: 4,  name: 'Warrior',      reward: 7000,  errorRate: 11, depth: 3 },
-  { level: 5,  name: 'Expert',       reward: 9000,  errorRate: 9,  depth: 3 },
-  { level: 6,  name: 'Master',       reward: 12000, errorRate: 7,  depth: 4 },
-  { level: 7,  name: 'Professional', reward: 15000, errorRate: 5,  depth: 5 },
-  { level: 8,  name: 'Epic',         reward: 20000, errorRate: 3,  depth: 6 },
-  { level: 9,  name: 'Legendary',    reward: 30000, errorRate: 1,  depth: 8 },
-  { level: 10, name: 'Mystic',       reward: 50000, errorRate: 0,  depth: 10 },
+  { level: 1,  name: 'Beginner',     reward: 1000,  thinkMs: 80,   maxDepth: 1 },
+  { level: 2,  name: 'Player',       reward: 3000,  thinkMs: 200,  maxDepth: 2 },
+  { level: 3,  name: 'Fighter',      reward: 5000,  thinkMs: 400,  maxDepth: 3 },
+  { level: 4,  name: 'Warrior',      reward: 7000,  thinkMs: 650,  maxDepth: 4 },
+  { level: 5,  name: 'Expert',       reward: 9000,  thinkMs: 1000, maxDepth: 5 },
+  { level: 6,  name: 'Master',       reward: 12000, thinkMs: 1500, maxDepth: 6 },
+  { level: 7,  name: 'Professional', reward: 15000, thinkMs: 2200, maxDepth: 7 },
+  { level: 8,  name: 'Epic',         reward: 20000, thinkMs: 3000, maxDepth: 9 },
+  { level: 9,  name: 'Legendary',    reward: 30000, thinkMs: 4200, maxDepth: 12 },
+  { level: 10, name: 'Mystic',       reward: 50000, thinkMs: 6000, maxDepth: 20 },
 ];
 
 const getStockfishMove = (
@@ -669,36 +667,39 @@ const getStockfishMove = (
   return new Promise((resolve) => {
     try {
       const { Chess } = require("chess.js");
-      const jarvisConfig = JARVIS_LEVELS[Math.max(0, Math.min(9, level - 1))];
-      const depth = jarvisConfig.depth;
-      const errorRate = jarvisConfig.errorRate;
+      const cfg = JARVIS_LEVELS[Math.max(0, Math.min(9, level - 1))];
+      const deadline = Date.now() + cfg.thinkMs;
 
       const chess = new Chess(fen);
       const moves = chess.moves({ verbose: true });
       if (moves.length === 0) return resolve(null);
 
-      // Делаем случайный ход с вероятностью errorRate%
-      if (errorRate > 0 && Math.random() * 100 < errorRate) {
-        const m = moves[Math.floor(Math.random() * moves.length)];
-        console.debug("[JARVIS] Level " + level + " — random move (error simulation)");
-        return resolve({ from: m.from, to: m.to });
+      // Стартовый ход — случайный (fallback если даже depth=1 не успеет)
+      let bestMove = moves[Math.floor(Math.random() * moves.length)];
+
+      // Iterative deepening: углубляемся пока есть время, не превышая maxDepth
+      for (let depth = 1; depth <= cfg.maxDepth; depth++) {
+        if (Date.now() >= deadline) break;
+
+        let localBest: any = null;
+        let localBestScore = -99999;
+        let timeExpired = false;
+
+        for (const m of moves) {
+          if (Date.now() >= deadline) { timeExpired = true; break; }
+          chess.move(m);
+          const score = -chessMinimaxFn(chess, depth - 1, -99999, 99999, deadline);
+          chess.undo();
+          if (score > localBestScore) { localBestScore = score; localBest = m; }
+        }
+
+        // Принимаем результат только если глубина пройдена полностью
+        if (!timeExpired && localBest) bestMove = localBest;
+        if (timeExpired) break;
       }
 
-      if (depth <= 1) {
-        const m = moves[Math.floor(Math.random() * moves.length)];
-        return resolve({ from: m.from, to: m.to });
-      }
-
-      let best: any = null;
-      let bestScore = -99999;
-      for (const m of moves) {
-        chess.move(m);
-        const score = -chessMinimaxFn(chess, depth - 1, -99999, 99999);
-        chess.undo();
-        if (score > bestScore) { bestScore = score; best = m; }
-      }
-      console.debug("[JARVIS] Level " + level + " depth " + depth + " — bestmove " + (best?.from ?? "") + (best?.to ?? ""));
-      resolve(best ? { from: best.from, to: best.to } : null);
+      console.debug("[JARVIS] Lv" + level + " thinkMs=" + cfg.thinkMs + " — " + bestMove.from + bestMove.to);
+      resolve({ from: bestMove.from, to: bestMove.to });
     } catch (err) {
       console.warn("[JARVIS] Error:", (err as Error).message);
       resolve(getRandomMove(fen));
@@ -706,13 +707,15 @@ const getStockfishMove = (
   });
 };
 
-function chessMinimaxFn(chess: any, depth: number, alpha: number, beta: number): number {
+function chessMinimaxFn(chess: any, depth: number, alpha: number, beta: number, deadline: number): number {
+  if (Date.now() >= deadline) return chessEvalBoardFn(chess);
   if (depth === 0 || chess.isGameOver()) return chessEvalBoardFn(chess);
   const moves = chess.moves({ verbose: true });
   let best = -99999;
   for (const m of moves) {
+    if (Date.now() >= deadline) break;
     chess.move(m);
-    const score = -chessMinimaxFn(chess, depth - 1, -beta, -alpha);
+    const score = -chessMinimaxFn(chess, depth - 1, -beta, -alpha, deadline);
     chess.undo();
     if (score > best) best = score;
     if (score > alpha) alpha = score;

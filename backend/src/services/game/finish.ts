@@ -163,20 +163,19 @@ const processBotPayouts = async (
       // fire-and-forget — не блокирует завершение игры
       setImmediate(() => applyReferralIncome(humanSide.playerId, botReward).catch(console.error));
 
-      // Начислить JARVIS бейдж за победу над этим уровнем
-      setImmediate(async () => {
-        try {
-          const JARVIS_NAMES: Record<number, string> = {
-            1: 'Beginner', 2: 'Player', 3: 'Fighter', 4: 'Warrior', 5: 'Expert',
-            6: 'Master', 7: 'Professional', 8: 'Epic', 9: 'Legendary', 10: 'Mystic',
-          };
-          const lvl = session.botLevel ?? 1;
-          const badgeName = JARVIS_NAMES[lvl] ?? 'Beginner';
-          const player = await prisma.user.findUnique({ where: { id: humanSide.playerId } });
-          if (!player) return;
+      // Начислить JARVIS бейдж — СИНХРОННО, до отправки game:over на клиент,
+      // чтобы /auth/me вернул уже обновлённый jarvisLevel
+      try {
+        const JARVIS_NAMES: Record<number, string> = {
+          1: 'Beginner', 2: 'Player', 3: 'Fighter', 4: 'Warrior', 5: 'Expert',
+          6: 'Master', 7: 'Professional', 8: 'Epic', 9: 'Legendary', 10: 'Mystic',
+        };
+        const lvl = session.botLevel ?? 1;
+        const badgeName = JARVIS_NAMES[lvl] ?? 'Beginner';
+        const player = await prisma.user.findUnique({ where: { id: humanSide.playerId } });
+        if (player) {
           const alreadyHas = player.jarvisBadges.includes(badgeName);
           const nextLevel = Math.min(10, lvl + 1);
-          // Записываем дату получения бейджа
           const badgeDates = ((player as any).jarvisBadgeDates as Record<string, string>) || {};
           if (!alreadyHas) badgeDates[badgeName] = new Date().toISOString().split('T')[0];
           await prisma.user.update({
@@ -188,10 +187,10 @@ const processBotPayouts = async (
             },
           });
           console.log(`[JARVIS] Badge '` + badgeName + `' awarded, next level: ` + nextLevel);
-        } catch (e) {
-          console.error('[JARVIS] Badge error:', e);
         }
-      });
+      } catch (e) {
+        console.error('[JARVIS] Badge error:', e);
+      }
     }
     // Проигрыш боту в фазе 1 — ничего не снимаем
   } else {
