@@ -69,6 +69,7 @@ services:
       S3_BUCKET: ${S3_BUCKET:-799d3c02-99e72b95-3b78-492f-af40-bfc39c0f8bb7}
       S3_ACCESS_KEY: ${S3_ACCESS_KEY:-GBZQW3Q2QMSLFBY6IXOH}
       S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-IDo7bC66zeCTEMDgaTd8AMBiAD6CqGnakAz1Pv8z}
+      SCREENSHOT_SECRET: ${SCREENSHOT_SECRET:-chesscoin_screenshots_2026}
     expose:
       - "3000"
     networks:
