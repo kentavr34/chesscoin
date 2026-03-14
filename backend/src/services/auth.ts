@@ -141,10 +141,12 @@ export const refreshAccessToken = async (refreshToken: string) => {
 // ─────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────
-const generateAccessToken = (userId: string) =>
+export const signAccessToken = (userId: string) =>
   jwt.sign({ userId }, config.jwt.accessSecret, {
     expiresIn: config.jwt.accessExpires,
   } as jwt.SignOptions);
+
+const generateAccessToken = signAccessToken;
 
 const generateTokens = (userId: string) => ({
   accessToken: generateAccessToken(userId),

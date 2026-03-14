@@ -48,7 +48,24 @@ router.get("/me", authMiddleware, async (req: Request, res: Response) => {
     const userId = (req as AuthRequest).userId;
 
     // Восстанавливаем попытки при каждом входе
-    const user = await checkAndRestoreUserAttempts(userId);
+    await checkAndRestoreUserAttempts(userId);
+
+    // Обновляем login streak
+    const today = new Date().toDateString();
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+    const currentUser = await prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { loginStreak: true, lastLoginDate: true },
+    });
+    const lastLogin = currentUser.lastLoginDate?.toDateString();
+    let newStreak = currentUser.loginStreak;
+    if (lastLogin !== today) {
+      newStreak = lastLogin === yesterday ? (currentUser.loginStreak ?? 0) + 1 : 1;
+      await prisma.user.update({
+        where: { id: userId },
+        data: { loginStreak: newStreak, lastLoginDate: new Date() },
+      });
+    }
 
     const fullUser = await prisma.user.findUniqueOrThrow({
       where: { id: userId },
@@ -102,6 +119,8 @@ const formatUser = (user: any) => ({
   activeSessions: user.activeSessions ?? [],
   jarvisLevel: user.jarvisLevel ?? 1,
   jarvisBadges: user.jarvisBadges ?? [],
+  jarvisBadgeDates: user.jarvisBadgeDates ?? {},
+  loginStreak: user.loginStreak ?? 0,
   createdAt: user.createdAt,
 });
 

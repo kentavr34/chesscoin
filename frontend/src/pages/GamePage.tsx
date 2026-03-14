@@ -11,6 +11,7 @@ import { useGameStore } from '@/store/useGameStore';
 import { useUserStore } from '@/store/useUserStore';
 import { getSocket } from '@/api/socket';
 import { fmtTime, fmtBalance } from '@/utils/format';
+import { JARVIS_LEVELS } from '@/components/ui/JarvisModal';
 
 export const GamePage: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -25,6 +26,7 @@ export const GamePage: React.FC = () => {
     result: 'win' | 'lose' | 'draw';
     earned: string;
     commission: string;
+    pieceCoins?: string;
   } | null>(null);
   const [myCaptured, setMyCaptured] = useState<string[]>([]);
   const [opCaptured, setOpCaptured] = useState<string[]>([]);
@@ -47,27 +49,26 @@ export const GamePage: React.FC = () => {
     const isDraw = session.status === 'DRAW';
     const playerWon = !isDraw && session.winnerSideId === session.mySideId;
 
-    // winningAmount = уже NET сумма (после комиссии) — записана в finish.ts
+    // winningAmount = финальный бонус за победу (botReward или battlePayout)
     const earned = mySide?.winningAmount ?? '0';
     const earnedBig = BigInt(earned || '0');
 
-    // Комиссия: для батла = bet*2*10%, для BOT = earned*10%/(1-0.1)*0.1
-    // Проще: если есть ставка, считаем от банка; иначе от earned
+    // Для батла — комиссия 10% от банка; для BOT — без комиссии
     let commission = '0';
     if (earnedBig > 0n && session.bet) {
       const betBig = BigInt(session.bet);
-      // Банк = ставка × 2, комиссия = банк × 10%
       const totalPot = betBig * 2n;
       commission = (totalPot * 10n / 100n).toString();
-    } else if (earnedBig > 0n) {
-      // BOT: earned уже net, обратно вычисляем: net = gross*0.9 → commission = gross*0.1 = net/9
-      commission = (earnedBig / 9n).toString();
     }
+
+    // Монеты за фигуры (только бот-игра)
+    const pieceCoins = session.pieceCoins ?? '0';
 
     setResultData({
       result: isDraw ? 'draw' : playerWon ? 'win' : 'lose',
       earned,
       commission,
+      pieceCoins: session.type === 'BOT' ? pieceCoins : undefined,
     });
     setShowResult(true);
   }, [session?.status]);
@@ -203,14 +204,7 @@ export const GamePage: React.FC = () => {
         borderRadius: 14, flexShrink: 0,
       }}>
         <div style={labelStyle}>История ходов</div>
-        <div style={{
-          fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: '#C8CDE0',
-          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 4,
-        }}>
-          {session.pgn
-            ? session.pgn.replace(/\[.*?\]\s*/g, '').trim() || '— партия началась —'
-            : '— партия началась —'}
-        </div>
+        <MoveHistory pgn={session.pgn} />
       </div>
 
       <div style={{ height: 82, flexShrink: 0 }} />
@@ -257,9 +251,42 @@ export const GamePage: React.FC = () => {
           result={resultData.result}
           earned={resultData.earned}
           commission={resultData.commission}
+          pieceCoins={resultData.pieceCoins}
+          botLevelName={isBotGame && session?.botLevel ? JARVIS_LEVELS[Math.max(0, (session.botLevel ?? 1) - 1)].name : undefined}
+          userTelegramId={(user as any)?.telegramId}
           onClose={handleResultClose}
         />
       )}
+    </div>
+  );
+};
+
+// ── MoveHistory — ходы парами ────────────────────────────────────────────────
+const parsePgnMoves = (pgn: string) => {
+  const cleaned = pgn.replace(/\[.*?\]\s*/g, '').trim();
+  if (!cleaned) return [];
+  const moves: Array<{ num: number; white: string; black: string }> = [];
+  const regex = /(\d+)\.\s+(\S+)(?:\s+(\S+))?/g;
+  let match;
+  while ((match = regex.exec(cleaned)) !== null) {
+    moves.push({ num: parseInt(match[1]), white: match[2], black: match[3] ?? '' });
+  }
+  return moves;
+};
+
+const MoveHistory: React.FC<{ pgn: string }> = ({ pgn }) => {
+  const moves = parsePgnMoves(pgn);
+  const last8 = moves.slice(-8);
+  if (last8.length === 0) {
+    return <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: '#4A5270', marginTop: 4 }}>— партия началась —</div>;
+  }
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 12px', marginTop: 4 }}>
+      {last8.map((m) => (
+        <span key={m.num} style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: '#C8CDE0', whiteSpace: 'nowrap' }}>
+          <span style={{ color: '#4A5270' }}>{m.num}.</span> {m.white}{m.black ? ` ${m.black}` : ''}
+        </span>
+      ))}
     </div>
   );
 };
@@ -269,6 +296,7 @@ const PlayerRow: React.FC<{
   player?: any; timeLeft: number; isActive: boolean; label?: string; isMe?: boolean;
 }> = ({ player, timeLeft, isActive, label, isMe }) => {
   const [localTime, setLocalTime] = React.useState(timeLeft);
+  const [pulseOn, setPulseOn] = React.useState(false);
 
   // Синхронизируем с сервером при изменении timeLeft
   React.useEffect(() => { setLocalTime(timeLeft); }, [timeLeft]);
@@ -280,7 +308,22 @@ const PlayerRow: React.FC<{
     return () => clearInterval(t);
   }, [isActive]);
 
-  const danger = localTime < 30 && isActive;
+  const danger = localTime < 10 && isActive;
+
+  // Пульсация при критическом времени
+  React.useEffect(() => {
+    if (!danger) { setPulseOn(false); return; }
+    const t = setInterval(() => setPulseOn(p => !p), 500);
+    return () => clearInterval(t);
+  }, [danger]);
+
+  // Haptic каждые 3 секунды при критическом времени
+  React.useEffect(() => {
+    if (!danger || !isActive) return;
+    if (localTime > 0 && localTime % 3 === 0) {
+      try { (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium'); } catch {}
+    }
+  }, [localTime, danger, isActive]);
 
   return (
     <div style={{
@@ -303,6 +346,7 @@ const PlayerRow: React.FC<{
         fontFamily: "'JetBrains Mono',monospace", fontSize: 19, fontWeight: 700,
         color: danger ? '#FF4D6A' : isActive ? '#F5C842' : '#4A5270',
         transition: 'color .25s', minWidth: 42, textAlign: 'right',
+        opacity: danger ? (pulseOn ? 1 : 0.4) : 1,
       }}>
         {fmtTime(localTime)}
       </div>

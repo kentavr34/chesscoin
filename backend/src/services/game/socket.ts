@@ -280,6 +280,9 @@ export const setupSocketHandlers = (io: Server) => {
                 await updateBalance(userId, piecePrice, TransactionType.BOT_PIECE, {
                   piece: moveResult.captured, sessionId,
                 }, { isEmission: true });
+                // Трекинг монет за фигуры для отображения в модале результата
+                await redis.incrby(`session:${sessionId}:pieceCoins:${userId}`, Number(piecePrice));
+                await redis.expire(`session:${sessionId}:pieceCoins:${userId}`, 86400);
               }
             }
           }
@@ -294,10 +297,12 @@ export const setupSocketHandlers = (io: Server) => {
               isDraw: chess.isDraw() || chess.isStalemate(),
             });
             await stopAllTimers(sessionId);
-            const formatted = formatSession(finished, userId);
-            io.to(sessionId).emit("game", formatted);
+            // Включаем pieceCoins в данные для отображения в модале результата
+            const pieceCoinsRaw = await redis.get(`session:${sessionId}:pieceCoins:${userId}`);
+            const formattedFinished = { ...formatSession(finished, userId), pieceCoins: pieceCoinsRaw ?? '0' };
+            io.to(sessionId).emit("game", formattedFinished);
             io.to(sessionId).emit("game:over", { status: finished.status });
-            if (callback) callback({ ok: true, session: formatted });
+            if (callback) callback({ ok: true, session: formattedFinished });
             return;
           }
 
@@ -308,7 +313,8 @@ export const setupSocketHandlers = (io: Server) => {
             data: { currentSideId: nextSide?.id },
           });
 
-          if (session.type === SessionType.BATTLE && nextSide) {
+          // Переключаем таймер для батлов и игр с ботом
+          if ((session.type === SessionType.BATTLE || session.type === SessionType.BOT) && nextSide) {
             await switchTimer(sessionId, mySide.id, nextSide.id);
           }
 
@@ -532,8 +538,12 @@ const makeBotMove = async (socket: AuthSocket, io: Server, sessionId: string) =>
         loserSideId: chess.isDraw() ? undefined : (chess.isCheckmate() ? humanSide?.id : botSide?.id),
         isDraw: chess.isDraw(),
       });
+      await stopAllTimers(sessionId);
       const uid = humanSide?.playerId ?? null;
-      io.to(sessionId).emit("game", formatSession(finished, uid));
+      // Включаем pieceCoins в данные для отображения в модале результата
+      const pieceCoinsRaw = uid ? await redis.get(`session:${sessionId}:pieceCoins:${uid}`) : null;
+      const formattedFinished = { ...formatSession(finished, uid), pieceCoins: pieceCoinsRaw ?? '0' };
+      io.to(sessionId).emit("game", formattedFinished);
       io.to(sessionId).emit("game:over", { status: finished.status });
       return;
     }
@@ -543,6 +553,11 @@ const makeBotMove = async (socket: AuthSocket, io: Server, sessionId: string) =>
       where: { id: sessionId },
       data: { currentSideId: humanSide?.id },
     });
+
+    // Переключаем таймер обратно к человеку после хода бота
+    if (botSide && humanSide) {
+      await switchTimer(sessionId, botSide.id, humanSide.id);
+    }
 
     const updatedSession = await prisma.session.findUnique({
       where: { id: sessionId },
@@ -570,12 +585,12 @@ const JARVIS_LEVELS = [
   { level: 2,  name: 'Player',       reward: 3000,  errorRate: 17, depth: 2 },
   { level: 3,  name: 'Fighter',      reward: 5000,  errorRate: 14, depth: 2 },
   { level: 4,  name: 'Warrior',      reward: 7000,  errorRate: 11, depth: 3 },
-  { level: 5,  name: 'Expert',       reward: 10000, errorRate: 9,  depth: 3 },
-  { level: 6,  name: 'Master',       reward: 13000, errorRate: 7,  depth: 4 },
-  { level: 7,  name: 'Professional', reward: 17000, errorRate: 5,  depth: 5 },
-  { level: 8,  name: 'Epic',         reward: 21000, errorRate: 3,  depth: 6 },
-  { level: 9,  name: 'Legendary',    reward: 26000, errorRate: 1,  depth: 8 },
-  { level: 10, name: 'Mystic',       reward: 30000, errorRate: 0,  depth: 10 },
+  { level: 5,  name: 'Expert',       reward: 9000,  errorRate: 9,  depth: 3 },
+  { level: 6,  name: 'Master',       reward: 12000, errorRate: 7,  depth: 4 },
+  { level: 7,  name: 'Professional', reward: 15000, errorRate: 5,  depth: 5 },
+  { level: 8,  name: 'Epic',         reward: 20000, errorRate: 3,  depth: 6 },
+  { level: 9,  name: 'Legendary',    reward: 30000, errorRate: 1,  depth: 8 },
+  { level: 10, name: 'Mystic',       reward: 50000, errorRate: 0,  depth: 10 },
 ];
 
 const getStockfishMove = (

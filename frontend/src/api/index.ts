@@ -1,7 +1,7 @@
 import { api } from './client';
 import type {
   User, GameSession, BattleLobbyItem, LeaderboardUser,
-  Nation, Transaction, Task,
+  Nation, Transaction, Task, ShopItem,
 } from '@/types';
 
 // ── AUTH ──────────────────────────────────────────────
@@ -35,6 +35,13 @@ export const profileApi = {
       refLink: string;
       referrals: UserPublicMin[];
     }>('/profile/referrals'),
+  uploadAvatar: (file: File) => {
+    const form = new FormData();
+    form.append('avatar', file);
+    return api.postForm<{ success: boolean; avatar: string }>('/profile/avatar', form);
+  },
+  deleteAvatar: () =>
+    api.delete<{ success: boolean }>('/profile/avatar'),
 };
 
 interface UserPublicMin {
@@ -97,15 +104,26 @@ export const shopApi = {
     api.post<{ attempts: number; balance: string }>('/attempts/purchase', { count }),
 };
 
-export interface ShopItem {
+// ── TOURNAMENTS ───────────────────────────────────────
+export const tournamentsApi = {
+  list: () =>
+    api.get<{ tournaments: TournamentItem[] }>('/tournaments'),
+  get: (id: string) =>
+    api.get<{ tournament: any }>(`/tournaments/${id}`),
+  join: (id: string) =>
+    api.post<{ ok: boolean }>(`/tournaments/${id}/join`),
+};
+
+export interface TournamentItem {
   id: string;
   name: string;
-  type: string;
-  category: string;
-  priceCoins: string;
-  isActive: boolean;
-  sortOrder: number;
-  owned: boolean;
-  equipped: boolean;
-  meta?: Record<string, unknown>;
+  description?: string | null;
+  entryFee: string;
+  maxPlayers: number;
+  currentPlayers: number;
+  status: 'REGISTRATION' | 'IN_PROGRESS' | 'FINISHED';
+  startAt?: string | null;
+  prizePool: string;
+  isJoined: boolean;
 }
+

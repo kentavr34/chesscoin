@@ -154,6 +154,12 @@ const processBotPayouts = async (
         { isEmission: true }
       );
 
+      // Записываем winningAmount для отображения в GameResultModal
+      await prisma.sessionSide.update({
+        where: { id: humanSide.id },
+        data: { winningAmount: botReward },
+      });
+
       // fire-and-forget — не блокирует завершение игры
       setImmediate(() => applyReferralIncome(humanSide.playerId, botReward).catch(console.error));
 
@@ -170,11 +176,15 @@ const processBotPayouts = async (
           if (!player) return;
           const alreadyHas = player.jarvisBadges.includes(badgeName);
           const nextLevel = Math.min(10, lvl + 1);
+          // Записываем дату получения бейджа
+          const badgeDates = ((player as any).jarvisBadgeDates as Record<string, string>) || {};
+          if (!alreadyHas) badgeDates[badgeName] = new Date().toISOString().split('T')[0];
           await prisma.user.update({
             where: { id: humanSide.playerId },
             data: {
               jarvisLevel: player.jarvisLevel <= lvl ? nextLevel : player.jarvisLevel,
               jarvisBadges: alreadyHas ? undefined : { push: badgeName },
+              jarvisBadgeDates: badgeDates,
             },
           });
           console.log(`[JARVIS] Badge '` + badgeName + `' awarded, next level: ` + nextLevel);

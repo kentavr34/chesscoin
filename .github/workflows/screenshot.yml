@@ -1,0 +1,44 @@
+name: Visual Screenshot Monitor
+
+on:
+  workflow_dispatch:          # Запуск вручную
+  schedule:
+    - cron: '0 */6 * * *'    # Каждые 6 часов автоматически
+
+jobs:
+  screenshot:
+    name: Take screenshots of live app
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Playwright + browsers
+        run: |
+          npm install -g playwright @playwright/test
+          npx playwright install chromium --with-deps
+
+      - name: Get test JWT token
+        id: auth
+        run: |
+          TOKEN=$(curl -sf "https://chesscoin.app/api/v1/screenshotter/token?secret=chesscoin_screenshots_2026" | python3 -c "import sys,json; print(json.load(sys.stdin)['token'])")
+          echo "TOKEN=$TOKEN" >> $GITHUB_ENV
+
+      - name: Take screenshots
+        run: |
+          mkdir -p screenshots
+          node scripts/playwright-screenshots.mjs
+        env:
+          APP_URL: https://chesscoin.app
+          AUTH_TOKEN: ${{ env.TOKEN }}
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-${{ github.run_number }}
+          path: screenshots/
+          retention-days: 7

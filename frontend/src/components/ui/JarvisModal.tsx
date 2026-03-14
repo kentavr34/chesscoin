@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { fmtBalance } from '@/utils/format';
 
 export interface JarvisLevel {
@@ -14,12 +14,12 @@ export const JARVIS_LEVELS: JarvisLevel[] = [
   { level: 2,  name: 'Player',       reward: 3000,  errorRate: 17, depth: 2 },
   { level: 3,  name: 'Fighter',      reward: 5000,  errorRate: 14, depth: 2 },
   { level: 4,  name: 'Warrior',      reward: 7000,  errorRate: 11, depth: 3 },
-  { level: 5,  name: 'Expert',       reward: 10000, errorRate: 9,  depth: 3 },
-  { level: 6,  name: 'Master',       reward: 13000, errorRate: 7,  depth: 4 },
-  { level: 7,  name: 'Professional', reward: 17000, errorRate: 5,  depth: 5 },
-  { level: 8,  name: 'Epic',         reward: 21000, errorRate: 3,  depth: 6 },
-  { level: 9,  name: 'Legendary',    reward: 26000, errorRate: 1,  depth: 8 },
-  { level: 10, name: 'Mystic',       reward: 30000, errorRate: 0,  depth: 10 },
+  { level: 5,  name: 'Expert',       reward: 9000,  errorRate: 9,  depth: 3 },
+  { level: 6,  name: 'Master',       reward: 12000, errorRate: 7,  depth: 4 },
+  { level: 7,  name: 'Professional', reward: 15000, errorRate: 5,  depth: 5 },
+  { level: 8,  name: 'Epic',         reward: 20000, errorRate: 3,  depth: 6 },
+  { level: 9,  name: 'Legendary',    reward: 30000, errorRate: 1,  depth: 8 },
+  { level: 10, name: 'Mystic',       reward: 50000, errorRate: 0,  depth: 10 },
 ];
 
 interface JarvisModalProps {
@@ -29,6 +29,15 @@ interface JarvisModalProps {
 }
 
 export const JarvisModal: React.FC<JarvisModalProps> = ({ currentJarvisLevel, onSelect, onClose }) => {
+  // Авто-скролл к текущему уровню при открытии
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const el = document.getElementById(`jarvis-level-${currentJarvisLevel}`);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 300);
+    return () => clearTimeout(t);
+  }, []);
+
   return (
     <div style={overlayStyle} onClick={onClose}>
       <div style={sheetStyle} onClick={(e) => e.stopPropagation()}>
@@ -55,6 +64,7 @@ export const JarvisModal: React.FC<JarvisModalProps> = ({ currentJarvisLevel, on
             return (
               <div
                 key={lvl.level}
+                id={`jarvis-level-${lvl.level}`}
                 onClick={() => unlocked && !completed && onSelect(lvl)}
                 style={levelCardStyle(unlocked, completed, isActive)}
               >
@@ -94,8 +104,8 @@ export const JarvisModal: React.FC<JarvisModalProps> = ({ currentJarvisLevel, on
         </div>
 
         {/* Footer hint */}
-        <div style={{ marginTop: 16, padding: '10px 14px', background: 'rgba(123,97,255,0.08)', border: '1px solid rgba(123,97,255,0.15)', borderRadius: 12 }}>
-          <div style={{ fontSize: 11, color: '#8B92A8', lineHeight: 1.5 }}>
+        <div style={{ marginTop: 16, padding: '16px', background: 'rgba(123,97,255,0.08)', border: '1px solid rgba(123,97,255,0.15)', borderRadius: 14 }}>
+          <div style={{ fontSize: 15, color: '#8B92A8', lineHeight: 1.6 }}>
             🏆 Побеждайте уровни по очереди. За каждый пройденный уровень вы получаете бейдж J.A.R.V.I.S в профиле.
           </div>
         </div>

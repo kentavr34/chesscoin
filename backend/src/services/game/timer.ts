@@ -1,9 +1,22 @@
 import { SessionStatus } from "@prisma/client";
 import { redis, redisSub, redisPub } from "@/lib/redis";
 import { prisma } from "@/lib/prisma";
+import { Chess } from "chess.js";
 import { finishSession } from "./finish";
 import { io } from "@/index";
 import { formatSession } from "./format";
+
+// Считает количество очков фигур, взятых данным игроком (чем больше — тем лучше)
+const calcCapturedScore = (fen: string, isWhite: boolean): number => {
+  const board = new Chess(fen).board().flat();
+  const values: Record<string, number> = { p: 1, n: 3, b: 3, r: 5, q: 9 };
+  const opponentColor = isWhite ? 'b' : 'w';
+  const opponentRemaining = board
+    .filter((sq): sq is NonNullable<typeof sq> => sq !== null && sq.color === opponentColor)
+    .reduce((sum, sq) => sum + (values[sq.type] ?? 0), 0);
+  // Начальный материал без короля: ферзь(9) + 2 ладьи(10) + 2 слона(6) + 2 коня(6) + 8 пешек(8) = 39
+  return 39 - opponentRemaining;
+};
 
 const timerKey = (sideId: string) => `timer:${sideId}`;
 
@@ -115,18 +128,39 @@ export const startTimerWatcher = () => {
       if (!side || side.session.status !== SessionStatus.IN_PROGRESS) return;
 
       const session = side.session;
-      const winnerSide = session.sides.find(s => s.id !== sideId && !s.isBot);
-      const loserSide = side;
+      const expiredSide = side;
+      const otherSide = session.sides.find(s => s.id !== sideId);
 
       console.log(`[Timer] Expired for side ${sideId} in session ${session.id}`);
+
+      // Определяем победителя по взятому материалу
+      let winnerSideId: string | undefined;
+      let loserSideId: string | undefined;
+
+      if (otherSide) {
+        const expiredCaptures = calcCapturedScore(session.fen, expiredSide.isWhite);
+        const otherCaptures = calcCapturedScore(session.fen, otherSide.isWhite);
+
+        if (expiredCaptures > otherCaptures) {
+          // У истёкшего игрока больше взятых фигур — он выигрывает
+          winnerSideId = expiredSide.id;
+          loserSideId = otherSide.id;
+        } else {
+          // Оппонент взял больше или равно — оппонент выигрывает (у него было время)
+          winnerSideId = otherSide.id;
+          loserSideId = expiredSide.id;
+        }
+      } else {
+        loserSideId = expiredSide.id;
+      }
 
       // Завершаем по истечению времени
       const finished = await finishSession(
         session.id,
         SessionStatus.TIME_EXPIRED,
         {
-          winnerSideId: winnerSide?.id,
-          loserSideId: loserSide.id,
+          winnerSideId,
+          loserSideId,
         }
       );
 
@@ -134,7 +168,7 @@ export const startTimerWatcher = () => {
       io.to(session.id).emit("game", formatSession(finished, null));
       io.to(session.id).emit("game:over", {
         status: "TIME_EXPIRED",
-        winnerSideId: winnerSide?.id,
+        winnerSideId,
       });
 
     } catch (err) {

@@ -97,12 +97,14 @@ export const createBotSession = async (
             playerId: userId,
             isWhite: color === "white",
             status: SessionSideStatus.IN_PROGRESS,
+            timeLeft: timeSeconds,
           },
           {
             playerId: bot.id,
             isWhite: color === "black",
             isBot: true,
             status: SessionSideStatus.IN_PROGRESS,
+            timeLeft: timeSeconds,
           },
         ],
       },
@@ -110,10 +112,8 @@ export const createBotSession = async (
     include: { sides: { include: { player: true } } },
   });
 
-  // Устанавливаем currentSide
-  const currentSide = session.sides.find(
-    (s) => s.isWhite === (color === "white")
-  );
+  // Устанавливаем currentSide: белые всегда ходят первыми (правило шахмат)
+  const currentSide = session.sides.find((s) => s.isWhite);
   const updatedSession = await prisma.session.update({
     where: { id: session.id },
     data: { currentSideId: currentSide?.id },
