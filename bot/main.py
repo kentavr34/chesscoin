@@ -3,6 +3,8 @@ import logging
 import os
 from dotenv import load_dotenv
 
+BOT_VERSION = "v6.0.0"
+
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties

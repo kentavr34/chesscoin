@@ -4,7 +4,7 @@ import { loginWithTelegram, refreshAccessToken } from "@/services/auth";
 import { authMiddleware, AuthRequest } from "@/middleware/auth";
 import { checkAndRestoreUserAttempts } from "@/services/attempts";
 import { prisma } from "@/lib/prisma";
-import { getMilitaryRank } from "@/utils/militaryRank";
+import { getMilitaryRank, getRankBonuses } from "@/utils/militaryRank";
 
 const router = Router();
 
@@ -126,10 +126,19 @@ const formatUser = (user: any) => ({
   nationId: user.nationId,
   // Военное звание
   referralCount: user.referralCount ?? 0,
+  teamSize: user.referralCount ?? 0,
   militaryRank: (() => {
     const count = user.referralCount ?? 0;
     const r = getMilitaryRank(count);
-    return { rank: r.rank, label: r.label, emoji: r.emoji };
+    const bonuses = getRankBonuses(count);
+    return {
+      rank: r.rank,
+      label: r.label,
+      emoji: r.emoji,
+      minMembers: r.minMembers,
+      activationBonus: bonuses.activationBonus.toString(),
+      l1Percent: bonuses.l1Percent,
+    };
   })(),
   createdAt: user.createdAt,
 });

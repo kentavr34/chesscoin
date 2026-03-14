@@ -240,7 +240,7 @@ const processBattlePayouts = async (
       await updateBalance(
         side.playerId,
         bet,
-        TransactionType.BATTLE_WIN,
+        TransactionType.BATTLE_BET,
         { sessionId: session.id, result: "draw" }
       );
     }

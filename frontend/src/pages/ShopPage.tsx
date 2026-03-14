@@ -4,14 +4,17 @@ import { shopApi, authApi } from '@/api';
 import { useUserStore } from '@/store/useUserStore';
 import { fmtBalance } from '@/utils/format';
 import type { ShopItem, ItemType } from '@/types';
+import { setActiveTheme, getActiveTheme, THEMES } from '@/lib/theme';
+import type { ThemeKey } from '@/lib/theme';
 
-type Tab = 'frames' | 'boards' | 'pieces' | 'anims' | 'ton';
+type Tab = 'frames' | 'boards' | 'pieces' | 'anims' | 'themes' | 'ton';
 
 const TAB_TYPE: Partial<Record<Tab, ItemType>> = {
   frames: 'AVATAR_FRAME',
   boards: 'BOARD_SKIN',
   pieces: 'PIECE_SKIN',
   anims: 'MOVE_ANIMATION',
+  themes: 'THEME',
 };
 
 const TAB_LABELS: Record<Tab, string> = {
@@ -19,7 +22,18 @@ const TAB_LABELS: Record<Tab, string> = {
   boards: 'Доски',
   pieces: 'Фигуры',
   anims: 'Аним.',
+  themes: 'Темы',
   ton: '💎 TON',
+};
+
+// Map item name to ThemeKey
+const THEME_NAME_TO_KEY: Record<string, ThemeKey> = {
+  'Binance Pro':   'binance',
+  'Chess Classic': 'chess_classic',
+  'Neon Cyber':    'neon_cyber',
+  'Royal Gold':    'royal_gold',
+  'Matrix Dark':   'matrix_dark',
+  'Crystal Ice':   'crystal_ice',
 };
 
 const RARITY_COLOR: Record<string, string> = {
@@ -340,6 +354,27 @@ export const ShopPage: React.FC = () => {
       setLoading(false);
     }
   }, [tab]);
+
+  const handleThemePurchase = async (item: ShopItem) => {
+    if (!confirm(`Купить тему «${item.name}» за ${fmtBalance(item.priceCoins)} ᚙ?`)) return;
+    setActionId(item.id);
+    try {
+      const res = await shopApi.purchase(item.id);
+      await refreshUser();
+      await loadItems();
+      showToast(res.message);
+    } catch (e: any) {
+      showToast(e.message);
+    } finally {
+      setActionId(null);
+    }
+  };
+
+  const handleThemeApply = (item: ShopItem) => {
+    const key = THEME_NAME_TO_KEY[item.name] ?? 'default';
+    setActiveTheme(key);
+    showToast(`Тема «${item.name}» применена`);
+  };
 
   useEffect(() => { loadItems(); }, [loadItems]);
 

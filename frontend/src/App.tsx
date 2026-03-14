@@ -4,6 +4,9 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useSocket } from '@/hooks/useSocket';
 import { useUserStore } from '@/store/useUserStore';
+import { useSettingsStore } from '@/store/useSettingsStore';
+import { useT } from '@/i18n/useT';
+import type { Lang } from '@/i18n/translations';
 
 import { HomePage } from '@/pages/HomePage';
 import { BattlesPage } from '@/pages/BattlesPage';
@@ -43,7 +46,8 @@ const AppInner: React.FC = () => {
 // ── Splash экран загрузки ─────────────────────────────────────────────────────
 const SplashScreen: React.FC = () => {
   const [phase, setPhase] = React.useState(0);
-  const PHASES = ['Подключение...', 'Авторизация...', 'Загрузка...'];
+  const t = useT();
+  const PHASES = [t.splash.connecting, t.splash.authorizing, t.splash.loading];
 
   React.useEffect(() => {
     const t = setInterval(() => setPhase((p) => Math.min(p + 1, PHASES.length - 1)), 700);
@@ -102,8 +106,41 @@ const SplashScreen: React.FC = () => {
   );
 };
 
+const AuthErrorScreen: React.FC = () => {
+  const t = useT();
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, background: '#0B0D11',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      flexDirection: 'column', gap: 12, padding: 24,
+    }}>
+      <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 22, fontWeight: 800, color: '#F5C842' }}>ChessCoin</div>
+      <div style={{ fontSize: 13, color: '#8B92A8', textAlign: 'center' }}>
+        {t.auth.openViaBot}
+      </div>
+      <a href="https://t.me/chessgamecoin_bot" style={{ marginTop: 8, padding: '12px 24px', background: '#F5C842', color: '#0B0D11', borderRadius: 14, fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
+        {t.auth.openBot}
+      </a>
+    </div>
+  );
+};
+
 const App: React.FC = () => {
   useAuth(); // запускаем Telegram auth
+  const setLang = useSettingsStore((s) => s.setLang);
+
+  // Auto-detect language from Telegram WebApp on first load
+  React.useEffect(() => {
+    try {
+      const tgLang = (window as any).Telegram?.WebApp?.initDataUnsafe?.user?.language_code as string | undefined;
+      if (tgLang) {
+        const lang: Lang = tgLang.startsWith('ru') ? 'ru' : 'en';
+        // Only set if user hasn't manually chosen (check localStorage)
+        const saved = localStorage.getItem('chesscoin-settings');
+        if (!saved) setLang(lang);
+      }
+    } catch {}
+  }, []);
 
   const { isLoading, isAuthenticated } = useUserStore();
 
@@ -112,21 +149,7 @@ const App: React.FC = () => {
   }
 
   if (!isAuthenticated) {
-    return (
-      <div style={{
-        position: 'fixed', inset: 0, background: '#0B0D11',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        flexDirection: 'column', gap: 12, padding: 24,
-      }}>
-        <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 22, fontWeight: 800, color: '#F5C842' }}>ChessCoin</div>
-        <div style={{ fontSize: 13, color: '#8B92A8', textAlign: 'center' }}>
-          Откройте приложение через Telegram бот
-        </div>
-        <a href="https://t.me/chessgamecoin_bot" style={{ marginTop: 8, padding: '12px 24px', background: '#F5C842', color: '#0B0D11', borderRadius: 14, fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
-          Открыть бота
-        </a>
-      </div>
-    );
+    return <AuthErrorScreen />;
   }
 
   return (

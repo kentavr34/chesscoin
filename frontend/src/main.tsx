@@ -1,6 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import { getActiveTheme, applyThemeToCss, THEMES } from '@/lib/theme';
+
+// Initialize theme before render
+applyThemeToCss(THEMES[getActiveTheme()]);
 
 // Глобальные стили
 const style = document.createElement('style');

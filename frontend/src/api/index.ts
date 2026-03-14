@@ -44,6 +44,15 @@ export const profileApi = {
     api.delete<{ success: boolean }>('/profile/avatar'),
 };
 
+export const tonApi = {
+  connectWallet: (walletAddress: string) =>
+    api.post<{ success: boolean; walletAddress: string }>('/profile/ton-wallet', { walletAddress }),
+  disconnectWallet: () =>
+    api.delete<{ success: boolean }>('/profile/ton-wallet'),
+  withdraw: (amountCoins: string) =>
+    api.post<{ success: boolean; netTon: number }>('/profile/ton/withdraw', { amountCoins }),
+};
+
 interface UserPublicMin {
   id: string;
   firstName: string;

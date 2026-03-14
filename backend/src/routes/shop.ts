@@ -1,6 +1,8 @@
 import { Router, Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { authMiddleware } from "../middleware/auth";
+import { updateBalance } from "@/services/economy";
+import { TransactionType } from "@prisma/client";
 
 export const shopRouter = Router();
 
@@ -62,27 +64,13 @@ shopRouter.post("/purchase", authMiddleware, async (req: Request, res: Response)
     if (user.balance < item.priceCoins)
       return res.status(400).json({ error: "Недостаточно ᚙ" });
 
-    // Транзакция: снять монеты + добавить в инвентарь
-    await prisma.$transaction([
-      prisma.user.update({
-        where: { id: userId },
-        data: {
-          balance: { decrement: item.priceCoins },
-          totalSpent: { increment: item.priceCoins },
-        },
-      }),
-      prisma.userItem.create({
-        data: { userId, itemId },
-      }),
-      prisma.transaction.create({
-        data: {
-          userId,
-          amount: -item.priceCoins,
-          type: "ITEM_PURCHASE",
-          payload: { itemId, itemName: item.name },
-        },
-      }),
-    ]);
+    // Снять монеты через updateBalance (создаёт транзакцию автоматически)
+    await updateBalance(userId, -BigInt(item.priceCoins.toString()), TransactionType.ITEM_PURCHASE, { itemId: item.id, itemName: item.name });
+
+    // Добавить в инвентарь
+    await prisma.userItem.create({
+      data: { userId, itemId },
+    });
 
     res.json({ success: true, message: `Куплено: ${item.name}` });
   } catch (err) {

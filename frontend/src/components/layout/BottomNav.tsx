@@ -1,17 +1,19 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-
-const TABS = [
-  { path: '/',           icon: '♔', label: 'Играть'  },
-  { path: '/battles',   icon: '⚔',  label: 'Батлы'   },
-  { path: '/nations',   icon: '🌍', label: 'Сборные' },
-  { path: '/leaderboard', icon: '🏆', label: 'Рейтинг' },
-  { path: '/profile',   icon: '👤', label: 'Профиль' },
-];
+import { useT } from '@/i18n/useT';
 
 export const BottomNav: React.FC = () => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const t = useT();
+
+  const TABS = [
+    { path: '/',             icon: '♔', label: t.nav.play      },
+    { path: '/battles',      icon: '⚔', label: t.nav.battles   },
+    { path: '/nations',      icon: '🌍', label: t.nav.nations   },
+    { path: '/leaderboard',  icon: '🏆', label: t.nav.top       },
+    { path: '/profile',      icon: '👤', label: t.nav.profile   },
+  ];
 
   return (
     <nav style={{

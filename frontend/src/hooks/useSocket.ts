@@ -4,6 +4,9 @@ import { getSocket } from '@/api/socket';
 import { authApi } from '@/api';
 import { useGameStore } from '@/store/useGameStore';
 import { useUserStore } from '@/store/useUserStore';
+import { sound } from '@/lib/sound';
+import { useSettingsStore } from '@/store/useSettingsStore';
+import { translations } from '@/i18n/translations';
 
 export const useSocket = () => {
   const { upsertSession, removeSession, setSessions, setBattles, setDrawOffered } =
@@ -11,6 +14,7 @@ export const useSocket = () => {
   const { updateBalance, setUser } = useUserStore();
   const navigate = useNavigate();
   const initialized = useRef(false);
+  const lang = useSettingsStore.getState().lang;
 
   useEffect(() => {
     if (initialized.current) return;
@@ -40,15 +44,11 @@ export const useSocket = () => {
           upsertSession(res.session);
           navigate('/game/' + res.session.id);
         } else {
-          // Понятное сообщение об ошибке вместо тихого провала
-          const msg: Record<string, string> = {
-            NO_ATTEMPTS:           'Нет попыток для входа в игру. Подожди восстановления или купи.',
-            CANNOT_JOIN_OWN_SESSION: 'Нельзя присоединиться к своей игре.',
-            SESSION_NOT_FOUND:     'Игра не найдена или уже завершена.',
-            SESSION_NOT_WAITING:   'Игра уже началась или завершена.',
-            INSUFFICIENT_BALANCE:  'Недостаточно монет для ставки.',
-          };
-          const text = msg[res.error ?? ''] ?? (res.error ?? 'Не удалось войти в игру');
+          // Локализованные сообщения об ошибках
+          const currentLang = useSettingsStore.getState().lang;
+          const errT = translations[currentLang].errors as Record<string, string>;
+          const fallback = currentLang === 'ru' ? 'Не удалось войти в игру' : 'Failed to join game';
+          const text = errT[res.error ?? ''] ?? (res.error ?? fallback);
           // Показываем через кастомный event — компоненты могут подписаться
           window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text, type: 'error' } }));
         }
@@ -57,6 +57,11 @@ export const useSocket = () => {
 
     // Подписываемся на лобби
     socket.emit('battles:subscribe');
+
+    // ── Игра началась ──
+    socket.on('game:started', () => {
+      sound.gameStart();
+    });
 
     // ── Обновление сессии ──
     socket.on('game', (session) => {
@@ -91,6 +96,7 @@ export const useSocket = () => {
     return () => {
       socket.off('game');
       socket.off('game:over');
+      socket.off('game:started');
       socket.off('battles:list');
       socket.off('game:draw_offered');
       socket.off('game:draw_declined');

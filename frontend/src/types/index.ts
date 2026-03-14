@@ -44,7 +44,10 @@ export interface User extends UserPublic {
   winStreak?: number;
   loginStreak?: number;
   referralCount?: number;
+  teamSize?: number;
   militaryRank?: MilitaryRankInfo;
+  tonWalletAddress?: string | null;
+  tonConnectedAt?: string | null;
 }
 
 export interface ActiveSessionRef {
@@ -140,7 +143,7 @@ export interface Transaction {
   payload?: Record<string, unknown> | null;
 }
 
-export type ItemType = 'AVATAR_FRAME' | 'BOARD_SKIN' | 'PIECE_SKIN' | 'MOVE_ANIMATION';
+export type ItemType = 'AVATAR_FRAME' | 'BOARD_SKIN' | 'PIECE_SKIN' | 'MOVE_ANIMATION' | 'THEME';
 export type ItemRarity = 'COMMON' | 'RARE' | 'EPIC' | 'LEGENDARY';
 
 export interface ShopItem {
@@ -176,8 +179,21 @@ export interface Task {
 }
 
 // Военное звание
-export type MilitaryRankType = 'PRIVATE' | 'CORPORAL' | 'SERGEANT' | 'LIEUTENANT' | 'CAPTAIN' | 'MAJOR' | 'COLONEL' | 'GENERAL' | 'MARSHAL' | 'PRESIDENT';
-export interface MilitaryRankInfo { rank: MilitaryRankType; label: string; emoji: string; }
+export type MilitaryRankType =
+  | 'RECRUIT' | 'PRIVATE' | 'CORPORAL' | 'SERGEANT' | 'WARRANT'
+  | 'JR_LIEUTENANT' | 'LIEUTENANT' | 'SR_LIEUTENANT' | 'CAPTAIN'
+  | 'MAJOR' | 'LT_COLONEL' | 'COLONEL' | 'BRIGADIER'
+  | 'MAJ_GENERAL' | 'LT_GENERAL' | 'COL_GENERAL'
+  | 'MARSHAL' | 'EMPEROR';
+
+export interface MilitaryRankInfo {
+  rank: MilitaryRankType;
+  label: string;
+  emoji: string;
+  minMembers: number;
+  activationBonus?: string;
+  l1Percent?: number;
+}
 
 // Клановые войны
 export interface ClanWar {

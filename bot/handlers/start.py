@@ -5,6 +5,7 @@ from aiogram.filters import CommandStart, CommandObject
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo, CallbackQuery
 
 from services.backend import BackendClient
+from i18n import t
 
 logger = logging.getLogger(__name__)
 router = Router()
@@ -12,22 +13,22 @@ router = Router()
 FRONTEND_URL = os.getenv("WEBAPP_URL", "https://chesscoin.app")
 
 
-def play_keyboard() -> InlineKeyboardMarkup:
+def play_keyboard(lang: str | None) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="♟ Играть в ChessCoin",
+                    text=t(lang, "btn_play"),
                     web_app=WebAppInfo(url=FRONTEND_URL),
                 )
             ],
             [
                 InlineKeyboardButton(
-                    text="🏆 Рейтинг",
+                    text=t(lang, "btn_leaderboard"),
                     web_app=WebAppInfo(url=f"{FRONTEND_URL}/leaderboard"),
                 ),
                 InlineKeyboardButton(
-                    text="👥 Рефералы",
+                    text=t(lang, "btn_referrals"),
                     callback_data="referral_info",
                 ),
             ],
@@ -35,26 +36,18 @@ def play_keyboard() -> InlineKeyboardMarkup:
     )
 
 
-def welcome_text(name: str, is_referred: bool = False) -> str:
-    bonus_line = "🎁 Твой реферальный бонус +3 000 ᚙ начислится когда ты сыграешь первую партию!\n\n" if is_referred else ""
+def welcome_text(name: str, lang: str | None, is_referred: bool = False) -> str:
+    bonus_line = t(lang, "referral_bonus_line") if is_referred else ""
     return (
-        f"♟ <b>Добро пожаловать в ChessCoin, {name}!</b>\n\n"
-        f"Ты получил приветственный бонус:\n"
-        f"<b>┌─────────────────────────┐</b>\n"
-        f"<b>│  🎁  +5 000 ᚙ  на старт  │</b>\n"
-        f"<b>└─────────────────────────┘</b>\n\n"
+        f"{t(lang, 'welcome_title').format(name=name)}\n\n"
+        f"{t(lang, 'welcome_bonus')}\n\n"
         f"{bonus_line}"
-        f"Что тебя ждёт:\n"
-        f"⚔️  Батлы на ставку с живыми игроками\n"
-        f"🤖  Игры с J.A.R.V.I.S — до <b>+20 000 ᚙ</b>\n"
-        f"🌍  Войны сборных стран\n"
-        f"👥  Реферальная программа: <b>50%</b> с побед друзей\n\n"
-        f"<i>Твои монеты уже зачислены. Открой приложение и начинай!</i>"
+        f"{t(lang, 'welcome_features')}"
     )
 
 
 # ─────────────────────────────────────────
-# /start с реферальной ссылкой
+# /start with deep link
 # ─────────────────────────────────────────
 @router.message(CommandStart(deep_link=True))
 async def cmd_start_with_ref(message: Message, command: CommandObject):
@@ -62,11 +55,12 @@ async def cmd_start_with_ref(message: Message, command: CommandObject):
     battle_code = None
 
     args = command.args or ""
+    lang = message.from_user.language_code if message.from_user else None
 
     # Format: battle_CODE_ref_TELEGRAMID
     if args.startswith("battle_"):
         parts = args.split("_ref_", 1)
-        battle_code = parts[0][len("battle_"):]  # strip "battle_" prefix
+        battle_code = parts[0][len("battle_"):]
         if len(parts) == 2:
             referrer_id = parts[1]
     # Format: ref_TELEGRAMID
@@ -74,7 +68,7 @@ async def cmd_start_with_ref(message: Message, command: CommandObject):
         referrer_id = args[4:]
 
     user = message.from_user
-    name = user.first_name or "Игрок"
+    name = user.first_name or "Player"
 
     # Register referral with backend
     if referrer_id:
@@ -87,95 +81,84 @@ async def cmd_start_with_ref(message: Message, command: CommandObject):
         except Exception as e:
             logger.warning(f"register_referral_start failed: {e}")
 
-    # If came via battle invite, show battle-specific welcome
     if battle_code:
         battle_url = f"{FRONTEND_URL}/battles?join={battle_code}"
+        ref_line = t(lang, "referral_bonus_battle") if referrer_id else ""
         await message.answer(
-            f"♟ <b>Добро пожаловать в ChessCoin, {name}!</b>\n\n"
-            f"Тебя пригласили на <b>приватный батл</b>!\n\n"
-            f"Ты получил приветственный бонус:\n"
-            f"<b>┌─────────────────────────┐</b>\n"
-            f"<b>│  🎁  +5 000 ᚙ  на старт  │</b>\n"
-            f"<b>└─────────────────────────┘</b>\n\n"
-            f"{'🎁 Реферальный бонус +3 000 ᚙ начислится после первой партии!'+chr(10)+chr(10) if referrer_id else ''}"
-            f"<i>Нажми кнопку ниже чтобы присоединиться к батлу:</i>",
+            t(lang, "battle_invite").format(name=name, ref_line=ref_line),
             reply_markup=InlineKeyboardMarkup(
                 inline_keyboard=[
                     [
                         InlineKeyboardButton(
-                            text="⚔️ Войти в батл",
+                            text=t(lang, "btn_join_battle"),
                             web_app=WebAppInfo(url=battle_url),
                         )
                     ],
                     [
                         InlineKeyboardButton(
-                            text="♟ Играть в ChessCoin",
+                            text=t(lang, "btn_play"),
                             web_app=WebAppInfo(url=FRONTEND_URL),
                         )
                     ],
                 ]
             ),
+            parse_mode="HTML",
         )
     else:
         await message.answer(
-            welcome_text(name, is_referred=bool(referrer_id)),
-            reply_markup=play_keyboard(),
+            welcome_text(name, lang, is_referred=bool(referrer_id)),
+            reply_markup=play_keyboard(lang),
+            parse_mode="HTML",
         )
 
 
 # ─────────────────────────────────────────
-# /start без реферала
+# /start without referral
 # ─────────────────────────────────────────
 @router.message(CommandStart())
 async def cmd_start(message: Message):
     user = message.from_user
-    name = user.first_name or "Игрок"
+    name = user.first_name or "Player"
+    lang = user.language_code if user else None
 
     await message.answer(
-        welcome_text(name),
-        reply_markup=play_keyboard(),
+        welcome_text(name, lang),
+        reply_markup=play_keyboard(lang),
+        parse_mode="HTML",
     )
 
 
 # ─────────────────────────────────────────
-# Кнопка «Рефералы»
+# "Referrals" button callback
 # ─────────────────────────────────────────
 @router.callback_query(F.data == "referral_info")
 async def referral_info(callback: CallbackQuery):
     user = callback.from_user
+    lang = user.language_code if user else None
     bot_username = (await callback.bot.get_me()).username
     ref_link = f"https://t.me/{bot_username}?start=ref_{user.id}"
 
     await callback.message.answer(
-        f"👥 <b>Реферальная программа</b>\n\n"
-        f"Приглашай — зарабатывай автоматически:\n\n"
-        f"  🥇 <b>50%</b> от каждого выигрыша друга\n"
-        f"  🥈 <b>10%</b> от выигрышей его друзей\n"
-        f"  🎁 <b>+3 000 ᚙ</b> когда друг сыграет первую партию\n\n"
-        f"<i>Бонус начисляется только после первой сыгранной партии — "
-        f"не за простую регистрацию.</i>\n\n"
-        f"Твоя ссылка:\n"
-        f"<code>{ref_link}</code>\n\n"
-        f"<i>Нажми на ссылку чтобы скопировать</i>",
+        f"{t(lang, 'referral_info_title')}\n\n"
+        + t(lang, "referral_info_body").format(ref_link=ref_link),
+        parse_mode="HTML",
     )
     await callback.answer()
 
 
 # ─────────────────────────────────────────
-# /invite — отправить реферальную ссылку
+# /invite command
 # ─────────────────────────────────────────
 @router.message(F.text == "/invite")
 async def cmd_invite(message: Message):
     user = message.from_user
+    lang = user.language_code if user else None
     bot_username = (await message.bot.get_me()).username
     ref_link = f"https://t.me/{bot_username}?start=ref_{user.id}"
-    share_url = f"https://t.me/share/url?url={ref_link}&text=♟ Играй в ChessCoin — зарабатывай монеты в шахматах!"
+    share_url = f"https://t.me/share/url?url={ref_link}&text=♟ Play ChessCoin — earn coins playing chess!"
 
     await message.answer(
-        f"👥 <b>Твоя реферальная ссылка:</b>\n\n"
-        f"<code>{ref_link}</code>\n\n"
-        f"Отправь другу — когда он сыграет первую игру, ты получишь <b>+3 000 ᚙ</b> "
-        f"и <b>50%</b> от каждой его победы навсегда!\n\n"
-        f"<a href=\"{share_url}\">📤 Поделиться в Telegram</a>",
+        t(lang, "invite_text").format(ref_link=ref_link, share_url=share_url),
+        parse_mode="HTML",
         disable_web_page_preview=True,
     )

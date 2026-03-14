@@ -736,6 +736,7 @@ enum ItemType {
   BOARD_SKIN         // цвет/стиль доски
   PIECE_SKIN         // стиль фигур
   MOVE_ANIMATION     // анимация ходов
+  THEME              // визуальная тема интерфейса
 }
 
 enum ItemCategory {

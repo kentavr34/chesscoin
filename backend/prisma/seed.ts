@@ -292,6 +292,35 @@ async function main() {
   }
   console.log(`✅ ${tasks.length} Tasks`);
 
+  // ─── Темы интерфейса ─────────────────────────────────────────────────────
+  const themes = [
+    { name: 'Binance Pro',    description: 'Стиль Binance — тёмный, профессиональный', priceCoins: 10_000n,    rarity: 'COMMON'    },
+    { name: 'Chess Classic',  description: 'Классика Chess.com — зелёный и кремовый',  priceCoins: 50_000n,    rarity: 'COMMON'    },
+    { name: 'Neon Cyber',     description: 'Неон и киберпанк — фиолетовый/голубой',    priceCoins: 100_000n,   rarity: 'RARE'      },
+    { name: 'Royal Gold',     description: 'Королевский синий с золотом',              priceCoins: 250_000n,   rarity: 'RARE'      },
+    { name: 'Matrix Dark',    description: 'Зелёный матрицы на чёрном',               priceCoins: 500_000n,   rarity: 'EPIC'      },
+    { name: 'Crystal Ice',    description: 'Ледяной кристалл — голубые тона',         priceCoins: 1_000_000n, rarity: 'LEGENDARY' },
+  ];
+
+  for (const t of themes) {
+    await prisma.item.upsert({
+      where: { id: `theme_${t.name.replace(/\s+/g,'_').toLowerCase()}` },
+      update: {},
+      create: {
+        id: `theme_${t.name.replace(/\s+/g,'_').toLowerCase()}`,
+        type: 'THEME',
+        category: t.rarity === 'LEGENDARY' || t.rarity === 'EPIC' ? 'PREMIUM' : 'BASIC',
+        name: t.name,
+        description: t.description,
+        priceCoins: t.priceCoins,
+        rarity: t.rarity as any,
+        isActive: true,
+        sortOrder: 100,
+      },
+    });
+  }
+  console.log(`✅ ${themes.length} Themes`);
+
   console.log("🎉 Seed completed!");
 }
 

@@ -1,6 +1,8 @@
 import cron from "node-cron";
 import { prisma } from "@/lib/prisma";
 import config from "@/config";
+import { updateBalance } from "@/services/economy";
+import { TransactionType } from "@prisma/client";
 
 // ─────────────────────────────────────────
 // Использовать попытку (при старте игры)
@@ -40,24 +42,11 @@ export const purchaseAttempts = async (
     throw new Error(`Недостаточно монет. Нужно ${totalCost} ᚙ.`);
   }
 
-  await prisma.$transaction([
-    prisma.user.update({
-      where: { id: userId },
-      data: {
-        attempts: { increment: actualCount },
-        balance: { decrement: totalCost },
-        totalSpent: { increment: totalCost },
-      },
-    }),
-    prisma.transaction.create({
-      data: {
-        userId,
-        amount: -totalCost,
-        type: "ATTEMPT_PURCHASE",
-        payload: { count: actualCount },
-      },
-    }),
-  ]);
+  await updateBalance(userId, -totalCost, TransactionType.ATTEMPT_PURCHASE, { count: actualCount });
+  await prisma.user.update({
+    where: { id: userId },
+    data: { attempts: { increment: actualCount } },
+  });
 };
 
 // ─────────────────────────────────────────

@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { fmtBalance } from '@/utils/format';
 import { haptic } from '@/lib/haptic';
+import { sound } from '@/lib/sound';
+import { useT } from '@/i18n/useT';
 
 type ResultType = 'win' | 'lose' | 'draw';
 
@@ -14,31 +16,10 @@ interface GameResultModalProps {
   onClose: () => void;
 }
 
-const CONFIG = {
-  win: {
-    emoji: '🏆',
-    title: 'Победа!',
-    titleColor: '#F5C842',
-    glow: 'rgba(245,200,66,0.25)',
-    bg: 'linear-gradient(160deg,#1a1c0f 0%,#0B0D11 60%)',
-    border: 'rgba(245,200,66,0.3)',
-  },
-  lose: {
-    emoji: '💔',
-    title: 'Поражение',
-    titleColor: '#FF4D6A',
-    glow: 'rgba(255,77,106,0.2)',
-    bg: 'linear-gradient(160deg,#1a0b0d 0%,#0B0D11 60%)',
-    border: 'rgba(255,77,106,0.25)',
-  },
-  draw: {
-    emoji: '🤝',
-    title: 'Ничья',
-    titleColor: '#8B92A8',
-    glow: 'rgba(139,146,168,0.15)',
-    bg: 'linear-gradient(160deg,#12141c 0%,#0B0D11 60%)',
-    border: 'rgba(255,255,255,0.12)',
-  },
+const RESULT_META = {
+  win:  { emoji: '🏆', titleColor: '#F5C842', glow: 'rgba(245,200,66,0.25)', bg: 'linear-gradient(160deg,#1a1c0f 0%,#0B0D11 60%)', border: 'rgba(245,200,66,0.3)' },
+  lose: { emoji: '💔', titleColor: '#FF4D6A', glow: 'rgba(255,77,106,0.2)',  bg: 'linear-gradient(160deg,#1a0b0d 0%,#0B0D11 60%)', border: 'rgba(255,77,106,0.25)' },
+  draw: { emoji: '🤝', titleColor: '#8B92A8', glow: 'rgba(139,146,168,0.15)', bg: 'linear-gradient(160deg,#12141c 0%,#0B0D11 60%)', border: 'rgba(255,255,255,0.12)' },
 };
 
 const AUTO_CLOSE_SEC = 3;
@@ -52,19 +33,20 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
   userTelegramId,
   onClose,
 }) => {
+  const t = useT();
   const [countdown, setCountdown] = useState(AUTO_CLOSE_SEC);
   const [visible, setVisible] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Анимация появления + haptic
+  // Анимация появления + haptic + sound
   useEffect(() => {
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       setVisible(true);
-      if (result === 'win') haptic.win();
-      else if (result === 'lose') haptic.lose();
-      else haptic.impact('light');
+      if (result === 'win') { haptic.win(); sound.win(); }
+      else if (result === 'lose') { haptic.lose(); sound.lose(); }
+      else { haptic.impact('light'); sound.draw(); }
     }, 30);
-    return () => clearTimeout(t);
+    return () => clearTimeout(timer);
   }, []);
 
   // Авто-закрытие через 3 сек
@@ -87,7 +69,8 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
     setTimeout(onClose, 220);
   };
 
-  const cfg = CONFIG[result];
+  const cfg = RESULT_META[result];
+  const titles = { win: t.gameResult.win, lose: t.gameResult.lose, draw: t.gameResult.draw };
   const earnedBig = BigInt(earned || '0');
   const commBig   = BigInt(commission || '0');
   const pieceBig  = BigInt(pieceCoins || '0');
@@ -167,7 +150,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
           marginBottom: 20,
           textShadow: `0 0 24px ${cfg.glow}`,
         }}>
-          {cfg.title}
+          {titles[result]}
         </div>
 
         {/* Разбивка монет */}
@@ -181,7 +164,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
             {/* Бот-игра: бонус за победу */}
             {isBotGame && earnedBig > 0n && (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 12, color: '#8B92A8' }}>За победу</span>
+                <span style={{ fontSize: 12, color: '#8B92A8' }}>{t.gameResult.forWin}</span>
                 <span style={{
                   fontFamily: "'JetBrains Mono',monospace",
                   fontSize: 14, fontWeight: 700, color: '#F0F2F8',
@@ -194,7 +177,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
             {/* Бот-игра: монеты за фигуры */}
             {isBotGame && pieceBig > 0n && (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 12, color: '#8B92A8' }}>За фигуры</span>
+                <span style={{ fontSize: 12, color: '#8B92A8' }}>{t.gameResult.forPieces}</span>
                 <span style={{
                   fontFamily: "'JetBrains Mono',monospace",
                   fontSize: 14, fontWeight: 700, color: '#F0F2F8',
@@ -207,7 +190,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
             {/* Батл-игра: заработано */}
             {!isBotGame && earnedBig > 0n && (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 12, color: '#8B92A8' }}>Заработано</span>
+                <span style={{ fontSize: 12, color: '#8B92A8' }}>{t.gameResult.earned}</span>
                 <span style={{
                   fontFamily: "'JetBrains Mono',monospace",
                   fontSize: 14, fontWeight: 700, color: '#F0F2F8',
@@ -220,7 +203,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
             {/* Комиссия (только батл) */}
             {commBig > 0n && (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 12, color: '#8B92A8' }}>Комиссия стола (10%)</span>
+                <span style={{ fontSize: 12, color: '#8B92A8' }}>{t.gameResult.commission}</span>
                 <span style={{
                   fontFamily: "'JetBrains Mono',monospace",
                   fontSize: 14, fontWeight: 700, color: '#FF4D6A',
@@ -237,7 +220,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
 
             {/* Итого */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#F0F2F8' }}>Итого</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#F0F2F8' }}>{t.gameResult.total}</span>
               <span style={{
                 fontFamily: "'JetBrains Mono',monospace",
                 fontSize: 18, fontWeight: 800,
@@ -256,7 +239,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
             textAlign: 'center', fontSize: 13, color: '#8B92A8',
             padding: '8px 0',
           }}>
-            Ставки возвращены игрокам
+            {t.gameResult.drawMsg}
           </div>
         )}
 
@@ -282,7 +265,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
               cursor: 'pointer', fontFamily: 'inherit',
             }}
           >
-            📤 Поделиться победой
+            {t.gameResult.shareWin}
           </button>
         )}
 
@@ -299,7 +282,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
             transition: 'background .15s',
           }}
         >
-          ← В главное меню
+          {t.gameResult.backToMenu}
         </button>
       </div>
     </div>

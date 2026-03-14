@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { haptic } from '@/lib/haptic';
+import { sound } from '@/lib/sound';
 import { Chessboard } from 'react-chessboard';
 import { Chess, Square, PieceSymbol } from 'chess.js';
 import type { Piece as RCBPiece } from 'react-chessboard/dist/chessboard/types';
@@ -122,14 +123,27 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
         setSelected(null);
         setOptionSqs({});
         setLocalFen(chess.fen());
-        if (move.captured) {
+        if (move.flags.includes('k') || move.flags.includes('q')) {
+          // Castling
+          haptic.move();
+          sound.castle();
+        } else if (move.flags.includes('p')) {
+          // Promotion
+          haptic.impact('medium');
+          sound.promote();
+        } else if (move.captured) {
           haptic.capture();
+          sound.capture();
           onCapture?.(move.captured as PieceSymbol);
         } else {
           haptic.move();
+          sound.move();
         }
-        // Шах — дополнительная вибрация
-        if (chess.inCheck()) haptic.check();
+        // Check — extra feedback
+        if (chess.inCheck()) {
+          haptic.check();
+          sound.check();
+        }
         onMove(selected, sq, move.promotion ?? undefined);
         return;
       } catch {
@@ -157,13 +171,24 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
       setSelected(null);
       setOptionSqs({});
       setLocalFen(chess.fen());
-      if (move.captured) {
+      if (move.flags.includes('k') || move.flags.includes('q')) {
+        haptic.move();
+        sound.castle();
+      } else if (move.flags.includes('p')) {
+        haptic.impact('medium');
+        sound.promote();
+      } else if (move.captured) {
         haptic.capture();
+        sound.capture();
         onCapture?.(move.captured as PieceSymbol);
       } else {
         haptic.move();
+        sound.move();
       }
-      if (chess.inCheck()) haptic.check();
+      if (chess.inCheck()) {
+        haptic.check();
+        sound.check();
+      }
       onMove(from as Square, to as Square, move.promotion ?? undefined);
       return true;
     } catch {

@@ -1,6 +1,8 @@
 import { Router, Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { authMiddleware } from "../middleware/auth";
+import { updateBalance } from "@/services/economy";
+import { TransactionType } from "@prisma/client";
 
 export const tasksRouter = Router();
 
@@ -78,25 +80,9 @@ tasksRouter.post("/complete", authMiddleware, async (req: Request, res: Response
         return res.status(400).json({ error: "Неверный код" });
     }
 
-    // Начислить награду
-    await prisma.$transaction([
-      prisma.completedTask.create({ data: { userId, taskId } }),
-      prisma.user.update({
-        where: { id: userId },
-        data: {
-          balance: { increment: task.winningAmount },
-          totalEarned: { increment: task.winningAmount },
-        },
-      }),
-      prisma.transaction.create({
-        data: {
-          userId,
-          amount: task.winningAmount,
-          type: "TASK_REWARD",
-          payload: { taskId, taskTitle: task.title },
-        },
-      }),
-    ]);
+    // Начислить награду через updateBalance (создаёт транзакцию автоматически)
+    await prisma.completedTask.create({ data: { userId, taskId } });
+    await updateBalance(userId, BigInt(task.winningAmount.toString()), TransactionType.TASK_REWARD, { taskId, taskTitle: task.title });
 
     res.json({
       success: true,

@@ -152,6 +152,101 @@ router.delete("/avatar", authMiddleware, async (req: Request, res: Response) => 
   }
 });
 
+// POST /profile/ton-wallet — подключить TON кошелёк
+router.post("/ton-wallet", authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as AuthRequest).userId;
+    const { walletAddress } = req.body;
+    if (!walletAddress || typeof walletAddress !== 'string' || walletAddress.length < 20) {
+      return res.status(400).json({ error: "Некорректный адрес кошелька" });
+    }
+    // Check wallet not already linked to another account
+    const existing = await prisma.user.findFirst({
+      where: { tonWalletAddress: walletAddress, id: { not: userId } },
+      select: { id: true },
+    });
+    if (existing) {
+      return res.status(409).json({ error: "Этот кошелёк уже привязан к другому аккаунту" });
+    }
+    await prisma.user.update({
+      where: { id: userId },
+      data: { tonWalletAddress: walletAddress, tonConnectedAt: new Date() },
+    });
+    res.json({ success: true, walletAddress });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /profile/ton-wallet — отвязать TON кошелёк
+router.delete("/ton-wallet", authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as AuthRequest).userId;
+    await prisma.user.update({
+      where: { id: userId },
+      data: { tonWalletAddress: null, tonConnectedAt: null },
+    });
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /profile/ton/withdraw — запрос на вывод (создаёт WithdrawalRequest)
+router.post("/ton/withdraw", authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as AuthRequest).userId;
+    const { amountCoins } = req.body;
+    if (!amountCoins || BigInt(amountCoins) < 1_000_000n) {
+      return res.status(400).json({ error: "Минимальная сумма вывода: 1,000,000 ᚙ" });
+    }
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { balance: true, tonWalletAddress: true },
+    });
+    if (!user) return res.status(404).json({ error: "Пользователь не найден" });
+    if (!user.tonWalletAddress) {
+      return res.status(400).json({ error: "Сначала подключите TON кошелёк" });
+    }
+    if (user.balance < BigInt(amountCoins)) {
+      return res.status(400).json({ error: "Недостаточно монет" });
+    }
+    // Check no pending withdrawal exists
+    const pending = await prisma.withdrawalRequest.findFirst({
+      where: { userId, status: "PENDING" },
+    });
+    if (pending) {
+      return res.status(409).json({ error: "У вас уже есть активная заявка на вывод" });
+    }
+    // Calculate TON equivalent (placeholder rate: 1 TON = 1,000,000 ᚙ)
+    const tonAmount = Number(amountCoins) / 1_000_000;
+    const commission = tonAmount * 0.005; // 0.5% commission
+    const netTon = tonAmount - commission;
+
+    // Deduct from balance
+    const { updateBalance } = await import("@/services/economy");
+    const { TransactionType } = await import("@prisma/client");
+    await updateBalance(userId, -BigInt(amountCoins), TransactionType.WITHDRAWAL, {
+      tonWallet: user.tonWalletAddress,
+      tonAmount: netTon,
+    });
+
+    const withdrawal = await prisma.withdrawalRequest.create({
+      data: {
+        userId,
+        amountCoins: BigInt(amountCoins),
+        tonWalletAddress: user.tonWalletAddress,
+        tonCommission: commission,
+        status: "PENDING",
+      },
+    });
+
+    res.json({ success: true, withdrawal: { ...withdrawal, amountCoins: withdrawal.amountCoins.toString() }, netTon });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /profile/:userId — публичный профиль (должен быть последним!)
 router.get("/:userId", authMiddleware, async (req: Request, res: Response) => {
   try {

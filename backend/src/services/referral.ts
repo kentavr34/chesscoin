@@ -12,7 +12,7 @@
 // 3. Начисления идут через updateBalance() — единый транзакционный путь.
 //    Никаких агрегаций на лету. Счётчики денормализованы в user (referrerIncome).
 //
-// 4. Реферальный бонус (3000ᚙ) — ТОЛЬКО после первой завершённой партии.
+// 4. Реферальный бонус — ТОЛЬКО после первой завершённой партии.
 //    Не при регистрации. Не при первом входе. Только game finish.
 //
 // 5. Реферальный % от выигрыша — fire-and-forget через setImmediate().
@@ -26,6 +26,7 @@ import { TransactionType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import config from "@/config";
 import { updateBalance, canEmit } from "@/services/economy";
+import { getMilitaryRank, getRankBonuses } from "@/utils/militaryRank";
 
 // ─────────────────────────────────────────
 // Вызывается в finish.ts при первом завершении партии
@@ -43,33 +44,45 @@ export const activateReferral = async (userId: string): Promise<void> => {
           id: true,
           telegramId: true,
           firstName: true,
+          referralCount: true,
         },
       },
     },
   });
 
-  // Уже активирован или нет реферера — выходим
   if (!user || user.referralActivated || !user.referrerId || !user.referrer) return;
 
-  // Атомарно помечаем активацию
   await prisma.user.update({
     where: { id: userId },
     data: { referralActivated: true },
   });
 
-  // Бонус пригласившему — только если фаза 1 (эмиссия открыта)
+  // Increment referrer's team count and update rank
+  const newCount = (user.referrer.referralCount ?? 0) + 1;
+  const newRankInfo = getMilitaryRank(newCount);
+  await prisma.user.update({
+    where: { id: user.referrerId },
+    data: {
+      referralCount: newCount,
+      militaryRank: newRankInfo.rank,
+    },
+  });
+
+  // Rank-based activation bonus — only in Phase 1
   const emit = await canEmit();
   if (emit) {
-    await updateBalance(
-      user.referrerId,
-      config.economy.referralFirstGameBonus,
-      TransactionType.REFERRAL_BONUS,
-      { referralId: userId, referralName: user.firstName },
-      { isEmission: true }
-    );
+    const bonuses = getRankBonuses(newCount - 1); // rank BEFORE this new member
+    if (bonuses.activationBonus > 0n) {
+      await updateBalance(
+        user.referrerId,
+        bonuses.activationBonus,
+        TransactionType.REFERRAL_BONUS,
+        { referralId: userId, referralName: user.firstName, rankBonus: bonuses.activationBonus.toString() },
+        { isEmission: true }
+      );
+    }
   }
 
-  // Уведомляем пригласившего через AdminNotification (бот отправит красивое сообщение)
   await prisma.adminNotification.create({
     data: {
       type: "REFERRAL_ACTIVATED",
@@ -77,7 +90,8 @@ export const activateReferral = async (userId: string): Promise<void> => {
         referrerTelegramId: user.referrer.telegramId,
         referrerName: user.referrer.firstName,
         newPlayerName: user.firstName,
-        bonus: config.economy.referralFirstGameBonus.toString(),
+        newRank: newRankInfo.label,
+        teamSize: newCount,
       },
     },
   });
@@ -93,7 +107,6 @@ export const applyReferralIncome = async (
 ): Promise<void> => {
   if (winAmount <= 0n) return;
 
-  // Один запрос — получаем winner + его l1 + l2 реферера
   const winner = await prisma.user.findUnique({
     where: { id: winnerId },
     select: {
@@ -102,33 +115,39 @@ export const applyReferralIncome = async (
         select: {
           id: true,
           referrerId: true,
+          referralCount: true,
         },
       },
     },
   });
 
-  if (!winner?.referrerId) return; // нет реферера — выходим
+  if (!winner?.referrerId) return;
 
   const l1 = winner.referrerId;
   const l2 = winner.referrer?.referrerId ?? null;
+  const referrerCount = winner.referrer?.referralCount ?? 0;
 
-  // L1: 50% от выигрыша — один UPDATE
-  const l1Amount = (winAmount * BigInt(config.economy.referrerIncomePercent)) / 100n;
-  if (l1Amount > 0n) {
-    await updateBalance(
-      l1,
-      l1Amount,
-      TransactionType.REFERRAL_INCOME,
-      { sourceUserId: winnerId, winAmount: winAmount.toString(), level: 1 },
-      { isEmission: false }
-    );
-    await prisma.user.update({
-      where: { id: l1 },
-      data: { referrerIncome: { increment: l1Amount } },
-    });
+  // L1: rank-based percent
+  const bonuses = getRankBonuses(referrerCount);
+  const l1Percent = bonuses.l1Percent;
+  if (l1Percent > 0) {
+    const l1Amount = (winAmount * BigInt(l1Percent)) / 100n;
+    if (l1Amount > 0n) {
+      await updateBalance(
+        l1,
+        l1Amount,
+        TransactionType.REFERRAL_INCOME,
+        { sourceUserId: winnerId, winAmount: winAmount.toString(), level: 1, percent: l1Percent },
+        { isEmission: false }
+      );
+      await prisma.user.update({
+        where: { id: l1 },
+        data: { referrerIncome: { increment: l1Amount } },
+      });
+    }
   }
 
-  // L2: 10% от выигрыша — один UPDATE (если есть)
+  // L2: fixed 10% (always, independent of L1 rank)
   if (l2) {
     const l2Amount = (winAmount * BigInt(config.economy.subReferrerIncomePercent)) / 100n;
     if (l2Amount > 0n) {
