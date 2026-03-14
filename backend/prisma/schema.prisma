@@ -335,6 +335,9 @@ model Clan {
   warsAsAttacker ClanWar[] @relation("AttackerClan")
   warsAsDefender ClanWar[] @relation("DefenderClan")
 
+  battlesAsChallenger ClanBattle[] @relation("ClanBattleChallenger")
+  battlesAsDefender   ClanBattle[] @relation("ClanBattleDefender")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -395,6 +398,107 @@ model ClanWar {
   finishedAt DateTime?
 
   @@map("clan_wars")
+}
+
+// ─────────────────────────────────────────
+// CLAN BATTLES (командные соревнования)
+// ─────────────────────────────────────────
+
+model ClanBattle {
+  id                 String           @id @default(uuid())
+
+  challengerClanId   String
+  challengerClan     Clan             @relation("ClanBattleChallenger", fields: [challengerClanId], references: [id])
+
+  defenderClanId     String
+  defenderClan       Clan             @relation("ClanBattleDefender", fields: [defenderClanId], references: [id])
+
+  status             ClanBattleStatus @default(PENDING)
+
+  // Пул: взносы игроков обоих кланов
+  pool               BigInt           @default(0)
+
+  // Ограничение одновременных партий
+  maxSimultaneous    Int              @default(10)
+  activeGames        Int              @default(0) // текущее кол-во активных партий
+
+  // Итоги
+  challengerWins     Int              @default(0)
+  defenderWins       Int              @default(0)
+  totalGames         Int              @default(0)
+  winnerClanId       String?
+
+  // Время
+  duration           Int              // секунды: 3600 до 2592000
+  startedAt          DateTime?
+  endAt              DateTime?
+  finishedAt         DateTime?
+
+  // Публикация
+  isPublished        Boolean          @default(false)
+
+  contributions ClanBattleContribution[]
+  games         ClanBattleGame[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([challengerClanId])
+  @@index([defenderClanId])
+  @@map("clan_battles")
+}
+
+model ClanBattleContribution {
+  id        String @id @default(uuid())
+
+  battleId  String
+  battle    ClanBattle @relation(fields: [battleId], references: [id], onDelete: Cascade)
+
+  userId    String
+  clanId    String
+  amount    BigInt
+
+  paidOut   Boolean @default(false)
+  paidAmount BigInt @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@unique([battleId, userId])
+  @@index([battleId])
+  @@map("clan_battle_contributions")
+}
+
+model ClanBattleGame {
+  id        String @id @default(uuid())
+
+  battleId  String
+  battle    ClanBattle @relation(fields: [battleId], references: [id], onDelete: Cascade)
+
+  sessionId String  @unique // ссылка на Session
+  player1Id String
+  player2Id String
+  clan1Id   String  // клан игрока1
+  clan2Id   String  // клан игрока2
+
+  winnerId  String?  // userId победителя
+  winnerClanId String?
+
+  status    String   @default("IN_PROGRESS") // IN_PROGRESS | FINISHED
+
+  createdAt  DateTime @default(now())
+  finishedAt DateTime?
+
+  @@index([battleId])
+  @@index([sessionId])
+  @@map("clan_battle_games")
+}
+
+enum ClanBattleStatus {
+  PENDING      // ожидает принятия
+  IN_PROGRESS  // идёт
+  FINISHED     // завершён
+  CANCELLED    // отменён
 }
 
 // ─────────────────────────────────────────

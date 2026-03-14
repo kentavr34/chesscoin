@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { updateBalance } from "@/services/economy";
 import { TransactionType } from "@prisma/client";
 import { ensureSystemTournaments } from "@/routes/tournaments";
+import { settleClanBattle } from "@/routes/nations";
 
 const BOT_TOKEN = () => process.env.BOT_TOKEN ?? "";
 const CHANNEL_ID = () => process.env.TELEGRAM_CHANNEL_ID ?? "";
@@ -194,6 +195,26 @@ async function checkClanWarResults() {
   }
 }
 
+// ─── Hourly: расчёт завершённых клановых батлов ──────────────────────────────
+async function checkClanBattleResults() {
+  try {
+    const expired = await (prisma as any).clanBattle.findMany({
+      where: {
+        status: "IN_PROGRESS",
+        endAt: { lte: new Date() },
+      },
+      include: { contributions: true },
+    });
+
+    for (const battle of expired) {
+      await settleClanBattle(battle);
+      console.log("[Cron/ClanBattle] Settled battle:", battle.id);
+    }
+  } catch (err) {
+    console.error("[Cron/ClanBattles]", err);
+  }
+}
+
 // ─── Периодически: итоги турниров ────────────────────────────────────────────
 async function checkTournamentResults() {
   try {
@@ -304,12 +325,14 @@ export function startGameCrons() {
   setInterval(async () => {
     await postTopBattle();
     await checkClanWarResults();
+    await checkClanBattleResults();
     await checkTournamentResults();
   }, 60 * 60 * 1000);
 
   // Первый запуск через 30 сек после старта сервера
   setTimeout(async () => {
     await checkClanWarResults();
+    await checkClanBattleResults();
     await checkTournamentResults();
   }, 30000);
 

@@ -243,6 +243,42 @@ export interface TournamentFull {
   myStats?: { wins: number; losses: number; draws: number; points: number } | null;
 }
 
+// Клановые батлы (командные соревнования)
+export type ClanBattleStatus = 'PENDING' | 'IN_PROGRESS' | 'FINISHED' | 'CANCELLED';
+
+export interface ClanBattle {
+  id: string;
+  challengerClanId: string;
+  defenderClanId: string;
+  challengerClan: { id: string; name: string; flag: string; elo?: number };
+  defenderClan:   { id: string; name: string; flag: string; elo?: number };
+  status: ClanBattleStatus;
+  pool: string;
+  maxSimultaneous: number;
+  activeGames: number;
+  challengerWins: number;
+  defenderWins: number;
+  totalGames: number;
+  winnerClanId?: string | null;
+  duration: number;
+  startedAt?: string | null;
+  endAt?: string | null;
+  finishedAt?: string | null;
+  createdAt: string;
+  myContribution?: { amount: string; clanId: string } | null;
+  _count?: { contributions: number; games: number };
+}
+
+export interface ClanBattleContribution {
+  id: string;
+  battleId: string;
+  userId: string;
+  clanId: string;
+  amount: string;
+  paidOut: boolean;
+  paidAmount: string;
+}
+
 // Реферальная программа
 export interface ReferralInfo {
   total: number;

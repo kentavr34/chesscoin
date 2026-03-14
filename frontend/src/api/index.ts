@@ -1,7 +1,7 @@
 import { api } from './client';
 import type {
   User, GameSession, BattleLobbyItem, LeaderboardUser,
-  Nation, Transaction, Task, ShopItem, ClanWar, ClanMemberData, TournamentFull,
+  Nation, Transaction, Task, ShopItem, ClanWar, ClanMemberData, TournamentFull, ClanBattle,
 } from '@/types';
 
 // ── AUTH ──────────────────────────────────────────────
@@ -89,6 +89,24 @@ export const nationsApi = {
     api.post<{ success: boolean; war: any }>('/nations/war/challenge', { defenderClanId, duration }),
   acceptWar: (warId: string) =>
     api.post<{ success: boolean }>(`/nations/war/${warId}/accept`),
+};
+
+// ── CLAN BATTLES ──────────────────────────────────────
+export const clanBattlesApi = {
+  list: () =>
+    api.get<{ battles: ClanBattle[] }>('/nations/battles'),
+  get: (id: string) =>
+    api.get<{ battle: ClanBattle }>(`/nations/battle/${id}`),
+  challenge: (defenderClanId: string, duration: number, bet: string) =>
+    api.post<{ success: boolean; battle: ClanBattle }>('/nations/battle/challenge', {
+      defenderClanId, duration, bet,
+    }),
+  join: (id: string, bet: string) =>
+    api.post<{ success: boolean; pool: string }>(`/nations/battle/${id}/join`, { bet }),
+  startGame: (id: string, opponentId: string) =>
+    api.post<{ success: boolean; battleId: string }>(`/nations/battle/${id}/start-game`, { opponentId }),
+  settle: (id: string) =>
+    api.post<{ success: boolean }>(`/nations/battle/${id}/settle`, {}),
 };
 
 // ── TASKS ─────────────────────────────────────────────
