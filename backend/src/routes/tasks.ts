@@ -26,11 +26,37 @@ tasksRouter.get("/", authMiddleware, async (req: Request, res: Response) => {
       completed.map((c) => [c.taskId, c.completedAt])
     );
 
-    const result = tasks.map((task) => ({
-      ...task,
-      completed: completedSet.has(task.id),
-      completedAt: completedSet.get(task.id) ?? null,
-    }));
+    const getCategory = (task: any): string => {
+      const meta = task.metadata as any;
+      if (meta?.category) return meta.category;
+      switch (task.taskType) {
+        case 'SUBSCRIBE_TELEGRAM':
+        case 'FOLLOW_LINK':
+        case 'REFERRAL':
+          return 'SOCIAL';
+        default:
+          return 'OTHER';
+      }
+    };
+
+    const result = tasks.map((task) => {
+      const isCompleted = completedSet.has(task.id);
+      return {
+        id: task.id,
+        type: getCategory(task),
+        taskType: task.taskType,
+        icon: task.icon,
+        title: task.title,
+        description: task.description,
+        metadata: task.metadata,
+        status: task.status,
+        reward: task.winningAmount.toString(),
+        winningAmount: task.winningAmount.toString(),
+        isCompleted,
+        completed: isCompleted,
+        completedAt: completedSet.get(task.id) ?? null,
+      };
+    });
 
     res.json({ tasks: result });
   } catch (err) {

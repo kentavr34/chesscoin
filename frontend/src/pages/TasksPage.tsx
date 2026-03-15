@@ -11,13 +11,25 @@ const CATEGORY_ICONS: Record<string, string> = {
   SOCIAL: '📢',
 };
 
+const CATEGORY_ORDER = ['DAILY', 'LEARN', 'SOCIAL', 'OTHER'];
+
 const groupByCategory = (tasks: Task[]): Record<string, Task[]> => {
   return tasks.reduce((acc, t) => {
-    const cat = t.type.split('_')[0] ?? 'OTHER';
+    const cat = (t.type ?? 'OTHER').split('_')[0];
     if (!acc[cat]) acc[cat] = [];
     acc[cat].push(t);
     return acc;
   }, {} as Record<string, Task[]>);
+};
+
+const sortedCategories = (grouped: Record<string, Task[]>): [string, Task[]][] => {
+  const keys = Object.keys(grouped);
+  keys.sort((a, b) => {
+    const ia = CATEGORY_ORDER.indexOf(a);
+    const ib = CATEGORY_ORDER.indexOf(b);
+    return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+  });
+  return keys.map((k) => [k, grouped[k]]);
 };
 
 const CAT_LABEL: Record<string, string> = {
@@ -42,6 +54,17 @@ export const TasksPage: React.FC = () => {
 
   const handleClaim = async (task: Task) => {
     if (task.isCompleted || claiming) return;
+    // Open URL for link-based tasks before claiming
+    if (task.taskType === 'FOLLOW_LINK' || task.taskType === 'SUBSCRIBE_TELEGRAM') {
+      const url = (task.metadata as any)?.url as string | undefined;
+      if (url) {
+        try {
+          (window as any).Telegram?.WebApp?.openLink(url);
+        } catch {
+          window.open(url, '_blank');
+        }
+      }
+    }
     setClaiming(task.id);
     try {
       await tasksApi.complete(task.id);
@@ -75,7 +98,7 @@ export const TasksPage: React.FC = () => {
 
       {loading && <div style={{ textAlign: 'center', color: '#4A5270', padding: 32 }}>Загрузка...</div>}
 
-      {Object.entries(grouped).map(([cat, catTasks]) => (
+      {sortedCategories(grouped).map(([cat, catTasks]) => (
         <React.Fragment key={cat}>
           <div style={secStyle}>{CAT_LABEL[cat] ?? cat}</div>
           {catTasks.map((task) => (
