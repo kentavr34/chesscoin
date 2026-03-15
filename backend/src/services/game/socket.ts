@@ -660,16 +660,16 @@ const makeBotMove = async (socket: AuthSocket, io: Server, sessionId: string) =>
 // Уровни JARVIS: thinkMs — время на размышление (мс), maxDepth — потолок глубины.
 // Iterative deepening: углубляемся пока есть время → естественный рост силы.
 const JARVIS_LEVELS = [
-  { level: 1,  name: 'Beginner',     reward: 1000,  thinkMs: 80,   maxDepth: 1 },
-  { level: 2,  name: 'Player',       reward: 3000,  thinkMs: 200,  maxDepth: 2 },
-  { level: 3,  name: 'Fighter',      reward: 5000,  thinkMs: 400,  maxDepth: 3 },
-  { level: 4,  name: 'Warrior',      reward: 7000,  thinkMs: 650,  maxDepth: 4 },
-  { level: 5,  name: 'Expert',       reward: 9000,  thinkMs: 1000, maxDepth: 5 },
-  { level: 6,  name: 'Master',       reward: 12000, thinkMs: 1500, maxDepth: 6 },
-  { level: 7,  name: 'Professional', reward: 15000, thinkMs: 2200, maxDepth: 7 },
-  { level: 8,  name: 'Epic',         reward: 20000, thinkMs: 3000, maxDepth: 9 },
-  { level: 9,  name: 'Legendary',    reward: 30000, thinkMs: 4200, maxDepth: 12 },
-  { level: 10, name: 'Mystic',       reward: 50000, thinkMs: 6000, maxDepth: 20 },
+  { level: 1,  name: 'Beginner',     reward: 1000,  thinkMs: 80,   maxDepth: 1,  errorRate: 25 },
+  { level: 2,  name: 'Player',       reward: 3000,  thinkMs: 200,  maxDepth: 2,  errorRate: 18 },
+  { level: 3,  name: 'Fighter',      reward: 5000,  thinkMs: 400,  maxDepth: 3,  errorRate: 14 },
+  { level: 4,  name: 'Warrior',      reward: 7000,  thinkMs: 650,  maxDepth: 4,  errorRate: 10 },
+  { level: 5,  name: 'Expert',       reward: 9000,  thinkMs: 1000, maxDepth: 5,  errorRate: 7  },
+  { level: 6,  name: 'Master',       reward: 12000, thinkMs: 1500, maxDepth: 6,  errorRate: 4  },
+  { level: 7,  name: 'Professional', reward: 15000, thinkMs: 2200, maxDepth: 7,  errorRate: 2  },
+  { level: 8,  name: 'Epic',         reward: 20000, thinkMs: 3000, maxDepth: 9,  errorRate: 1  },
+  { level: 9,  name: 'Legendary',    reward: 30000, thinkMs: 4200, maxDepth: 12, errorRate: 0  },
+  { level: 10, name: 'Mystic',       reward: 50000, thinkMs: 6000, maxDepth: 20, errorRate: 0  },
 ];
 
 const getStockfishMove = (
@@ -680,6 +680,14 @@ const getStockfishMove = (
     try {
       const { Chess } = require("chess.js");
       const cfg = JARVIS_LEVELS[Math.max(0, Math.min(9, level - 1))];
+
+      // Случайная ошибка для нижних уровней — делает слабые уровни заметно слабее
+      if (cfg.errorRate > 0 && Math.floor(Math.random() * 100) < cfg.errorRate) {
+        const rndMove = getRandomMove(fen);
+        console.debug(`[JARVIS] Lv${level} — random error (${cfg.errorRate}%)`);
+        return resolve(rndMove);
+      }
+
       const deadline = Date.now() + cfg.thinkMs;
 
       const chess = new Chess(fen);
@@ -736,14 +744,56 @@ function chessMinimaxFn(chess: any, depth: number, alpha: number, beta: number, 
   return best;
 }
 
+// Piece-square tables (white's perspective, board[0][0]=a8, board[7][7]=h1)
+// For white: index = r*8+c; for black: mirror index = (7-r)*8+c
+const _PST: Record<string, number[]> = {
+  p: [  0,  0,  0,  0,  0,  0,  0,  0,
+         5, 10, 10,-20,-20, 10, 10,  5,
+         5, -5,-10,  0,  0,-10, -5,  5,
+         0,  0,  0, 20, 20,  0,  0,  0,
+         5,  5, 10, 25, 25, 10,  5,  5,
+        10, 10, 20, 30, 30, 20, 10, 10,
+        50, 50, 50, 50, 50, 50, 50, 50,
+         0,  0,  0,  0,  0,  0,  0,  0 ],
+  n: [-50,-40,-30,-30,-30,-30,-40,-50,
+      -40,-20,  0,  0,  0,  0,-20,-40,
+      -30,  0, 10, 15, 15, 10,  0,-30,
+      -30,  5, 15, 20, 20, 15,  5,-30,
+      -30,  0, 15, 20, 20, 15,  0,-30,
+      -30,  5, 10, 15, 15, 10,  5,-30,
+      -40,-20,  0,  5,  5,  0,-20,-40,
+      -50,-40,-30,-30,-30,-30,-40,-50 ],
+  b: [-20,-10,-10,-10,-10,-10,-10,-20,
+      -10,  0,  0,  0,  0,  0,  0,-10,
+      -10,  0,  5, 10, 10,  5,  0,-10,
+      -10,  5,  5, 10, 10,  5,  5,-10,
+      -10,  0, 10, 10, 10, 10,  0,-10,
+      -10, 10, 10, 10, 10, 10, 10,-10,
+      -10,  5,  0,  0,  0,  0,  5,-10,
+      -20,-10,-10,-10,-10,-10,-10,-20 ],
+  r: [  0,  0,  0,  5,  5,  0,  0,  0,
+        -5,  0,  0,  0,  0,  0,  0, -5,
+        -5,  0,  0,  0,  0,  0,  0, -5,
+        -5,  0,  0,  0,  0,  0,  0, -5,
+        -5,  0,  0,  0,  0,  0,  0, -5,
+        -5,  0,  0,  0,  0,  0,  0, -5,
+         5, 10, 10, 10, 10, 10, 10,  5,
+         0,  0,  0,  0,  0,  0,  0,  0 ],
+};
+
 function chessEvalBoardFn(chess: any): number {
-  const vals: Record<string, number> = { p: 10, n: 30, b: 30, r: 50, q: 90, k: 900 };
+  const vals: Record<string, number> = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
   let score = 0;
-  for (const row of chess.board()) {
-    for (const sq of row) {
-      if (sq === null) continue;
+  const board = chess.board();
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const sq = board[r][c];
+      if (!sq) continue;
+      const isWhite = sq.color === "w";
       const v = vals[sq.type] || 0;
-      score += sq.color === "w" ? v : -v;
+      const pst = _PST[sq.type];
+      const pos = pst ? (pst[isWhite ? r * 8 + c : (7 - r) * 8 + c] || 0) : 0;
+      score += isWhite ? (v + pos) : -(v + pos);
     }
   }
   return score;

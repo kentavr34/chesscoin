@@ -147,14 +147,14 @@ const BadgeDetailModal: React.FC<{
   );
 };
 
-type Tab = 'info' | 'games' | 'saves' | 'ach' | 'settings';
+type Tab = 'analytics' | 'saves' | 'ach' | 'settings';
 
 export const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const { user, setUser } = useUserStore();
   const { lang, setLang, soundEnabled, setSoundEnabled } = useSettingsStore();
   const t = useT();
-  const [tab, setTab] = useState<Tab>('info');
+  const [tab, setTab] = useState<Tab>('analytics');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [gamesList, setGamesList] = useState<GameHistoryItem[]>([]);
   const [showTxModal, setShowTxModal] = useState(false);
@@ -203,7 +203,7 @@ export const ProfilePage: React.FC = () => {
   };
 
   useEffect(() => {
-    if (tab === 'games') {
+    if (tab === 'analytics') {
       profileApi.getGames().then((r) => setGamesList(r.games)).catch(() => {});
     }
     if (tab === 'saves') {
@@ -227,12 +227,17 @@ export const ProfilePage: React.FC = () => {
   const lossRate = totalGames > 0 ? Math.round((losses / totalGames) * 100) : 0;
   const drawRate = 100 - winRate - lossRate;
 
+  // JARVIS ring chart variables
+  const jLvl = (user as any).jarvisLevel ?? 1;
+  const jName = JARVIS_LEVELS[Math.max(0, Math.min(9, jLvl - 1))].name;
+  const _R = 30, _C = 2 * Math.PI * _R;
+  const _jDash = ((jLvl - 1) / 9) * _C;
+
   const TABS: { id: Tab; label: string }[] = [
-    { id: 'info',     label: t.profile.tabs.info },
-    { id: 'games',    label: t.profile.tabs.games },
-    { id: 'saves',    label: t.profile.tabs.saves },
-    { id: 'ach',      label: t.profile.tabs.achievements },
-    { id: 'settings', label: t.profile.tabs.settings },
+    { id: 'analytics', label: 'Аналитика' },
+    { id: 'saves',     label: t.profile.tabs.saves },
+    { id: 'ach',       label: t.profile.tabs.achievements },
+    { id: 'settings',  label: t.profile.tabs.settings },
   ];
 
   const rightAction = (
@@ -360,95 +365,121 @@ export const ProfilePage: React.FC = () => {
         ))}
       </div>
 
-      {/* Info tab */}
-      {tab === 'info' && (
-        <>
-          <div style={secStyle}>{t.profile.stats}</div>
-          <div style={{ display: 'flex', justifyContent: 'space-around', padding: '12px 18px' }}>
-            <CircStat value={wins}   pct={winRate}  color="#00D68F" label={t.profile.wins}   />
-            <CircStat value={losses} pct={lossRate} color="#FF4D6A" label={t.profile.losses} />
-            <CircStat value={draws}  pct={drawRate} color="#9B85FF" label={t.profile.draws}  />
-          </div>
-
-          <div style={{ margin: '0 18px', background: '#1C2030', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: 12 }}>
-            <div style={microLbl}>{t.profile.eloChart}</div>
-            <svg viewBox="0 0 300 60" preserveAspectRatio="none" style={{ width: '100%', height: 60 }}>
-              <defs>
-                <linearGradient id="eg" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#9B85FF" stopOpacity=".3" />
-                  <stop offset="100%" stopColor="#9B85FF" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              <path d="M0,45 L40,40 L80,35 L120,30 L160,22 L200,18 L240,12 L300,6" fill="none" stroke="#9B85FF" strokeWidth="1.5" strokeLinecap="round" />
-              <path d="M0,45 L40,40 L80,35 L120,30 L160,22 L200,18 L240,12 L300,6 L300,60 L0,60 Z" fill="url(#eg)" />
-            </svg>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, padding: '8px 18px 0' }}>
-            <StatCard val={totalGames}       lbl={t.profile.games}  />
-            <StatCard val={user.elo}         lbl={t.profile.elo}    color="#9B85FF" />
-            <StatCard val={user.winStreak ?? 0} lbl={t.profile.streak} color="#F5C842" />
-          </div>
-
-          <div style={secStyle}>{t.profile.refSection}</div>
-          <div style={{ margin: '0 18px', padding: 14, background: '#1C2030', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 18, display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#F0F2F8' }}>{t.profile.refLink}</div>
-              <div style={{ fontSize: 10, color: '#4A5270', fontFamily: "'JetBrains Mono',monospace", marginTop: 5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                t.me/chessgamecoin_bot?start=ref_{user.telegramId}
+      {/* Analytics tab (merged info + games) */}
+      {tab === 'analytics' && (() => {
+        return (
+          <>
+            {/* Top stat rings */}
+            <div style={{ display: 'flex', justifyContent: 'space-around', padding: '14px 18px 6px' }}>
+              {/* JARVIS ring */}
+              <div style={{ textAlign: 'center' }}>
+                <svg width="76" height="76" viewBox="0 0 76 76">
+                  <circle cx="38" cy="38" r={_R} fill="none" stroke="#1C2030" strokeWidth="6" />
+                  <circle cx="38" cy="38" r={_R} fill="none" stroke="#9B85FF" strokeWidth="6"
+                    strokeDasharray={`${_jDash} ${_C}`} strokeLinecap="round"
+                    transform="rotate(-90 38 38)" />
+                  <text x="38" y="42" textAnchor="middle" fill="#F0F2F8" fontSize="15" fontWeight="800" fontFamily="'JetBrains Mono',monospace">{jLvl}</text>
+                </svg>
+                <div style={{ fontSize: 9, color: '#9B85FF', fontWeight: 700, marginTop: 3, letterSpacing: '.04em' }}>JARVIS</div>
+                <div style={{ fontSize: 9, color: '#4A5270', marginTop: 1 }}>{jName}</div>
               </div>
+              {/* Wins ring */}
+              <CircStat value={wins}   pct={winRate}  color="#00D68F" label={t.profile.wins}   />
+              {/* Losses ring */}
+              <CircStat value={losses} pct={lossRate} color="#FF4D6A" label={t.profile.losses} />
+              {/* Draws ring */}
+              <CircStat value={draws}  pct={drawRate} color="#9B85FF" label={t.profile.draws}  />
+            </div>
+
+            {/* Small stats row */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, padding: '6px 18px 0' }}>
+              <StatCard val={totalGames}          lbl={t.profile.games}  />
+              <StatCard val={user.elo}            lbl={t.profile.elo}    color="#9B85FF" />
+              <StatCard val={user.winStreak ?? 0} lbl={t.profile.streak} color="#F5C842" />
+            </div>
+
+            {/* ELO chart */}
+            <div style={{ margin: '10px 18px 0', background: '#1C2030', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: 12 }}>
+              <div style={microLbl}>{t.profile.eloChart}</div>
+              <svg viewBox="0 0 300 60" preserveAspectRatio="none" style={{ width: '100%', height: 60 }}>
+                <defs>
+                  <linearGradient id="eg" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#9B85FF" stopOpacity=".3" />
+                    <stop offset="100%" stopColor="#9B85FF" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                <path d="M0,45 L40,40 L80,35 L120,30 L160,22 L200,18 L240,12 L300,6" fill="none" stroke="#9B85FF" strokeWidth="1.5" strokeLinecap="round" />
+                <path d="M0,45 L40,40 L80,35 L120,30 L160,22 L200,18 L240,12 L300,6 L300,60 L0,60 Z" fill="url(#eg)" />
+              </svg>
+            </div>
+
+            {/* Game history */}
+            <div style={secStyle}>История партий</div>
+            {gamesList.length === 0 && (
+              <div style={{ textAlign: 'center', color: '#4A5270', padding: '24px 18px', fontSize: 13 }}>
+                Нет сыгранных партий
+              </div>
+            )}
+            {gamesList.map((g) => {
+              const resultColor = g.result === 'WON' ? '#00D68F' : g.result === 'LOST' ? '#FF4D6A' : '#9B85FF';
+              const resultLabel = g.result === 'WON' ? '✓ Победа' : g.result === 'LOST' ? '✗ Пораж.' : '= Ничья';
+              const opponentName = g.hasBot ? `JARVIS Lv.${g.botLevel}` : (g.opponent?.firstName ?? '?');
+              const myColor = g.isWhite ? '♔ Белые' : '♚ Чёрные';
+              const oppColor = g.isWhite ? '♚ Чёрные' : '♔ Белые';
+              const earned = g.winningAmount && BigInt(g.winningAmount) > 0n;
+              return (
+                <div
+                  key={g.sessionId}
+                  style={{ margin: '0 18px 8px', padding: '12px 14px', background: '#13161E', border: `1px solid ${resultColor}28`, borderRadius: 16, cursor: g.pgn ? 'pointer' : 'default' }}
+                  onClick={() => g.pgn && setReplayGame({ pgn: g.pgn, title: `${user.firstName} vs ${opponentName}` })}
+                >
+                  {/* VS row */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    {/* My side */}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, flex: 1 }}>
+                      <Avatar user={user} size="s" />
+                      <div style={{ fontSize: 10, fontWeight: 700, color: '#F0F2F8', maxWidth: 60, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.firstName}</div>
+                      <div style={{ fontSize: 8, color: '#4A5270' }}>{myColor}</div>
+                    </div>
+                    {/* Middle */}
+                    <div style={{ textAlign: 'center', flexShrink: 0 }}>
+                      <div style={{ fontSize: 16 }}>⚔️</div>
+                      <div style={{ fontSize: 10, fontWeight: 800, color: resultColor, marginTop: 2 }}>{resultLabel}</div>
+                      {earned && (
+                        <div style={{ fontSize: 9, fontFamily: "'JetBrains Mono',monospace", color: '#00D68F', marginTop: 1 }}>+{fmtBalance(g.winningAmount!)} ᚙ</div>
+                      )}
+                    </div>
+                    {/* Opponent side */}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, flex: 1 }}>
+                      <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#1C2030', border: '1.5px solid rgba(155,133,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15 }}>
+                        {g.hasBot ? '🤖' : '👤'}
+                      </div>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: '#F0F2F8', maxWidth: 60, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{opponentName}</div>
+                      <div style={{ fontSize: 8, color: '#4A5270' }}>{oppColor}</div>
+                    </div>
+                  </div>
+                  {/* Footer row */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 6, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                    <span style={{ fontSize: 9, color: '#4A5270' }}>{g.type === 'BOT' ? '🤖 Бот' : g.type === 'BATTLE' ? '⚔ Батл' : '🤝 Дружеская'} · {g.finishedAt ? fmtDate(g.finishedAt) : ''}</span>
+                    {g.pgn && <span style={{ fontSize: 9, color: '#4A5270' }}>↗ разобрать</span>}
+                  </div>
+                </div>
+              );
+            })}
+
+            <div style={secStyle}>{t.profile.refSection}</div>
+            <div style={{ margin: '0 18px', padding: 14, background: '#1C2030', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 18, display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#F0F2F8' }}>{t.profile.refLink}</div>
+                <div style={{ fontSize: 10, color: '#4A5270', fontFamily: "'JetBrains Mono',monospace", marginTop: 5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  t.me/chessgamecoin_bot?start=ref_{user.telegramId}
+                </div>
             </div>
             <button style={goldBtn}>{t.profile.invite}</button>
           </div>
         </>
-      )}
-
-      {/* Games tab */}
-      {tab === 'games' && (
-        <>
-          <div style={secStyle}>История партий</div>
-          {gamesList.length === 0 && (
-            <div style={{ textAlign: 'center', color: '#4A5270', padding: 32, fontSize: 13 }}>Нет сыгранных партий</div>
-          )}
-          {gamesList.map((g) => {
-            const resultColor = g.result === 'WON' ? '#00D68F' : g.result === 'LOST' ? '#FF4D6A' : '#9B85FF';
-            const resultLabel = g.result === 'WON' ? '✓ Победа' : g.result === 'LOST' ? '✗ Пораж.' : '= Ничья';
-            const opponentName = g.hasBot ? `JARVIS Lv.${g.botLevel}` : (g.opponent?.firstName ?? '?');
-            const typeLabel = g.type === 'BOT' ? '🤖 Бот' : g.type === 'BATTLE' ? '⚔ Батл' : '🤝 Дружеская';
-            const earned = g.winningAmount && BigInt(g.winningAmount) > 0n;
-            return (
-              <div
-                key={g.sessionId}
-                style={{ ...stripStyle, cursor: g.pgn ? 'pointer' : 'default' }}
-                onClick={() => g.pgn && setReplayGame({ pgn: g.pgn, title: `vs ${opponentName}` })}
-              >
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: `${resultColor}15`, border: `1.5px solid ${resultColor}50`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
-                  {g.hasBot ? '🤖' : '⚔️'}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: '#F0F2F8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    vs {opponentName}
-                  </div>
-                  <div style={{ fontSize: 10, color: '#4A5270', marginTop: 2 }}>
-                    {typeLabel} · {g.finishedAt ? fmtDate(g.finishedAt) : ''}
-                  </div>
-                </div>
-                <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: resultColor }}>{resultLabel}</div>
-                  {earned && (
-                    <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono',monospace", color: '#00D68F', marginTop: 2 }}>
-                      +{fmtBalance(g.winningAmount!)} ᚙ
-                    </div>
-                  )}
-                  {g.pgn && (
-                    <div style={{ fontSize: 9, color: '#4A5270', marginTop: 2 }}>↗ разобрать</div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </>
-      )}
+      );
+      })()}
 
       {/* Saves tab */}
       {tab === 'saves' && (

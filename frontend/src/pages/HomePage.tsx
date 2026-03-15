@@ -8,8 +8,6 @@ import { fmtBalance, fmtTime, fmtCountdown, leagueEmoji } from '@/utils/format';
 import { AttemptsModal } from '@/components/ui/AttemptsModal';
 import { getSocket } from '@/api/socket';
 import { JarvisModal, JARVIS_LEVELS } from '@/components/ui/JarvisModal';
-import { GameSetupModal } from '@/components/ui/GameSetupModal';
-import type { JarvisLevel } from '@/components/ui/JarvisModal';
 import { tasksApi, warsApi } from '@/api';
 
 const ONBOARDING_STEPS = [
@@ -92,7 +90,6 @@ export const HomePage: React.FC = () => {
 
   const [startingBot, setStartingBot] = useState(false);
   const [showJarvis, setShowJarvis] = useState(false);
-  const [selectedLevel, setSelectedLevel] = useState<JarvisLevel | null>(null);
 
   // Live данные: задания и война моей страны
   const [taskStats, setTaskStats] = useState<{ done: number; total: number; remaining: number } | null>(null);
@@ -126,18 +123,14 @@ export const HomePage: React.FC = () => {
     setShowJarvis(true);
   };
 
-  const handleLevelSelect = (level: JarvisLevel) => {
-    setSelectedLevel(level);
-    setShowJarvis(false);
-  };
-
   const handleGameStart = (color: 'white' | 'black', timeMinutes: number) => {
-    if (!selectedLevel || startingBot) return;
+    if (startingBot) return;
+    const botLevel = jarvisLevel; // always play current level
     setStartingBot(true);
-    setSelectedLevel(null);
+    setShowJarvis(false);
     getSocket().emit('game:create:bot', {
       color,
-      botLevel: selectedLevel.level,
+      botLevel,
       timeSeconds: timeMinutes * 60,
     } as any, (res: any) => {
       setStartingBot(false);
@@ -147,6 +140,16 @@ export const HomePage: React.FC = () => {
     });
     setTimeout(() => setStartingBot(false), 5000);
   };
+
+  // Fallback: if socket callback missed but game was created, navigate when session appears
+  useEffect(() => {
+    if (!startingBot) return;
+    const botSession = sessions.find(s => s.type === 'BOT' && s.status === 'IN_PROGRESS');
+    if (botSession) {
+      setStartingBot(false);
+      navigate('/game/' + botSession.id);
+    }
+  }, [sessions, startingBot]);
 
   // Inject coin animation CSS once
   useEffect(() => {
@@ -366,15 +369,8 @@ export const HomePage: React.FC = () => {
       {showJarvis && (
         <JarvisModal
           currentJarvisLevel={jarvisLevel}
-          onSelect={handleLevelSelect}
-          onClose={() => setShowJarvis(false)}
-        />
-      )}
-      {selectedLevel && (
-        <GameSetupModal
-          selectedLevel={selectedLevel}
           onStart={handleGameStart}
-          onBack={() => { setSelectedLevel(null); setShowJarvis(true); }}
+          onClose={() => setShowJarvis(false)}
         />
       )}
       {/* Onboarding tour — shown only on first visit */}
