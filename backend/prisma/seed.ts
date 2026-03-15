@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { COUNTRIES } from "./seeds/countries";
 
 const prisma = new PrismaClient();
 
@@ -320,6 +321,18 @@ async function main() {
     });
   }
   console.log(`✅ ${themes.length} Themes`);
+
+  // ─── Countries ──────────────────────────────────────────────────────────────
+  let countriesCount = 0;
+  for (const c of COUNTRIES) {
+    await (prisma as any).country.upsert({
+      where: { code: c.code },
+      update: { nameRu: c.nameRu, nameEn: c.nameEn, flag: c.flag },
+      create: { code: c.code, nameRu: c.nameRu, nameEn: c.nameEn, flag: c.flag },
+    });
+    countriesCount++;
+  }
+  console.log(`✅ ${countriesCount} Countries`);
 
   console.log("🎉 Seed completed!");
 }

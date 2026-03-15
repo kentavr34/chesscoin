@@ -109,6 +109,11 @@ model User {
   loginStreak   Int       @default(0)
   lastLoginDate DateTime?
 
+  // Wars
+  hasSeenWarsIntro Boolean @default(false)
+  countryMember    CountryMember?
+  savedGames       SavedGame[]
+
   // Служебное
   isBot     Boolean @default(false)
   isBanned  Boolean @default(false)
@@ -155,6 +160,10 @@ model Session {
 
   // Активные пользователи в этой сессии
   activeUsers User[] @relation("ActiveUserSessions")
+
+  // Wars
+  warBattle WarBattle?
+  savedBy   SavedGame[]
 
   finishedAt DateTime?
   startedAt  DateTime?
@@ -398,6 +407,125 @@ model ClanWar {
   finishedAt DateTime?
 
   @@map("clan_wars")
+}
+
+// ─────────────────────────────────────────
+// COUNTRIES — войны между странами
+// ─────────────────────────────────────────
+
+model Country {
+  id        String @id @default(uuid())
+
+  code      String @unique   // "RU", "BR", "US"...
+  nameRu    String           // Россия
+  nameEn    String           // Russia
+  flag      String           // 🇷🇺 emoji
+
+  treasury  BigInt @default(0) // казна (начисляется за победы в войнах)
+  wins      Int    @default(0)
+  losses    Int    @default(0)
+  maxMembers Int   @default(1000)
+
+  members        CountryMember[]
+  warsAsAttacker CountryWar[] @relation("WarAttacker")
+  warsAsDefender CountryWar[] @relation("WarDefender")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([wins])
+  @@map("countries")
+}
+
+model CountryMember {
+  id        String @id @default(uuid())
+
+  countryId String
+  country   Country @relation(fields: [countryId], references: [id])
+
+  userId    String @unique  // один игрок — одна страна
+  user      User   @relation(fields: [userId], references: [id])
+
+  warWins   Int @default(0)  // победы в войнах (определяет Главнокомандующего)
+  warLosses Int @default(0)
+
+  joinedAt  DateTime @default(now())
+
+  @@index([countryId, warWins])
+  @@map("country_members")
+}
+
+model CountryWar {
+  id String @id @default(uuid())
+
+  attackerCountryId String
+  attackerCountry   Country @relation("WarAttacker", fields: [attackerCountryId], references: [id])
+
+  defenderCountryId String
+  defenderCountry   Country @relation("WarDefender", fields: [defenderCountryId], references: [id])
+
+  status       CountryWarStatus @default(IN_PROGRESS)
+  attackerWins Int @default(0)
+  defenderWins Int @default(0)
+
+  prizePerWin      BigInt @default(100)  // монет в казну за каждую победу
+  duration         Int                   // секунды (3600 / 43200 / 86400 / 604800 / 2592000)
+  startedAt        DateTime @default(now())
+  endAt            DateTime
+  finishedAt       DateTime?
+  winnerCountryId  String?
+  declaredByUserId String  // userId Главнокомандующего
+
+  battles WarBattle[]
+
+  createdAt DateTime @default(now())
+
+  @@index([status])
+  @@index([attackerCountryId])
+  @@index([defenderCountryId])
+  @@map("country_wars")
+}
+
+model WarBattle {
+  id    String @id @default(uuid())
+
+  warId String
+  war   CountryWar @relation(fields: [warId], references: [id])
+
+  sessionId String  @unique
+  session   Session @relation(fields: [sessionId], references: [id])
+
+  attackerId        String
+  defenderId        String
+  attackerCountryId String
+  defenderCountryId String
+
+  winnerId        String?
+  winnerCountryId String?
+
+  status String @default("IN_PROGRESS")  // IN_PROGRESS | FINISHED
+
+  createdAt  DateTime @default(now())
+  finishedAt DateTime?
+
+  @@index([warId])
+  @@map("war_battles")
+}
+
+model SavedGame {
+  id        String @id @default(uuid())
+
+  userId    String
+  user      User   @relation(fields: [userId], references: [id])
+
+  sessionId String
+  session   Session @relation(fields: [sessionId], references: [id])
+
+  savedAt   DateTime @default(now())
+
+  @@unique([userId, sessionId])
+  @@index([userId])
+  @@map("saved_games")
 }
 
 // ─────────────────────────────────────────
@@ -714,6 +842,7 @@ enum TransactionType {
   WITHDRAWAL         // вывод (v6)
   BATTLE_DONATION    // донат зрителя в батл
   CLAN_WAR_WIN       // выигрыш в клановой войне
+  COUNTRY_WAR_WIN    // выигрыш в войне между странами
   TOURNAMENT_WIN     // выигрыш в турнире
   TON_DEPOSIT        // пополнение через TON
   WALLET_UNLOCK      // разовый платёж за подключение кошелька
@@ -760,6 +889,11 @@ enum ClanRole {
 }
 
 enum ClanWarStatus {
+  IN_PROGRESS
+  FINISHED
+}
+
+enum CountryWarStatus {
   IN_PROGRESS
   FINISHED
 }
