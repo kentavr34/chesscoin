@@ -72,7 +72,7 @@ app.use(`${API}/screenshotter`, screenshotterRouter);
 app.get("/health", async (_req, res) => {
   const cfg = await prisma.platformConfig.findUnique({ where: { id: "singleton" } });
   res.json({
-    status: "ok", version: "6.0.0",
+    status: "ok", version: "6.0.1",
     phase: cfg?.currentPhase ?? 1,
     totalEmitted: cfg?.totalEmitted?.toString() ?? "0",
     emissionCap: cfg?.emissionCap?.toString() ?? "0",
