@@ -16,7 +16,7 @@ interface ServerToClient {
 
 interface ClientToServer {
   'game:current': (cb: SocketCallback<{ sessions: GameSession[] }>) => void;
-  'game:create:bot': (data: { color: 'white' | 'black'; botLevel: number }, cb: SocketCallback<{ session: GameSession }>) => void;
+  'game:create:bot': (data: { color: 'white' | 'black'; botLevel: number; timeSeconds?: number }, cb: SocketCallback<{ session: GameSession }>) => void;
   'game:create:battle': (data: { color: 'white' | 'black'; duration: number; bet: string; isPrivate?: boolean }, cb: SocketCallback<{ session: GameSession }>) => void;
   'game:join': (data: { code: string }, cb: SocketCallback<{ session: GameSession }>) => void;
   'game:move': (data: { sessionId: string; from: string; to: string; promotion?: string }, cb: SocketCallback<{ session: GameSession }>) => void;

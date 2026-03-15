@@ -314,15 +314,17 @@ nationsRouter.post("/war/challenge", authMiddleware, async (req: Request, res: R
 
     // Проверяем наличие офицера (минимум лейтенант) в атакующем клане
     const officerRanks = ["LIEUTENANT", "SR_LIEUTENANT", "CAPTAIN", "MAJOR", "LT_COLONEL", "COLONEL", "BRIGADIER", "MAJ_GENERAL", "LT_GENERAL", "COL_GENERAL", "MARSHAL", "EMPEROR"];
-    const hasOfficer = await prisma.clanMember.findFirst({
-      where: {
-        clanId: myMembership.clanId,
-        isPending: false,
-        user: { militaryRank: { in: officerRanks } },
-      },
-      include: { user: { select: { militaryRank: true } } },
+    const clanMemberIds = await prisma.clanMember.findMany({
+      where: { clanId: myMembership.clanId, isPending: false },
+      select: { userId: true },
     });
-    if (!hasOfficer) {
+    const officerUser = clanMemberIds.length > 0
+      ? await prisma.user.findFirst({
+          where: { id: { in: clanMemberIds.map(m => m.userId) }, militaryRank: { in: officerRanks } },
+          select: { id: true },
+        })
+      : null;
+    if (!officerUser) {
       return res.status(403).json({ error: "Для объявления войны в клане должен быть хотя бы один офицер (Лейтенант и выше)" });
     }
 
@@ -887,8 +889,8 @@ export async function settleClanBattle(battle: any) {
       await prisma.adminNotification.create({
         data: {
           type: "CLAN_BATTLE_RESULT",
-          userId: c.userId,
           payload: {
+            userId: c.userId,
             result: "draw",
             battleId: battle.id,
             refund: refund.toString(),
@@ -1006,8 +1008,8 @@ export async function settleClanBattle(battle: any) {
     await prisma.adminNotification.create({
       data: {
         type: "CLAN_BATTLE_RESULT",
-        userId: c.userId,
         payload: {
+          userId: c.userId,
           result: "win",
           battleId: battle.id,
           rank,
@@ -1029,8 +1031,8 @@ export async function settleClanBattle(battle: any) {
     await prisma.adminNotification.create({
       data: {
         type: "CLAN_BATTLE_RESULT",
-        userId: c.userId,
         payload: {
+          userId: c.userId,
           result: "loss",
           battleId: battle.id,
           lost: BigInt(c.amount).toString(),

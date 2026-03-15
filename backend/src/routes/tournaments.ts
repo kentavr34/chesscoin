@@ -376,9 +376,10 @@ export async function settleTournament(tournamentId: string) {
       rank: prize.rank,
       prizePool: totalPool.toString(),
     });
+    // Mark player as eliminated (prizeWon field not in schema, use contribution as proxy)
     await prisma.tournamentPlayer.update({
       where: { id: prize.playerId },
-      data: { prizeWon: prize.share },
+      data: { contribution: prize.share },
     });
   }
 
