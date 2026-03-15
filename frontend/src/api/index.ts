@@ -2,6 +2,7 @@ import { api } from './client';
 import type {
   User, GameSession, BattleLobbyItem, LeaderboardUser,
   Nation, Transaction, Task, ShopItem, ClanWar, ClanMemberData, TournamentFull, ClanBattle,
+  GameHistoryItem,
 } from '@/types';
 
 // ── AUTH ──────────────────────────────────────────────
@@ -26,6 +27,10 @@ export const profileApi = {
   getTransactions: (limit = 20, offset = 0) =>
     api.get<{ total: number; transactions: Transaction[] }>(
       `/profile/transactions?limit=${limit}&offset=${offset}`
+    ),
+  getGames: (limit = 20, offset = 0) =>
+    api.get<{ total: number; games: GameHistoryItem[] }>(
+      `/profile/games?limit=${limit}&offset=${offset}`
     ),
   getReferrals: () =>
     api.get<{

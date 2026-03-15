@@ -8,7 +8,7 @@ import { useT } from '@/i18n/useT';
 import type { Lang } from '@/i18n/translations';
 import { profileApi, authApi, warsApi } from '@/api';
 import { fmtBalance, fmtDate, leagueEmoji } from '@/utils/format';
-import type { Transaction } from '@/types';
+import type { Transaction, GameHistoryItem } from '@/types';
 import { JARVIS_LEVELS } from '@/components/ui/JarvisModal';
 import { Chessboard } from 'react-chessboard';
 import { Chess } from 'chess.js';
@@ -18,6 +18,7 @@ const PgnReplayModal: React.FC<{ pgn: string; title?: string; onClose: () => voi
   const [moves, setMoves] = useState<string[]>([]);
   const [step, setStep] = useState(0);
   const [fens, setFens] = useState<string[]>([]);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
     try {
@@ -32,9 +33,20 @@ const PgnReplayModal: React.FC<{ pgn: string; title?: string; onClose: () => voi
       }
       setMoves(history);
       setFens(fenList);
-      setStep(fenList.length - 1);
+      setStep(0);
     } catch {}
   }, [pgn]);
+
+  // Auto-play: advance step every 1.5s
+  useEffect(() => {
+    if (!isPlaying) return;
+    if (step >= fens.length - 1) {
+      setIsPlaying(false);
+      return;
+    }
+    const timer = setTimeout(() => setStep(s => s + 1), 1500);
+    return () => clearTimeout(timer);
+  }, [isPlaying, step, fens.length]);
 
   const currentFen = fens[step] ?? 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
@@ -56,12 +68,24 @@ const PgnReplayModal: React.FC<{ pgn: string; title?: string; onClose: () => voi
         </div>
 
         {/* Controls */}
-        <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+        <div style={{ display: 'flex', gap: 6, marginTop: 12 }}>
           {[
-            { label: '⏮', action: () => setStep(0) },
-            { label: '◀', action: () => setStep(s => Math.max(0, s - 1)) },
-            { label: '▶', action: () => setStep(s => Math.min(fens.length - 1, s + 1)) },
-            { label: '⏭', action: () => setStep(fens.length - 1) },
+            { label: '⏮', action: () => { setIsPlaying(false); setStep(0); } },
+            { label: '◀', action: () => { setIsPlaying(false); setStep(s => Math.max(0, s - 1)); } },
+          ].map(({ label, action }) => (
+            <button key={label} onClick={action} style={{ flex: 1, padding: '10px 0', background: '#232840', border: 'none', borderRadius: 10, color: '#F0F2F8', fontSize: 16, cursor: 'pointer', fontFamily: 'inherit' }}>
+              {label}
+            </button>
+          ))}
+          <button
+            onClick={() => setIsPlaying(p => !p)}
+            style={{ flex: 2, padding: '10px 0', background: isPlaying ? 'rgba(245,200,66,0.15)' : '#F5C842', border: isPlaying ? '1px solid rgba(245,200,66,0.4)' : 'none', borderRadius: 10, color: isPlaying ? '#F5C842' : '#0B0D11', fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            {isPlaying ? '⏸' : '▶ Авто'}
+          </button>
+          {[
+            { label: '▶', action: () => { setIsPlaying(false); setStep(s => Math.min(fens.length - 1, s + 1)); } },
+            { label: '⏭', action: () => { setIsPlaying(false); setStep(fens.length - 1); } },
           ].map(({ label, action }) => (
             <button key={label} onClick={action} style={{ flex: 1, padding: '10px 0', background: '#232840', border: 'none', borderRadius: 10, color: '#F0F2F8', fontSize: 16, cursor: 'pointer', fontFamily: 'inherit' }}>
               {label}
@@ -72,7 +96,7 @@ const PgnReplayModal: React.FC<{ pgn: string; title?: string; onClose: () => voi
         {/* Move list */}
         <div style={{ marginTop: 12, maxHeight: 100, overflowY: 'auto', display: 'flex', flexWrap: 'wrap', gap: 4 }}>
           {moves.map((m, i) => (
-            <button key={i} onClick={() => setStep(i + 1)} style={{
+            <button key={i} onClick={() => { setIsPlaying(false); setStep(i + 1); }} style={{
               padding: '3px 7px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', fontFamily: 'inherit',
               background: step === i + 1 ? '#F5C842' : '#1C2030',
               color: step === i + 1 ? '#0B0D11' : '#8B92A8',
@@ -132,6 +156,8 @@ export const ProfilePage: React.FC = () => {
   const t = useT();
   const [tab, setTab] = useState<Tab>('info');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [gamesList, setGamesList] = useState<GameHistoryItem[]>([]);
+  const [showTxModal, setShowTxModal] = useState(false);
   const [savedGames, setSavedGames] = useState<any[]>([]);
   const [replayGame, setReplayGame] = useState<{ pgn: string; title?: string } | null>(null);
   const [selectedBadge, setSelectedBadge] = useState<{ name: string; date?: string } | null>(null);
@@ -178,12 +204,18 @@ export const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     if (tab === 'games') {
-      profileApi.getTransactions().then((r) => setTransactions(r.transactions)).catch(() => {});
+      profileApi.getGames().then((r) => setGamesList(r.games)).catch(() => {});
     }
     if (tab === 'saves') {
       warsApi.savedGames().then((r) => setSavedGames(r.savedGames)).catch(() => {});
     }
   }, [tab]);
+
+  useEffect(() => {
+    if (showTxModal) {
+      profileApi.getTransactions(50).then((r) => setTransactions(r.transactions)).catch(() => {});
+    }
+  }, [showTxModal]);
 
   if (!user) return null;
 
@@ -266,8 +298,17 @@ export const ProfilePage: React.FC = () => {
       <div style={balCard}>
         <div>
           <div style={microLbl}>{t.profile.balance}</div>
-          <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 22, fontWeight: 800, color: '#F5C842' }}>
-            {fmtBalance(user.balance)} <span style={{ fontSize: 13, opacity: .5 }}>ᚙ</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 20, fontWeight: 800, color: '#F5C842' }}>
+              {fmtBalance(user.balance)} <span style={{ fontSize: 12, opacity: .5 }}>ᚙ</span>
+            </div>
+            <button
+              onClick={() => setShowTxModal(true)}
+              title="История транзакций"
+              style={{ background: 'rgba(245,200,66,0.12)', border: '1px solid rgba(245,200,66,0.25)', borderRadius: 8, padding: '4px 8px', color: '#F5C842', fontSize: 14, cursor: 'pointer', lineHeight: 1, flexShrink: 0 }}
+            >
+              💰
+            </button>
           </div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -365,22 +406,44 @@ export const ProfilePage: React.FC = () => {
       {/* Games tab */}
       {tab === 'games' && (
         <>
-          <div style={secStyle}>{t.profile.txHistory}</div>
-          {transactions.length === 0 && (
-            <div style={{ textAlign: 'center', color: '#4A5270', padding: 32 }}>{t.profile.noTx}</div>
+          <div style={secStyle}>История партий</div>
+          {gamesList.length === 0 && (
+            <div style={{ textAlign: 'center', color: '#4A5270', padding: 32, fontSize: 13 }}>Нет сыгранных партий</div>
           )}
-          {transactions.map((tx) => {
-            const isPos = BigInt(tx.amount) > 0n;
+          {gamesList.map((g) => {
+            const resultColor = g.result === 'WON' ? '#00D68F' : g.result === 'LOST' ? '#FF4D6A' : '#9B85FF';
+            const resultLabel = g.result === 'WON' ? '✓ Победа' : g.result === 'LOST' ? '✗ Пораж.' : '= Ничья';
+            const opponentName = g.hasBot ? `JARVIS Lv.${g.botLevel}` : (g.opponent?.firstName ?? '?');
+            const typeLabel = g.type === 'BOT' ? '🤖 Бот' : g.type === 'BATTLE' ? '⚔ Батл' : '🤝 Дружеская';
+            const earned = g.winningAmount && BigInt(g.winningAmount) > 0n;
             return (
-              <div key={tx.id} style={stripStyle}>
-                <span style={{ fontSize: 20 }}>{isPos ? '📈' : '📉'}</span>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: '#F0F2F8' }}>{tx.type}</div>
-                  <div style={{ fontSize: 11, color: '#8B92A8', marginTop: 2 }}>{fmtDate(tx.createdAt)}</div>
+              <div
+                key={g.sessionId}
+                style={{ ...stripStyle, cursor: g.pgn ? 'pointer' : 'default' }}
+                onClick={() => g.pgn && setReplayGame({ pgn: g.pgn, title: `vs ${opponentName}` })}
+              >
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: `${resultColor}15`, border: `1.5px solid ${resultColor}50`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
+                  {g.hasBot ? '🤖' : '⚔️'}
                 </div>
-                <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 700, color: isPos ? '#00D68F' : '#FF4D6A' }}>
-                  {isPos ? '+' : ''}{fmtBalance(tx.amount)} ᚙ
-                </span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#F0F2F8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    vs {opponentName}
+                  </div>
+                  <div style={{ fontSize: 10, color: '#4A5270', marginTop: 2 }}>
+                    {typeLabel} · {g.finishedAt ? fmtDate(g.finishedAt) : ''}
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: resultColor }}>{resultLabel}</div>
+                  {earned && (
+                    <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono',monospace", color: '#00D68F', marginTop: 2 }}>
+                      +{fmtBalance(g.winningAmount!)} ᚙ
+                    </div>
+                  )}
+                  {g.pgn && (
+                    <div style={{ fontSize: 9, color: '#4A5270', marginTop: 2 }}>↗ разобрать</div>
+                  )}
+                </div>
               </div>
             );
           })}
@@ -584,6 +647,61 @@ export const ProfilePage: React.FC = () => {
           title={replayGame.title}
           onClose={() => setReplayGame(null)}
         />
+      )}
+
+      {/* Transaction history modal */}
+      {showTxModal && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 400, display: 'flex', flexDirection: 'column' }}
+          onClick={(e) => e.target === e.currentTarget && setShowTxModal(false)}
+        >
+          <div style={{ background: '#0B0D11', flex: 1, marginTop: 56, borderRadius: '24px 24px 0 0', overflow: 'hidden', display: 'flex', flexDirection: 'column', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <div style={{ padding: '18px 18px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink: 0 }}>
+              <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 15, fontWeight: 700, color: '#F5C842' }}>💰 История транзакций</div>
+              <button onClick={() => setShowTxModal(false)} style={{ background: 'none', border: 'none', color: '#8B92A8', fontSize: 20, cursor: 'pointer', padding: 0, lineHeight: 1 }}>✕</button>
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '6px 0 24px' }}>
+              {transactions.length === 0 ? (
+                <div style={{ textAlign: 'center', color: '#4A5270', padding: 40, fontSize: 13 }}>Нет транзакций</div>
+              ) : transactions.map((tx) => {
+                const isPos = BigInt(tx.amount) > 0n;
+                const TX_LABELS: Record<string, string> = {
+                  WELCOME_BONUS:    '🎁 Приветственный бонус',
+                  BOT_WIN:          '🤖 Победа над ботом',
+                  BOT_PIECE:        '♟ За взятую фигуру',
+                  BOT_LOSS:         '🤖 Проигрыш боту',
+                  BATTLE_WIN:       '⚔ Победа в батле',
+                  BATTLE_BET:       '🎲 Ставка в батле',
+                  BATTLE_COMMISSION:'💸 Комиссия стола (10%)',
+                  FRIENDLY_WIN:     '🤝 Победа (дружеская)',
+                  REFERRAL_BONUS:   '👥 Реферальный бонус',
+                  TASK_REWARD:      '✅ Выполнение задания',
+                  ATTEMPT_PURCHASE: '🔄 Покупка попытки',
+                  ITEM_PURCHASE:    '🛍 Покупка предмета',
+                  CLAN_CONTRIBUTION:'🏰 Взнос в клан',
+                  WITHDRAWAL:       '💳 Вывод TON',
+                  TON_DEPOSIT:      '💎 Пополнение TON',
+                };
+                return (
+                  <div key={tx.id} style={{ margin: '4px 18px 0', padding: '12px 14px', background: '#1C2030', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 10, background: isPos ? 'rgba(0,214,143,0.1)' : 'rgba(255,77,106,0.1)', border: `1px solid ${isPos ? 'rgba(0,214,143,0.25)' : 'rgba(255,77,106,0.25)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>
+                      {isPos ? '📈' : '📉'}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: '#F0F2F8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {TX_LABELS[tx.type] ?? tx.type}
+                      </div>
+                      <div style={{ fontSize: 10, color: '#8B92A8', marginTop: 2 }}>{fmtDate(tx.createdAt)}</div>
+                    </div>
+                    <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, color: isPos ? '#00D68F' : '#FF4D6A', flexShrink: 0 }}>
+                      {isPos ? '+' : ''}{fmtBalance(tx.amount)} ᚙ
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       )}
     </PageLayout>
   );

@@ -145,6 +145,30 @@ export interface Transaction {
   payload?: Record<string, unknown> | null;
 }
 
+export interface GameHistoryItem {
+  sessionId: string;
+  type: SessionType;
+  result: 'WON' | 'LOST' | 'DRAW';
+  isWhite: boolean;
+  winningAmount: string | null;
+  bet: string | null;
+  botLevel: number | null;
+  pgn: string;
+  duration: number | null;
+  startedAt: string | null;
+  finishedAt: string | null;
+  opponent: {
+    id: string;
+    firstName: string;
+    lastName?: string | null;
+    username?: string | null;
+    avatar?: string | null;
+    avatarGradient?: string | null;
+    avatarType?: string | null;
+  } | null;
+  hasBot: boolean;
+}
+
 export type ItemType = 'AVATAR_FRAME' | 'BOARD_SKIN' | 'PIECE_SKIN' | 'MOVE_ANIMATION' | 'THEME';
 export type ItemRarity = 'COMMON' | 'RARE' | 'EPIC' | 'LEGENDARY';
 
