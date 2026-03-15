@@ -408,7 +408,11 @@ export const ShopPage: React.FC = () => {
       const res = await shopApi.purchase(item.id);
       await refreshUser();
       await loadItems();
-      showToast(res.message);
+      // Применяем тему сразу после покупки
+      const key = THEME_NAME_TO_KEY[item.name] ?? 'default';
+      setActiveTheme(key);
+      profileApi.saveTheme(key).catch(() => {});
+      showToast(`✅ Тема «${item.name}» куплена и применена!`);
     } catch (e: any) {
       showToast(e.message);
     } finally {

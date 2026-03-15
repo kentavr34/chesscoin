@@ -283,7 +283,7 @@ const processBotPayouts = async (
     }
     // Проигрыш боту в фазе 1 — ничего не снимаем
   } else {
-    // Фаза 2+: как батл — победитель берёт из резерва, проигравший теряет
+    // Фаза 2+: победитель получает награду из резерва, проигравший ничего не теряет
     if (session.botLevel && humanWon) {
       const botReward = config.economy.botRewards[session.botLevel] ?? 1000n;
       await updateBalance(
@@ -293,18 +293,8 @@ const processBotPayouts = async (
         { sessionId: session.id },
         { isEmission: false }
       );
-    } else if (!humanWon) {
-      // Проигрыш боту — платформа забирает ставку
-      const botPenalty = config.economy.botRewards[session.botLevel ?? 1] ?? 1000n;
-      if (humanSide.player.balance >= botPenalty) {
-        await updateBalance(
-          humanSide.playerId,
-          -botPenalty,
-          TransactionType.BOT_LOSS,
-          { sessionId: session.id }
-        );
-      }
     }
+    // При проигрыше боту — только теряется попытка, монеты не снимаются
   }
 };
 

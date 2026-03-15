@@ -14,6 +14,7 @@ interface GameResultModalProps {
   botLevelName?: string; // название уровня JARVIS (для share)
   userTelegramId?: string;
   onClose: () => void;
+  onRematch?: () => void;
 }
 
 const RESULT_META = {
@@ -32,6 +33,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
   botLevelName,
   userTelegramId,
   onClose,
+  onRematch,
 }) => {
   const t = useT();
   const [countdown, setCountdown] = useState(AUTO_CLOSE_SEC);
@@ -265,6 +267,24 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
             }}
           >
             {t.gameResult.shareWin}
+          </button>
+        )}
+
+        {/* Кнопка Реванш (только бот-игра) */}
+        {botLevelName && onRematch && (
+          <button
+            onClick={() => { clearInterval(timerRef.current!); onRematch(); }}
+            style={{
+              width: '100%', marginTop: 10,
+              padding: '12px', background: 'transparent',
+              border: '1px solid rgba(245,200,66,0.4)',
+              borderRadius: 14, color: '#F5C842',
+              fontSize: 13, fontWeight: 700,
+              cursor: 'pointer', fontFamily: 'inherit',
+              transition: 'background .15s',
+            }}
+          >
+            ⚔️ Реванш
           </button>
         )}
 

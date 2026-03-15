@@ -61,10 +61,15 @@ export const HomePage: React.FC = () => {
   const [showAttempts, setShowAttempts] = useState(false);
   const [attemptTimer, setAttemptTimer] = useState(0);
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('chesscoin_onboarding_done'));
+  const [welcomeStep, setWelcomeStep] = useState<0|1|2>(0); // 0=none, 1=bonus toast, 2=attempts toast
 
   const handleOnboardingDone = () => {
     localStorage.setItem('chesscoin_onboarding_done', '1');
     setShowOnboarding(false);
+    // Показываем два уведомления последовательно
+    setWelcomeStep(1);
+    setTimeout(() => setWelcomeStep(2), 3500);
+    setTimeout(() => setWelcomeStep(0), 7000);
   };
 
   const activeSessions = sessions.filter(
@@ -374,6 +379,26 @@ export const HomePage: React.FC = () => {
       )}
       {/* Onboarding tour — shown only on first visit */}
       {showOnboarding && <OnboardingTour onDone={handleOnboardingDone} />}
+
+      {/* Приветственные уведомления */}
+      {welcomeStep === 1 && (
+        <div style={{ position: 'fixed', bottom: 100, left: 16, right: 16, zIndex: 400, background: 'linear-gradient(135deg,#1C2030,#232840)', border: '1px solid rgba(245,200,66,0.4)', borderRadius: 20, padding: '16px 20px', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ fontSize: 36 }}>🎁</div>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#F5C842', marginBottom: 3 }}>Приветственный бонус!</div>
+            <div style={{ fontSize: 12, color: '#C8CDDF', lineHeight: 1.5 }}>Тебе начислено <b style={{ color: '#F5C842' }}>5,000 ᚙ</b> на счёт.<br/>Начни играть прямо сейчас!</div>
+          </div>
+        </div>
+      )}
+      {welcomeStep === 2 && (
+        <div style={{ position: 'fixed', bottom: 100, left: 16, right: 16, zIndex: 400, background: 'linear-gradient(135deg,#1C2030,#232840)', border: '1px solid rgba(123,97,255,0.4)', borderRadius: 20, padding: '16px 20px', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ fontSize: 36 }}>⚡</div>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#7B61FF', marginBottom: 3 }}>3 попытки в день</div>
+            <div style={{ fontSize: 12, color: '#C8CDDF', lineHeight: 1.5 }}>Каждые 8 часов восстанавливается<br/>1 попытка. Используй их с умом!</div>
+          </div>
+        </div>
+      )}
     </PageLayout>
   );
 };

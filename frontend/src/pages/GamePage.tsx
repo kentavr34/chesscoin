@@ -51,20 +51,14 @@ export const GamePage: React.FC = () => {
     const mySide = session.sides.find((s) => s.id === session.mySideId);
     const isDraw = session.status === 'DRAW';
     const playerWon = !isDraw && session.winnerSideId === session.mySideId;
-
-    // winningAmount = финальный бонус за победу (botReward или battlePayout)
     const earned = mySide?.winningAmount ?? '0';
     const earnedBig = BigInt(earned || '0');
-
-    // Для батла — комиссия 10% от банка; для BOT — без комиссии
     let commission = '0';
     if (earnedBig > 0n && session.bet) {
       const betBig = BigInt(session.bet);
       const totalPot = betBig * 2n;
       commission = (totalPot * 10n / 100n).toString();
     }
-
-    // Монеты за фигуры (только бот-игра)
     const pieceCoins = session.pieceCoins ?? '0';
 
     setResultData({
@@ -73,7 +67,9 @@ export const GamePage: React.FC = () => {
       commission,
       pieceCoins: session.type === 'BOT' ? pieceCoins : undefined,
     });
-    setShowResult(true);
+    // 3-секундная задержка перед показом модала результата
+    const timer = setTimeout(() => setShowResult(true), 3000);
+    return () => clearTimeout(timer);
   }, [session?.status]);
 
   // Spectate mode: подписаться на партию как наблюдатель
@@ -120,6 +116,24 @@ export const GamePage: React.FC = () => {
     removeSession(session?.id ?? '');
     navigate('/');
   };
+
+  const handleRematch = useCallback(() => {
+    if (!session) return;
+    const botLevel = session.botLevel ?? 1;
+    const mySide = session.sides.find((s) => s.id === session.mySideId);
+    const botSide = session.sides.find((s) => s.id !== session.mySideId);
+    const color = mySide?.isWhite ? 'white' : 'black';
+    // Use the bot side's remaining timeLeft as proxy for original duration (bot moves instantly)
+    const timeSeconds = botSide?.timeLeft ?? mySide?.timeLeft ?? 300;
+    setShowResult(false);
+    removeSession(session.id);
+    getSocket().emit('game:create:bot', { color, botLevel, timeSeconds }, (res: any) => {
+      if (res?.ok && res.session) {
+        upsertSession(res.session);
+        navigate('/game/' + res.session.id, { replace: true });
+      }
+    });
+  }, [session]);
 
   if (!session) return (
     <div style={rootStyle}>
@@ -273,6 +287,7 @@ export const GamePage: React.FC = () => {
           botLevelName={isBotGame && session?.botLevel ? JARVIS_LEVELS[Math.max(0, (session.botLevel ?? 1) - 1)].name : undefined}
           userTelegramId={(user as any)?.telegramId}
           onClose={handleResultClose}
+          onRematch={isBotGame ? handleRematch : undefined}
         />
       )}
     </div>

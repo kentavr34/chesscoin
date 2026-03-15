@@ -312,6 +312,20 @@ nationsRouter.post("/war/challenge", authMiddleware, async (req: Request, res: R
 
     if (attackerClan.id === defenderClan.id) return res.status(400).json({ error: "Нельзя объявить войну самим себе" });
 
+    // Проверяем наличие офицера (минимум лейтенант) в атакующем клане
+    const officerRanks = ["LIEUTENANT", "SR_LIEUTENANT", "CAPTAIN", "MAJOR", "LT_COLONEL", "COLONEL", "BRIGADIER", "MAJ_GENERAL", "LT_GENERAL", "COL_GENERAL", "MARSHAL", "EMPEROR"];
+    const hasOfficer = await prisma.clanMember.findFirst({
+      where: {
+        clanId: myMembership.clanId,
+        isPending: false,
+        user: { militaryRank: { in: officerRanks } },
+      },
+      include: { user: { select: { militaryRank: true } } },
+    });
+    if (!hasOfficer) {
+      return res.status(403).json({ error: "Для объявления войны в клане должен быть хотя бы один офицер (Лейтенант и выше)" });
+    }
+
     // Проверяем нет ли уже активной войны
     const existing = await prisma.clanWar.findFirst({
       where: {
@@ -831,8 +845,14 @@ export async function settleClanBattle(battle: any) {
   const defWins = battle.defenderWins as number;
 
   let winnerClanId: string | null = null;
-  if (chWins > defWins)       winnerClanId = battle.challengerClanId;
-  else if (defWins > chWins)  winnerClanId = battle.defenderClanId;
+  let loserClanId: string | null = null;
+  if (chWins > defWins) {
+    winnerClanId = battle.challengerClanId;
+    loserClanId  = battle.defenderClanId;
+  } else if (defWins > chWins) {
+    winnerClanId = battle.defenderClanId;
+    loserClanId  = battle.challengerClanId;
+  }
   // ничья = winnerClanId null → возврат взносов
 
   await (prisma as any).clanBattle.update({
@@ -852,42 +872,180 @@ export async function settleClanBattle(battle: any) {
 
   if (totalPool === 0n) return;
 
+  // ─── Ничья — возврат взносов всем участникам ───────────────────────────────
   if (!winnerClanId) {
-    // Ничья — возврат всем
     for (const c of contributions) {
-      await updateBalance(c.userId, BigInt(c.amount), TransactionType.CLAN_WAR_WIN, {
+      const refund = BigInt(c.amount);
+      await updateBalance(c.userId, refund, TransactionType.CLAN_WAR_WIN, {
         reason: "clan_battle_draw_refund", battleId: battle.id,
       });
       await (prisma as any).clanBattleContribution.update({
         where: { id: c.id },
-        data: { paidOut: true, paidAmount: BigInt(c.amount) },
+        data: { paidOut: true, paidAmount: refund },
+      });
+      // Уведомляем игрока
+      await prisma.adminNotification.create({
+        data: {
+          type: "CLAN_BATTLE_RESULT",
+          userId: c.userId,
+          payload: {
+            result: "draw",
+            battleId: battle.id,
+            refund: refund.toString(),
+          },
+        },
       });
     }
+    io.emit("clan:battle_finished", {
+      battleId: battle.id, winnerClanId: null, pool: totalPool.toString(),
+      challengerWins: chWins, defenderWins: defWins,
+    });
     return;
   }
 
-  // Победители получают пропорциональную долю от всего пула
+  // ─── Разделяем участников на победителей и проигравших ────────────────────
   const winners = contributions.filter((c: any) => c.clanId === winnerClanId);
+  const losers  = contributions.filter((c: any) => c.clanId === loserClanId);
+
+  // loserTreasury — сумма взносов проигравших (ставки проигравшего клана)
+  const loserTreasury = losers.reduce((s: bigint, c: any) => s + BigInt(c.amount), 0n);
+
+  if (loserTreasury === 0n) {
+    // Нет взносов у проигравших — возвращаем победителям их взносы
+    for (const c of winners) {
+      const refund = BigInt(c.amount);
+      await updateBalance(c.userId, refund, TransactionType.CLAN_WAR_WIN, {
+        reason: "clan_battle_win_no_prize", battleId: battle.id,
+      });
+      await (prisma as any).clanBattleContribution.update({
+        where: { id: c.id },
+        data: { paidOut: true, paidAmount: refund },
+      });
+    }
+    io.emit("clan:battle_finished", {
+      battleId: battle.id, winnerClanId, pool: totalPool.toString(),
+      challengerWins: chWins, defenderWins: defWins,
+    });
+    return;
+  }
+
+  // ─── Расчёт призового фонда ────────────────────────────────────────────────
+  // 10% комиссия с казны проигравших
+  const commission = loserTreasury * 10n / 100n;
+  const prizePool  = loserTreasury - commission;
+
+  // ─── Получаем статистику побед каждого победителя в этом батле ────────────
+  const winnerPlayerWins = await (prisma as any).clanBattleGame.groupBy({
+    by: ["winnerId"],
+    where: {
+      battleId: battle.id,
+      winnerClanId,
+      winnerId: { not: null },
+    },
+    _count: { winnerId: true },
+  });
+  // Преобразуем в Map: userId → winCount
+  const winsMap = new Map<string, number>(
+    winnerPlayerWins.map((r: any) => [r.winnerId, r._count.winnerId])
+  );
+
+  // Сортируем победителей по числу побед (по убыванию)
+  const sortedWinners = [...winners].sort((a, b) => {
+    const wa = winsMap.get(a.userId) ?? 0;
+    const wb = winsMap.get(b.userId) ?? 0;
+    return wb - wa;
+  });
+
+  const first  = sortedWinners[0] ?? null;
+  const second = sortedWinners[1] ?? null;
+  const third  = sortedWinners[2] ?? null;
+
+  // Призовые суммы для топ-3
+  const prize1 = first  ? prizePool * 20n / 100n : 0n; // 20%
+  const prize2 = second ? prizePool * 10n / 100n : 0n; // 10%
+  const prize3 = third  ? prizePool *  5n / 100n : 0n; // 5%
+  // Остаток (~65%) делится пропорционально по взносам среди всех победителей
+  const topPrizesTotal = prize1 + prize2 + prize3;
+  const restPool = prizePool - topPrizesTotal;
+
   const totalWinnerContrib = winners.reduce((s: bigint, c: any) => s + BigInt(c.amount), 0n);
 
-  for (const c of winners) {
-    if (totalWinnerContrib === 0n) continue;
-    const share = (totalPool * BigInt(c.amount)) / totalWinnerContrib;
-    await updateBalance(c.userId, share, TransactionType.CLAN_WAR_WIN, {
-      reason: "clan_battle_win", battleId: battle.id,
-      winnerClanId, share: share.toString(),
+  // ─── Выплаты победителям ───────────────────────────────────────────────────
+  for (const c of sortedWinners) {
+    // Возврат собственного взноса + доля от prizePool
+    const ownContrib = BigInt(c.amount);
+    let topPrize = 0n;
+    if (first  && c.userId === first.userId)  topPrize = prize1;
+    if (second && c.userId === second.userId) topPrize = prize2;
+    if (third  && c.userId === third.userId)  topPrize = prize3;
+
+    const propShare = totalWinnerContrib > 0n
+      ? (restPool * ownContrib) / totalWinnerContrib
+      : 0n;
+
+    const totalPayout = ownContrib + topPrize + propShare;
+
+    await updateBalance(c.userId, totalPayout, TransactionType.CLAN_WAR_WIN, {
+      reason: "clan_battle_win",
+      battleId: battle.id,
+      winnerClanId,
+      topPrize: topPrize.toString(),
+      propShare: propShare.toString(),
+      total: totalPayout.toString(),
     });
     await (prisma as any).clanBattleContribution.update({
       where: { id: c.id },
-      data: { paidOut: true, paidAmount: share },
+      data: { paidOut: true, paidAmount: totalPayout },
+    });
+
+    // Уведомляем победителя
+    const rank = c.userId === first?.userId ? 1
+      : c.userId === second?.userId ? 2
+      : c.userId === third?.userId  ? 3
+      : null;
+    await prisma.adminNotification.create({
+      data: {
+        type: "CLAN_BATTLE_RESULT",
+        userId: c.userId,
+        payload: {
+          result: "win",
+          battleId: battle.id,
+          rank,
+          wins: winsMap.get(c.userId) ?? 0,
+          topPrize: topPrize.toString(),
+          propShare: propShare.toString(),
+          total: totalPayout.toString(),
+        },
+      },
     });
   }
 
-  // Проигравшие — ставка сгорает (уже снята при join)
+  // ─── Проигравшие: ставки сгорают, уведомляем о поражении ─────────────────
+  for (const c of losers) {
+    await (prisma as any).clanBattleContribution.update({
+      where: { id: c.id },
+      data: { paidOut: true, paidAmount: 0n },
+    });
+    await prisma.adminNotification.create({
+      data: {
+        type: "CLAN_BATTLE_RESULT",
+        userId: c.userId,
+        payload: {
+          result: "loss",
+          battleId: battle.id,
+          lost: BigInt(c.amount).toString(),
+        },
+      },
+    });
+  }
+
+  // ─── Финальный emit ────────────────────────────────────────────────────────
   io.emit("clan:battle_finished", {
     battleId: battle.id,
     winnerClanId,
     pool: totalPool.toString(),
+    prizePool: prizePool.toString(),
+    commission: commission.toString(),
     challengerWins: chWins,
     defenderWins: defWins,
   });

@@ -186,13 +186,58 @@ router.post("/:id/join", async (req, res) => {
       });
     }
 
-    await prisma.tournamentPlayer.create({
+    const newPlayer = await prisma.tournamentPlayer.create({
       data: {
         tournamentId: tournament.id,
         userId: req.userId,
         contribution: tournament.entryFee,
       },
     });
+
+    // Auto-matchmaking: find a random active participant without an ongoing match
+    try {
+      const activeMatches = await prisma.tournamentMatch.findMany({
+        where: {
+          tournamentId: tournament.id,
+          status: 'IN_PROGRESS',
+        },
+        select: { player1Id: true, player2Id: true },
+      });
+      const busyPlayerIds = new Set(activeMatches.flatMap((m) => [m.player1Id, m.player2Id]));
+
+      const candidates = await prisma.tournamentPlayer.findMany({
+        where: {
+          tournamentId: tournament.id,
+          isActive: true,
+          id: { not: newPlayer.id },
+          userId: { not: req.userId },
+        },
+      });
+
+      const available = candidates.filter((p) => !busyPlayerIds.has(p.id));
+      if (available.length > 0) {
+        const opponent = available[Math.floor(Math.random() * available.length)];
+        // Determine current round
+        const lastMatch = await prisma.tournamentMatch.findFirst({
+          where: { tournamentId: tournament.id },
+          orderBy: { round: 'desc' },
+        });
+        const round = lastMatch ? lastMatch.round + 1 : 1;
+
+        await prisma.tournamentMatch.create({
+          data: {
+            tournamentId: tournament.id,
+            player1Id: newPlayer.id,
+            player2Id: opponent.id,
+            round,
+            status: 'IN_PROGRESS',
+          },
+        });
+      }
+    } catch (matchErr) {
+      console.error('[Tournaments] Auto-matchmaking error:', matchErr);
+      // Non-fatal: player still joined successfully
+    }
 
     res.json({ ok: true });
   } catch (err: any) {
@@ -277,5 +322,73 @@ router.post("/", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// settleTournament — distribute prizes when a tournament ends
+export async function settleTournament(tournamentId: string) {
+  const tournament = await prisma.tournament.findUnique({
+    where: { id: tournamentId },
+    include: {
+      players: {
+        where: { isActive: true },
+        orderBy: [{ points: 'desc' }, { wins: 'desc' }],
+      },
+    },
+  });
+
+  if (!tournament) throw new Error('Tournament not found');
+  if (tournament.status === 'FINISHED') return; // already settled
+
+  const totalPool = tournament.prizePool + tournament.donationPool;
+  const type = tournament.type as TournamentType;
+
+  // Prize distribution by type
+  const prizes: Array<{ rank: number; share: bigint; playerId: string; userId: string }> = [];
+
+  const byShare = (pct: number) => (totalPool * BigInt(Math.round(pct * 100))) / 10000n;
+
+  if (type === 'YEARLY' || type === 'WORLD') {
+    // 1st=60%, 2nd=30%, 3rd=10%
+    const ranks = [
+      { rank: 1, pct: 60 },
+      { rank: 2, pct: 30 },
+      { rank: 3, pct: 10 },
+    ];
+    for (const { rank, pct } of ranks) {
+      const player = tournament.players[rank - 1];
+      if (player) {
+        prizes.push({ rank, share: byShare(pct), playerId: player.id, userId: player.userId });
+      }
+    }
+  } else {
+    // Single winner
+    const pct = type === 'WEEKLY' ? 10 : type === 'MONTHLY' ? 20 : type === 'SEASONAL' ? 30 : 10;
+    const champion = tournament.players[0];
+    if (champion) {
+      prizes.push({ rank: 1, share: byShare(pct), playerId: champion.id, userId: champion.userId });
+    }
+  }
+
+  // Pay out prizes
+  for (const prize of prizes) {
+    if (prize.share <= 0n) continue;
+    await updateBalance(prize.userId, prize.share, TransactionType.TOURNAMENT_WIN, {
+      tournamentId: tournament.id,
+      rank: prize.rank,
+      prizePool: totalPool.toString(),
+    });
+    await prisma.tournamentPlayer.update({
+      where: { id: prize.playerId },
+      data: { prizeWon: prize.share },
+    });
+  }
+
+  // Mark tournament as finished
+  await prisma.tournament.update({
+    where: { id: tournamentId },
+    data: { status: 'FINISHED' },
+  });
+
+  console.log(`[Tournaments] Settled ${tournament.type} "${tournament.name}": ${prizes.length} prizes paid from pool ${totalPool}`);
+}
 
 export default router;

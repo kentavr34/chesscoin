@@ -180,7 +180,6 @@ const BPlayer: React.FC<{ user?: any; name: string; right?: boolean }> = ({ user
 const MIN_BET = 10000;
 
 const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-  const navigate = useNavigate();
   const { upsertSession } = useGameStore();
   const { user } = useUserStore();
 
@@ -223,7 +222,6 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       setLoading(false);
       if (res.ok && res.session) {
         upsertSession(res.session);
-        onClose();
         if (!isPublic && res.session.code) {
           const myRef = (user as any)?.referralCode ?? user?.telegramId;
           const shareText = `⚔️ Вызываю тебя на шахматный батл!\n💰 Ставка: ${fmtBalance(String(bet))} ᚙ\n\nПрими вызов:`;
@@ -233,8 +231,11 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               `https://t.me/share/url?url=${encodeURIComponent(botUrl)}&text=${encodeURIComponent(shareText)}`
             );
           } catch {}
+          showToast('⚔️ Приватный батл создан! Отправь ссылку другу', 'info');
+        } else {
+          showToast('⚔️ Батл создан! Ожидаем соперника...', 'info');
         }
-        navigate('/game/' + res.session.id);
+        onClose();
       } else {
         showToast(getErrText(res.error ?? ''), 'error');
       }
