@@ -72,8 +72,8 @@ export const translations = {
     nav: {
       play: 'Play',
       battles: 'Battles',
-      nations: 'Nations',
-      top: 'Top',
+      wars: 'Wars',
+      tournaments: 'Tournaments',
       profile: 'Profile',
     },
     common: {
@@ -163,8 +163,8 @@ export const translations = {
     nav: {
       play: 'Играть',
       battles: 'Батлы',
-      nations: 'Сборные',
-      top: 'Рейтинг',
+      wars: 'Войны',
+      tournaments: 'Турниры',
       profile: 'Профиль',
     },
     common: {

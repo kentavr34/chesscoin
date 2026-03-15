@@ -30,7 +30,8 @@ const AppInner: React.FC = () => {
       <Route path="/game" element={<GamePage />} />
       <Route path="/game/:sessionId" element={<GamePage />} />
       <Route path="/leaderboard" element={<LeaderboardPage />} />
-      <Route path="/nations" element={<NationsPage />} />
+      <Route path="/wars" element={<NationsPage />} />
+      <Route path="/nations" element={<Navigate to="/wars" replace />} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/tasks" element={<TasksPage />} />
       <Route path="/shop" element={<ShopPage />} />

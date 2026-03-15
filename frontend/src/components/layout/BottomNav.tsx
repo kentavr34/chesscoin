@@ -8,11 +8,11 @@ export const BottomNav: React.FC = () => {
   const t = useT();
 
   const TABS = [
-    { path: '/',             icon: '♔', label: t.nav.play      },
-    { path: '/battles',      icon: '⚔', label: t.nav.battles   },
-    { path: '/nations',      icon: '🌍', label: t.nav.nations   },
-    { path: '/leaderboard',  icon: '🏆', label: t.nav.top       },
-    { path: '/profile',      icon: '👤', label: t.nav.profile   },
+    { path: '/',             icon: '♔', label: t.nav.play         },
+    { path: '/battles',      icon: '⚔', label: t.nav.battles      },
+    { path: '/wars',         icon: '🌍', label: t.nav.wars         },
+    { path: '/tournaments',  icon: '🏆', label: t.nav.tournaments  },
+    { path: '/profile',      icon: '👤', label: t.nav.profile      },
   ];
 
   return (
