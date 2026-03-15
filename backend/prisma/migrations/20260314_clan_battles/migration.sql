@@ -80,19 +80,22 @@ CREATE INDEX IF NOT EXISTS "clan_battle_contributions_battleId_idx" ON "clan_bat
 CREATE INDEX IF NOT EXISTS "clan_battle_games_battleId_idx"         ON "clan_battle_games"("battleId");
 CREATE INDEX IF NOT EXISTS "clan_battle_games_sessionId_idx"        ON "clan_battle_games"("sessionId");
 
--- ─── Внешние ключи ────────────────────────────────────────────────────────────
-ALTER TABLE "clan_battles"
-  ADD CONSTRAINT IF NOT EXISTS "clan_battles_challengerClanId_fkey"
-    FOREIGN KEY ("challengerClanId") REFERENCES "clans"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
-ALTER TABLE "clan_battles"
-  ADD CONSTRAINT IF NOT EXISTS "clan_battles_defenderClanId_fkey"
-    FOREIGN KEY ("defenderClanId") REFERENCES "clans"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
-ALTER TABLE "clan_battle_contributions"
-  ADD CONSTRAINT IF NOT EXISTS "clan_battle_contributions_battleId_fkey"
-    FOREIGN KEY ("battleId") REFERENCES "clan_battles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
-ALTER TABLE "clan_battle_games"
-  ADD CONSTRAINT IF NOT EXISTS "clan_battle_games_battleId_fkey"
-    FOREIGN KEY ("battleId") REFERENCES "clan_battles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- ─── Внешние ключи (безопасно — проверяем существование через pg_constraint) ───
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'clan_battles_challengerClanId_fkey') THEN
+    ALTER TABLE "clan_battles" ADD CONSTRAINT "clan_battles_challengerClanId_fkey"
+      FOREIGN KEY ("challengerClanId") REFERENCES "clans"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'clan_battles_defenderClanId_fkey') THEN
+    ALTER TABLE "clan_battles" ADD CONSTRAINT "clan_battles_defenderClanId_fkey"
+      FOREIGN KEY ("defenderClanId") REFERENCES "clans"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'clan_battle_contributions_battleId_fkey') THEN
+    ALTER TABLE "clan_battle_contributions" ADD CONSTRAINT "clan_battle_contributions_battleId_fkey"
+      FOREIGN KEY ("battleId") REFERENCES "clan_battles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'clan_battle_games_battleId_fkey') THEN
+    ALTER TABLE "clan_battle_games" ADD CONSTRAINT "clan_battle_games_battleId_fkey"
+      FOREIGN KEY ("battleId") REFERENCES "clan_battles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
+END $$;
