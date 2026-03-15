@@ -28,6 +28,7 @@ import { shopRouter } from "@/routes/shop";
 import { tasksRouter } from "@/routes/tasks";
 import { botRouter } from "@/routes/bot";
 import { nationsRouter } from "@/routes/nations";
+import { warsRouter } from "@/routes/wars";
 import tournamentsRouter from "@/routes/tournaments";
 import screenshotterRouter from "@/routes/screenshotter";
 import rateLimit from "express-rate-limit";
@@ -64,6 +65,7 @@ app.use(`${API}/shop`,        shopRouter);
 app.use(`${API}/tasks`,       tasksRouter);
 app.use(`${API}/bot`,         botRouter);
 app.use(`${API}/nations`,       nationsRouter);
+app.use(`${API}/wars`,          warsRouter);
 app.use(`${API}/tournaments`,   tournamentsRouter);
 app.use(`${API}/screenshotter`, screenshotterRouter);
 
