@@ -348,6 +348,35 @@ async function checkCountryWarResults() {
         data: { losses: { increment: 1 } },
       });
 
+      // Уведомляем всех бойцов обеих стран через бота
+      const winnerCountry = attackerWon ? war.attackerCountry : war.defenderCountry;
+      const loserCountry  = attackerWon ? war.defenderCountry : war.attackerCountry;
+      const allMembers = await (prisma as any).countryMember.findMany({
+        where: { countryId: { in: [winnerCountryId, loserCountryId] } },
+        select: { userId: true, countryId: true },
+      });
+      for (const m of allMembers) {
+        const user = await prisma.user.findUnique({ where: { id: m.userId }, select: { telegramId: true } });
+        if (user?.telegramId) {
+          const won = m.countryId === winnerCountryId;
+          await prisma.adminNotification.create({
+            data: {
+              type: "WAR_FINISHED",
+              payload: {
+                telegramId: user.telegramId,
+                won,
+                winnerName: winnerCountry.nameRu,
+                winnerFlag: winnerCountry.flag,
+                loserName: loserCountry.nameRu,
+                loserFlag: loserCountry.flag,
+                attackerWins: war.attackerWins,
+                defenderWins: war.defenderWins,
+              },
+            },
+          }).catch(() => {});
+        }
+      }
+
       console.log(`[Cron/CountryWar] Finished war ${war.id}: winner=${winnerCountryId}`);
     }
   } catch (err) {

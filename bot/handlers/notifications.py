@@ -50,6 +50,42 @@ GAME_WIN_TMPL = """
 Возвращайся за следующей победой! ♟
 """.strip()
 
+WAR_DECLARED_TMPL = """
+⚔️ <b>Война объявлена!</b>
+
+{attacker_flag} <b>{attacker_name}</b> объявила войну {defender_flag} <b>{defender_name}</b>!
+
+Ваша страна атакована. Ведите своих бойцов в бой!
+Откройте приложение, чтобы принять вызов.
+""".strip()
+
+WAR_STARTED_TMPL = """
+🌍 <b>Война началась!</b>
+
+{attacker_flag} <b>{attacker_name}</b> vs {defender_flag} <b>{defender_name}</b>
+
+Сражение уже идёт! Вступайте в бой за свою страну.
+Каждая победа приближает вас к триумфу!
+""".strip()
+
+WAR_FINISHED_WIN_TMPL = """
+🏆 <b>Победа в войне!</b>
+
+{winner_flag} <b>{winner_name}</b> победила {loser_flag} <b>{loser_name}</b>!
+Счёт: <b>{attacker_wins}:{defender_wins}</b>
+
+Ваша страна одержала победу! Слава героям! ⚔️
+""".strip()
+
+WAR_FINISHED_LOSS_TMPL = """
+💔 <b>Война проиграна</b>
+
+{winner_flag} <b>{winner_name}</b> победила {loser_flag} <b>{loser_name}</b>.
+Счёт: <b>{attacker_wins}:{defender_wins}</b>
+
+Не сдавайтесь — следующая война за вами! ♟
+""".strip()
+
 DEAD_PLAYERS_CLEANED_TMPL = """
 🗑 <b>Ежемесячная чистка завершена</b>
 
@@ -108,6 +144,46 @@ async def _dispatch(bot: Bot, notif: dict) -> None:
             commission_fmt=f"{commission:,}".replace(",", " "),
         )
         await bot.send_message(telegram_id, text)
+
+    elif t == "WAR_DECLARED":
+        telegram_id = p.get("telegramId")
+        if not telegram_id:
+            return
+        text = WAR_DECLARED_TMPL.format(
+            attacker_flag=p.get("attackerFlag", "🏳️"),
+            attacker_name=p.get("attackerName", ""),
+            defender_flag=p.get("defenderFlag", "🏳️"),
+            defender_name=p.get("defenderName", ""),
+        )
+        await bot.send_message(telegram_id, text, parse_mode="HTML")
+
+    elif t == "WAR_STARTED":
+        telegram_id = p.get("telegramId")
+        if not telegram_id:
+            return
+        text = WAR_STARTED_TMPL.format(
+            attacker_flag=p.get("attackerFlag", "🏳️"),
+            attacker_name=p.get("attackerName", ""),
+            defender_flag=p.get("defenderFlag", "🏳️"),
+            defender_name=p.get("defenderName", ""),
+        )
+        await bot.send_message(telegram_id, text, parse_mode="HTML")
+
+    elif t == "WAR_FINISHED":
+        telegram_id = p.get("telegramId")
+        if not telegram_id:
+            return
+        won = p.get("won", False)
+        tmpl = WAR_FINISHED_WIN_TMPL if won else WAR_FINISHED_LOSS_TMPL
+        text = tmpl.format(
+            winner_flag=p.get("winnerFlag", "🏳️"),
+            winner_name=p.get("winnerName", ""),
+            loser_flag=p.get("loserFlag", "🏳️"),
+            loser_name=p.get("loserName", ""),
+            attacker_wins=p.get("attackerWins", 0),
+            defender_wins=p.get("defenderWins", 0),
+        )
+        await bot.send_message(telegram_id, text, parse_mode="HTML")
 
     elif t == "DEAD_PLAYERS_CLEANED":
         # Отправляем всем admin_ids

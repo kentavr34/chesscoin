@@ -203,6 +203,14 @@ warsRouter.post("/countries/:id/join", authMiddleware, async (req: Request, res:
     const existing = await prisma.countryMember.findUnique({ where: { userId } });
     if (existing) {
       if (existing.countryId === id) return res.status(400).json({ error: "Already in this country" });
+      // Нельзя покинуть страну, если она участвует в активной войне
+      const activeWar = await (prisma as any).countryWar.findFirst({
+        where: {
+          status: "IN_PROGRESS",
+          OR: [{ attackerCountryId: existing.countryId }, { defenderCountryId: existing.countryId }],
+        },
+      });
+      if (activeWar) return res.status(400).json({ error: "Cannot transfer during active war" });
       // Выходим из старой страны (трансфер)
       await prisma.countryMember.delete({ where: { userId } });
     }
@@ -227,6 +235,15 @@ warsRouter.post("/leave", authMiddleware, async (req: Request, res: Response) =>
 
     const existing = await prisma.countryMember.findUnique({ where: { userId } });
     if (!existing) return res.status(400).json({ error: "Not in any country" });
+
+    // Нельзя покинуть страну во время активной войны
+    const activeWar = await (prisma as any).countryWar.findFirst({
+      where: {
+        status: "IN_PROGRESS",
+        OR: [{ attackerCountryId: existing.countryId }, { defenderCountryId: existing.countryId }],
+      },
+    });
+    if (activeWar) return res.status(400).json({ error: "Cannot leave during active war" });
 
     await prisma.countryMember.delete({ where: { userId } });
 
@@ -405,6 +422,23 @@ warsRouter.post("/declare", authMiddleware, async (req: Request, res: Response) 
           message: `${war.attackerCountry.nameRu} объявила войну вашей стране!`,
         });
       } catch {}
+      // Bot notification для Главнокомандующего защитников
+      const defenderCommander = await prisma.user.findUnique({ where: { id: defenderCommanderId }, select: { telegramId: true, firstName: true } });
+      if (defenderCommander?.telegramId) {
+        await prisma.adminNotification.create({
+          data: {
+            type: "WAR_DECLARED",
+            payload: {
+              telegramId: defenderCommander.telegramId,
+              attackerName: war.attackerCountry.nameRu,
+              attackerFlag: war.attackerCountry.flag,
+              defenderName: war.defenderCountry.nameRu,
+              defenderFlag: war.defenderCountry.flag,
+              endAt: war.endAt.toISOString(),
+            },
+          },
+        }).catch(() => {});
+      }
     }
 
     // Уведомить всех бойцов атакующей страны
@@ -419,6 +453,31 @@ warsRouter.post("/declare", authMiddleware, async (req: Request, res: Response) 
           war: formatWar(war),
         });
       } catch {}
+    }
+
+    // Уведомить всех бойцов защищающейся страны через бота
+    const defenderMembers = await prisma.countryMember.findMany({
+      where: { countryId: defenderCountryId },
+      select: { userId: true },
+    });
+    const allWarMembers = [...attackerMembers, ...defenderMembers];
+    for (const m of allWarMembers) {
+      const member = await prisma.user.findUnique({ where: { id: m.userId }, select: { telegramId: true } });
+      if (member?.telegramId) {
+        await prisma.adminNotification.create({
+          data: {
+            type: "WAR_STARTED",
+            payload: {
+              telegramId: member.telegramId,
+              attackerName: war.attackerCountry.nameRu,
+              attackerFlag: war.attackerCountry.flag,
+              defenderName: war.defenderCountry.nameRu,
+              defenderFlag: war.defenderCountry.flag,
+              endAt: war.endAt.toISOString(),
+            },
+          },
+        }).catch(() => {});
+      }
     }
 
     res.json({ success: true, war: formatWar(war) });

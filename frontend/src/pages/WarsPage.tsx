@@ -419,7 +419,7 @@ const WarDetailModal: React.FC<{ warId: string; onClose: () => void }> = ({ warI
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN WARSPAGE
 // ─────────────────────────────────────────────────────────────────────────────
-type Tab = 'countries' | 'active' | 'history';
+type Tab = 'countries' | 'active' | 'history' | 'ranking';
 
 export const WarsPage: React.FC = () => {
   const { user } = useUserStore();
@@ -478,6 +478,15 @@ export const WarsPage: React.FC = () => {
   useEffect(() => { loadAll(); }, [loadAll]);
   useEffect(() => { if (tab === 'active') loadActive(); }, [tab, loadActive]);
   useEffect(() => { if (tab === 'history') loadHistory(); }, [tab, loadHistory]);
+
+  // Auto-refresh: обновляем каждые 30 секунд активную вкладку
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (tab === 'active') loadActive();
+      else if (tab === 'countries' || tab === 'ranking') loadAll();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [tab, loadActive, loadAll]);
 
   const handleIntroClose = async () => {
     setShowIntro(false);
@@ -554,7 +563,7 @@ export const WarsPage: React.FC = () => {
 
       {/* Tabs */}
       <div style={{ display: 'flex', margin: '4px 18px 10px', background: '#1C2030', borderRadius: 12, padding: 3 }}>
-        {([['countries', 'Страны'], ['active', 'Идёт война'], ['history', 'История']] as [Tab, string][]).map(([t, label]) => (
+        {([['countries', 'Страны'], ['active', 'Война'], ['ranking', 'Рейтинг'], ['history', 'История']] as [Tab, string][]).map(([t, label]) => (
           <button key={t} onClick={() => setTab(t)} style={{
             flex: 1, padding: '8px 4px', border: 'none', borderRadius: 9, fontFamily: 'inherit',
             fontSize: 11, fontWeight: 600, cursor: 'pointer',
@@ -731,6 +740,60 @@ export const WarsPage: React.FC = () => {
               </div>
             );
           })}
+        </>
+      )}
+
+      {/* ── TAB: РЕЙТИНГ ────────────────────────────────────────────────────── */}
+      {tab === 'ranking' && (
+        <>
+          <div style={{ margin: '0 18px 10px', color: '#8B92A8', fontSize: 11 }}>
+            Рейтинг стран по числу побед в войнах
+          </div>
+          {countries
+            .slice()
+            .sort((a, b) => (b.wins ?? 0) - (a.wins ?? 0))
+            .map((country, idx) => {
+              const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}.`;
+              const isMe = myCountry?.id === country.id;
+              return (
+                <div
+                  key={country.id}
+                  onClick={() => setSelectedCountryId(country.id)}
+                  style={{
+                    margin: '0 18px 6px', padding: '12px 14px', cursor: 'pointer',
+                    background: isMe ? 'rgba(245,200,66,0.06)' : '#13161E',
+                    border: `1px solid ${isMe ? 'rgba(245,200,66,0.25)' : 'rgba(255,255,255,0.07)'}`,
+                    borderRadius: 16, display: 'flex', alignItems: 'center', gap: 12,
+                  }}
+                >
+                  <div style={{ fontSize: idx < 3 ? 20 : 13, fontWeight: 700, color: '#8B92A8', minWidth: 28, textAlign: 'center' }}>
+                    {medal}
+                  </div>
+                  <span style={{ fontSize: 28 }}>{country.flag}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: isMe ? '#F5C842' : '#F0F2F8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {country.nameRu}
+                    </div>
+                    <div style={{ fontSize: 10, color: '#8B92A8' }}>{country.memberCount} бойцов</div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14, fontWeight: 800, color: '#4ADE80' }}>{country.wins ?? 0}</div>
+                      <div style={{ fontSize: 9, color: '#4A5270' }}>побед</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14, fontWeight: 800, color: '#FF4D6A' }}>{country.losses ?? 0}</div>
+                      <div style={{ fontSize: 9, color: '#4A5270' }}>пораж.</div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          {countries.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '40px 20px', color: '#4A5270' }}>
+              Нет данных о войнах
+            </div>
+          )}
         </>
       )}
 
