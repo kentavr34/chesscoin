@@ -1,17 +1,13 @@
-import os
 import logging
 from aiogram import Router, F, Bot
 from aiogram.filters import Command
 from aiogram.types import Message
 
 from services.backend import BackendClient
+from config import ADMIN_IDS
 
 logger = logging.getLogger(__name__)
 router = Router()
-
-# Telegram ID администраторов (через запятую в .env)
-_raw = os.getenv("ADMIN_IDS", "")
-ADMIN_IDS: set[int] = {int(x.strip()) for x in _raw.split(",") if x.strip().isdigit()}
 
 
 def is_admin(user_id: int) -> bool:
