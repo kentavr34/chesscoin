@@ -73,7 +73,8 @@ export const translations = {
       play: 'Play',
       battles: 'Battles',
       wars: 'Wars',
-      tournaments: 'Tournaments',
+      tournaments: 'Cups',
+      tasks: 'Tasks',
       profile: 'Profile',
     },
     common: {
@@ -164,7 +165,8 @@ export const translations = {
       play: 'Играть',
       battles: 'Батлы',
       wars: 'Войны',
-      tournaments: 'Турниры',
+      tournaments: 'Кубки',
+      tasks: 'Задания',
       profile: 'Профиль',
     },
     common: {

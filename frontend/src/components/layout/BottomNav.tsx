@@ -12,6 +12,7 @@ export const BottomNav: React.FC = () => {
     { path: '/battles',      icon: '⚔', label: t.nav.battles      },
     { path: '/wars',         icon: '🌍', label: t.nav.wars         },
     { path: '/tournaments',  icon: '🏆', label: t.nav.tournaments  },
+    { path: '/tasks',        icon: '📋', label: t.nav.tasks        },
     { path: '/profile',      icon: '👤', label: t.nav.profile      },
   ];
 
@@ -58,9 +59,9 @@ export const BottomNav: React.FC = () => {
               {tab.icon}
             </span>
             <span style={{
-              fontSize: 9, fontWeight: 600,
+              fontSize: 8, fontWeight: 600,
               color: active ? '#F5C842' : '#7A8299',
-              letterSpacing: '.03em', textTransform: 'uppercase',
+              letterSpacing: '.02em', textTransform: 'uppercase',
               transition: 'color .2s',
             }}>
               {tab.label}
