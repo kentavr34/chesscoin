@@ -8,6 +8,7 @@ BOT_VERSION = "v6.0.0"
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
+from aiogram.fsm.storage.memory import MemoryStorage
 
 from handlers.start import router as start_router
 from handlers.admin import router as admin_router
@@ -31,7 +32,7 @@ async def main():
         token=BOT_TOKEN,
         default=DefaultBotProperties(parse_mode=ParseMode.HTML),
     )
-    dp = Dispatcher()
+    dp = Dispatcher(storage=MemoryStorage())
 
     dp.include_router(start_router)
     dp.include_router(admin_router)

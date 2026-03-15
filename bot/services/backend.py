@@ -106,3 +106,52 @@ class BackendClient:
             })
         except Exception as e:
             logger.warning(f"register_referral_start: {e}")
+
+    # ─── Детальная статистика ─────────────────────────────────────────────────
+
+    async def get_detailed_stats(self) -> dict:
+        """Расширенная статистика: пользователи, сессии, экономика."""
+        return await self._get("/bot/stats/detailed")
+
+    # ─── Управление заданиями ─────────────────────────────────────────────────
+
+    async def get_tasks(self) -> list:
+        """Список всех заданий с числом выполнений."""
+        data = await self._get("/bot/tasks")
+        return data if isinstance(data, list) else []
+
+    async def create_task(self, payload: dict) -> dict:
+        """Создать новое социальное задание."""
+        return await self._post("/bot/tasks/create", payload)
+
+    async def toggle_task(self, task_id: str) -> dict:
+        """Переключить статус задания ACTIVE ↔ ARCHIVED."""
+        async with self._session.put(f"/bot/tasks/{task_id}/toggle") as resp:
+            data = await resp.json()
+            if not resp.ok:
+                raise RuntimeError(f"Backend {resp.status}: {data}")
+            return data
+
+    async def delete_task(self, task_id: str) -> dict:
+        """Удалить задание (вместе со всеми записями о выполнении)."""
+        async with self._session.delete(f"/bot/tasks/{task_id}") as resp:
+            data = await resp.json()
+            if not resp.ok:
+                raise RuntimeError(f"Backend {resp.status}: {data}")
+            return data
+
+    # ─── Операции очистки БД ──────────────────────────────────────────────────
+
+    async def cleanup_dead(self) -> dict:
+        """Запустить очистку мёртвых аккаунтов (не играли 30+ дней)."""
+        return await self._post("/bot/cleanup/dead", {})
+
+    async def cleanup_sessions(self) -> dict:
+        """Отменить зависшие сессии (ожидание >1ч, в процессе >6ч)."""
+        return await self._post("/bot/cleanup/sessions", {})
+
+    # ─── Управление сервером ──────────────────────────────────────────────────
+
+    async def restart_backend(self) -> dict:
+        """Перезапустить бэкенд-контейнер (graceful shutdown → Docker restart)."""
+        return await self._post("/bot/restart", {})
