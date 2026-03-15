@@ -247,7 +247,10 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         <div style={bmHandleStyle} />
 
         {/* Заголовок */}
-        <div style={{ fontSize: 18, fontWeight: 800, color: '#F0F2F8', marginBottom: 20 }}>⚔ Создать батл</div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <div style={{ fontSize: 18, fontWeight: 800, color: '#F0F2F8' }}>⚔ Создать батл</div>
+          <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: '#8B92A8', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+        </div>
 
         {/* Ставка */}
         <div style={bmSectionLbl}>Ставка</div>

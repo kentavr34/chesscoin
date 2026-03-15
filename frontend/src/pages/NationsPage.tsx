@@ -465,8 +465,9 @@ const ContributeModal: React.FC<{ clanName: string; clanFlag: string; onClose: (
     <div style={overlayStyle} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div style={modalStyle}>
         <div style={handleBar} />
-        <div style={{ fontSize: 17, fontWeight: 700, color: '#F0F2F8', marginBottom: 16 }}>
-          {clanFlag} Взнос в казну {clanName}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <div style={{ fontSize: 17, fontWeight: 700, color: '#F0F2F8' }}>{clanFlag} Взнос в казну {clanName}</div>
+          <button onClick={onClose} style={closeBtnStyle}>✕</button>
         </div>
         <div style={{ fontSize: 11, color: '#8B92A8', marginBottom: 16 }}>
           Ваш взнос укрепляет казну клана. При победе в войне — получите пропорциональную долю приза.
@@ -510,7 +511,10 @@ const WarChallengeModal: React.FC<{ nations: Nation[]; onClose: () => void; onSu
     <div style={overlayStyle} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div style={modalStyle}>
         <div style={handleBar} />
-        <div style={{ fontSize: 17, fontWeight: 700, color: '#FF4D6A', marginBottom: 4 }}>⚔️ Объявить клановую войну</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+          <div style={{ fontSize: 17, fontWeight: 700, color: '#FF4D6A' }}>⚔️ Объявить клановую войну</div>
+          <button onClick={onClose} style={closeBtnStyle}>✕</button>
+        </div>
         <div style={{ fontSize: 11, color: '#8B92A8', marginBottom: 16 }}>На кону будет казна обоих кланов!</div>
         <div style={{ fontSize: 10, color: '#4A5270', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 8 }}>Выберите врага</div>
         <div style={{ maxHeight: 200, overflowY: 'auto', marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -552,6 +556,9 @@ const JoinClanModal: React.FC<{ clanId: string; clan?: Nation; onClose: () => vo
     <div style={overlayStyle} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div style={modalStyle}>
         <div style={handleBar} />
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+          <button onClick={onClose} style={closeBtnStyle}>✕</button>
+        </div>
         <div style={{ textAlign: 'center', marginBottom: 16 }}>
           <div style={{ fontSize: 48 }}>{clan?.flag}</div>
           <div style={{ fontSize: 18, fontWeight: 700, color: '#F0F2F8' }}>{clan?.name}</div>
@@ -828,4 +835,9 @@ const nationSelectBtn: React.CSSProperties = {
 };
 const nationSelectBtnActive: React.CSSProperties = {
   background: 'rgba(245,200,66,0.08)', borderColor: 'rgba(245,200,66,0.3)', color: '#F5C842',
+};
+const closeBtnStyle: React.CSSProperties = {
+  width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.07)',
+  border: '1px solid rgba(255,255,255,0.1)', color: '#8B92A8', fontSize: 14,
+  cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center',
 };
