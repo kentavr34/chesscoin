@@ -4,6 +4,8 @@ import { useEffect } from 'react';
 import { authApi } from '@/api';
 import { setTokens, clearTokens, getAccessToken } from '@/api/client';
 import { useUserStore } from '@/store/useUserStore';
+import { setActiveTheme } from '@/lib/theme';
+import type { ThemeKey } from '@/lib/theme';
 
 export const useAuth = () => {
   const { setUser, setLoading, logout } = useUserStore();
@@ -20,6 +22,7 @@ export const useAuth = () => {
       try {
         const user = await authApi.me();
         setUser(user);
+        if (user.activeTheme) setActiveTheme(user.activeTheme as ThemeKey);
         return;
       } catch {
         clearTokens();
@@ -59,6 +62,7 @@ export const useAuth = () => {
       const result = await authApi.login(initData, referrer);
       setTokens(result.accessToken, result.refreshToken);
       setUser(result.user);
+      if (result.user.activeTheme) setActiveTheme(result.user.activeTheme as ThemeKey);
 
       // Deep link в конкретную игру
       const pendingCode = sessionStorage.getItem('pendingGameCode');

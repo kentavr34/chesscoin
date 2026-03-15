@@ -384,6 +384,57 @@ async function checkCountryWarResults() {
   }
 }
 
+// ─── Hourly: предупреждение за 1 час до конца войны ─────────────────────────
+async function sendWarWarnings() {
+  try {
+    const in1hour = new Date(Date.now() + 60 * 60 * 1000);
+    const soon = await (prisma as any).countryWar.findMany({
+      where: {
+        status: "IN_PROGRESS",
+        endAt: { lte: in1hour },
+        warningNotifiedAt: null,
+      },
+      include: {
+        attackerCountry: true,
+        defenderCountry: true,
+      },
+    });
+
+    for (const war of soon) {
+      const allMembers = await (prisma as any).countryMember.findMany({
+        where: { countryId: { in: [war.attackerCountryId, war.defenderCountryId] } },
+        select: { userId: true },
+      });
+      for (const m of allMembers) {
+        const user = await prisma.user.findUnique({ where: { id: m.userId }, select: { telegramId: true } });
+        if (user?.telegramId) {
+          await prisma.adminNotification.create({
+            data: {
+              type: "WAR_ENDING_SOON",
+              payload: {
+                telegramId: user.telegramId,
+                attackerName: war.attackerCountry.nameRu,
+                attackerFlag: war.attackerCountry.flag,
+                defenderName: war.defenderCountry.nameRu,
+                defenderFlag: war.defenderCountry.flag,
+                attackerWins: war.attackerWins,
+                defenderWins: war.defenderWins,
+              },
+            },
+          }).catch(() => {});
+        }
+      }
+      await (prisma as any).countryWar.update({
+        where: { id: war.id },
+        data: { warningNotifiedAt: new Date() },
+      });
+      console.log(`[Cron/WarWarning] Sent 1h warning for war ${war.id}`);
+    }
+  } catch (err) {
+    console.error("[Cron/WarWarning]", err);
+  }
+}
+
 // ─── Запуск всех кронов ──────────────────────────────────────────────────────
 export function startGameCrons() {
   // Обеспечиваем наличие системных турниров при старте
@@ -396,6 +447,7 @@ export function startGameCrons() {
     await checkClanBattleResults();
     await checkTournamentResults();
     await checkCountryWarResults();
+    await sendWarWarnings();
   }, 60 * 60 * 1000);
 
   // Первый запуск через 30 сек после старта сервера

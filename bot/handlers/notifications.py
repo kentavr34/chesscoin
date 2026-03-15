@@ -50,6 +50,16 @@ GAME_WIN_TMPL = """
 Возвращайся за следующей победой! ♟
 """.strip()
 
+WAR_ENDING_SOON_TMPL = """
+⏰ <b>Война заканчивается через 1 час!</b>
+
+{attacker_flag} <b>{attacker_name}</b> vs {defender_flag} <b>{defender_name}</b>
+Счёт: <b>{attacker_wins}:{defender_wins}</b>
+
+Это последний шанс повлиять на исход!
+Заходи и бейся за свою страну прямо сейчас! ⚔️
+""".strip()
+
 WAR_DECLARED_TMPL = """
 ⚔️ <b>Война объявлена!</b>
 
@@ -144,6 +154,20 @@ async def _dispatch(bot: Bot, notif: dict) -> None:
             commission_fmt=f"{commission:,}".replace(",", " "),
         )
         await bot.send_message(telegram_id, text)
+
+    elif t == "WAR_ENDING_SOON":
+        telegram_id = p.get("telegramId")
+        if not telegram_id:
+            return
+        text = WAR_ENDING_SOON_TMPL.format(
+            attacker_flag=p.get("attackerFlag", "🏳️"),
+            attacker_name=p.get("attackerName", ""),
+            defender_flag=p.get("defenderFlag", "🏳️"),
+            defender_name=p.get("defenderName", ""),
+            attacker_wins=p.get("attackerWins", 0),
+            defender_wins=p.get("defenderWins", 0),
+        )
+        await bot.send_message(telegram_id, text, parse_mode="HTML")
 
     elif t == "WAR_DECLARED":
         telegram_id = p.get("telegramId")

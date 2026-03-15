@@ -49,6 +49,7 @@ export interface User extends UserPublic {
   tonWalletAddress?: string | null;
   tonConnectedAt?: string | null;
   hasSeenWarsIntro?: boolean;
+  activeTheme?: string;
 }
 
 export interface ActiveSessionRef {

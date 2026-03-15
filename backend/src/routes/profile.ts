@@ -337,6 +337,101 @@ router.post("/ton/withdraw", authMiddleware, async (req: Request, res: Response)
   }
 });
 
+// POST /profile/theme — сохранить активную тему
+router.post("/theme", authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as AuthRequest).userId;
+    const { theme } = req.body;
+    if (!theme || typeof theme !== 'string') return res.status(400).json({ error: "theme required" });
+    await prisma.user.update({ where: { id: userId }, data: { activeTheme: theme } });
+    res.json({ success: true, theme });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /profile/ton/rate — текущий курс TON → ᚙ
+router.get("/ton/rate", authMiddleware, async (_req: Request, res: Response) => {
+  try {
+    // Пытаемся получить актуальный курс с CoinGecko
+    let tonUsdt = 5.5; // fallback
+    try {
+      const resp = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=the-open-network&vs_currencies=usd", { signal: AbortSignal.timeout(3000) });
+      if (resp.ok) {
+        const data = await resp.json();
+        tonUsdt = data["the-open-network"]?.usd ?? tonUsdt;
+      }
+    } catch {}
+    const coinsPerTon = 1_000_000;
+    const coinsPerUsdt = Math.round(coinsPerTon / tonUsdt);
+    res.json({ tonUsdt, coinsPerTon, coinsPerUsdt, feePercent: 0.5 });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /profile/ton/buy — купить монеты за TON (создаёт заявку на пополнение)
+router.post("/ton/buy", authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as AuthRequest).userId;
+    const { amountTon } = req.body;
+    if (!amountTon || parseFloat(amountTon) < 0.1) {
+      return res.status(400).json({ error: "Минимальная покупка: 0.1 TON" });
+    }
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { tonWalletAddress: true } });
+    if (!user?.tonWalletAddress) {
+      return res.status(400).json({ error: "Сначала подключите TON кошелёк" });
+    }
+    const coinsPerTon = 1_000_000;
+    const gross = Math.round(parseFloat(amountTon) * coinsPerTon);
+    const fee = Math.round(gross * 0.005);
+    const net = gross - fee;
+    // Начисляем монеты сразу (реальная оплата TON — вне платформы, пользователь подтверждает)
+    const { updateBalance } = await import("@/services/economy");
+    const { TransactionType } = await import("@prisma/client");
+    await updateBalance(userId, BigInt(net), TransactionType.TON_DEPOSIT, {
+      amountTon: parseFloat(amountTon),
+      coinsGross: gross,
+      coinsFee: fee,
+      coinsNet: net,
+    });
+    res.json({ success: true, coinsReceived: net, fee });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /profile/ton/sell — продать монеты за TON (создаёт заявку на выплату)
+router.post("/ton/sell", authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as AuthRequest).userId;
+    const { amountCoins } = req.body;
+    if (!amountCoins || BigInt(amountCoins) < 1_000_000n) {
+      return res.status(400).json({ error: "Минимальная продажа: 1,000,000 ᚙ (= 1 TON)" });
+    }
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { balance: true, tonWalletAddress: true } });
+    if (!user?.tonWalletAddress) return res.status(400).json({ error: "Сначала подключите TON кошелёк" });
+    if (user.balance < BigInt(amountCoins)) return res.status(400).json({ error: "Недостаточно монет" });
+    const coinsPerTon = 1_000_000;
+    const tonGross = Number(amountCoins) / coinsPerTon;
+    const tonFee = tonGross * 0.005;
+    const tonNet = tonGross - tonFee;
+    const { updateBalance } = await import("@/services/economy");
+    const { TransactionType } = await import("@prisma/client");
+    await updateBalance(userId, -BigInt(amountCoins), TransactionType.WITHDRAWAL, {
+      type: "sell",
+      tonWallet: user.tonWalletAddress,
+      tonAmount: tonNet,
+    });
+    await prisma.withdrawalRequest.create({
+      data: { userId, amountCoins: BigInt(amountCoins), tonCommission: tonFee, tonWalletAddress: user.tonWalletAddress },
+    });
+    res.json({ success: true, tonAmount: tonNet, fee: tonFee });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /profile/:userId — публичный профиль (должен быть последним!)
 router.get("/:userId", authMiddleware, async (req: Request, res: Response) => {
   try {

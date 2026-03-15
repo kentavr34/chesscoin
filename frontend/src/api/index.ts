@@ -42,6 +42,8 @@ export const profileApi = {
   },
   deleteAvatar: () =>
     api.delete<{ success: boolean }>('/profile/avatar'),
+  saveTheme: (theme: string) =>
+    api.post<{ success: boolean; theme: string }>('/profile/theme', { theme }),
 };
 
 export const tonApi = {
@@ -49,6 +51,12 @@ export const tonApi = {
     api.post<{ success: boolean; walletAddress: string }>('/profile/ton-wallet', { walletAddress }),
   disconnectWallet: () =>
     api.delete<{ success: boolean }>('/profile/ton-wallet'),
+  rate: () =>
+    api.get<{ tonUsdt: number; coinsPerTon: number; coinsPerUsdt: number; feePercent: number }>('/profile/ton/rate'),
+  buy: (amountTon: number) =>
+    api.post<{ success: boolean; coinsReceived: number; fee: number }>('/profile/ton/buy', { amountTon }),
+  sell: (amountCoins: string) =>
+    api.post<{ success: boolean; tonAmount: number; fee: number }>('/profile/ton/sell', { amountCoins }),
   withdraw: (amountCoins: string) =>
     api.post<{ success: boolean; netTon: number }>('/profile/ton/withdraw', { amountCoins }),
 };

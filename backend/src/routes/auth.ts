@@ -143,6 +143,7 @@ const formatUser = (user: any) => ({
   })(),
   createdAt: user.createdAt,
   hasSeenWarsIntro: user.hasSeenWarsIntro ?? false,
+  activeTheme: user.activeTheme ?? 'default',
 });
 
 export default router;

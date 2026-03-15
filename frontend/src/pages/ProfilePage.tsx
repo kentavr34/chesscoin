@@ -10,6 +10,81 @@ import { profileApi, authApi, warsApi } from '@/api';
 import { fmtBalance, fmtDate, leagueEmoji } from '@/utils/format';
 import type { Transaction } from '@/types';
 import { JARVIS_LEVELS } from '@/components/ui/JarvisModal';
+import { Chessboard } from 'react-chessboard';
+import { Chess } from 'chess.js';
+
+// ── PgnReplayModal ────────────────────────────────────────────────────────────
+const PgnReplayModal: React.FC<{ pgn: string; title?: string; onClose: () => void }> = ({ pgn, title, onClose }) => {
+  const [moves, setMoves] = useState<string[]>([]);
+  const [step, setStep] = useState(0);
+  const [fens, setFens] = useState<string[]>([]);
+
+  useEffect(() => {
+    try {
+      const chess = new Chess();
+      chess.loadPgn(pgn);
+      const history = chess.history();
+      const fenList: string[] = ['rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'];
+      const c2 = new Chess();
+      for (const m of history) {
+        c2.move(m);
+        fenList.push(c2.fen());
+      }
+      setMoves(history);
+      setFens(fenList);
+      setStep(fenList.length - 1);
+    } catch {}
+  }, [pgn]);
+
+  const currentFen = fens[step] ?? 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+      onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div style={{ background: '#13161E', borderRadius: 24, padding: 20, width: '100%', maxWidth: 420, border: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: '#F5C842' }}>♟ {title ?? 'Разбор партии'}</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#8B92A8', fontSize: 16, cursor: 'pointer', padding: 0 }}>✕</button>
+        </div>
+
+        <Chessboard position={currentFen} arePiecesDraggable={false} boardWidth={Math.min(380, window.innerWidth - 72)} />
+
+        {/* Move counter */}
+        <div style={{ textAlign: 'center', marginTop: 10, fontSize: 12, color: '#8B92A8' }}>
+          Ход {step} / {fens.length - 1}
+          {step > 0 && moves[step - 1] && <span style={{ color: '#F5C842', marginLeft: 6 }}>{moves[step - 1]}</span>}
+        </div>
+
+        {/* Controls */}
+        <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+          {[
+            { label: '⏮', action: () => setStep(0) },
+            { label: '◀', action: () => setStep(s => Math.max(0, s - 1)) },
+            { label: '▶', action: () => setStep(s => Math.min(fens.length - 1, s + 1)) },
+            { label: '⏭', action: () => setStep(fens.length - 1) },
+          ].map(({ label, action }) => (
+            <button key={label} onClick={action} style={{ flex: 1, padding: '10px 0', background: '#232840', border: 'none', borderRadius: 10, color: '#F0F2F8', fontSize: 16, cursor: 'pointer', fontFamily: 'inherit' }}>
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Move list */}
+        <div style={{ marginTop: 12, maxHeight: 100, overflowY: 'auto', display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+          {moves.map((m, i) => (
+            <button key={i} onClick={() => setStep(i + 1)} style={{
+              padding: '3px 7px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+              background: step === i + 1 ? '#F5C842' : '#1C2030',
+              color: step === i + 1 ? '#0B0D11' : '#8B92A8',
+            }}>
+              {i % 2 === 0 ? `${Math.floor(i / 2) + 1}.` : ''}{m}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // ── BadgeDetailModal ─────────────────────────────────────────────────────────
 const BadgeDetailModal: React.FC<{
@@ -58,6 +133,7 @@ export const ProfilePage: React.FC = () => {
   const [tab, setTab] = useState<Tab>('info');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [savedGames, setSavedGames] = useState<any[]>([]);
+  const [replayGame, setReplayGame] = useState<{ pgn: string; title?: string } | null>(null);
   const [selectedBadge, setSelectedBadge] = useState<{ name: string; date?: string } | null>(null);
   const [avatarLoading, setAvatarLoading] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -200,6 +276,40 @@ export const ProfilePage: React.FC = () => {
         </div>
       </div>
 
+      {/* League progress bar */}
+      {(() => {
+        const LEAGUE_THRESHOLDS: Record<string, { next: string | null; threshold: bigint; nextThreshold: bigint }> = {
+          BRONZE:   { next: 'SILVER',   threshold: 0n,           nextThreshold: 100_000n },
+          SILVER:   { next: 'GOLD',     threshold: 100_000n,     nextThreshold: 1_000_000n },
+          GOLD:     { next: 'DIAMOND',  threshold: 1_000_000n,   nextThreshold: 5_000_000n },
+          DIAMOND:  { next: 'CHAMPION', threshold: 5_000_000n,   nextThreshold: 10_000_000n },
+          CHAMPION: { next: 'STAR',     threshold: 10_000_000n,  nextThreshold: 50_000_000n },
+          STAR:     { next: null,       threshold: 50_000_000n,  nextThreshold: 50_000_000n },
+        };
+        const info = LEAGUE_THRESHOLDS[user.league];
+        if (!info) return null;
+        const bal = BigInt(user.balance ?? '0');
+        const range = info.nextThreshold - info.threshold;
+        const progress = info.next === null ? 100 : range > 0n ? Math.min(100, Number((bal - info.threshold) * 100n / range)) : 100;
+        const remaining = info.next ? info.nextThreshold - bal : 0n;
+        return (
+          <div style={{ margin: '0 18px 10px', padding: '12px 16px', background: '#13161E', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#F5C842' }}>{leagueEmoji[user.league]} Лига {user.league}</div>
+              {info.next ? (
+                <div style={{ fontSize: 10, color: '#8B92A8' }}>до {leagueEmoji[info.next]} {info.next}: {fmtBalance(remaining.toString())} ᚙ</div>
+              ) : (
+                <div style={{ fontSize: 10, color: '#00D68F', fontWeight: 700 }}>★ Максимальная лига</div>
+              )}
+            </div>
+            <div style={{ height: 5, background: '#1C2030', borderRadius: 3, overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${progress}%`, background: 'linear-gradient(90deg,#F5C842,#FFD966)', borderRadius: 3, transition: 'width .5s' }} />
+            </div>
+            <div style={{ fontSize: 9, color: '#4A5270', marginTop: 4 }}>{progress}% до следующей лиги</div>
+          </div>
+        );
+      })()}
+
       {/* Tabs */}
       <div style={ptabsStyle}>
         {TABS.map(({ id, label }) => (
@@ -306,7 +416,7 @@ export const ProfilePage: React.FC = () => {
                         <Avatar user={p2} size="s" />
                       </div>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: s?.pgn ? 8 : 0 }}>
                       <div style={{ fontSize: 10, color: '#4A5270' }}>
                         {s?.type ?? ''} · {s?.finishedAt ? fmtDate(s.finishedAt) : ''}
                       </div>
@@ -322,6 +432,14 @@ export const ProfilePage: React.FC = () => {
                         ✕ убрать
                       </button>
                     </div>
+                    {s?.pgn && (
+                      <button
+                        onClick={() => setReplayGame({ pgn: s.pgn, title: `${p1?.firstName ?? '?'} vs ${p2?.firstName ?? '?'}` })}
+                        style={{ width: '100%', padding: '7px 0', background: 'rgba(245,200,66,0.08)', color: '#F5C842', border: '1px solid rgba(245,200,66,0.2)', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                      >
+                        ♟ Разобрать партию
+                      </button>
+                    )}
                   </div>
                 );
               })}
@@ -456,6 +574,15 @@ export const ProfilePage: React.FC = () => {
           badgeName={selectedBadge.name}
           date={selectedBadge.date}
           onClose={() => setSelectedBadge(null)}
+        />
+      )}
+
+      {/* PGN Replay modal */}
+      {replayGame && (
+        <PgnReplayModal
+          pgn={replayGame.pgn}
+          title={replayGame.title}
+          onClose={() => setReplayGame(null)}
         />
       )}
     </PageLayout>

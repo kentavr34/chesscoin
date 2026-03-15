@@ -393,6 +393,14 @@ const WarDetailModal: React.FC<{ warId: string; onClose: () => void }> = ({ warI
                     <div style={{ cursor: 'pointer' }} onClick={() => p2 && navigate(`/profile/${p2.id}`)}>
                       <Avatar user={p2} size="s" />
                     </div>
+                    {!isDone && b.sessionId && (
+                      <button
+                        onClick={() => { onClose(); navigate(`/game/${b.sessionId}?spectate=1`); }}
+                        style={{ padding: '5px 8px', background: 'rgba(245,200,66,0.1)', color: '#F5C842', border: '1px solid rgba(245,200,66,0.25)', borderRadius: 8, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}
+                      >
+                        👁 Смотреть
+                      </button>
+                    )}
                     {b.session?.pgn && isDone && (
                       <button
                         onClick={() => handleSave(b.sessionId)}
@@ -476,7 +484,7 @@ export const WarsPage: React.FC = () => {
   }, []);
 
   useEffect(() => { loadAll(); }, [loadAll]);
-  useEffect(() => { if (tab === 'active') loadActive(); }, [tab, loadActive]);
+  useEffect(() => { if (tab === 'active' || tab === 'ranking') loadActive(); }, [tab, loadActive]);
   useEffect(() => { if (tab === 'history') loadHistory(); }, [tab, loadHistory]);
 
   // Auto-refresh: обновляем каждые 30 секунд активную вкладку
@@ -746,6 +754,7 @@ export const WarsPage: React.FC = () => {
       {/* ── TAB: РЕЙТИНГ ────────────────────────────────────────────────────── */}
       {tab === 'ranking' && (
         <>
+          <style>{`@keyframes warBlink { 0%,100%{opacity:1} 50%{opacity:0.3} }`}</style>
           <div style={{ margin: '0 18px 10px', color: '#8B92A8', fontSize: 11 }}>
             Рейтинг стран по числу побед в войнах
           </div>
@@ -755,6 +764,7 @@ export const WarsPage: React.FC = () => {
             .map((country, idx) => {
               const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}.`;
               const isMe = myCountry?.id === country.id;
+              const atWar = activeWars.some((w: any) => w.attackerCountryId === country.id || w.defenderCountryId === country.id);
               return (
                 <div
                   key={country.id}
@@ -762,7 +772,7 @@ export const WarsPage: React.FC = () => {
                   style={{
                     margin: '0 18px 6px', padding: '12px 14px', cursor: 'pointer',
                     background: isMe ? 'rgba(245,200,66,0.06)' : '#13161E',
-                    border: `1px solid ${isMe ? 'rgba(245,200,66,0.25)' : 'rgba(255,255,255,0.07)'}`,
+                    border: `1px solid ${atWar ? 'rgba(255,77,106,0.3)' : isMe ? 'rgba(245,200,66,0.25)' : 'rgba(255,255,255,0.07)'}`,
                     borderRadius: 16, display: 'flex', alignItems: 'center', gap: 12,
                   }}
                 >
@@ -771,10 +781,17 @@ export const WarsPage: React.FC = () => {
                   </div>
                   <span style={{ fontSize: 28 }}>{country.flag}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: isMe ? '#F5C842' : '#F0F2F8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {country.nameRu}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: isMe ? '#F5C842' : '#F0F2F8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {country.nameRu}
+                      </div>
+                      {atWar && (
+                        <span style={{ fontSize: 11, animation: 'warBlink 1s ease-in-out infinite' }}>⚔️</span>
+                      )}
                     </div>
-                    <div style={{ fontSize: 10, color: '#8B92A8' }}>{country.memberCount} бойцов</div>
+                    <div style={{ fontSize: 10, color: atWar ? '#FF4D6A' : '#8B92A8' }}>
+                      {atWar ? 'Идёт война!' : `${country.memberCount} бойцов`}
+                    </div>
                   </div>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                     <div style={{ textAlign: 'center' }}>

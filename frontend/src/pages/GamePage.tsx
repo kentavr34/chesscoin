@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Square, PieceSymbol } from 'chess.js';
 import { ChessBoard } from '@/components/game/ChessBoard';
 import { CapturedPieces } from '@/components/game/CapturedPieces';
@@ -16,6 +16,8 @@ import { JARVIS_LEVELS } from '@/components/ui/JarvisModal';
 export const GamePage: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isSpectator = searchParams.get('spectate') === '1';
   const { sessions, upsertSession, removeSession, drawOfferedBy, setDrawOffered } = useGameStore();
   const { user } = useUserStore();
 
@@ -35,9 +37,10 @@ export const GamePage: React.FC = () => {
   const session = sessions.find((s) => s.id === sessionId) ?? sessions[0];
 
   useEffect(() => {
+    if (isSpectator) return; // spectator uses own session flow
     if (!session && sessions.length > 0) navigate('/game/' + sessions[0].id, { replace: true });
     if (!session && sessions.length === 0) navigate('/', { replace: true });
-  }, [sessions, session]);
+  }, [sessions, session, isSpectator]);
 
   // Показываем модал результата при завершении
   useEffect(() => {
@@ -73,9 +76,16 @@ export const GamePage: React.FC = () => {
     setShowResult(true);
   }, [session?.status]);
 
+  // Spectate mode: подписаться на партию как наблюдатель
+  useEffect(() => {
+    if (!isSpectator || !sessionId) return;
+    getSocket().emit('spectate', { sessionId });
+    return () => { getSocket().emit('unspectate', { sessionId }); };
+  }, [isSpectator, sessionId]);
+
   const mySide = session?.sides.find((s) => s.id === session.mySideId);
   const opSide = session?.sides.find((s) => s.id !== session.mySideId);
-  const isMyTurn  = session?.isMyTurn ?? false;
+  const isMyTurn  = !isSpectator && (session?.isMyTurn ?? false);
   const isWhite   = mySide?.isWhite ?? true;
   const isGameOver = ['FINISHED', 'DRAW', 'CANCELLED', 'TIME_EXPIRED'].includes(session?.status ?? '');
   const isBotGame  = session?.type === 'BOT';
@@ -126,6 +136,14 @@ export const GamePage: React.FC = () => {
 
   return (
     <div style={rootStyle}>
+
+      {/* Spectator banner */}
+      {isSpectator && (
+        <div style={{ background: 'rgba(245,200,66,0.1)', border: '1px solid rgba(245,200,66,0.2)', borderRadius: 10, margin: '6px 12px 0', padding: '7px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: 12, color: '#F5C842', fontWeight: 600 }}>👁 Режим наблюдателя</span>
+          <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', color: '#8B92A8', fontSize: 12, cursor: 'pointer', padding: 0 }}>← Назад</button>
+        </div>
+      )}
 
       {/* Оппонент */}
       <div style={{ padding: '8px 12px 4px', paddingTop: 'max(8px,env(safe-area-inset-top,8px))', flexShrink: 0 }}>

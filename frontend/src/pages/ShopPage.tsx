@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { PageLayout } from '@/components/layout/PageLayout';
-import { shopApi, authApi } from '@/api';
+import { shopApi, authApi, tonApi, profileApi } from '@/api';
 import { useUserStore } from '@/store/useUserStore';
 import { fmtBalance } from '@/utils/format';
 import type { ShopItem, ItemType } from '@/types';
@@ -50,9 +50,8 @@ const RARITY_LABEL: Record<string, string> = {
   LEGENDARY: 'Легендарный',
 };
 
-// TON rate (1 TON ≈ 5.5 USDT, mocked — in production fetch from API)
-const TON_TO_COINS = 1_000_000; // 1 TON = 1,000,000 ᚙ
-const USDT_TO_COINS = 200_000;  // 1 USDT ≈ 200,000 ᚙ
+const DEFAULT_TON_TO_COINS = 1_000_000;
+const DEFAULT_USDT_TO_COINS = 200_000;
 const FEE_PERCENT = 0.5;
 
 // ── TON Tab ─────────────────────────────────────────────────
@@ -68,6 +67,10 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
   const [connecting, setConnecting] = useState(false);
   const [activeAction, setActiveAction] = useState<'buy' | 'sell' | 'withdraw' | null>(null);
   const [amount, setAmount] = useState('');
+  const [processing, setProcessing] = useState(false);
+  const [tonToCoins, setTonToCoins] = useState(DEFAULT_TON_TO_COINS);
+  const [usdtToCoins, setUsdtToCoins] = useState(DEFAULT_USDT_TO_COINS);
+  const [tonUsdt, setTonUsdt] = useState(5.5);
 
   // Check if user already unlocked TON features (tonWalletAddress set)
   useEffect(() => {
@@ -76,6 +79,15 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
       setWalletAddress(user.tonWalletAddress);
     }
   }, [user]);
+
+  // Load live rate
+  useEffect(() => {
+    tonApi.rate().then(r => {
+      setTonToCoins(r.coinsPerTon);
+      setUsdtToCoins(r.coinsPerUsdt);
+      setTonUsdt(r.tonUsdt);
+    }).catch(() => {});
+  }, []);
 
   const handleConnectWallet = async () => {
     const tg = (window as any).Telegram?.WebApp;
@@ -104,7 +116,7 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
       }
 
       // POST to backend to unlock + store wallet address
-      // await api.post('/profile/ton-wallet', { address: addr });
+      await tonApi.connectWallet(addr);
       setWalletAddress(addr);
       setWalletConnected(true);
       showToast('✅ TON кошелёк подключён!');
@@ -118,7 +130,7 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
 
   const calcCoins = (tonOrUsdt: string, isTon: boolean) => {
     const n = parseFloat(tonOrUsdt) || 0;
-    const rate = isTon ? TON_TO_COINS : USDT_TO_COINS;
+    const rate = isTon ? tonToCoins : usdtToCoins;
     const gross = n * rate;
     const fee = gross * (FEE_PERCENT / 100);
     return { gross, fee, net: gross - fee };
@@ -126,7 +138,7 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
 
   const calcWithdraw = (coins: string) => {
     const n = BigInt(coins.replace(/\D/g, '') || '0');
-    const ton = Number(n) / TON_TO_COINS;
+    const ton = Number(n) / tonToCoins;
     const fee = ton * (FEE_PERCENT / 100);
     return { ton, fee, net: ton - fee };
   };
@@ -192,7 +204,8 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
         </div>
         <div style={{ flex: 1, padding: '12px', background: '#1C2030', borderRadius: 14, textAlign: 'center' }}>
           <div style={{ fontSize: 10, color: '#4A5270', marginBottom: 4 }}>КУРС</div>
-          <div style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 12, fontWeight: 700, color: '#0098EA' }}>1 TON = 1M ᚙ</div>
+          <div style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 12, fontWeight: 700, color: '#0098EA' }}>1 TON = {(tonToCoins / 1000).toFixed(0)}K ᚙ</div>
+          <div style={{ fontSize: 9, color: '#4A5270', marginTop: 2 }}>≈ ${tonUsdt.toFixed(2)}</div>
         </div>
       </div>
 
@@ -233,13 +246,22 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
               onChange={e => setAmount(e.target.value)}
               style={{ flex: 1, padding: '10px 12px', background: '#1C2030', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: '#F0F2F8', fontSize: 13, fontFamily: 'inherit' }}
             />
-            <button style={{ padding: '10px 16px', background: '#0098EA', color: '#fff', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
-              onClick={() => {
-                const c = calcCoins(amount, true);
-                showToast(`Покупка за ${amount} TON\nПолучишь: ${fmtBalance(String(Math.round(c.net)))} ᚙ\nКомиссия: ${FEE_PERCENT}%`);
+            <button
+              disabled={processing || !amount}
+              style={{ padding: '10px 16px', background: processing ? '#555' : '#0098EA', color: '#fff', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: processing ? 'default' : 'pointer', fontFamily: 'inherit' }}
+              onClick={async () => {
+                if (!amount || parseFloat(amount) < 0.1) { showToast('Минимум 0.1 TON'); return; }
+                setProcessing(true);
+                try {
+                  const r = await tonApi.buy(parseFloat(amount));
+                  showToast(`✅ Начислено ${fmtBalance(String(r.coinsReceived))} ᚙ`);
+                  setAmount('');
+                  onUserRefresh();
+                } catch (e: any) { showToast(e.message || 'Ошибка'); }
+                finally { setProcessing(false); }
               }}
             >
-              Купить
+              {processing ? '...' : 'Купить'}
             </button>
           </div>
           {amount && (
@@ -265,10 +287,22 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
               onChange={e => setAmount(e.target.value)}
               style={{ flex: 1, padding: '10px 12px', background: '#1C2030', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: '#F0F2F8', fontSize: 13, fontFamily: 'inherit' }}
             />
-            <button style={{ padding: '10px 16px', background: '#7B61FF', color: '#fff', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
-              onClick={() => showToast('Продажа монет — в разработке')}
+            <button
+              disabled={processing || !amount}
+              style={{ padding: '10px 16px', background: processing ? '#555' : '#7B61FF', color: '#fff', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: processing ? 'default' : 'pointer', fontFamily: 'inherit' }}
+              onClick={async () => {
+                if (!amount || BigInt(amount.replace(/\D/g,'') || '0') < 1_000_000n) { showToast('Минимум 1,000,000 ᚙ'); return; }
+                setProcessing(true);
+                try {
+                  const r = await tonApi.sell(amount.replace(/\D/g,''));
+                  showToast(`✅ Заявка создана: ${r.tonAmount.toFixed(4)} TON`);
+                  setAmount('');
+                  onUserRefresh();
+                } catch (e: any) { showToast(e.message || 'Ошибка'); }
+                finally { setProcessing(false); }
+              }}
             >
-              Продать
+              {processing ? '...' : 'Продать'}
             </button>
           </div>
           {amount && (
@@ -295,10 +329,22 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
               onChange={e => setAmount(e.target.value)}
               style={{ flex: 1, padding: '10px 12px', background: '#1C2030', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: '#F0F2F8', fontSize: 13, fontFamily: 'inherit' }}
             />
-            <button style={{ padding: '10px 16px', background: '#00D68F', color: '#0B0D11', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
-              onClick={() => showToast('Вывод монет — в разработке')}
+            <button
+              disabled={processing || !amount}
+              style={{ padding: '10px 16px', background: processing ? '#555' : '#00D68F', color: '#0B0D11', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: processing ? 'default' : 'pointer', fontFamily: 'inherit' }}
+              onClick={async () => {
+                if (!amount || BigInt(amount.replace(/\D/g,'') || '0') < 1_000_000n) { showToast('Минимум 1,000,000 ᚙ'); return; }
+                setProcessing(true);
+                try {
+                  const r = await tonApi.withdraw(amount.replace(/\D/g,''));
+                  showToast(`✅ Заявка создана: ${(r as any).netTon?.toFixed(4)} TON`);
+                  setAmount('');
+                  onUserRefresh();
+                } catch (e: any) { showToast(e.message || 'Ошибка'); }
+                finally { setProcessing(false); }
+              }}
             >
-              Вывести
+              {processing ? '...' : 'Вывести'}
             </button>
           </div>
           {amount && (
@@ -373,6 +419,7 @@ export const ShopPage: React.FC = () => {
   const handleThemeApply = (item: ShopItem) => {
     const key = THEME_NAME_TO_KEY[item.name] ?? 'default';
     setActiveTheme(key);
+    profileApi.saveTheme(key).catch(() => {});
     showToast(`Тема «${item.name}» применена`);
   };
 
