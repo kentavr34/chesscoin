@@ -151,6 +151,38 @@ export const tournamentsApi = {
     api.post<{ ok: boolean }>(`/tournaments/${id}/donate`, { amount }),
 };
 
+// ── WARS ──────────────────────────────────────────────
+export const warsApi = {
+  countries: (sort?: 'wins' | 'alpha') =>
+    api.get<{ countries: any[] }>(`/wars/countries${sort ? `?sort=${sort}` : ''}`),
+  country: (id: string) =>
+    api.get<{ country: any; members: any[]; isCommander: boolean }>(`/wars/countries/${id}`),
+  myCountry: () =>
+    api.get<{ country: any; membership: any; isCommander: boolean; activeWar: any }>('/wars/my-country'),
+  join: (countryId: string) =>
+    api.post<{ success: boolean; membership: any }>(`/wars/countries/${countryId}/join`),
+  leave: () =>
+    api.post<{ success: boolean }>('/wars/leave'),
+  introSeen: () =>
+    api.post<{ success: boolean }>('/wars/intro-seen'),
+  active: () =>
+    api.get<{ wars: any[] }>('/wars/active'),
+  history: (limit = 20, offset = 0) =>
+    api.get<{ wars: any[] }>(`/wars/history?limit=${limit}&offset=${offset}`),
+  warDetail: (warId: string) =>
+    api.get<{ war: any }>(`/wars/${warId}`),
+  declare: (defenderCountryId: string, duration: number) =>
+    api.post<{ success: boolean; war: any }>('/wars/declare', { defenderCountryId, duration }),
+  challenge: (warId: string, opponentUserId: string) =>
+    api.post<{ success: boolean; sessionId: string }>(`/wars/${warId}/challenge`, { opponentUserId }),
+  saveGame: (sessionId: string) =>
+    api.post<{ success: boolean }>(`/wars/games/${sessionId}/save`),
+  unsaveGame: (sessionId: string) =>
+    api.delete<{ success: boolean }>(`/wars/games/${sessionId}/save`),
+  savedGames: () =>
+    api.get<{ savedGames: any[] }>('/wars/my-saved-games'),
+};
+
 export interface TournamentItem {
   id: string;
   name: string;

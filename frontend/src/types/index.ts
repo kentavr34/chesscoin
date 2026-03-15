@@ -48,6 +48,7 @@ export interface User extends UserPublic {
   militaryRank?: MilitaryRankInfo;
   tonWalletAddress?: string | null;
   tonConnectedAt?: string | null;
+  hasSeenWarsIntro?: boolean;
 }
 
 export interface ActiveSessionRef {

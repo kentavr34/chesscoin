@@ -13,6 +13,7 @@ import { BattlesPage } from '@/pages/BattlesPage';
 import { GamePage } from '@/pages/GamePage';
 import { LeaderboardPage } from '@/pages/LeaderboardPage';
 import { NationsPage } from '@/pages/NationsPage';
+import { WarsPage } from '@/pages/WarsPage';
 import { ProfilePage } from '@/pages/ProfilePage';
 import { TasksPage } from '@/pages/TasksPage';
 import { ShopPage } from '@/pages/ShopPage';
@@ -30,7 +31,7 @@ const AppInner: React.FC = () => {
       <Route path="/game" element={<GamePage />} />
       <Route path="/game/:sessionId" element={<GamePage />} />
       <Route path="/leaderboard" element={<LeaderboardPage />} />
-      <Route path="/wars" element={<NationsPage />} />
+      <Route path="/wars" element={<WarsPage />} />
       <Route path="/nations" element={<Navigate to="/wars" replace />} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/tasks" element={<TasksPage />} />
