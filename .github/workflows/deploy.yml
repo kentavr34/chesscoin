@@ -33,11 +33,25 @@ jobs:
             echo "==> Reloading nginx (pick up new backend IP after container redeploy)..."
             docker exec chesscoin_nginx nginx -s reload || docker compose restart nginx
 
-            echo "==> Resolving any previously failed migrations..."
-            docker exec chesscoin_backend npx prisma migrate resolve --rolled-back 20260313_tournaments_streak 2>/dev/null || true
+            echo "==> Resolving any previously failed/pending migrations..."
+            for migration in \
+              20260313_tournaments_streak \
+              20260314_clan_battles \
+              20260314_stages2to5 \
+              20260314_theme_items \
+              20260315_countries_wars \
+              20260315_war_warning_field \
+              20260315_active_theme; do
+              docker exec chesscoin_backend npx prisma migrate resolve --rolled-back "$migration" 2>/dev/null || true
+            done
 
             echo "==> Running DB migrations..."
-            docker exec chesscoin_backend npx prisma migrate deploy
+            docker exec chesscoin_backend npx prisma migrate deploy || (
+              echo "Migration failed, dumping migration status:"
+              docker exec chesscoin_backend npx prisma migrate status 2>&1 || true
+              docker logs --tail 50 chesscoin_backend 2>&1 || true
+              exit 1
+            )
 
             echo "==> Running seed (update shop item images)..."
             docker exec chesscoin_backend npm run seed
