@@ -91,8 +91,97 @@ export const finishSession = async (
   // 7. Чистим Redis кеш
   await deleteCachedSession(sessionId);
 
+  // 8. Обновляем WarBattle если сессия является частью войны между странами
+  setImmediate(() => updateWarBattle(sessionId, winnerSideId, isDraw).catch(console.error));
+
   return finished;
 };
+
+// ─────────────────────────────────────────
+// Обновление статуса военной дуэли
+// ─────────────────────────────────────────
+async function updateWarBattle(sessionId: string, winnerSideId?: string, isDraw: boolean = false) {
+  try {
+    const warBattle = await (prisma as any).warBattle.findUnique({
+      where: { sessionId },
+      include: { war: true },
+    });
+    if (!warBattle) return; // не военная партия
+
+    if (isDraw) {
+      await (prisma as any).warBattle.update({
+        where: { id: warBattle.id },
+        data: { status: "FINISHED", finishedAt: new Date() },
+      });
+      return;
+    }
+
+    if (!winnerSideId) return;
+
+    // Определяем победителя среди участников войны
+    const session = await prisma.session.findUnique({
+      where: { id: sessionId },
+      include: { sides: true },
+    });
+    if (!session) return;
+
+    const winnerSide = session.sides.find((s: any) => s.id === winnerSideId);
+    if (!winnerSide) return;
+
+    const winnerId = winnerSide.playerId;
+    const winnerMembership = await (prisma as any).countryMember.findUnique({
+      where: { userId: winnerId },
+    });
+    const winnerCountryId = winnerMembership?.countryId ?? null;
+
+    const loserId = warBattle.attackerId === winnerId ? warBattle.defenderId : warBattle.attackerId;
+    const loserMembership = await (prisma as any).countryMember.findUnique({
+      where: { userId: loserId },
+    });
+
+    // Обновляем WarBattle
+    await (prisma as any).warBattle.update({
+      where: { id: warBattle.id },
+      data: { status: "FINISHED", finishedAt: new Date(), winnerId, winnerCountryId },
+    });
+
+    // Обновляем счёт войны
+    const isAttackerWon = winnerCountryId === warBattle.attackerCountryId;
+    await (prisma as any).countryWar.update({
+      where: { id: warBattle.warId },
+      data: isAttackerWon
+        ? { attackerWins: { increment: 1 } }
+        : { defenderWins: { increment: 1 } },
+    });
+
+    // Обновляем warWins/warLosses у бойцов
+    if (winnerMembership) {
+      await (prisma as any).countryMember.update({
+        where: { id: winnerMembership.id },
+        data: { warWins: { increment: 1 } },
+      });
+    }
+    if (loserMembership) {
+      await (prisma as any).countryMember.update({
+        where: { id: loserMembership.id },
+        data: { warLosses: { increment: 1 } },
+      });
+    }
+
+    // Начисляем prizePerWin в казну победившей страны
+    const prize = warBattle.war.prizePerWin ?? 0n;
+    if (winnerCountryId && prize > 0n) {
+      await (prisma as any).country.update({
+        where: { id: winnerCountryId },
+        data: { treasury: { increment: prize } },
+      });
+    }
+
+    console.log(`[WarBattle] Battle ${warBattle.id} finished: winner=${winnerId} country=${winnerCountryId}`);
+  } catch (err) {
+    console.error("[WarBattle] updateWarBattle error:", err);
+  }
+}
 
 // ─────────────────────────────────────────
 // Расчёт выплат по типу игры

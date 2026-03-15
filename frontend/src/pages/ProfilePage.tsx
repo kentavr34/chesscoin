@@ -6,7 +6,7 @@ import { useUserStore } from '@/store/useUserStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { useT } from '@/i18n/useT';
 import type { Lang } from '@/i18n/translations';
-import { profileApi, authApi } from '@/api';
+import { profileApi, authApi, warsApi } from '@/api';
 import { fmtBalance, fmtDate, leagueEmoji } from '@/utils/format';
 import type { Transaction } from '@/types';
 import { JARVIS_LEVELS } from '@/components/ui/JarvisModal';
@@ -57,6 +57,7 @@ export const ProfilePage: React.FC = () => {
   const t = useT();
   const [tab, setTab] = useState<Tab>('info');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [savedGames, setSavedGames] = useState<any[]>([]);
   const [selectedBadge, setSelectedBadge] = useState<{ name: string; date?: string } | null>(null);
   const [avatarLoading, setAvatarLoading] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -102,6 +103,9 @@ export const ProfilePage: React.FC = () => {
   useEffect(() => {
     if (tab === 'games') {
       profileApi.getTransactions().then((r) => setTransactions(r.transactions)).catch(() => {});
+    }
+    if (tab === 'saves') {
+      warsApi.savedGames().then((r) => setSavedGames(r.savedGames)).catch(() => {});
     }
   }, [tab]);
 
@@ -277,9 +281,52 @@ export const ProfilePage: React.FC = () => {
       {tab === 'saves' && (
         <>
           <div style={secStyle}>{t.profile.savedGames}</div>
-          <div style={{ textAlign: 'center', color: '#4A5270', padding: 32, fontSize: 13 }}>
-            {t.profile.noSaves}
-          </div>
+          {savedGames.length === 0 ? (
+            <div style={{ textAlign: 'center', color: '#4A5270', padding: 32, fontSize: 13 }}>
+              {t.profile.noSaves}
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 18px' }}>
+              {savedGames.map((sg: any) => {
+                const s = sg.session;
+                const sides = s?.sides ?? [];
+                const p1 = sides[0]?.player;
+                const p2 = sides[1]?.player;
+                const winner = sides.find((sd: any) => sd.status === 'WON');
+                return (
+                  <div key={sg.id} style={{ background: '#13161E', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '12px 14px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Avatar user={p1} size="s" />
+                        <div style={{ fontSize: 12, fontWeight: 600, color: '#F0F2F8' }}>{p1?.firstName ?? '?'}</div>
+                      </div>
+                      <div style={{ textAlign: 'center', fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: '#8B92A8' }}>vs</div>
+                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: '#F0F2F8', textAlign: 'right' }}>{p2?.firstName ?? '?'}</div>
+                        <Avatar user={p2} size="s" />
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ fontSize: 10, color: '#4A5270' }}>
+                        {s?.type ?? ''} · {s?.finishedAt ? fmtDate(s.finishedAt) : ''}
+                      </div>
+                      {winner && (
+                        <div style={{ fontSize: 11, color: '#00D68F', fontWeight: 600 }}>
+                          🏆 {winner.player?.firstName ?? 'Unknown'}
+                        </div>
+                      )}
+                      <button
+                        onClick={() => warsApi.unsaveGame(s.id).then(() => setSavedGames(g => g.filter(x => x.id !== sg.id)))}
+                        style={{ fontSize: 10, color: '#4A5270', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: '2px 6px' }}
+                      >
+                        ✕ убрать
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </>
       )}
 

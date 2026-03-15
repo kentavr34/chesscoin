@@ -316,6 +316,45 @@ async function checkTournamentResults() {
   }
 }
 
+// ─── Hourly: расчёт завершённых войн между странами ─────────────────────────
+async function checkCountryWarResults() {
+  try {
+    const expiredWars = await (prisma as any).countryWar.findMany({
+      where: { status: "IN_PROGRESS", endAt: { lte: new Date() } },
+      include: {
+        attackerCountry: true,
+        defenderCountry: true,
+      },
+    });
+
+    for (const war of expiredWars) {
+      const attackerWon = war.attackerWins >= war.defenderWins;
+      const winnerCountryId = attackerWon ? war.attackerCountryId : war.defenderCountryId;
+      const loserCountryId  = attackerWon ? war.defenderCountryId : war.attackerCountryId;
+
+      // Завершаем войну
+      await (prisma as any).countryWar.update({
+        where: { id: war.id },
+        data: { status: "FINISHED", finishedAt: new Date(), winnerCountryId },
+      });
+
+      // Обновляем счётчики побед/поражений стран
+      await (prisma as any).country.update({
+        where: { id: winnerCountryId },
+        data: { wins: { increment: 1 } },
+      });
+      await (prisma as any).country.update({
+        where: { id: loserCountryId },
+        data: { losses: { increment: 1 } },
+      });
+
+      console.log(`[Cron/CountryWar] Finished war ${war.id}: winner=${winnerCountryId}`);
+    }
+  } catch (err) {
+    console.error("[Cron/CountryWars]", err);
+  }
+}
+
 // ─── Запуск всех кронов ──────────────────────────────────────────────────────
 export function startGameCrons() {
   // Обеспечиваем наличие системных турниров при старте
@@ -327,6 +366,7 @@ export function startGameCrons() {
     await checkClanWarResults();
     await checkClanBattleResults();
     await checkTournamentResults();
+    await checkCountryWarResults();
   }, 60 * 60 * 1000);
 
   // Первый запуск через 30 сек после старта сервера
@@ -334,7 +374,8 @@ export function startGameCrons() {
     await checkClanWarResults();
     await checkClanBattleResults();
     await checkTournamentResults();
+    await checkCountryWarResults();
   }, 30000);
 
-  console.log("[Crons] Started: battles, clan wars, tournaments");
+  console.log("[Crons] Started: battles, clan wars, country wars, tournaments");
 }

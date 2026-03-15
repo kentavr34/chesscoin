@@ -142,6 +142,7 @@ const formatUser = (user: any) => ({
     };
   })(),
   createdAt: user.createdAt,
+  hasSeenWarsIntro: user.hasSeenWarsIntro ?? false,
 });
 
 export default router;
