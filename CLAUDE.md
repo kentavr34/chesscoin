@@ -4,6 +4,29 @@
 
 ---
 
+## Доступ к серверу (Production)
+
+| Параметр | Значение |
+|---|---|
+| **IP** | 37.77.106.28 |
+| **User** | root |
+| **Password** | tv?vpGA@dJ._8, |
+| **SSH-ключ** | `/tmp/claude_server_key` (приватный), `/tmp/claude_server_key.pub` (публичный) |
+
+Публичный ключ Claude (добавить в `~/.ssh/authorized_keys` на сервере):
+```
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL+dOLLJpk6GxouJkUcfgu7Npt/c/bxRBAIU0ExTXH/m claude-code-session
+```
+
+Подключение:
+```bash
+sshpass -p 'tv?vpGA@dJ._8,' ssh -o StrictHostKeyChecking=no root@37.77.106.28
+# или с ключом (после добавления):
+ssh -i /tmp/claude_server_key -o StrictHostKeyChecking=no root@37.77.106.28
+```
+
+---
+
 ## Обзор проекта
 
 **ChessCoin** — шахматная мини-игра в Telegram (Mini App) с внутренней валютой ᚙ, системой батлов, лигами, рефералами и токеномикой. Текущая версия: **v5.8.x**.
