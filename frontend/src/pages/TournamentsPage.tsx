@@ -74,10 +74,10 @@ export const TournamentsPage: React.FC = () => {
         <button style={segBtn(filter === 'joined')} onClick={() => setFilter('joined')}>⚔️ Мои</button>
       </div>
 
-      {loading && <div style={{ textAlign: 'center', color: '#4A5270', padding: 32 }}>Загрузка...</div>}
+      {loading && <div style={{ textAlign: 'center', color: '#6B7494', padding: 32 }}>Загрузка...</div>}
 
       {!loading && filtered.length === 0 && (
-        <div style={{ textAlign: 'center', color: '#4A5270', padding: 32, fontSize: 13 }}>
+        <div style={{ textAlign: 'center', color: '#6B7494', padding: 32, fontSize: 13 }}>
           {filter === 'joined' ? 'Вы не участвуете в турнирах' : 'Нет активных турниров'}
         </div>
       )}
@@ -134,7 +134,7 @@ const TournamentCard: React.FC<{
           <span style={{ fontSize: 28 }}>{icon}</span>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 14, fontWeight: 800, color }}>{t.name}</div>
-            {t.period && <div style={{ fontSize: 10, color: '#8B92A8', marginTop: 2 }}>Период: {t.period}</div>}
+            {t.period && <div style={{ fontSize: 10, color: '#A8B0C8', marginTop: 2 }}>Период: {t.period}</div>}
           </div>
           {t.isJoined && (
             <div style={{ fontSize: 10, fontWeight: 700, color: '#00D68F', background: 'rgba(0,214,143,0.1)', padding: '3px 8px', borderRadius: 6 }}>
@@ -146,19 +146,19 @@ const TournamentCard: React.FC<{
 
       <div style={{ display: 'flex', padding: '10px 16px', gap: 16 }}>
         <div>
-          <div style={{ fontSize: 10, color: '#4A5270' }}>Участники</div>
+          <div style={{ fontSize: 10, color: '#6B7494' }}>Участники</div>
           <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 700, color: '#F0F2F8', marginTop: 2 }}>
             {t.currentPlayers.toLocaleString()}
           </div>
         </div>
         <div>
-          <div style={{ fontSize: 10, color: '#4A5270' }}>Взнос</div>
+          <div style={{ fontSize: 10, color: '#6B7494' }}>Взнос</div>
           <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 700, color: '#F5C842', marginTop: 2 }}>
             {fmtBalance(t.entryFee)} ᚙ
           </div>
         </div>
         <div>
-          <div style={{ fontSize: 10, color: '#4A5270' }}>Призовой фонд</div>
+          <div style={{ fontSize: 10, color: '#6B7494' }}>Призовой фонд</div>
           <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 700, color, marginTop: 2 }}>
             {fmtBalance(t.totalPool ?? t.prizePool)} ᚙ
           </div>
@@ -171,13 +171,13 @@ const TournamentCard: React.FC<{
           <div style={{ display: 'flex', gap: 14 }}>
             <span style={{ fontSize: 13, color: '#00D68F' }}>✓ {t.myStats.wins}</span>
             <span style={{ fontSize: 13, color: '#FF4D6A' }}>✗ {t.myStats.losses}</span>
-            <span style={{ fontSize: 13, color: '#8B92A8' }}>= {t.myStats.draws}</span>
+            <span style={{ fontSize: 13, color: '#A8B0C8' }}>= {t.myStats.draws}</span>
             <span style={{ fontSize: 13, color: '#F5C842', marginLeft: 'auto' }}>Очки: {t.myStats.points.toFixed(1)}</span>
           </div>
         </div>
       )}
 
-      {endDate && <div style={{ padding: '0 16px 4px', fontSize: 10, color: '#4A5270' }}>До: {endDate}</div>}
+      {endDate && <div style={{ padding: '0 16px 4px', fontSize: 10, color: '#6B7494' }}>До: {endDate}</div>}
 
       <div style={{ display: 'flex', gap: 8, padding: '10px 16px 14px' }}>
         <button onClick={onView} style={viewBtn}>Топ-лист</button>
@@ -206,16 +206,16 @@ const TournamentDetailModal: React.FC<{ tournamentId: string; onClose: () => voi
           <div style={{ fontSize: 16, fontWeight: 700, color: '#F0F2F8' }}>🏆 Лидерборд</div>
           <button onClick={onClose} style={closeBtn}>✕</button>
         </div>
-        {!data && <div style={{ textAlign: 'center', color: '#4A5270', padding: 24 }}>Загрузка...</div>}
+        {!data && <div style={{ textAlign: 'center', color: '#6B7494', padding: 24 }}>Загрузка...</div>}
         {data?.players?.map((p: any, i: number) => (
           <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: i === 0 ? '#F5C842' : i === 1 ? '#C0C0C0' : i === 2 ? '#CD7F32' : '#4A5270', width: 24, textAlign: 'center' }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: i === 0 ? '#F5C842' : i === 1 ? '#C0C0C0' : i === 2 ? '#CD7F32' : '#6B7494', width: 24, textAlign: 'center' }}>
               {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
             </span>
             <Avatar user={p.user} size="s" />
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: '#F0F2F8' }}>{p.user?.firstName}</div>
-              <div style={{ fontSize: 10, color: '#8B92A8' }}>{p.wins}W {p.losses}L {p.draws}D</div>
+              <div style={{ fontSize: 10, color: '#A8B0C8' }}>{p.wins}W {p.losses}L {p.draws}D</div>
             </div>
             <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14, fontWeight: 700, color: '#F5C842' }}>
               {p.points?.toFixed(1) ?? '0.0'}
@@ -223,7 +223,7 @@ const TournamentDetailModal: React.FC<{ tournamentId: string; onClose: () => voi
           </div>
         ))}
         {!data?.players?.length && data && (
-          <div style={{ textAlign: 'center', color: '#4A5270', padding: 16 }}>Нет участников</div>
+          <div style={{ textAlign: 'center', color: '#6B7494', padding: 16 }}>Нет участников</div>
         )}
       </div>
     </div>
@@ -244,7 +244,7 @@ const DonateModal: React.FC<{ tournamentId: string; onClose: () => void; onSucce
       <div style={modalStyle}>
         <div style={handleBar} />
         <div style={{ fontSize: 17, fontWeight: 700, color: '#F0F2F8', marginBottom: 8 }}>💸 Донат в кассу</div>
-        <div style={{ fontSize: 11, color: '#8B92A8', marginBottom: 16 }}>Все монеты идут победителям турнира!</div>
+        <div style={{ fontSize: 11, color: '#A8B0C8', marginBottom: 16 }}>Все монеты идут победителям турнира!</div>
         <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
           {['10000', '50000', '100000', '500000'].map(v => (
             <button key={v} onClick={() => setAmount(v)} style={chipBtn(amount === v)}>{fmtBalance(v)}</button>
@@ -259,7 +259,7 @@ const DonateModal: React.FC<{ tournamentId: string; onClose: () => void; onSucce
 };
 
 const segStyle: React.CSSProperties = { display: 'flex', margin: '4px 18px 10px', background: '#1C2030', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: 3 };
-const segBtn = (active: boolean): React.CSSProperties => ({ flex: 1, padding: 8, border: 'none', borderRadius: 8, fontFamily: 'inherit', fontSize: 12, fontWeight: 600, color: active ? '#F0F2F8' : '#8B92A8', background: active ? '#232840' : 'transparent', cursor: 'pointer' });
+const segBtn = (active: boolean): React.CSSProperties => ({ flex: 1, padding: 8, border: 'none', borderRadius: 8, fontFamily: 'inherit', fontSize: 12, fontWeight: 600, color: active ? '#F0F2F8' : '#A8B0C8', background: active ? '#232840' : 'transparent', cursor: 'pointer' });
 const secStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, letterSpacing: '.09em', textTransform: 'uppercase', color: '#7B8299', padding: '16px 18px 8px' };
 const viewBtn: React.CSSProperties = { padding: '8px 12px', background: '#232840', color: '#F0F2F8', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' };
 const donateBtn: React.CSSProperties = { padding: '8px 12px', background: 'rgba(123,97,255,0.12)', color: '#9B85FF', border: '1px solid rgba(123,97,255,0.25)', borderRadius: 10, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' };
@@ -268,6 +268,6 @@ const leaveBtnStyle: React.CSSProperties = { flex: 1, padding: '8px 12px', backg
 const overlayStyle: React.CSSProperties = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', zIndex: 300, display: 'flex', alignItems: 'flex-end' };
 const modalStyle: React.CSSProperties = { width: '100%', background: '#161927', borderRadius: '24px 24px 0 0', padding: 20, borderTop: '1px solid rgba(255,255,255,0.1)', maxHeight: '85vh', overflowY: 'auto' };
 const handleBar: React.CSSProperties = { width: 36, height: 4, background: '#2A2F48', borderRadius: 2, margin: '0 auto 16px' };
-const closeBtn: React.CSSProperties = { width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: '#8B92A8', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' };
-const chipBtn = (active: boolean): React.CSSProperties => ({ flex: 1, padding: '7px 8px', borderRadius: 10, fontSize: 11, fontWeight: 600, cursor: 'pointer', border: '1px solid', background: active ? 'rgba(245,200,66,0.12)' : '#232840', color: active ? '#F5C842' : '#8B92A8', borderColor: active ? 'rgba(245,200,66,0.3)' : 'rgba(255,255,255,0.07)', fontFamily: 'inherit' });
+const closeBtn: React.CSSProperties = { width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: '#A8B0C8', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' };
+const chipBtn = (active: boolean): React.CSSProperties => ({ flex: 1, padding: '7px 8px', borderRadius: 10, fontSize: 11, fontWeight: 600, cursor: 'pointer', border: '1px solid', background: active ? 'rgba(245,200,66,0.12)' : '#232840', color: active ? '#F5C842' : '#A8B0C8', borderColor: active ? 'rgba(245,200,66,0.3)' : 'rgba(255,255,255,0.07)', fontFamily: 'inherit' });
 const goldBtnFull: React.CSSProperties = { width: '100%', padding: '13px', background: '#F5C842', color: '#0B0D11', border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' };

@@ -5,6 +5,7 @@ import { useUserStore } from '@/store/useUserStore';
 import { nationsApi, clanBattlesApi } from '@/api';
 import { fmtBalance } from '@/utils/format';
 import type { Nation, ClanWar, ClanMemberData, ClanBattle } from '@/types';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 
 const showToast = (text: string, type: 'error' | 'info' = 'error') => {
   window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text, type } }));
@@ -29,6 +30,8 @@ export const NationsPage: React.FC = () => {
   const [showBattleChallenge, setShowBattleChallenge] = useState(false);
   const [showJoinBattle, setShowJoinBattle] = useState<ClanBattle | null>(null);
   const [showJoin, setShowJoin] = useState<string | null>(null);
+  const [confirmLeave, setConfirmLeave] = useState(false);
+  const [confirmKick, setConfirmKick] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -63,8 +66,12 @@ export const NationsPage: React.FC = () => {
   useEffect(() => { load(); }, []);
   useEffect(() => { if (tab === 'members') loadMembers(); }, [tab]);
 
-  const handleLeave = async () => {
-    if (!confirm('Выйти из клана? Ваш взнос будет возвращён.')) return;
+  const handleLeave = () => {
+    setConfirmLeave(true);
+  };
+
+  const doLeave = async () => {
+    setConfirmLeave(false);
     await nationsApi.leave();
     await load();
     setTab('ranking');
@@ -75,8 +82,12 @@ export const NationsPage: React.FC = () => {
     await loadMembers();
   };
 
-  const handleKick = async (targetUserId: string) => {
-    if (!confirm('Исключить бойца из клана?')) return;
+  const handleKick = (targetUserId: string) => {
+    setConfirmKick(targetUserId);
+  };
+
+  const doKick = async (targetUserId: string) => {
+    setConfirmKick(null);
     await nationsApi.kickMember(targetUserId);
     await loadMembers();
   };
@@ -99,7 +110,7 @@ export const NationsPage: React.FC = () => {
             <span style={{ fontSize: 44 }}>{myClan.flag}</span>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 18, fontWeight: 800, color: '#F0F2F8' }}>{myClan.name}</div>
-              <div style={{ fontSize: 11, color: '#8B92A8', marginTop: 3 }}>
+              <div style={{ fontSize: 11, color: '#A8B0C8', marginTop: 3 }}>
                 {isLeader ? '👑 Лидер' : '⚔️ Боец'} · {myClan._count?.members ?? 0} бойцов
               </div>
             </div>
@@ -125,14 +136,14 @@ export const NationsPage: React.FC = () => {
                   <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 22, fontWeight: 800, color: '#F0F2F8' }}>
                     {activeWar.attackerWins}:{activeWar.defenderWins}
                   </div>
-                  <div style={{ fontSize: 10, color: '#8B92A8', marginTop: 2 }}>
+                  <div style={{ fontSize: 10, color: '#A8B0C8', marginTop: 2 }}>
                     💰 {fmtBalance(activeWar.prize ?? '0')} ᚙ на кону
                   </div>
                 </div>
                 <span style={{ fontSize: 24 }}>{activeWar.defenderClan.flag}</span>
               </div>
               {activeWar.endAt && (
-                <div style={{ fontSize: 10, color: '#8B92A8', textAlign: 'center', marginTop: 6 }}>
+                <div style={{ fontSize: 10, color: '#A8B0C8', textAlign: 'center', marginTop: 6 }}>
                   Завершится: {new Date(activeWar.endAt).toLocaleDateString('ru-RU')}
                 </div>
               )}
@@ -147,7 +158,7 @@ export const NationsPage: React.FC = () => {
                   <span style={{ fontSize: 22 }}>{ch.attackerClan.flag}</span>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: '#FF4D6A' }}>⚔️ Вызов войны!</div>
-                    <div style={{ fontSize: 11, color: '#8B92A8' }}>{ch.attackerClan.name} · Казна {fmtBalance(ch.attackerClan.treasury ?? '0')} ᚙ</div>
+                    <div style={{ fontSize: 11, color: '#A8B0C8' }}>{ch.attackerClan.name} · Казна {fmtBalance(ch.attackerClan.treasury ?? '0')} ᚙ</div>
                   </div>
                   <button onClick={() => handleAcceptWar(ch.id)} style={acceptWarBtn}>Принять</button>
                 </div>
@@ -188,7 +199,7 @@ export const NationsPage: React.FC = () => {
         <>
           <div style={secStyle}>Активные клановые войны</div>
           {wars.length === 0 && (
-            <div style={{ textAlign: 'center', color: '#4A5270', padding: 32, fontSize: 13 }}>
+            <div style={{ textAlign: 'center', color: '#6B7494', padding: 32, fontSize: 13 }}>
               Нет активных войн
             </div>
           )}
@@ -213,7 +224,7 @@ export const NationsPage: React.FC = () => {
                 </div>
               </div>
               {war.endAt && (
-                <div style={{ fontSize: 10, color: '#4A5270', textAlign: 'center' }}>
+                <div style={{ fontSize: 10, color: '#6B7494', textAlign: 'center' }}>
                   До {new Date(war.endAt).toLocaleDateString('ru-RU')}
                 </div>
               )}
@@ -227,7 +238,7 @@ export const NationsPage: React.FC = () => {
         <>
           <div style={{ margin: '0 18px 12px', padding: '12px 14px', background: 'rgba(123,97,255,0.08)', border: '1px solid rgba(123,97,255,0.2)', borderRadius: 14 }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: '#7B61FF', marginBottom: 4 }}>⚡ Как работают сражения</div>
-            <div style={{ fontSize: 11, color: '#8B92A8', lineHeight: 1.6 }}>
+            <div style={{ fontSize: 11, color: '#A8B0C8', lineHeight: 1.6 }}>
               Любой член клана может вызвать другой клан на командное соревнование.<br />
               Все участники вносят ставку в общую кассу. Побеждает клан с <b style={{ color: '#F0F2F8' }}>лучшим win rate</b>.<br />
               Максимум <b style={{ color: '#F0F2F8' }}>10 партий одновременно</b> — побеждает мастерство, а не количество.<br />
@@ -245,7 +256,7 @@ export const NationsPage: React.FC = () => {
           </div>
 
           {battles.length === 0 && (
-            <div style={{ textAlign: 'center', color: '#4A5270', padding: '24px 0', fontSize: 13 }}>
+            <div style={{ textAlign: 'center', color: '#6B7494', padding: '24px 0', fontSize: 13 }}>
               Нет активных сражений.<br />Брось вызов другому клану!
             </div>
           )}
@@ -270,7 +281,7 @@ export const NationsPage: React.FC = () => {
                   <span style={{ fontSize: 10, fontWeight: 700, color: b.status === 'IN_PROGRESS' ? '#00D68F' : '#FF9F43', letterSpacing: '.07em' }}>
                     {b.status === 'IN_PROGRESS' ? '⚡ ИДЁТ' : '⏳ ОЖИДАНИЕ'}
                   </span>
-                  <span style={{ fontSize: 10, color: '#4A5270' }}>
+                  <span style={{ fontSize: 10, color: '#6B7494' }}>
                     {b.status === 'IN_PROGRESS' && timeLeft != null ? `⏰ ${timeStr}` : `⏳ Длительность: ${Math.floor(b.duration / 3600)}ч`}
                   </span>
                 </div>
@@ -281,15 +292,15 @@ export const NationsPage: React.FC = () => {
                     <div style={{ fontSize: 26 }}>{b.challengerClan.flag}</div>
                     <div style={{ fontSize: 12, fontWeight: 700, color: '#F0F2F8', marginTop: 4 }}>{b.challengerClan.name}</div>
                     <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 22, fontWeight: 800, color: '#F5C842', marginTop: 6 }}>{b.challengerWins}</div>
-                    {b.totalGames > 0 && <div style={{ fontSize: 10, color: '#8B92A8' }}>{chWinRate}%</div>}
+                    {b.totalGames > 0 && <div style={{ fontSize: 10, color: '#A8B0C8' }}>{chWinRate}%</div>}
                   </div>
                   <div style={{ textAlign: 'center', flexShrink: 0 }}>
-                    <div style={{ fontSize: 11, color: '#8B92A8', marginBottom: 4 }}>vs</div>
+                    <div style={{ fontSize: 11, color: '#A8B0C8', marginBottom: 4 }}>vs</div>
                     <div style={{ fontSize: 10, color: '#F5C842', fontWeight: 700 }}>💰 {fmtBalance(b.pool)} ᚙ</div>
-                    <div style={{ fontSize: 10, color: '#4A5270', marginTop: 4 }}>
+                    <div style={{ fontSize: 10, color: '#6B7494', marginTop: 4 }}>
                       {b.activeGames}/{b.maxSimultaneous} партий
                     </div>
-                    <div style={{ fontSize: 10, color: '#4A5270' }}>
+                    <div style={{ fontSize: 10, color: '#6B7494' }}>
                       {b._count?.contributions ?? 0} игроков
                     </div>
                   </div>
@@ -297,7 +308,7 @@ export const NationsPage: React.FC = () => {
                     <div style={{ fontSize: 26 }}>{b.defenderClan.flag}</div>
                     <div style={{ fontSize: 12, fontWeight: 700, color: '#F0F2F8', marginTop: 4 }}>{b.defenderClan.name}</div>
                     <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 22, fontWeight: 800, color: '#F5C842', marginTop: 6 }}>{b.defenderWins}</div>
-                    {b.totalGames > 0 && <div style={{ fontSize: 10, color: '#8B92A8' }}>{defWinRate}%</div>}
+                    {b.totalGames > 0 && <div style={{ fontSize: 10, color: '#A8B0C8' }}>{defWinRate}%</div>}
                   </div>
                 </div>
 
@@ -340,7 +351,7 @@ export const NationsPage: React.FC = () => {
                   <Avatar user={m.user} size="s" />
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: '#F0F2F8' }}>{m.user?.firstName ?? 'Игрок'}</div>
-                    <div style={{ fontSize: 10, color: '#8B92A8' }}>
+                    <div style={{ fontSize: 10, color: '#A8B0C8' }}>
                       ELO {m.user?.elo ?? '?'} · Взнос: {fmtBalance(m.pendingContribution ?? '0')} ᚙ
                     </div>
                   </div>
@@ -354,7 +365,7 @@ export const NationsPage: React.FC = () => {
           <div style={secStyle}>Бойцы клана ({activeMembers.length})</div>
           {activeMembers.map((m, i) => (
             <div key={m.id} style={memberCardStyle}>
-              <span style={{ fontSize: 11, color: i < 3 ? '#F5C842' : '#4A5270', width: 20, flexShrink: 0 }}>
+              <span style={{ fontSize: 11, color: i < 3 ? '#F5C842' : '#6B7494', width: 20, flexShrink: 0 }}>
                 {i + 1}
               </span>
               <Avatar user={m.user} size="s" />
@@ -363,7 +374,7 @@ export const NationsPage: React.FC = () => {
                   <span style={{ fontSize: 13, fontWeight: 600, color: '#F0F2F8' }}>{m.user?.firstName ?? 'Игрок'}</span>
                   {m.role === 'COMMANDER' && <span style={{ fontSize: 10, color: '#F5C842' }}>👑</span>}
                 </div>
-                <div style={{ fontSize: 10, color: '#8B92A8', marginTop: 2 }}>
+                <div style={{ fontSize: 10, color: '#A8B0C8', marginTop: 2 }}>
                   ELO {m.user?.elo ?? '?'} · {m.warWins}W/{m.warLosses}L · Взнос {fmtBalance(m.contribution ?? '0')} ᚙ
                 </div>
               </div>
@@ -379,16 +390,16 @@ export const NationsPage: React.FC = () => {
       {tab === 'ranking' && (
         <>
           <div style={secStyle}>Рейтинг сборных</div>
-          {loading && <div style={{ textAlign: 'center', color: '#4A5270', padding: 24 }}>Загрузка...</div>}
+          {loading && <div style={{ textAlign: 'center', color: '#6B7494', padding: 24 }}>Загрузка...</div>}
           {nations.map((n, i) => (
             <div key={n.id} style={nationRowStyle}>
-              <span style={{ fontSize: 13, fontWeight: 700, color: i === 0 ? '#F5C842' : i === 1 ? '#C0C0C0' : i === 2 ? '#CD7F32' : '#4A5270', width: 20 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: i === 0 ? '#F5C842' : i === 1 ? '#C0C0C0' : i === 2 ? '#CD7F32' : '#6B7494', width: 20 }}>
                 {i + 1}
               </span>
               <span style={{ fontSize: 24 }}>{n.flag}</span>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: '#F0F2F8' }}>{n.name}</div>
-                <div style={{ fontSize: 10, color: '#8B92A8', marginTop: 2 }}>
+                <div style={{ fontSize: 10, color: '#A8B0C8', marginTop: 2 }}>
                   {n._count?.members ?? n.memberCount ?? 0} бойцов · ELO {n.elo ?? n.avgElo ?? 1000}
                 </div>
               </div>
@@ -445,6 +456,32 @@ export const NationsPage: React.FC = () => {
           onSuccess={() => { setShowJoinBattle(null); load(); }}
         />
       )}
+
+      {/* Подтверждение выхода из клана */}
+      {confirmLeave && (
+        <ConfirmModal
+          icon="🚪"
+          title="Выйти из клана?"
+          message="Ваш взнос будет возвращён."
+          confirmLabel="Выйти"
+          variant="danger"
+          onConfirm={doLeave}
+          onCancel={() => setConfirmLeave(false)}
+        />
+      )}
+
+      {/* Подтверждение исключения бойца */}
+      {confirmKick && (
+        <ConfirmModal
+          icon="⚔️"
+          title="Исключить бойца?"
+          message="Боец будет удалён из клана."
+          confirmLabel="Исключить"
+          variant="danger"
+          onConfirm={() => doKick(confirmKick)}
+          onCancel={() => setConfirmKick(null)}
+        />
+      )}
     </PageLayout>
   );
 };
@@ -469,7 +506,7 @@ const ContributeModal: React.FC<{ clanName: string; clanFlag: string; onClose: (
           <div style={{ fontSize: 17, fontWeight: 700, color: '#F0F2F8' }}>{clanFlag} Взнос в казну {clanName}</div>
           <button onClick={onClose} style={closeBtnStyle}>✕</button>
         </div>
-        <div style={{ fontSize: 11, color: '#8B92A8', marginBottom: 16 }}>
+        <div style={{ fontSize: 11, color: '#A8B0C8', marginBottom: 16 }}>
           Ваш взнос укрепляет казну клана. При победе в войне — получите пропорциональную долю приза.
         </div>
         <input
@@ -515,18 +552,18 @@ const WarChallengeModal: React.FC<{ nations: Nation[]; onClose: () => void; onSu
           <div style={{ fontSize: 17, fontWeight: 700, color: '#FF4D6A' }}>⚔️ Объявить клановую войну</div>
           <button onClick={onClose} style={closeBtnStyle}>✕</button>
         </div>
-        <div style={{ fontSize: 11, color: '#8B92A8', marginBottom: 16 }}>На кону будет казна обоих кланов!</div>
-        <div style={{ fontSize: 10, color: '#4A5270', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 8 }}>Выберите врага</div>
+        <div style={{ fontSize: 11, color: '#A8B0C8', marginBottom: 16 }}>На кону будет казна обоих кланов!</div>
+        <div style={{ fontSize: 10, color: '#6B7494', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 8 }}>Выберите врага</div>
         <div style={{ maxHeight: 200, overflowY: 'auto', marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
           {nations.map(n => (
             <button key={n.id} onClick={() => setTargetId(n.id)} style={{ ...nationSelectBtn, ...(targetId === n.id ? nationSelectBtnActive : {}) }}>
               <span style={{ fontSize: 20 }}>{n.flag}</span>
               <span>{n.name}</span>
-              <span style={{ marginLeft: 'auto', fontSize: 10, color: '#8B92A8' }}>ELO {n.elo ?? 1000}</span>
+              <span style={{ marginLeft: 'auto', fontSize: 10, color: '#A8B0C8' }}>ELO {n.elo ?? 1000}</span>
             </button>
           ))}
         </div>
-        <div style={{ fontSize: 10, color: '#4A5270', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 8 }}>Время войны</div>
+        <div style={{ fontSize: 10, color: '#6B7494', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 8 }}>Время войны</div>
         <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
           {DURATIONS.map(d => (
             <button key={d.v} onClick={() => setDuration(d.v)} style={chipBtn(duration === d.v)}>{d.l}</button>
@@ -562,11 +599,11 @@ const JoinClanModal: React.FC<{ clanId: string; clan?: Nation; onClose: () => vo
         <div style={{ textAlign: 'center', marginBottom: 16 }}>
           <div style={{ fontSize: 48 }}>{clan?.flag}</div>
           <div style={{ fontSize: 18, fontWeight: 700, color: '#F0F2F8' }}>{clan?.name}</div>
-          <div style={{ fontSize: 11, color: '#8B92A8', marginTop: 4 }}>
+          <div style={{ fontSize: 11, color: '#A8B0C8', marginTop: 4 }}>
             {clan?._count?.members ?? 0} бойцов · ELO {clan?.elo ?? 1000}
           </div>
         </div>
-        <div style={{ fontSize: 11, color: '#8B92A8', marginBottom: 12 }}>
+        <div style={{ fontSize: 11, color: '#A8B0C8', marginBottom: 12 }}>
           Необязательный взнос в казну клана при вступлении (повышает приоритет одобрения):
         </div>
         <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
@@ -617,31 +654,31 @@ const BattleChallengeModal: React.FC<{
       <div style={modalStyle}>
         <div style={handleBar} />
         <div style={{ fontSize: 17, fontWeight: 700, color: '#7B61FF', marginBottom: 4 }}>🏆 Командное сражение</div>
-        <div style={{ fontSize: 11, color: '#8B92A8', marginBottom: 16 }}>
+        <div style={{ fontSize: 11, color: '#A8B0C8', marginBottom: 16 }}>
           Победитель определяется по win rate — не по числу партий!<br />
           Макс. {10} одновременных партий между кланами.
         </div>
 
-        <div style={{ fontSize: 10, color: '#4A5270', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 8 }}>Противник</div>
+        <div style={{ fontSize: 10, color: '#6B7494', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 8 }}>Противник</div>
         <div style={{ maxHeight: 160, overflowY: 'auto', marginBottom: 14, display: 'flex', flexDirection: 'column', gap: 6 }}>
           {nations.map(n => (
             <button key={n.id} onClick={() => setTargetId(n.id)}
               style={{ ...nationSelectBtn, ...(targetId === n.id ? nationSelectBtnActive : {}) }}>
               <span style={{ fontSize: 20 }}>{n.flag}</span>
               <span>{n.name}</span>
-              <span style={{ marginLeft: 'auto', fontSize: 10, color: '#8B92A8' }}>ELO {n.elo ?? 1000}</span>
+              <span style={{ marginLeft: 'auto', fontSize: 10, color: '#A8B0C8' }}>ELO {n.elo ?? 1000}</span>
             </button>
           ))}
         </div>
 
-        <div style={{ fontSize: 10, color: '#4A5270', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 8 }}>Длительность</div>
+        <div style={{ fontSize: 10, color: '#6B7494', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 8 }}>Длительность</div>
         <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
           {DURATIONS.map(d => (
             <button key={d.v} onClick={() => setDuration(d.v)} style={chipBtn(duration === d.v)}>{d.l}</button>
           ))}
         </div>
 
-        <div style={{ fontSize: 10, color: '#4A5270', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 8 }}>Ваша ставка (войдёт в кассу)</div>
+        <div style={{ fontSize: 10, color: '#6B7494', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 8 }}>Ваша ставка (войдёт в кассу)</div>
         <input
           type="number" value={bet}
           onChange={e => setBet(e.target.value)}
@@ -690,11 +727,11 @@ const JoinBattleModal: React.FC<{
         <div style={{ textAlign: 'center', marginBottom: 16 }}>
           <div style={{ fontSize: 32, marginBottom: 4 }}>{myClan.flag} ⚔️</div>
           <div style={{ fontSize: 16, fontWeight: 700, color: '#7B61FF' }}>Вступить в сражение</div>
-          <div style={{ fontSize: 11, color: '#8B92A8', marginTop: 4 }}>
+          <div style={{ fontSize: 11, color: '#A8B0C8', marginTop: 4 }}>
             Касса: {fmtBalance(battle.pool)} ᚙ · {battle._count?.contributions ?? 0} участников
           </div>
         </div>
-        <div style={{ fontSize: 11, color: '#8B92A8', marginBottom: 12 }}>
+        <div style={{ fontSize: 11, color: '#A8B0C8', marginBottom: 12 }}>
           Ваша ставка добавится в общую кассу. При победе клана получите пропорциональную долю!
         </div>
         <input
@@ -721,7 +758,7 @@ const JoinBattleModal: React.FC<{
 const Stat: React.FC<{ val: string | number; lbl: string; color: string }> = ({ val, lbl, color }) => (
   <div>
     <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 18, fontWeight: 800, color }}>{val}</div>
-    <div style={{ fontSize: 10, color: '#4A5270', marginTop: 2 }}>{lbl}</div>
+    <div style={{ fontSize: 10, color: '#6B7494', marginTop: 2 }}>{lbl}</div>
   </div>
 );
 
@@ -761,7 +798,7 @@ const segStyle: React.CSSProperties = {
 const segBtn = (active: boolean): React.CSSProperties => ({
   flex: 1, padding: '8px 6px', border: 'none', borderRadius: 8,
   fontFamily: 'inherit', fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap',
-  color: active ? '#F0F2F8' : '#8B92A8',
+  color: active ? '#F0F2F8' : '#A8B0C8',
   background: active ? '#232840' : 'transparent',
   cursor: 'pointer', transition: 'all .2s',
 });
@@ -819,7 +856,7 @@ const chipBtn = (active: boolean): React.CSSProperties => ({
   flex: 1, padding: '7px 8px', borderRadius: 10, fontSize: 11, fontWeight: 600,
   cursor: 'pointer', border: '1px solid',
   background: active ? 'rgba(245,200,66,0.12)' : '#232840',
-  color: active ? '#F5C842' : '#8B92A8',
+  color: active ? '#F5C842' : '#A8B0C8',
   borderColor: active ? 'rgba(245,200,66,0.3)' : 'rgba(255,255,255,0.07)',
   fontFamily: 'inherit',
 });
@@ -838,6 +875,6 @@ const nationSelectBtnActive: React.CSSProperties = {
 };
 const closeBtnStyle: React.CSSProperties = {
   width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.07)',
-  border: '1px solid rgba(255,255,255,0.1)', color: '#8B92A8', fontSize: 14,
+  border: '1px solid rgba(255,255,255,0.1)', color: '#A8B0C8', fontSize: 14,
   cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center',
 };

@@ -49,19 +49,19 @@ export const AttemptsModal: React.FC<Props> = ({ user, onClose }) => {
             }}>★</span>
           ))}
         </div>
-        <p style={{ textAlign: 'center', fontSize: 13, color: '#8B92A8', marginBottom: 4 }}>
+        <p style={{ textAlign: 'center', fontSize: 13, color: '#A8B0C8', marginBottom: 4 }}>
           Попытки: {user.attempts} из {user.maxAttempts}
         </p>
-        <div style={{ fontSize: 10, fontWeight: 700, color: '#4A5270', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 8 }}>
+        <div style={{ fontSize: 10, fontWeight: 700, color: '#6B7494', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 8 }}>
           Количество
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, margin: '12px 0' }}>
-          <button onClick={() => setCount(Math.max(1, count - 1))} style={stepBtn('#232840', '#8B92A8')}>−</button>
+          <button onClick={() => setCount(Math.max(1, count - 1))} style={stepBtn('#232840', '#A8B0C8')}>−</button>
           <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 700, color: '#F0F2F8', minWidth: 32, textAlign: 'center' }}>{count}</span>
           <button onClick={() => setCount(Math.min(3 - user.attempts, count + 1))} style={stepBtn('#F5C842', '#0B0D11')}>+</button>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderTop: '1px solid rgba(255,255,255,0.07)', borderBottom: '1px solid rgba(255,255,255,0.07)', marginBottom: 16 }}>
-          <span style={{ fontSize: 13, color: '#8B92A8' }}>Стоимость</span>
+          <span style={{ fontSize: 13, color: '#A8B0C8' }}>Стоимость</span>
           <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14, fontWeight: 700, color: '#F5C842' }}>
             {(count * COST_PER).toLocaleString()} ᚙ
           </span>
@@ -106,7 +106,7 @@ const closeBtnStyle: React.CSSProperties = {
   width: 32, height: 32, borderRadius: '50%',
   background: 'rgba(255,255,255,0.07)',
   border: '1px solid rgba(255,255,255,0.1)',
-  color: '#8B92A8', fontSize: 14, cursor: 'pointer',
+  color: '#A8B0C8', fontSize: 14, cursor: 'pointer',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   fontFamily: 'inherit', flexShrink: 0,
 };

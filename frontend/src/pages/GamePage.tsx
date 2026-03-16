@@ -12,6 +12,7 @@ import { useUserStore } from '@/store/useUserStore';
 import { getSocket } from '@/api/socket';
 import { fmtTime, fmtBalance } from '@/utils/format';
 import { JARVIS_LEVELS } from '@/components/ui/JarvisModal';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 
 export const GamePage: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -22,6 +23,7 @@ export const GamePage: React.FC = () => {
   const { user } = useUserStore();
 
   const [confirmSurrender, setConfirmSurrender] = useState(false);
+  const [confirmExit, setConfirmExit] = useState(false);
   const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [resultData, setResultData] = useState<{
@@ -137,7 +139,7 @@ export const GamePage: React.FC = () => {
 
   if (!session) return (
     <div style={rootStyle}>
-      <div style={{ color: '#4A5270', textAlign: 'center', padding: 48 }}>Загрузка...</div>
+      <div style={{ color: '#6B7494', textAlign: 'center', padding: 48 }}>Загрузка...</div>
     </div>
   );
 
@@ -155,7 +157,7 @@ export const GamePage: React.FC = () => {
       {isSpectator && (
         <div style={{ background: 'rgba(245,200,66,0.1)', border: '1px solid rgba(245,200,66,0.2)', borderRadius: 10, margin: '6px 12px 0', padding: '7px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontSize: 12, color: '#F5C842', fontWeight: 600 }}>👁 Режим наблюдателя</span>
-          <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', color: '#8B92A8', fontSize: 12, cursor: 'pointer', padding: 0 }}>← Назад</button>
+          <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', color: '#A8B0C8', fontSize: 12, cursor: 'pointer', padding: 0 }}>← Назад</button>
         </div>
       )}
 
@@ -201,7 +203,7 @@ export const GamePage: React.FC = () => {
         {!isGameOver && (
           <span style={isMyTurn
             ? tagStyle('#00D68F', 'rgba(0,214,143,0.10)')
-            : tagStyle('#8B92A8', '#232840')}>
+            : tagStyle('#A8B0C8', '#232840')}>
             {isMyTurn ? '▲ Ваш ход' : '⏳ Ход соперника'}
           </span>
         )}
@@ -217,7 +219,7 @@ export const GamePage: React.FC = () => {
       {/* Кнопки */}
       {!isGameOver ? (
         <div style={{ display: 'flex', gap: 6, padding: '6px 12px', flexShrink: 0 }}>
-          <button onClick={() => { if (window.confirm('Выйти из партии? Игра продолжится.')) navigate('/'); }} style={actionBtn()}>← Назад</button>
+          <button onClick={() => setConfirmExit(true)} style={actionBtn()}>← Назад</button>
           <button onClick={() => getSocket().emit('game:offer_draw', { sessionId: session.id })}
             style={actionBtn()}>½ Ничья</button>
           <button onClick={() => setConfirmSurrender(true)}
@@ -290,6 +292,20 @@ export const GamePage: React.FC = () => {
           onRematch={isBotGame ? handleRematch : undefined}
         />
       )}
+
+      {/* Подтверждение выхода */}
+      {confirmExit && (
+        <ConfirmModal
+          icon="🚪"
+          title="Выйти из партии?"
+          message="Игра продолжится. Вы сможете вернуться позже."
+          confirmLabel="← Выйти"
+          cancelLabel="Остаться"
+          variant="warning"
+          onConfirm={() => { setConfirmExit(false); navigate('/'); }}
+          onCancel={() => setConfirmExit(false)}
+        />
+      )}
     </div>
   );
 };
@@ -311,13 +327,13 @@ const MoveHistory: React.FC<{ pgn: string }> = ({ pgn }) => {
   const moves = parsePgnMoves(pgn);
   const last8 = moves.slice(-8);
   if (last8.length === 0) {
-    return <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: '#4A5270', marginTop: 4 }}>— партия началась —</div>;
+    return <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: '#6B7494', marginTop: 4 }}>— партия началась —</div>;
   }
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 12px', marginTop: 4 }}>
       {last8.map((m) => (
         <span key={m.num} style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: '#C8CDE0', whiteSpace: 'nowrap' }}>
-          <span style={{ color: '#4A5270' }}>{m.num}.</span> {m.white}{m.black ? ` ${m.black}` : ''}
+          <span style={{ color: '#6B7494' }}>{m.num}.</span> {m.white}{m.black ? ` ${m.black}` : ''}
         </span>
       ))}
     </div>
@@ -371,13 +387,13 @@ const PlayerRow: React.FC<{
         <div style={{ fontSize: 13, fontWeight: 600, color: '#F0F2F8' }}>
           {label ?? player?.firstName ?? '?'}
         </div>
-        <div style={{ fontSize: 10, color: '#8B92A8', marginTop: 2 }}>
+        <div style={{ fontSize: 10, color: '#A8B0C8', marginTop: 2 }}>
           ELO {player?.elo ?? '—'}{isActive ? ' · Ход' : ''}
         </div>
       </div>
       <div style={{
         fontFamily: "'JetBrains Mono',monospace", fontSize: 19, fontWeight: 700,
-        color: danger ? '#FF4D6A' : isActive ? '#F5C842' : '#4A5270',
+        color: danger ? '#FF4D6A' : isActive ? '#F5C842' : '#6B7494',
         transition: 'color .25s', minWidth: 42, textAlign: 'right',
         opacity: danger ? (pulseOn ? 1 : 0.4) : 1,
       }}>
@@ -412,17 +428,17 @@ const tagStyle = (color: string, bg: string): React.CSSProperties => ({
   display: 'inline-flex', padding: '3px 9px', background: bg, color,
   borderRadius: 6, fontSize: 10, fontWeight: 700, letterSpacing: '.05em', textTransform: 'uppercase',
 });
-const actionBtn = (color = '#8B92A8', bg = 'transparent'): React.CSSProperties => ({
+const actionBtn = (color = '#A8B0C8', bg = 'transparent'): React.CSSProperties => ({
   flex: 1, padding: '9px 10px', background: bg, color,
   border: '1px solid rgba(255,255,255,0.1)', borderRadius: 11,
   fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
 });
 const labelStyle: React.CSSProperties = {
   fontSize: 9, fontWeight: 700, letterSpacing: '.08em',
-  textTransform: 'uppercase', color: '#4A5270',
+  textTransform: 'uppercase', color: '#6B7494',
 };
 const modalTitle: React.CSSProperties = { fontSize: 17, fontWeight: 700, color: '#F0F2F8', marginBottom: 6 };
-const modalSub: React.CSSProperties = { fontSize: 13, color: '#8B92A8' };
+const modalSub: React.CSSProperties = { fontSize: 13, color: '#A8B0C8' };
 const btnGold: React.CSSProperties = {
   flex: 1, padding: 11, background: '#F5C842', color: '#0B0D11',
   border: 'none', borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',

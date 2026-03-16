@@ -37,7 +37,7 @@ const OnboardingTour: React.FC<{ onDone: () => void }> = ({ onDone }) => {
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
           {step > 0 && (
-            <button onClick={() => setStep(s => s - 1)} style={{ flex: 1, padding: '12px 0', background: '#1C2030', color: '#8B92A8', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+            <button onClick={() => setStep(s => s - 1)} style={{ flex: 1, padding: '12px 0', background: '#1C2030', color: '#A8B0C8', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
               ← Назад
             </button>
           )}
@@ -45,7 +45,7 @@ const OnboardingTour: React.FC<{ onDone: () => void }> = ({ onDone }) => {
             {isLast ? '🚀 Начать играть!' : 'Далее →'}
           </button>
         </div>
-        <button onClick={onDone} style={{ marginTop: 10, background: 'none', border: 'none', color: '#4A5270', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}>
+        <button onClick={onDone} style={{ marginTop: 10, background: 'none', border: 'none', color: '#6B7494', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}>
           Пропустить
         </button>
       </div>
@@ -56,7 +56,7 @@ const OnboardingTour: React.FC<{ onDone: () => void }> = ({ onDone }) => {
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useUserStore();
-  const { sessions, battles } = useGameStore();
+  const { sessions, battles, upsertSession } = useGameStore();
   const t = useT();
   const th = (t as any).home ?? {};
   const [showAttempts, setShowAttempts] = useState(false);
@@ -146,6 +146,7 @@ export const HomePage: React.FC = () => {
     } as any, (res: any) => {
       setStartingBot(false);
       if (res?.ok && res?.session) {
+        upsertSession(res.session);
         navigate('/game/' + res.session.id);
       }
     });
@@ -206,7 +207,7 @@ export const HomePage: React.FC = () => {
             <div style={{ fontSize: 16, fontWeight: 700, color: '#F0F2F8', letterSpacing: '-.02em' }}>
               {user.firstName}{countryFlag ? ` ${countryFlag}` : ''}
             </div>
-            <div style={{ fontSize: 11, color: '#8B92A8', marginTop: 2 }}>@{user.username ?? 'unknown'}</div>
+            <div style={{ fontSize: 11, color: '#A8B0C8', marginTop: 2 }}>@{user.username ?? 'unknown'}</div>
             <div style={{ display: 'flex', gap: 5, marginTop: 6, flexWrap: 'wrap' }}>
               <span style={tag('gold')}>{leagueEmoji[user.league]} #{myRank ?? '—'}</span>
               <span style={tag('vi')}>ELO {user.elo}</span>
@@ -280,7 +281,7 @@ export const HomePage: React.FC = () => {
               <div style={{ fontSize: 10, color: '#6B7290' }}>{th.allRestored ?? 'Все ★ восстановлены'}</div>
             ) : (
               <div onClick={() => setShowAttempts(true)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <div style={{ fontSize: 9, color: '#8B92A8' }}>{th.nextStar ?? 'до следующей ★:'}</div>
+                <div style={{ fontSize: 9, color: '#A8B0C8' }}>{th.nextStar ?? 'до следующей ★:'}</div>
                 <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 700, color: '#F5C842' }}>
                   ⏱ {attemptTimer > 0 ? fmtCountdown(attemptTimer) : '...'}
                 </div>
@@ -300,7 +301,7 @@ export const HomePage: React.FC = () => {
               <div style={{ fontSize: 13, fontWeight: 600, color: '#00D68F' }}>
                 {activeSessions.length} {activeSessions.length === 1 ? (th.activeGame ?? 'активная игра') : (th.activeGames ?? 'активные игры')}
               </div>
-              <div style={{ fontSize: 11, color: '#8B92A8', marginTop: 2 }}>
+              <div style={{ fontSize: 11, color: '#A8B0C8', marginTop: 2 }}>
                 {myTurnSessions.length > 0 ? `${myTurnSessions.length} ${th.yourTurn ?? 'ожидают вашего хода'}` : (th.opponentTurn ?? 'Ход соперника')}
               </div>
             </div>
@@ -320,14 +321,14 @@ export const HomePage: React.FC = () => {
                 <div style={{ fontSize: 13, fontWeight: 600, color: '#F0F2F8' }}>
                   {myWar.attackerCountry?.flag} {myWar.attackerCountry?.nameRu} vs {myWar.defenderCountry?.flag} {myWar.defenderCountry?.nameRu}
                 </div>
-                <div style={{ fontSize: 11, color: '#8B92A8', marginTop: 2 }}>
+                <div style={{ fontSize: 11, color: '#A8B0C8', marginTop: 2 }}>
                   {th.warActive ?? 'Идёт война · нажми чтобы участвовать'}
                 </div>
               </>
             ) : (
               <>
                 <div style={{ fontSize: 13, fontWeight: 600, color: '#F0F2F8' }}>{myCountry.nameRu}</div>
-                <div style={{ fontSize: 11, color: '#8B92A8', marginTop: 2 }}>
+                <div style={{ fontSize: 11, color: '#A8B0C8', marginTop: 2 }}>
                   {myCountry.memberCount} {th.soldiers ?? 'бойцов'} · {th.wins ?? 'побед'}: {myCountry.wins}
                 </div>
               </>
@@ -338,7 +339,7 @@ export const HomePage: React.FC = () => {
               {myWar.attackerWins}:{myWar.defenderWins}
             </span>
           ) : (
-            <span style={{ fontSize: 13, color: '#4A5270' }}>→</span>
+            <span style={{ fontSize: 13, color: '#6B7494' }}>→</span>
           )}
         </div>
       ) : (
@@ -346,9 +347,9 @@ export const HomePage: React.FC = () => {
           <span style={{ fontSize: 20 }}>🌍</span>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: '#F0F2F8' }}>{th.joinCountry ?? 'Вступи в страну'}</div>
-            <div style={{ fontSize: 11, color: '#8B92A8', marginTop: 2 }}>{th.fightForTeam ?? 'Сражайся за свою сборную'}</div>
+            <div style={{ fontSize: 11, color: '#A8B0C8', marginTop: 2 }}>{th.fightForTeam ?? 'Сражайся за свою сборную'}</div>
           </div>
-          <span style={{ fontSize: 13, color: '#4A5270' }}>→</span>
+          <span style={{ fontSize: 13, color: '#6B7494' }}>→</span>
         </div>
       )}
 
@@ -364,7 +365,7 @@ export const HomePage: React.FC = () => {
           <div key={item.title} onClick={() => item.action ? item.action() : navigate(item.path!)} style={{...gameCardStyle, opacity: item.action && startingBot ? 0.6 : 1}}>
             <span style={{ fontSize: 32, marginBottom: 10, display: 'block' }}>{item.ico}</span>
             <div style={{ fontSize: 13, fontWeight: 700, color: '#F0F2F8', marginBottom: 4 }}>{item.title}</div>
-            <div style={{ fontSize: 11, color: '#8B92A8', marginBottom: 8 }}>{item.sub}</div>
+            <div style={{ fontSize: 11, color: '#A8B0C8', marginBottom: 8 }}>{item.sub}</div>
             <span style={{ ...tag('neutral'), color: item.tc }}>{item.tag}</span>
           </div>
         ))}
@@ -381,7 +382,7 @@ export const HomePage: React.FC = () => {
                 {taskStats.done} из {taskStats.total} выполнено
                 {taskStats.remaining > 0 && ` · +${fmtBalance(taskStats.remaining)} ᚙ осталось`}
               </div>
-              <div style={{ fontSize: 11, color: taskStats.done === taskStats.total ? '#00D68F' : '#8B92A8', marginTop: 2 }}>
+              <div style={{ fontSize: 11, color: taskStats.done === taskStats.total ? '#00D68F' : '#A8B0C8', marginTop: 2 }}>
                 {taskStats.done === taskStats.total ? (th.tasksAll ?? '✅ Все задания выполнены!') : (th.tasksTap ?? 'Нажми, чтобы выполнить')}
               </div>
               <div style={{ height: 3, background: '#181B22', borderRadius: 2, marginTop: 7, overflow: 'hidden' }}>
@@ -389,7 +390,7 @@ export const HomePage: React.FC = () => {
               </div>
             </>
           ) : (
-            <div style={{ fontSize: 13, color: '#8B92A8' }}>{th.tasksLoading ?? 'Загрузка заданий...'}</div>
+            <div style={{ fontSize: 13, color: '#A8B0C8' }}>{th.tasksLoading ?? 'Загрузка заданий...'}</div>
           )}
         </div>
       </div>
@@ -465,7 +466,7 @@ const tbaStyle: React.CSSProperties = {
   width: 36, height: 36, borderRadius: 11, background: '#1C2030',
   border: '1px solid rgba(255,255,255,0.13)', display: 'flex',
   alignItems: 'center', justifyContent: 'center', fontSize: 16,
-  cursor: 'pointer', color: '#8B92A8',
+  cursor: 'pointer', color: '#A8B0C8',
 };
 
 const tag = (type: 'gold' | 'vi' | 'gr' | 'rd' | 'neutral'): React.CSSProperties => {
@@ -474,7 +475,7 @@ const tag = (type: 'gold' | 'vi' | 'gr' | 'rd' | 'neutral'): React.CSSProperties
     vi:   { background: 'rgba(123,97,255,0.12)', color: '#9B85FF', borderColor: 'rgba(123,97,255,0.2)' },
     gr:   { background: 'rgba(0,214,143,0.10)',  color: '#00D68F', borderColor: 'rgba(0,214,143,0.2)' },
     rd:   { background: 'rgba(255,77,106,0.10)', color: '#FF4D6A', borderColor: 'rgba(255,77,106,0.2)' },
-    neutral: { background: '#232840', color: '#8B92A8', borderColor: 'rgba(255,255,255,0.07)' },
+    neutral: { background: '#232840', color: '#A8B0C8', borderColor: 'rgba(255,255,255,0.07)' },
   };
   return {
     display: 'inline-flex', alignItems: 'center', gap: 3,

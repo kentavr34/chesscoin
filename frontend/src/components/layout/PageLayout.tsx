@@ -91,7 +91,7 @@ const tbaBtnStyle: React.CSSProperties = {
   background: '#1C2030',
   border: '1px solid rgba(255,255,255,0.13)',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
-  fontSize: 18, cursor: 'pointer', color: '#8B92A8',
+  fontSize: 18, cursor: 'pointer', color: '#A8B0C8',
   transition: 'all .18s',
   fontFamily: 'inherit',
 };

@@ -87,7 +87,7 @@ export const ReferralsPage: React.FC = () => {
         <div style={{ fontFamily: "Inter,sans-serif", fontSize: 16, fontWeight: 700, color: '#F0F2F8' }}>
           Реферальная программа
         </div>
-        <div style={{ fontSize: 12, color: '#8B92A8', marginTop: 6, lineHeight: 1.6 }}>
+        <div style={{ fontSize: 12, color: '#A8B0C8', marginTop: 6, lineHeight: 1.6 }}>
           Приглашай друзей и зарабатывай автоматически
         </div>
 
@@ -107,7 +107,7 @@ export const ReferralsPage: React.FC = () => {
 
         {/* Ссылка */}
         <div style={linkBox}>
-          <div style={{ fontSize: 11, color: '#4A5270', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div style={{ fontSize: 11, color: '#6B7494', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {refLink}
           </div>
           <button onClick={handleCopy} style={copyBtn}>Копировать</button>
@@ -130,12 +130,12 @@ export const ReferralsPage: React.FC = () => {
 
         return (
           <div style={{ margin: '12px 18px 0', padding: '16px', background: '#13161E', border: '1px solid rgba(123,97,255,0.25)', borderRadius: 18 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.09em', textTransform: 'uppercase', color: '#4A5270', marginBottom: 10 }}>Военное звание</div>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.09em', textTransform: 'uppercase', color: '#6B7494', marginBottom: 10 }}>Военное звание</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
               <div style={{ fontSize: 28 }}>{currentRank.emoji}</div>
               <div>
                 <div style={{ fontSize: 15, fontWeight: 800, color: '#F5C842' }}>{currentRank.label}</div>
-                <div style={{ fontSize: 11, color: '#8B92A8', marginTop: 2 }}>{referralCount} рефералов</div>
+                <div style={{ fontSize: 11, color: '#A8B0C8', marginTop: 2 }}>{referralCount} рефералов</div>
                 {currentRank.bonus > 0 && (
                   <div style={{ fontSize: 10, color: '#7B61FF', marginTop: 2 }}>
                     +{currentRank.bonus.toLocaleString()} ᚙ за реферала · {currentRank.pct}% от выигрыша
@@ -144,9 +144,9 @@ export const ReferralsPage: React.FC = () => {
               </div>
               {nextRank && (
                 <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-                  <div style={{ fontSize: 9, color: '#4A5270', marginBottom: 2 }}>Следующий ранг</div>
+                  <div style={{ fontSize: 9, color: '#6B7494', marginBottom: 2 }}>Следующий ранг</div>
                   <div style={{ fontSize: 12, fontWeight: 700, color: '#7B61FF' }}>{nextRank.emoji} {nextRank.label}</div>
-                  <div style={{ fontSize: 10, color: '#4A5270' }}>{nextRank.minReferrals.toLocaleString()} реф.</div>
+                  <div style={{ fontSize: 10, color: '#6B7494' }}>{nextRank.minReferrals.toLocaleString()} реф.</div>
                 </div>
               )}
             </div>
@@ -155,7 +155,7 @@ export const ReferralsPage: React.FC = () => {
                 <div style={{ height: 6, background: 'rgba(255,255,255,0.07)', borderRadius: 999, overflow: 'hidden' }}>
                   <div style={{ height: '100%', width: `${progress}%`, background: 'linear-gradient(90deg,#7B61FF,#F5C842)', borderRadius: 999, transition: 'width .5s' }} />
                 </div>
-                <div style={{ fontSize: 10, color: '#4A5270', marginTop: 6, textAlign: 'right' }}>
+                <div style={{ fontSize: 10, color: '#6B7494', marginTop: 6, textAlign: 'right' }}>
                   {nextRank.minReferrals - referralCount} до следующего звания
                 </div>
               </>
@@ -166,7 +166,7 @@ export const ReferralsPage: React.FC = () => {
                 <span key={r.rank} style={{
                   fontSize: 10, padding: '3px 8px', borderRadius: 8,
                   background: referralCount >= r.minReferrals ? 'rgba(245,200,66,0.12)' : 'rgba(255,255,255,0.04)',
-                  color: referralCount >= r.minReferrals ? '#F5C842' : '#4A5270',
+                  color: referralCount >= r.minReferrals ? '#F5C842' : '#6B7494',
                   border: `1px solid ${referralCount >= r.minReferrals ? 'rgba(245,200,66,0.3)' : 'rgba(255,255,255,0.07)'}`,
                   fontWeight: 600,
                 }}>
@@ -215,11 +215,11 @@ export const ReferralsPage: React.FC = () => {
                   <div style={{ fontSize: 22, width: 36, textAlign: 'center', flexShrink: 0 }}>{r.ico}</div>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 700, color: '#F5C842' }}>{r.title}</div>
-                    <div style={{ fontSize: 11, color: '#8B92A8', marginTop: 2 }}>{r.sub}</div>
+                    <div style={{ fontSize: 11, color: '#A8B0C8', marginTop: 2 }}>{r.sub}</div>
                   </div>
                 </div>
               ))}
-              <div style={{ fontSize: 11, color: '#4A5270', padding: '6px 0', lineHeight: 1.5 }}>
+              <div style={{ fontSize: 11, color: '#6B7494', padding: '6px 0', lineHeight: 1.5 }}>
                 * Бонус начисляется только после первой завершённой партии реферала. Размер зависит от вашего военного звания.
               </div>
             </div>
@@ -238,7 +238,7 @@ export const ReferralsPage: React.FC = () => {
                 <div style={{ fontSize: 13, fontWeight: 600, color: '#F0F2F8' }}>
                   {ref.firstName}
                 </div>
-                <div style={{ fontSize: 10, color: '#8B92A8', marginTop: 1 }}>
+                <div style={{ fontSize: 10, color: '#A8B0C8', marginTop: 1 }}>
                   ELO {ref.elo} · {fmtDate(ref.createdAt)}
                 </div>
               </div>
@@ -255,7 +255,7 @@ export const ReferralsPage: React.FC = () => {
       )}
 
       {!loading && (data?.total ?? 0) === 0 && (
-        <div style={{ textAlign: 'center', color: '#4A5270', fontSize: 13, padding: '32px 0' }}>
+        <div style={{ textAlign: 'center', color: '#6B7494', fontSize: 13, padding: '32px 0' }}>
           Пока нет рефералов.<br />Поделитесь ссылкой с друзьями!
         </div>
       )}
@@ -282,7 +282,7 @@ const incomeBadge: React.CSSProperties = {
   display: 'flex', gap: 16, justifyContent: 'space-between', alignItems: 'center',
 };
 const microLbl: React.CSSProperties = {
-  fontSize: 9, fontWeight: 700, color: '#4A5270',
+  fontSize: 9, fontWeight: 700, color: '#6B7494',
   letterSpacing: '.09em', textTransform: 'uppercase', marginBottom: 4,
 };
 const incomeNum: React.CSSProperties = {
@@ -311,7 +311,7 @@ const shareBtn: React.CSSProperties = {
 };
 const secLbl: React.CSSProperties = {
   fontSize: 10, fontWeight: 700, letterSpacing: '.09em',
-  textTransform: 'uppercase', color: '#4A5270',
+  textTransform: 'uppercase', color: '#6B7494',
   padding: '18px 18px 8px',
 };
 const ruleRow: React.CSSProperties = {
@@ -333,6 +333,6 @@ const tagGreen: React.CSSProperties = {
 };
 const tagGray: React.CSSProperties = {
   display: 'inline-block', padding: '3px 8px',
-  background: 'rgba(255,255,255,0.05)', color: '#4A5270',
+  background: 'rgba(255,255,255,0.05)', color: '#6B7494',
   borderRadius: 6, fontSize: 10, fontWeight: 700,
 };

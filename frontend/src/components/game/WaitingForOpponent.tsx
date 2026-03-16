@@ -57,7 +57,7 @@ export const WaitingForOpponent: React.FC<Props> = ({ session }) => {
         <button
           onClick={() => navigate('/battles')}
           title="Свернуть (батл останется активным)"
-          style={{ ...navBtn, color: '#8B92A8' }}
+          style={{ ...navBtn, color: '#A8B0C8' }}
         >
           ← Свернуть
         </button>
@@ -78,7 +78,7 @@ export const WaitingForOpponent: React.FC<Props> = ({ session }) => {
           <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 18, fontWeight: 800, color: '#F0F2F8', marginTop: 12 }}>
             Ожидание соперника
           </div>
-          <div style={{ fontSize: 12, color: '#8B92A8', marginTop: 6 }}>
+          <div style={{ fontSize: 12, color: '#A8B0C8', marginTop: 6 }}>
             Ставка:{' '}
             <span style={{ color: '#F5C842', fontWeight: 700 }}>
               {fmtBalance(session.bet ?? '0')} ᚙ
@@ -88,7 +88,7 @@ export const WaitingForOpponent: React.FC<Props> = ({ session }) => {
 
         {/* Код партии */}
         <div style={codeBlock}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: '#4A5270', letterSpacing: '.09em', textTransform: 'uppercase', marginBottom: 6 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#6B7494', letterSpacing: '.09em', textTransform: 'uppercase', marginBottom: 6 }}>
             Код партии
           </div>
           <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 800, color: '#F5C842', letterSpacing: '.12em' }}>
@@ -98,7 +98,7 @@ export const WaitingForOpponent: React.FC<Props> = ({ session }) => {
 
         {/* Ссылка */}
         <div style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: '#4A5270', letterSpacing: '.09em', textTransform: 'uppercase', marginBottom: 8 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#6B7494', letterSpacing: '.09em', textTransform: 'uppercase', marginBottom: 8 }}>
             Ссылка-приглашение
           </div>
           <div style={linkBox}>
@@ -111,7 +111,7 @@ export const WaitingForOpponent: React.FC<Props> = ({ session }) => {
               {copied ? '✓' : '⎘'}
             </button>
           </div>
-          <div style={{ fontSize: 11, color: '#4A5270', marginTop: 6, textAlign: 'center' }}>
+          <div style={{ fontSize: 11, color: '#6B7494', marginTop: 6, textAlign: 'center' }}>
             Друг автоматически попадёт в игру
           </div>
         </div>
@@ -147,7 +147,7 @@ const navBtn: React.CSSProperties = {
   padding: '7px 14px', background: 'rgba(255,255,255,0.05)',
   border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10,
   fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-  color: '#8B92A8',
+  color: '#A8B0C8',
 };
 const rootStyle: React.CSSProperties = {
   position: 'absolute', inset: 0, background: '#0B0D11',

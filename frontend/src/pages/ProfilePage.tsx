@@ -56,13 +56,13 @@ const PgnReplayModal: React.FC<{ pgn: string; title?: string; onClose: () => voi
       <div style={{ background: '#13161E', borderRadius: 24, padding: 20, width: '100%', maxWidth: 420, border: '1px solid rgba(255,255,255,0.08)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
           <div style={{ fontSize: 14, fontWeight: 700, color: '#F5C842' }}>♟ {title ?? 'Разбор партии'}</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#8B92A8', fontSize: 16, cursor: 'pointer', padding: 0 }}>✕</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#A8B0C8', fontSize: 16, cursor: 'pointer', padding: 0 }}>✕</button>
         </div>
 
         <Chessboard position={currentFen} arePiecesDraggable={false} boardWidth={Math.min(380, window.innerWidth - 72)} />
 
         {/* Move counter */}
-        <div style={{ textAlign: 'center', marginTop: 10, fontSize: 12, color: '#8B92A8' }}>
+        <div style={{ textAlign: 'center', marginTop: 10, fontSize: 12, color: '#A8B0C8' }}>
           Ход {step} / {fens.length - 1}
           {step > 0 && moves[step - 1] && <span style={{ color: '#F5C842', marginLeft: 6 }}>{moves[step - 1]}</span>}
         </div>
@@ -99,7 +99,7 @@ const PgnReplayModal: React.FC<{ pgn: string; title?: string; onClose: () => voi
             <button key={i} onClick={() => { setIsPlaying(false); setStep(i + 1); }} style={{
               padding: '3px 7px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', fontFamily: 'inherit',
               background: step === i + 1 ? '#F5C842' : '#1C2030',
-              color: step === i + 1 ? '#0B0D11' : '#8B92A8',
+              color: step === i + 1 ? '#0B0D11' : '#A8B0C8',
             }}>
               {i % 2 === 0 ? `${Math.floor(i / 2) + 1}.` : ''}{m}
             </button>
@@ -119,7 +119,7 @@ const BadgeDetailModal: React.FC<{
   const t = useT();
   const lvlData = JARVIS_LEVELS.find(l => l.name === badgeName);
   const colors: Record<string, string> = {
-    Beginner: '#8B92A8', Player: '#00B4D8', Fighter: '#00D68F',
+    Beginner: '#A8B0C8', Player: '#00B4D8', Fighter: '#00D68F',
     Warrior: '#4CAF50', Expert: '#9B85FF', Master: '#F5C842',
     Professional: '#FF9F43', Epic: '#FF6B6B', Legendary: '#E040FB', Mystic: '#F5C842',
   };
@@ -130,13 +130,13 @@ const BadgeDetailModal: React.FC<{
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 400, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 320, background: 'linear-gradient(160deg,#13161F,#0B0D11)', border: `1px solid ${color}40`, borderRadius: 24, padding: '32px 24px 24px', textAlign: 'center', boxShadow: `0 0 60px ${color}20` }}>
         <div style={{ fontSize: 56, lineHeight: 1, marginBottom: 16 }}>🤖</div>
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: '#4A5270', marginBottom: 8 }}>{t.gameResult.jarvisCert}</div>
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: '#6B7494', marginBottom: 8 }}>{t.gameResult.jarvisCert}</div>
         <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 22, fontWeight: 800, color, marginBottom: 8 }}>{badgeName}</div>
-        <div style={{ fontSize: 13, color: '#8B92A8', marginBottom: 20 }}>
+        <div style={{ fontSize: 13, color: '#A8B0C8', marginBottom: 20 }}>
           {t.profile.level} {lvlData?.level ?? '?'} · +{(lvlData?.reward ?? 0).toLocaleString()} ᚙ
         </div>
         {formattedDate && (
-          <div style={{ fontSize: 14, color: '#8B92A8', marginBottom: 8 }}>📅 {formattedDate}</div>
+          <div style={{ fontSize: 14, color: '#A8B0C8', marginBottom: 8 }}>📅 {formattedDate}</div>
         )}
         <div style={{ fontSize: 12, color: '#00D68F', marginBottom: 24 }}>{t.gameResult.confirmedBy}</div>
         <button onClick={onClose} style={{ width: '100%', padding: 12, background: '#1C2030', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, color: '#F0F2F8', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -302,7 +302,7 @@ export const ProfilePage: React.FC = () => {
           {nationFlag && <span style={{ fontSize: 20 }}>{nationFlag}</span>}
           {user.firstName} {user.lastName ?? ''}
         </div>
-        <div style={{ fontSize: 12, color: '#8B92A8', marginTop: 3 }}>@{user.username ?? 'unknown'}</div>
+        <div style={{ fontSize: 12, color: '#A8B0C8', marginTop: 3 }}>@{user.username ?? 'unknown'}</div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8, justifyContent: 'center' }}>
           <span style={tagGold}>{leagueEmoji[user.league]} #1</span>
           <span style={tagVi}>ELO {user.elo}</span>
@@ -359,7 +359,7 @@ export const ProfilePage: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: '#F5C842' }}>{leagueEmoji[user.league]} Лига {user.league}</div>
               {info.next ? (
-                <div style={{ fontSize: 10, color: '#8B92A8' }}>до {leagueEmoji[info.next]} {info.next}: {fmtBalance(remaining.toString())} ᚙ</div>
+                <div style={{ fontSize: 10, color: '#A8B0C8' }}>до {leagueEmoji[info.next]} {info.next}: {fmtBalance(remaining.toString())} ᚙ</div>
               ) : (
                 <div style={{ fontSize: 10, color: '#00D68F', fontWeight: 700 }}>★ Максимальная лига</div>
               )}
@@ -367,7 +367,7 @@ export const ProfilePage: React.FC = () => {
             <div style={{ height: 5, background: '#1C2030', borderRadius: 3, overflow: 'hidden' }}>
               <div style={{ height: '100%', width: `${progress}%`, background: 'linear-gradient(90deg,#F5C842,#FFD966)', borderRadius: 3, transition: 'width .5s' }} />
             </div>
-            <div style={{ fontSize: 9, color: '#4A5270', marginTop: 4 }}>{progress}% до следующей лиги</div>
+            <div style={{ fontSize: 9, color: '#6B7494', marginTop: 4 }}>{progress}% до следующей лиги</div>
           </div>
         );
       })()}
@@ -397,7 +397,7 @@ export const ProfilePage: React.FC = () => {
                   <text x="38" y="42" textAnchor="middle" fill="#F0F2F8" fontSize="15" fontWeight="800" fontFamily="'JetBrains Mono',monospace">{jLvl}</text>
                 </svg>
                 <div style={{ fontSize: 9, color: '#9B85FF', fontWeight: 700, marginTop: 3, letterSpacing: '.04em' }}>JARVIS</div>
-                <div style={{ fontSize: 9, color: '#4A5270', marginTop: 1 }}>{jName}</div>
+                <div style={{ fontSize: 9, color: '#6B7494', marginTop: 1 }}>{jName}</div>
               </div>
               {/* Wins ring */}
               <CircStat value={wins}   pct={winRate}  color="#00D68F" label={t.profile.wins}   />
@@ -432,7 +432,7 @@ export const ProfilePage: React.FC = () => {
             {/* Game history */}
             <div style={secStyle}>История партий</div>
             {gamesList.length === 0 && (
-              <div style={{ textAlign: 'center', color: '#4A5270', padding: '24px 18px', fontSize: 13 }}>
+              <div style={{ textAlign: 'center', color: '#6B7494', padding: '24px 18px', fontSize: 13 }}>
                 Нет сыгранных партий
               </div>
             )}
@@ -455,7 +455,7 @@ export const ProfilePage: React.FC = () => {
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, flex: 1 }}>
                       <Avatar user={user} size="s" />
                       <div style={{ fontSize: 10, fontWeight: 700, color: '#F0F2F8', maxWidth: 60, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.firstName}</div>
-                      <div style={{ fontSize: 8, color: '#4A5270' }}>{myColor}</div>
+                      <div style={{ fontSize: 8, color: '#6B7494' }}>{myColor}</div>
                     </div>
                     {/* Middle */}
                     <div style={{ textAlign: 'center', flexShrink: 0 }}>
@@ -471,14 +471,14 @@ export const ProfilePage: React.FC = () => {
                         {g.hasBot ? '🤖' : '👤'}
                       </div>
                       <div style={{ fontSize: 10, fontWeight: 700, color: '#F0F2F8', maxWidth: 60, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{opponentName}</div>
-                      <div style={{ fontSize: 8, color: '#4A5270' }}>{oppColor}</div>
+                      <div style={{ fontSize: 8, color: '#6B7494' }}>{oppColor}</div>
                     </div>
                   </div>
                   {/* Footer row */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 6, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                    <span style={{ fontSize: 9, color: '#4A5270' }}>{g.type === 'BOT' ? '🤖 Бот' : g.type === 'BATTLE' ? '⚔ Батл' : '🤝 Дружеская'} · {g.finishedAt ? fmtDate(g.finishedAt) : ''}</span>
+                    <span style={{ fontSize: 9, color: '#6B7494' }}>{g.type === 'BOT' ? '🤖 Бот' : g.type === 'BATTLE' ? '⚔ Батл' : '🤝 Дружеская'} · {g.finishedAt ? fmtDate(g.finishedAt) : ''}</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      {g.pgn && <span style={{ fontSize: 9, color: '#4A5270' }}>↗ разобрать</span>}
+                      {g.pgn && <span style={{ fontSize: 9, color: '#6B7494' }}>↗ разобрать</span>}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -491,7 +491,7 @@ export const ProfilePage: React.FC = () => {
                         }}
                         style={{
                           background: 'none', border: 'none', cursor: 'pointer', padding: 2,
-                          fontSize: 14, color: savedGameIds.has(g.sessionId) ? '#F5C842' : '#4A5270',
+                          fontSize: 14, color: savedGameIds.has(g.sessionId) ? '#F5C842' : '#6B7494',
                           lineHeight: 1,
                         }}
                         title={savedGameIds.has(g.sessionId) ? 'Убрать из сохранённых' : 'Сохранить партию'}
@@ -513,7 +513,7 @@ export const ProfilePage: React.FC = () => {
         <>
           <div style={secStyle}>{t.profile.savedGames}</div>
           {savedGames.length === 0 ? (
-            <div style={{ textAlign: 'center', color: '#4A5270', padding: 32, fontSize: 13 }}>
+            <div style={{ textAlign: 'center', color: '#6B7494', padding: 32, fontSize: 13 }}>
               {t.profile.noSaves}
             </div>
           ) : (
@@ -531,14 +531,14 @@ export const ProfilePage: React.FC = () => {
                         <Avatar user={p1} size="s" />
                         <div style={{ fontSize: 12, fontWeight: 600, color: '#F0F2F8' }}>{p1?.firstName ?? '?'}</div>
                       </div>
-                      <div style={{ textAlign: 'center', fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: '#8B92A8' }}>vs</div>
+                      <div style={{ textAlign: 'center', fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: '#A8B0C8' }}>vs</div>
                       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
                         <div style={{ fontSize: 12, fontWeight: 600, color: '#F0F2F8', textAlign: 'right' }}>{p2?.firstName ?? '?'}</div>
                         <Avatar user={p2} size="s" />
                       </div>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: s?.pgn ? 8 : 0 }}>
-                      <div style={{ fontSize: 10, color: '#4A5270' }}>
+                      <div style={{ fontSize: 10, color: '#6B7494' }}>
                         {s?.type ?? ''} · {s?.finishedAt ? fmtDate(s.finishedAt) : ''}
                       </div>
                       {winner && (
@@ -548,7 +548,7 @@ export const ProfilePage: React.FC = () => {
                       )}
                       <button
                         onClick={() => warsApi.unsaveGame(s.id).then(() => setSavedGames(g => g.filter(x => x.id !== sg.id)))}
-                        style={{ fontSize: 10, color: '#4A5270', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: '2px 6px' }}
+                        style={{ fontSize: 10, color: '#6B7494', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: '2px 6px' }}
                       >
                         ✕ убрать
                       </button>
@@ -574,7 +574,7 @@ export const ProfilePage: React.FC = () => {
         <>
           <div style={secStyle}>{t.profile.jarvisCerts}</div>
           {((user as any).jarvisBadges?.length ?? 0) === 0 ? (
-            <div style={{ textAlign: 'center', color: '#4A5270', padding: 32, fontSize: 13 }}>
+            <div style={{ textAlign: 'center', color: '#6B7494', padding: 32, fontSize: 13 }}>
               {t.profile.noJarvis}
             </div>
           ) : (
@@ -585,7 +585,7 @@ export const ProfilePage: React.FC = () => {
                 const badgeDates = (user as any).jarvisBadgeDates as Record<string, string> | null;
                 const dateStr = badgeDates?.[badgeName];
                 const colors: Record<string, string> = {
-                  Beginner: '#8B92A8', Player: '#00B4D8', Fighter: '#00D68F',
+                  Beginner: '#A8B0C8', Player: '#00B4D8', Fighter: '#00D68F',
                   Warrior: '#4CAF50', Expert: '#9B85FF', Master: '#F5C842',
                   Professional: '#FF9F43', Epic: '#FF6B6B', Legendary: '#E040FB', Mystic: '#F5C842',
                 };
@@ -598,7 +598,7 @@ export const ProfilePage: React.FC = () => {
                     <div style={{ fontSize: 12, fontWeight: 800, color: '#F0F2F8' }}>{badgeName}</div>
                     <div style={{ fontSize: 9, color, fontWeight: 700 }}>Lv.{lvlData?.level ?? '?'}</div>
                     {dateStr && (
-                      <div style={{ fontSize: 9, color: '#4A5270' }}>
+                      <div style={{ fontSize: 9, color: '#6B7494' }}>
                         {new Date(dateStr).toLocaleDateString()}
                       </div>
                     )}
@@ -635,7 +635,7 @@ export const ProfilePage: React.FC = () => {
                       cursor: 'pointer',
                       fontFamily: 'inherit',
                       background: lang === l ? '#F5C842' : '#1C2030',
-                      color: lang === l ? '#0B0D11' : '#8B92A8',
+                      color: lang === l ? '#0B0D11' : '#A8B0C8',
                       border: lang === l ? 'none' : '1px solid rgba(255,255,255,0.1)',
                       transition: 'all .15s',
                     }}
@@ -650,7 +650,7 @@ export const ProfilePage: React.FC = () => {
             <div style={settingCard}>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 600, color: '#F0F2F8' }}>{t.profile.settings.sound}</div>
-                <div style={{ fontSize: 11, color: '#4A5270', marginTop: 3 }}>
+                <div style={{ fontSize: 11, color: '#6B7494', marginTop: 3 }}>
                   {soundEnabled ? t.profile.settings.soundOn : t.profile.settings.soundOff}
                 </div>
               </div>
@@ -711,11 +711,11 @@ export const ProfilePage: React.FC = () => {
           <div style={{ background: '#0B0D11', flex: 1, marginTop: 56, borderRadius: '24px 24px 0 0', overflow: 'hidden', display: 'flex', flexDirection: 'column', border: '1px solid rgba(255,255,255,0.07)' }}>
             <div style={{ padding: '18px 18px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink: 0 }}>
               <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 15, fontWeight: 700, color: '#F5C842' }}>💰 История транзакций</div>
-              <button onClick={() => setShowTxModal(false)} style={{ background: 'none', border: 'none', color: '#8B92A8', fontSize: 20, cursor: 'pointer', padding: 0, lineHeight: 1 }}>✕</button>
+              <button onClick={() => setShowTxModal(false)} style={{ background: 'none', border: 'none', color: '#A8B0C8', fontSize: 20, cursor: 'pointer', padding: 0, lineHeight: 1 }}>✕</button>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '6px 0 24px' }}>
               {transactions.length === 0 ? (
-                <div style={{ textAlign: 'center', color: '#4A5270', padding: 40, fontSize: 13 }}>Нет транзакций</div>
+                <div style={{ textAlign: 'center', color: '#6B7494', padding: 40, fontSize: 13 }}>Нет транзакций</div>
               ) : transactions.map((tx) => {
                 const isPos = BigInt(tx.amount) > 0n;
                 const TX_LABELS: Record<string, string> = {
@@ -744,7 +744,7 @@ export const ProfilePage: React.FC = () => {
                       <div style={{ fontSize: 12, fontWeight: 600, color: '#F0F2F8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {TX_LABELS[tx.type] ?? tx.type}
                       </div>
-                      <div style={{ fontSize: 10, color: '#8B92A8', marginTop: 2 }}>{fmtDate(tx.createdAt)}</div>
+                      <div style={{ fontSize: 10, color: '#A8B0C8', marginTop: 2 }}>{fmtDate(tx.createdAt)}</div>
                     </div>
                     <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, color: isPos ? '#00D68F' : '#FF4D6A', flexShrink: 0 }}>
                       {isPos ? '+' : ''}{fmtBalance(tx.amount)} ᚙ
@@ -773,7 +773,7 @@ const CircStat: React.FC<{ value: number; pct: number; color: string; label: str
       </svg>
       <div style={{ fontFamily: 'Inter,sans-serif', fontSize: 16, fontWeight: 800, color: '#F0F2F8' }}>{value}</div>
       <div style={{ fontSize: 11, fontWeight: 700, color }}>{pct}%</div>
-      <div style={{ fontSize: 10, color: '#4A5270', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.04em' }}>{label}</div>
+      <div style={{ fontSize: 10, color: '#6B7494', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.04em' }}>{label}</div>
     </div>
   );
 };
@@ -781,7 +781,7 @@ const CircStat: React.FC<{ value: number; pct: number; color: string; label: str
 const StatCard: React.FC<{ val: number; lbl: string; color?: string }> = ({ val, lbl, color }) => (
   <div style={{ background: '#1C2030', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '14px 10px', textAlign: 'center' }}>
     <div style={{ fontFamily: 'Inter,sans-serif', fontSize: 20, fontWeight: 800, color: color ?? '#F0F2F8' }}>{val}</div>
-    <div style={{ fontSize: 10, color: '#4A5270', marginTop: 3, fontWeight: 500 }}>{lbl}</div>
+    <div style={{ fontSize: 10, color: '#6B7494', marginTop: 3, fontWeight: 500 }}>{lbl}</div>
   </div>
 );
 
@@ -790,11 +790,11 @@ const secStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, letterSpa
 const microLbl: React.CSSProperties = { fontSize: 9, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#7B8299', marginBottom: 3 };
 const balCard: React.CSSProperties = { margin: '12px 18px 0', padding: '14px 18px', background: '#1C2030', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 18, display: 'flex', alignItems: 'center', justifyContent: 'space-between' };
 const ptabsStyle: React.CSSProperties = { display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.07)', margin: '12px 18px 0', overflowX: 'auto' as any };
-const ptab = (active: boolean): React.CSSProperties => ({ flex: '0 0 auto', textAlign: 'center', padding: '10px 12px', fontSize: 11, fontWeight: 600, color: active ? '#F5C842' : '#8B92A8', cursor: 'pointer', border: 'none', borderBottom: `2px solid ${active ? '#F5C842' : 'transparent'}`, outline: 'none', background: 'none', fontFamily: 'inherit', transition: 'all .2s', whiteSpace: 'nowrap' } as any);
+const ptab = (active: boolean): React.CSSProperties => ({ flex: '0 0 auto', textAlign: 'center', padding: '10px 12px', fontSize: 11, fontWeight: 600, color: active ? '#F5C842' : '#A8B0C8', cursor: 'pointer', border: 'none', borderBottom: `2px solid ${active ? '#F5C842' : 'transparent'}`, outline: 'none', background: 'none', fontFamily: 'inherit', transition: 'all .2s', whiteSpace: 'nowrap' } as any);
 const stripStyle: React.CSSProperties = { margin: '4px 18px 0', padding: '13px 16px', background: '#1C2030', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 18, display: 'flex', alignItems: 'center', gap: 12 };
-const tbaStyle: React.CSSProperties = { width: 36, height: 36, borderRadius: 11, background: '#1C2030', border: '1px solid rgba(255,255,255,0.13)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, cursor: 'pointer', color: '#8B92A8' };
+const tbaStyle: React.CSSProperties = { width: 36, height: 36, borderRadius: 11, background: '#1C2030', border: '1px solid rgba(255,255,255,0.13)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, cursor: 'pointer', color: '#A8B0C8' };
 const secBtn: React.CSSProperties = { padding: '8px 14px', background: '#232840', color: '#F0F2F8', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' };
-const ghostBtn: React.CSSProperties = { ...secBtn, background: 'transparent', color: '#8B92A8' };
+const ghostBtn: React.CSSProperties = { ...secBtn, background: 'transparent', color: '#A8B0C8' };
 const goldBtn: React.CSSProperties = { padding: '8px 14px', background: '#F5C842', color: '#0B0D11', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' };
 const tagGold: React.CSSProperties = { display: 'inline-flex', padding: '3px 8px', background: 'rgba(245,200,66,0.12)', color: '#F5C842', borderRadius: 6, fontSize: 10, fontWeight: 700 };
 const tagVi: React.CSSProperties = { ...tagGold, background: 'rgba(123,97,255,0.12)', color: '#9B85FF' };

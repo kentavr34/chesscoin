@@ -165,7 +165,8 @@ export const startTimerWatcher = () => {
       );
 
       // Уведомляем клиентов
-      io.to(session.id).emit("game", formatSession(finished, null));
+      const humanSide = session.sides.find((s: any) => !s.isBot);
+      io.to(session.id).emit("game", formatSession(finished, humanSide?.playerId ?? null));
       io.to(session.id).emit("game:over", {
         status: "TIME_EXPIRED",
         winnerSideId,

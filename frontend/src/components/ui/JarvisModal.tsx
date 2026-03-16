@@ -86,10 +86,10 @@ export const JarvisModal: React.FC<JarvisModalProps> = ({ currentJarvisLevel, on
               return (
                 <div key={lvl.level} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 12px', marginBottom: 5, background: active ? 'rgba(245,200,66,0.07)' : '#1C2030', border: `1px solid ${active ? 'rgba(245,200,66,0.3)' : 'rgba(255,255,255,0.06)'}`, borderRadius: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: '50%', background: done ? 'rgba(0,214,143,0.15)' : active ? 'rgba(245,200,66,0.15)' : '#232840', border: `1.5px solid ${done ? '#00D68F' : active ? '#F5C842' : 'rgba(255,255,255,0.1)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: done ? '#00D68F' : active ? '#F5C842' : '#8B92A8', flexShrink: 0 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: '50%', background: done ? 'rgba(0,214,143,0.15)' : active ? 'rgba(245,200,66,0.15)' : '#232840', border: `1.5px solid ${done ? '#00D68F' : active ? '#F5C842' : 'rgba(255,255,255,0.1)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: done ? '#00D68F' : active ? '#F5C842' : '#A8B0C8', flexShrink: 0 }}>
                       {done ? '✓' : lvl.level}
                     </div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: lvl.level > currentJarvisLevel ? '#4A5270' : '#F0F2F8' }}>{lvl.name}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: lvl.level > currentJarvisLevel ? '#6B7494' : '#F0F2F8' }}>{lvl.name}</div>
                   </div>
                   <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono',monospace", color: '#F5C842', fontWeight: 700 }}>+{lvl.reward.toLocaleString()} ᚙ</div>
                 </div>
@@ -114,12 +114,12 @@ export const JarvisModal: React.FC<JarvisModalProps> = ({ currentJarvisLevel, on
             <div style={innerCircleStyle}><span style={{ fontSize: 38 }}>🤖</span></div>
           </div>
           <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 20, fontWeight: 800, color: '#F5C842', textAlign: 'center', marginBottom: 6 }}>Запускаем бой!</div>
-          <div style={{ fontSize: 12, color: '#8B92A8', textAlign: 'center', marginBottom: 22 }}>J.A.R.V.I.S {currentLevel.name} · {time < 60 ? `${time} мин` : '1 час'}</div>
+          <div style={{ fontSize: 12, color: '#A8B0C8', textAlign: 'center', marginBottom: 22 }}>J.A.R.V.I.S {currentLevel.name} · {time < 60 ? `${time} мин` : '1 час'}</div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginBottom: 24 }}>
             <div style={chipStyle('#F5C842', 'rgba(245,200,66,0.1)', 'rgba(245,200,66,0.25)')}>
               {resolvedColor === 'white' ? '♔' : '♚'} Вы
             </div>
-            <span style={{ fontSize: 12, fontWeight: 800, color: '#4A5270' }}>VS</span>
+            <span style={{ fontSize: 12, fontWeight: 800, color: '#6B7494' }}>VS</span>
             <div style={chipStyle('#9B85FF', 'rgba(155,133,255,0.12)', 'rgba(155,133,255,0.3)')}>
               {resolvedColor === 'white' ? '♚' : '♔'} JARVIS
             </div>
@@ -128,7 +128,7 @@ export const JarvisModal: React.FC<JarvisModalProps> = ({ currentJarvisLevel, on
             <div style={cdCircleStyle}>
               <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 30, fontWeight: 800, color: '#F5C842' }}>{countdown}</span>
             </div>
-            <div style={{ fontSize: 10, color: '#4A5270', marginTop: 8, letterSpacing: '.06em' }}>СЕКУНДЫ ДО СТАРТА</div>
+            <div style={{ fontSize: 10, color: '#6B7494', marginTop: 8, letterSpacing: '.06em' }}>СЕКУНДЫ ДО СТАРТА</div>
           </div>
         </div>
       </div>
@@ -161,8 +161,8 @@ export const JarvisModal: React.FC<JarvisModalProps> = ({ currentJarvisLevel, on
           {prevLevel && (
             <div style={{ padding: '10px 8px', background: 'rgba(0,214,143,0.05)', border: '1px solid rgba(0,214,143,0.2)', borderRadius: 12, textAlign: 'center' }}>
               <div style={{ fontSize: 9, fontWeight: 700, color: '#00D68F', letterSpacing: '.06em', marginBottom: 4 }}>✓ ПРОЙДЕН</div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#4A5270' }}>{prevLevel.name}</div>
-              <div style={{ fontSize: 9, color: '#4A5270', marginTop: 2 }}>Lv.{prevLevel.level}</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#6B7494' }}>{prevLevel.name}</div>
+              <div style={{ fontSize: 9, color: '#6B7494', marginTop: 2 }}>Lv.{prevLevel.level}</div>
             </div>
           )}
           <div style={{ padding: '12px 8px', background: 'rgba(245,200,66,0.08)', border: '2px solid rgba(245,200,66,0.45)', borderRadius: 14, textAlign: 'center' }}>
@@ -172,9 +172,9 @@ export const JarvisModal: React.FC<JarvisModalProps> = ({ currentJarvisLevel, on
           </div>
           {nextLevel && (
             <div style={{ padding: '10px 8px', background: '#1C2030', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, textAlign: 'center', opacity: 0.55 }}>
-              <div style={{ fontSize: 9, fontWeight: 700, color: '#4A5270', letterSpacing: '.06em', marginBottom: 4 }}>🔒 СЛЕДУЮЩИЙ</div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#4A5270' }}>{nextLevel.name}</div>
-              <div style={{ fontSize: 9, color: '#4A5270', marginTop: 2 }}>Lv.{nextLevel.level}</div>
+              <div style={{ fontSize: 9, fontWeight: 700, color: '#6B7494', letterSpacing: '.06em', marginBottom: 4 }}>🔒 СЛЕДУЮЩИЙ</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#6B7494' }}>{nextLevel.name}</div>
+              <div style={{ fontSize: 9, color: '#6B7494', marginTop: 2 }}>Lv.{nextLevel.level}</div>
             </div>
           )}
         </div>
@@ -240,7 +240,7 @@ const launchSheetStyle: React.CSSProperties = {
 const closeBtnStyle: React.CSSProperties = {
   width: 32, height: 32, borderRadius: '50%',
   background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)',
-  color: '#8B92A8', fontSize: 14, cursor: 'pointer',
+  color: '#A8B0C8', fontSize: 14, cursor: 'pointer',
   display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit',
 };
 const glowRingStyle: React.CSSProperties = {
@@ -264,13 +264,13 @@ const cdCircleStyle: React.CSSProperties = {
 };
 const sectionLbl: React.CSSProperties = {
   fontSize: 10, fontWeight: 700, letterSpacing: '.09em',
-  textTransform: 'uppercase', color: '#4A5270', marginBottom: 10,
+  textTransform: 'uppercase', color: '#6B7494', marginBottom: 10,
 };
 const colorBtnStyle = (active: boolean): React.CSSProperties => ({
   padding: '18px 8px', borderRadius: 14, cursor: 'pointer', minHeight: 76,
   background: active ? 'rgba(245,200,66,0.1)' : '#1C2030',
   border: `2px solid ${active ? '#F5C842' : 'rgba(255,255,255,0.07)'}`,
-  color: active ? '#F5C842' : '#8B92A8',
+  color: active ? '#F5C842' : '#A8B0C8',
   textAlign: 'center', transition: 'all .15s', fontFamily: 'inherit',
   transform: active ? 'scale(1.04)' : 'scale(1)',
 });
@@ -278,7 +278,7 @@ const timeBtnStyle = (active: boolean): React.CSSProperties => ({
   padding: '12px 8px', borderRadius: 12, cursor: 'pointer', minHeight: 62,
   background: active ? 'rgba(123,97,255,0.15)' : '#1C2030',
   border: `1px solid ${active ? 'rgba(123,97,255,0.4)' : 'rgba(255,255,255,0.07)'}`,
-  color: active ? '#9B85FF' : '#8B92A8',
+  color: active ? '#9B85FF' : '#A8B0C8',
   fontSize: 12, fontWeight: 700, transition: 'all .15s', fontFamily: 'inherit', textAlign: 'center',
 });
 const startBtnStyle: React.CSSProperties = {

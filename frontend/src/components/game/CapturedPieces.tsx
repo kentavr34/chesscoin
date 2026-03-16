@@ -31,7 +31,7 @@ export const CapturedPieces: React.FC<CapturedPiecesProps> = ({
       flexWrap: 'wrap',
     }}>
       {label && (
-        <span style={{ fontSize: 9, color: '#4A5270', fontWeight: 700,
+        <span style={{ fontSize: 9, color: '#6B7494', fontWeight: 700,
           letterSpacing: '.06em', textTransform: 'uppercase', marginRight: 2 }}>
           {label}
         </span>

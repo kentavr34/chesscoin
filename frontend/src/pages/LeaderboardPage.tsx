@@ -39,14 +39,14 @@ export const LeaderboardPage: React.FC = () => {
           <span style={{ fontSize: 28 }}>{leagueEmoji[user.league]}</span>
           <div>
             <div style={{ fontSize: 14, fontWeight: 700, color: '#F5C842' }}>{LEAGUE_LABELS[user.league] ?? user.league}</div>
-            <div style={{ fontSize: 11, color: '#8B92A8', marginTop: 2 }}>{fmtBalance(user.balance)} ᚙ · ELO {user.elo}</div>
+            <div style={{ fontSize: 11, color: '#A8B0C8', marginTop: 2 }}>{fmtBalance(user.balance)} ᚙ · ELO {user.elo}</div>
           </div>
         </div>
       )}
 
       {/* Поиск */}
       <div style={{ margin: '8px 18px', padding: '9px 12px', background: '#1C2030', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, display: 'flex', gap: 8, alignItems: 'center' }}>
-        <span style={{ fontSize: 14, color: '#4A5270' }}>🔍</span>
+        <span style={{ fontSize: 14, color: '#6B7494' }}>🔍</span>
         <input
           placeholder="Поиск игрока (мин. 3 символа)..."
           value={query}
@@ -61,7 +61,7 @@ export const LeaderboardPage: React.FC = () => {
           <button key={l} onClick={() => setLeague(l)} style={{
             padding: '6px 14px', borderRadius: 20, fontSize: 11, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
             background: league === l ? 'rgba(245,200,66,0.12)' : '#1C2030',
-            color: league === l ? '#F5C842' : '#8B92A8',
+            color: league === l ? '#F5C842' : '#A8B0C8',
             border: `1px solid ${league === l ? 'rgba(245,200,66,0.25)' : 'rgba(255,255,255,0.07)'}`,
             fontFamily: 'inherit',
           }}>
@@ -77,7 +77,7 @@ export const LeaderboardPage: React.FC = () => {
         </div>
       )}
 
-      {loading && <div style={{ textAlign: 'center', color: '#4A5270', padding: 32 }}>Загрузка...</div>}
+      {loading && <div style={{ textAlign: 'center', color: '#6B7494', padding: 32 }}>Загрузка...</div>}
       {filtered.map((u, idx) => (
         <LbRow key={u.id} rank={idx + 1} user={u} balance={(u as any).balance ?? '0'} />
       ))}
@@ -92,13 +92,13 @@ const LbRow: React.FC<{ rank: number; user: any; balance: string; isMe?: boolean
     background: isMe ? 'rgba(245,200,66,0.08)' : undefined,
     cursor: 'pointer',
   }}>
-    <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 700, color: POS_COLOR[rank] ?? '#4A5270', width: 24, textAlign: 'center', flexShrink: 0 }}>
+    <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 700, color: POS_COLOR[rank] ?? '#6B7494', width: 24, textAlign: 'center', flexShrink: 0 }}>
       {isMe ? 'Вы' : rank}
     </span>
     <Avatar user={user} size="s" gold={isMe} />
     <div style={{ flex: 1 }}>
       <div style={{ fontSize: 13, fontWeight: 600, color: isMe ? '#F5C842' : '#F0F2F8' }}>{user.firstName}</div>
-      <div style={{ fontSize: 10, color: '#8B92A8', marginTop: 1 }}>{user.username ? `@${user.username} · ` : ''}ELO {user.elo}</div>
+      <div style={{ fontSize: 10, color: '#A8B0C8', marginTop: 1 }}>{user.username ? `@${user.username} · ` : ''}ELO {user.elo}</div>
     </div>
     <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, color: '#F5C842' }}>
       {fmtBalance(balance)} ᚙ

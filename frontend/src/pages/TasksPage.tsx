@@ -90,7 +90,7 @@ export const TasksPage: React.FC = () => {
             flex: 1, background: 'none', border: 'none', cursor: 'pointer',
             paddingBottom: 10, paddingTop: 4,
             borderBottom: tab === t.key ? '2px solid #7B61FF' : '2px solid transparent',
-            color: tab === t.key ? '#7B61FF' : '#4A5270',
+            color: tab === t.key ? '#7B61FF' : '#6B7494',
             fontSize: 11, fontWeight: 600,
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
           }}>
@@ -101,7 +101,7 @@ export const TasksPage: React.FC = () => {
       </div>
 
       {loading && (
-        <div style={{ textAlign: 'center', color: '#4A5270', padding: 40 }}>Загрузка...</div>
+        <div style={{ textAlign: 'center', color: '#6B7494', padding: 40 }}>Загрузка...</div>
       )}
 
       {/* Lessons tab */}
@@ -109,7 +109,7 @@ export const TasksPage: React.FC = () => {
         <div style={{ paddingBottom: 40 }}>
           <div style={secLabel}>Шахматные уроки — учись и зарабатывай</div>
           {lessons.length === 0 && (
-            <div style={{ textAlign: 'center', color: '#4A5270', padding: 32, fontSize: 14 }}>
+            <div style={{ textAlign: 'center', color: '#6B7494', padding: 32, fontSize: 14 }}>
               Уроки скоро появятся
             </div>
           )}
@@ -132,7 +132,7 @@ export const TasksPage: React.FC = () => {
                 <div style={{ fontSize: 12, fontWeight: 700, color: '#F5C842', fontFamily: "'JetBrains Mono',monospace" }}>
                   +{fmtBalance(lesson.reward)} ᚙ
                 </div>
-                <div style={{ fontSize: 11, color: '#4A5270', marginTop: 2 }}>›</div>
+                <div style={{ fontSize: 11, color: '#6B7494', marginTop: 2 }}>›</div>
               </div>
             </div>
           ))}
@@ -144,7 +144,7 @@ export const TasksPage: React.FC = () => {
         <div style={{ paddingBottom: 40 }}>
           <div style={secLabel}>Ежедневные задачи — новые каждый день</div>
           {dailies.length === 0 && (
-            <div style={{ textAlign: 'center', color: '#4A5270', padding: 32, fontSize: 14 }}>
+            <div style={{ textAlign: 'center', color: '#6B7494', padding: 32, fontSize: 14 }}>
               Сегодня нет задач
             </div>
           )}
@@ -167,7 +167,7 @@ export const TasksPage: React.FC = () => {
                 <div style={{ fontSize: 12, fontWeight: 700, color: '#F5C842', fontFamily: "'JetBrains Mono',monospace" }}>
                   +{fmtBalance(puzzle.reward)} ᚙ
                 </div>
-                <div style={{ fontSize: 11, color: '#4A5270', marginTop: 2 }}>›</div>
+                <div style={{ fontSize: 11, color: '#6B7494', marginTop: 2 }}>›</div>
               </div>
             </div>
           ))}
@@ -179,7 +179,7 @@ export const TasksPage: React.FC = () => {
         <div style={{ paddingBottom: 40 }}>
           <div style={secLabel}>Подписки, рефералы, активность</div>
           {socialTasks.length === 0 && (
-            <div style={{ textAlign: 'center', color: '#4A5270', padding: 32, fontSize: 14 }}>Нет доступных заданий</div>
+            <div style={{ textAlign: 'center', color: '#6B7494', padding: 32, fontSize: 14 }}>Нет доступных заданий</div>
           )}
           {socialTasks.map(task => (
             <div key={task.id} onClick={() => handleClaim(task)} style={{ ...card, opacity: task.isCompleted ? 0.5 : 1, cursor: task.isCompleted ? 'default' : 'pointer' }}>
@@ -188,7 +188,7 @@ export const TasksPage: React.FC = () => {
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: '#F0F2F8' }}>{task.title}</div>
-                <div style={{ fontSize: 11, color: '#8B92A8', marginTop: 2 }}>{task.isCompleted ? 'Выполнено!' : task.description}</div>
+                <div style={{ fontSize: 11, color: '#A8B0C8', marginTop: 2 }}>{task.isCompleted ? 'Выполнено!' : task.description}</div>
               </div>
               <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, color: '#F5C842', whiteSpace: 'nowrap', marginRight: 8 }}>
                 +{fmtBalance(task.reward)} ᚙ
@@ -206,7 +206,7 @@ export const TasksPage: React.FC = () => {
         <div style={{ paddingBottom: 40 }}>
           <div style={secLabel}>Остальные задания</div>
           {otherTasks.length === 0 && (
-            <div style={{ textAlign: 'center', color: '#4A5270', padding: 32, fontSize: 14 }}>Нет доступных заданий</div>
+            <div style={{ textAlign: 'center', color: '#6B7494', padding: 32, fontSize: 14 }}>Нет доступных заданий</div>
           )}
           {otherTasks.map(task => (
             <div key={task.id} onClick={() => handleClaim(task)} style={{ ...card, opacity: task.isCompleted ? 0.5 : 1, cursor: task.isCompleted ? 'default' : 'pointer' }}>
@@ -215,7 +215,7 @@ export const TasksPage: React.FC = () => {
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: '#F0F2F8' }}>{task.title}</div>
-                <div style={{ fontSize: 11, color: '#8B92A8', marginTop: 2 }}>{task.isCompleted ? 'Выполнено!' : task.description}</div>
+                <div style={{ fontSize: 11, color: '#A8B0C8', marginTop: 2 }}>{task.isCompleted ? 'Выполнено!' : task.description}</div>
                 {task.maxProgress && !task.isCompleted && (
                   <div style={{ height: 3, background: '#181B22', borderRadius: 2, marginTop: 6, overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${((task.progress ?? 0) / task.maxProgress) * 100}%`, background: '#9B85FF', borderRadius: 2 }} />
@@ -237,7 +237,7 @@ export const TasksPage: React.FC = () => {
 };
 
 const secLabel: React.CSSProperties = {
-  fontSize: 11, color: '#4A5270', fontWeight: 600, padding: '14px 18px 8px',
+  fontSize: 11, color: '#6B7494', fontWeight: 600, padding: '14px 18px 8px',
   letterSpacing: '.04em',
 };
 const card: React.CSSProperties = {

@@ -89,7 +89,7 @@ export const BattlesPage: React.FC = () => {
             position: 'absolute', top: 10, right: 10,
             width: 24, height: 24, borderRadius: '50%',
             background: 'rgba(255,255,255,0.07)', border: 'none',
-            color: '#8B92A8', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
+            color: '#A8B0C8', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>✕</button>
           <div style={{ fontSize: 12, color: '#9B85FF', whiteSpace: 'pre-line', lineHeight: 1.6 }}>
@@ -106,7 +106,7 @@ export const BattlesPage: React.FC = () => {
       {tab === 'active' && (
         <>
           {activeSessions.length === 0 && (
-            <div style={{ textAlign: 'center', color: '#4A5270', fontSize: 13, padding: '32px 0' }}>
+            <div style={{ textAlign: 'center', color: '#6B7494', fontSize: 13, padding: '32px 0' }}>
               Нет активных партий
             </div>
           )}
@@ -121,11 +121,11 @@ export const BattlesPage: React.FC = () => {
                 <div style={{ display: 'flex', alignItems: 'center', padding: 14, gap: 8 }}>
                   <BPlayer user={mySide?.player} name={mySide?.player.firstName ?? 'Вы'} />
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                    <span style={{ fontSize: 9, fontWeight: 800, color: '#4A5270', letterSpacing: '.1em' }}>VS</span>
+                    <span style={{ fontSize: 9, fontWeight: 800, color: '#6B7494', letterSpacing: '.1em' }}>VS</span>
                     <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 20, fontWeight: 700, color: '#F0F2F8' }}>
                       {fmtTime(mySide?.timeLeft ?? 300)}
                     </span>
-                    <span style={{ fontSize: 10, color: '#4A5270', fontWeight: 600 }}>
+                    <span style={{ fontSize: 10, color: '#6B7494', fontWeight: 600 }}>
                       {s.type === 'BOT' ? 'J.A.R.V.I.S' : 'БАТЛ'}
                     </span>
                   </div>
@@ -135,12 +135,12 @@ export const BattlesPage: React.FC = () => {
                       <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 16, fontWeight: 700, color: '#F0F2F8' }}>
                         {fmtBalance(s.bet)}
                       </div>
-                      <div style={{ fontSize: 10, color: '#8B92A8' }}>ᚙ</div>
+                      <div style={{ fontSize: 10, color: '#A8B0C8' }}>ᚙ</div>
                     </div>
                   )}
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 14px', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
-                  <span style={{ fontSize: 11, color: '#8B92A8' }}>
+                  <span style={{ fontSize: 11, color: '#A8B0C8' }}>
                     {s.isMyTurn ? '▶ Ваш ход' : '⏳ Ход соперника'}
                   </span>
                   <button
@@ -168,7 +168,7 @@ export const BattlesPage: React.FC = () => {
         <>
           <div style={secStyle}>Ожидают соперника</div>
           {waitingSessions.length === 0 && (
-            <div style={{ textAlign: 'center', color: '#4A5270', fontSize: 13, padding: '32px 0' }}>
+            <div style={{ textAlign: 'center', color: '#6B7494', fontSize: 13, padding: '32px 0' }}>
               Нет ожидающих батлов
             </div>
           )}
@@ -179,13 +179,13 @@ export const BattlesPage: React.FC = () => {
                 <div style={{ fontSize: 14, fontWeight: 700, color: '#F0F2F8' }}>
                   {battle.creator?.firstName ?? 'Игрок'}
                 </div>
-                <div style={{ fontSize: 11, color: '#8B92A8', marginTop: 3 }}>
+                <div style={{ fontSize: 11, color: '#A8B0C8', marginTop: 3 }}>
                   {battle.duration / 60} мин · ELO {battle.creator?.elo ?? '?'}
                 </div>
                 <div style={{ marginTop: 6, display: 'flex', gap: 6, alignItems: 'center' }}>
                   <span style={tagGold}>{fmtBalance(battle.bet)} ᚙ</span>
                   {(battle.spectatorCount ?? 0) > 0 && (
-                    <span style={{ fontSize: 10, color: '#4A5270' }}>
+                    <span style={{ fontSize: 10, color: '#6B7494' }}>
                       👁 {battle.spectatorCount}
                     </span>
                   )}
@@ -213,8 +213,8 @@ export const BattlesPage: React.FC = () => {
 const BPlayer: React.FC<{ user?: any; name: string; right?: boolean }> = ({ user, name, right }) => (
   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, minWidth: 58 }}>
     <Avatar user={user} size="s" />
-    <span style={{ fontSize: 11, fontWeight: 600, color: '#8B92A8', textAlign: 'center' }}>{name}</span>
-    {user?.elo && <span style={{ fontSize: 10, color: '#4A5270' }}>ELO {user.elo}</span>}
+    <span style={{ fontSize: 11, fontWeight: 600, color: '#A8B0C8', textAlign: 'center' }}>{name}</span>
+    {user?.elo && <span style={{ fontSize: 10, color: '#6B7494' }}>ELO {user.elo}</span>}
   </div>
 );
 
@@ -291,7 +291,7 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         {/* Заголовок */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
           <div style={{ fontSize: 18, fontWeight: 800, color: '#F0F2F8' }}>⚔ Создать батл</div>
-          <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: '#8B92A8', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+          <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: '#A8B0C8', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
         </div>
 
         {/* Ставка */}
@@ -321,7 +321,7 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                       padding: '8px 4px', borderRadius: 10, fontSize: 11, fontWeight: 700,
                       cursor: 'pointer', border: '1px solid',
                       background: active ? 'rgba(245,200,66,0.12)' : '#1C2030',
-                      color: unavailable ? '#3A3F58' : active ? '#F5C842' : '#8B92A8',
+                      color: unavailable ? '#3A3F58' : active ? '#F5C842' : '#A8B0C8',
                       borderColor: active ? 'rgba(245,200,66,0.3)' : 'rgba(255,255,255,0.07)',
                       fontFamily: 'inherit', textAlign: 'center' as const,
                     }}
@@ -378,7 +378,7 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             width: '100%', padding: '18px 14px',
             background: canCreate ? '#F5C842' : '#2A2F48',
             border: 'none', borderRadius: 14,
-            color: canCreate ? '#0B0D11' : '#4A5270',
+            color: canCreate ? '#0B0D11' : '#6B7494',
             fontSize: 16, fontWeight: 800,
             cursor: canCreate && !loading ? 'pointer' : 'not-allowed',
             fontFamily: 'inherit',
@@ -402,7 +402,7 @@ const segStyle: React.CSSProperties = {
 const segBtn = (active: boolean): React.CSSProperties => ({
   flex: 1, padding: 8, border: 'none', borderRadius: 8,
   fontFamily: 'inherit', fontSize: 12, fontWeight: 600,
-  color: active ? '#F0F2F8' : '#8B92A8',
+  color: active ? '#F0F2F8' : '#A8B0C8',
   background: active ? '#232840' : 'transparent',
   cursor: 'pointer', transition: 'all .2s',
 });
@@ -454,7 +454,7 @@ const tbaStyle: React.CSSProperties = {
   width: 36, height: 36, borderRadius: 11, background: '#1C2030',
   border: '1px solid rgba(255,255,255,0.13)', display: 'flex',
   alignItems: 'center', justifyContent: 'center', fontSize: 16,
-  cursor: 'pointer', color: '#8B92A8',
+  cursor: 'pointer', color: '#A8B0C8',
 };
 // ── Стили модала создания батла ──
 const bmOverlayStyle: React.CSSProperties = {
@@ -484,7 +484,7 @@ const bmColorBtn = (active: boolean): React.CSSProperties => ({
   padding: '10px 8px', borderRadius: 12, cursor: 'pointer', minHeight: 58,
   background: active ? 'rgba(245,200,66,0.1)' : '#1C2030',
   border: `2px solid ${active ? '#F5C842' : 'rgba(255,255,255,0.07)'}`,
-  color: active ? '#F5C842' : '#8B92A8',
+  color: active ? '#F5C842' : '#A8B0C8',
   textAlign: 'center', transition: 'all .15s', fontFamily: 'inherit',
   transform: active ? 'scale(1.03)' : 'scale(1)',
 });
@@ -492,7 +492,7 @@ const bmTimeBtn = (active: boolean): React.CSSProperties => ({
   padding: '10px 8px', borderRadius: 10, cursor: 'pointer', minHeight: 52,
   background: active ? 'rgba(123,97,255,0.15)' : '#1C2030',
   border: `1px solid ${active ? 'rgba(123,97,255,0.4)' : 'rgba(255,255,255,0.07)'}`,
-  color: active ? '#9B85FF' : '#8B92A8',
+  color: active ? '#9B85FF' : '#A8B0C8',
   fontSize: 12, fontWeight: 700, transition: 'all .15s', fontFamily: 'inherit',
   textAlign: 'center' as const,
 });
@@ -500,6 +500,6 @@ const bmTypeBtn = (active: boolean): React.CSSProperties => ({
   padding: 12, borderRadius: 12, cursor: 'pointer',
   background: active ? 'rgba(245,200,66,0.1)' : '#1C2030',
   border: `1px solid ${active ? 'rgba(245,200,66,0.3)' : 'rgba(255,255,255,0.07)'}`,
-  color: active ? '#F5C842' : '#8B92A8',
+  color: active ? '#F5C842' : '#A8B0C8',
   fontSize: 12, fontWeight: 600, fontFamily: 'inherit', textAlign: 'center' as const,
 });

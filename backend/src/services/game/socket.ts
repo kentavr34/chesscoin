@@ -166,7 +166,7 @@ export const setupSocketHandlers = (io: Server) => {
           if (data.color === "black") {
             setTimeout(async () => {
               await makeBotMove(socket, io, session.id);
-            }, 500);
+            }, 200);
           } else {
             await setTimer(session.id);
           }
@@ -333,7 +333,7 @@ export const setupSocketHandlers = (io: Server) => {
           if (session.type === SessionType.BOT && nextSide?.isBot) {
             setTimeout(async () => {
               await makeBotMove(socket, io, sessionId);
-            }, 400 + Math.random() * 600);
+            }, 200);
           }
         } catch (err: any) {
           if (callback) callback({ ok: false, error: err.message });
@@ -652,496 +652,83 @@ const makeBotMove = async (socket: AuthSocket, io: Server, sessionId: string) =>
   }
 };
 
-// ═══════════════════════════════════════════════════════════════════════
-// JARVIS AI ENGINE v2.0
-// Alpha-Beta + Transposition Table + Null-Move + Killers + History + LMR
-// Evaluation: material + PST + pawn structure + king safety + bishop pair
-// ═══════════════════════════════════════════════════════════════════════
-
-// ── Level config ──────────────────────────────────────────────────────
-// errorRate: вероятность случайного хода (снижает силу на нижних уровнях)
-// useTT:     включить таблицу транспозиций
-// useNullMv: включить null-move pruning (сильно ускоряет поиск)
-// useLMR:    включить Late Move Reductions
-const JARVIS_LEVELS = [
-  { level: 1,  name: 'Beginner',     reward: 1000,  thinkMs: 100,   maxDepth: 2,  errorRate: 70, useTT: false, useNullMv: false, useLMR: false },
-  { level: 2,  name: 'Player',       reward: 3000,  thinkMs: 250,   maxDepth: 3,  errorRate: 48, useTT: false, useNullMv: false, useLMR: false },
-  { level: 3,  name: 'Fighter',      reward: 5000,  thinkMs: 600,   maxDepth: 4,  errorRate: 28, useTT: false, useNullMv: false, useLMR: false },
-  { level: 4,  name: 'Warrior',      reward: 7000,  thinkMs: 1200,  maxDepth: 5,  errorRate: 12, useTT: true,  useNullMv: false, useLMR: false },
-  { level: 5,  name: 'Expert',       reward: 9000,  thinkMs: 3000,  maxDepth: 10, errorRate: 3,  useTT: true,  useNullMv: true,  useLMR: true  },
-  { level: 6,  name: 'Master',       reward: 12000, thinkMs: 5000,  maxDepth: 14, errorRate: 0,  useTT: true,  useNullMv: true,  useLMR: true  },
-  { level: 7,  name: 'Professional', reward: 15000, thinkMs: 7000,  maxDepth: 18, errorRate: 0,  useTT: true,  useNullMv: true,  useLMR: true  },
-  { level: 8,  name: 'Epic',         reward: 20000, thinkMs: 10000, maxDepth: 24, errorRate: 0,  useTT: true,  useNullMv: true,  useLMR: true  },
-  { level: 9,  name: 'Legendary',    reward: 30000, thinkMs: 14000, maxDepth: 32, errorRate: 0,  useTT: true,  useNullMv: true,  useLMR: true  },
-  { level: 10, name: 'Mystic',       reward: 50000, thinkMs: 20000, maxDepth: 50, errorRate: 0,  useTT: true,  useNullMv: true,  useLMR: true  },
-];
-
-// ── Piece values (centipawns) ─────────────────────────────────────────
-const PV: Record<string, number> = { p: 100, n: 325, b: 335, r: 500, q: 975, k: 20000 };
-
-// ── Piece-Square Tables — белые, row 0 = rank 8 (верхний) ────────────
-// Для чёрных: idx = (7 - row) * 8 + col
-const PST: Record<string, number[]> = {
-  // Пешка: продвижение вперёд, контроль центра
-  p: [
-     0,  0,  0,  0,  0,  0,  0,  0,
-    98, 134, 61, 95, 68, 126, 34, -11,
-    -6,   7, 26, 31, 65,  56, 25, -20,
-   -14,  13,  6, 21, 23,  12, 17, -23,
-   -27,  -2, -5, 12, 17,   6, 10, -25,
-   -26,  -4, -4,-10, 3,   3, 33, -12,
-   -35,  -1,-20,-23,-15,  24, 38, -22,
-     0,   0,  0,  0,  0,   0,  0,   0,
-  ],
-  // Конь: центр значительно лучше
-  n: [
-   -167, -89, -34, -49,  61, -97, -15, -107,
-    -73, -41,  72,  36,  23,  62,   7,  -17,
-    -47,  60,  37,  65,  84,  129,  73,   44,
-     -9,  17,  19,  53,  37,   69,  18,   22,
-    -13,   4,  16,  13,  28,   19,  21,   -8,
-    -23,  -9,  12,  10,  19,   17,  25,  -16,
-    -29, -53, -12,  -3,  -1,   18, -14,  -19,
-   -105, -21, -58, -33, -17,  -28, -19,  -23,
-  ],
-  // Слон: активные диагонали, избегать углов
-  b: [
-   -29,   4, -82, -37, -25, -42,   7,  -8,
-   -26,  16, -18, -13,  30,  59,  18, -47,
-   -16,  37,  43,  40,  35,  50,  37,  -2,
-    -4,   5,  19,  50,  37,  37,   7,  -2,
-    -6,  13,  13,  26,  34,  12,  10,   4,
-     0,  15,  15,  15,  14,  27,  18,  10,
-     4,  15,  16,   0,   7,  21,  33,   1,
-   -33,  -3, -14, -21, -13, -12, -39, -21,
-  ],
-  // Ладья: открытые вертикали, 7-й ряд
-  r: [
-    32,  42,  32,  51, 63,  9,  31,  43,
-    27,  32,  58,  62, 80, 67,  26,  44,
-    -5,  19,  26,  36, 17, 45,  61,  16,
-   -24, -11,   7,  26, 24, 35,  -8, -20,
-   -36, -26, -12,  -1,  9, -7,   6, -23,
-   -45, -25, -16, -17,  3,  0,  -5, -33,
-   -44, -16, -20,  -9, -1, 11,  -6, -71,
-   -19, -13,   1,  17, 16,  7, -37, -26,
-  ],
-  // Ферзь: не выходить рано, защищать короля
-  q: [
-   -28,   0,  29,  12,  59,  44,  43,  45,
-   -24, -39,  -5,   1, -16,  57,  28,  54,
-   -13, -17,   7,   8,  29,  56,  47,  57,
-   -27, -27, -16, -16,  -1,  17,  -2,   1,
-    -9, -26,  -9, -10,  -2,  -4,   3,  -3,
-   -14,   2, -11,  -2,  -5,   2,  14,   5,
-   -35,  -8,  11,   2,   8,  15,  -3,   1,
-    -1, -18,  -9,  10, -15, -25, -31, -50,
-  ],
-  // Король (дебют/миттельшпиль): прятаться за пешками
-  k: [
-   -65,  23,  16, -15, -56, -34,   2,  13,
-    29,  -1, -20,  -7,  -8,  -4, -38, -29,
-    -9,  24,   2, -16, -20,   6,  22, -22,
-   -17, -20, -12, -27, -30, -25, -14, -36,
-   -49,  -1, -27, -39, -46, -44, -33, -51,
-   -14, -14, -22, -46, -44, -30, -15, -27,
-     1,   7,  -8, -64, -43, -16,   9,   8,
-   -15,  36,  12, -54,   8, -28,  24,  14,
-  ],
-  // Король (эндшпиль): активный king — идти в центр
-  ke: [
-   -74, -35, -18, -18, -11,  15,   4, -17,
-   -12,  17,  14,  17,  17,  38,  23,  11,
-    10,  17,  23,  15,  20,  45,  44,  13,
-    -8,  22,  24,  27,  26,  33,  26,   3,
-   -18,  -4,  21,  24,  27,  23,   9, -11,
-   -19,  -3,  11,  21,  23,  16,   7,  -9,
-   -27, -11,   4,  13,  14,   4,  -5, -17,
-   -53, -34, -21, -11, -28, -14, -24, -43,
-  ],
+// ─────────────────────────────────────────
+// JARVIS AI — Stockfish UCI
+// ─────────────────────────────────────────
+const JARVIS_LEVELS: Record<number, { skillLevel: number; moveTimeMs: number }> = {
+  1:  { skillLevel: 0,  moveTimeMs: 200 },
+  2:  { skillLevel: 2,  moveTimeMs: 250 },
+  3:  { skillLevel: 4,  moveTimeMs: 300 },
+  4:  { skillLevel: 6,  moveTimeMs: 350 },
+  5:  { skillLevel: 9,  moveTimeMs: 400 },
+  6:  { skillLevel: 12, moveTimeMs: 450 },
+  7:  { skillLevel: 15, moveTimeMs: 500 },
+  8:  { skillLevel: 17, moveTimeMs: 600 },
+  9:  { skillLevel: 19, moveTimeMs: 700 },
+  10: { skillLevel: 20, moveTimeMs: 800 },
 };
 
-// ── Transposition Table ───────────────────────────────────────────────
-interface TTEntry {
-  score: number;
-  depth: number;
-  flag: 0 | 1 | 2; // 0=exact, 1=lowerbound (fail-high), 2=upperbound (fail-low)
-  bestMove: string | null;  // "from+to" e.g. "e2e4"
-}
-// Используем отдельный TT на каждый вызов getStockfishMove (не глобальный)
-// чтобы не смешивать позиции разных партий
-
-// Ключ TT: первые 4 поля FEN (без счётчиков ходов)
-function fenKey(chess: any): string {
-  return chess.fen().split(' ').slice(0, 4).join(' ');
-}
-
-// ── Search context ────────────────────────────────────────────────────
-interface SearchCtx {
-  deadline: number;
-  killers: Array<[string | null, string | null]>;  // [ply] → 2 тихих хода-убийцы
-  history: Record<string, number>;                  // "piece+from+to" → бонус
-  tt: Map<string, TTEntry>;
-  useTT: boolean;
-  useNullMv: boolean;
-  useLMR: boolean;
-  aborted: boolean;
-}
-
-// ── Endgame detection ─────────────────────────────────────────────────
-function isEndgame(chess: any): boolean {
-  let queens = 0, material = 0;
-  const board = chess.board();
-  for (let r = 0; r < 8; r++)
-    for (let c = 0; c < 8; c++) {
-      const sq = board[r][c];
-      if (!sq || sq.type === 'k' || sq.type === 'p') continue;
-      if (sq.type === 'q') queens++;
-      material += PV[sq.type] ?? 0;
-    }
-  return queens === 0 || material < 1300;
-}
-
-// ── Static evaluation (from CURRENT player's perspective) ────────────
-function evaluate(chess: any, eg: boolean): number {
-  if (chess.isCheckmate()) return -28000;
-  if (chess.isDraw() || chess.isStalemate() || chess.isThreefoldRepetition()) return 0;
-
-  const board = chess.board();
-  const turn = chess.turn();
-  let score = 0;
-  let wBishops = 0, bBishops = 0;
-  const wPawns = new Array(8).fill(0);
-  const bPawns = new Array(8).fill(0);
-  const wPassedMask = new Array(8).fill(0); // max rank reached per file
-  const bPassedMask = new Array(8).fill(8);
-
-  // First pass: pawns for passed/isolated/doubled detection
-  for (let r = 0; r < 8; r++) {
-    for (let c = 0; c < 8; c++) {
-      const sq = board[r][c];
-      if (!sq || sq.type !== 'p') continue;
-      if (sq.color === 'w') {
-        wPawns[c]++;
-        if (r < wPassedMask[c]) wPassedMask[c] = r; // smaller r = higher rank (closer to 8th)
-      } else {
-        bPawns[c]++;
-        if (r > bPassedMask[c]) bPassedMask[c] = r;
-      }
-    }
-  }
-
-  // Main evaluation loop
-  for (let r = 0; r < 8; r++) {
-    for (let c = 0; c < 8; c++) {
-      const sq = board[r][c];
-      if (!sq) continue;
-      const isW = sq.color === 'w';
-
-      // Material + PST
-      const pstKey = (sq.type === 'k' && eg) ? 'ke' : sq.type;
-      const idx = isW ? r * 8 + c : (7 - r) * 8 + c;
-      const pst = PST[pstKey];
-      const pieceScore = PV[sq.type] + (pst ? (pst[idx] ?? 0) : 0);
-      score += isW ? pieceScore : -pieceScore;
-
-      if (sq.type === 'b') isW ? wBishops++ : bBishops++;
-
-      // Passed pawn bonus (pawns that can't be blocked by opponent pawns)
-      if (sq.type === 'p') {
-        const rank = isW ? (7 - r) : r; // 0=start, 6=almost queening
-        if (isW) {
-          const blocked = (c > 0 && bPawns[c - 1] > 0 && bPassedMask[c - 1] < r)
-            || (bPawns[c] > 0 && bPassedMask[c] < r)
-            || (c < 7 && bPawns[c + 1] > 0 && bPassedMask[c + 1] < r);
-          if (!blocked) score += 15 + rank * rank * 3; // exponential bonus near promotion
-        } else {
-          const blocked = (c > 0 && wPawns[c - 1] > 0 && wPassedMask[c - 1] > r)
-            || (wPawns[c] > 0 && wPassedMask[c] > r)
-            || (c < 7 && wPawns[c + 1] > 0 && wPassedMask[c + 1] > r);
-          if (!blocked) score -= 15 + rank * rank * 3;
-        }
-      }
-
-      // Rook on open/semi-open file
-      if (sq.type === 'r') {
-        if (isW) {
-          if (wPawns[c] === 0 && bPawns[c] === 0) score += 20; // open file
-          else if (wPawns[c] === 0) score += 10;               // semi-open
-        } else {
-          if (wPawns[c] === 0 && bPawns[c] === 0) score -= 20;
-          else if (bPawns[c] === 0) score -= 10;
-        }
-      }
-    }
-  }
-
-  // Pawn structure
-  for (let c = 0; c < 8; c++) {
-    if (wPawns[c] > 1) score -= 12 * (wPawns[c] - 1); // doubled
-    if (bPawns[c] > 1) score += 12 * (bPawns[c] - 1);
-    const wIso = wPawns[c] > 0 && (c === 0 || wPawns[c - 1] === 0) && (c === 7 || wPawns[c + 1] === 0);
-    const bIso = bPawns[c] > 0 && (c === 0 || bPawns[c - 1] === 0) && (c === 7 || bPawns[c + 1] === 0);
-    if (wIso) score -= 20;
-    if (bIso) score += 20;
-  }
-
-  // Bishop pair
-  if (wBishops >= 2) score += 30;
-  if (bBishops >= 2) score -= 30;
-
-  // Mobility
-  const mobilityMoves = chess.moves().length;
-  score += mobilityMoves * (turn === 'w' ? 4 : -4);
-
-  return turn === 'w' ? score : -score;
-}
-
-// ── Move key ──────────────────────────────────────────────────────────
-function mvKey(m: any): string { return m.from + m.to + (m.promotion ?? ''); }
-
-// ── Move ordering ─────────────────────────────────────────────────────
-// TT move → MVV-LVA captures → promotions → killer moves → history → quiet
-function orderMoves(moves: any[], ctx: SearchCtx, ply: number, ttMove: string | null): any[] {
-  const [k1, k2] = ply < ctx.killers.length ? ctx.killers[ply] : [null, null];
-  return moves.slice().sort((a, b) => {
-    const sc = (m: any): number => {
-      const key = mvKey(m);
-      if (ttMove && key === ttMove) return 30000;
-      if (m.captured) return 10000 + (PV[m.captured] ?? 0) * 10 - (PV[m.piece] ?? 0); // MVV-LVA
-      if (m.flags?.includes('p')) return 9000 + (m.promotion === 'q' ? 500 : 0);
-      if (key === k1) return 8000;
-      if (key === k2) return 7500;
-      return ctx.history[m.piece + key] ?? 0;
-    };
-    return sc(b) - sc(a);
-  });
-}
-
-// ── Quiescence search ─────────────────────────────────────────────────
-function qsearch(chess: any, alpha: number, beta: number, ctx: SearchCtx, eg: boolean, depth = 0): number {
-  if (ctx.aborted || Date.now() >= ctx.deadline) return 0;
-  if (depth > 12) return evaluate(chess, eg);
-
-  const stand = evaluate(chess, eg);
-  if (stand >= beta) return beta;
-  if (stand > alpha) alpha = stand;
-
-  // Look at captures + promotions only
-  const moves = chess.moves({ verbose: true })
-    .filter((m: any) => m.captured || m.flags?.includes('p'))
-    .sort((a: any, b: any) => {
-      const s = (m: any) => m.captured ? (PV[m.captured] ?? 0) * 10 - (PV[m.piece] ?? 0) : 0;
-      return s(b) - s(a);
-    });
-
-  for (const m of moves) {
-    if (Date.now() >= ctx.deadline) { ctx.aborted = true; break; }
-    chess.move(m);
-    const score = -qsearch(chess, -beta, -alpha, ctx, eg, depth + 1);
-    chess.undo();
-    if (score >= beta) return beta;
-    if (score > alpha) alpha = score;
-  }
-  return alpha;
-}
-
-// ── Null move helper ──────────────────────────────────────────────────
-// Chess.js не поддерживает null move, поэтому модифицируем FEN напрямую
-function makeNullChess(chess: any): any | null {
-  try {
-    const parts = chess.fen().split(' ');
-    parts[1] = parts[1] === 'w' ? 'b' : 'w';
-    parts[3] = '-'; // убрать en-passant
-    return new (chess.constructor)(parts.join(' '));
-  } catch { return null; }
-}
-
-// ── Alpha-Beta (negamax) ──────────────────────────────────────────────
-function alphaBeta(
-  chess: any,
-  depth: number,
-  alpha: number,
-  beta: number,
-  ply: number,
-  ctx: SearchCtx,
-  eg: boolean,
-  allowNull: boolean,
-): number {
-  if (ctx.aborted) return 0;
-  if (Date.now() >= ctx.deadline) { ctx.aborted = true; return 0; }
-  if (chess.isGameOver()) return evaluate(chess, eg);
-  if (depth <= 0) return qsearch(chess, alpha, beta, ctx, eg);
-
-  const isPV = beta > alpha + 1;
-  const inCheck = chess.inCheck();
-
-  // TT probe
-  const ttKey = ctx.useTT ? fenKey(chess) : null;
-  let ttMove: string | null = null;
-  if (ctx.useTT && ttKey) {
-    const tte = ctx.tt.get(ttKey);
-    if (tte) {
-      ttMove = tte.bestMove;
-      if (tte.depth >= depth) {
-        if (tte.flag === 0) return tte.score;
-        if (tte.flag === 1 && tte.score > alpha) alpha = tte.score;
-        if (tte.flag === 2 && tte.score < beta) beta = tte.score;
-        if (alpha >= beta) return tte.score;
-      }
-    }
-  }
-
-  // Null-move pruning (не в PV, не в шахе, не в эндшпиле если риск цугцванга)
-  if (ctx.useNullMv && allowNull && !isPV && !inCheck && depth >= 3 && !eg) {
-    const R = depth >= 6 ? 3 : 2;
-    const nullChess = makeNullChess(chess);
-    if (nullChess) {
-      const nullScore = -alphaBeta(nullChess, depth - 1 - R, -beta, -beta + 1, ply + 1, ctx, eg, false);
-      if (!ctx.aborted && nullScore >= beta) return beta; // прунинг
-    }
-  }
-
-  const moves = chess.moves({ verbose: true });
-  const originalAlpha = alpha;
-  const ordered = orderMoves(moves, ctx, ply, ttMove);
-  let best = -99999;
-  let bestMoveKey: string | null = null;
-  let moveCount = 0;
-
-  for (const m of ordered) {
-    if (ctx.aborted || Date.now() >= ctx.deadline) { ctx.aborted = true; break; }
-
-    chess.move(m);
-    moveCount++;
-    const givesCheck = chess.inCheck();
-
-    let score: number;
-    const newDepth = depth - 1 + (givesCheck ? 1 : 0); // check extension
-
-    if (moveCount === 1) {
-      // Первый ход — полный поиск
-      score = -alphaBeta(chess, newDepth, -beta, -alpha, ply + 1, ctx, eg, true);
-    } else if (ctx.useLMR && moveCount > 4 && depth >= 3 && !m.captured && !inCheck && !givesCheck) {
-      // LMR: тихие поздние ходы ищем с уменьшенной глубиной
-      const R = moveCount > 10 ? Math.floor(depth / 3) + 1 : 1;
-      score = -alphaBeta(chess, newDepth - R, -alpha - 1, -alpha, ply + 1, ctx, eg, true);
-      if (!ctx.aborted && score > alpha) {
-        // Пересмотреть на полной глубине если ход оказался хорошим
-        score = -alphaBeta(chess, newDepth, -beta, -alpha, ply + 1, ctx, eg, true);
-      }
-    } else if (isPV && moveCount > 1) {
-      // PVS: null-window для неPV ходов
-      score = -alphaBeta(chess, newDepth, -alpha - 1, -alpha, ply + 1, ctx, eg, true);
-      if (!ctx.aborted && score > alpha && score < beta) {
-        score = -alphaBeta(chess, newDepth, -beta, -alpha, ply + 1, ctx, eg, true);
-      }
-    } else {
-      score = -alphaBeta(chess, newDepth, -beta, -alpha, ply + 1, ctx, eg, true);
-    }
-
-    chess.undo();
-    if (ctx.aborted) break;
-
-    if (score > best) {
-      best = score;
-      bestMoveKey = mvKey(m);
-    }
-    if (score > alpha) {
-      alpha = score;
-      // Обновить killers и history для тихих ходов
-      if (!m.captured && !m.flags?.includes('p')) {
-        const key = mvKey(m);
-        const histKey = m.piece + key;
-        ctx.history[histKey] = Math.min(8000, (ctx.history[histKey] ?? 0) + depth * depth);
-        if (score >= beta && ply < ctx.killers.length) {
-          ctx.killers[ply][1] = ctx.killers[ply][0];
-          ctx.killers[ply][0] = key;
-        }
-      }
-    }
-    if (alpha >= beta) break;
-  }
-
-  if (!ctx.aborted && ctx.useTT && ttKey) {
-    const flag: 0 | 1 | 2 = best >= beta ? 1 : (best <= originalAlpha ? 2 : 0);
-    ctx.tt.set(ttKey, { score: best, depth, flag, bestMove: bestMoveKey });
-  }
-
-  return best;
-}
-
-// ── Main JARVIS entry point ───────────────────────────────────────────
 const getStockfishMove = (fen: string, level: number): Promise<{ from: string; to: string } | null> => {
   return new Promise((resolve) => {
     try {
-      const { Chess: ChessLib } = require("chess.js");
-      const cfg = JARVIS_LEVELS[Math.max(0, Math.min(9, level - 1))];
+      const cfg = JARVIS_LEVELS[Math.max(1, Math.min(10, level))] ?? JARVIS_LEVELS[1];
 
-      // Случайный ход для низких уровней
-      if (cfg.errorRate > 0 && Math.floor(Math.random() * 100) < cfg.errorRate) {
-        const rnd = getRandomMove(fen);
-        console.debug(`[JARVIS] Lv${level} — random move (${cfg.errorRate}%)`);
-        return resolve(rnd);
-      }
+      const { spawn } = require('child_process');
+      const sf = spawn('stockfish');
 
-      const chess = new ChessLib(fen);
-      const moves = chess.moves({ verbose: true });
-      if (moves.length === 0) return resolve(null);
-
-      const deadline = Date.now() + cfg.thinkMs;
-      const eg = isEndgame(chess);
-
-      const ctx: SearchCtx = {
-        deadline,
-        killers: Array.from({ length: 64 }, () => [null, null] as [null, null]),
-        history: {},
-        tt: new Map(),
-        useTT: cfg.useTT,
-        useNullMv: cfg.useNullMv,
-        useLMR: cfg.useLMR,
-        aborted: false,
+      let resolved = false;
+      const done = (move: { from: string; to: string } | null) => {
+        if (resolved) return;
+        resolved = true;
+        try { sf.kill(); } catch {}
+        resolve(move);
       };
 
-      // Стартовый ход (fallback)
-      let bestMove = moves[Math.floor(Math.random() * moves.length)];
+      const timeout = setTimeout(() => {
+        console.warn('[JARVIS] Stockfish timeout, using random');
+        done(getRandomMove(fen));
+      }, cfg.moveTimeMs + 2000);
 
-      // Iterative deepening
-      for (let depth = 1; depth <= cfg.maxDepth; depth++) {
-        if (Date.now() >= deadline) break;
-
-        ctx.aborted = false;
-        let localBest: any = null;
-        let localBestScore = -99999;
-
-        const orderedMoves = orderMoves(moves, ctx, 0, ctx.tt.get(fenKey(chess))?.bestMove ?? null);
-
-        for (const m of orderedMoves) {
-          if (Date.now() >= deadline || ctx.aborted) { ctx.aborted = true; break; }
-          chess.move(m);
-          const score = -alphaBeta(chess, depth - 1, -99999, 99999, 1, ctx, eg, false);
-          chess.undo();
-          if (!ctx.aborted && score > localBestScore) {
-            localBestScore = score;
-            localBest = m;
+      let buffer = '';
+      sf.stdout.on('data', (data: Buffer) => {
+        buffer += data.toString();
+        const lines = buffer.split('\n');
+        buffer = lines.pop() ?? '';
+        for (const line of lines) {
+          if (line.startsWith('bestmove')) {
+            clearTimeout(timeout);
+            const parts = line.trim().split(' ');
+            const mv = parts[1];
+            if (!mv || mv === '(none)') { done(null); return; }
+            done({ from: mv.slice(0, 2), to: mv.slice(2, 4) });
+            return;
           }
         }
+      });
 
-        // Принимаем результат только если глубина завершена полностью
-        if (!ctx.aborted && localBest) {
-          bestMove = localBest;
-          console.debug(`[JARVIS] Lv${level} depth=${depth} score=${localBestScore} move=${localBest.from}${localBest.to} TT=${ctx.tt.size}`);
-        }
-        if (ctx.aborted) break;
-      }
+      sf.stderr.on('data', () => {});
+      sf.on('error', (err: Error) => {
+        clearTimeout(timeout);
+        console.error('[JARVIS] Stockfish spawn error:', err.message);
+        done(getRandomMove(fen));
+      });
+      sf.on('close', () => {
+        clearTimeout(timeout);
+        if (!resolved) done(getRandomMove(fen));
+      });
 
-      resolve({ from: bestMove.from, to: bestMove.to });
+      sf.stdin.write('uci\n');
+      sf.stdin.write(`setoption name Skill Level value ${cfg.skillLevel}\n`);
+      sf.stdin.write(`setoption name UCI_LimitStrength value ${cfg.skillLevel < 20 ? 'true' : 'false'}\n`);
+      sf.stdin.write(`position fen ${fen}\n`);
+      sf.stdin.write(`go movetime ${cfg.moveTimeMs}\n`);
     } catch (err) {
-      console.warn("[JARVIS] Error:", (err as Error).message);
+      console.error('[JARVIS] Error:', (err as Error).message);
       resolve(getRandomMove(fen));
     }
   });
 };
+
 
 const getRandomMove = (fen: string): { from: string; to: string } | null => {
   try {
