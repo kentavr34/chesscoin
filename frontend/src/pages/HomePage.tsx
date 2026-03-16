@@ -203,7 +203,7 @@ export const HomePage: React.FC = () => {
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', paddingBottom: 12, borderBottom: '1px solid rgba(255,255,255,0.07)', position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', paddingBottom: 12, borderBottom: '1px solid rgba(255,255,255,0.07)', position: 'relative', zIndex: 1 }}>
           <div>
             <div style={lblStyle}>Баланс</div>
             <div className="coin-balance" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -217,22 +217,26 @@ export const HomePage: React.FC = () => {
               >🛍</button>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 7, alignItems: 'flex-end' }}>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 9, color: '#4A5270', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 3 }}>JARVIS</div>
-              <div style={{ fontSize: 13, fontWeight: 800, color: '#9B85FF' }}>
+              <div style={{ fontSize: 9, color: '#6B7290', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 2 }}>JARVIS</div>
+              <div style={{ fontSize: 12, fontWeight: 800, color: '#9B85FF' }}>
                 {JARVIS_LEVELS[Math.max(0, jarvisLevel - 1)].name}
               </div>
-              <div style={{ fontSize: 9, color: '#4A5270', marginTop: 1 }}>Lv.{jarvisLevel} / 10</div>
+              <div style={{ fontSize: 9, color: '#6B7290', marginTop: 1 }}>Lv.{jarvisLevel} / 10</div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 9, color: '#4A5270', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 3 }}>Звание</div>
-              <div style={{ fontSize: 13, fontWeight: 800, color: '#F5C842' }}>
+              <div style={{ fontSize: 9, color: '#6B7290', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 2 }}>Звание</div>
+              <div style={{ fontSize: 12, fontWeight: 800, color: '#F5C842' }}>
                 {rankEmoji} {rankLabel}
               </div>
-              <div style={{ fontSize: 9, color: '#4A5270', marginTop: 1 }}>
+              <div style={{ fontSize: 9, color: '#6B7290', marginTop: 1 }}>
                 Бойцов: {referralCount}
               </div>
+            </div>
+            <div style={{ textAlign: 'right', cursor: 'pointer' }} onClick={() => navigate('/tournaments')}>
+              <div style={{ fontSize: 9, color: '#6B7290', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 2 }}>Чемпионат</div>
+              <div style={{ fontSize: 12, fontWeight: 800, color: '#F5C842' }}>🏆 Участвовать</div>
             </div>
           </div>
         </div>
@@ -264,13 +268,13 @@ export const HomePage: React.FC = () => {
             </div>
           </div>
           {/* Таймер — показываем до следующей звезды или "все звёзды есть" */}
-          <div style={{ textAlign: 'right' }}>
+          <div>
             {user.attempts >= user.maxAttempts ? (
-              <div style={{ fontSize: 10, color: '#4A5270' }}>Все ★ восстановлены</div>
+              <div style={{ fontSize: 10, color: '#6B7290' }}>Все ★ восстановлены</div>
             ) : (
-              <div onClick={() => setShowAttempts(true)} style={{ cursor: 'pointer' }}>
-                <div style={{ fontSize: 9, color: '#8B92A8', marginBottom: 2 }}>до следующей ★ осталось</div>
-                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14, fontWeight: 700, color: '#F5C842' }}>
+              <div onClick={() => setShowAttempts(true)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ fontSize: 9, color: '#8B92A8' }}>до следующей ★:</div>
+                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 700, color: '#F5C842' }}>
                   ⏱ {attemptTimer > 0 ? fmtCountdown(attemptTimer) : '...'}
                 </div>
               </div>
@@ -437,12 +441,12 @@ const gameCardStyle: React.CSSProperties = {
 };
 const secStyle: React.CSSProperties = {
   fontSize: 10, fontWeight: 700, letterSpacing: '.09em',
-  textTransform: 'uppercase', color: '#4A5270',
+  textTransform: 'uppercase', color: '#7B8299',
   padding: '16px 18px 8px',
 };
 const lblStyle: React.CSSProperties = {
   fontSize: 9, fontWeight: 700, letterSpacing: '.08em',
-  textTransform: 'uppercase', color: '#4A5270', marginBottom: 3,
+  textTransform: 'uppercase', color: '#7B8299', marginBottom: 3,
 };
 const attPlusStyle: React.CSSProperties = {
   width: 24, height: 24, borderRadius: '50%', background: '#F5C842',

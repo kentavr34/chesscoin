@@ -289,14 +289,14 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         <div style={bmHandleStyle} />
 
         {/* Заголовок */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
           <div style={{ fontSize: 18, fontWeight: 800, color: '#F0F2F8' }}>⚔ Создать батл</div>
           <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: '#8B92A8', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
         </div>
 
         {/* Ставка */}
         <div style={bmSectionLbl}>Ставка</div>
-        <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 30, fontWeight: 800, color: '#F5C842', textAlign: 'center', marginBottom: 12 }}>
+        <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 24, fontWeight: 800, color: '#F5C842', textAlign: 'center', marginBottom: 10 }}>
           {fmtBalance(bet)} ᚙ
         </div>
 
@@ -308,7 +308,7 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               style={{ width: '100%', marginBottom: 12, accentColor: '#F5C842' }}
             />
             {/* Быстрый выбор — 4 кнопки в один ряд */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 6, marginBottom: 20 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 6, marginBottom: 14 }}>
               {QUICK_BETS.map((v) => {
                 const capped = Math.min(v, maxBet);
                 const active = bet === capped && bet === v;
@@ -340,7 +340,7 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
         {/* Цвет — 3 колонки как в GameSetupModal */}
         <div style={bmSectionLbl}>Выбор цвета</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 14 }}>
           {(['random', 'white', 'black'] as const).map((c) => (
             <button key={c} onClick={() => setColor(c)} style={bmColorBtn(color === c)}>
               <span style={{ fontSize: 22, display: 'block', marginBottom: 5 }}>
@@ -355,7 +355,7 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
         {/* Время — 3×2 сетка как в GameSetupModal */}
         <div style={bmSectionLbl}>Контроль времени</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 14 }}>
           {DURATIONS.map((d) => (
             <button key={d.value} onClick={() => setDuration(d.value)} style={bmTimeBtn(duration === d.value)}>
               <span style={{ fontSize: 16, display: 'block', marginBottom: 2 }}>{d.icon}</span>
@@ -365,7 +365,7 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         </div>
 
         {/* Публичный / Приватный */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
           <button onClick={() => setIsPublic(true)} style={bmTypeBtn(isPublic)}>🌍 Публичный</button>
           <button onClick={() => setIsPublic(false)} style={bmTypeBtn(!isPublic)}>🔒 Приватный</button>
         </div>
@@ -433,7 +433,7 @@ const fabStyle: React.CSSProperties = {
 };
 const secStyle: React.CSSProperties = {
   fontSize: 10, fontWeight: 700, letterSpacing: '.09em',
-  textTransform: 'uppercase', color: '#4A5270', padding: '16px 18px 8px',
+  textTransform: 'uppercase', color: '#7B8299', padding: '16px 18px 8px',
 };
 const watchBtn: React.CSSProperties = {
   padding: '6px 12px', background: '#232840', color: '#F0F2F8',
@@ -462,18 +462,16 @@ const bmOverlayStyle: React.CSSProperties = {
   background: 'rgba(0,0,0,0.75)',
   backdropFilter: 'blur(8px)',
   WebkitBackdropFilter: 'blur(8px)',
-  display: 'flex', alignItems: 'center', justifyContent: 'center',
-  padding: '12px 0 0',
+  display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
 };
 const bmSheetStyle: React.CSSProperties = {
   width: '100%', maxWidth: 480,
   background: '#13161F',
   border: '1px solid rgba(255,255,255,0.1)',
   borderRadius: '24px 24px 0 0',
-  padding: '16px 18px',
-  paddingBottom: 'max(24px, env(safe-area-inset-bottom, 24px))',
-  maxHeight: '92vh', overflowY: 'auto',
-  marginTop: 'auto',
+  padding: '14px 18px',
+  paddingBottom: 'max(20px, env(safe-area-inset-bottom, 20px))',
+  maxHeight: '82vh', overflowY: 'auto',
 };
 const bmHandleStyle: React.CSSProperties = {
   width: 36, height: 4, background: '#2A2F48', borderRadius: 2, margin: '0 auto 16px',
@@ -483,19 +481,19 @@ const bmSectionLbl: React.CSSProperties = {
   textTransform: 'uppercase', color: '#4A5270', marginBottom: 10,
 };
 const bmColorBtn = (active: boolean): React.CSSProperties => ({
-  padding: '18px 8px', borderRadius: 14, cursor: 'pointer', minHeight: 76,
+  padding: '10px 8px', borderRadius: 12, cursor: 'pointer', minHeight: 58,
   background: active ? 'rgba(245,200,66,0.1)' : '#1C2030',
   border: `2px solid ${active ? '#F5C842' : 'rgba(255,255,255,0.07)'}`,
   color: active ? '#F5C842' : '#8B92A8',
   textAlign: 'center', transition: 'all .15s', fontFamily: 'inherit',
-  transform: active ? 'scale(1.04)' : 'scale(1)',
+  transform: active ? 'scale(1.03)' : 'scale(1)',
 });
 const bmTimeBtn = (active: boolean): React.CSSProperties => ({
-  padding: '14px 8px', borderRadius: 12, cursor: 'pointer', minHeight: 68,
+  padding: '10px 8px', borderRadius: 10, cursor: 'pointer', minHeight: 52,
   background: active ? 'rgba(123,97,255,0.15)' : '#1C2030',
   border: `1px solid ${active ? 'rgba(123,97,255,0.4)' : 'rgba(255,255,255,0.07)'}`,
   color: active ? '#9B85FF' : '#8B92A8',
-  fontSize: 13, fontWeight: 700, transition: 'all .15s', fontFamily: 'inherit',
+  fontSize: 12, fontWeight: 700, transition: 'all .15s', fontFamily: 'inherit',
   textAlign: 'center' as const,
 });
 const bmTypeBtn = (active: boolean): React.CSSProperties => ({

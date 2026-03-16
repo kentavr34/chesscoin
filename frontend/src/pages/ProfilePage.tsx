@@ -244,11 +244,10 @@ export const ProfilePage: React.FC = () => {
     { id: 'analytics', label: 'Аналитика' },
     { id: 'saves',     label: t.profile.tabs.saves },
     { id: 'ach',       label: t.profile.tabs.achievements },
-    { id: 'settings',  label: t.profile.tabs.settings },
   ];
 
   const rightAction = (
-    <button onClick={() => setTab('settings')} style={tbaStyle}>⚙</button>
+    <button onClick={() => navigate('/settings')} style={tbaStyle}>⚙</button>
   );
 
   return (
@@ -787,8 +786,8 @@ const StatCard: React.FC<{ val: number; lbl: string; color?: string }> = ({ val,
 );
 
 // Styles
-const secStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, letterSpacing: '.09em', textTransform: 'uppercase', color: '#4A5270', padding: '16px 18px 8px' };
-const microLbl: React.CSSProperties = { fontSize: 9, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#4A5270', marginBottom: 3 };
+const secStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, letterSpacing: '.09em', textTransform: 'uppercase', color: '#7B8299', padding: '16px 18px 8px' };
+const microLbl: React.CSSProperties = { fontSize: 9, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#7B8299', marginBottom: 3 };
 const balCard: React.CSSProperties = { margin: '12px 18px 0', padding: '14px 18px', background: '#1C2030', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 18, display: 'flex', alignItems: 'center', justifyContent: 'space-between' };
 const ptabsStyle: React.CSSProperties = { display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.07)', margin: '12px 18px 0', overflowX: 'auto' as any };
 const ptab = (active: boolean): React.CSSProperties => ({ flex: '0 0 auto', textAlign: 'center', padding: '10px 12px', fontSize: 11, fontWeight: 600, color: active ? '#F5C842' : '#8B92A8', cursor: 'pointer', border: 'none', borderBottom: `2px solid ${active ? '#F5C842' : 'transparent'}`, outline: 'none', background: 'none', fontFamily: 'inherit', transition: 'all .2s', whiteSpace: 'nowrap' } as any);

@@ -260,7 +260,7 @@ const DonateModal: React.FC<{ tournamentId: string; onClose: () => void; onSucce
 
 const segStyle: React.CSSProperties = { display: 'flex', margin: '4px 18px 10px', background: '#1C2030', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: 3 };
 const segBtn = (active: boolean): React.CSSProperties => ({ flex: 1, padding: 8, border: 'none', borderRadius: 8, fontFamily: 'inherit', fontSize: 12, fontWeight: 600, color: active ? '#F0F2F8' : '#8B92A8', background: active ? '#232840' : 'transparent', cursor: 'pointer' });
-const secStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, letterSpacing: '.09em', textTransform: 'uppercase', padding: '16px 18px 8px' };
+const secStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, letterSpacing: '.09em', textTransform: 'uppercase', color: '#7B8299', padding: '16px 18px 8px' };
 const viewBtn: React.CSSProperties = { padding: '8px 12px', background: '#232840', color: '#F0F2F8', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' };
 const donateBtn: React.CSSProperties = { padding: '8px 12px', background: 'rgba(123,97,255,0.12)', color: '#9B85FF', border: '1px solid rgba(123,97,255,0.25)', borderRadius: 10, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' };
 const joinBtnStyle: React.CSSProperties = { flex: 1, padding: '8px 12px', background: '#F5C842', color: '#0B0D11', border: 'none', borderRadius: 10, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' };

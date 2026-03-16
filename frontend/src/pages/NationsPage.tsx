@@ -767,7 +767,7 @@ const segBtn = (active: boolean): React.CSSProperties => ({
 });
 const secStyle: React.CSSProperties = {
   fontSize: 10, fontWeight: 700, letterSpacing: '.09em',
-  textTransform: 'uppercase', color: '#4A5270', padding: '16px 18px 8px',
+  textTransform: 'uppercase', color: '#7B8299', padding: '16px 18px 8px',
 };
 const secBtn: React.CSSProperties = {
   padding: '8px 12px', background: '#232840', color: '#F0F2F8',
