@@ -1098,7 +1098,7 @@ export async function settleWar(
       defenderClan: { include: { members: { where: { isPending: false } } } },
     },
   });
-  if (!war || war.status === "FINISHED" || war.status === "CANCELLED") return;
+  if (!war || war.status === "FINISHED") return;
 
   const isAttackerWinner = winnerClanId === war.attackerClanId;
   const winner = isAttackerWinner ? war.attackerClan : war.defenderClan;
