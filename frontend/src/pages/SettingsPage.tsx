@@ -46,7 +46,7 @@ export const SettingsPage: React.FC = () => {
   );
 
   const sectionTitle = (title: string) => (
-    <div style={{ padding: '20px 16px 8px', fontSize: 11, color: '#4A5270', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase' }}>
+    <div style={{ padding: '20px 16px 8px', fontSize: 11, color: '#6B7494', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase' }}>
       {title}
     </div>
   );
@@ -58,9 +58,9 @@ export const SettingsPage: React.FC = () => {
     }}>
       <div>
         <div style={{ fontSize: 14, color: '#E8EAF0', fontWeight: 500 }}>{label}</div>
-        <div style={{ fontSize: 11, color: '#8B92A8', marginTop: 2 }}>{hint}</div>
+        <div style={{ fontSize: 11, color: '#A8B0C8', marginTop: 2 }}>{hint}</div>
       </div>
-      <span style={{ fontSize: 11, color: '#4A5270', background: '#1C2030', borderRadius: 6, padding: '2px 8px' }}>
+      <span style={{ fontSize: 11, color: '#6B7494', background: '#1C2030', borderRadius: 6, padding: '2px 8px' }}>
         Скоро
       </span>
     </div>
@@ -77,7 +77,7 @@ export const SettingsPage: React.FC = () => {
                 <button key={l} onClick={() => setLang(l)} style={{
                   padding: '4px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
                   background: lang === l ? '#7B61FF' : '#1C2030',
-                  color: lang === l ? '#fff' : '#8B92A8',
+                  color: lang === l ? '#fff' : '#A8B0C8',
                   fontWeight: 600, fontSize: 13,
                 }}>
                   {l === 'ru' ? '🇷🇺 RU' : '🇬🇧 EN'}
@@ -104,9 +104,9 @@ export const SettingsPage: React.FC = () => {
 
         {sectionTitle('О приложении')}
         <div style={{ background: '#13161E', borderRadius: 16, margin: '0 16px' }}>
-          {row('Версия', <span style={{ fontSize: 13, color: '#8B92A8' }}>v6.0.1</span>)}
+          {row('Версия', <span style={{ fontSize: 13, color: '#A8B0C8' }}>v6.0.1</span>)}
           {row('Политика конфиденциальности',
-            <span style={{ fontSize: 18, color: '#4A5270' }}>›</span>, false
+            <span style={{ fontSize: 18, color: '#6B7494' }}>›</span>, false
           )}
         </div>
       </div>

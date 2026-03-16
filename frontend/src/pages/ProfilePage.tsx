@@ -12,6 +12,7 @@ import type { Transaction, GameHistoryItem } from '@/types';
 import { JARVIS_LEVELS } from '@/components/ui/JarvisModal';
 import { Chessboard } from 'react-chessboard';
 import { Chess } from 'chess.js';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 
 // ── PgnReplayModal ────────────────────────────────────────────────────────────
 const PgnReplayModal: React.FC<{ pgn: string; title?: string; onClose: () => void }> = ({ pgn, title, onClose }) => {
@@ -165,6 +166,7 @@ export const ProfilePage: React.FC = () => {
   const [avatarLoading, setAvatarLoading] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [nationFlag, setNationFlag] = useState<string | null>(null);
+  const [confirmDeleteAvatar, setConfirmDeleteAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -197,8 +199,12 @@ export const ProfilePage: React.FC = () => {
     }
   };
 
-  const handleAvatarDelete = async () => {
-    if (!confirm(t.profile.deleteAvatar)) return;
+  const handleAvatarDelete = () => {
+    setConfirmDeleteAvatar(true);
+  };
+
+  const doAvatarDelete = async () => {
+    setConfirmDeleteAvatar(false);
     setAvatarLoading(true);
     try {
       await profileApi.deleteAvatar();
