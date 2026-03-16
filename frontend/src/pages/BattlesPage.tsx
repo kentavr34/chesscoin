@@ -478,7 +478,7 @@ const bmHandleStyle: React.CSSProperties = {
 };
 const bmSectionLbl: React.CSSProperties = {
   fontSize: 10, fontWeight: 700, letterSpacing: '.09em',
-  textTransform: 'uppercase', color: '#4A5270', marginBottom: 10,
+  textTransform: 'uppercase', color: '#7B8299', marginBottom: 10,
 };
 const bmColorBtn = (active: boolean): React.CSSProperties => ({
   padding: '10px 8px', borderRadius: 12, cursor: 'pointer', minHeight: 58,
