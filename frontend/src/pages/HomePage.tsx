@@ -215,37 +215,40 @@ export const HomePage: React.FC = () => {
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', paddingBottom: 12, borderBottom: '1px solid rgba(255,255,255,0.07)', position: 'relative', zIndex: 1 }}>
+        {/* Balance row */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, position: 'relative', zIndex: 1 }}>
           <div>
             <div style={lblStyle}>{th.balance ?? 'Баланс'}</div>
             <div className="coin-balance" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 28, fontWeight: 800, color: '#F5C842', letterSpacing: '-.04em', lineHeight: 1, textShadow: '0 0 20px rgba(245,200,66,0.4)' }}>
-                {fmtBalance(user.balance)} <span style={{ fontSize: 14, opacity: .5 }}>ᚙ</span>
+              <span style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 26, fontWeight: 800, color: '#F5C842', letterSpacing: '-.04em', lineHeight: 1, textShadow: '0 0 20px rgba(245,200,66,0.4)' }}>
+                {fmtBalance(user.balance)} <span style={{ fontSize: 13, opacity: .5 }}>ᚙ</span>
               </span>
-              <button
-                onClick={() => navigate('/shop')}
-                style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(245,200,66,0.1)', border: '1px solid rgba(245,200,66,0.25)', color: '#F5C842', fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-                title="Магазин"
-              >🛍</button>
             </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 7, alignItems: 'flex-end' }}>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 9, color: '#9BA3BC', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 2 }}>{th.jarvis ?? 'JARVIS'}</div>
-              <div style={{ fontSize: 12, fontWeight: 800, color: '#9B85FF' }}>
-                {JARVIS_LEVELS[Math.max(0, jarvisLevel - 1)].name}
-              </div>
-              <div style={{ fontSize: 9, color: '#9BA3BC', marginTop: 1 }}>Lv.{jarvisLevel} / 10</div>
+          <button
+            onClick={() => navigate('/shop')}
+            style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(245,200,66,0.1)', border: '1px solid rgba(245,200,66,0.25)', color: '#F5C842', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+            title="Магазин"
+          >🛍</button>
+        </div>
+
+        {/* Stats strip */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, paddingBottom: 12, borderBottom: '1px solid rgba(255,255,255,0.07)', position: 'relative', zIndex: 1 }}>
+          <div style={statBoxStyle}>
+            <div style={statLblStyle}>ELO</div>
+            <div style={{ fontSize: 13, fontWeight: 800, color: '#9B85FF' }}>{user.elo}</div>
+          </div>
+          <div style={statBoxStyle}>
+            <div style={statLblStyle}>JARVIS</div>
+            <div style={{ fontSize: 11, fontWeight: 800, color: '#9B85FF', lineHeight: 1.2 }}>
+              {JARVIS_LEVELS[Math.max(0, jarvisLevel - 1)].name}
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 9, color: '#9BA3BC', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 2 }}>{th.rank ?? 'Звание'}</div>
-              <div style={{ fontSize: 12, fontWeight: 800, color: '#F5C842' }}>
-                {rankEmoji} {rankLabel}
-              </div>
-              <div style={{ fontSize: 9, color: '#9BA3BC', marginTop: 1 }}>
-                {th.soldiers ?? 'Бойцов'}: {referralCount}
-              </div>
-            </div>
+            <div style={{ fontSize: 9, color: '#6B7494', marginTop: 1 }}>Lv.{jarvisLevel}/10</div>
+          </div>
+          <div style={statBoxStyle}>
+            <div style={statLblStyle}>{th.rank ?? 'Звание'}</div>
+            <div style={{ fontSize: 11, fontWeight: 800, color: '#F5C842', lineHeight: 1.2 }}>{rankEmoji} {rankLabel}</div>
+            <div style={{ fontSize: 9, color: '#6B7494', marginTop: 1 }}>{referralCount} {th.soldiers ?? 'бойц.'}</div>
           </div>
         </div>
 
@@ -470,6 +473,17 @@ const tbaStyle: React.CSSProperties = {
   border: '1px solid rgba(255,255,255,0.13)', display: 'flex',
   alignItems: 'center', justifyContent: 'center', fontSize: 16,
   cursor: 'pointer', color: '#A8B0C8',
+};
+
+const statBoxStyle: React.CSSProperties = {
+  background: 'rgba(255,255,255,0.04)',
+  borderRadius: 10,
+  padding: '7px 10px',
+  textAlign: 'center',
+};
+const statLblStyle: React.CSSProperties = {
+  fontSize: 8, fontWeight: 700, letterSpacing: '.07em',
+  textTransform: 'uppercase', color: '#6B7494', marginBottom: 3,
 };
 
 const tag = (type: 'gold' | 'vi' | 'gr' | 'rd' | 'neutral'): React.CSSProperties => {
