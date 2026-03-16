@@ -90,7 +90,7 @@ router.get("/", async (req, res) => {
       include: {
         _count: { select: { players: { where: { isActive: true } } } },
         players: {
-          where: { userId: req.userId },
+          where: { userId: req.userId, isActive: true },
           select: { id: true, wins: true, losses: true, draws: true, points: true },
         },
       },
@@ -167,7 +167,29 @@ router.post("/:id/join", async (req, res) => {
     const existing = await prisma.tournamentPlayer.findUnique({
       where: { tournamentId_userId: { tournamentId: tournament.id, userId: req.userId } },
     });
-    if (existing) return res.status(400).json({ error: "ALREADY_JOINED" });
+    // Если запись есть, но игрок вышел (isActive: false) — позволяем вернуться
+    if (existing && existing.isActive) return res.status(400).json({ error: "ALREADY_JOINED" });
+    // Если игрок ранее выходил — реактивируем запись вместо создания новой
+    if (existing && !existing.isActive) {
+      if (tournament.entryFee > 0n) {
+        const user = await prisma.user.findUniqueOrThrow({ where: { id: req.userId } });
+        if (user.balance < tournament.entryFee) {
+          return res.status(400).json({ error: "INSUFFICIENT_BALANCE" });
+        }
+        await updateBalance(req.userId, -tournament.entryFee, TransactionType.TOURNAMENT_ENTRY, {
+          tournamentId: tournament.id,
+        });
+        await prisma.tournament.update({
+          where: { id: tournament.id },
+          data: { prizePool: { increment: tournament.entryFee } },
+        });
+      }
+      await prisma.tournamentPlayer.update({
+        where: { id: existing.id },
+        data: { isActive: true, eliminated: false, wins: 0, losses: 0, draws: 0, points: 0 },
+      });
+      return res.json({ ok: true });
+    }
 
     if (tournament.entryFee > 0n) {
       const user = await prisma.user.findUniqueOrThrow({ where: { id: req.userId } });
