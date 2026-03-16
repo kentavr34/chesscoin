@@ -27,7 +27,12 @@ export const clearTokens = () => {
   refreshToken = null;
   ss.del('accessToken');
   ss.del('refreshToken');
+  ss.del('telegramUserId'); // очищаем при logout/смене пользователя
 };
+
+// Хранение telegramId для определения смены пользователя на одном устройстве
+export const setStoredTelegramId = (id: string) => ss.set('telegramUserId', id);
+export const getStoredTelegramId = () => ss.get('telegramUserId');
 
 export const getAccessToken = () => accessToken;
 

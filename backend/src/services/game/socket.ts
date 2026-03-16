@@ -660,16 +660,16 @@ const makeBotMove = async (socket: AuthSocket, io: Server, sessionId: string) =>
 // Уровни JARVIS: thinkMs — время на размышление (мс), maxDepth — потолок глубины.
 // Iterative deepening: углубляемся пока есть время → естественный рост силы.
 const JARVIS_LEVELS = [
-  { level: 1,  name: 'Beginner',     reward: 1000,  thinkMs: 80,   maxDepth: 1,  errorRate: 25 },
-  { level: 2,  name: 'Player',       reward: 3000,  thinkMs: 200,  maxDepth: 2,  errorRate: 18 },
-  { level: 3,  name: 'Fighter',      reward: 5000,  thinkMs: 400,  maxDepth: 3,  errorRate: 14 },
-  { level: 4,  name: 'Warrior',      reward: 7000,  thinkMs: 650,  maxDepth: 4,  errorRate: 10 },
-  { level: 5,  name: 'Expert',       reward: 9000,  thinkMs: 1000, maxDepth: 5,  errorRate: 7  },
-  { level: 6,  name: 'Master',       reward: 12000, thinkMs: 1500, maxDepth: 6,  errorRate: 4  },
-  { level: 7,  name: 'Professional', reward: 15000, thinkMs: 2200, maxDepth: 7,  errorRate: 2  },
-  { level: 8,  name: 'Epic',         reward: 20000, thinkMs: 3000, maxDepth: 9,  errorRate: 1  },
-  { level: 9,  name: 'Legendary',    reward: 30000, thinkMs: 4200, maxDepth: 12, errorRate: 0  },
-  { level: 10, name: 'Mystic',       reward: 50000, thinkMs: 6000, maxDepth: 20, errorRate: 0  },
+  { level: 1,  name: 'Beginner',     reward: 1000,  thinkMs: 80,    maxDepth: 1,  errorRate: 30 },
+  { level: 2,  name: 'Player',       reward: 3000,  thinkMs: 200,   maxDepth: 2,  errorRate: 22 },
+  { level: 3,  name: 'Fighter',      reward: 5000,  thinkMs: 400,   maxDepth: 3,  errorRate: 16 },
+  { level: 4,  name: 'Warrior',      reward: 7000,  thinkMs: 700,   maxDepth: 4,  errorRate: 11 },
+  { level: 5,  name: 'Expert',       reward: 9000,  thinkMs: 1200,  maxDepth: 5,  errorRate: 7  },
+  { level: 6,  name: 'Master',       reward: 12000, thinkMs: 2000,  maxDepth: 6,  errorRate: 4  },
+  { level: 7,  name: 'Professional', reward: 15000, thinkMs: 3000,  maxDepth: 8,  errorRate: 2  },
+  { level: 8,  name: 'Epic',         reward: 20000, thinkMs: 4500,  maxDepth: 11, errorRate: 1  },
+  { level: 9,  name: 'Legendary',    reward: 30000, thinkMs: 7000,  maxDepth: 15, errorRate: 0  },
+  { level: 10, name: 'Mystic',       reward: 50000, thinkMs: 10000, maxDepth: 25, errorRate: 0  },
 ];
 
 const getStockfishMove = (
@@ -730,16 +730,19 @@ const getStockfishMove = (
 // ─── Piece values (centipawns) ───
 const PIECE_VALS: Record<string, number> = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
 
-// ─── Piece-square tables (white's perspective) ───
+// ─── Piece-square tables (white's perspective, row 0 = rank 8, row 7 = rank 1) ───
+// idx_white = r*8+c, idx_black = (7-r)*8+c — автоматически зеркалит для чёрных
 const _PST: Record<string, number[]> = {
-  p: [  0,  0,  0,  0,  0,  0,  0,  0,
-         5, 10, 10,-20,-20, 10, 10,  5,
-         5, -5,-10,  0,  0,-10, -5,  5,
-         0,  0,  0, 20, 20,  0,  0,  0,
-         5,  5, 10, 25, 25, 10,  5,  5,
-        10, 10, 20, 30, 30, 20, 10, 10,
-        50, 50, 50, 50, 50, 50, 50, 50,
-         0,  0,  0,  0,  0,  0,  0,  0 ],
+  // Пешка: большой бонус за продвижение вперёд (row 1 = rank 7 = предпоследний ряд)
+  p: [  0,  0,  0,  0,  0,  0,  0,  0,   // rank 8 (нет пешек)
+        50, 50, 50, 50, 50, 50, 50, 50,   // rank 7 (почти ферзь!)
+        10, 10, 20, 30, 30, 20, 10, 10,   // rank 6
+         5,  5, 10, 25, 25, 10,  5,  5,   // rank 5
+         0,  0,  0, 20, 20,  0,  0,  0,   // rank 4 (центральные пешки вперёд)
+         5, -5,-10,  0,  0,-10, -5,  5,   // rank 3
+         5, 10, 10,-20,-20, 10, 10,  5,   // rank 2 (стартовый ряд белых)
+         0,  0,  0,  0,  0,  0,  0,  0 ], // rank 1
+  // Конь: симметрично, центр лучше
   n: [-50,-40,-30,-30,-30,-30,-40,-50,
       -40,-20,  0,  5,  5,  0,-20,-40,
       -30,  5, 10, 15, 15, 10,  5,-30,
@@ -748,22 +751,25 @@ const _PST: Record<string, number[]> = {
       -30,  0, 10, 15, 15, 10,  0,-30,
       -40,-20,  0,  5,  5,  0,-20,-40,
       -50,-40,-30,-30,-30,-30,-40,-50 ],
+  // Слон: активные диагонали
   b: [-20,-10,-10,-10,-10,-10,-10,-20,
-      -10,  5,  0,  0,  0,  0,  5,-10,
-      -10, 10, 10, 10, 10, 10, 10,-10,
-      -10,  0, 10, 10, 10, 10,  0,-10,
-      -10,  5,  5, 10, 10,  5,  5,-10,
-      -10,  0,  5, 10, 10,  5,  0,-10,
       -10,  0,  0,  0,  0,  0,  0,-10,
+      -10,  0,  5, 10, 10,  5,  0,-10,
+      -10,  5,  5, 10, 10,  5,  5,-10,
+      -10,  0, 10, 10, 10, 10,  0,-10,
+      -10, 10, 10, 10, 10, 10, 10,-10,
+      -10,  5,  0,  0,  0,  0,  5,-10,
       -20,-10,-10,-10,-10,-10,-10,-20 ],
-  r: [  0,  0,  0,  5,  5,  0,  0,  0,
+  // Ладья: контроль 7-го ряда (rank 7 = row 1 для белых)
+  r: [  0,  0,  0,  0,  0,  0,  0,  0,   // rank 8
+         5, 10, 10, 10, 10, 10, 10,  5,   // rank 7 (атака пешек соперника!)
         -5,  0,  0,  0,  0,  0,  0, -5,
         -5,  0,  0,  0,  0,  0,  0, -5,
         -5,  0,  0,  0,  0,  0,  0, -5,
         -5,  0,  0,  0,  0,  0,  0, -5,
         -5,  0,  0,  0,  0,  0,  0, -5,
-         5, 10, 10, 10, 10, 10, 10,  5,
-         0,  0,  0,  0,  0,  0,  0,  0 ],
+         0,  0,  0,  5,  5,  0,  0,  0 ], // rank 1 (d1/e1 — активные поля)
+  // Ферзь: держаться подальше от края
   q: [-20,-10,-10, -5, -5,-10,-10,-20,
       -10,  0,  5,  0,  0,  0,  0,-10,
       -10,  5,  5,  5,  5,  5,  0,-10,
@@ -772,14 +778,15 @@ const _PST: Record<string, number[]> = {
       -10,  0,  5,  5,  5,  5,  0,-10,
       -10,  0,  0,  0,  0,  0,  0,-10,
       -20,-10,-10, -5, -5,-10,-10,-20 ],
-  k: [ 20, 30, 10,  0,  0, 10, 30, 20,
-       20, 20,  0,  0,  0,  0, 20, 20,
-      -10,-20,-20,-20,-20,-20,-20,-10,
+  // Король: РОКИРОВКА = безопасность (row 7 = rank 1 = g1/c1 — лучшие поля)
+  k: [-30,-40,-40,-50,-50,-40,-40,-30,   // rank 8 (около врага — опасно)
+      -30,-40,-40,-50,-50,-40,-40,-30,
+      -30,-40,-40,-50,-50,-40,-40,-30,
+      -30,-40,-40,-50,-50,-40,-40,-30,
       -20,-30,-30,-40,-40,-30,-30,-20,
-      -30,-40,-40,-50,-50,-40,-40,-30,
-      -30,-40,-40,-50,-50,-40,-40,-30,
-      -30,-40,-40,-50,-50,-40,-40,-30,
-      -30,-40,-40,-50,-50,-40,-40,-30 ],
+      -10,-20,-20,-20,-20,-20,-20,-10,
+       20, 20,  0,  0,  0,  0, 20, 20,   // rank 2 (около рокировки)
+       20, 30, 10,  0,  0, 10, 30, 20 ], // rank 1 (g1/c1 — рокировочные поля)
 };
 
 // Evaluate from CURRENT PLAYER's perspective (positive = good for me)

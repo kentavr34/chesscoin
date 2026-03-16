@@ -6,7 +6,7 @@ import { useUserStore } from '@/store/useUserStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { useT } from '@/i18n/useT';
 import type { Lang } from '@/i18n/translations';
-import { profileApi, authApi, warsApi, gamesApi } from '@/api';
+import { profileApi, authApi, warsApi, gamesApi, nationsApi } from '@/api';
 import { fmtBalance, fmtDate, leagueEmoji } from '@/utils/format';
 import type { Transaction, GameHistoryItem } from '@/types';
 import { JARVIS_LEVELS } from '@/components/ui/JarvisModal';
@@ -164,7 +164,16 @@ export const ProfilePage: React.FC = () => {
   const [selectedBadge, setSelectedBadge] = useState<{ name: string; date?: string } | null>(null);
   const [avatarLoading, setAvatarLoading] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [nationFlag, setNationFlag] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (user?.nationId) {
+      nationsApi.getMy().then((r) => {
+        if (r.clan?.flag) setNationFlag(r.clan.flag);
+      }).catch(() => {});
+    }
+  }, [user?.nationId]);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -289,7 +298,8 @@ export const ProfilePage: React.FC = () => {
             </button>
           )}
         </div>
-        <div style={{ fontFamily: 'Inter,sans-serif', fontSize: 18, fontWeight: 700, color: '#F0F2F8', letterSpacing: '-.02em', textAlign: 'center' }}>
+        <div style={{ fontFamily: 'Inter,sans-serif', fontSize: 18, fontWeight: 700, color: '#F0F2F8', letterSpacing: '-.02em', textAlign: 'center', display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
+          {nationFlag && <span style={{ fontSize: 20 }}>{nationFlag}</span>}
           {user.firstName} {user.lastName ?? ''}
         </div>
         <div style={{ fontSize: 12, color: '#8B92A8', marginTop: 3 }}>@{user.username ?? 'unknown'}</div>
@@ -494,16 +504,6 @@ export const ProfilePage: React.FC = () => {
               );
             })}
 
-            <div style={secStyle}>{t.profile.refSection}</div>
-            <div style={{ margin: '0 18px', padding: 14, background: '#1C2030', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 18, display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#F0F2F8' }}>{t.profile.refLink}</div>
-                <div style={{ fontSize: 10, color: '#4A5270', fontFamily: "'JetBrains Mono',monospace", marginTop: 5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  t.me/chessgamecoin_bot?start=ref_{user.telegramId}
-                </div>
-            </div>
-            <button style={goldBtn}>{t.profile.invite}</button>
-          </div>
         </>
       );
       })()}

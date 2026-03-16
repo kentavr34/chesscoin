@@ -2,7 +2,7 @@ declare global { interface Window { __pendingGameCode?: string; } }
 
 import { useEffect } from 'react';
 import { authApi } from '@/api';
-import { setTokens, clearTokens, getAccessToken } from '@/api/client';
+import { setTokens, clearTokens, getAccessToken, setStoredTelegramId, getStoredTelegramId } from '@/api/client';
 import { useUserStore } from '@/store/useUserStore';
 import { setActiveTheme } from '@/lib/theme';
 import type { ThemeKey } from '@/lib/theme';
@@ -49,19 +49,20 @@ export const useAuth = () => {
     // Получаем telegramId текущего пользователя из initData
     const currentTelegramId = tg.initDataUnsafe?.user?.id?.toString();
 
-    // Уже есть токен — проверяем что он принадлежит ТЕКУЩЕМУ пользователю
-    if (getAccessToken()) {
+    // ПРИОРИТЕТ: сравниваем telegramId ДО обращения к API
+    // Если пользователь сменился — сразу очищаем кэш без лишних API вызовов
+    const storedTelegramId = getStoredTelegramId();
+    if (storedTelegramId && currentTelegramId && storedTelegramId !== currentTelegramId) {
+      console.warn(`[Auth] User changed: ${storedTelegramId} → ${currentTelegramId}, clearing cache`);
+      clearTokens();
+      logout(); // очищаем Zustand store
+    } else if (getAccessToken()) {
+      // Тот же пользователь — используем кэшированный токен
       try {
         const user = await authApi.me();
-        // Если telegramId совпадает — всё ок
-        if (!currentTelegramId || user.telegramId?.toString() === currentTelegramId) {
-          setUser(user);
-          if (user.activeTheme) setActiveTheme(user.activeTheme as ThemeKey);
-          return;
-        }
-        // Другой пользователь — очищаем кэш и логинимся заново
-        console.warn('[Auth] Different Telegram user detected, clearing cache');
-        clearTokens();
+        setUser(user);
+        if (user.activeTheme) setActiveTheme(user.activeTheme as ThemeKey);
+        return;
       } catch {
         clearTokens();
       }
@@ -84,6 +85,10 @@ export const useAuth = () => {
       setTokens(result.accessToken, result.refreshToken);
       setUser(result.user);
       if (result.user.activeTheme) setActiveTheme(result.user.activeTheme as ThemeKey);
+
+      // Сохраняем telegramId для детекции смены пользователя
+      const telegramId = (result.user as any).telegramId;
+      if (telegramId) setStoredTelegramId(telegramId.toString());
 
       // Deep link в конкретную игру
       const pendingCode = sessionStorage.getItem('pendingGameCode');

@@ -581,20 +581,43 @@ export const WarsPage: React.FC = () => {
       {/* Моя страна — плашка */}
       {myCountry && (
         <div style={{ margin: '12px 18px', padding: '12px 16px', background: 'linear-gradient(135deg,rgba(245,200,66,0.08),rgba(123,97,255,0.06))', border: '1px solid rgba(245,200,66,0.2)', borderRadius: 18 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
             <span style={{ fontSize: 28 }}>{myCountry.flag}</span>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#F5C842' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#F5C842', textTransform: 'uppercase', letterSpacing: '.05em' }}>
                 {isCommander ? '👑 Главнокомандующий' : '🏴 Боец'}
               </div>
               <div style={{ fontSize: 15, fontWeight: 800, color: '#F0F2F8' }}>{myCountry.nameRu}</div>
-              <div style={{ fontSize: 10, color: '#8B92A8' }}>
-                {myMembership?.warWins ?? 0}W / {myMembership?.warLosses ?? 0}L
-              </div>
             </div>
+          </div>
+          {/* Статистика страны */}
+          <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+            <div style={{ flex: 1, background: 'rgba(245,200,66,0.08)', border: '1px solid rgba(245,200,66,0.15)', borderRadius: 10, padding: '6px 8px', textAlign: 'center' }}>
+              <div style={{ fontSize: 9, color: '#7B8299', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 2 }}>Казна</div>
+              <div style={{ fontSize: 12, fontWeight: 800, color: '#F5C842' }}>{fmtBalance(myCountry.treasury ?? '0')}</div>
+            </div>
+            <div style={{ flex: 1, background: 'rgba(123,97,255,0.08)', border: '1px solid rgba(123,97,255,0.15)', borderRadius: 10, padding: '6px 8px', textAlign: 'center' }}>
+              <div style={{ fontSize: 9, color: '#7B8299', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 2 }}>Бойцов</div>
+              <div style={{ fontSize: 12, fontWeight: 800, color: '#9B85FF' }}>{myCountry.memberCount}</div>
+            </div>
+            <div style={{ flex: 1, background: 'rgba(0,214,143,0.08)', border: '1px solid rgba(0,214,143,0.15)', borderRadius: 10, padding: '6px 8px', textAlign: 'center' }}>
+              <div style={{ fontSize: 9, color: '#7B8299', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 2 }}>Побед</div>
+              <div style={{ fontSize: 12, fontWeight: 800, color: '#00D68F' }}>{myCountry.wins}</div>
+            </div>
+          </div>
+          {/* Кнопки действий */}
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button onClick={() => setSelectedCountryId(myCountry.id)} style={{ flex: 1, padding: '7px 4px', background: 'rgba(123,97,255,0.12)', color: '#9B85FF', border: '1px solid rgba(123,97,255,0.25)', borderRadius: 10, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+              🏴 Бойцы
+            </button>
             {isCommander && !myActiveWar && (
-              <button onClick={() => setShowDeclareWar(true)} style={declareWarBtnStyle}>
+              <button onClick={() => setShowDeclareWar(true)} style={{ flex: 1, padding: '7px 4px', background: 'rgba(255,77,106,0.12)', color: '#FF4D6A', border: '1px solid rgba(255,77,106,0.25)', borderRadius: 10, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                 ⚔️ Война
+              </button>
+            )}
+            {myActiveWar && (
+              <button onClick={() => setSelectedWarId(myActiveWar.id)} style={{ flex: 1, padding: '7px 4px', background: 'rgba(255,77,106,0.12)', color: '#FF4D6A', border: '1px solid rgba(255,77,106,0.25)', borderRadius: 10, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                ⚔️ Сражения
               </button>
             )}
           </div>

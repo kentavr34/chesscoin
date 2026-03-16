@@ -10,6 +10,7 @@ interface PageLayoutProps {
   onBack?: () => void;
   rightAction?: React.ReactNode;
   noScroll?: boolean;
+  noHeader?: boolean;
 }
 
 export const PageLayout: React.FC<PageLayoutProps> = ({
@@ -20,6 +21,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   onBack,
   rightAction,
   noScroll,
+  noHeader,
 }) => {
   const navigate = useNavigate();
 
@@ -30,33 +32,42 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
       background: '#0B0D11', overflow: 'hidden',
     }}>
       {/* Topbar */}
-      <div style={{
+      {!noHeader && <div style={{
+        position: 'relative',
         display: 'flex', alignItems: 'center',
         justifyContent: 'space-between',
         padding: '14px 18px 8px',
         paddingTop: 'max(14px, env(safe-area-inset-top, 14px))',
         flexShrink: 0,
+        minHeight: 56,
       }}>
-        {onBack ? (
-          <button onClick={onBack} style={tbaBtnStyle}>←</button>
-        ) : backTo ? (
-          <button onClick={() => navigate(backTo)} style={tbaBtnStyle}>←</button>
-        ) : (
-          <div style={{ width: 36 }} />
-        )}
-        {logo ? (
-          <span style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 15, fontWeight: 800, color: '#F5C842' }}>
-            ChessCoin
-          </span>
-        ) : (
-          <span style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 13, fontWeight: 700, color: '#F0F2F8' }}>
-            {title}
-          </span>
-        )}
-        <div style={{ minWidth: 36 }}>
+        {/* Left */}
+        <div style={{ width: 36, flexShrink: 0 }}>
+          {onBack ? (
+            <button onClick={onBack} style={tbaBtnStyle}>←</button>
+          ) : backTo ? (
+            <button onClick={() => navigate(backTo)} style={tbaBtnStyle}>←</button>
+          ) : null}
+        </div>
+
+        {/* Center — absolutely centered for pixel-perfect alignment */}
+        <div style={{ position: 'absolute', left: 0, right: 0, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
+          {logo ? (
+            <span style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 15, fontWeight: 800, color: '#F5C842', letterSpacing: '-.01em' }}>
+              ChessCoin
+            </span>
+          ) : title ? (
+            <span style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 13, fontWeight: 700, color: '#F0F2F8', letterSpacing: '-.01em', whiteSpace: 'nowrap' }}>
+              {title}
+            </span>
+          ) : null}
+        </div>
+
+        {/* Right */}
+        <div style={{ width: 36, flexShrink: 0, display: 'flex', justifyContent: 'flex-end' }}>
           {rightAction}
         </div>
-      </div>
+      </div>}
 
       {/* Content */}
       <div style={{

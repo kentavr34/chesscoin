@@ -183,9 +183,9 @@ export const HomePage: React.FC = () => {
   const countryFlag = (user as any).countryFlag ?? '';
 
   return (
-    <PageLayout>
+    <PageLayout noHeader>
       {/* Hero */}
-      <div style={{ ...heroStyle, marginTop: 8 }}>
+      <div style={{ ...heroStyle, marginTop: 'max(8px, env(safe-area-inset-top, 8px))' }}>
         <div style={{ position: 'absolute', top: -40, right: -30, width: 130, height: 130, background: 'radial-gradient(circle,rgba(123,97,255,0.14),transparent 70%)', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', bottom: -8, right: 14, fontSize: 72, opacity: 0.05, color: '#9B85FF', pointerEvents: 'none', lineHeight: 1 }}>♟</div>
 
@@ -207,8 +207,8 @@ export const HomePage: React.FC = () => {
           <div>
             <div style={lblStyle}>Баланс</div>
             <div className="coin-balance" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 20, fontWeight: 800, color: '#F5C842', letterSpacing: '-.04em', lineHeight: 1 }}>
-                {fmtBalance(user.balance)} <span style={{ fontSize: 11, opacity: .5 }}>ᚙ</span>
+              <span style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 14, fontWeight: 800, color: '#F5C842', letterSpacing: '-.04em', lineHeight: 1 }}>
+                {fmtBalance(user.balance)} <span style={{ fontSize: 10, opacity: .5 }}>ᚙ</span>
               </span>
               <button
                 onClick={() => navigate('/shop')}

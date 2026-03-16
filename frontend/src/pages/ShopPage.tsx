@@ -378,6 +378,7 @@ export const ShopPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [actionId, setActionId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [shopFilter, setShopFilter] = useState('ALL');
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -427,7 +428,7 @@ export const ShopPage: React.FC = () => {
     showToast(`Тема «${item.name}» применена`);
   };
 
-  useEffect(() => { loadItems(); }, [loadItems]);
+  useEffect(() => { loadItems(); setShopFilter('ALL'); }, [loadItems]);
 
   const handlePurchase = async (item: ShopItem) => {
     if (!confirm(`Купить «${item.name}» за ${fmtBalance(item.priceCoins)} ᚙ?`)) return;
@@ -507,17 +508,37 @@ export const ShopPage: React.FC = () => {
         ) : items.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 40, color: '#4A5270', fontSize: 13 }}>Нет предметов</div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, padding: '0 18px 24px' }}>
-            {items.map((item) => (
-              <ItemCard
-                key={item.id}
-                item={item}
-                loading={actionId === item.id}
-                onPurchase={() => handlePurchase(item)}
-                onEquip={() => handleEquip(item)}
-              />
-            ))}
-          </div>
+          <>
+            {/* Rarity filter */}
+            {tab !== 'themes' && (
+              <div style={{ display: 'flex', gap: 6, padding: '0 18px 10px', flexWrap: 'wrap' }}>
+                {['ALL', 'COMMON', 'RARE', 'EPIC', 'LEGENDARY'].map(r => {
+                  const active = (shopFilter === r);
+                  return (
+                    <button key={r} onClick={() => setShopFilter(r)} style={{
+                      padding: '4px 10px', border: `1px solid ${active ? (RARITY_COLOR[r] ?? '#F5C842') : 'rgba(255,255,255,0.1)'}`,
+                      borderRadius: 20, background: active ? `${RARITY_COLOR[r] ?? '#F5C842'}18` : 'transparent',
+                      color: active ? (RARITY_COLOR[r] ?? '#F5C842') : '#8B92A8', fontSize: 10, fontWeight: 600,
+                      cursor: 'pointer', fontFamily: 'inherit',
+                    }}>
+                      {r === 'ALL' ? 'Все' : RARITY_LABEL[r]}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, padding: '0 18px 24px' }}>
+              {items.filter(item => shopFilter === 'ALL' || item.rarity === shopFilter).map((item) => (
+                <ItemCard
+                  key={item.id}
+                  item={item}
+                  loading={actionId === item.id}
+                  onPurchase={() => tab === 'themes' ? handleThemePurchase(item) : handlePurchase(item)}
+                  onEquip={() => tab === 'themes' ? handleThemeApply(item) : handleEquip(item)}
+                />
+              ))}
+            </div>
+          </>
         )
       )}
     </PageLayout>
