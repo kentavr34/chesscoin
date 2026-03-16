@@ -122,7 +122,7 @@ warsRouter.get("/countries/:id", authMiddleware, async (req: Request, res: Respo
     res.json({
       country: {
         ...fmtCountry(country, myMembership ? { warWins: myMembership.warWins, warLosses: myMembership.warLosses, joinedAt: myMembership.joinedAt } : null, commanderId),
-        activeWar,
+        activeWar: activeWar ? formatWar(activeWar) : null,
       },
       members: fmtMembers,
       isCommander: commanderId === userId,
@@ -176,7 +176,7 @@ warsRouter.get("/my-country", authMiddleware, async (req: Request, res: Response
         joinedAt: membership.joinedAt,
       },
       isCommander,
-      activeWar,
+      activeWar: activeWar ? formatWar(activeWar) : null,
     });
   } catch (e: any) {
     console.error(e);

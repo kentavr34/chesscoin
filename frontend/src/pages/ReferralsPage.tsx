@@ -24,7 +24,7 @@ const RANK_THRESHOLDS = [
   { rank: 'SERGEANT',     label: 'Сержант',            emoji: '🔷',     minReferrals: 100,       bonus:  5_000,  pct:  3 },
   { rank: 'CORPORAL',     label: 'Ефрейтор',           emoji: '🔹',     minReferrals: 50,        bonus:  4_000,  pct:  2 },
   { rank: 'PRIVATE',      label: 'Рядовой',            emoji: '🪖',     minReferrals: 10,        bonus:  3_000,  pct:  1 },
-  { rank: 'RECRUIT',      label: 'Новобранец',         emoji: '🙂',     minReferrals: 0,         bonus:      0,  pct:  0 },
+  { rank: 'RECRUIT',      label: 'Новобранец',         emoji: '🙂',     minReferrals: 0,         bonus:  3_000,  pct:  0 },
 ];
 
 interface Referral {

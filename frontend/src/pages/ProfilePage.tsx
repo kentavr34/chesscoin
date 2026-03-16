@@ -241,7 +241,7 @@ export const ProfilePage: React.FC = () => {
   const draws = user.draws ?? 0;
   const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
   const lossRate = totalGames > 0 ? Math.round((losses / totalGames) * 100) : 0;
-  const drawRate = 100 - winRate - lossRate;
+  const drawRate = totalGames > 0 ? 100 - winRate - lossRate : 0;
 
   // JARVIS ring chart variables
   const jLvl = (user as any).jarvisLevel ?? 1;
