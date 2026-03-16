@@ -15,10 +15,11 @@ COPY src ./src
 RUN npm run build
 
 # ─── Production image ─────────────────────
-FROM node:20-alpine
+FROM node:20-bookworm-slim
 
-RUN apk add --no-cache openssl \
-    && apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community stockfish
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openssl stockfish \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
