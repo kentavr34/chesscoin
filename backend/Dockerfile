@@ -17,7 +17,8 @@ RUN npm run build
 # ─── Production image ─────────────────────
 FROM node:20-alpine
 
-RUN apk add --no-cache openssl
+RUN apk add --no-cache openssl \
+    && apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community stockfish
 
 WORKDIR /app
 
