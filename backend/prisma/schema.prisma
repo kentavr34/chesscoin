@@ -117,6 +117,12 @@ model User {
   countryMember    CountryMember?
   savedGames       SavedGame[]
 
+  // Puzzles
+  puzzleCompletions PuzzleCompletion[]
+
+  // Trade orders
+  tradeOrders TradeOrder[]
+
   // Служебное
   isBot     Boolean @default(false)
   isBanned  Boolean @default(false)
@@ -851,6 +857,9 @@ enum TransactionType {
   TOURNAMENT_WIN     // выигрыш в турнире
   TON_DEPOSIT        // пополнение через TON
   WALLET_UNLOCK      // разовый платёж за подключение кошелька
+  PUZZLE_REWARD      // награда за прохождение урока/задачи
+  TRADE_BUY          // покупка монет через биржу
+  TRADE_SELL         // продажа монет через биржу
 }
 
 enum TaskType {
@@ -937,6 +946,107 @@ model AdminNotification {
   createdAt DateTime @default(now())
 
   @@index([sentAt])
+}
+
+// ─────────────────────────────────────────
+// CHESS PUZZLES — уроки и ежедневные задания
+// ─────────────────────────────────────────
+model ChessPuzzle {
+  id         String     @id @default(cuid())
+  externalId String?    @unique   // lichess ID или внешний ID
+  type       PuzzleType           // LESSON | DAILY
+
+  titleRu    String
+  titleEn    String
+  descRu     String?
+  descEn     String?
+
+  fen        String               // начальная позиция FEN
+  moves      String               // правильные ходы через пробел "e2e4 e7e5"
+
+  difficulty Int    @default(1)   // 1-100
+  reward     BigInt @default(1000) // монеты за прохождение
+
+  category   String?              // tactics, endgame, opening, etc.
+  month      Int?                 // для ежемесячных DAILY
+  year       Int?
+
+  isActive   Boolean @default(true)
+  sortOrder  Int     @default(0)
+
+  completions PuzzleCompletion[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([type])
+  @@index([difficulty])
+  @@map("chess_puzzles")
+}
+
+model PuzzleCompletion {
+  id       String @id @default(cuid())
+
+  userId   String
+  user     User        @relation(fields: [userId], references: [id])
+
+  puzzleId String
+  puzzle   ChessPuzzle @relation(fields: [puzzleId], references: [id])
+
+  passedAt DateTime @default(now())
+
+  @@unique([userId, puzzleId])
+  @@index([userId])
+  @@map("puzzle_completions")
+}
+
+enum PuzzleType {
+  LESSON
+  DAILY
+}
+
+// ─────────────────────────────────────────
+// TRADE ORDERS — P2P биржа монет
+// ─────────────────────────────────────────
+model TradeOrder {
+  id       String @id @default(cuid())
+
+  userId   String
+  user     User   @relation(fields: [userId], references: [id])
+
+  type     TradeOrderType    // BUY | SELL
+  currency TradeOrderCurrency // TON | STARS
+
+  amount   BigInt // количество монет ᚙ
+  price    Float  // цена за 1000 монет в TON/Stars
+
+  status   TradeOrderStatus @default(OPEN)
+
+  filledByUserId String?
+
+  createdAt  DateTime  @default(now())
+  filledAt   DateTime?
+  cancelledAt DateTime?
+
+  @@index([status])
+  @@index([userId])
+  @@map("trade_orders")
+}
+
+enum TradeOrderType {
+  BUY
+  SELL
+}
+
+enum TradeOrderCurrency {
+  TON
+  STARS
+}
+
+enum TradeOrderStatus {
+  OPEN
+  FILLED
+  CANCELLED
 }
 
 // Хранит реферальную связь до первого auth/login нового игрока

@@ -17,23 +17,23 @@ export const useAuth = () => {
   const init = async () => {
     setLoading(true);
 
-    // Уже есть токен — пробуем получить профиль
-    if (getAccessToken()) {
-      try {
-        const user = await authApi.me();
-        setUser(user);
-        if (user.activeTheme) setActiveTheme(user.activeTheme as ThemeKey);
-        return;
-      } catch {
-        clearTokens();
-      }
-    }
-
-    // Telegram WebApp
+    // Telegram WebApp — получаем текущего пользователя ДО проверки токена
     const tg = (window as any).Telegram?.WebApp;
+
+    // Dev режим без Telegram
     if (!tg || !tg.initData) {
-      // Dev режим без Telegram — используем mock
       if (import.meta.env.DEV) {
+        // В dev режиме просто проверяем токен без смены пользователя
+        if (getAccessToken()) {
+          try {
+            const user = await authApi.me();
+            setUser(user);
+            if (user.activeTheme) setActiveTheme(user.activeTheme as ThemeKey);
+            return;
+          } catch {
+            clearTokens();
+          }
+        }
         console.warn('[Auth] No Telegram WebApp, using dev mock');
         await loginWithInitData('dev_mock');
       } else {
@@ -45,6 +45,27 @@ export const useAuth = () => {
 
     tg.ready();
     tg.expand();
+
+    // Получаем telegramId текущего пользователя из initData
+    const currentTelegramId = tg.initDataUnsafe?.user?.id?.toString();
+
+    // Уже есть токен — проверяем что он принадлежит ТЕКУЩЕМУ пользователю
+    if (getAccessToken()) {
+      try {
+        const user = await authApi.me();
+        // Если telegramId совпадает — всё ок
+        if (!currentTelegramId || user.telegramId?.toString() === currentTelegramId) {
+          setUser(user);
+          if (user.activeTheme) setActiveTheme(user.activeTheme as ThemeKey);
+          return;
+        }
+        // Другой пользователь — очищаем кэш и логинимся заново
+        console.warn('[Auth] Different Telegram user detected, clearing cache');
+        clearTokens();
+      } catch {
+        clearTokens();
+      }
+    }
 
     // Получаем referrer и game deep link из startParam
     const startParam = tg.initDataUnsafe?.start_param ?? '';
