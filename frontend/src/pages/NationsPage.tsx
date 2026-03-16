@@ -32,6 +32,7 @@ export const NationsPage: React.FC = () => {
   const [showJoin, setShowJoin] = useState<string | null>(null);
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [confirmKick, setConfirmKick] = useState<string | null>(null);
+  const [confirmSurrender, setConfirmSurrender] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -97,6 +98,18 @@ export const NationsPage: React.FC = () => {
     await load();
   };
 
+  const doSurrender = async () => {
+    setConfirmSurrender(false);
+    if (!activeWar) return;
+    try {
+      await nationsApi.surrenderWar(activeWar.id);
+      showToast('Ваш клан сдался. Казна передана победителю.', 'info');
+      await load();
+    } catch (e: any) {
+      showToast(e.message ?? 'Ошибка');
+    }
+  };
+
   const isLeader = myMembership?.role === 'COMMANDER';
   const pendingMembers = members.filter(m => m.isPending);
   const activeMembers = members.filter(m => !m.isPending);
@@ -146,6 +159,14 @@ export const NationsPage: React.FC = () => {
                 <div style={{ fontSize: 10, color: '#A8B0C8', textAlign: 'center', marginTop: 6 }}>
                   Завершится: {new Date(activeWar.endAt).toLocaleDateString('ru-RU')}
                 </div>
+              )}
+              {isLeader && (
+                <button
+                  onClick={() => setConfirmSurrender(true)}
+                  style={{ marginTop: 10, width: '100%', padding: '8px', background: 'rgba(255,77,106,0.1)', color: '#FF4D6A', border: '1px solid rgba(255,77,106,0.3)', borderRadius: 10, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                >
+                  🏳️ Сдаться (казна перейдёт противнику)
+                </button>
               )}
             </div>
           )}
@@ -480,6 +501,19 @@ export const NationsPage: React.FC = () => {
           variant="danger"
           onConfirm={() => doKick(confirmKick)}
           onCancel={() => setConfirmKick(null)}
+        />
+      )}
+
+      {/* Подтверждение сдачи в войне */}
+      {confirmSurrender && (
+        <ConfirmModal
+          icon="🏳️"
+          title="Сдаться в войне?"
+          message="Ваша казна будет передана противнику и распределена между его бойцами. Это действие необратимо."
+          confirmLabel="Сдаться"
+          variant="danger"
+          onConfirm={doSurrender}
+          onCancel={() => setConfirmSurrender(false)}
         />
       )}
     </PageLayout>

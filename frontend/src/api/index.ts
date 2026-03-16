@@ -111,6 +111,8 @@ export const nationsApi = {
     api.post<{ success: boolean; war: any }>('/nations/war/challenge', { defenderClanId, duration }),
   acceptWar: (warId: string) =>
     api.post<{ success: boolean }>(`/nations/war/${warId}/accept`),
+  surrenderWar: (warId: string) =>
+    api.post<{ success: boolean }>(`/nations/war/${warId}/surrender`),
 };
 
 // ── CLAN BATTLES ──────────────────────────────────────

@@ -459,6 +459,38 @@ nationsRouter.get("/wars", authMiddleware, async (_req: Request, res: Response) 
   }
 });
 
+// ─── POST /api/v1/nations/war/:id/surrender ──────────────────────────────────
+nationsRouter.post("/war/:id/surrender", authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const { id } = req.params;
+
+    const myMembership = await prisma.clanMember.findUnique({ where: { userId } });
+    if (!myMembership || myMembership.role !== "COMMANDER") {
+      return res.status(403).json({ error: "Только лидер клана может сдаться" });
+    }
+
+    const war = await prisma.clanWar.findUnique({ where: { id } });
+    if (!war || war.status !== "IN_PROGRESS" || war.isPending) {
+      return res.status(400).json({ error: "Война не активна" });
+    }
+    if (myMembership.clanId !== war.attackerClanId && myMembership.clanId !== war.defenderClanId) {
+      return res.status(403).json({ error: "Ваш клан не участвует в этой войне" });
+    }
+
+    // Сдавшийся клан проигрывает, противник — победитель
+    const winnerClanId = myMembership.clanId === war.attackerClanId
+      ? war.defenderClanId
+      : war.attackerClanId;
+
+    await settleWar(id, winnerClanId, "surrender");
+    res.json({ success: true });
+  } catch (err) {
+    console.error("[nations/war/surrender]", err);
+    res.status(500).json({ error: "Ошибка" });
+  }
+});
+
 // ─── GET /api/v1/nations/war-challenges ──────────────────────────────────────
 nationsRouter.get("/war-challenges", authMiddleware, async (req: Request, res: Response) => {
   try {
@@ -1051,6 +1083,109 @@ export async function settleClanBattle(battle: any) {
     challengerWins: chWins,
     defenderWins: defWins,
   });
+}
+
+// ─── settleWar: завершение войны с известным победителем ─────────────────────
+export async function settleWar(
+  warId: string,
+  winnerClanId: string,
+  reason: "time" | "surrender" | "capitulation"
+) {
+  const war = await prisma.clanWar.findUnique({
+    where: { id: warId },
+    include: {
+      attackerClan: { include: { members: { where: { isPending: false } } } },
+      defenderClan: { include: { members: { where: { isPending: false } } } },
+    },
+  });
+  if (!war || war.status === "FINISHED" || war.status === "CANCELLED") return;
+
+  const isAttackerWinner = winnerClanId === war.attackerClanId;
+  const winner = isAttackerWinner ? war.attackerClan : war.defenderClan;
+  const loser  = isAttackerWinner ? war.defenderClan : war.attackerClan;
+  const winnerMembers = winner.members;
+  // Казна проигравшего, зафиксированная при начале/принятии войны
+  const loserTreasury = isAttackerWinner ? war.defenderTreasury : war.attackerTreasury;
+
+  await prisma.clanWar.update({
+    where: { id: warId },
+    data: { status: "FINISHED", winnerClanId, finishedAt: new Date() },
+  });
+
+  await prisma.clan.update({ where: { id: winner.id }, data: { totalWarWins: { increment: 1 } } });
+  await prisma.clan.update({
+    where: { id: loser.id },
+    data: { totalWarLosses: { increment: 1 }, treasury: { decrement: loserTreasury } },
+  });
+
+  io.emit("clan:war_finished", { warId, winnerClanId, reason, prize: loserTreasury.toString() });
+
+  if (loserTreasury <= 0n || winnerMembers.length === 0) return;
+
+  // Распределение: 10% комиссия, топ-3 по warWins получают 20/10/5%, остаток — пропорционально взносу
+  const commission = loserTreasury * 10n / 100n;
+  const prizePool  = loserTreasury - commission;
+
+  const memberWins = winnerMembers
+    .map(m => ({ userId: m.userId, wins: m.warWins, contribution: m.contribution }))
+    .sort((a, b) => b.wins - a.wins);
+
+  const totalContrib = memberWins.reduce((s, m) => s + m.contribution, 0n);
+  const n = BigInt(memberWins.length);
+  const p1 = memberWins[0] ? prizePool * 20n / 100n : 0n;
+  const p2 = memberWins[1] ? prizePool * 10n / 100n : 0n;
+  const p3 = memberWins[2] ? prizePool *  5n / 100n : 0n;
+  const pRest = prizePool - p1 - p2 - p3;
+
+  const reasonLabel = reason === "capitulation" ? "Капитуляция" : reason === "surrender" ? "Сдача" : "Победа";
+
+  for (let i = 0; i < memberWins.length; i++) {
+    const m = memberWins[i];
+    const bonus = i === 0 ? p1 : i === 1 ? p2 : i === 2 ? p3 : 0n;
+    const propShare = totalContrib > 0n ? (pRest * m.contribution) / totalContrib : pRest / n;
+    const total = bonus + propShare;
+    if (total <= 0n) continue;
+
+    await updateBalance(m.userId, total, TransactionType.CLAN_WAR_WIN, {
+      warId, winnerClanId, reason, rank: i < 3 ? i + 1 : null,
+    });
+
+    // Telegram-уведомление победителю
+    try {
+      const user = await prisma.user.findUnique({ where: { id: m.userId }, select: { telegramId: true } });
+      if (user?.telegramId && process.env.BOT_TOKEN) {
+        const amtK = (Number(total) / 1000).toFixed(1);
+        const rankLabel = i === 0 ? "🥇 1 место" : i === 1 ? "🥈 2 место" : i === 2 ? "🥉 3 место" : "за вклад";
+        await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: user.telegramId,
+            text: `🏆 ${winner.flag} <b>${winner.name}</b> победила в войне! (${reasonLabel})\n\nВы получили <b>${amtK}K ᚙ</b> (${rankLabel})`,
+            parse_mode: "HTML",
+          }),
+        });
+      }
+    } catch {}
+  }
+
+  // Публикация в канал
+  const reasonText = reason === "capitulation" ? " (Капитуляция)" : reason === "surrender" ? " (Сдача)" : "";
+  const text = `🏆 <b>Клановая война завершена!${reasonText}</b>\n\n` +
+    `${winner.flag} <b>${winner.name}</b> победила над ${loser.flag} <b>${loser.name}</b>\n` +
+    `Счёт: <b>${war.attackerWins}:${war.defenderWins}</b>\n\n` +
+    `💰 Приз: <b>${(Number(loserTreasury) / 1000).toFixed(1)}K ᚙ</b> распределён между победителями.\n\n` +
+    `<a href="https://t.me/chessgamecoin_bot">Вступи в клан своей страны!</a>`;
+  const channelId = process.env.TELEGRAM_CHANNEL_ID;
+  if (process.env.BOT_TOKEN && channelId) {
+    try {
+      await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: channelId, text, parse_mode: "HTML" }),
+      });
+    } catch {}
+  }
 }
 
 // ─── Публикация войны в Telegram-канал ────────────────────────────────────────

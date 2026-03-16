@@ -9,7 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { updateBalance } from "@/services/economy";
 import { TransactionType } from "@prisma/client";
 import { ensureSystemTournaments } from "@/routes/tournaments";
-import { settleClanBattle } from "@/routes/nations";
+import { settleClanBattle, settleWar } from "@/routes/nations";
 
 const BOT_TOKEN = () => process.env.BOT_TOKEN ?? "";
 const CHANNEL_ID = () => process.env.TELEGRAM_CHANNEL_ID ?? "";
@@ -192,6 +192,56 @@ async function checkClanWarResults() {
     }
   } catch (err) {
     console.error("[Cron/ClanWars]", err);
+  }
+}
+
+// ─── Hourly: капитуляция — если за 24ч никто не ответил/не сыграл ────────────
+async function checkWarCapitulations() {
+  try {
+    const deadline = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    // 1. Вызовы войны, не принятые за 24 часа → атакующий побеждает без трофея
+    const pendingExpired = await prisma.clanWar.findMany({
+      where: { status: "IN_PROGRESS", isPending: true, startedAt: { lte: deadline } },
+    });
+    for (const war of pendingExpired) {
+      await prisma.clanWar.update({
+        where: { id: war.id },
+        data: { status: "FINISHED", winnerClanId: war.attackerClanId, finishedAt: new Date() },
+      });
+      await prisma.clan.update({ where: { id: war.attackerClanId }, data: { totalWarWins: { increment: 1 } } });
+      await prisma.clan.update({ where: { id: war.defenderClanId }, data: { totalWarLosses: { increment: 1 } } });
+
+      // Уведомляем лидера победившего клана
+      const attackerClan = await prisma.clan.findUnique({ where: { id: war.attackerClanId }, select: { leaderId: true, flag: true, name: true } });
+      const defenderClan = await prisma.clan.findUnique({ where: { id: war.defenderClanId }, select: { flag: true, name: true } });
+      if (attackerClan?.leaderId) {
+        const { io } = await import("@/index");
+        io.emit(`user:${attackerClan.leaderId}`, {
+          type: "clan:war_capitulation",
+          warId: war.id,
+          message: `${defenderClan?.flag} ${defenderClan?.name} не приняли вызов — вы победили! (Капитуляция)`,
+        });
+      }
+      console.log(`[Cron/WarCapitulation] War ${war.id}: attacker wins (defender did not accept)`);
+    }
+
+    // 2. Активные войны, в которых ни одна сторона не сыграла за 24ч → атакующий побеждает
+    const activeNoGames = await prisma.clanWar.findMany({
+      where: {
+        status: "IN_PROGRESS",
+        isPending: false,
+        attackerWins: 0,
+        defenderWins: 0,
+        startedAt: { lte: deadline },
+      },
+    });
+    for (const war of activeNoGames) {
+      await settleWar(war.id, war.attackerClanId, "capitulation");
+      console.log(`[Cron/WarCapitulation] War ${war.id}: attacker wins (no games played in 24h)`);
+    }
+  } catch (err) {
+    console.error("[Cron/WarCapitulations]", err);
   }
 }
 
@@ -448,6 +498,7 @@ export function startGameCrons() {
     await checkTournamentResults();
     await checkCountryWarResults();
     await sendWarWarnings();
+    await checkWarCapitulations();
   }, 60 * 60 * 1000);
 
   // Первый запуск через 30 сек после старта сервера
@@ -456,6 +507,7 @@ export function startGameCrons() {
     await checkClanBattleResults();
     await checkTournamentResults();
     await checkCountryWarResults();
+    await checkWarCapitulations();
   }, 30000);
 
   console.log("[Crons] Started: battles, clan wars, country wars, tournaments");
