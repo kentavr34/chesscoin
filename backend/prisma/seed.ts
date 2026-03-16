@@ -365,56 +365,56 @@ async function main() {
 
   // ─── Chess Puzzles (Lessons) ─────────────────────────────────────────────────
   const lessons = [
-    { id: 'lesson_001', title: 'Шах и мат в 1 ход', description: 'Поставьте мат за один ход.', fen: 'r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4', moves: 'h5f7', difficulty: 5, reward: 1000n },
-    { id: 'lesson_002', title: 'Вилка конём', description: 'Используйте вилку конём для выигрыша материала.', fen: 'r1bqkbnr/pppp1ppp/2n5/4p3/3PP3/5N2/PPP2PPP/RNBQKB1R b KQkq d3 0 3', moves: 'c6d4 f3d4', difficulty: 15, reward: 2000n },
-    { id: 'lesson_003', title: 'Связка слона', description: 'Свяжите коня противника.', fen: 'rnbqk2r/pppp1ppp/4pn2/8/1bPP4/2N5/PP2PPPP/R1BQKBNR w KQkq - 2 4', moves: 'c1d2 b4c3 d2c3', difficulty: 20, reward: 3000n },
-    { id: 'lesson_004', title: 'Двойной удар ферзём', description: 'Атакуйте одновременно две фигуры ферзём.', fen: 'r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4', moves: 'd1b3', difficulty: 25, reward: 4000n },
-    { id: 'lesson_005', title: 'Открытый шах', description: 'Используйте открытый шах для выигрыша материала.', fen: 'r2qkb1r/ppp1pppp/2np1n2/8/2BPP1b1/2P2N2/PP3PPP/RNBQK2R w KQkq - 1 6', moves: 'f3e5 g4d1 c4f7 e8f7 e5g4', difficulty: 35, reward: 6000n },
-    { id: 'lesson_006', title: 'Мат Легаля', description: 'Классический ловушечный мат.', fen: 'r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/2NP1N2/PPP2PPP/R1BQK2R b KQkq - 3 4', moves: 'c6e5 c4f7 e8f7 d1h5 f7e6 h5e5', difficulty: 40, reward: 8000n },
-    { id: 'lesson_007', title: 'Мат Эпаулет', description: 'Ладьи ограничивают короля.', fen: '6k1/5ppp/8/8/8/8/8/R5RK w - - 0 1', moves: 'g1g7 g8h8 a1g1', difficulty: 30, reward: 5000n },
-    { id: 'lesson_008', title: 'Принципы дебюта', description: 'Изучите основные принципы дебютной игры.', fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', moves: 'e2e4 e7e5 g1f3 b8c6 f1c4 g8f6', difficulty: 10, reward: 1500n },
-    { id: 'lesson_009', title: 'Итальянская партия', description: 'Изучите итальянское начало.', fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', moves: 'e2e4 e7e5 g1f3 b8c6 f1c4 f8c5 b2b4', difficulty: 20, reward: 3000n },
-    { id: 'lesson_010', title: 'Короткая рокировка', description: 'Выполните рокировку для защиты короля.', fen: 'rnbqk2r/pppp1ppp/4pn2/8/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 2 4', moves: 'e1g1', difficulty: 8, reward: 1200n },
-    { id: 'lesson_011', title: 'Батарея ладей', description: 'Используйте две ладьи на одной линии.', fen: '6k1/8/8/8/8/8/8/R1R3K1 w - - 0 1', moves: 'c1c8 a1c1', difficulty: 22, reward: 3500n },
-    { id: 'lesson_012', title: 'Слоновые окончания', description: 'Используйте слона в эндшпиле.', fen: '8/5k2/8/8/8/8/8/4BK2 w - - 0 1', moves: 'e1d2 f7e6 f1e2 e6d5 e2d3', difficulty: 28, reward: 4500n },
-    { id: 'lesson_013', title: 'Оппозиция королей', description: 'Используйте оппозицию в пешечном окончании.', fen: '8/8/8/3k4/8/3K4/8/8 w - - 0 1', moves: 'd3e3 d5e5 e3f3 e5f5 f3g3', difficulty: 18, reward: 2500n },
-    { id: 'lesson_014', title: 'Проходная пешка', description: 'Проведите пешку в ферзи.', fen: '8/P7/8/8/8/8/8/k1K5 w - - 0 1', moves: 'a7a8q', difficulty: 12, reward: 2000n },
-    { id: 'lesson_015', title: 'Мат двумя слонами', description: 'Поставьте мат двумя слонами.', fen: '8/8/8/8/8/2k5/8/2BB1K2 w - - 0 1', moves: 'd1e2 c3c4 e2d3 c4b4 d3c3 b4a4 c3b4', difficulty: 45, reward: 10000n },
-    { id: 'lesson_016', title: 'Жертва слона на h7', description: 'Классическая жертва слона на h7.', fen: 'r1bq1rk1/ppp2ppp/3p1n2/8/2BnP3/5N2/PPP2PPP/R1BQR1K1 w - - 0 1', moves: 'c4h7 g8h7 d1d4 h7g8 d4h8', difficulty: 55, reward: 15000n },
-    { id: 'lesson_017', title: 'Мат Андерсена', description: 'Красивая комбинация с жертвой.', fen: 'r4rk1/ppp1ppbp/3p1np1/8/4P3/2N2N2/PPP2PPP/R1BR2K1 w - - 0 1', moves: 'f3g5 f6e4 g5f7 a8a7 f7h6', difficulty: 60, reward: 18000n },
-    { id: 'lesson_018', title: 'Ловушка Легаля', description: 'Ловушка в испанской партии.', fen: 'r1bqkb1r/pppp1ppp/2n2n2/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4', moves: 'b5c6 d7c6 f3e5 d8d1 e5f7 e8f7 e1d1', difficulty: 38, reward: 7000n },
-    { id: 'lesson_019', title: 'Сицилианская защита', description: 'Изучите сицилианское начало.', fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', moves: 'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4', difficulty: 25, reward: 4000n },
-    { id: 'lesson_020', title: 'Мат Эпаулет ладьями', description: 'Быстрый мат ладьями на краю.', fen: '6k1/8/6K1/8/8/8/8/7R w - - 0 1', moves: 'h1h8', difficulty: 10, reward: 1500n },
+    { id: 'lesson_001', titleRu: 'Шах и мат в 1 ход', titleEn: 'Checkmate in 1', descRu: 'Поставьте мат за один ход.', descEn: 'Deliver checkmate in one move.', fen: 'r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4', moves: 'h5f7', difficulty: 5, reward: 1000n },
+    { id: 'lesson_002', titleRu: 'Вилка конём', titleEn: 'Knight Fork', descRu: 'Используйте вилку конём для выигрыша материала.', descEn: 'Use a knight fork to win material.', fen: 'r1bqkbnr/pppp1ppp/2n5/4p3/3PP3/5N2/PPP2PPP/RNBQKB1R b KQkq d3 0 3', moves: 'c6d4 f3d4', difficulty: 15, reward: 2000n },
+    { id: 'lesson_003', titleRu: 'Связка слона', titleEn: 'Bishop Pin', descRu: 'Свяжите коня противника.', descEn: 'Pin the opponent\'s knight with a bishop.', fen: 'rnbqk2r/pppp1ppp/4pn2/8/1bPP4/2N5/PP2PPPP/R1BQKBNR w KQkq - 2 4', moves: 'c1d2 b4c3 d2c3', difficulty: 20, reward: 3000n },
+    { id: 'lesson_004', titleRu: 'Двойной удар ферзём', titleEn: 'Queen Double Attack', descRu: 'Атакуйте одновременно две фигуры ферзём.', descEn: 'Attack two pieces simultaneously with the queen.', fen: 'r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4', moves: 'd1b3', difficulty: 25, reward: 4000n },
+    { id: 'lesson_005', titleRu: 'Открытый шах', titleEn: 'Discovered Check', descRu: 'Используйте открытый шах для выигрыша материала.', descEn: 'Use a discovered check to win material.', fen: 'r2qkb1r/ppp1pppp/2np1n2/8/2BPP1b1/2P2N2/PP3PPP/RNBQK2R w KQkq - 1 6', moves: 'f3e5 g4d1 c4f7 e8f7 e5g4', difficulty: 35, reward: 6000n },
+    { id: 'lesson_006', titleRu: 'Мат Легаля', titleEn: 'Legal\'s Mate', descRu: 'Классический ловушечный мат.', descEn: 'A classic trap leading to checkmate.', fen: 'r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/2NP1N2/PPP2PPP/R1BQK2R b KQkq - 3 4', moves: 'c6e5 c4f7 e8f7 d1h5 f7e6 h5e5', difficulty: 40, reward: 8000n },
+    { id: 'lesson_007', titleRu: 'Мат Эпаулет', titleEn: 'Epaulette Mate', descRu: 'Ладьи ограничивают короля.', descEn: 'Rooks restrict the king on both sides.', fen: '6k1/5ppp/8/8/8/8/8/R5RK w - - 0 1', moves: 'g1g7 g8h8 a1g1', difficulty: 30, reward: 5000n },
+    { id: 'lesson_008', titleRu: 'Принципы дебюта', titleEn: 'Opening Principles', descRu: 'Изучите основные принципы дебютной игры.', descEn: 'Learn the fundamental principles of chess openings.', fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', moves: 'e2e4 e7e5 g1f3 b8c6 f1c4 g8f6', difficulty: 10, reward: 1500n },
+    { id: 'lesson_009', titleRu: 'Итальянская партия', titleEn: 'Italian Game', descRu: 'Изучите итальянское начало.', descEn: 'Study the Italian game opening.', fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', moves: 'e2e4 e7e5 g1f3 b8c6 f1c4 f8c5 b2b4', difficulty: 20, reward: 3000n },
+    { id: 'lesson_010', titleRu: 'Короткая рокировка', titleEn: 'Kingside Castling', descRu: 'Выполните рокировку для защиты короля.', descEn: 'Castle kingside to protect your king.', fen: 'rnbqk2r/pppp1ppp/4pn2/8/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 2 4', moves: 'e1g1', difficulty: 8, reward: 1200n },
+    { id: 'lesson_011', titleRu: 'Батарея ладей', titleEn: 'Rook Battery', descRu: 'Используйте две ладьи на одной линии.', descEn: 'Coordinate two rooks on the same file.', fen: '6k1/8/8/8/8/8/8/R1R3K1 w - - 0 1', moves: 'c1c8 a1c1', difficulty: 22, reward: 3500n },
+    { id: 'lesson_012', titleRu: 'Слоновые окончания', titleEn: 'Bishop Endgame', descRu: 'Используйте слона в эндшпиле.', descEn: 'Use the bishop effectively in the endgame.', fen: '8/5k2/8/8/8/8/8/4BK2 w - - 0 1', moves: 'e1d2 f7e6 f1e2 e6d5 e2d3', difficulty: 28, reward: 4500n },
+    { id: 'lesson_013', titleRu: 'Оппозиция королей', titleEn: 'King Opposition', descRu: 'Используйте оппозицию в пешечном окончании.', descEn: 'Use opposition in a pawn endgame.', fen: '8/8/8/3k4/8/3K4/8/8 w - - 0 1', moves: 'd3e3 d5e5 e3f3 e5f5 f3g3', difficulty: 18, reward: 2500n },
+    { id: 'lesson_014', titleRu: 'Проходная пешка', titleEn: 'Passed Pawn Promotion', descRu: 'Проведите пешку в ферзи.', descEn: 'Promote a passed pawn to a queen.', fen: '8/P7/8/8/8/8/8/k1K5 w - - 0 1', moves: 'a7a8q', difficulty: 12, reward: 2000n },
+    { id: 'lesson_015', titleRu: 'Мат двумя слонами', titleEn: 'Two Bishops Mate', descRu: 'Поставьте мат двумя слонами.', descEn: 'Deliver checkmate with two bishops.', fen: '8/8/8/8/8/2k5/8/2BB1K2 w - - 0 1', moves: 'd1e2 c3c4 e2d3 c4b4 d3c3 b4a4 c3b4', difficulty: 45, reward: 10000n },
+    { id: 'lesson_016', titleRu: 'Жертва слона на h7', titleEn: 'Greek Gift Sacrifice', descRu: 'Классическая жертва слона на h7.', descEn: 'The classic Greek gift sacrifice on h7.', fen: 'r1bq1rk1/ppp2ppp/3p1n2/8/2BnP3/5N2/PPP2PPP/R1BQR1K1 w - - 0 1', moves: 'c4h7 g8h7 d1d4 h7g8 d4h8', difficulty: 55, reward: 15000n },
+    { id: 'lesson_017', titleRu: 'Мат Андерсена', titleEn: 'Anderssen\'s Mate', descRu: 'Красивая комбинация с жертвой.', descEn: 'A beautiful combination with a piece sacrifice.', fen: 'r4rk1/ppp1ppbp/3p1np1/8/4P3/2N2N2/PPP2PPP/R1BR2K1 w - - 0 1', moves: 'f3g5 f6e4 g5f7 a8a7 f7h6', difficulty: 60, reward: 18000n },
+    { id: 'lesson_018', titleRu: 'Ловушка Легаля', titleEn: 'Legal\'s Trap', descRu: 'Ловушка в испанской партии.', descEn: 'A classic trap in the Spanish game.', fen: 'r1bqkb1r/pppp1ppp/2n2n2/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4', moves: 'b5c6 d7c6 f3e5 d8d1 e5f7 e8f7 e1d1', difficulty: 38, reward: 7000n },
+    { id: 'lesson_019', titleRu: 'Сицилианская защита', titleEn: 'Sicilian Defence', descRu: 'Изучите сицилианское начало.', descEn: 'Study the Sicilian defence.', fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', moves: 'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4', difficulty: 25, reward: 4000n },
+    { id: 'lesson_020', titleRu: 'Мат Эпаулет ладьями', titleEn: 'Ladder Mate', descRu: 'Быстрый мат ладьями на краю.', descEn: 'Quick checkmate with rooks on the edge.', fen: '6k1/8/6K1/8/8/8/8/7R w - - 0 1', moves: 'h1h8', difficulty: 10, reward: 1500n },
   ];
 
   for (const l of lessons) {
     await (prisma as any).chessPuzzle.upsert({
       where: { id: l.id },
-      update: { title: l.title, description: l.description, fen: l.fen, moves: l.moves, difficulty: l.difficulty, reward: l.reward },
-      create: { id: l.id, type: 'LESSON', title: l.title, description: l.description, fen: l.fen, moves: l.moves, difficulty: l.difficulty, reward: l.reward, isActive: true },
+      update: { titleRu: l.titleRu, titleEn: l.titleEn, descRu: l.descRu, descEn: l.descEn, fen: l.fen, moves: l.moves, difficulty: l.difficulty, reward: l.reward },
+      create: { id: l.id, type: 'LESSON', titleRu: l.titleRu, titleEn: l.titleEn, descRu: l.descRu, descEn: l.descEn, fen: l.fen, moves: l.moves, difficulty: l.difficulty, reward: l.reward, isActive: true },
     });
   }
   console.log(`✅ ${lessons.length} Puzzle Lessons`);
 
   // ─── Chess Puzzles (Daily) ────────────────────────────────────────────────────
   const dailies = [
-    { id: 'daily_001', title: 'Мат в 1 (понедельник)', description: 'Найдите мат в один ход.', fen: '7k/5Q1p/7K/8/8/8/8/8 w - - 0 1', moves: 'f7f8', difficulty: 10, reward: 5000n },
-    { id: 'daily_002', title: 'Тактика (вторник)', description: 'Выиграйте материал тактикой.', fen: 'r1bqkb1r/pppp1ppp/2n5/4p3/2PPn3/2N5/PP2PPPP/R1BQKBNR w KQkq - 1 5', moves: 'd1a4', difficulty: 20, reward: 7000n },
-    { id: 'daily_003', title: 'Эндшпиль (среда)', description: 'Доведите пешку до превращения.', fen: '8/8/8/8/8/3K4/3P4/3k4 w - - 0 1', moves: 'd3e3 d1c1 e3e4 c1d1 d2d4 d1c1 d4d5', difficulty: 30, reward: 8000n },
-    { id: 'daily_004', title: 'Вилка (четверг)', description: 'Поставьте вилку конём.', fen: 'r1bqkb1r/ppppnppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 4', moves: 'f3g5 e7c6 d1h5 g7g6 h5f7', difficulty: 35, reward: 9000n },
-    { id: 'daily_005', title: 'Связка (пятница)', description: 'Используйте связку для выигрыша.', fen: 'r3kb1r/ppp1pppp/2nq1n2/3p4/3P4/2N1PN2/PPP2PPP/R1BQKB1R w KQkq - 2 5', moves: 'f1b5', difficulty: 25, reward: 7000n },
-    { id: 'daily_006', title: 'Мат в 2 (суббота)', description: 'Поставьте мат в два хода.', fen: '4k3/4Q3/4K3/8/8/8/8/8 w - - 0 1', moves: 'e7e5 e8d8 e5d5', difficulty: 15, reward: 6000n },
-    { id: 'daily_007', title: 'Комбинация (воскресенье)', description: 'Найдите лучшую комбинацию.', fen: 'r3r1k1/pp1q1ppp/2n1pn2/3pN3/3P4/2PB4/PP2QPPP/R3R1K1 w - - 0 15', moves: 'e5c6 d7c6 d3h7 g8h7 e2h5 h7g8 h5f7', difficulty: 65, reward: 20000n },
-    { id: 'daily_008', title: 'Пешечный эндшпиль', description: 'Используйте оппозицию.', fen: '8/8/2k5/2p5/2P5/2K5/8/8 w - - 0 1', moves: 'c3b3 c6b5 b3b2 b5c4 b2c2', difficulty: 40, reward: 10000n },
-    { id: 'daily_009', title: 'Жертва качества', description: 'Пожертвуйте ладью за атаку.', fen: 'r2qkb1r/pp3ppp/2n1pn2/3p4/2PP4/2N1PN2/PP3PPP/R1BQK2R w KQkq - 0 8', moves: 'e1g1 d5c4 f1c4', difficulty: 45, reward: 12000n },
-    { id: 'daily_010', title: 'Финал недели', description: 'Сложная позиция — найдите выигрывающий ход.', fen: 'r1b1kb1r/ppq1pppp/2np1n2/2p5/2PPP3/2NB1N2/PP3PPP/R1BQK2R w KQkq c6 0 7', moves: 'd4d5 c6d5 e4d5 c6b4 d3b5 b4d3 c1d2', difficulty: 70, reward: 25000n },
+    { id: 'daily_001', titleRu: 'Мат в 1 (понедельник)', titleEn: 'Mate in 1 (Monday)', descRu: 'Найдите мат в один ход.', descEn: 'Find checkmate in one move.', fen: '7k/5Q1p/7K/8/8/8/8/8 w - - 0 1', moves: 'f7f8', difficulty: 10, reward: 5000n },
+    { id: 'daily_002', titleRu: 'Тактика (вторник)', titleEn: 'Tactics (Tuesday)', descRu: 'Выиграйте материал тактикой.', descEn: 'Win material using tactics.', fen: 'r1bqkb1r/pppp1ppp/2n5/4p3/2PPn3/2N5/PP2PPPP/R1BQKBNR w KQkq - 1 5', moves: 'd1a4', difficulty: 20, reward: 7000n },
+    { id: 'daily_003', titleRu: 'Эндшпиль (среда)', titleEn: 'Endgame (Wednesday)', descRu: 'Доведите пешку до превращения.', descEn: 'Promote the pawn to a queen.', fen: '8/8/8/8/8/3K4/3P4/3k4 w - - 0 1', moves: 'd3e3 d1c1 e3e4 c1d1 d2d4 d1c1 d4d5', difficulty: 30, reward: 8000n },
+    { id: 'daily_004', titleRu: 'Вилка (четверг)', titleEn: 'Fork (Thursday)', descRu: 'Поставьте вилку конём.', descEn: 'Set up a knight fork.', fen: 'r1bqkb1r/ppppnppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 4', moves: 'f3g5 e7c6 d1h5 g7g6 h5f7', difficulty: 35, reward: 9000n },
+    { id: 'daily_005', titleRu: 'Связка (пятница)', titleEn: 'Pin (Friday)', descRu: 'Используйте связку для выигрыша.', descEn: 'Use a pin to win material.', fen: 'r3kb1r/ppp1pppp/2nq1n2/3p4/3P4/2N1PN2/PPP2PPP/R1BQKB1R w KQkq - 2 5', moves: 'f1b5', difficulty: 25, reward: 7000n },
+    { id: 'daily_006', titleRu: 'Мат в 2 (суббота)', titleEn: 'Mate in 2 (Saturday)', descRu: 'Поставьте мат в два хода.', descEn: 'Deliver checkmate in two moves.', fen: '4k3/4Q3/4K3/8/8/8/8/8 w - - 0 1', moves: 'e7e5 e8d8 e5d5', difficulty: 15, reward: 6000n },
+    { id: 'daily_007', titleRu: 'Комбинация (воскресенье)', titleEn: 'Combination (Sunday)', descRu: 'Найдите лучшую комбинацию.', descEn: 'Find the best combination.', fen: 'r3r1k1/pp1q1ppp/2n1pn2/3pN3/3P4/2PB4/PP2QPPP/R3R1K1 w - - 0 15', moves: 'e5c6 d7c6 d3h7 g8h7 e2h5 h7g8 h5f7', difficulty: 65, reward: 20000n },
+    { id: 'daily_008', titleRu: 'Пешечный эндшпиль', titleEn: 'Pawn Endgame', descRu: 'Используйте оппозицию.', descEn: 'Use king opposition to win.', fen: '8/8/2k5/2p5/2P5/2K5/8/8 w - - 0 1', moves: 'c3b3 c6b5 b3b2 b5c4 b2c2', difficulty: 40, reward: 10000n },
+    { id: 'daily_009', titleRu: 'Жертва качества', titleEn: 'Exchange Sacrifice', descRu: 'Пожертвуйте ладью за атаку.', descEn: 'Sacrifice the exchange for a strong attack.', fen: 'r2qkb1r/pp3ppp/2n1pn2/3p4/2PP4/2N1PN2/PP3PPP/R1BQK2R w KQkq - 0 8', moves: 'e1g1 d5c4 f1c4', difficulty: 45, reward: 12000n },
+    { id: 'daily_010', titleRu: 'Финал недели', titleEn: 'Weekend Final', descRu: 'Сложная позиция — найдите выигрывающий ход.', descEn: 'Complex position — find the winning move.', fen: 'r1b1kb1r/ppq1pppp/2np1n2/2p5/2PPP3/2NB1N2/PP3PPP/R1BQK2R w KQkq c6 0 7', moves: 'd4d5 c6d5 e4d5 c6b4 d3b5 b4d3 c1d2', difficulty: 70, reward: 25000n },
   ];
 
   for (const d of dailies) {
     await (prisma as any).chessPuzzle.upsert({
       where: { id: d.id },
-      update: { title: d.title, description: d.description, fen: d.fen, moves: d.moves, difficulty: d.difficulty, reward: d.reward },
-      create: { id: d.id, type: 'DAILY', title: d.title, description: d.description, fen: d.fen, moves: d.moves, difficulty: d.difficulty, reward: d.reward, isActive: true },
+      update: { titleRu: d.titleRu, titleEn: d.titleEn, descRu: d.descRu, descEn: d.descEn, fen: d.fen, moves: d.moves, difficulty: d.difficulty, reward: d.reward },
+      create: { id: d.id, type: 'DAILY', titleRu: d.titleRu, titleEn: d.titleEn, descRu: d.descRu, descEn: d.descEn, fen: d.fen, moves: d.moves, difficulty: d.difficulty, reward: d.reward, isActive: true },
     });
   }
   console.log(`✅ ${dailies.length} Daily Puzzles`);
