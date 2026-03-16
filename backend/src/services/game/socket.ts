@@ -655,17 +655,17 @@ const makeBotMove = async (socket: AuthSocket, io: Server, sessionId: string) =>
 // ─────────────────────────────────────────
 // JARVIS AI — Stockfish UCI
 // ─────────────────────────────────────────
-const JARVIS_LEVELS: Record<number, { skillLevel: number; moveTimeMs: number }> = {
-  1:  { skillLevel: 0,  moveTimeMs: 200 },
-  2:  { skillLevel: 2,  moveTimeMs: 250 },
-  3:  { skillLevel: 4,  moveTimeMs: 300 },
-  4:  { skillLevel: 6,  moveTimeMs: 350 },
-  5:  { skillLevel: 9,  moveTimeMs: 400 },
-  6:  { skillLevel: 12, moveTimeMs: 450 },
-  7:  { skillLevel: 15, moveTimeMs: 500 },
-  8:  { skillLevel: 17, moveTimeMs: 600 },
-  9:  { skillLevel: 19, moveTimeMs: 700 },
-  10: { skillLevel: 20, moveTimeMs: 800 },
+const JARVIS_LEVELS: Record<number, { skillLevel: number; eloLimit: number; moveTimeMs: number }> = {
+  1:  { skillLevel: 0,  eloLimit: 1350, moveTimeMs: 500  },
+  2:  { skillLevel: 2,  eloLimit: 1400, moveTimeMs: 600  },
+  3:  { skillLevel: 4,  eloLimit: 1500, moveTimeMs: 700  },
+  4:  { skillLevel: 6,  eloLimit: 1600, moveTimeMs: 800  },
+  5:  { skillLevel: 9,  eloLimit: 1700, moveTimeMs: 900  },
+  6:  { skillLevel: 12, eloLimit: 1900, moveTimeMs: 1000 },
+  7:  { skillLevel: 15, eloLimit: 2100, moveTimeMs: 1200 },
+  8:  { skillLevel: 17, eloLimit: 2300, moveTimeMs: 1500 },
+  9:  { skillLevel: 19, eloLimit: 2600, moveTimeMs: 2000 },
+  10: { skillLevel: 20, eloLimit: 3000, moveTimeMs: 3000 },
 };
 
 const getStockfishMove = (fen: string, level: number): Promise<{ from: string; to: string } | null> => {
@@ -687,17 +687,38 @@ const getStockfishMove = (fen: string, level: number): Promise<{ from: string; t
       const timeout = setTimeout(() => {
         console.warn('[JARVIS] Stockfish timeout, using random');
         done(getRandomMove(fen));
-      }, cfg.moveTimeMs + 2000);
+      }, cfg.moveTimeMs + 5000);
 
       let buffer = '';
+      // State machine: wait for uciok → send isready → wait for readyok → send position+go
+      let uciOk = false;
+      let readyOk = false;
+
       sf.stdout.on('data', (data: Buffer) => {
         buffer += data.toString();
         const lines = buffer.split('\n');
         buffer = lines.pop() ?? '';
         for (const line of lines) {
-          if (line.startsWith('bestmove')) {
+          const trimmed = line.trim();
+          if (!uciOk && trimmed === 'uciok') {
+            uciOk = true;
+            // Apply options after uciok
+            sf.stdin.write(`setoption name Skill Level value ${cfg.skillLevel}\n`);
+            if (cfg.skillLevel < 20) {
+              sf.stdin.write(`setoption name UCI_LimitStrength value true\n`);
+              sf.stdin.write(`setoption name UCI_Elo value ${cfg.eloLimit}\n`);
+            } else {
+              sf.stdin.write(`setoption name UCI_LimitStrength value false\n`);
+            }
+            sf.stdin.write('isready\n');
+          } else if (!readyOk && trimmed === 'readyok') {
+            readyOk = true;
+            // Now send position and go
+            sf.stdin.write(`position fen ${fen}\n`);
+            sf.stdin.write(`go movetime ${cfg.moveTimeMs}\n`);
+          } else if (trimmed.startsWith('bestmove')) {
             clearTimeout(timeout);
-            const parts = line.trim().split(' ');
+            const parts = trimmed.split(' ');
             const mv = parts[1];
             if (!mv || mv === '(none)') { done(null); return; }
             done({ from: mv.slice(0, 2), to: mv.slice(2, 4) });
@@ -717,11 +738,8 @@ const getStockfishMove = (fen: string, level: number): Promise<{ from: string; t
         if (!resolved) done(getRandomMove(fen));
       });
 
+      // Start UCI handshake
       sf.stdin.write('uci\n');
-      sf.stdin.write(`setoption name Skill Level value ${cfg.skillLevel}\n`);
-      sf.stdin.write(`setoption name UCI_LimitStrength value ${cfg.skillLevel < 20 ? 'true' : 'false'}\n`);
-      sf.stdin.write(`position fen ${fen}\n`);
-      sf.stdin.write(`go movetime ${cfg.moveTimeMs}\n`);
     } catch (err) {
       console.error('[JARVIS] Error:', (err as Error).message);
       resolve(getRandomMove(fen));
