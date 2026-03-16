@@ -117,7 +117,7 @@ export const PuzzleDailyPage: React.FC = () => {
   if (!puzzle) {
     return (
       <PageLayout title="Задача дня" onBack={() => navigate(-1)}>
-        <div style={{ textAlign: 'center', padding: 40, color: '#8B92A8' }}>Задача не найдена</div>
+        <div style={{ textAlign: 'center', padding: 40, color: '#A8B0C8' }}>Задача не найдена</div>
       </PageLayout>
     );
   }
@@ -131,7 +131,7 @@ export const PuzzleDailyPage: React.FC = () => {
       rightAction={
         <button onClick={() => setShowInfo(v => !v)} style={{
           background: 'none', border: 'none', cursor: 'pointer',
-          fontSize: 18, color: '#8B92A8', padding: '4px 8px',
+          fontSize: 18, color: '#A8B0C8', padding: '4px 8px',
         }}>ⓘ</button>
       }
     >
@@ -139,9 +139,9 @@ export const PuzzleDailyPage: React.FC = () => {
 
       {/* Info panel */}
       {showInfo && puzzle.description && (
-        <div style={{ margin: '0 16px 12px', padding: '12px 14px', background: '#1C2030', borderRadius: 12, fontSize: 13, color: '#8B92A8', lineHeight: 1.5, position: 'relative' }}>
+        <div style={{ margin: '0 16px 12px', padding: '12px 14px', background: '#1C2030', borderRadius: 12, fontSize: 13, color: '#A8B0C8', lineHeight: 1.5, position: 'relative' }}>
           <button onClick={() => setShowInfo(false)} style={{
-            position: 'absolute', top: 8, right: 8, background: 'none', border: 'none', cursor: 'pointer', color: '#4A5270', fontSize: 16,
+            position: 'absolute', top: 8, right: 8, background: 'none', border: 'none', cursor: 'pointer', color: '#6B7494', fontSize: 16,
           }}>✕</button>
           {puzzle.description}
         </div>
@@ -152,7 +152,7 @@ export const PuzzleDailyPage: React.FC = () => {
         <div style={{ padding: '4px 14px', background: '#1C2030', borderRadius: 20, fontSize: 12, color: '#F5C842', fontWeight: 600 }}>
           Награда: {Number(puzzle.reward).toLocaleString()} ᚙ
         </div>
-        <div style={{ padding: '4px 14px', background: '#1C2030', borderRadius: 20, fontSize: 12, color: '#8B92A8' }}>
+        <div style={{ padding: '4px 14px', background: '#1C2030', borderRadius: 20, fontSize: 12, color: '#A8B0C8' }}>
           {'★'.repeat(Math.min(5, Math.ceil(puzzle.difficulty / 20)))}{'☆'.repeat(5 - Math.min(5, Math.ceil(puzzle.difficulty / 20)))}
         </div>
       </div>
@@ -184,7 +184,7 @@ export const PuzzleDailyPage: React.FC = () => {
         <div style={{ padding: '16px' }}>
           <button onClick={reset} style={{
             width: '100%', padding: '12px 0', borderRadius: 12, border: 'none', cursor: 'pointer',
-            background: '#1C2030', color: '#8B92A8', fontWeight: 600, fontSize: 14,
+            background: '#1C2030', color: '#A8B0C8', fontWeight: 600, fontSize: 14,
           }}>
             🔄 Начать заново
           </button>
@@ -197,7 +197,7 @@ export const PuzzleDailyPage: React.FC = () => {
           <div style={{ fontSize: 16, fontWeight: 700, color: '#F5C842', marginTop: 8 }}>
             {rewarded ? `+${Number(puzzle.reward).toLocaleString()} ᚙ получено!` : 'Задача уже была решена'}
           </div>
-          <div style={{ fontSize: 13, color: '#8B92A8', marginTop: 4 }}>Приходи завтра за новой задачей!</div>
+          <div style={{ fontSize: 13, color: '#A8B0C8', marginTop: 4 }}>Приходи завтра за новой задачей!</div>
           <button onClick={() => navigate(-1)} style={{
             marginTop: 16, padding: '12px 32px', background: '#F5C842', color: '#0B0D11',
             border: 'none', borderRadius: 12, fontWeight: 700, cursor: 'pointer', fontSize: 14,

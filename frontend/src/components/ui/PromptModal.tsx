@@ -63,7 +63,7 @@ export const PromptModal: React.FC<PromptModalProps> = ({
             width: 28, height: 28, borderRadius: '50%',
             background: 'rgba(255,255,255,0.07)',
             border: '1px solid rgba(255,255,255,0.1)',
-            color: '#8B92A8', fontSize: 14, cursor: 'pointer',
+            color: '#A8B0C8', fontSize: 14, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontFamily: 'inherit',
           }}
@@ -110,7 +110,7 @@ export const PromptModal: React.FC<PromptModalProps> = ({
             width: '100%', padding: '13px',
             background: (!value || Number(value) <= 0) ? 'rgba(123,97,255,0.05)' : 'rgba(123,97,255,0.15)',
             border: '1px solid rgba(123,97,255,0.35)',
-            borderRadius: 14, color: (!value || Number(value) <= 0) ? '#4A5270' : '#9B85FF',
+            borderRadius: 14, color: (!value || Number(value) <= 0) ? '#6B7494' : '#9B85FF',
             fontSize: 14, fontWeight: 700,
             cursor: (!value || Number(value) <= 0) ? 'not-allowed' : 'pointer',
             fontFamily: 'inherit', marginBottom: 8,

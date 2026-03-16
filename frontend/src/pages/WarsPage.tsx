@@ -131,14 +131,14 @@ const DeclareWarModal: React.FC<{
               <span style={{ fontSize: 22 }}>{c.flag}</span>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: '#F0F2F8' }}>{c.nameRu}</div>
-                <div style={{ fontSize: 10, color: '#8B92A8' }}>Бойцов: {c.memberCount} • Побед: {c.wins}</div>
+                <div style={{ fontSize: 10, color: '#A8B0C8' }}>Бойцов: {c.memberCount} • Побед: {c.wins}</div>
               </div>
               {selected === c.id && <span style={{ color: '#F5C842', fontSize: 16 }}>✓</span>}
             </div>
           ))}
         </div>
 
-        <div style={{ fontSize: 11, color: '#8B92A8', marginBottom: 8, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.05em' }}>
+        <div style={{ fontSize: 11, color: '#A8B0C8', marginBottom: 8, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.05em' }}>
           Длительность
         </div>
         <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
@@ -253,7 +253,7 @@ const CountryDetailModal: React.FC<{
             <span style={{ fontSize: 32 }}>{c?.flag ?? '🏴'}</span>
             <div>
               <div style={{ fontSize: 16, fontWeight: 800, color: '#F0F2F8' }}>{c?.nameRu ?? '...'}</div>
-              <div style={{ fontSize: 10, color: '#8B92A8' }}>{c?.nameEn ?? ''}</div>
+              <div style={{ fontSize: 10, color: '#A8B0C8' }}>{c?.nameEn ?? ''}</div>
             </div>
           </div>
           <button onClick={onClose} style={closeBtnStyle}>✕</button>
@@ -273,7 +273,7 @@ const CountryDetailModal: React.FC<{
             <div style={{ fontSize: 12, color: '#C8CDDF' }}>
               {c.activeWar.attackerCountry?.nameRu} vs {c.activeWar.defenderCountry?.nameRu}
             </div>
-            <div style={{ fontSize: 11, color: '#8B92A8', marginTop: 2 }}>
+            <div style={{ fontSize: 11, color: '#A8B0C8', marginTop: 2 }}>
               {c.activeWar.attackerWins} : {c.activeWar.defenderWins}
             </div>
           </div>
@@ -307,7 +307,7 @@ const CountryDetailModal: React.FC<{
           </>
         )}
 
-        <div style={{ fontSize: 11, fontWeight: 700, color: '#8B92A8', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#A8B0C8', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10 }}>
           🏴 Бойцы ({members.length})
         </div>
 
@@ -321,7 +321,7 @@ const CountryDetailModal: React.FC<{
                 <span style={{ fontSize: 16, flexShrink: 0 }}>👑</span>
               )}
               {!m.isCommander && (
-                <span style={{ fontSize: 13, color: '#4A5270', width: 20, textAlign: 'center', flexShrink: 0 }}>{i + 1}</span>
+                <span style={{ fontSize: 13, color: '#6B7494', width: 20, textAlign: 'center', flexShrink: 0 }}>{i + 1}</span>
               )}
               <div
                 onClick={() => { navigate(`/profile/${m.userId}`); onClose(); }}
@@ -337,7 +337,7 @@ const CountryDetailModal: React.FC<{
                   {m.isCommander && <span style={{ fontSize: 10, color: '#F5C842', marginRight: 4 }}>ГЛАВКОМ</span>}
                   {m.user?.firstName} {m.user?.lastName ?? ''}
                 </div>
-                <div style={{ fontSize: 10, color: '#8B92A8' }}>
+                <div style={{ fontSize: 10, color: '#A8B0C8' }}>
                   ELO {m.user?.elo ?? '—'} • {m.warWins}W / {m.warLosses}L
                 </div>
               </div>
@@ -353,7 +353,7 @@ const CountryDetailModal: React.FC<{
             </div>
           ))}
           {members.length === 0 && (
-            <div style={{ textAlign: 'center', color: '#4A5270', padding: 24, fontSize: 13 }}>Нет бойцов</div>
+            <div style={{ textAlign: 'center', color: '#6B7494', padding: 24, fontSize: 13 }}>Нет бойцов</div>
           )}
         </div>
       </div>
@@ -407,7 +407,7 @@ const WarDetailModal: React.FC<{ warId: string; onClose: () => void }> = ({ warI
           <button onClick={onClose} style={closeBtnStyle}>✕</button>
         </div>
 
-        {!war && <div style={{ textAlign: 'center', color: '#4A5270', padding: 32 }}>Загрузка...</div>}
+        {!war && <div style={{ textAlign: 'center', color: '#6B7494', padding: 32 }}>Загрузка...</div>}
 
         {war && (
           <>
@@ -421,7 +421,7 @@ const WarDetailModal: React.FC<{ warId: string; onClose: () => void }> = ({ warI
                 <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 800, color: '#F5C842' }}>
                   {war.attackerWins} : {war.defenderWins}
                 </div>
-                <div style={{ fontSize: 10, color: war.status === 'IN_PROGRESS' ? '#00D68F' : '#8B92A8', marginTop: 2 }}>
+                <div style={{ fontSize: 10, color: war.status === 'IN_PROGRESS' ? '#00D68F' : '#A8B0C8', marginTop: 2 }}>
                   {war.status === 'IN_PROGRESS' ? `⏱ ${formatTime(countdown)}` : '✓ Завершена'}
                 </div>
               </div>
@@ -440,7 +440,7 @@ const WarDetailModal: React.FC<{ warId: string; onClose: () => void }> = ({ warI
             )}
 
             {/* Список партий */}
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#8B92A8', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#A8B0C8', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10 }}>
               Партии ({war.battles?.length ?? 0})
             </div>
             <div style={{ maxHeight: 320, overflowY: 'auto' }}>
@@ -460,7 +460,7 @@ const WarDetailModal: React.FC<{ warId: string; onClose: () => void }> = ({ warI
                       <div style={{ fontSize: 11, fontWeight: 700, color: isDone ? (b.winnerId === b.attackerId ? '#00D68F' : '#FF4D6A') : '#F5C842' }}>
                         {isDone ? (b.winnerId === b.attackerId ? '✓ Победа' : '✗ Поражение') : '⏳ В игре'}
                       </div>
-                      <div style={{ fontSize: 9, color: '#4A5270', marginTop: 2 }}>VS</div>
+                      <div style={{ fontSize: 9, color: '#6B7494', marginTop: 2 }}>VS</div>
                     </div>
                     <div style={{ cursor: 'pointer' }} onClick={() => p2 && navigate(`/profile/${p2.id}`)}>
                       <Avatar user={p2} size="s" />
@@ -486,7 +486,7 @@ const WarDetailModal: React.FC<{ warId: string; onClose: () => void }> = ({ warI
                 );
               })}
               {!(war.battles?.length) && (
-                <div style={{ textAlign: 'center', color: '#4A5270', padding: 24, fontSize: 13 }}>Партий ещё нет</div>
+                <div style={{ textAlign: 'center', color: '#6B7494', padding: 24, fontSize: 13 }}>Партий ещё нет</div>
               )}
             </div>
           </>
@@ -595,7 +595,7 @@ export const WarsPage: React.FC = () => {
         </div>
         <button
           onClick={() => setShowIntro(true)}
-          style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: '#8B92A8', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: '#A8B0C8', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
           ?
         </button>
@@ -658,7 +658,7 @@ export const WarsPage: React.FC = () => {
                   {myActiveWar.attackerWins} : {myActiveWar.defenderWins}
                 </div>
               </div>
-              <div style={{ fontSize: 10, color: '#8B92A8', marginTop: 2 }}>⏱ <WarCountdown initialSeconds={myActiveWar.secondsLeft ?? 0} active={true} /></div>
+              <div style={{ fontSize: 10, color: '#A8B0C8', marginTop: 2 }}>⏱ <WarCountdown initialSeconds={myActiveWar.secondsLeft ?? 0} active={true} /></div>
             </div>
           )}
         </div>
@@ -671,7 +671,7 @@ export const WarsPage: React.FC = () => {
             flex: 1, padding: '8px 4px', border: 'none', borderRadius: 9, fontFamily: 'inherit',
             fontSize: 11, fontWeight: 600, cursor: 'pointer',
             background: tab === t ? '#232840' : 'transparent',
-            color: tab === t ? '#F0F2F8' : '#8B92A8',
+            color: tab === t ? '#F0F2F8' : '#A8B0C8',
           }}>
             {label}
           </button>
@@ -694,7 +694,7 @@ export const WarsPage: React.FC = () => {
             </button>
           </div>
 
-          {loading && <div style={{ textAlign: 'center', color: '#4A5270', padding: 32 }}>Загрузка...</div>}
+          {loading && <div style={{ textAlign: 'center', color: '#6B7494', padding: 32 }}>Загрузка...</div>}
 
           {filteredCountries.map((c, i) => {
             const isMyCountry = myCountry?.id === c.id;
@@ -711,7 +711,7 @@ export const WarsPage: React.FC = () => {
                   transition: 'background .15s',
                 }}
               >
-                <div style={{ fontSize: 11, color: '#4A5270', width: 20, textAlign: 'center', fontFamily: "'JetBrains Mono',monospace" }}>
+                <div style={{ fontSize: 11, color: '#6B7494', width: 20, textAlign: 'center', fontFamily: "'JetBrains Mono',monospace" }}>
                   {i + 1}
                 </div>
                 <span style={{ fontSize: 26 }}>{c.flag}</span>
@@ -720,7 +720,7 @@ export const WarsPage: React.FC = () => {
                     {c.nameRu}
                     {isMyCountry && <span style={{ fontSize: 9, marginLeft: 6, color: '#F5C842', fontWeight: 600 }}>МОЯ</span>}
                   </div>
-                  <div style={{ fontSize: 10, color: '#8B92A8', marginTop: 2 }}>
+                  <div style={{ fontSize: 10, color: '#A8B0C8', marginTop: 2 }}>
                     Бойцов: {c.memberCount} / {c.maxMembers}
                   </div>
                 </div>
@@ -728,14 +728,14 @@ export const WarsPage: React.FC = () => {
                   <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14, fontWeight: 700, color: '#00D68F' }}>
                     {c.wins}W
                   </div>
-                  <div style={{ fontSize: 10, color: '#4A5270' }}>побед</div>
+                  <div style={{ fontSize: 10, color: '#6B7494' }}>побед</div>
                 </div>
               </div>
             );
           })}
 
           {!loading && filteredCountries.length === 0 && (
-            <div style={{ textAlign: 'center', color: '#4A5270', padding: 32, fontSize: 13 }}>Ничего не найдено</div>
+            <div style={{ textAlign: 'center', color: '#6B7494', padding: 32, fontSize: 13 }}>Ничего не найдено</div>
           )}
         </>
       )}
@@ -747,7 +747,7 @@ export const WarsPage: React.FC = () => {
             <div style={{ textAlign: 'center', padding: 40 }}>
               <div style={{ fontSize: 40, marginBottom: 12 }}>🕊️</div>
               <div style={{ fontSize: 14, fontWeight: 600, color: '#F0F2F8', marginBottom: 6 }}>Войн нет</div>
-              <div style={{ fontSize: 12, color: '#8B92A8' }}>
+              <div style={{ fontSize: 12, color: '#A8B0C8' }}>
                 {isCommander ? 'Объяви войну другой стране!' : 'Станови Главнокомандующим и объяви войну!'}
               </div>
             </div>
@@ -799,7 +799,7 @@ export const WarsPage: React.FC = () => {
           {historyWars.length === 0 && (
             <div style={{ textAlign: 'center', padding: 40 }}>
               <div style={{ fontSize: 40, marginBottom: 12 }}>📜</div>
-              <div style={{ fontSize: 13, color: '#8B92A8' }}>История войн пуста</div>
+              <div style={{ fontSize: 13, color: '#A8B0C8' }}>История войн пуста</div>
             </div>
           )}
           {historyWars.map(war => {
@@ -815,10 +815,10 @@ export const WarsPage: React.FC = () => {
                         <div style={{ fontSize: 12, fontWeight: 700, color: attackerWon ? '#F5C842' : '#F0F2F8' }}>
                           {attackerWon && '🏆 '}{war.attackerCountry?.nameRu}
                         </div>
-                        <div style={{ fontSize: 10, color: '#8B92A8' }}>{war.attackerWins} побед</div>
+                        <div style={{ fontSize: 10, color: '#A8B0C8' }}>{war.attackerWins} побед</div>
                       </div>
                     </div>
-                    <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 20, fontWeight: 800, color: '#8B92A8' }}>
+                    <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 20, fontWeight: 800, color: '#A8B0C8' }}>
                       {war.attackerWins}:{war.defenderWins}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }} onClick={() => setSelectedCountryId(war.defenderCountryId)}>
@@ -826,12 +826,12 @@ export const WarsPage: React.FC = () => {
                         <div style={{ fontSize: 12, fontWeight: 700, color: defenderWon ? '#F5C842' : '#F0F2F8' }}>
                           {defenderWon && '🏆 '}{war.defenderCountry?.nameRu}
                         </div>
-                        <div style={{ fontSize: 10, color: '#8B92A8' }}>{war.defenderWins} побед</div>
+                        <div style={{ fontSize: 10, color: '#A8B0C8' }}>{war.defenderWins} побед</div>
                       </div>
                       <span style={{ fontSize: 24 }}>{war.defenderCountry?.flag}</span>
                     </div>
                   </div>
-                  <div style={{ fontSize: 10, color: '#4A5270' }}>
+                  <div style={{ fontSize: 10, color: '#6B7494' }}>
                     {war.battleCount} партий • {war.finishedAt ? new Date(war.finishedAt).toLocaleDateString('ru-RU') : ''}
                   </div>
                 </div>
@@ -880,7 +880,7 @@ function formatTime(seconds: number): string {
 
 const StatBox: React.FC<{ label: string; value: string; color: string }> = ({ label, value, color }) => (
   <div style={{ flex: 1, padding: '8px 10px', background: '#1C2030', borderRadius: 12, textAlign: 'center' }}>
-    <div style={{ fontSize: 10, color: '#4A5270', marginBottom: 3 }}>{label}</div>
+    <div style={{ fontSize: 10, color: '#6B7494', marginBottom: 3 }}>{label}</div>
     <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 700, color }}>{value}</div>
   </div>
 );
@@ -900,7 +900,7 @@ const handleBar: React.CSSProperties = {
 };
 const closeBtnStyle: React.CSSProperties = {
   width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.07)',
-  border: '1px solid rgba(255,255,255,0.1)', color: '#8B92A8', fontSize: 14,
+  border: '1px solid rgba(255,255,255,0.1)', color: '#A8B0C8', fontSize: 14,
   cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center',
 };
 const goldBtnFull: React.CSSProperties = {
@@ -916,7 +916,7 @@ const chipBtn = (active: boolean): React.CSSProperties => ({
   padding: '7px 12px', borderRadius: 10, fontSize: 11, fontWeight: 600, cursor: 'pointer',
   border: '1px solid', fontFamily: 'inherit',
   background: active ? 'rgba(245,200,66,0.12)' : '#1C2030',
-  color: active ? '#F5C842' : '#8B92A8',
+  color: active ? '#F5C842' : '#A8B0C8',
   borderColor: active ? 'rgba(245,200,66,0.3)' : 'rgba(255,255,255,0.07)',
   whiteSpace: 'nowrap' as const,
 });

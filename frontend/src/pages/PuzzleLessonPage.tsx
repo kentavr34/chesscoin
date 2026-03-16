@@ -165,7 +165,7 @@ export const PuzzleLessonPage: React.FC = () => {
   if (!lesson) {
     return (
       <PageLayout title="Урок" onBack={() => navigate(-1)}>
-        <div style={{ textAlign: 'center', padding: 40, color: '#8B92A8' }}>Урок не найден</div>
+        <div style={{ textAlign: 'center', padding: 40, color: '#A8B0C8' }}>Урок не найден</div>
       </PageLayout>
     );
   }
@@ -183,7 +183,7 @@ export const PuzzleLessonPage: React.FC = () => {
           <button key={m} onClick={() => switchMode(m)} style={{
             flex: 1, padding: '10px 0', borderRadius: 12, border: 'none', cursor: 'pointer',
             background: mode === m ? '#7B61FF' : '#1C2030',
-            color: mode === m ? '#fff' : '#8B92A8',
+            color: mode === m ? '#fff' : '#A8B0C8',
             fontWeight: 600, fontSize: 14,
           }}>
             {m === 'lesson' ? '📖 Обучение' : '🎯 Тест'}
@@ -193,7 +193,7 @@ export const PuzzleLessonPage: React.FC = () => {
 
       {/* Description */}
       {lesson.description && (
-        <div style={{ margin: '0 16px 12px', padding: '12px 14px', background: '#13161E', borderRadius: 12, fontSize: 13, color: '#8B92A8', lineHeight: 1.5 }}>
+        <div style={{ margin: '0 16px 12px', padding: '12px 14px', background: '#13161E', borderRadius: 12, fontSize: 13, color: '#A8B0C8', lineHeight: 1.5 }}>
           {lesson.description}
         </div>
       )}
@@ -236,7 +236,7 @@ export const PuzzleLessonPage: React.FC = () => {
           <div style={{ fontSize: 16, fontWeight: 700, color: '#F5C842', marginTop: 8 }}>
             {rewarded ? `+${Number(lesson.reward).toLocaleString()} ᚙ начислено!` : 'Урок уже пройден ранее'}
           </div>
-          <div style={{ fontSize: 13, color: '#8B92A8', marginTop: 4 }}>Отличная работа!</div>
+          <div style={{ fontSize: 13, color: '#A8B0C8', marginTop: 4 }}>Отличная работа!</div>
           <button onClick={() => navigate(-1)} style={{
             marginTop: 16, padding: '12px 32px', background: '#7B61FF', color: '#fff',
             border: 'none', borderRadius: 12, fontWeight: 600, cursor: 'pointer', fontSize: 14,
@@ -251,18 +251,18 @@ export const PuzzleLessonPage: React.FC = () => {
         <div style={{ display: 'flex', gap: 8, padding: '16px', alignItems: 'center' }}>
           <button onClick={stepBack} disabled={moveIdx === 0} style={{
             flex: 1, padding: '12px 0', borderRadius: 12, border: 'none', cursor: moveIdx === 0 ? 'not-allowed' : 'pointer',
-            background: '#1C2030', color: moveIdx === 0 ? '#4A5270' : '#E8EAF0', fontWeight: 600, fontSize: 14,
+            background: '#1C2030', color: moveIdx === 0 ? '#6B7494' : '#E8EAF0', fontWeight: 600, fontSize: 14,
           }}>
             ← Назад
           </button>
-          <div style={{ fontSize: 13, color: '#8B92A8', minWidth: 60, textAlign: 'center' }}>
+          <div style={{ fontSize: 13, color: '#A8B0C8', minWidth: 60, textAlign: 'center' }}>
             {moveIdx}/{moves.length}
           </div>
           <button onClick={stepForward} disabled={moveIdx >= moves.length} style={{
             flex: 1, padding: '12px 0', borderRadius: 12, border: 'none',
             cursor: moveIdx >= moves.length ? 'not-allowed' : 'pointer',
             background: moveIdx >= moves.length ? '#1C2030' : '#7B61FF',
-            color: moveIdx >= moves.length ? '#4A5270' : '#fff',
+            color: moveIdx >= moves.length ? '#6B7494' : '#fff',
             fontWeight: 600, fontSize: 14,
           }}>
             Вперёд →
@@ -275,7 +275,7 @@ export const PuzzleLessonPage: React.FC = () => {
         <div style={{ padding: '0 16px 16px' }}>
           <button onClick={resetTest} style={{
             width: '100%', padding: '12px 0', borderRadius: 12, border: 'none', cursor: 'pointer',
-            background: '#1C2030', color: '#8B92A8', fontWeight: 600, fontSize: 14,
+            background: '#1C2030', color: '#A8B0C8', fontWeight: 600, fontSize: 14,
           }}>
             🔄 Начать заново
           </button>
@@ -283,7 +283,7 @@ export const PuzzleLessonPage: React.FC = () => {
       )}
 
       {/* Difficulty */}
-      <div style={{ textAlign: 'center', paddingBottom: 24, fontSize: 12, color: '#4A5270' }}>
+      <div style={{ textAlign: 'center', paddingBottom: 24, fontSize: 12, color: '#6B7494' }}>
         Сложность: {'★'.repeat(Math.min(5, Math.ceil(lesson.difficulty / 20)))}{'☆'.repeat(5 - Math.min(5, Math.ceil(lesson.difficulty / 20)))}
       </div>
     </PageLayout>

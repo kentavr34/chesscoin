@@ -65,7 +65,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             width: 28, height: 28, borderRadius: '50%',
             background: 'rgba(255,255,255,0.07)',
             border: '1px solid rgba(255,255,255,0.1)',
-            color: '#8B92A8', fontSize: 14, cursor: 'pointer',
+            color: '#A8B0C8', fontSize: 14, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontFamily: 'inherit',
           }}

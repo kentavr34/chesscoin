@@ -9,6 +9,7 @@ import { getSocket } from '@/api/socket';
 import { fmtBalance, fmtTime } from '@/utils/format';
 import { translations } from '@/i18n/translations';
 import type { BattleLobbyItem } from '@/types';
+import { PromptModal } from '@/components/ui/PromptModal';
 
 const showToast = (text: string, type: 'error' | 'info' = 'error') => {
   window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text, type } }));
@@ -44,6 +45,7 @@ export const BattlesPage: React.FC = () => {
   const { user } = useUserStore();
   const [tab, setTab] = useState<Tab>('active');
   const [showCreate, setShowCreate] = useState(false);
+  const [donatePrompt, setDonatePrompt] = useState<string | null>(null);
   const [showInfo, setShowInfo] = useState(() => {
     try { return !localStorage.getItem('battles_info_seen'); } catch { return false; }
   });
@@ -146,13 +148,7 @@ export const BattlesPage: React.FC = () => {
                   <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  const amt = prompt('Сумма доната (ᚙ):');
-                  if (amt && Number(amt) > 0) {
-                    donateToBattle(s.id, amt, (ok) => {
-                      if (ok) showToast('Донат отправлен! Удачи в бою!', 'info');
-                      else showToast('Ошибка доната', 'error');
-                    });
-                  }
+                  setDonatePrompt(s.id);
                 }}
                 style={{ ...watchBtn, color: '#9B85FF', borderColor: 'rgba(123,97,255,0.3)', background: 'rgba(123,97,255,0.08)' }}
               >💸 Донат</button>
@@ -205,6 +201,26 @@ export const BattlesPage: React.FC = () => {
       <button onClick={() => setShowCreate(true)} style={fabStyle}>＋</button>
 
       {showCreate && <CreateBattleModal onClose={() => setShowCreate(false)} />}
+
+      {/* Донат в батл */}
+      {donatePrompt && (
+        <PromptModal
+          icon="💸"
+          title="Донат в батл"
+          message="Поддержи любимца — отправь монеты в банк битвы!"
+          placeholder="Сумма ᚙ"
+          confirmLabel="Отправить донат"
+          onConfirm={(amt) => {
+            const sessionId = donatePrompt;
+            setDonatePrompt(null);
+            donateToBattle(sessionId, amt, (ok) => {
+              if (ok) showToast('Донат отправлен! Удачи в бою!', 'info');
+              else showToast('Ошибка доната', 'error');
+            });
+          }}
+          onCancel={() => setDonatePrompt(null)}
+        />
+      )}
     </PageLayout>
   );
 };

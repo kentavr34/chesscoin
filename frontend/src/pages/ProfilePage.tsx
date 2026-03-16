@@ -762,6 +762,19 @@ export const ProfilePage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Подтверждение удаления аватара */}
+      {confirmDeleteAvatar && (
+        <ConfirmModal
+          icon="🗑️"
+          title="Удалить аватар?"
+          message="Аватар будет удалён безвозвратно."
+          confirmLabel="Удалить"
+          variant="danger"
+          onConfirm={doAvatarDelete}
+          onCancel={() => setConfirmDeleteAvatar(false)}
+        />
+      )}
     </PageLayout>
   );
 };

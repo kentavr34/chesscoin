@@ -4,6 +4,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { tournamentsApi } from '@/api';
 import { fmtBalance } from '@/utils/format';
 import type { TournamentFull } from '@/types';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 
 const showToast = (text: string, type: 'error' | 'info' = 'error') => {
   window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text, type } }));
@@ -26,6 +27,7 @@ export const TournamentsPage: React.FC = () => {
   const [selected, setSelected] = useState<string | null>(null);
   const [donateModal, setDonateModal] = useState<string | null>(null);
   const [joiningId, setJoiningId] = useState<string | null>(null);
+  const [confirmLeave, setConfirmLeave] = useState<string | null>(null);
 
   const load = async () => {
     try {
@@ -50,8 +52,12 @@ export const TournamentsPage: React.FC = () => {
     }
   };
 
-  const handleLeave = async (id: string) => {
-    if (!confirm('Выйти из турнира? Взнос не возвращается!')) return;
+  const handleLeave = (id: string) => {
+    setConfirmLeave(id);
+  };
+
+  const doLeave = async (id: string) => {
+    setConfirmLeave(null);
     try {
       await tournamentsApi.leave(id);
       await load();
@@ -113,6 +119,19 @@ export const TournamentsPage: React.FC = () => {
           tournamentId={donateModal}
           onClose={() => setDonateModal(null)}
           onSuccess={() => { setDonateModal(null); load(); }}
+        />
+      )}
+
+      {/* Подтверждение выхода из турнира */}
+      {confirmLeave && (
+        <ConfirmModal
+          icon="🚪"
+          title="Выйти из турнира?"
+          message="Взнос не возвращается!"
+          confirmLabel="Выйти"
+          variant="danger"
+          onConfirm={() => doLeave(confirmLeave)}
+          onCancel={() => setConfirmLeave(null)}
         />
       )}
     </PageLayout>

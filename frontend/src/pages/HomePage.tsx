@@ -219,8 +219,8 @@ export const HomePage: React.FC = () => {
           <div>
             <div style={lblStyle}>{th.balance ?? 'Баланс'}</div>
             <div className="coin-balance" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 14, fontWeight: 800, color: '#F5C842', letterSpacing: '-.04em', lineHeight: 1 }}>
-                {fmtBalance(user.balance)} <span style={{ fontSize: 10, opacity: .5 }}>ᚙ</span>
+              <span style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 28, fontWeight: 800, color: '#F5C842', letterSpacing: '-.04em', lineHeight: 1, textShadow: '0 0 20px rgba(245,200,66,0.4)' }}>
+                {fmtBalance(user.balance)} <span style={{ fontSize: 14, opacity: .5 }}>ᚙ</span>
               </span>
               <button
                 onClick={() => navigate('/shop')}
@@ -252,7 +252,7 @@ export const HomePage: React.FC = () => {
         {/* Streak */}
         {((user as any).loginStreak ?? 0) >= 2 && (
           <div style={{ marginTop: 10, marginBottom: -2, position: 'relative', zIndex: 1 }}>
-            <span style={{ fontSize: 10, fontWeight: 700, color: '#FF9F43', background: 'rgba(255,159,67,0.12)', padding: '3px 10px', borderRadius: 8, letterSpacing: '.04em' }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: '#FF9040', background: 'linear-gradient(90deg, rgba(255,120,0,0.2), rgba(255,60,0,0.1))', padding: '3px 10px', borderRadius: 8, letterSpacing: '.04em', border: '1px solid rgba(255,120,0,0.3)' }}>
               🔥 {(user as any).loginStreak} дней подряд
             </span>
           </div>
@@ -268,7 +268,7 @@ export const HomePage: React.FC = () => {
                   <span key={i} style={{
                     fontSize: 18,
                     color: i < user.attempts ? '#F5C842' : '#2A2F48',
-                    filter: i < user.attempts ? 'drop-shadow(0 0 5px rgba(245,200,66,0.7))' : undefined,
+                    filter: i < user.attempts ? 'drop-shadow(0 0 8px rgba(245,200,66,0.9)) drop-shadow(0 0 3px rgba(245,200,66,0.6))' : undefined,
                   }}>★</span>
                 ))}
               </div>
@@ -432,9 +432,10 @@ export const HomePage: React.FC = () => {
 // ── Styles ──
 const heroStyle: React.CSSProperties = {
   margin: '6px 18px 0', padding: 18,
-  background: 'linear-gradient(135deg,#181B2E 0%,#12162A 100%)',
-  border: '1px solid rgba(123,97,255,0.18)',
+  background: 'linear-gradient(135deg, #13161E 0%, #1a1d2e 100%)',
+  border: '1px solid rgba(245,200,66,0.15)',
   borderRadius: 22, position: 'relative', overflow: 'hidden',
+  boxShadow: '0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)',
 };
 const stripStyle: React.CSSProperties = {
   margin: '4px 18px 0', padding: '13px 16px',
@@ -443,9 +444,11 @@ const stripStyle: React.CSSProperties = {
   cursor: 'pointer', transition: 'border-color .18s',
 };
 const gameCardStyle: React.CSSProperties = {
-  background: '#1C2030', border: '1px solid rgba(255,255,255,0.07)',
-  borderRadius: 18, padding: '18px 16px',
+  background: 'linear-gradient(135deg, #13161E 0%, #1C2030 100%)',
+  border: '1px solid rgba(255,255,255,0.08)',
+  borderRadius: 20, padding: '18px 16px',
   cursor: 'pointer', textAlign: 'center', transition: 'all .22s',
+  boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
 };
 const secStyle: React.CSSProperties = {
   fontSize: 10, fontWeight: 700, letterSpacing: '.09em',

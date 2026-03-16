@@ -58,7 +58,7 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
           <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 22, fontWeight: 800, color: '#F5C842', textAlign: 'center', marginBottom: 6 }}>
             Запускаем бой!
           </div>
-          <div style={{ fontSize: 13, color: '#8B92A8', textAlign: 'center', marginBottom: 28 }}>
+          <div style={{ fontSize: 13, color: '#A8B0C8', textAlign: 'center', marginBottom: 28 }}>
             J.A.R.V.I.S {selectedLevel.name} · {time < 60 ? `${time} мин` : '1 час'}
           </div>
 
@@ -67,7 +67,7 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
             <div style={playerChipStyle}>
               {resolvedColor === 'white' ? '♔' : '♚'} Вы
             </div>
-            <span style={{ fontSize: 13, fontWeight: 800, color: '#4A5270' }}>VS</span>
+            <span style={{ fontSize: 13, fontWeight: 800, color: '#6B7494' }}>VS</span>
             <div style={{ ...playerChipStyle, background: 'rgba(155,133,255,0.12)', borderColor: 'rgba(155,133,255,0.3)', color: '#9B85FF' }}>
               {resolvedColor === 'white' ? '♚' : '♔'} JARVIS
             </div>
@@ -80,7 +80,7 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
                 {countdown}
               </span>
             </div>
-            <div style={{ fontSize: 11, color: '#4A5270', marginTop: 10, letterSpacing: '.06em' }}>
+            <div style={{ fontSize: 11, color: '#6B7494', marginTop: 10, letterSpacing: '.06em' }}>
               СЕКУНДЫ ДО СТАРТА
             </div>
           </div>
@@ -219,7 +219,7 @@ const backBtnStyle: React.CSSProperties = {
 };
 const sectionLbl: React.CSSProperties = {
   fontSize: 10, fontWeight: 700, letterSpacing: '.09em',
-  textTransform: 'uppercase', color: '#4A5270',
+  textTransform: 'uppercase', color: '#6B7494',
   marginBottom: 10,
 };
 const colorBtnStyle = (active: boolean, c: ColorChoice): React.CSSProperties => ({
@@ -227,7 +227,7 @@ const colorBtnStyle = (active: boolean, c: ColorChoice): React.CSSProperties => 
   minHeight: 80,
   background: active ? 'rgba(245,200,66,0.1)' : '#1C2030',
   border: `2px solid ${active ? '#F5C842' : 'rgba(255,255,255,0.07)'}`,
-  color: active ? '#F5C842' : '#8B92A8',
+  color: active ? '#F5C842' : '#A8B0C8',
   textAlign: 'center', transition: 'all .15s', fontFamily: 'inherit',
   transform: active ? 'scale(1.05)' : 'scale(1)',
 });
@@ -236,7 +236,7 @@ const timeBtnStyle = (active: boolean): React.CSSProperties => ({
   minHeight: 68,
   background: active ? 'rgba(123,97,255,0.15)' : '#1C2030',
   border: `1px solid ${active ? 'rgba(123,97,255,0.4)' : 'rgba(255,255,255,0.07)'}`,
-  color: active ? '#9B85FF' : '#8B92A8',
+  color: active ? '#9B85FF' : '#A8B0C8',
   fontSize: 13, fontWeight: 700, transition: 'all .15s', fontFamily: 'inherit',
   textAlign: 'center' as const,
 });
