@@ -7,6 +7,7 @@ interface PageLayoutProps {
   title?: React.ReactNode;
   logo?: boolean;
   backTo?: string;
+  onBack?: () => void;
   rightAction?: React.ReactNode;
   noScroll?: boolean;
 }
@@ -16,6 +17,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   title,
   logo,
   backTo,
+  onBack,
   rightAction,
   noScroll,
 }) => {
@@ -35,7 +37,9 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
         paddingTop: 'max(14px, env(safe-area-inset-top, 14px))',
         flexShrink: 0,
       }}>
-        {backTo ? (
+        {onBack ? (
+          <button onClick={onBack} style={tbaBtnStyle}>←</button>
+        ) : backTo ? (
           <button onClick={() => navigate(backTo)} style={tbaBtnStyle}>←</button>
         ) : (
           <div style={{ width: 36 }} />
