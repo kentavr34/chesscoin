@@ -727,25 +727,10 @@ const getStockfishMove = (
   });
 };
 
-function chessMinimaxFn(chess: any, depth: number, alpha: number, beta: number, deadline: number): number {
-  if (Date.now() >= deadline) return chessEvalBoardFn(chess);
-  if (depth === 0 || chess.isGameOver()) return chessEvalBoardFn(chess);
-  const moves = chess.moves({ verbose: true });
-  let best = -99999;
-  for (const m of moves) {
-    if (Date.now() >= deadline) break;
-    chess.move(m);
-    const score = -chessMinimaxFn(chess, depth - 1, -beta, -alpha, deadline);
-    chess.undo();
-    if (score > best) best = score;
-    if (score > alpha) alpha = score;
-    if (alpha >= beta) break;
-  }
-  return best;
-}
+// ─── Piece values (centipawns) ───
+const PIECE_VALS: Record<string, number> = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
 
-// Piece-square tables (white's perspective, board[0][0]=a8, board[7][7]=h1)
-// For white: index = r*8+c; for black: mirror index = (7-r)*8+c
+// ─── Piece-square tables (white's perspective) ───
 const _PST: Record<string, number[]> = {
   p: [  0,  0,  0,  0,  0,  0,  0,  0,
          5, 10, 10,-20,-20, 10, 10,  5,
@@ -756,20 +741,20 @@ const _PST: Record<string, number[]> = {
         50, 50, 50, 50, 50, 50, 50, 50,
          0,  0,  0,  0,  0,  0,  0,  0 ],
   n: [-50,-40,-30,-30,-30,-30,-40,-50,
-      -40,-20,  0,  0,  0,  0,-20,-40,
-      -30,  0, 10, 15, 15, 10,  0,-30,
-      -30,  5, 15, 20, 20, 15,  5,-30,
-      -30,  0, 15, 20, 20, 15,  0,-30,
+      -40,-20,  0,  5,  5,  0,-20,-40,
       -30,  5, 10, 15, 15, 10,  5,-30,
+      -30,  0, 15, 20, 20, 15,  0,-30,
+      -30,  5, 15, 20, 20, 15,  5,-30,
+      -30,  0, 10, 15, 15, 10,  0,-30,
       -40,-20,  0,  5,  5,  0,-20,-40,
       -50,-40,-30,-30,-30,-30,-40,-50 ],
   b: [-20,-10,-10,-10,-10,-10,-10,-20,
-      -10,  0,  0,  0,  0,  0,  0,-10,
-      -10,  0,  5, 10, 10,  5,  0,-10,
-      -10,  5,  5, 10, 10,  5,  5,-10,
-      -10,  0, 10, 10, 10, 10,  0,-10,
-      -10, 10, 10, 10, 10, 10, 10,-10,
       -10,  5,  0,  0,  0,  0,  5,-10,
+      -10, 10, 10, 10, 10, 10, 10,-10,
+      -10,  0, 10, 10, 10, 10,  0,-10,
+      -10,  5,  5, 10, 10,  5,  5,-10,
+      -10,  0,  5, 10, 10,  5,  0,-10,
+      -10,  0,  0,  0,  0,  0,  0,-10,
       -20,-10,-10,-10,-10,-10,-10,-20 ],
   r: [  0,  0,  0,  5,  5,  0,  0,  0,
         -5,  0,  0,  0,  0,  0,  0, -5,
@@ -779,24 +764,100 @@ const _PST: Record<string, number[]> = {
         -5,  0,  0,  0,  0,  0,  0, -5,
          5, 10, 10, 10, 10, 10, 10,  5,
          0,  0,  0,  0,  0,  0,  0,  0 ],
+  q: [-20,-10,-10, -5, -5,-10,-10,-20,
+      -10,  0,  5,  0,  0,  0,  0,-10,
+      -10,  5,  5,  5,  5,  5,  0,-10,
+        0,  0,  5,  5,  5,  5,  0, -5,
+       -5,  0,  5,  5,  5,  5,  0, -5,
+      -10,  0,  5,  5,  5,  5,  0,-10,
+      -10,  0,  0,  0,  0,  0,  0,-10,
+      -20,-10,-10, -5, -5,-10,-10,-20 ],
+  k: [ 20, 30, 10,  0,  0, 10, 30, 20,
+       20, 20,  0,  0,  0,  0, 20, 20,
+      -10,-20,-20,-20,-20,-20,-20,-10,
+      -20,-30,-30,-40,-40,-30,-30,-20,
+      -30,-40,-40,-50,-50,-40,-40,-30,
+      -30,-40,-40,-50,-50,-40,-40,-30,
+      -30,-40,-40,-50,-50,-40,-40,-30,
+      -30,-40,-40,-50,-50,-40,-40,-30 ],
 };
 
+// Evaluate from CURRENT PLAYER's perspective (positive = good for me)
 function chessEvalBoardFn(chess: any): number {
-  const vals: Record<string, number> = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
-  let score = 0;
+  if (chess.isCheckmate()) return -29000; // current player mated
+  if (chess.isDraw() || chess.isStalemate() || chess.isThreefoldRepetition()) return 0;
+
+  const turn = chess.turn();
+  let whiteScore = 0;
   const board = chess.board();
+
   for (let r = 0; r < 8; r++) {
     for (let c = 0; c < 8; c++) {
       const sq = board[r][c];
       if (!sq) continue;
       const isWhite = sq.color === "w";
-      const v = vals[sq.type] || 0;
+      const v = PIECE_VALS[sq.type] || 0;
       const pst = _PST[sq.type];
-      const pos = pst ? (pst[isWhite ? r * 8 + c : (7 - r) * 8 + c] || 0) : 0;
-      score += isWhite ? (v + pos) : -(v + pos);
+      const idx = isWhite ? r * 8 + c : (7 - r) * 8 + c;
+      const pos = pst ? (pst[idx] || 0) : 0;
+      whiteScore += isWhite ? (v + pos) : -(v + pos);
     }
   }
-  return score;
+
+  // Mobility: more options = better position
+  whiteScore += (chess.moves().length) * (turn === 'w' ? 2 : -2);
+
+  return turn === 'w' ? whiteScore : -whiteScore;
+}
+
+// Move ordering: captures first (MVV-LVA heuristic), promotions, checks
+function orderMoves(moves: any[]): any[] {
+  return moves.slice().sort((a, b) => {
+    const aScore = (a.captured ? (PIECE_VALS[a.captured] || 0) * 10 - (PIECE_VALS[a.piece] || 0) : 0)
+      + (a.flags?.includes('p') ? 800 : 0); // promotion bonus
+    const bScore = (b.captured ? (PIECE_VALS[b.captured] || 0) * 10 - (PIECE_VALS[b.piece] || 0) : 0)
+      + (b.flags?.includes('p') ? 800 : 0);
+    return bScore - aScore;
+  });
+}
+
+// Quiescence search: resolve all captures to avoid horizon effect
+function quiescence(chess: any, alpha: number, beta: number, deadline: number, depth = 0): number {
+  if (Date.now() >= deadline || depth > 8) return chessEvalBoardFn(chess);
+  const stand = chessEvalBoardFn(chess);
+  if (stand >= beta) return beta;
+  if (stand > alpha) alpha = stand;
+
+  const captures = chess.moves({ verbose: true }).filter((m: any) => m.captured || m.flags?.includes('p'));
+  for (const m of captures) {
+    if (Date.now() >= deadline) break;
+    chess.move(m);
+    const score = -quiescence(chess, -beta, -alpha, deadline, depth + 1);
+    chess.undo();
+    if (score >= beta) return beta;
+    if (score > alpha) alpha = score;
+  }
+  return alpha;
+}
+
+function chessMinimaxFn(chess: any, depth: number, alpha: number, beta: number, deadline: number): number {
+  if (Date.now() >= deadline) return chessEvalBoardFn(chess);
+  if (chess.isGameOver()) return chessEvalBoardFn(chess);
+  if (depth === 0) return quiescence(chess, alpha, beta, deadline);
+
+  const moves = orderMoves(chess.moves({ verbose: true }));
+  let best = -99999;
+
+  for (const m of moves) {
+    if (Date.now() >= deadline) break;
+    chess.move(m);
+    const score = -chessMinimaxFn(chess, depth - 1, -beta, -alpha, deadline);
+    chess.undo();
+    if (score > best) best = score;
+    if (score > alpha) alpha = score;
+    if (alpha >= beta) break;
+  }
+  return best;
 }
 const getRandomMove = (fen: string): { from: string; to: string } | null => {
   try {

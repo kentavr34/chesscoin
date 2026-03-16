@@ -31,6 +31,8 @@ import { nationsRouter } from "@/routes/nations";
 import { warsRouter } from "@/routes/wars";
 import tournamentsRouter from "@/routes/tournaments";
 import screenshotterRouter from "@/routes/screenshotter";
+import puzzlesRouter from "@/routes/puzzles";
+import gamesRouter from "@/routes/games";
 import rateLimit from "express-rate-limit";
 
 const app = express();
@@ -68,6 +70,8 @@ app.use(`${API}/nations`,       nationsRouter);
 app.use(`${API}/wars`,          warsRouter);
 app.use(`${API}/tournaments`,   tournamentsRouter);
 app.use(`${API}/screenshotter`, screenshotterRouter);
+app.use(`${API}/puzzles`,       puzzlesRouter);
+app.use(`${API}/games`,         gamesRouter);
 
 app.get("/health", async (_req, res) => {
   const cfg = await prisma.platformConfig.findUnique({ where: { id: "singleton" } });

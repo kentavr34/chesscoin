@@ -12,7 +12,6 @@ export const BottomNav: React.FC = () => {
     { path: '/battles',      icon: '⚔', label: t.nav.battles      },
     { path: '/wars',         icon: '🌍', label: t.nav.wars         },
     { path: '/tournaments',  icon: '🏆', label: t.nav.tournaments  },
-    { path: '/tasks',        icon: '📋', label: t.nav.tasks        },
     { path: '/profile',      icon: '👤', label: t.nav.profile      },
   ];
 

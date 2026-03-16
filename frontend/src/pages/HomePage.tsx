@@ -173,21 +173,28 @@ export const HomePage: React.FC = () => {
     }
   }, []);
 
-  const rightAction = (
-    <button onClick={() => navigate('/shop')} style={tbaStyle}>🛍</button>
-  );
+  // Военное звание по рефералам
+  const referralCount = (user as any).referralCount ?? 0;
+  const militaryRank = (user as any).militaryRank;
+  const rankLabel = militaryRank?.label ?? 'Рядовой';
+  const rankEmoji = militaryRank?.emoji ?? '🪖';
+
+  // Флаг страны
+  const countryFlag = (user as any).countryFlag ?? '';
 
   return (
-    <PageLayout logo rightAction={rightAction}>
+    <PageLayout>
       {/* Hero */}
-      <div style={heroStyle}>
+      <div style={{ ...heroStyle, marginTop: 8 }}>
         <div style={{ position: 'absolute', top: -40, right: -30, width: 130, height: 130, background: 'radial-gradient(circle,rgba(123,97,255,0.14),transparent 70%)', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', bottom: -8, right: 14, fontSize: 72, opacity: 0.05, color: '#9B85FF', pointerEvents: 'none', lineHeight: 1 }}>♟</div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14, position: 'relative', zIndex: 1 }}>
           <Avatar user={user} size="l" gold />
           <div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: '#F0F2F8', letterSpacing: '-.02em' }}>{user.firstName}</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: '#F0F2F8', letterSpacing: '-.02em' }}>
+              {user.firstName}{countryFlag ? ` ${countryFlag}` : ''}
+            </div>
             <div style={{ fontSize: 11, color: '#8B92A8', marginTop: 2 }}>@{user.username ?? 'unknown'}</div>
             <div style={{ display: 'flex', gap: 5, marginTop: 6, flexWrap: 'wrap' }}>
               <span style={tag('gold')}>{leagueEmoji[user.league]} #{1}</span>
@@ -199,17 +206,33 @@ export const HomePage: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', paddingBottom: 12, borderBottom: '1px solid rgba(255,255,255,0.07)', position: 'relative', zIndex: 1 }}>
           <div>
             <div style={lblStyle}>Баланс</div>
-            <div className="coin-balance" style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 28, fontWeight: 800, color: '#F5C842', letterSpacing: '-.04em', lineHeight: 1 }}>
-              {fmtBalance(user.balance)} <span style={{ fontSize: 14, opacity: .5 }}>ᚙ</span>
+            <div className="coin-balance" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 20, fontWeight: 800, color: '#F5C842', letterSpacing: '-.04em', lineHeight: 1 }}>
+                {fmtBalance(user.balance)} <span style={{ fontSize: 11, opacity: .5 }}>ᚙ</span>
+              </span>
+              <button
+                onClick={() => navigate('/shop')}
+                style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(245,200,66,0.1)', border: '1px solid rgba(245,200,66,0.25)', color: '#F5C842', fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                title="Магазин"
+              >🛍</button>
             </div>
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 10, color: '#4A5270', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 4 }}>JARVIS</div>
-            <div style={{ fontSize: 14, fontWeight: 800, color: '#9B85FF' }}>
-              {JARVIS_LEVELS[Math.max(0, jarvisLevel - 1)].name}
+          <div style={{ display: 'flex', gap: 16 }}>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: 9, color: '#4A5270', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 3 }}>JARVIS</div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#9B85FF' }}>
+                {JARVIS_LEVELS[Math.max(0, jarvisLevel - 1)].name}
+              </div>
+              <div style={{ fontSize: 9, color: '#4A5270', marginTop: 1 }}>Lv.{jarvisLevel} / 10</div>
             </div>
-            <div style={{ fontSize: 9, color: '#4A5270', marginTop: 2 }}>
-              Lv.{jarvisLevel} / 10
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: 9, color: '#4A5270', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 3 }}>Звание</div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#F5C842' }}>
+                {rankEmoji} {rankLabel}
+              </div>
+              <div style={{ fontSize: 9, color: '#4A5270', marginTop: 1 }}>
+                Бойцов: {referralCount}
+              </div>
             </div>
           </div>
         </div>
@@ -237,24 +260,19 @@ export const HomePage: React.FC = () => {
                   }}>★</span>
                 ))}
               </div>
-              {user.attempts < user.maxAttempts && (
-                <button onClick={() => setShowAttempts(true)} style={attPlusStyle}>+</button>
-              )}
+              <button onClick={() => setShowAttempts(true)} style={attPlusStyle}>+</button>
             </div>
           </div>
-          {/* Таймер восстановления попыток — всегда виден */}
+          {/* Таймер — показываем до следующей звезды или "все звёзды есть" */}
           <div style={{ textAlign: 'right' }}>
             {user.attempts >= user.maxAttempts ? (
-              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: '#4A5270' }}>
-                ⏱ 00:00
-              </div>
+              <div style={{ fontSize: 10, color: '#4A5270' }}>Все ★ восстановлены</div>
             ) : (
-              <div
-                onClick={() => setShowAttempts(true)}
-                style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: '#F5C842', cursor: 'pointer' }}
-              >
-                ⏱ {attemptTimer > 0 ? fmtCountdown(attemptTimer) : '...'}
-                <div style={{ fontSize: 9, color: '#8B92A8', marginTop: 1 }}>до +1 ★</div>
+              <div onClick={() => setShowAttempts(true)} style={{ cursor: 'pointer' }}>
+                <div style={{ fontSize: 9, color: '#8B92A8', marginBottom: 2 }}>до следующей ★ осталось</div>
+                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14, fontWeight: 700, color: '#F5C842' }}>
+                  ⏱ {attemptTimer > 0 ? fmtCountdown(attemptTimer) : '...'}
+                </div>
               </div>
             )}
           </div>

@@ -52,6 +52,22 @@ export const WaitingForOpponent: React.FC<Props> = ({ session }) => {
 
   return (
     <div style={rootStyle}>
+      {/* Кнопки управления сверху */}
+      <div style={{ position: 'absolute', top: 16, left: 16, right: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 10 }}>
+        <button
+          onClick={() => navigate('/battles')}
+          title="Свернуть (батл останется активным)"
+          style={{ ...navBtn, color: '#8B92A8' }}
+        >
+          ← Свернуть
+        </button>
+        <button
+          onClick={handleCancel}
+          style={{ ...navBtn, color: '#FF4D6A', borderColor: 'rgba(255,77,106,0.25)' }}
+        >
+          Отменить
+        </button>
+      </div>
       <div style={cardStyle}>
         {/* Пульсирующий индикатор */}
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
@@ -127,10 +143,16 @@ export const WaitingForOpponent: React.FC<Props> = ({ session }) => {
 };
 
 // Styles
+const navBtn: React.CSSProperties = {
+  padding: '7px 14px', background: 'rgba(255,255,255,0.05)',
+  border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10,
+  fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+  color: '#8B92A8',
+};
 const rootStyle: React.CSSProperties = {
   position: 'absolute', inset: 0, background: '#0B0D11',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
-  padding: '24px 20px',
+  padding: '60px 20px 24px',
 };
 const cardStyle: React.CSSProperties = {
   width: '100%', maxWidth: 340,

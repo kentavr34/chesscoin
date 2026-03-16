@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { fmtBalance } from '@/utils/format';
 import { haptic } from '@/lib/haptic';
 import { sound } from '@/lib/sound';
@@ -23,7 +24,6 @@ const RESULT_META = {
   draw: { emoji: '🤝', titleColor: '#8B92A8', glow: 'rgba(139,146,168,0.15)', bg: 'linear-gradient(160deg,#12141c 0%,#0B0D11 60%)', border: 'rgba(255,255,255,0.12)' },
 };
 
-const AUTO_CLOSE_SEC = 3;
 
 export const GameResultModal: React.FC<GameResultModalProps> = ({
   result,
@@ -36,7 +36,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
   onRematch,
 }) => {
   const t = useT();
-  const [countdown, setCountdown] = useState(AUTO_CLOSE_SEC);
+  const navigate = useNavigate();
   const [visible, setVisible] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -51,24 +51,13 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
     return () => clearTimeout(timer);
   }, []);
 
-  // Авто-закрытие через 3 сек
-  useEffect(() => {
-    timerRef.current = setInterval(() => {
-      setCountdown((c) => {
-        if (c <= 1) {
-          clearInterval(timerRef.current!);
-          handleClose();
-          return 0;
-        }
-        return c - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timerRef.current!);
-  }, []);
-
   const handleClose = () => {
     setVisible(false);
-    setTimeout(onClose, 220);
+    clearInterval(timerRef.current!);
+    setTimeout(() => {
+      onClose();
+      navigate('/');
+    }, 220);
   };
 
   const cfg = RESULT_META[result];
@@ -123,18 +112,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
           }}
         >✕</button>
 
-        {/* Таймер авто-закрытия */}
-        <div style={{
-          position: 'absolute', top: 14, left: 14,
-          width: 28, height: 28, borderRadius: '50%',
-          background: 'rgba(255,255,255,0.05)',
-          border: `2px solid ${cfg.border}`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontFamily: "'JetBrains Mono',monospace",
-          fontSize: 11, fontWeight: 700, color: '#8B92A8',
-        }}>
-          {countdown}
-        </div>
+        {/* Нет авто-закрытия — игрок закрывает сам */}
 
         {/* Эмодзи */}
         <div style={{ textAlign: 'center', fontSize: 56, lineHeight: 1, marginBottom: 12 }}>
@@ -273,7 +251,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
         {/* Кнопка Реванш (только бот-игра) */}
         {botLevelName && onRematch && (
           <button
-            onClick={() => { clearInterval(timerRef.current!); onRematch(); }}
+            onClick={() => { setVisible(false); setTimeout(onRematch, 220); }}
             style={{
               width: '100%', marginTop: 10,
               padding: '12px', background: 'transparent',

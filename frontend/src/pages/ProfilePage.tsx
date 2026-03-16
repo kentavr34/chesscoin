@@ -6,7 +6,7 @@ import { useUserStore } from '@/store/useUserStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { useT } from '@/i18n/useT';
 import type { Lang } from '@/i18n/translations';
-import { profileApi, authApi, warsApi } from '@/api';
+import { profileApi, authApi, warsApi, gamesApi } from '@/api';
 import { fmtBalance, fmtDate, leagueEmoji } from '@/utils/format';
 import type { Transaction, GameHistoryItem } from '@/types';
 import { JARVIS_LEVELS } from '@/components/ui/JarvisModal';
@@ -159,6 +159,7 @@ export const ProfilePage: React.FC = () => {
   const [gamesList, setGamesList] = useState<GameHistoryItem[]>([]);
   const [showTxModal, setShowTxModal] = useState(false);
   const [savedGames, setSavedGames] = useState<any[]>([]);
+  const [savedGameIds, setSavedGameIds] = useState<Set<string>>(new Set());
   const [replayGame, setReplayGame] = useState<{ pgn: string; title?: string } | null>(null);
   const [selectedBadge, setSelectedBadge] = useState<{ name: string; date?: string } | null>(null);
   const [avatarLoading, setAvatarLoading] = useState(false);
@@ -204,7 +205,13 @@ export const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     if (tab === 'analytics') {
-      profileApi.getGames().then((r) => setGamesList(r.games)).catch(() => {});
+      profileApi.getGames().then((r) => {
+        setGamesList(r.games);
+        // Загружаем список сохранённых ID для иконок
+        gamesApi.savedList().then((list: any[]) => {
+          setSavedGameIds(new Set(list.map((s: any) => s.session?.id ?? s.sessionId)));
+        }).catch(() => {});
+      }).catch(() => {});
     }
     if (tab === 'saves') {
       warsApi.savedGames().then((r) => setSavedGames(r.savedGames)).catch(() => {});
@@ -461,7 +468,28 @@ export const ProfilePage: React.FC = () => {
                   {/* Footer row */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 6, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
                     <span style={{ fontSize: 9, color: '#4A5270' }}>{g.type === 'BOT' ? '🤖 Бот' : g.type === 'BATTLE' ? '⚔ Батл' : '🤝 Дружеская'} · {g.finishedAt ? fmtDate(g.finishedAt) : ''}</span>
-                    {g.pgn && <span style={{ fontSize: 9, color: '#4A5270' }}>↗ разобрать</span>}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {g.pgn && <span style={{ fontSize: 9, color: '#4A5270' }}>↗ разобрать</span>}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const isSaved = savedGameIds.has(g.sessionId);
+                          if (isSaved) {
+                            gamesApi.unsave(g.sessionId).then(() => setSavedGameIds(s => { const n = new Set(s); n.delete(g.sessionId); return n; }));
+                          } else {
+                            gamesApi.save(g.sessionId).then(() => setSavedGameIds(s => new Set([...s, g.sessionId])));
+                          }
+                        }}
+                        style={{
+                          background: 'none', border: 'none', cursor: 'pointer', padding: 2,
+                          fontSize: 14, color: savedGameIds.has(g.sessionId) ? '#F5C842' : '#4A5270',
+                          lineHeight: 1,
+                        }}
+                        title={savedGameIds.has(g.sessionId) ? 'Убрать из сохранённых' : 'Сохранить партию'}
+                      >
+                        {savedGameIds.has(g.sessionId) ? '🔖' : '🔖'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
@@ -552,6 +580,7 @@ export const ProfilePage: React.FC = () => {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '0 18px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, padding: '0 18px' }}>
               {[...((user as any).jarvisBadges ?? [])].reverse().map((badgeName: string, i: number) => {
                 const lvlData = JARVIS_LEVELS.find(l => l.name === badgeName);
                 const badgeDates = (user as any).jarvisBadgeDates as Record<string, string> | null;
@@ -563,27 +592,21 @@ export const ProfilePage: React.FC = () => {
                 };
                 const color = colors[badgeName] ?? '#9B85FF';
                 return (
-                  <div key={i} onClick={() => setSelectedBadge({ name: badgeName, date: dateStr })} style={{ background: 'linear-gradient(135deg,#1C2030,#13161F)', border: `1px solid ${color}40`, borderRadius: 18, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }}>
-                    <div style={{ width: 52, height: 52, borderRadius: 14, background: `${color}18`, border: `2px solid ${color}60`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <span style={{ fontSize: 22 }}>🤖</span>
+                  <div key={i} onClick={() => setSelectedBadge({ name: badgeName, date: dateStr })} style={{ background: 'linear-gradient(135deg,#1C2030,#13161F)', border: `1px solid ${color}40`, borderRadius: 14, padding: '12px 10px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, cursor: 'pointer', textAlign: 'center' }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 12, background: `${color}18`, border: `2px solid ${color}60`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <span style={{ fontSize: 18 }}>🤖</span>
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color, marginBottom: 3 }}>{t.gameResult.jarvisCert}</div>
-                      <div style={{ fontSize: 16, fontWeight: 800, color: '#F0F2F8' }}>{badgeName}</div>
-                      <div style={{ fontSize: 11, color: '#8B92A8', marginTop: 2 }}>{t.profile.level} {lvlData?.level ?? '?'} · +{((lvlData?.reward ?? 0) / 1000).toFixed(0)}K ᚙ</div>
-                      {dateStr && (
-                        <div style={{ fontSize: 10, color: '#4A5270', marginTop: 4 }}>
-                          📅 {new Date(dateStr).toLocaleDateString()}
-                        </div>
-                      )}
-                    </div>
-                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <div style={{ fontSize: 18 }}>✓</div>
-                      <div style={{ fontSize: 9, color: '#4A5270', marginTop: 2 }}>{t.profile.passed}</div>
-                    </div>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: '#F0F2F8' }}>{badgeName}</div>
+                    <div style={{ fontSize: 9, color, fontWeight: 700 }}>Lv.{lvlData?.level ?? '?'}</div>
+                    {dateStr && (
+                      <div style={{ fontSize: 9, color: '#4A5270' }}>
+                        {new Date(dateStr).toLocaleDateString()}
+                      </div>
+                    )}
                   </div>
                 );
               })}
+              </div>
             </div>
           )}
         </>

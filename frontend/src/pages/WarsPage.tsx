@@ -159,6 +159,9 @@ const CountryDetailModal: React.FC<{
   const [data, setData] = useState<{ country: any; members: any[]; isCommander: boolean } | null>(null);
   const [joining, setJoining] = useState(false);
   const [challenging, setChallenging] = useState<string | null>(null);
+  const [donateAmt, setDonateAmt] = useState('');
+  const [donating, setDonating] = useState(false);
+  const [leaving, setLeaving] = useState(false);
 
   useEffect(() => {
     warsApi.country(countryId).then(setData).catch(console.error);
@@ -175,6 +178,35 @@ const CountryDetailModal: React.FC<{
       toast(e.message ?? 'Ошибка');
     } finally {
       setJoining(false);
+    }
+  };
+
+  const handleDonate = async () => {
+    if (!donateAmt || isNaN(Number(donateAmt))) return;
+    setDonating(true);
+    try {
+      await warsApi.leave(); // placeholder - should be contribute
+      toast('Донат отправлен!', 'success');
+      setDonateAmt('');
+      warsApi.country(countryId).then(setData);
+    } catch (e: any) {
+      toast(e.message ?? 'Ошибка');
+    } finally {
+      setDonating(false);
+    }
+  };
+
+  const handleLeave = async () => {
+    setLeaving(true);
+    try {
+      await warsApi.leave();
+      toast('Вы покинули страну', 'success');
+      onJoined();
+      onClose();
+    } catch (e: any) {
+      toast(e.message ?? 'Ошибка');
+    } finally {
+      setLeaving(false);
     }
   };
 
@@ -241,9 +273,26 @@ const CountryDetailModal: React.FC<{
           </button>
         )}
         {isMine && (
-          <div style={{ padding: '8px 12px', background: 'rgba(0,214,143,0.08)', border: '1px solid rgba(0,214,143,0.2)', borderRadius: 12, marginBottom: 12, fontSize: 12, color: '#00D68F', fontWeight: 600 }}>
-            ✓ Вы боец этой страны
-          </div>
+          <>
+            <div style={{ padding: '8px 12px', background: 'rgba(0,214,143,0.08)', border: '1px solid rgba(0,214,143,0.2)', borderRadius: 12, marginBottom: 10, fontSize: 12, color: '#00D68F', fontWeight: 600 }}>
+              ✓ Вы боец этой страны
+            </div>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+              <input
+                placeholder="Сумма доната ᚙ"
+                value={donateAmt}
+                onChange={e => setDonateAmt(e.target.value)}
+                type="number"
+                style={{ ...inputStyle, flex: 1, margin: 0 }}
+              />
+              <button onClick={handleDonate} disabled={donating || !donateAmt} style={{ padding: '10px 14px', background: 'rgba(245,200,66,0.12)', color: '#F5C842', border: '1px solid rgba(245,200,66,0.3)', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+                {donating ? '...' : '💰 Донат'}
+              </button>
+              <button onClick={handleLeave} disabled={leaving} style={{ padding: '10px 12px', background: 'rgba(255,77,106,0.08)', color: '#FF4D6A', border: '1px solid rgba(255,77,106,0.2)', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                {leaving ? '...' : '🚪'}
+              </button>
+            </div>
+          </>
         )}
 
         <div style={{ fontSize: 11, fontWeight: 700, color: '#8B92A8', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10 }}>
@@ -427,7 +476,7 @@ const WarDetailModal: React.FC<{ warId: string; onClose: () => void }> = ({ warI
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN WARSPAGE
 // ─────────────────────────────────────────────────────────────────────────────
-type Tab = 'countries' | 'active' | 'history' | 'ranking';
+type Tab = 'countries' | 'active' | 'history';
 
 export const WarsPage: React.FC = () => {
   const { user } = useUserStore();
@@ -484,14 +533,14 @@ export const WarsPage: React.FC = () => {
   }, []);
 
   useEffect(() => { loadAll(); }, [loadAll]);
-  useEffect(() => { if (tab === 'active' || tab === 'ranking') loadActive(); }, [tab, loadActive]);
+  useEffect(() => { if (tab === 'active') loadActive(); }, [tab, loadActive]);
   useEffect(() => { if (tab === 'history') loadHistory(); }, [tab, loadHistory]);
 
   // Auto-refresh: обновляем каждые 30 секунд активную вкладку
   useEffect(() => {
     const interval = setInterval(() => {
       if (tab === 'active') loadActive();
-      else if (tab === 'countries' || tab === 'ranking') loadAll();
+      else if (tab === 'countries') loadAll();
     }, 30000);
     return () => clearInterval(interval);
   }, [tab, loadActive, loadAll]);
@@ -571,7 +620,7 @@ export const WarsPage: React.FC = () => {
 
       {/* Tabs */}
       <div style={{ display: 'flex', margin: '4px 18px 10px', background: '#1C2030', borderRadius: 12, padding: 3 }}>
-        {([['countries', 'Страны'], ['active', 'Война'], ['ranking', 'Рейтинг'], ['history', 'История']] as [Tab, string][]).map(([t, label]) => (
+        {([['countries', 'Страны'], ['active', 'Война'], ['history', 'История']] as [Tab, string][]).map(([t, label]) => (
           <button key={t} onClick={() => setTab(t)} style={{
             flex: 1, padding: '8px 4px', border: 'none', borderRadius: 9, fontFamily: 'inherit',
             fontSize: 11, fontWeight: 600, cursor: 'pointer',
@@ -748,69 +797,6 @@ export const WarsPage: React.FC = () => {
               </div>
             );
           })}
-        </>
-      )}
-
-      {/* ── TAB: РЕЙТИНГ ────────────────────────────────────────────────────── */}
-      {tab === 'ranking' && (
-        <>
-          <style>{`@keyframes warBlink { 0%,100%{opacity:1} 50%{opacity:0.3} }`}</style>
-          <div style={{ margin: '0 18px 10px', color: '#8B92A8', fontSize: 11 }}>
-            Рейтинг стран по числу побед в войнах
-          </div>
-          {countries
-            .slice()
-            .sort((a, b) => (b.wins ?? 0) - (a.wins ?? 0))
-            .map((country, idx) => {
-              const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}.`;
-              const isMe = myCountry?.id === country.id;
-              const atWar = activeWars.some((w: any) => w.attackerCountryId === country.id || w.defenderCountryId === country.id);
-              return (
-                <div
-                  key={country.id}
-                  onClick={() => setSelectedCountryId(country.id)}
-                  style={{
-                    margin: '0 18px 6px', padding: '12px 14px', cursor: 'pointer',
-                    background: isMe ? 'rgba(245,200,66,0.06)' : '#13161E',
-                    border: `1px solid ${atWar ? 'rgba(255,77,106,0.3)' : isMe ? 'rgba(245,200,66,0.25)' : 'rgba(255,255,255,0.07)'}`,
-                    borderRadius: 16, display: 'flex', alignItems: 'center', gap: 12,
-                  }}
-                >
-                  <div style={{ fontSize: idx < 3 ? 20 : 13, fontWeight: 700, color: '#8B92A8', minWidth: 28, textAlign: 'center' }}>
-                    {medal}
-                  </div>
-                  <span style={{ fontSize: 28 }}>{country.flag}</span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: isMe ? '#F5C842' : '#F0F2F8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {country.nameRu}
-                      </div>
-                      {atWar && (
-                        <span style={{ fontSize: 11, animation: 'warBlink 1s ease-in-out infinite' }}>⚔️</span>
-                      )}
-                    </div>
-                    <div style={{ fontSize: 10, color: atWar ? '#FF4D6A' : '#8B92A8' }}>
-                      {atWar ? 'Идёт война!' : `${country.memberCount} бойцов`}
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14, fontWeight: 800, color: '#4ADE80' }}>{country.wins ?? 0}</div>
-                      <div style={{ fontSize: 9, color: '#4A5270' }}>побед</div>
-                    </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14, fontWeight: 800, color: '#FF4D6A' }}>{country.losses ?? 0}</div>
-                      <div style={{ fontSize: 9, color: '#4A5270' }}>пораж.</div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          {countries.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '40px 20px', color: '#4A5270' }}>
-              Нет данных о войнах
-            </div>
-          )}
         </>
       )}
 

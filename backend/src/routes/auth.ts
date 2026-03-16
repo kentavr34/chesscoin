@@ -89,6 +89,9 @@ router.get("/me", authMiddleware, async (req: Request, res: Response) => {
             },
           },
         },
+        countryMember: {
+          include: { country: { select: { flag: true, nameRu: true, nameEn: true, code: true } } },
+        },
       },
     });
 
@@ -144,6 +147,10 @@ const formatUser = (user: any) => ({
   createdAt: user.createdAt,
   hasSeenWarsIntro: user.hasSeenWarsIntro ?? false,
   activeTheme: user.activeTheme ?? 'default',
+  // Страна
+  countryFlag: user.countryMember?.country?.flag ?? null,
+  countryName: user.countryMember?.country?.nameRu ?? null,
+  countryCode: user.countryMember?.country?.code ?? null,
 });
 
 export default router;

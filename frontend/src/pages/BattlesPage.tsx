@@ -28,12 +28,25 @@ const donateToBattle = (sessionId: string, amount: string, cb: (ok: boolean) => 
 
 type Tab = 'active' | 'waiting';
 
+const BATTLES_INFO = `⚔️ Батлы — PvP режим
+
+Ставьте монеты на кон и сражайтесь с реальными игроками!
+
+• Ставка: от 10,000 ᚙ
+• Комиссия стола: 10% от банка
+• Победитель получает 90% от суммарной ставки
+• ELO меняется только в батлах (K=32)
+• Создайте публичный батл или пригласите друга по ссылке`;
+
 export const BattlesPage: React.FC = () => {
   const navigate = useNavigate();
   const { battles, sessions, upsertSession } = useGameStore();
   const { user } = useUserStore();
   const [tab, setTab] = useState<Tab>('active');
   const [showCreate, setShowCreate] = useState(false);
+  const [showInfo, setShowInfo] = useState(() => {
+    try { return !localStorage.getItem('battles_info_seen'); } catch { return false; }
+  });
 
   const activeSessions = sessions.filter((s) => s.status === 'IN_PROGRESS');
   const waitingSessions = battles; // из лобби сокета
@@ -50,12 +63,40 @@ export const BattlesPage: React.FC = () => {
     });
   };
 
+  const closeInfo = () => {
+    setShowInfo(false);
+    try { localStorage.setItem('battles_info_seen', '1'); } catch {}
+  };
+
   const rightAction = (
-    <button onClick={() => setShowCreate(true)} style={tbaStyle}>＋</button>
+    <div style={{ display: 'flex', gap: 8 }}>
+      <button onClick={() => setShowInfo(true)} style={tbaStyle} title="Информация">ⓘ</button>
+      <button onClick={() => setShowCreate(true)} style={{ ...tbaStyle, color: '#F5C842', borderColor: 'rgba(245,200,66,0.3)' }}>＋</button>
+    </div>
   );
 
   return (
     <PageLayout title="Батлы" backTo="/" rightAction={rightAction}>
+      {/* Инфо-панель */}
+      {showInfo && (
+        <div style={{
+          margin: '4px 18px 10px',
+          background: 'rgba(123,97,255,0.08)',
+          border: '1px solid rgba(123,97,255,0.2)',
+          borderRadius: 16, padding: 16, position: 'relative',
+        }}>
+          <button onClick={closeInfo} style={{
+            position: 'absolute', top: 10, right: 10,
+            width: 24, height: 24, borderRadius: '50%',
+            background: 'rgba(255,255,255,0.07)', border: 'none',
+            color: '#8B92A8', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>✕</button>
+          <div style={{ fontSize: 12, color: '#9B85FF', whiteSpace: 'pre-line', lineHeight: 1.6 }}>
+            {BATTLES_INFO}
+          </div>
+        </div>
+      )}
       {/* Сегментные вкладки */}
       <div style={segStyle}>
         <button style={segBtn(tab === 'active')} onClick={() => setTab('active')}>⚔ Активные</button>
@@ -415,23 +456,24 @@ const tbaStyle: React.CSSProperties = {
   alignItems: 'center', justifyContent: 'center', fontSize: 16,
   cursor: 'pointer', color: '#8B92A8',
 };
-// ── Стили модала создания батла (соответствует GameSetupModal) ──
+// ── Стили модала создания батла ──
 const bmOverlayStyle: React.CSSProperties = {
   position: 'fixed', inset: 0, zIndex: 200,
-  background: 'rgba(0,0,0,0.70)',
+  background: 'rgba(0,0,0,0.75)',
   backdropFilter: 'blur(8px)',
   WebkitBackdropFilter: 'blur(8px)',
-  display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  padding: '12px 0 0',
 };
 const bmSheetStyle: React.CSSProperties = {
   width: '100%', maxWidth: 480,
   background: '#13161F',
   border: '1px solid rgba(255,255,255,0.1)',
-  borderBottom: 'none',
   borderRadius: '24px 24px 0 0',
-  padding: '20px 18px',
-  paddingBottom: 'max(20px, env(safe-area-inset-bottom, 20px))',
-  maxHeight: '90vh', overflowY: 'auto',
+  padding: '16px 18px',
+  paddingBottom: 'max(24px, env(safe-area-inset-bottom, 24px))',
+  maxHeight: '92vh', overflowY: 'auto',
+  marginTop: 'auto',
 };
 const bmHandleStyle: React.CSSProperties = {
   width: 36, height: 4, background: '#2A2F48', borderRadius: 2, margin: '0 auto 16px',

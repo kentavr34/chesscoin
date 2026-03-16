@@ -196,6 +196,32 @@ export const warsApi = {
     api.get<{ savedGames: any[] }>('/wars/my-saved-games'),
 };
 
+// Games API — сохранение партий
+export const gamesApi = {
+  save: (sessionId: string) =>
+    api.post<{ saved: boolean }>(`/games/${sessionId}/save`),
+  unsave: (sessionId: string) =>
+    api.delete<{ saved: boolean }>(`/games/${sessionId}/save`),
+  savedList: () =>
+    api.get<any[]>('/games/saved'),
+};
+
+// Puzzles API — уроки и задачи
+export const puzzlesApi = {
+  lessons: (lang?: string) =>
+    api.get<any[]>(`/puzzles/lessons${lang ? `?lang=${lang}` : ''}`),
+  lesson: (id: string, lang?: string) =>
+    api.get<any>(`/puzzles/lessons/${id}${lang ? `?lang=${lang}` : ''}`),
+  completeLesson: (id: string) =>
+    api.post<{ alreadyCompleted: boolean; reward: string; balance: string }>(`/puzzles/lessons/${id}/complete`),
+  daily: (lang?: string) =>
+    api.get<any[]>(`/puzzles/daily${lang ? `?lang=${lang}` : ''}`),
+  dailyPuzzle: (id: string, lang?: string) =>
+    api.get<any>(`/puzzles/daily/${id}${lang ? `?lang=${lang}` : ''}`),
+  completeDaily: (id: string) =>
+    api.post<{ reward: string; balance: string }>(`/puzzles/daily/${id}/complete`),
+};
+
 export interface TournamentItem {
   id: string;
   name: string;

@@ -19,6 +19,9 @@ import { TasksPage } from '@/pages/TasksPage';
 import { ShopPage } from '@/pages/ShopPage';
 import { ReferralsPage } from '@/pages/ReferralsPage';
 import { TournamentsPage } from '@/pages/TournamentsPage';
+import { PuzzleLessonPage } from '@/pages/PuzzleLessonPage';
+import { PuzzleDailyPage } from '@/pages/PuzzleDailyPage';
+import { SettingsPage } from '@/pages/SettingsPage';
 
 const AppInner: React.FC = () => {
   useSocket(); // подключаем сокет после аутентификации
@@ -38,6 +41,9 @@ const AppInner: React.FC = () => {
       <Route path="/shop" element={<ShopPage />} />
       <Route path="/referrals" element={<ReferralsPage />} />
       <Route path="/tournaments" element={<TournamentsPage />} />
+      <Route path="/puzzle/lesson/:id" element={<PuzzleLessonPage />} />
+      <Route path="/puzzle/daily/:id" element={<PuzzleDailyPage />} />
+      <Route path="/settings" element={<SettingsPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
     </>
