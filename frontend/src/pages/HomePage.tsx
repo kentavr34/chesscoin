@@ -8,7 +8,8 @@ import { fmtBalance, fmtTime, fmtCountdown, leagueEmoji } from '@/utils/format';
 import { AttemptsModal } from '@/components/ui/AttemptsModal';
 import { getSocket } from '@/api/socket';
 import { JarvisModal, JARVIS_LEVELS } from '@/components/ui/JarvisModal';
-import { tasksApi, warsApi } from '@/api';
+import { tasksApi, warsApi, leaderboardApi } from '@/api';
+import { useT } from '@/i18n/useT';
 
 const ONBOARDING_STEPS = [
   { title: '👋 Добро пожаловать в ChessCoin!', desc: 'Играй в шахматы — зарабатывай монеты ᚙ. Победи J.A.R.V.I.S, участвуй в батлах и войнах стран!', icon: '♟' },
@@ -55,11 +56,14 @@ const OnboardingTour: React.FC<{ onDone: () => void }> = ({ onDone }) => {
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useUserStore();
-  const { sessions } = useGameStore();
+  const { sessions, battles } = useGameStore();
+  const t = useT();
+  const th = (t as any).home ?? {};
   const [showAttempts, setShowAttempts] = useState(false);
   const [attemptTimer, setAttemptTimer] = useState(0);
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('chesscoin_onboarding_done'));
   const [welcomeStep, setWelcomeStep] = useState<0|1|2>(0); // 0=none, 1=bonus toast, 2=attempts toast
+  const [myRank, setMyRank] = useState<number | null>(null);
 
   const handleOnboardingDone = () => {
     localStorage.setItem('chesscoin_onboarding_done', '1');
@@ -114,6 +118,13 @@ export const HomePage: React.FC = () => {
   }, []);
 
   useEffect(() => { loadLiveData(); }, [loadLiveData]);
+
+  // Рейтинг игрока из лидерборда
+  useEffect(() => {
+    leaderboardApi.get({}).then((r: any) => {
+      if (r?.myRank) setMyRank(r.myRank);
+    }).catch(() => {});
+  }, []);
 
   // Текущий JARVIS уровень игрока (из user или дефолт 1)
   const jarvisLevel = (user as any)?.jarvisLevel ?? 1;
@@ -197,7 +208,7 @@ export const HomePage: React.FC = () => {
             </div>
             <div style={{ fontSize: 11, color: '#8B92A8', marginTop: 2 }}>@{user.username ?? 'unknown'}</div>
             <div style={{ display: 'flex', gap: 5, marginTop: 6, flexWrap: 'wrap' }}>
-              <span style={tag('gold')}>{leagueEmoji[user.league]} #{1}</span>
+              <span style={tag('gold')}>{leagueEmoji[user.league]} #{myRank ?? '—'}</span>
               <span style={tag('vi')}>ELO {user.elo}</span>
             </div>
           </div>
@@ -205,7 +216,7 @@ export const HomePage: React.FC = () => {
 
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', paddingBottom: 12, borderBottom: '1px solid rgba(255,255,255,0.07)', position: 'relative', zIndex: 1 }}>
           <div>
-            <div style={lblStyle}>Баланс</div>
+            <div style={lblStyle}>{th.balance ?? 'Баланс'}</div>
             <div className="coin-balance" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 14, fontWeight: 800, color: '#F5C842', letterSpacing: '-.04em', lineHeight: 1 }}>
                 {fmtBalance(user.balance)} <span style={{ fontSize: 10, opacity: .5 }}>ᚙ</span>
@@ -219,24 +230,20 @@ export const HomePage: React.FC = () => {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 7, alignItems: 'flex-end' }}>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 9, color: '#6B7290', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 2 }}>JARVIS</div>
+              <div style={{ fontSize: 9, color: '#6B7290', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 2 }}>{th.jarvis ?? 'JARVIS'}</div>
               <div style={{ fontSize: 12, fontWeight: 800, color: '#9B85FF' }}>
                 {JARVIS_LEVELS[Math.max(0, jarvisLevel - 1)].name}
               </div>
               <div style={{ fontSize: 9, color: '#6B7290', marginTop: 1 }}>Lv.{jarvisLevel} / 10</div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 9, color: '#6B7290', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 2 }}>Звание</div>
+              <div style={{ fontSize: 9, color: '#6B7290', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 2 }}>{th.rank ?? 'Звание'}</div>
               <div style={{ fontSize: 12, fontWeight: 800, color: '#F5C842' }}>
                 {rankEmoji} {rankLabel}
               </div>
               <div style={{ fontSize: 9, color: '#6B7290', marginTop: 1 }}>
-                Бойцов: {referralCount}
+                {th.soldiers ?? 'Бойцов'}: {referralCount}
               </div>
-            </div>
-            <div style={{ textAlign: 'right', cursor: 'pointer' }} onClick={() => navigate('/tournaments')}>
-              <div style={{ fontSize: 9, color: '#6B7290', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 2 }}>Чемпионат</div>
-              <div style={{ fontSize: 12, fontWeight: 800, color: '#F5C842' }}>🏆 Участвовать</div>
             </div>
           </div>
         </div>
@@ -253,7 +260,7 @@ export const HomePage: React.FC = () => {
         {/* Попытки */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, position: 'relative', zIndex: 1 }}>
           <div>
-            <div style={lblStyle}>Попытки</div>
+            <div style={lblStyle}>{th.attempts ?? 'Попытки'}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
               <div style={{ display: 'flex', gap: 4 }}>
                 {Array.from({ length: user.maxAttempts }).map((_, i) => (
@@ -270,10 +277,10 @@ export const HomePage: React.FC = () => {
           {/* Таймер — показываем до следующей звезды или "все звёзды есть" */}
           <div>
             {user.attempts >= user.maxAttempts ? (
-              <div style={{ fontSize: 10, color: '#6B7290' }}>Все ★ восстановлены</div>
+              <div style={{ fontSize: 10, color: '#6B7290' }}>{th.allRestored ?? 'Все ★ восстановлены'}</div>
             ) : (
               <div onClick={() => setShowAttempts(true)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <div style={{ fontSize: 9, color: '#8B92A8' }}>до следующей ★:</div>
+                <div style={{ fontSize: 9, color: '#8B92A8' }}>{th.nextStar ?? 'до следующей ★:'}</div>
                 <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 700, color: '#F5C842' }}>
                   ⏱ {attemptTimer > 0 ? fmtCountdown(attemptTimer) : '...'}
                 </div>
@@ -286,15 +293,15 @@ export const HomePage: React.FC = () => {
       {/* Активные сессии */}
       {activeSessions.length > 0 && (
         <>
-          <div style={secStyle}>Активные сессии</div>
+          <div style={secStyle}>{th.activeSessions ?? 'Активные сессии'}</div>
           <div onClick={() => navigate('/game')} style={{ ...stripStyle, borderColor: 'rgba(0,214,143,0.2)', background: 'linear-gradient(135deg,rgba(0,214,143,0.06),transparent)' }}>
             <span style={{ fontSize: 20 }}>⚔️</span>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: '#00D68F' }}>
-                {activeSessions.length} активн{activeSessions.length === 1 ? 'ая игра' : 'ые игры'}
+                {activeSessions.length} {activeSessions.length === 1 ? (th.activeGame ?? 'активная игра') : (th.activeGames ?? 'активные игры')}
               </div>
               <div style={{ fontSize: 11, color: '#8B92A8', marginTop: 2 }}>
-                {myTurnSessions.length > 0 ? `${myTurnSessions.length} ожидают вашего хода` : 'Ход соперника'}
+                {myTurnSessions.length > 0 ? `${myTurnSessions.length} ${th.yourTurn ?? 'ожидают вашего хода'}` : (th.opponentTurn ?? 'Ход соперника')}
               </div>
             </div>
             <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 700, color: '#00D68F' }}>→</span>
@@ -303,7 +310,7 @@ export const HomePage: React.FC = () => {
       )}
 
       {/* Война моей страны */}
-      <div style={secStyle}>Война стран</div>
+      <div style={secStyle}>{th.war ?? 'Война стран'}</div>
       {myCountry ? (
         <div onClick={() => navigate('/wars')} style={{ ...stripStyle, borderColor: myWar ? 'rgba(245,200,66,0.2)' : 'rgba(255,255,255,0.07)' }}>
           <span style={{ fontSize: 22 }}>{myCountry.flag}</span>
@@ -314,14 +321,14 @@ export const HomePage: React.FC = () => {
                   {myWar.attackerCountry?.flag} {myWar.attackerCountry?.nameRu} vs {myWar.defenderCountry?.flag} {myWar.defenderCountry?.nameRu}
                 </div>
                 <div style={{ fontSize: 11, color: '#8B92A8', marginTop: 2 }}>
-                  Идёт война · нажми чтобы участвовать
+                  {th.warActive ?? 'Идёт война · нажми чтобы участвовать'}
                 </div>
               </>
             ) : (
               <>
                 <div style={{ fontSize: 13, fontWeight: 600, color: '#F0F2F8' }}>{myCountry.nameRu}</div>
                 <div style={{ fontSize: 11, color: '#8B92A8', marginTop: 2 }}>
-                  {myCountry.memberCount} бойцов · побед: {myCountry.wins}
+                  {myCountry.memberCount} {th.soldiers ?? 'бойцов'} · {th.wins ?? 'побед'}: {myCountry.wins}
                 </div>
               </>
             )}
@@ -338,21 +345,21 @@ export const HomePage: React.FC = () => {
         <div onClick={() => navigate('/wars')} style={{ ...stripStyle }}>
           <span style={{ fontSize: 20 }}>🌍</span>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: '#F0F2F8' }}>Вступи в страну</div>
-            <div style={{ fontSize: 11, color: '#8B92A8', marginTop: 2 }}>Сражайся за свою сборную</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#F0F2F8' }}>{th.joinCountry ?? 'Вступи в страну'}</div>
+            <div style={{ fontSize: 11, color: '#8B92A8', marginTop: 2 }}>{th.fightForTeam ?? 'Сражайся за свою сборную'}</div>
           </div>
           <span style={{ fontSize: 13, color: '#4A5270' }}>→</span>
         </div>
       )}
 
       {/* Разделы */}
-      <div style={secStyle}>Разделы</div>
+      <div style={secStyle}>{th.sections ?? 'Разделы'}</div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '0 18px' }}>
         {[
-          { ico: '🤖', title: 'J.A.R.V.I.S', sub: JARVIS_LEVELS[Math.max(0, jarvisLevel - 1)].name, tag: `+${(JARVIS_LEVELS[Math.max(0, jarvisLevel - 1)].reward / 1000).toFixed(0)}K ᚙ`, tc: '#9B85FF', path: null, action: startBotGame },
-          { ico: '⚔️', title: 'Батлы', sub: 'На ставку', tag: '5 LIVE', tc: '#FF4D6A', path: '/battles', action: null },
-          { ico: '🏆', title: 'Турниры', sub: 'Чемпион месяца', tag: '2 открытых', tc: '#F5C842', path: '/tournaments', action: null },
-          { ico: '🌍', title: 'Войны', sub: myCountry ? myCountry.nameRu : 'Выбери страну', tag: myWar ? `${myWar.attackerWins}:${myWar.defenderWins}` : myCountry ? `${myCountry.wins}П` : '→', tc: '#00D68F', path: '/wars', action: null },
+          { ico: '🤖', title: 'J.A.R.V.I.S', sub: JARVIS_LEVELS[Math.max(0, jarvisLevel - 1)].name, tag: jarvisLevel >= 10 ? 'MAX' : `+${(JARVIS_LEVELS[Math.max(0, jarvisLevel - 1)].reward / 1000).toFixed(0)}K ᚙ`, tc: '#9B85FF', path: null, action: startBotGame },
+          { ico: '⚔️', title: t.nav.battles, sub: th.stake ?? 'На ставку', tag: battles.length > 0 ? `${battles.length} ${th.live ?? 'LIVE'}` : (th.pvp ?? 'PvP'), tc: '#FF4D6A', path: '/battles', action: null },
+          { ico: '🏆', title: t.nav.tournaments, sub: th.monthChamp ?? 'Чемпион месяца', tag: '→', tc: '#F5C842', path: '/tournaments', action: null },
+          { ico: '🌍', title: t.nav.wars, sub: myCountry ? myCountry.nameRu : (th.chooseCountry ?? 'Выбери страну'), tag: myWar ? `${myWar.attackerWins}:${myWar.defenderWins}` : myCountry ? `${myCountry.wins}${th.wins ?? 'П'}` : '→', tc: '#00D68F', path: '/wars', action: null },
         ].map((item) => (
           <div key={item.title} onClick={() => item.action ? item.action() : navigate(item.path!)} style={{...gameCardStyle, opacity: item.action && startingBot ? 0.6 : 1}}>
             <span style={{ fontSize: 32, marginBottom: 10, display: 'block' }}>{item.ico}</span>
@@ -364,7 +371,7 @@ export const HomePage: React.FC = () => {
       </div>
 
       {/* Задания */}
-      <div style={secStyle}>Задания</div>
+      <div style={secStyle}>{th.tasks ?? 'Задания'}</div>
       <div onClick={() => navigate('/tasks')} style={{ ...stripStyle, marginBottom: 8 }}>
         <span style={{ fontSize: 20 }}>📋</span>
         <div style={{ flex: 1 }}>
@@ -375,14 +382,14 @@ export const HomePage: React.FC = () => {
                 {taskStats.remaining > 0 && ` · +${fmtBalance(taskStats.remaining)} ᚙ осталось`}
               </div>
               <div style={{ fontSize: 11, color: taskStats.done === taskStats.total ? '#00D68F' : '#8B92A8', marginTop: 2 }}>
-                {taskStats.done === taskStats.total ? '✅ Все задания выполнены!' : 'Нажми, чтобы выполнить'}
+                {taskStats.done === taskStats.total ? (th.tasksAll ?? '✅ Все задания выполнены!') : (th.tasksTap ?? 'Нажми, чтобы выполнить')}
               </div>
               <div style={{ height: 3, background: '#181B22', borderRadius: 2, marginTop: 7, overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: `${taskStats.total > 0 ? Math.round((taskStats.done / taskStats.total) * 100) : 0}%`, background: 'linear-gradient(90deg,#F5C842,#FFD966)', borderRadius: 2, transition: 'width .4s' }} />
               </div>
             </>
           ) : (
-            <div style={{ fontSize: 13, color: '#8B92A8' }}>Загрузка заданий...</div>
+            <div style={{ fontSize: 13, color: '#8B92A8' }}>{th.tasksLoading ?? 'Загрузка заданий...'}</div>
           )}
         </div>
       </div>

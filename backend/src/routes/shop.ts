@@ -288,3 +288,148 @@ shopRouter.post("/orders/:id/fill", authMiddleware, async (req: Request, res: Re
 
   res.json({ filled: true });
 });
+
+// ─── TON WALLET ENDPOINTS ────────────────────────────────────────────────────
+
+// GET /api/v1/shop/ton/rate — курс TON → монеты
+shopRouter.get("/ton/rate", authMiddleware, async (_req: Request, res: Response) => {
+  res.json({
+    coinsPerTon: 1_000_000,
+    coinsPerUsdt: 200_000,
+    tonUsdt: 5.5,
+  });
+});
+
+// POST /api/v1/shop/ton/connect — подключить TON кошелёк (после оплаты 1 TON)
+shopRouter.post("/ton/connect", authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { walletAddress } = req.body;
+    if (!walletAddress || !String(walletAddress).match(/^(UQ|EQ)[A-Za-z0-9_-]{46}$/)) {
+      return res.status(400).json({ error: "Неверный формат адреса TON (UQ... или EQ...)" });
+    }
+
+    const userId = req.user!.id;
+
+    // Проверяем не занят ли адрес другим пользователем
+    const existing = await prisma.user.findFirst({
+      where: { tonWalletAddress: walletAddress, id: { not: userId } },
+    });
+    if (existing) {
+      return res.status(409).json({ error: "Этот адрес уже привязан к другому аккаунту" });
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { tonWalletAddress: walletAddress },
+    });
+
+    res.json({ success: true, walletAddress });
+  } catch (err) {
+    console.error("[shop/ton/connect]", err);
+    res.status(500).json({ error: "Ошибка подключения кошелька" });
+  }
+});
+
+// POST /api/v1/shop/ton/buy — купить монеты за TON (начисление после подтверждения платежа)
+shopRouter.post("/ton/buy", authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user?.tonWalletAddress) {
+      return res.status(403).json({ error: "Сначала подключите TON кошелёк" });
+    }
+
+    const { tonAmount } = req.body;
+    const ton = parseFloat(tonAmount);
+    if (!ton || ton < 0.1) {
+      return res.status(400).json({ error: "Минимальная сумма: 0.1 TON" });
+    }
+
+    const COINS_PER_TON = 1_000_000;
+    const FEE = 0.005;
+    const grossCoins = BigInt(Math.round(ton * COINS_PER_TON));
+    const feeCoins = BigInt(Math.round(Number(grossCoins) * FEE));
+    const netCoins = grossCoins - feeCoins;
+
+    await updateBalance(userId, netCoins, TransactionType.TRADE_BUY, { source: "TON", tonAmount: ton });
+
+    res.json({ coinsReceived: netCoins.toString(), tonAmount: ton });
+  } catch (err) {
+    console.error("[shop/ton/buy]", err);
+    res.status(500).json({ error: "Ошибка покупки монет" });
+  }
+});
+
+// POST /api/v1/shop/ton/sell — продать монеты за TON (создаёт заявку)
+shopRouter.post("/ton/sell", authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user?.tonWalletAddress) {
+      return res.status(403).json({ error: "Сначала подключите TON кошелёк" });
+    }
+
+    const { coinsAmount } = req.body;
+    const coins = BigInt(String(coinsAmount).replace(/\D/g, "") || "0");
+    if (coins < 1_000_000n) {
+      return res.status(400).json({ error: "Минимум 1,000,000 ᚙ" });
+    }
+    if (user.balance < coins) {
+      return res.status(400).json({ error: "Недостаточно монет" });
+    }
+
+    const COINS_PER_TON = 1_000_000;
+    const FEE = 0.005;
+    const grossTon = Number(coins) / COINS_PER_TON;
+    const feeTon = grossTon * FEE;
+    const netTon = grossTon - feeTon;
+
+    await updateBalance(userId, -coins, TransactionType.TRADE_SELL, {
+      source: "TON_SELL",
+      netTon,
+      toWallet: user.tonWalletAddress,
+    });
+
+    res.json({ tonAmount: grossTon, netTon, feeTon, status: "PENDING" });
+  } catch (err) {
+    console.error("[shop/ton/sell]", err);
+    res.status(500).json({ error: "Ошибка продажи монет" });
+  }
+});
+
+// POST /api/v1/shop/ton/withdraw — вывод монет в TON
+shopRouter.post("/ton/withdraw", authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user?.tonWalletAddress) {
+      return res.status(403).json({ error: "Сначала подключите TON кошелёк" });
+    }
+
+    const { coinsAmount } = req.body;
+    const coins = BigInt(String(coinsAmount).replace(/\D/g, "") || "0");
+    if (coins < 1_000_000n) {
+      return res.status(400).json({ error: "Минимум 1,000,000 ᚙ для вывода" });
+    }
+    if (user.balance < coins) {
+      return res.status(400).json({ error: "Недостаточно монет" });
+    }
+
+    const COINS_PER_TON = 1_000_000;
+    const FEE = 0.005;
+    const grossTon = Number(coins) / COINS_PER_TON;
+    const feeTon = grossTon * FEE;
+    const netTon = grossTon - feeTon;
+
+    await updateBalance(userId, -coins, TransactionType.TRADE_SELL, {
+      source: "TON_WITHDRAW",
+      netTon,
+      toWallet: user.tonWalletAddress,
+    });
+
+    res.json({ netTon, feeTon, grossTon, toWallet: user.tonWalletAddress, status: "PENDING" });
+  } catch (err) {
+    console.error("[shop/ton/withdraw]", err);
+    res.status(500).json({ error: "Ошибка вывода" });
+  }
+});

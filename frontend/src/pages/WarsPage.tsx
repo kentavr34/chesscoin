@@ -9,6 +9,18 @@ import { fmtBalance } from '@/utils/format';
 const toast = (text: string, type: 'error' | 'success' | 'info' = 'error') =>
   window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text, type } }));
 
+// Тикающий таймер войны
+const WarCountdown: React.FC<{ initialSeconds: number; active: boolean }> = ({ initialSeconds, active }) => {
+  const [secs, setSecs] = useState(initialSeconds);
+  useEffect(() => {
+    setSecs(initialSeconds);
+    if (!active || initialSeconds <= 0) return;
+    const t = setInterval(() => setSecs(s => Math.max(0, s - 1)), 1000);
+    return () => clearInterval(t);
+  }, [initialSeconds, active]);
+  return <>{formatTime(secs)}</>;
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // WARSINTROMODAL
 // ─────────────────────────────────────────────────────────────────────────────
@@ -356,10 +368,21 @@ const WarDetailModal: React.FC<{ warId: string; onClose: () => void }> = ({ warI
   const navigate = useNavigate();
   const [data, setData] = useState<any>(null);
   const [saving, setSaving] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState(0);
 
   useEffect(() => {
-    warsApi.warDetail(warId).then(r => setData(r.war)).catch(console.error);
+    warsApi.warDetail(warId).then(r => {
+      setData(r.war);
+      setCountdown(r.war?.secondsLeft ?? 0);
+    }).catch(console.error);
   }, [warId]);
+
+  // Тикаем таймер каждую секунду
+  useEffect(() => {
+    if (!data || data.status !== 'IN_PROGRESS') return;
+    const t = setInterval(() => setCountdown(s => Math.max(0, s - 1)), 1000);
+    return () => clearInterval(t);
+  }, [data?.status]);
 
   const handleSave = async (sessionId: string) => {
     setSaving(sessionId);
@@ -399,7 +422,7 @@ const WarDetailModal: React.FC<{ warId: string; onClose: () => void }> = ({ warI
                   {war.attackerWins} : {war.defenderWins}
                 </div>
                 <div style={{ fontSize: 10, color: war.status === 'IN_PROGRESS' ? '#00D68F' : '#8B92A8', marginTop: 2 }}>
-                  {war.status === 'IN_PROGRESS' ? `⏱ ${formatTime(war.secondsLeft)}` : '✓ Завершена'}
+                  {war.status === 'IN_PROGRESS' ? `⏱ ${formatTime(countdown)}` : '✓ Завершена'}
                 </div>
               </div>
               <div style={{ textAlign: 'center', flex: 1 }}>
@@ -635,7 +658,7 @@ export const WarsPage: React.FC = () => {
                   {myActiveWar.attackerWins} : {myActiveWar.defenderWins}
                 </div>
               </div>
-              <div style={{ fontSize: 10, color: '#8B92A8', marginTop: 2 }}>⏱ {formatTime(myActiveWar.secondsLeft)}</div>
+              <div style={{ fontSize: 10, color: '#8B92A8', marginTop: 2 }}>⏱ <WarCountdown initialSeconds={myActiveWar.secondsLeft ?? 0} active={true} /></div>
             </div>
           )}
         </div>
@@ -741,7 +764,7 @@ export const WarsPage: React.FC = () => {
                     <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 24, fontWeight: 800, color: '#F5C842' }}>
                       {war.attackerWins} : {war.defenderWins}
                     </div>
-                    <div style={{ fontSize: 10, color: '#FF4D6A', marginTop: 2 }}>⏱ {formatTime(war.secondsLeft)}</div>
+                    <div style={{ fontSize: 10, color: '#FF4D6A', marginTop: 2 }}>⏱ <WarCountdown initialSeconds={war.secondsLeft ?? 0} active={war.status === 'IN_PROGRESS'} /></div>
                   </div>
                   <div style={{ textAlign: 'center', flex: 1 }}>
                     <div style={{ fontSize: 28 }}>{war.defenderCountry?.flag}</div>

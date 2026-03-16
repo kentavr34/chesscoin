@@ -54,6 +54,142 @@ const DEFAULT_TON_TO_COINS = 1_000_000;
 const DEFAULT_USDT_TO_COINS = 200_000;
 const FEE_PERCENT = 0.5;
 
+// Кошелёк-казначейство для получения платы за разблокировку (1 TON)
+const TREASURY_ADDRESS = 'UQDZNHJrTBJ9asNgL15bf-8Ud4Rleku-oP6TSlbg6EWXfq7y';
+
+// ── Модал подключения TON кошелька ────────────────────────────
+const ConnectWalletModal: React.FC<{
+  onClose: () => void;
+  onConfirm: (addr: string) => Promise<void>;
+}> = ({ onClose, onConfirm }) => {
+  const [step, setStep] = useState<'info' | 'pay' | 'confirm'>('info');
+  const [addr, setAddr] = useState('');
+  const [processing, setProcessing] = useState(false);
+  const [addrError, setAddrError] = useState('');
+
+  const handleOpenTon = () => {
+    const tg = (window as any).Telegram?.WebApp;
+    const tonUrl = `ton://transfer/${TREASURY_ADDRESS}?amount=1000000000&text=ChessCoin%20TON%20Unlock`;
+    if (tg?.openLink) {
+      tg.openLink(tonUrl, { try_instant_view: false });
+    } else {
+      window.open(tonUrl, '_blank');
+    }
+    setStep('confirm');
+  };
+
+  const handleConfirm = async () => {
+    const trimmed = addr.trim();
+    if (!trimmed.match(/^(UQ|EQ)[A-Za-z0-9_-]{46}$/)) {
+      setAddrError('Неверный формат. Адрес должен начинаться с UQ или EQ (48 символов)');
+      return;
+    }
+    setAddrError('');
+    setProcessing(true);
+    try {
+      await onConfirm(trimmed);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 500, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+      onClick={e => e.target === e.currentTarget && onClose()}>
+      <div style={{ background: '#13161E', borderRadius: '24px 24px 0 0', padding: '20px 20px 36px', width: '100%', maxWidth: 480, border: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ width: 36, height: 4, background: '#2A2F48', borderRadius: 2, margin: '0 auto 20px' }} />
+
+        {step === 'info' && (<>
+          <div style={{ textAlign: 'center', marginBottom: 20 }}>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>💎</div>
+            <div style={{ fontSize: 17, fontWeight: 800, color: '#F0F2F8', marginBottom: 8 }}>Подключить TON кошелёк</div>
+            <div style={{ fontSize: 12, color: '#8B92A8', lineHeight: 1.6 }}>
+              Одноразовая оплата <b style={{ color: '#0098EA' }}>1 TON</b> открывает доступ к покупке монет за крипту и выводу заработанного
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+            {[
+              { ico: '🪙', text: 'Купи монеты за TON или USDT', sub: '1 TON = 1 000 000 ᚙ' },
+              { ico: '💸', text: 'Выводи монеты в TON', sub: 'Комиссия 0.5% на все операции' },
+              { ico: '🔒', text: 'Разовая оплата — навсегда', sub: '1 TON отправляется на кошелёк проекта' },
+            ].map(r => (
+              <div key={r.ico} style={{ display: 'flex', gap: 10, padding: '10px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 12 }}>
+                <span style={{ fontSize: 18 }}>{r.ico}</span>
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#F0F2F8' }}>{r.text}</div>
+                  <div style={{ fontSize: 10, color: '#8B92A8', marginTop: 2 }}>{r.sub}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <button onClick={() => setStep('pay')}
+            style={{ width: '100%', padding: 14, background: 'linear-gradient(90deg,#0098EA,#007AC2)', color: '#fff', border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+            Продолжить →
+          </button>
+          <button onClick={onClose} style={{ width: '100%', marginTop: 10, padding: 12, background: 'none', border: 'none', color: '#4A5270', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
+            Отмена
+          </button>
+        </>)}
+
+        {step === 'pay' && (<>
+          <div style={{ textAlign: 'center', marginBottom: 20 }}>
+            <div style={{ fontSize: 36, marginBottom: 12 }}>📤</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: '#F0F2F8', marginBottom: 8 }}>Отправить 1 TON</div>
+            <div style={{ fontSize: 12, color: '#8B92A8', lineHeight: 1.6, marginBottom: 16 }}>
+              Нажми кнопку ниже чтобы открыть кошелёк и отправить <b style={{ color: '#0098EA' }}>1 TON</b> на адрес проекта
+            </div>
+            <div style={{ padding: '10px 14px', background: '#1C2030', borderRadius: 12, marginBottom: 16 }}>
+              <div style={{ fontSize: 9, color: '#4A5270', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '.06em' }}>Адрес получателя</div>
+              <div style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 10, color: '#0098EA', wordBreak: 'break-all' }}>{TREASURY_ADDRESS}</div>
+            </div>
+            <div style={{ fontSize: 11, color: '#F5C842', background: 'rgba(245,200,66,0.08)', padding: '8px 12px', borderRadius: 10, marginBottom: 16 }}>
+              ⚠️ Сумма: ровно 1 TON. В комментарии: «ChessCoin TON Unlock»
+            </div>
+          </div>
+          <button onClick={handleOpenTon}
+            style={{ width: '100%', padding: 14, background: 'linear-gradient(90deg,#0098EA,#007AC2)', color: '#fff', border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 10 }}>
+            💎 Открыть TON кошелёк
+          </button>
+          <button onClick={() => setStep('confirm')}
+            style={{ width: '100%', padding: 12, background: '#1C2030', border: '1px solid rgba(255,255,255,0.1)', color: '#8B92A8', borderRadius: 14, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
+            Уже отправил →
+          </button>
+        </>)}
+
+        {step === 'confirm' && (<>
+          <div style={{ textAlign: 'center', marginBottom: 20 }}>
+            <div style={{ fontSize: 36, marginBottom: 12 }}>✅</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: '#F0F2F8', marginBottom: 8 }}>Подтвердить оплату</div>
+            <div style={{ fontSize: 12, color: '#8B92A8', lineHeight: 1.6 }}>
+              Введи адрес своего TON кошелька, с которого была отправлена оплата
+            </div>
+          </div>
+          <div style={{ marginBottom: 8 }}>
+            <input
+              value={addr}
+              onChange={e => { setAddr(e.target.value); setAddrError(''); }}
+              placeholder="UQ... или EQ..."
+              style={{ width: '100%', padding: '12px 14px', background: '#1C2030', border: `1px solid ${addrError ? '#FF4D6A' : 'rgba(255,255,255,0.1)'}`, borderRadius: 12, color: '#F0F2F8', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' }}
+            />
+            {addrError && <div style={{ fontSize: 11, color: '#FF4D6A', marginTop: 6 }}>{addrError}</div>}
+          </div>
+          <div style={{ fontSize: 11, color: '#4A5270', marginBottom: 16, lineHeight: 1.5 }}>
+            Убедись, что отправил ровно 1 TON на адрес проекта. Оплата проверяется вручную в течение 24 часов.
+          </div>
+          <button onClick={handleConfirm} disabled={processing || !addr}
+            style={{ width: '100%', padding: 14, background: processing || !addr ? '#2A2F48' : 'linear-gradient(90deg,#00D68F,#00B87A)', color: processing || !addr ? '#4A5270' : '#0B0D11', border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: processing || !addr ? 'default' : 'pointer', fontFamily: 'inherit', marginBottom: 10 }}>
+            {processing ? 'Подключение...' : '✅ Подтвердить'}
+          </button>
+          <button onClick={() => setStep('pay')}
+            style={{ width: '100%', padding: 12, background: 'none', border: 'none', color: '#4A5270', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
+            ← Назад
+          </button>
+        </>)}
+      </div>
+    </div>
+  );
+};
+
 // ── TON Tab ─────────────────────────────────────────────────
 interface TonTabProps {
   user: any;
@@ -71,6 +207,7 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
   const [tonToCoins, setTonToCoins] = useState(DEFAULT_TON_TO_COINS);
   const [usdtToCoins, setUsdtToCoins] = useState(DEFAULT_USDT_TO_COINS);
   const [tonUsdt, setTonUsdt] = useState(5.5);
+  const [showConnectModal, setShowConnectModal] = useState(false);
 
   // Check if user already unlocked TON features (tonWalletAddress set)
   useEffect(() => {
@@ -95,36 +232,20 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
       showToast('Откройте в Telegram для подключения кошелька');
       return;
     }
+    setShowConnectModal(true);
+  };
 
-    setConnecting(true);
+  const handleConfirmConnection = async (addr: string) => {
     try {
-      // Show confirmation for one-time unlock payment
-      const confirmed = confirm(
-        'Подключение TON кошелька\n\n' +
-        'Стоимость: 1 TON (одноразово)\n\n' +
-        'Это откроет:\n• Покупка монет за TON/USDT\n• Вывод монет на кошелёк\n• Комиссия 0.5% на операции\n\nПродолжить?'
-      );
-      if (!confirmed) { setConnecting(false); return; }
-
-      // In production: trigger TonConnect or TON Wallet connection
-      // For now show address input simulation
-      const addr = prompt('Введите адрес TON кошелька (UQ...)');
-      if (!addr || !addr.startsWith('UQ')) {
-        showToast('Неверный формат адреса TON');
-        setConnecting(false);
-        return;
-      }
-
-      // POST to backend to unlock + store wallet address
       await tonApi.connectWallet(addr);
       setWalletAddress(addr);
       setWalletConnected(true);
+      setShowConnectModal(false);
       showToast('✅ TON кошелёк подключён!');
       onUserRefresh();
     } catch (e: any) {
       showToast(e.message || 'Ошибка подключения');
-    } finally {
-      setConnecting(false);
+      throw e;
     }
   };
 
@@ -171,15 +292,20 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
 
           <button
             onClick={handleConnectWallet}
-            disabled={connecting}
             style={{ width: '100%', padding: '14px', background: 'linear-gradient(90deg,#0098EA,#007AC2)', color: '#fff', border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
           >
-            {connecting ? 'Подключение...' : '💎 Подключить TON кошелёк'}
+            💎 Подключить TON кошелёк
           </button>
           <div style={{ fontSize: 10, color: '#4A5270', marginTop: 8, textAlign: 'center' }}>
             Оплата 1 TON для разблокировки
           </div>
         </div>
+        {showConnectModal && (
+          <ConnectWalletModal
+            onClose={() => setShowConnectModal(false)}
+            onConfirm={handleConfirmConnection}
+          />
+        )}
       </div>
     );
   }
