@@ -302,108 +302,113 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   return (
     <div onClick={(e) => e.target === e.currentTarget && onClose()} style={bmOverlayStyle}>
       <div style={bmSheetStyle}>
-        <div style={bmHandleStyle} />
-
-        {/* Заголовок */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-          <div style={{ fontSize: 18, fontWeight: 800, color: '#F0F2F8' }}>⚔ Создать батл</div>
-          <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: '#A8B0C8', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
-        </div>
-
-        {/* Ставка */}
-        <div style={bmSectionLbl}>Ставка</div>
-        <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 24, fontWeight: 800, color: '#F5C842', textAlign: 'center', marginBottom: 10 }}>
-          {fmtBalance(bet)} ᚙ
-        </div>
-
-        {canCreate ? (
-          <>
-            <input
-              type="range" min={MIN_BET} max={maxBet} step={1000} value={bet}
-              onChange={(e) => setBet(Number(e.target.value))}
-              style={{ width: '100%', marginBottom: 12, accentColor: '#F5C842' }}
-            />
-            {/* Быстрый выбор — 4 кнопки в один ряд */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 6, marginBottom: 14 }}>
-              {QUICK_BETS.map((v) => {
-                const capped = Math.min(v, maxBet);
-                const active = bet === capped && bet === v;
-                const unavailable = v > maxBet;
-                return (
-                  <button
-                    key={v}
-                    onClick={() => setBet(capped)}
-                    style={{
-                      padding: '8px 4px', borderRadius: 10, fontSize: 11, fontWeight: 700,
-                      cursor: 'pointer', border: '1px solid',
-                      background: active ? 'rgba(245,200,66,0.12)' : '#1C2030',
-                      color: unavailable ? '#3A3F58' : active ? '#F5C842' : '#A8B0C8',
-                      borderColor: active ? 'rgba(245,200,66,0.3)' : 'rgba(255,255,255,0.07)',
-                      fontFamily: 'inherit', textAlign: 'center' as const,
-                    }}
-                  >
-                    {fmtBalance(v)}
-                  </button>
-                );
-              })}
-            </div>
-          </>
-        ) : (
-          <div style={{ textAlign: 'center', color: '#FF4D6A', fontSize: 13, padding: '8px 0 20px', marginBottom: 4 }}>
-            Нужно минимум {fmtBalance(MIN_BET)} ᚙ для батла
+        {/* Handle + Header — не скроллятся */}
+        <div style={{ padding: '14px 18px 0', flexShrink: 0 }}>
+          <div style={bmHandleStyle} />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: '#F0F2F8' }}>⚔ Создать батл</div>
+            <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: '#A8B0C8', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
           </div>
-        )}
-
-        {/* Цвет — 3 колонки как в GameSetupModal */}
-        <div style={bmSectionLbl}>Выбор цвета</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 14 }}>
-          {(['random', 'white', 'black'] as const).map((c) => (
-            <button key={c} onClick={() => setColor(c)} style={bmColorBtn(color === c)}>
-              <span style={{ fontSize: 22, display: 'block', marginBottom: 5 }}>
-                {c === 'random' ? '🎲' : c === 'white' ? '♔' : '♚'}
-              </span>
-              <span style={{ fontSize: 11, fontWeight: 700 }}>
-                {c === 'random' ? 'Случайно' : c === 'white' ? 'Белые' : 'Чёрные'}
-              </span>
-            </button>
-          ))}
         </div>
 
-        {/* Время — 3×2 сетка как в GameSetupModal */}
-        <div style={bmSectionLbl}>Контроль времени</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 14 }}>
-          {DURATIONS.map((d) => (
-            <button key={d.value} onClick={() => setDuration(d.value)} style={bmTimeBtn(duration === d.value)}>
-              <span style={{ fontSize: 16, display: 'block', marginBottom: 2 }}>{d.icon}</span>
-              {d.label}
-            </button>
-          ))}
+        {/* Скроллируемый контент */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '0 18px' }}>
+          {/* Ставка */}
+          <div style={bmSectionLbl}>Ставка</div>
+          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 24, fontWeight: 800, color: '#F5C842', textAlign: 'center', marginBottom: 10 }}>
+            {fmtBalance(bet)} ᚙ
+          </div>
+
+          {canCreate ? (
+            <>
+              <input
+                type="range" min={MIN_BET} max={maxBet} step={1000} value={bet}
+                onChange={(e) => setBet(Number(e.target.value))}
+                style={{ width: '100%', marginBottom: 12, accentColor: '#F5C842' }}
+              />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 6, marginBottom: 14 }}>
+                {QUICK_BETS.map((v) => {
+                  const capped = Math.min(v, maxBet);
+                  const active = bet === capped && bet === v;
+                  const unavailable = v > maxBet;
+                  return (
+                    <button
+                      key={v}
+                      onClick={() => setBet(capped)}
+                      style={{
+                        padding: '8px 4px', borderRadius: 10, fontSize: 11, fontWeight: 700,
+                        cursor: 'pointer', border: '1px solid',
+                        background: active ? 'rgba(245,200,66,0.12)' : '#1C2030',
+                        color: unavailable ? '#3A3F58' : active ? '#F5C842' : '#A8B0C8',
+                        borderColor: active ? 'rgba(245,200,66,0.3)' : 'rgba(255,255,255,0.07)',
+                        fontFamily: 'inherit', textAlign: 'center' as const,
+                      }}
+                    >
+                      {fmtBalance(v)}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          ) : (
+            <div style={{ textAlign: 'center', color: '#FF4D6A', fontSize: 13, padding: '8px 0 20px', marginBottom: 4 }}>
+              Нужно минимум {fmtBalance(MIN_BET)} ᚙ для батла
+            </div>
+          )}
+
+          {/* Цвет */}
+          <div style={bmSectionLbl}>Выбор цвета</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 14 }}>
+            {(['random', 'white', 'black'] as const).map((c) => (
+              <button key={c} onClick={() => setColor(c)} style={bmColorBtn(color === c)}>
+                <span style={{ fontSize: 22, display: 'block', marginBottom: 5 }}>
+                  {c === 'random' ? '🎲' : c === 'white' ? '♔' : '♚'}
+                </span>
+                <span style={{ fontSize: 11, fontWeight: 700 }}>
+                  {c === 'random' ? 'Случайно' : c === 'white' ? 'Белые' : 'Чёрные'}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Время */}
+          <div style={bmSectionLbl}>Контроль времени</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 14 }}>
+            {DURATIONS.map((d) => (
+              <button key={d.value} onClick={() => setDuration(d.value)} style={bmTimeBtn(duration === d.value)}>
+                <span style={{ fontSize: 16, display: 'block', marginBottom: 2 }}>{d.icon}</span>
+                {d.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Публичный / Приватный */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
+            <button onClick={() => setIsPublic(true)} style={bmTypeBtn(isPublic)}>🌍 Публичный</button>
+            <button onClick={() => setIsPublic(false)} style={bmTypeBtn(!isPublic)}>🔒 Приватный</button>
+          </div>
         </div>
 
-        {/* Публичный / Приватный */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
-          <button onClick={() => setIsPublic(true)} style={bmTypeBtn(isPublic)}>🌍 Публичный</button>
-          <button onClick={() => setIsPublic(false)} style={bmTypeBtn(!isPublic)}>🔒 Приватный</button>
+        {/* Кнопка создания — всегда видна снизу */}
+        <div style={{ padding: '12px 18px', paddingBottom: 'max(16px, env(safe-area-inset-bottom, 16px))', borderTop: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
+          <button
+            onClick={handleCreate}
+            disabled={loading || !canCreate}
+            style={{
+              width: '100%', padding: '18px 14px',
+              background: canCreate ? '#F5C842' : '#2A2F48',
+              border: 'none', borderRadius: 14,
+              color: canCreate ? '#0B0D11' : '#6B7494',
+              fontSize: 16, fontWeight: 800,
+              cursor: canCreate && !loading ? 'pointer' : 'not-allowed',
+              fontFamily: 'inherit',
+              opacity: loading ? 0.7 : 1,
+              boxShadow: canCreate ? '0 4px 20px rgba(245,200,66,0.25)' : 'none',
+            }}
+          >
+            {loading ? 'Создаём...' : '⚔ Создать батл'}
+          </button>
         </div>
-
-        {/* Кнопка создания */}
-        <button
-          onClick={handleCreate}
-          disabled={loading || !canCreate}
-          style={{
-            width: '100%', padding: '18px 14px',
-            background: canCreate ? '#F5C842' : '#2A2F48',
-            border: 'none', borderRadius: 14,
-            color: canCreate ? '#0B0D11' : '#6B7494',
-            fontSize: 16, fontWeight: 800,
-            cursor: canCreate && !loading ? 'pointer' : 'not-allowed',
-            fontFamily: 'inherit',
-            opacity: loading ? 0.7 : 1,
-            boxShadow: canCreate ? '0 4px 20px rgba(245,200,66,0.25)' : 'none',
-          }}
-        >
-          {loading ? 'Создаём...' : '⚔ Создать батл'}
-        </button>
       </div>
     </div>
   );
@@ -484,10 +489,11 @@ const bmSheetStyle: React.CSSProperties = {
   width: '100%', maxWidth: 480,
   background: '#13161F',
   border: '1px solid rgba(255,255,255,0.1)',
+  borderBottom: 'none',
   borderRadius: '24px 24px 0 0',
-  padding: '14px 18px',
-  paddingBottom: 'max(20px, env(safe-area-inset-bottom, 20px))',
-  maxHeight: '82vh', overflowY: 'auto',
+  maxHeight: '93vh',
+  display: 'flex',
+  flexDirection: 'column',
 };
 const bmHandleStyle: React.CSSProperties = {
   width: 36, height: 4, background: '#2A2F48', borderRadius: 2, margin: '0 auto 16px',
