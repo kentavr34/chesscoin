@@ -616,15 +616,15 @@ export const WarsPage: React.FC = () => {
           {/* Статистика страны */}
           <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
             <div style={{ flex: 1, background: 'rgba(245,200,66,0.08)', border: '1px solid rgba(245,200,66,0.15)', borderRadius: 10, padding: '6px 8px', textAlign: 'center' }}>
-              <div style={{ fontSize: 9, color: '#7B8299', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 2 }}>Казна</div>
+              <div style={{ fontSize: 9, color: '#9BA3BC', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 2 }}>Казна</div>
               <div style={{ fontSize: 12, fontWeight: 800, color: '#F5C842' }}>{fmtBalance(myCountry.treasury ?? '0')}</div>
             </div>
             <div style={{ flex: 1, background: 'rgba(123,97,255,0.08)', border: '1px solid rgba(123,97,255,0.15)', borderRadius: 10, padding: '6px 8px', textAlign: 'center' }}>
-              <div style={{ fontSize: 9, color: '#7B8299', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 2 }}>Бойцов</div>
+              <div style={{ fontSize: 9, color: '#9BA3BC', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 2 }}>Бойцов</div>
               <div style={{ fontSize: 12, fontWeight: 800, color: '#9B85FF' }}>{myCountry.memberCount}</div>
             </div>
             <div style={{ flex: 1, background: 'rgba(0,214,143,0.08)', border: '1px solid rgba(0,214,143,0.15)', borderRadius: 10, padding: '6px 8px', textAlign: 'center' }}>
-              <div style={{ fontSize: 9, color: '#7B8299', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 2 }}>Побед</div>
+              <div style={{ fontSize: 9, color: '#9BA3BC', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 2 }}>Побед</div>
               <div style={{ fontSize: 12, fontWeight: 800, color: '#00D68F' }}>{myCountry.wins}</div>
             </div>
           </div>
@@ -880,7 +880,7 @@ function formatTime(seconds: number): string {
 
 const StatBox: React.FC<{ label: string; value: string; color: string }> = ({ label, value, color }) => (
   <div style={{ flex: 1, padding: '8px 10px', background: '#1C2030', borderRadius: 12, textAlign: 'center' }}>
-    <div style={{ fontSize: 10, color: '#6B7494', marginBottom: 3 }}>{label}</div>
+    <div style={{ fontSize: 10, color: '#9BA3BC', marginBottom: 3 }}>{label}</div>
     <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 700, color }}>{value}</div>
   </div>
 );

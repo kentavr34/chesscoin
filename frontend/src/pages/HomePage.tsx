@@ -231,18 +231,18 @@ export const HomePage: React.FC = () => {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 7, alignItems: 'flex-end' }}>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 9, color: '#6B7290', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 2 }}>{th.jarvis ?? 'JARVIS'}</div>
+              <div style={{ fontSize: 9, color: '#9BA3BC', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 2 }}>{th.jarvis ?? 'JARVIS'}</div>
               <div style={{ fontSize: 12, fontWeight: 800, color: '#9B85FF' }}>
                 {JARVIS_LEVELS[Math.max(0, jarvisLevel - 1)].name}
               </div>
-              <div style={{ fontSize: 9, color: '#6B7290', marginTop: 1 }}>Lv.{jarvisLevel} / 10</div>
+              <div style={{ fontSize: 9, color: '#9BA3BC', marginTop: 1 }}>Lv.{jarvisLevel} / 10</div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 9, color: '#6B7290', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 2 }}>{th.rank ?? 'Звание'}</div>
+              <div style={{ fontSize: 9, color: '#9BA3BC', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 2 }}>{th.rank ?? 'Звание'}</div>
               <div style={{ fontSize: 12, fontWeight: 800, color: '#F5C842' }}>
                 {rankEmoji} {rankLabel}
               </div>
-              <div style={{ fontSize: 9, color: '#6B7290', marginTop: 1 }}>
+              <div style={{ fontSize: 9, color: '#9BA3BC', marginTop: 1 }}>
                 {th.soldiers ?? 'Бойцов'}: {referralCount}
               </div>
             </div>
@@ -365,7 +365,7 @@ export const HomePage: React.FC = () => {
           <div key={item.title} onClick={() => item.action ? item.action() : navigate(item.path!)} style={{...gameCardStyle, opacity: item.action && startingBot ? 0.6 : 1}}>
             <span style={{ fontSize: 32, marginBottom: 10, display: 'block' }}>{item.ico}</span>
             <div style={{ fontSize: 13, fontWeight: 700, color: '#F0F2F8', marginBottom: 4 }}>{item.title}</div>
-            <div style={{ fontSize: 11, color: '#A8B0C8', marginBottom: 8 }}>{item.sub}</div>
+            <div style={{ fontSize: 11, color: '#C0C8DE', marginBottom: 8 }}>{item.sub}</div>
             <span style={{ ...tag('neutral'), color: item.tc }}>{item.tag}</span>
           </div>
         ))}
@@ -452,12 +452,12 @@ const gameCardStyle: React.CSSProperties = {
 };
 const secStyle: React.CSSProperties = {
   fontSize: 10, fontWeight: 700, letterSpacing: '.09em',
-  textTransform: 'uppercase', color: '#7B8299',
+  textTransform: 'uppercase', color: '#9BA3BC',
   padding: '16px 18px 8px',
 };
 const lblStyle: React.CSSProperties = {
   fontSize: 9, fontWeight: 700, letterSpacing: '.08em',
-  textTransform: 'uppercase', color: '#7B8299', marginBottom: 3,
+  textTransform: 'uppercase', color: '#9BA3BC', marginBottom: 3,
 };
 const attPlusStyle: React.CSSProperties = {
   width: 24, height: 24, borderRadius: '50%', background: '#F5C842',

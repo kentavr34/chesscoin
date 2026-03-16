@@ -339,7 +339,7 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                         padding: '8px 4px', borderRadius: 10, fontSize: 11, fontWeight: 700,
                         cursor: 'pointer', border: '1px solid',
                         background: active ? 'rgba(245,200,66,0.12)' : '#1C2030',
-                        color: unavailable ? '#3A3F58' : active ? '#F5C842' : '#A8B0C8',
+                        color: unavailable ? '#5A6280' : active ? '#F5C842' : '#C0C8DE',
                         borderColor: active ? 'rgba(245,200,66,0.3)' : 'rgba(255,255,255,0.07)',
                         fontFamily: 'inherit', textAlign: 'center' as const,
                       }}
@@ -500,13 +500,13 @@ const bmHandleStyle: React.CSSProperties = {
 };
 const bmSectionLbl: React.CSSProperties = {
   fontSize: 10, fontWeight: 700, letterSpacing: '.09em',
-  textTransform: 'uppercase', color: '#7B8299', marginBottom: 10,
+  textTransform: 'uppercase', color: '#9BA3BC', marginBottom: 10,
 };
 const bmColorBtn = (active: boolean): React.CSSProperties => ({
   padding: '10px 8px', borderRadius: 12, cursor: 'pointer', minHeight: 58,
   background: active ? 'rgba(245,200,66,0.1)' : '#1C2030',
   border: `2px solid ${active ? '#F5C842' : 'rgba(255,255,255,0.07)'}`,
-  color: active ? '#F5C842' : '#A8B0C8',
+  color: active ? '#F5C842' : '#C0C8DE',
   textAlign: 'center', transition: 'all .15s', fontFamily: 'inherit',
   transform: active ? 'scale(1.03)' : 'scale(1)',
 });
@@ -514,7 +514,7 @@ const bmTimeBtn = (active: boolean): React.CSSProperties => ({
   padding: '10px 8px', borderRadius: 10, cursor: 'pointer', minHeight: 52,
   background: active ? 'rgba(123,97,255,0.15)' : '#1C2030',
   border: `1px solid ${active ? 'rgba(123,97,255,0.4)' : 'rgba(255,255,255,0.07)'}`,
-  color: active ? '#9B85FF' : '#A8B0C8',
+  color: active ? '#9B85FF' : '#C0C8DE',
   fontSize: 12, fontWeight: 700, transition: 'all .15s', fontFamily: 'inherit',
   textAlign: 'center' as const,
 });
@@ -522,6 +522,6 @@ const bmTypeBtn = (active: boolean): React.CSSProperties => ({
   padding: 12, borderRadius: 12, cursor: 'pointer',
   background: active ? 'rgba(245,200,66,0.1)' : '#1C2030',
   border: `1px solid ${active ? 'rgba(245,200,66,0.3)' : 'rgba(255,255,255,0.07)'}`,
-  color: active ? '#F5C842' : '#A8B0C8',
+  color: active ? '#F5C842' : '#C0C8DE',
   fontSize: 12, fontWeight: 600, fontFamily: 'inherit', textAlign: 'center' as const,
 });
