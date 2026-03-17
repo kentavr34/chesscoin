@@ -178,6 +178,8 @@ export const warsApi = {
     api.post<{ success: boolean; membership: any }>(`/wars/countries/${countryId}/join`),
   leave: () =>
     api.post<{ success: boolean }>('/wars/leave'),
+  contribute: (amount: string) =>
+    api.post<{ success: boolean }>('/wars/contribute', { amount }),
   introSeen: () =>
     api.post<{ success: boolean }>('/wars/intro-seen'),
   active: () =>

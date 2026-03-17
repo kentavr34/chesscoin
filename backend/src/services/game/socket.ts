@@ -655,17 +655,17 @@ const makeBotMove = async (socket: AuthSocket, io: Server, sessionId: string) =>
 // ─────────────────────────────────────────
 // JARVIS AI — Stockfish UCI
 // ─────────────────────────────────────────
-const JARVIS_LEVELS: Record<number, { skillLevel: number; eloLimit: number; moveTimeMs: number }> = {
-  1:  { skillLevel: 0,  eloLimit: 1350, moveTimeMs: 500  },
-  2:  { skillLevel: 2,  eloLimit: 1400, moveTimeMs: 600  },
-  3:  { skillLevel: 4,  eloLimit: 1500, moveTimeMs: 700  },
-  4:  { skillLevel: 6,  eloLimit: 1600, moveTimeMs: 800  },
-  5:  { skillLevel: 9,  eloLimit: 1700, moveTimeMs: 900  },
-  6:  { skillLevel: 12, eloLimit: 1900, moveTimeMs: 1000 },
-  7:  { skillLevel: 15, eloLimit: 2100, moveTimeMs: 1200 },
-  8:  { skillLevel: 17, eloLimit: 2300, moveTimeMs: 1500 },
-  9:  { skillLevel: 19, eloLimit: 2600, moveTimeMs: 2000 },
-  10: { skillLevel: 20, eloLimit: 3000, moveTimeMs: 3000 },
+const JARVIS_LEVELS: Record<number, { skillLevel: number; eloLimit: number; moveTimeMs: number; threads: number; hash: number }> = {
+  1:  { skillLevel: 0,  eloLimit: 1350, moveTimeMs: 500,  threads: 1, hash: 16  },
+  2:  { skillLevel: 2,  eloLimit: 1400, moveTimeMs: 600,  threads: 1, hash: 16  },
+  3:  { skillLevel: 4,  eloLimit: 1500, moveTimeMs: 700,  threads: 1, hash: 16  },
+  4:  { skillLevel: 6,  eloLimit: 1600, moveTimeMs: 800,  threads: 1, hash: 32  },
+  5:  { skillLevel: 9,  eloLimit: 1700, moveTimeMs: 900,  threads: 1, hash: 32  },
+  6:  { skillLevel: 12, eloLimit: 1900, moveTimeMs: 1200, threads: 2, hash: 64  },
+  7:  { skillLevel: 15, eloLimit: 2200, moveTimeMs: 1800, threads: 2, hash: 64  },
+  8:  { skillLevel: 18, eloLimit: 2500, moveTimeMs: 3000, threads: 2, hash: 128 },
+  9:  { skillLevel: 20, eloLimit: 2800, moveTimeMs: 5000, threads: 4, hash: 256 },
+  10: { skillLevel: 20, eloLimit: 9999, moveTimeMs: 8000, threads: 4, hash: 512 },
 };
 
 const getStockfishMove = (fen: string, level: number): Promise<{ from: string; to: string } | null> => {
@@ -703,8 +703,10 @@ const getStockfishMove = (fen: string, level: number): Promise<{ from: string; t
           if (!uciOk && trimmed === 'uciok') {
             uciOk = true;
             // Apply options after uciok
+            sf.stdin.write(`setoption name Threads value ${cfg.threads}\n`);
+            sf.stdin.write(`setoption name Hash value ${cfg.hash}\n`);
             sf.stdin.write(`setoption name Skill Level value ${cfg.skillLevel}\n`);
-            if (cfg.skillLevel < 20) {
+            if (cfg.skillLevel < 20 && cfg.eloLimit < 9999) {
               sf.stdin.write(`setoption name UCI_LimitStrength value true\n`);
               sf.stdin.write(`setoption name UCI_Elo value ${cfg.eloLimit}\n`);
             } else {

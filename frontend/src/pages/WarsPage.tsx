@@ -522,6 +522,11 @@ export const WarsPage: React.FC = () => {
   const [selectedCountryId, setSelectedCountryId] = useState<string | null>(null);
   const [selectedWarId, setSelectedWarId] = useState<string | null>(null);
   const [searchCountry, setSearchCountry] = useState('');
+  const [showDonate, setShowDonate] = useState(false);
+  const [donateAmt, setDonateAmt] = useState('');
+  const [donating, setDonating] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [leaving, setLeaving] = useState(false);
 
   const loadAll = useCallback(async () => {
     try {
@@ -573,6 +578,36 @@ export const WarsPage: React.FC = () => {
     try { await warsApi.introSeen(); } catch {}
   };
 
+  const handleDonate = async () => {
+    if (!donateAmt || isNaN(Number(donateAmt))) return;
+    setDonating(true);
+    try {
+      await warsApi.contribute(donateAmt);
+      toast('Донат отправлен в казну!', 'success');
+      setDonateAmt('');
+      setShowDonate(false);
+      loadAll();
+    } catch (e: any) {
+      toast(e.message ?? 'Ошибка');
+    } finally {
+      setDonating(false);
+    }
+  };
+
+  const handleLeave = async () => {
+    setLeaving(true);
+    try {
+      await warsApi.leave();
+      toast('Вы покинули страну', 'success');
+      setShowLeaveConfirm(false);
+      loadAll();
+    } catch (e: any) {
+      toast(e.message ?? 'Ошибка');
+    } finally {
+      setLeaving(false);
+    }
+  };
+
   const filteredCountries = countries.filter(c =>
     c.nameRu.toLowerCase().includes(searchCountry.toLowerCase()) ||
     c.nameEn.toLowerCase().includes(searchCountry.toLowerCase())
@@ -589,15 +624,15 @@ export const WarsPage: React.FC = () => {
   return (
     <PageLayout title="">
       {/* Заголовок */}
-      <div style={{ padding: '10px 18px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 20, fontWeight: 800, color: '#F5C842' }}>
-          ⚔️ Войны
+      <div style={{ padding: '10px 18px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+        <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 18, fontWeight: 800, color: '#F5C842', textAlign: 'center' }}>
+          Войны
         </div>
         <button
           onClick={() => setShowIntro(true)}
-          style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: '#A8B0C8', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          style={{ position: 'absolute', right: 18, width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: '#A8B0C8', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
-          ?
+          ⓘ
         </button>
       </div>
 
@@ -629,20 +664,22 @@ export const WarsPage: React.FC = () => {
             </div>
           </div>
           {/* Кнопки действий */}
-          <div style={{ display: 'flex', gap: 6 }}>
-            <button onClick={() => setSelectedCountryId(myCountry.id)} style={{ flex: 1, padding: '7px 4px', background: 'rgba(123,97,255,0.12)', color: '#9B85FF', border: '1px solid rgba(123,97,255,0.25)', borderRadius: 10, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+            <button onClick={() => setShowDonate(true)} style={{ padding: '8px 4px', background: 'rgba(245,200,66,0.10)', color: '#F5C842', border: '1px solid rgba(245,200,66,0.25)', borderRadius: 10, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+              💰 Донат
+            </button>
+            <button onClick={() => setSelectedCountryId(myCountry.id)} style={{ padding: '8px 4px', background: 'rgba(123,97,255,0.12)', color: '#9B85FF', border: '1px solid rgba(123,97,255,0.25)', borderRadius: 10, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
               🏴 Бойцы
             </button>
-            {isCommander && !myActiveWar && (
-              <button onClick={() => setShowDeclareWar(true)} style={{ flex: 1, padding: '7px 4px', background: 'rgba(255,77,106,0.12)', color: '#FF4D6A', border: '1px solid rgba(255,77,106,0.25)', borderRadius: 10, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-                ⚔️ Война
-              </button>
-            )}
-            {myActiveWar && (
-              <button onClick={() => setSelectedWarId(myActiveWar.id)} style={{ flex: 1, padding: '7px 4px', background: 'rgba(255,77,106,0.12)', color: '#FF4D6A', border: '1px solid rgba(255,77,106,0.25)', borderRadius: 10, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-                ⚔️ Сражения
-              </button>
-            )}
+            <button
+              onClick={() => myActiveWar ? setSelectedWarId(myActiveWar.id) : (isCommander ? setShowDeclareWar(true) : undefined)}
+              style={{ padding: '8px 4px', background: 'rgba(255,77,106,0.12)', color: '#FF4D6A', border: '1px solid rgba(255,77,106,0.25)', borderRadius: 10, fontSize: 11, fontWeight: 600, cursor: isCommander || myActiveWar ? 'pointer' : 'default', fontFamily: 'inherit', opacity: (!isCommander && !myActiveWar) ? 0.4 : 1 }}
+            >
+              ⚔️ Сражения
+            </button>
+            <button onClick={() => setShowLeaveConfirm(true)} style={{ padding: '8px 4px', background: 'rgba(255,77,106,0.07)', color: '#FF7090', border: '1px solid rgba(255,77,106,0.18)', borderRadius: 10, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+              🚪 Выйти
+            </button>
           </div>
           {myActiveWar && (
             <div
@@ -664,9 +701,19 @@ export const WarsPage: React.FC = () => {
         </div>
       )}
 
+      {/* Поиск — всегда над табами */}
+      <div style={{ margin: '8px 18px 8px' }}>
+        <input
+          placeholder="🔍 Поиск страны..."
+          value={searchCountry}
+          onChange={e => setSearchCountry(e.target.value)}
+          style={{ ...inputStyle, width: '100%', margin: 0, boxSizing: 'border-box' }}
+        />
+      </div>
+
       {/* Tabs */}
-      <div style={{ display: 'flex', margin: '4px 18px 10px', background: '#1C2030', borderRadius: 12, padding: 3 }}>
-        {([['countries', 'Страны'], ['active', 'Война'], ['history', 'История']] as [Tab, string][]).map(([t, label]) => (
+      <div style={{ display: 'flex', margin: '0 18px 10px', background: '#1C2030', borderRadius: 12, padding: 3 }}>
+        {([['countries', 'Страны'], ['active', 'Войны'], ['history', 'История']] as [Tab, string][]).map(([t, label]) => (
           <button key={t} onClick={() => setTab(t)} style={{
             flex: 1, padding: '8px 4px', border: 'none', borderRadius: 9, fontFamily: 'inherit',
             fontSize: 11, fontWeight: 600, cursor: 'pointer',
@@ -681,14 +728,8 @@ export const WarsPage: React.FC = () => {
       {/* ── TAB: СТРАНЫ ─────────────────────────────────────────────────────── */}
       {tab === 'countries' && (
         <>
-          {/* Sort + Search */}
-          <div style={{ display: 'flex', gap: 8, margin: '0 18px 10px', alignItems: 'center' }}>
-            <input
-              placeholder="🔍 Поиск страны..."
-              value={searchCountry}
-              onChange={e => setSearchCountry(e.target.value)}
-              style={{ ...inputStyle, flex: 1, margin: 0 }}
-            />
+          {/* Sort */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '0 18px 8px' }}>
             <button onClick={() => setSort(s => s === 'wins' ? 'alpha' : 'wins')} style={chipBtn(false)}>
               {sort === 'wins' ? '🏆 Топ' : 'А-Я'}
             </button>
@@ -844,6 +885,55 @@ export const WarsPage: React.FC = () => {
             );
           })}
         </>
+      )}
+
+      {/* Модал доната в казну */}
+      {showDonate && myCountry && (
+        <div style={overlayStyle} onClick={(e) => e.target === e.currentTarget && setShowDonate(false)}>
+          <div style={{ ...modalStyle, padding: 24, maxHeight: 'auto' }}>
+            <div style={handleBar} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: '#F5C842' }}>💰 Донат в казну</div>
+              <button onClick={() => setShowDonate(false)} style={closeBtnStyle}>✕</button>
+            </div>
+            <div style={{ fontSize: 12, color: '#A8B0C8', marginBottom: 12 }}>
+              Пополни казну {myCountry.nameRu} для наград победителям войн.
+            </div>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+              <input
+                placeholder="Сумма ᚙ"
+                value={donateAmt}
+                onChange={e => setDonateAmt(e.target.value)}
+                type="number"
+                style={{ ...inputStyle, flex: 1, margin: 0 }}
+              />
+              <button onClick={handleDonate} disabled={donating || !donateAmt} style={{ padding: '10px 16px', background: '#F5C842', color: '#0B0D11', border: 'none', borderRadius: 12, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: donating ? 0.6 : 1 }}>
+                {donating ? '...' : 'Отправить'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Модал подтверждения выхода */}
+      {showLeaveConfirm && (
+        <div style={overlayStyle} onClick={(e) => e.target === e.currentTarget && setShowLeaveConfirm(false)}>
+          <div style={{ ...modalStyle, padding: 24, maxHeight: 'auto' }}>
+            <div style={handleBar} />
+            <div style={{ fontSize: 16, fontWeight: 700, color: '#F0F2F8', marginBottom: 12 }}>Выйти из сборной?</div>
+            <div style={{ fontSize: 13, color: '#A8B0C8', marginBottom: 20, lineHeight: 1.5 }}>
+              Вы покинете {myCountry?.nameRu}. Вы всегда сможете вступить в другую страну.
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={() => setShowLeaveConfirm(false)} style={{ flex: 1, padding: 12, background: '#1C2030', color: '#A8B0C8', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                Отмена
+              </button>
+              <button onClick={handleLeave} disabled={leaving} style={{ flex: 1, padding: 12, background: 'rgba(255,77,106,0.1)', color: '#FF4D6A', border: '1px solid rgba(255,77,106,0.3)', borderRadius: 12, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: leaving ? 0.6 : 1 }}>
+                {leaving ? '...' : '🚪 Выйти'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Modals */}
