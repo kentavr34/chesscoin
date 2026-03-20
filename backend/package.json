@@ -1,6 +1,6 @@
 {
   "name": "chesscoin-backend",
-  "version": "6.0.1",
+  "version": "7.1.2",
   "private": true,
   "scripts": {
     "dev": "tsx --tsconfig tsconfig.json -r tsconfig-paths/register watch src/index.ts",
@@ -9,7 +9,10 @@
     "migrate": "prisma migrate deploy",
     "migrate:dev": "prisma migrate dev",
     "generate": "prisma generate",
-    "seed": "tsx -r tsconfig-paths/register prisma/seed.ts"
+    "seed": "tsx -r tsconfig-paths/register prisma/seed.ts",
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1009.0",
@@ -24,13 +27,18 @@
     "ioredis": "^5.3.2",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
+    "nanoid": "^3.3.7",
+    "sharp": "^0.33.3",
     "node-cron": "^3.0.3",
     "socket.io": "^4.7.4",
     "stockfish": "^16.0.0",
     "tsconfig-paths": "^4.2.0",
     "tsx": "^4.7.1",
     "uuid": "^9.0.1",
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "helmet": "^8.0.0",
+    "winston": "^3.14.0",
+    "compression": "^1.7.4"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
@@ -38,11 +46,51 @@
     "@types/express-rate-limit": "^6.0.0",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/multer": "^1.4.11",
+    "@types/nanoid": "*",
     "@types/node": "^20.11.25",
     "@types/node-cron": "^3.0.11",
     "@types/uuid": "^9.0.8",
     "prisma": "^5.10.0",
     "tsc-alias": "^1.8.8",
-    "typescript": "^5.4.2"
+    "typescript": "^5.4.2",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.12",
+    "ts-jest": "^29.2.5",
+    "@types/compression": "^1.7.5"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1"
+    },
+    "testMatch": [
+      "**/__tests__/**/*.test.ts"
+    ],
+    "collectCoverageFrom": [
+      "src/services/game/finish.ts",
+      "src/services/crons.ts",
+      "src/services/cleanup.ts",
+      "src/services/economy.ts"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 60,
+        "functions": 70,
+        "lines": 70
+      }
+    },
+    "setupFilesAfterFramework": [],
+    "globals": {
+      "ts-jest": {
+        "tsconfig": {
+          "paths": {
+            "@/*": [
+              "./src/*"
+            ]
+          }
+        }
+      }
+    }
   }
 }
