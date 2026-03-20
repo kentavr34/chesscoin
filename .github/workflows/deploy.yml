@@ -28,7 +28,7 @@ jobs:
             git reset --hard origin/${{ github.ref_name }}
 
             echo "==> Building and restarting containers..."
-            docker compose up -d --build backend frontend bot
+            docker compose up -d --build --force-recreate backend frontend bot
 
             echo "==> Reloading nginx (pick up new backend IP after container redeploy)..."
             docker exec chesscoin_nginx nginx -s reload || docker compose restart nginx
