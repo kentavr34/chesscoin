@@ -101,8 +101,9 @@ jobs:
             git pull origin main
 
             # Пересобираем и перезапускаем контейнеры
-            echo "🐳 Docker compose build & up..."
-            docker compose up -d --build --force-recreate --remove-orphans
+            echo "🐳 Docker compose down & up..."
+            docker compose down --remove-orphans || true
+            docker compose up -d --build
 
             # Ждём запуска backend
             echo "⏳ Waiting for backend..."
