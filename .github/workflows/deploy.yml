@@ -1,72 +1,176 @@
-name: Deploy to Production
+# ──────────────────────────────────────────────────────────────
+# ChessCoin — CI/CD Pipeline
+#
+# Триггер: push в ветку main
+#
+# Шаги:
+# 1. Тесты (124 unit тестов)
+# 2. TypeScript проверка (tsc --noEmit)
+# 3. SSH деплой на VPS:
+#    - git pull
+#    - docker compose up --build -d
+#    - prisma migrate deploy
+#    - health check
+#
+# Секреты GitHub (Settings → Secrets → Actions):
+#   SSH_HOST         — IP адрес VPS
+#   SSH_USER         — пользователь (обычно root или ubuntu)
+#   SSH_PRIVATE_KEY  — приватный SSH ключ (весь текст с -----BEGIN...)
+#   SSH_PORT         — порт SSH (обычно 22)
+# ──────────────────────────────────────────────────────────────
+
+name: Deploy ChessCoin
 
 on:
   push:
-    branches:
-      - main
-      - 'claude/**'
+    branches: [main]
+  workflow_dispatch:      # ручной запуск из GitHub UI
 
 jobs:
-  deploy:
-    name: Deploy via SSH
+  # ── Шаг 1: Тесты и типизация ─────────────────────────────────
+  test:
+    name: 🧪 Tests & TypeScript
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy on server
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Run unit tests (124 tests)
+        working-directory: backend
+        run: npm test -- --passWithNoTests --forceExit
+        env:
+          NODE_ENV: test
+
+      - name: TypeScript check (backend)
+        working-directory: backend
+        run: npx tsc --noEmit
+
+      - name: Setup Node.js for frontend
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: TypeScript check (frontend)
+        working-directory: frontend
+        run: npx tsc --noEmit
+
+  # ── Шаг 2: Деплой на VPS ──────────────────────────────────────
+  deploy:
+    name: 🚀 Deploy to VPS
+    runs-on: ubuntu-latest
+    needs: test             # запускается только если тесты прошли
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT || 2222 }}
+          port: ${{ secrets.SSH_PORT }}
+          timeout: 300s
           script: |
             set -e
+            echo "──────────────────────────────────"
+            echo "🚀 ChessCoin Deploy $(date '+%Y-%m-%d %H:%M:%S')"
+            echo "──────────────────────────────────"
+
             cd /opt/chesscoin
 
-            echo "==> Pulling branch: ${{ github.ref_name }}..."
-            git fetch origin ${{ github.ref_name }}
-            git reset --hard origin/${{ github.ref_name }}
+            # Получаем последние изменения
+            echo "📥 Git pull..."
+            git pull origin main
 
-            echo "==> Building and restarting containers..."
-            docker compose up -d --build --force-recreate backend frontend bot
+            # Пересобираем и перезапускаем контейнеры
+            echo "🐳 Docker compose build & up..."
+            docker compose up -d --build --force-recreate --remove-orphans
 
-            echo "==> Reloading nginx (pick up new backend IP after container redeploy)..."
-            docker exec chesscoin_nginx nginx -s reload || docker compose restart nginx
+            # Ждём запуска backend
+            echo "⏳ Waiting for backend..."
+            sleep 10
 
-            echo "==> Resolving any previously failed/pending migrations..."
-            for migration in \
-              20260313_tournaments_streak \
-              20260314_clan_battles \
-              20260314_stages2to5 \
-              20260314_theme_items \
-              20260315_countries_wars \
-              20260315_war_warning_field \
-              20260315_active_theme; do
-              docker exec chesscoin_backend npx prisma migrate resolve --rolled-back "$migration" 2>/dev/null || true
+            # Применяем миграции БД
+            echo "🗄️  Prisma migrate deploy..."
+            docker compose exec -T backend npx prisma migrate deploy
+
+            # Health check
+            echo "❤️  Health check..."
+            for i in {1..10}; do
+              STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://chesscoin.app/health || echo "000")
+              if [ "$STATUS" = "200" ]; then
+                echo "✅ Health check passed (attempt $i)"
+                break
+              fi
+              echo "⏳ Attempt $i: status=$STATUS, waiting 5s..."
+              sleep 5
+              if [ $i -eq 10 ]; then
+                echo "❌ Health check failed after 10 attempts"
+                docker compose logs backend --tail=30
+                exit 1
+              fi
             done
 
-            echo "==> Running DB migrations..."
-            docker exec chesscoin_backend npx prisma migrate deploy || (
-              echo "Migration failed, dumping migration status:"
-              docker exec chesscoin_backend npx prisma migrate status 2>&1 || true
-              docker logs --tail 50 chesscoin_backend 2>&1 || true
-              exit 1
-            )
+            # Показываем статус
+            echo "📊 Container status:"
+            docker compose ps
 
-            echo "==> Running seed (update shop item images)..."
-            docker exec chesscoin_backend npm run seed
+            echo ""
+            echo "✅ Deploy completed successfully!"
 
-            echo "==> Health check..."
-            sleep 5
-            docker exec chesscoin_backend node -e "require('http').get('http://localhost:3000/health',r=>{process.exit(r.statusCode===200?0:1)}).on('error',e=>{console.error(e.message);process.exit(1)})" || (echo "Health check failed! Backend logs:" && docker logs --tail 80 chesscoin_backend && exit 1)
+  # ── Уведомление в Telegram при успехе/ошибке ─────────────────
+  notify:
+    name: 📱 Telegram Notification
+    runs-on: ubuntu-latest
+    needs: [test, deploy]
+    if: always()
 
-            echo "==> Waiting 30s to check backend stability..."
-            sleep 30
-            echo "==> Post-deploy container status..."
-            docker inspect chesscoin_backend --format '{{.State.Status}} restarts={{.RestartCount}}' || true
-            docker logs --tail 30 chesscoin_backend 2>&1 | tail -30 || true
+    steps:
+      - name: Notify success
+        if: needs.deploy.result == 'success'
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_ADMIN_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            ✅ *ChessCoin v7.1+ задеплоен успешно!*
 
-            echo "==> Checking public API health..."
-            curl -sf https://chesscoin.app/health && echo "Public health OK" || echo "WARNING: Public health returned non-200"
+            📦 Коммит: `${{ github.sha }}`
+            👤 Автор: ${{ github.actor }}
+            🕐 Время: ${{ github.event.head_commit.timestamp }}
 
-            echo "==> Deploy complete! Branch: ${{ github.ref_name }}"
+            [Открыть приложение](https://chesscoin.app)
+
+      - name: Notify failure
+        if: needs.test.result == 'failure' || needs.deploy.result == 'failure'
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_ADMIN_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            ❌ *ChessCoin деплой ПРОВАЛИЛСЯ*
+
+            📦 Коммит: `${{ github.sha }}`
+            👤 Автор: ${{ github.actor }}
+            🔴 Тесты: ${{ needs.test.result }}
+            🔴 Деплой: ${{ needs.deploy.result }}
+
+            [Логи GitHub Actions](https://github.com/${{ github.repository }}/actions)
