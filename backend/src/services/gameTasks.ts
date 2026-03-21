@@ -20,9 +20,7 @@ import { prisma } from '@/lib/prisma';
 import { redis } from '@/lib/redis';
 import { updateBalance } from '@/services/economy';
 import { TransactionType, TaskType } from '@prisma/client';
-import { getLogger } from '@/lib/logger';
-
-const logger = getLogger('gameTasks');
+import { logger } from '@/lib/logger';
 
 // ── Вспомогательная: завершить задание (идемпотентно) ────────
 async function completeTask(userId: string, taskId: string, reward: bigint): Promise<boolean> {

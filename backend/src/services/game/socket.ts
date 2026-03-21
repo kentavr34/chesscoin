@@ -132,7 +132,7 @@ export const setupSocketHandlers = (io: Server) => {
                 currentSideId: true, winnerSideId: true, bet: true, botLevel: true,
                 isSurrender: true, duration: true, turnStartedAt: true,
                 startedAt: true, finishedAt: true, createdAt: true, code: true,
-                sides: { include: { player: { select: { id: true, firstName: true, username: true, elo: true, avatar: true, avatarGradient: true } } } },
+                sides: { include: { player: { select: { id: true, firstName: true, lastName: true, username: true, elo: true, avatar: true, avatarType: true, avatarGradient: true } } } },
               },
             },
           },
@@ -244,7 +244,7 @@ export const setupSocketHandlers = (io: Server) => {
             select: {
               id: true, fen: true, pgn: true, status: true, type: true,
               currentSideId: true, bet: true, botLevel: true,
-              sides: { include: { player: { select: { id: true, firstName: true, username: true, elo: true, avatar: true, avatarGradient: true } } } },
+              sides: { include: { player: { select: { id: true, firstName: true, lastName: true, username: true, elo: true, avatar: true, avatarType: true, avatarGradient: true } } } },
             },
           });
 
@@ -327,7 +327,7 @@ export const setupSocketHandlers = (io: Server) => {
 
           const updatedSession = await prisma.session.findUnique({
             where: { id: sessionId },
-            include: { sides: { include: { player: { select: { id: true, firstName: true, username: true, elo: true, avatar: true, avatarGradient: true } } } } },
+            include: { sides: { include: { player: { select: { id: true, firstName: true, lastName: true, username: true, elo: true, avatar: true, avatarType: true, avatarGradient: true } } } } },
           });
 
           await cacheSession(updatedSession);
@@ -593,7 +593,7 @@ const makeBotMove = async (socket: AuthSocket, io: Server, sessionId: string) =>
       where: { id: sessionId },
       select: {
         id: true, fen: true, pgn: true, status: true, botLevel: true, currentSideId: true,
-        sides: { include: { player: { select: { id: true, firstName: true, username: true, elo: true, avatar: true, avatarGradient: true } } } },
+        sides: { include: { player: { select: { id: true, firstName: true, lastName: true, username: true, elo: true, avatar: true, avatarType: true, avatarGradient: true } } } },
       },
     });
     if (!session || session.status !== SessionStatus.IN_PROGRESS) return;
@@ -655,7 +655,7 @@ const makeBotMove = async (socket: AuthSocket, io: Server, sessionId: string) =>
 
     const updatedSession = await prisma.session.findUnique({
       where: { id: sessionId },
-      include: { sides: { include: { player: { select: { id: true, firstName: true, username: true, elo: true, avatar: true, avatarGradient: true } } } } },
+      include: { sides: { include: { player: { select: { id: true, firstName: true, lastName: true, username: true, elo: true, avatar: true, avatarType: true, avatarGradient: true } } } } },
     });
 
     io.to(sessionId).emit("game", formatSession(updatedSession, humanSide?.playerId ?? null));
@@ -682,7 +682,7 @@ const getStockfishMove = (
   fen: string,
   level: number
 ): Promise<{ from: string; to: string } | null> => {
-  return new Promise((resolve) => {
+  return new Promise(async (resolve) => {
     const requestId = uuidv4();
     // movetime на уровень + 5 сек запаса до полного kill
     // BUG-02 fix: расширено до 20 уровней (было 10)

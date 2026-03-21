@@ -10,9 +10,7 @@
 // ═══════════════════════════════════════════════════════════════
 import { Worker } from "worker_threads";
 import path from "path";
-import { getLogger } from "@/lib/logger";
-
-const logger = getLogger("stockfish-pool");
+import { logger } from "@/lib/logger";
 
 // Максимум параллельных Stockfish процессов
 // 2 CPU: 15-20 воркеров | 4 CPU: 30-40 | 8 CPU: 60-80

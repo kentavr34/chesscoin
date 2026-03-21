@@ -1,5 +1,4 @@
 /**
-import { logger, logError } from "@/lib/logger";
  * stockfishWorker.ts
  * Запускается как Worker Thread — не блокирует основной event loop.
  * Общается с основным потоком через parentPort.
@@ -11,6 +10,7 @@ import { logger, logError } from "@/lib/logger";
 
 import { parentPort } from "worker_threads";
 import { Chess } from "chess.js";
+import { logger } from "@/lib/logger";
 
 // ─── Уровни J.A.R.V.I.S (20 уровней) ────────────────────────────────────────
 // elo: целевой UCI_Elo для Stockfish (1320–3190)
