@@ -9,6 +9,7 @@ import { useGameStore } from '@/store/useGameStore';
 import { useWarChallengeStore } from '@/store/useWarChallengeStore';
 import { getSocket } from '@/api/socket';
 import { WarChallengePopup } from '@/components/ui/WarChallengePopup';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { useT } from '@/i18n/useT';
 import type { Lang } from '@/i18n/translations';
 
