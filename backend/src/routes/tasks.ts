@@ -1,8 +1,12 @@
 import { Router, Request, Response } from "express";
+import { z } from "zod";
 import { prisma } from "../lib/prisma";
 import { authMiddleware } from "../middleware/auth";
+import { validate } from "@/middleware/validate";
 import { updateBalance } from "@/services/economy";
 import { TransactionType } from "@prisma/client";
+
+const CompleteTaskSchema = z.object({ taskId: z.string() });
 
 export const tasksRouter = Router();
 
