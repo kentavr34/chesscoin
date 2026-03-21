@@ -394,7 +394,10 @@ export const getActiveBattles = async () => {
             select: {
               id: true,
               firstName: true,
+              lastName: true,
+              username: true,
               avatar: true,
+              avatarType: true,
               avatarGradient: true,
               elo: true,
               league: true,
