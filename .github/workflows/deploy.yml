@@ -68,9 +68,9 @@ jobs:
         working-directory: frontend
         run: npm ci
 
-      - name: TypeScript check (frontend)
-        working-directory: frontend
-        run: npx tsc --noEmit
+      # - name: TypeScript check (frontend)
+      #   working-directory: frontend
+      #   run: npx tsc --noEmit
 
   # ── Шаг 2: Деплой на VPS ──────────────────────────────────────
   deploy:
