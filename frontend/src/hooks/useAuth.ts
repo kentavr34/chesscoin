@@ -81,6 +81,7 @@ export const useAuth = () => {
 
   const loginWithInitData = async (initData: string, referrer?: string) => {
     try {
+      console.log('[Auth] Sending initData, length:', initData.length, 'first 100:', initData.substring(0, 100));
       const result = await authApi.login(initData, referrer);
       setTokens(result.accessToken, result.refreshToken);
       setUser(result.user);

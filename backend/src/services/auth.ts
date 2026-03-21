@@ -21,9 +21,13 @@ export const loginWithTelegram = async (
   }
 
   try {
+    logger.info("[Auth] validating initData, length=" + initDataString.length + ", botToken=" + (config.telegram.botToken ? "SET(" + config.telegram.botToken.length + " chars)" : "EMPTY"));
     validate(initDataString, config.telegram.botToken, { expiresIn: 0 });
+    logger.info("[Auth] initData validation OK");
   } catch (e) {
-    logger.error("[Auth] initData validation failed:", (e as Error).message);
+    const errMsg = e instanceof Error ? e.message : JSON.stringify(e);
+    logger.error("[Auth] initData validation failed: " + errMsg);
+    logger.error("[Auth] initData (first 200 chars): " + initDataString.substring(0, 200));
     throw new Error("Invalid Telegram initData");
   }
 

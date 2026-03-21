@@ -1,4 +1,4 @@
-import { api } from './client';
+import { api, apiFetch } from './client';
 import type {
   User, GameSession, BattleLobbyItem, LeaderboardUser,
   Nation, Transaction, Task, ShopItem, ClanWar, ClanMemberData, TournamentFull, ClanBattle,
@@ -6,10 +6,12 @@ import type {
 
 // ── AUTH ──────────────────────────────────────────────
 export const authApi = {
+  // Login should NOT retry/reload on 401 — it would cause infinite reload loop
   login: (initData: string, referrer?: string) =>
-    api.post<{ accessToken: string; refreshToken: string; user: User }>(
+    apiFetch<{ accessToken: string; refreshToken: string; user: User }>(
       '/auth/login',
-      { initData, referrer }
+      { method: 'POST', body: JSON.stringify({ initData, referrer }) },
+      false // disable 401 retry
     ),
   refresh: (refreshToken: string) =>
     api.post<{ accessToken: string; refreshToken: string }>(
