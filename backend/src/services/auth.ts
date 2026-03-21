@@ -1,10 +1,37 @@
 import jwt from "jsonwebtoken";
-import { validate, parse } from "@telegram-apps/init-data-node";
+import { validate } from "@telegram-apps/init-data-node";
 import { prisma } from "@/lib/prisma";
 import config from "@/config";
 import { logger } from "@/lib/logger";
 import { giveWelcomeBonus } from "@/services/economy";
 import { generateGradient } from "@/utils/gradient";
+
+// Manual initData parser (replaces broken parse() from @telegram-apps/init-data-node v1.2.2)
+function parseInitData(initDataString: string) {
+  const params = new URLSearchParams(initDataString);
+  const userStr = params.get("user");
+  const user = userStr ? JSON.parse(userStr) : null;
+  return {
+    queryId: params.get("query_id") ?? undefined,
+    hash: params.get("hash") ?? "",
+    authDate: params.has("auth_date")
+      ? new Date(parseInt(params.get("auth_date")!, 10) * 1000)
+      : new Date(),
+    user: user
+      ? {
+          id: user.id,
+          firstName: user.first_name ?? "",
+          lastName: user.last_name ?? undefined,
+          username: user.username ?? undefined,
+          languageCode: user.language_code ?? undefined,
+          photoUrl: user.photo_url ?? undefined,
+          isPremium: user.is_premium ?? false,
+          allowsWriteToPm: user.allows_write_to_pm ?? false,
+        }
+      : undefined,
+    startParam: params.get("start_param") ?? undefined,
+  };
+}
 
 // ─────────────────────────────────────────
 // Telegram Login / Register
@@ -20,22 +47,15 @@ export const loginWithTelegram = async (
     return loginDebug(parseInt(telegramId));
   }
 
-  let validationPassed = false;
   try {
-    logger.info("[Auth] validating initData, length=" + initDataString.length + ", botToken=" + (config.telegram.botToken ? "SET(" + config.telegram.botToken.length + " chars)" : "EMPTY"));
     validate(initDataString, config.telegram.botToken, { expiresIn: 0 });
-    logger.info("[Auth] initData validation OK");
-    validationPassed = true;
   } catch (e) {
     const errMsg = e instanceof Error ? e.message : JSON.stringify(e);
     logger.error("[Auth] initData validation failed: " + errMsg);
-    logger.error("[Auth] initData (full): " + initDataString);
-    // TEMPORARY: allow login even if validation fails to debug the issue
-    // TODO: re-enable strict validation after fixing
-    logger.warn("[Auth] BYPASSING validation temporarily for debugging");
+    throw new Error("Invalid Telegram initData");
   }
 
-  const initData = parse(initDataString);
+  const initData = parseInitData(initDataString);
   if (!initData.user) throw new Error("No user in initData");
 
   const { id, firstName, lastName, username, languageCode, photoUrl } =
