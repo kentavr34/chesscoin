@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import { validate, parse } from "@telegram-apps/init-data-node";
 import { prisma } from "@/lib/prisma";
 import config from "@/config";
+import { logger } from "@/lib/logger";
 import { giveWelcomeBonus } from "@/services/economy";
 import { generateGradient } from "@/utils/gradient";
 
@@ -20,8 +21,9 @@ export const loginWithTelegram = async (
   }
 
   try {
-    validate(initDataString, config.telegram.botToken);
-  } catch {
+    validate(initDataString, config.telegram.botToken, { expiresIn: 0 });
+  } catch (e) {
+    logger.error("[Auth] initData validation failed:", (e as Error).message);
     throw new Error("Invalid Telegram initData");
   }
 
