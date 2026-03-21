@@ -151,7 +151,7 @@ export const BattlesPage: React.FC = () => {
           )}
           {waitingSessions.map((battle) => (
             <div key={battle.id} style={wcardStyle}>
-              <Avatar user={battle.creator as import("@/types").UserPublic} size="m" />
+              <Avatar user={battle.creator as any} size="m" />
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>
                   {battle.creator?.firstName ?? t.battles.creator}
@@ -237,7 +237,7 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       duration,
       bet: String(bet),
       isPrivate: !isPublic,
-    }, (res: Record<string,unknown>) => {
+    }, (res: any) => {
       setLoading(false);
       if (res.ok && res.session) {
         upsertSession(res.session);

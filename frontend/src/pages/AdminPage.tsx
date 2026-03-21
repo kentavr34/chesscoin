@@ -104,13 +104,13 @@ export const AdminPage: React.FC = () => {
 
   // Проверяем права доступа
   useEffect(() => {
-    api.get('/admin/stats').then((r: Record<string,unknown>) => setStats(r)).catch(() => {});
-    api.get('/admin/users').then((r: Record<string,unknown>) => setUsers(r.users ?? [])).catch(() => {});
+    api.get('/admin/stats').then((r: any) => setStats(r)).catch(() => {});
+    api.get('/admin/users').then((r: any) => setUsers(r.users ?? [])).catch(() => {});
   }, []);
 
   const searchUsers = async () => {
     try {
-      const r = await api.get(`/admin/users?search=${userSearch}`);
+      const r: any = await api.get(`/admin/users?search=${userSearch}`);
       setUsers(r.users ?? []);
     } catch {}
   };
@@ -281,7 +281,7 @@ export const AdminPage: React.FC = () => {
             <input value={userSearch} onChange={e => setUserSearch(e.target.value)} onKeyDown={e => e.key === 'Enter' && searchUsers()} placeholder={t.admin.searchPlaceholder} style={{ flex: 1, padding: '10px 14px', background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, color: 'var(--text-primary, #F0F2F8)', fontSize: 13, fontFamily: 'inherit' }} />
             <button onClick={searchUsers} style={{ padding: '10px 16px', background: 'var(--accent, #F5C842)', border: 'none', borderRadius: 12, color: '#0B0D11', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>🔍</button>
           </div>
-          {users.map((u: Record<string,unknown>) => (
+          {users.map((u: any) => (
             <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: u.isBanned ? 'var(--red, #FF4D6A)' : 'var(--text-primary, #F0F2F8)' }}>{u.firstName} @{u.username ?? '—'}</div>
@@ -830,7 +830,7 @@ const ListTab: React.FC<{
                 <input
                   value={editData.name}
                   onChange={(e) => setEditData(d => ({ ...d, name: e.target.value }))}
-                  placeholder={t.admin.tourName}
+                  placeholder="Название"
                   style={inputStyle}
                 />
                 <div style={{ display: 'flex', gap: 6 }}>

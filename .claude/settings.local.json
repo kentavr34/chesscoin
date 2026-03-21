@@ -3,7 +3,22 @@
     "allow": [
       "Bash(ls *.yml)",
       "Bash(gh auth:*)",
-      "Bash(gh repo:*)"
+      "Bash(gh repo:*)",
+      "Bash(find /c/Users/SAM/Desktop/chesscoin -name .env -not -path */node_modules/*)",
+      "Bash(mkdir -p /tmp/sshkey)",
+      "Bash(/tmp/sshkey/id_ed25519:*)",
+      "Bash(chmod 600 /tmp/sshkey/id_ed25519)",
+      "Bash(ssh -i /tmp/sshkey/id_ed25519 -o StrictHostKeyChecking=no -o ConnectTimeout=10 root@37.77.106.28 \"cd /opt/chesscoin && git pull origin main && docker compose up -d --build 2>&1\")",
+      "Bash(ssh -i /tmp/sshkey/id_ed25519 -o StrictHostKeyChecking=no -o ConnectTimeout=5 -p 2222 root@37.77.106.28 \"echo ok\")",
+      "Bash(ssh -i /tmp/sshkey/id_ed25519 -o StrictHostKeyChecking=no -o ConnectTimeout=5 -p 2200 root@37.77.106.28 \"echo ok\")",
+      "Bash(ssh -i /tmp/sshkey/id_ed25519 -o StrictHostKeyChecking=no -p 2222 root@37.77.106.28 \"cd /opt/chesscoin && git pull origin main && docker compose up -d --build\")",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(ssh -i /tmp/sshkey/id_ed25519 -o StrictHostKeyChecking=no -p 2222 root@37.77.106.28 \"cd /opt/chesscoin && git pull origin main && docker compose up -d --build 2>&1\")",
+      "Bash(npx tsc:*)",
+      "Bash(node_modules/.bin/tsc --noEmit)",
+      "Bash(tsc --version)"
     ]
   }
 }

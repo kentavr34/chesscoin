@@ -81,7 +81,7 @@ const CandleChart: React.FC<{ candles: PriceCandle[]; up: boolean; height?: numb
         high:  c.high,
         low:   c.low,
         close: c.close,
-      })).sort((a, b) => a.time - b.time);
+      })).sort((a, b) => (a.time as number) - (b.time as number));
 
       candleSeries.setData(data);
       chart.timeScale().fitContent();
@@ -247,6 +247,10 @@ const ExecuteOrderModal: React.FC<{
 }> = ({ order, buyerWallet, onClose, onExecuted, showToast, onUserRefresh }) => {
   const [step, setStep] = useState<'confirm' | 'paying' | 'verifying' | 'done' | 'error'>('confirm');
   const [errMsg, setErrMsg] = useState('');
+
+  const maxCoins = Number(order.amountCoins);
+  const [partialAmt, setPartialAmt] = useState(maxCoins);
+  const isPartial = partialAmt < maxCoins;
 
   const totalTon = order.totalTon;
   const feeTon   = totalTon * PLATFORM_FEE;
@@ -542,7 +546,7 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
       ]);
       setOrders(all.orders);
       setMyOrders(mine.orders);
-      setBuyOrders(buys.orders);
+      setBuyOrders(buys.orders as any);
     } catch {} finally {
       setLoadingOrders(false);
     }
