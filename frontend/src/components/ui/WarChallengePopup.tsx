@@ -25,7 +25,9 @@ interface Props {
 }
 
 export const WarChallengePopup: React.FC<Props> = ({ data, onAccept, onDecline }) => {
-  // Автоотклонение через 30 t.warChallenge.secondsунд
+  const t = useT();
+
+  // Автоотклонение через 30 секунд
   useEffect(() => {
     const timer = setTimeout(onDecline, 30_000);
     return () => clearTimeout(timer);
@@ -89,7 +91,7 @@ export const WarChallengePopup: React.FC<Props> = ({ data, onAccept, onDecline }
           fontSize: 12, color: 'var(--text-muted, #4A5270)',
           marginBottom: 28,
         }}>
-          {t.warChallenge.subtitle} · t.warChallenge.autoDecline 30 t.warChallenge.seconds
+          {t.warChallenge.subtitle} · {t.warChallenge.autoDecline} 30 {t.warChallenge.seconds}
         </div>
 
         {/* Кнопки */}

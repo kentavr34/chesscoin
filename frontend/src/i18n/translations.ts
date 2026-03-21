@@ -206,8 +206,8 @@ export const translations = {
       testWrong: '❌ Wrong! Try again.',
     },
     gameSetup: {
-      title: 'Настройка игры', duration: 'Контроль времени', color: 'Цвет',
-      white: '☀️ Белые', black: '🌙 Чёрные', random: '🎲 Случайно', start: 'Начать',
+      title: 'Game Setup', duration: 'Time Control', color: 'Color',
+      white: '☀️ White', black: '🌙 Black', random: '🎲 Random', start: 'Start',
     },
     admin: {
       title: 'Admin Panel',
@@ -260,9 +260,9 @@ export const translations = {
       reload: 'Reload',
     },
     notifications: {
-      warChallenge: (country) => `⚔️ Вас вызвала на дуэль страна ${country}! Переходите в Батлы для принятия.`,
-      tournamentMatch: (opponent) => `🏆 Матч турнира! Играй против ${opponent}. Переходи в Батлы.`,
-      goToBattles: 'Перейти в Батлы →',
+      warChallenge: (country) => `⚔️ Country ${country} challenged you to a duel! Go to Battles to accept.`,
+      tournamentMatch: (opponent) => `🏆 Tournament match! Play against ${opponent}. Go to Battles.`,
+      goToBattles: 'Go to Battles →',
     },
   },
   ru: {

@@ -2,6 +2,7 @@ import { api, apiFetch } from './client';
 import type {
   User, GameSession, BattleLobbyItem, LeaderboardUser,
   Nation, Transaction, Task, ShopItem, ClanWar, ClanMemberData, TournamentFull, ClanBattle,
+  ActiveMatch, Country,
 } from '@/types';
 
 // ── AUTH ──────────────────────────────────────────────

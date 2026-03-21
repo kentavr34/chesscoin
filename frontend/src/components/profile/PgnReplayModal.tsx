@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useT } from '@/i18n/useT';
 import { Chessboard } from 'react-chessboard';
 import { Chess } from 'chess.js';

@@ -23,7 +23,13 @@ export const airdropRouter = Router();
 
 // Middleware: только для администраторов
 const adminOnly = async (req: Request, res: Response, next: Function) => {
-  if (!req.user?.isAdmin) return res.status(403).json({ error: 'Admin only' });
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { isAdmin: true },
+  });
+  if (!user?.isAdmin) return res.status(403).json({ error: 'Admin only' });
   next();
 };
 

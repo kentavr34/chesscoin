@@ -1,5 +1,6 @@
 import React from 'react';
 import { useT } from '@/i18n/useT';
+import { JARVIS_LEVELS } from '@/components/ui/JarvisModal';
 
 export const BadgeDetailModal: React.FC<{
   badgeName: string;

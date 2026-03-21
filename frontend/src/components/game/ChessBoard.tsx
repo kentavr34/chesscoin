@@ -137,6 +137,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
   const [selected, setSelected]  = useState<Square | null>(null);
   const [optionSqs, setOptionSqs] = useState<Record<string, React.CSSProperties>>({});
   const [localFen, setLocalFen]   = useState(fen);
+  const [pendingPromotion, setPendingPromotion] = useState<{ from: Square; to: Square } | null>(null);
 
   // Применяем filter фигур через CSS переменную
   useEffect(() => {

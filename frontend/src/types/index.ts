@@ -65,7 +65,6 @@ export interface User extends UserPublic {
   nextRestoreSeconds?: number; // R1: for attempts timer
   jarvisLevel?: number;        // R1: Jarvis level progress
   rank?: number;               // TAIL-4: военный ранг (число)
-  loginStreak?: number;        // TAIL-4: уже есть выше — дублируем для ясности
   isMonthlyChampion?: boolean; // R1
   monthlyChampionAt?: string | null; // R1
   tournamentBadges?: Array<{ id: string; name: string; type: string; date?: string }>; // R1
@@ -357,39 +356,5 @@ export interface PuzzleItem {
   dailyDate?: string;
 }
 
-export interface ActiveMatch {
-  id: string;
-  tournamentId: string;
-  sessionId?: string | null;
-  round: number;
-  status: string;
-  myUserId: string;
-  tournament?: { name: string; type: string } | null;
-  player1?: { userId: string; user: UserPublic } | null;
-  player2?: { userId: string; user: UserPublic } | null;
-}
-
-export interface WarBattle {
-  id: string;
-  warId: string;
-  sessionId: string;
-  status: string;
-  attackerId: string;
-  defenderId: string;
-  winnerId: string | null;
-  spectatorCount?: number;
-  session?: { id: string; pgn?: string; status: SessionStatus; sides: SessionSide[] };
-}
-
-export interface Country {
-  id: string;
-  code: string;
-  nameRu: string;
-  nameEn: string;
-  flag: string;
-  memberCount: number;
-  wins?: number;
-  losses?: number;
-}
-
-export type { PublicUser, SessionSide, GameSession, TournamentFull, ActiveMatch, Country, WarBattle, Transaction, SocketGameEvent } from "./api"; // R1
+// R1: типы для ответов REST/socket, совместимые с backend — из ./api (без дублирования SessionSide/GameSession из этого файла)
+export type { ActiveMatch, Country, WarBattle, SocketGameEvent } from "./api";
