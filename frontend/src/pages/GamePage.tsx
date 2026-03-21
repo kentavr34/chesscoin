@@ -361,7 +361,7 @@ export const GamePage: React.FC = () => {
           commission={resultData.commission}
           pieceCoins={resultData.pieceCoins}
           botLevelName={isBotGame && session?.botLevel ? JARVIS_LEVELS[Math.max(0, (session.botLevel ?? 1) - 1)].name : undefined}
-          userTelegramId={user as import("@/types").User & { telegramId: string }?.telegramId}
+          userTelegramId={(user as import("@/types").User & { telegramId: string })?.telegramId}
           sessionId={session?.id}
           onClose={handleResultClose}
           onRematch={isBotGame ? handleRematch : undefined}

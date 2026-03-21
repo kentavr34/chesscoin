@@ -70,6 +70,7 @@ export const TasksPage: React.FC = () => {
   const grouped = groupByCategory(tasks);
 
   return (
+    <>
     {tasksInfo.show && <InfoPopup infoKey="tasks" slides={[{ icon: '📋', title: 'Задания', desc: 'Выполняй задания и получай монеты ᚙ. Ежедневные задания обновляются каждый день.' }, { icon: '👥', title: 'Реферальные задания', desc: 'Приглашай друзей и выполняй реферальные задания — бонус растёт с каждым новым игроком.' }]} onClose={tasksInfo.close} />}
     <PageLayout title={t.tasks.title} centered>
       {/* Прогресс */}
@@ -236,6 +237,7 @@ export const TasksPage: React.FC = () => {
         </React.Fragment>
       ))}
     </PageLayout>
+    </>
   );
 };
 

@@ -317,36 +317,37 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
   }, [pendingPromotion, localFen, onMove]);
 
   return (
-    <div style={{
-      width: '100%',
-      borderRadius: 12,
-      overflow: 'hidden',
-      boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
-    }}>
-      <Chessboard
-        position={localFen}
-        boardOrientation={orientation}
-        onSquareClick={handleSquareClick}
-        onPieceDrop={handlePieceDrop}
-        onPieceDragBegin={handleDragBegin}
-        onPieceDragEnd={() => { setSelected(null); setOptionSqs({}); }}
-        arePiecesDraggable={isMyTurn && !isGameOver}
-        arePremovesAllowed={false}
-        customPieces={CUSTOM_PIECES}
-        customBoardStyle={{ borderRadius: 12, boxShadow: '0 4px 24px rgba(0,0,0,0.4)' }}
-        showBoardNotation={true}
-        customLightSquareStyle={{
-          background: effectiveBoardColors.light,
-          ...(effectiveBoardColors.border ? { outline: effectiveBoardColors.border, outlineOffset: '-1px' } : {}),
-        }}
-        customDarkSquareStyle={{
-          background: effectiveBoardColors.dark,
-          ...(effectiveBoardColors.border ? { outline: effectiveBoardColors.border, outlineOffset: '-1px' } : {}),
-        }}
-        customSquareStyles={mergedSqs}
-        animationDuration={moveAnim.duration}
-      />
-    </div>
+    <>
+      <div style={{
+        width: '100%',
+        borderRadius: 12,
+        overflow: 'hidden',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
+      }}>
+        <Chessboard
+          position={localFen}
+          boardOrientation={orientation}
+          onSquareClick={handleSquareClick}
+          onPieceDrop={handlePieceDrop}
+          onPieceDragBegin={handleDragBegin}
+          onPieceDragEnd={() => { setSelected(null); setOptionSqs({}); }}
+          arePiecesDraggable={isMyTurn && !isGameOver}
+          arePremovesAllowed={false}
+          customPieces={CUSTOM_PIECES}
+          customBoardStyle={{ borderRadius: 12, boxShadow: '0 4px 24px rgba(0,0,0,0.4)' }}
+          showBoardNotation={true}
+          customLightSquareStyle={{
+            background: effectiveBoardColors.light,
+            ...(effectiveBoardColors.border ? { outline: effectiveBoardColors.border, outlineOffset: '-1px' } : {}),
+          }}
+          customDarkSquareStyle={{
+            background: effectiveBoardColors.dark,
+            ...(effectiveBoardColors.border ? { outline: effectiveBoardColors.border, outlineOffset: '-1px' } : {}),
+          }}
+          customSquareStyles={mergedSqs}
+          animationDuration={moveAnim.duration}
+        />
+      </div>
       {/* V1: Диалог промоции */}
       {pendingPromotion && (
         <PromotionModal
@@ -354,5 +355,6 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
           onSelect={handlePromotionSelect}
         />
       )}
+    </>
   );
 };

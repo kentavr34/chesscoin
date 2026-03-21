@@ -28,7 +28,8 @@ const STATUS_LABEL: Record<string, { text: string; color: string }> = {
 };
 
 export const ActiveSessionsModal: React.FC<ActiveSessionsModalProps> = ({
-  const t = useT(); sessions, onClose }) => {
+  sessions, onClose }) => {
+  const t = useT();
   const navigate = useNavigate();
 
   const handleSelect = (session: GameSession) => {

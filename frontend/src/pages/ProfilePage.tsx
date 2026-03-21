@@ -122,6 +122,7 @@ export const ProfilePage: React.FC = () => {
   ) : undefined;
 
   return (
+    <>
     {isOwnProfile && profileInfo.show && <InfoPopup infoKey="profile" slides={[{ icon: '🏅', title: 'Твой профиль', desc: 'Здесь твоя статистика, бейджи и история партий. ELO показывает твой уровень — чем выше, тем сильнее соперники.' }, { icon: '🎖️', title: 'Военное звание', desc: 'Звание растёт с количеством рефералов. Чем выше звание — тем больший процент от побед друзей ты получаешь.' }, { icon: '💰', title: 'Лиги и награды', desc: 'Накапливай монеты чтобы подниматься по лигам: Bronze → Silver → Gold → Diamond → Champion.' }]} onClose={profileInfo.close} />}
     <PageLayout backTo="/" rightAction={rightAction} centered>
       {/* Toast */}
@@ -833,6 +834,7 @@ export const ProfilePage: React.FC = () => {
         />
       )}
     </PageLayout>
+    </>
   );
 };
 

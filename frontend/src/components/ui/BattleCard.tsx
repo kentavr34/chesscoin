@@ -45,10 +45,10 @@ const STATUS_CONFIG = {
 };
 
 export const BattleCard: React.FC<BattleCardProps> = ({
-  const t = useT();
   player1, player2, status, winner, spectatorCount,
   sessionId, onSpectate, onSave, saving, label, compact,
 }) => {
+  const t = useT();
   const navigate = useNavigate();
 
   const goProfile = (player?: BattleCardPlayer | null) => {
