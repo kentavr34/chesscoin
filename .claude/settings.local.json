@@ -18,7 +18,11 @@
       "Bash(ssh -i /tmp/sshkey/id_ed25519 -o StrictHostKeyChecking=no -p 2222 root@37.77.106.28 \"cd /opt/chesscoin && git pull origin main && docker compose up -d --build 2>&1\")",
       "Bash(npx tsc:*)",
       "Bash(node_modules/.bin/tsc --noEmit)",
-      "Bash(tsc --version)"
+      "Bash(tsc --version)",
+      "Bash(grep -c '\\\\\\\\\\\\`' /c/Users/SAM/Desktop/chesscoin/backend/src/routes/profile.ts)",
+      "Bash(python3 -c \":*)",
+      "Bash(xxd)",
+      "Bash(node \"C:/Users/SAM/Desktop/chesscoin/fix_backticks.js\")"
     ]
   }
 }

@@ -120,14 +120,13 @@ app.get("/health", async (_req: import("express").Request, res: import("express"
       prisma.$queryRaw`SELECT 1`.then(() => true).catch(() => false),
     ]);
     res.json({
-      status: "ok", version: "7.1.7", stockfish: stockfishPool.stats(),
-    phase: cfg?.currentPhase ?? 1,
-    totalEmitted: cfg?.totalEmitted?.toString() ?? "0",
-    emissionCap: cfg?.emissionCap?.toString() ?? "0",
-  });
-});
+      status: "ok", version: "7.2.0", stockfish: stockfishPool.stats(),
+      phase: cfg?.currentPhase ?? 1,
+      totalEmitted: cfg?.totalEmitted?.toString() ?? "0",
+      emissionCap: cfg?.emissionCap?.toString() ?? "0",
+    });
   } catch (err) {
-    res.status(503).json({ status: "error", version: "7.1.1", error: "Service unavailable" });
+    res.status(503).json({ status: "error", version: "7.2.0", error: "Service unavailable" });
   }
 });
 

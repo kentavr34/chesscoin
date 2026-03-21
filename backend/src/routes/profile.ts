@@ -361,7 +361,7 @@ router.post("/ton-wallet/verify", authMiddleware, async (req: Request, res: Resp
       },
     }).catch(() => {}); // не критично
 
-    logger.info(\`[TON] Wallet verified for user \${userId}: \${walletAddress}\`);
+    logger.info(`[TON] Wallet verified for user ${userId}: ${walletAddress}`);
     res.json({ success: true, walletAddress });
   } catch (err: unknown) {
     res.status(500).json({ error: (err instanceof Error ? err.message : String(err)) });
@@ -385,10 +385,10 @@ async function verifyTonPayment(
     // Шаг 1: из BOC получаем hash транзакции
     // BOC — это base64, его hash служит идентификатором
     // Ищем входящие транзакции на кошелёк платформы от fromWallet
-    const url = \`\${apiBase}/getTransactions?address=\${encodeURIComponent(toWallet)}&limit=20\${apiKey ? \`&api_key=\${apiKey}\` : ""}\`;
+    const url = `${apiBase}/getTransactions?address=${encodeURIComponent(toWallet)}&limit=20${apiKey ? `&api_key=${apiKey}` : ""}`;
     const resp = await fetch(url, { signal: AbortSignal.timeout(10_000) });
     if (!resp.ok) {
-      logger.warn(\`[TON verify] toncenter returned \${resp.status}\`);
+      logger.warn(`[TON verify] toncenter returned ${resp.status}`);
       return false;
     }
     const data = await resp.json() as { ok: boolean; result: Array<Record<string, unknown>> };
@@ -412,12 +412,12 @@ async function verifyTonPayment(
       const fromNorm = fromWallet.toLowerCase();
 
       if ((srcAddr === fromWallet || srcNorm.includes(fromNorm.slice(2, 10))) && value >= minAmountNano) {
-        logger.info(\`[TON verify] ✅ Found payment: \${value} nTON from \${srcAddr} at \${utime}\`);
+        logger.info(`[TON verify] ✅ Found payment: ${value} nTON from ${srcAddr} at ${utime}`);
         return true;
       }
     }
 
-    logger.warn(\`[TON verify] Payment not found from \${fromWallet} to \${toWallet}\`);
+    logger.warn(`[TON verify] Payment not found from ${fromWallet} to ${toWallet}`);
     return false;
   } catch (err) {
     logError("[TON verify]", err);
