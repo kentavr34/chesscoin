@@ -1,15 +1,58 @@
-name: Deploy ChessCoin
+# CI (U2) → при успехе деплой на VPS. PR: только проверки, без деплоя.
+name: CI and Deploy ChessCoin
 
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
+concurrency:
+  group: chesscoin-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
+  verify-backend:
+    name: ✅ Backend — test + tsc
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm test
+      - run: npx tsc --noEmit
+
+  verify-frontend:
+    name: ✅ Frontend — vite build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      # Полный tsc — после U8 (сейчас в проекте много ошибок TS); локально: npm run typecheck
+
   deploy:
     name: 🚀 Deploy to VPS
     runs-on: ubuntu-latest
-
+    needs: [verify-backend, verify-frontend]
+    if: github.event_name != 'pull_request'
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -45,7 +88,7 @@ jobs:
     name: 📱 Telegram Notification
     runs-on: ubuntu-latest
     needs: [deploy]
-    if: always()
+    if: always() && github.event_name != 'pull_request'
     continue-on-error: true
 
     steps:
@@ -57,7 +100,7 @@ jobs:
           to: ${{ secrets.TELEGRAM_ADMIN_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
-            ✅ ChessCoin v7.2.0 задеплоен!
+            ✅ ChessCoin задеплоен
             Коммит: ${{ github.sha }}
             Автор: ${{ github.actor }}
 

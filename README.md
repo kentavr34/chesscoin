@@ -194,6 +194,29 @@ docker compose restart bot
 
 ---
 
+## ✅ CI и проверка перед релизом (шаг U2)
+
+При **push** в `main` GitHub Actions сначала выполняет проверки, затем — деплой на VPS (если проверки зелёные). При **pull request** в `main` выполняются только проверки, **деплой не запускается**.
+
+| Job | Что делает |
+|-----|------------|
+| Backend | `npm ci` → `prisma generate` → `npm test` → `tsc --noEmit` |
+| Frontend | `npm ci` → `npm run build` |
+
+Полная проверка типов фронта (`tsc --noEmit`) сейчас выполняется **локально** командой `npm run typecheck` в каталоге `frontend`; включение её в CI планируется после устранения ошибок TypeScript (шаг U8 в `RECONSTRUCTION_TASKS.md`).
+
+**Локально те же шаги, что в CI:**
+
+```bash
+cd backend && npm ci && npx prisma generate && npm test && npx tsc --noEmit
+cd ../frontend && npm ci && npm run build
+# опционально: cd ../frontend && npm run typecheck
+```
+
+Файл workflow: `.github/workflows/deploy.yml`.
+
+---
+
 ## 🧪 Тесты
 
 ```bash

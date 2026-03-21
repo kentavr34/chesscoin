@@ -1,281 +1,225 @@
-# ChessCoin — ПОЛНЫЙ АУДИТ ПЛАТФОРМЫ
-> Версия: v7.1.3
-> Дата аудита: 2026-03-20
-> Аудитор: Claude Sonnet (статический анализ + трассировка игровых путей)
-> Метод: полный анализ backend routes, services, frontend, нагрузочная оценка
+# ChessCoin v7.2.0 — Полный аудит
+> Дата: 21.03.2026
+> Сравнение с MASTERPLAN.md, проверка всего стека
+> Метод: полный анализ backend, frontend, bot, infrastructure, security
+>
+> **Актуальный порядок исправлений и критерии готовности (реконструкция без переписывания с нуля):** см. **[RECONSTRUCTION_TASKS.md](./RECONSTRUCTION_TASKS.md)** (шаги U1–U10, важность `[Ф]`/`[В]`/`[С]`, чеклисты верификации). Ниже — детальный разбор находок; при конфликте приоритет у **номерованной последовательности** в RECONSTRUCTION_TASKS.
 
 ---
 
-## 📋 ОБЯЗАТЕЛЬНЫЕ ЧЕКПОИНТЫ (проверять при каждой версии)
+## Результат: 67 находок
 
-### 🎮 ИГРОВЫЕ МЕХАНИКИ
-
-#### GM-01: Джарвис
-- [ ] Уровень не перепрыгивается (maxAllowed = jarvisLevel + 1)
-- [ ] BOT_WIN начисляется только победителю-человеку
-- [ ] Бейдж начисляется синхронно до game:over
-- [ ] jarvisLevel: Math.min(20, lvl + 1)
-- [ ] Stockfish: setoption только после readyok
-- [ ] levelMovetimes: 20 значений (не 10)
-
-#### GM-02: Батл
-- [ ] Ставка: BATTLE_BET при создании
-- [ ] Победитель: totalPot - commission (BATTLE_WIN)
-- [ ] Комиссия 10% → platformReserve
-- [ ] Ничья: каждый получает ставку обратно
-- [ ] Донат-пул → победителю
-- [ ] winningAmount записан в SessionSide
-- [ ] Реферальный доход: applyReferralIncome (fire-and-forget)
-- [ ] Скины создателя в Session
-
-#### GM-03: Турниры
-- [ ] Взнос: TOURNAMENT_ENTRY при регистрации
-- [ ] Нет двойного join (проверка alreadyJoined)
-- [ ] COUNTRY требует членства в стране
-- [ ] Матч: Session + TournamentMatch в $transaction
-- [ ] Socket push tournament:match
-- [ ] Авто-поражение через 24ч
-- [ ] Призы: cron checkTournamentResults
-- [ ] Бот: TOURNAMENT_WIN уведомление
-
-#### GM-04: Войны
-- [ ] Только главком объявляет войну
-- [ ] Лимит 10 батлов в войне
-- [ ] $transaction: Session + WarBattle
-- [ ] Socket war:challenge с sessionCode
-- [ ] WarChallengePopup на фронте
-- [ ] Результат обновляет warBattle.winner
-- [ ] Cron: очки стран по итогам войны
-
-#### GM-05: Задания ⚠️ КРИТИЧНО
-- [ ] DAILY_LOGIN срабатывает при входе (auth.ts)
-- [ ] FIRST_GAME срабатывает при 1-й партии (finish.ts)
-- [ ] WIN_N срабатывает при N-й победе (finish.ts)
-- [ ] WIN_BOT_N срабатывает при N-й победе над ботом (finish.ts)
-- [ ] REFERRAL_1 при referralActivated=true
-- [ ] Нет дублирования (CompletedTask уникален)
-- [ ] Награда: TASK_REWARD
-
-#### GM-06: Магазин
-- [ ] Баланс проверяется до покупки
-- [ ] $transaction: списание + UserItem
-- [ ] equip: снимается предыдущий того же типа
-- [ ] TON: boc верификация
-- [ ] Скины применяются в партии (S3)
-
-#### GM-07: Реферальная система
-- [ ] L1%: зависит от военного ранга
-- [ ] activationBonus при первой игре реферала
-- [ ] L2: фиксированные 10%
-- [ ] referralActivated=false → нет бонуса
-
-#### GM-08: P2P Биржа
-- [ ] SELL: EXCHANGE_FREEZE при создании
-- [ ] Race condition: updateMany WHERE status=OPEN
-- [ ] Отмена: EXCHANGE_UNFREEZE
-- [ ] BUY: нет заморозки ᚙ при создании
-- [ ] Верификация TON через TonCenter
-- [ ] Idempotency: @@unique txHash
-- [ ] Комиссия 0.5% → PLATFORM_TON_WALLET
-- [ ] Частичное: остаток → новый ордер
-- [ ] Лимит 5 SELL + 5 BUY
-
-#### GM-09: TON Connect
-- [ ] 1 TON за подключение верифицируется через boc
-- [ ] tonWalletAddress сохраняется в User
-- [ ] 403 TON_WALLET_REQUIRED для биржи
+| Severity | Count | Описание |
+|----------|-------|----------|
+| CRITICAL | 6 | Крэши, секреты в git, сломанные компоненты |
+| HIGH | 8 | Обход updateBalance, отсутствие полей, TS strict off |
+| MEDIUM | 15 | i18n ошибки, hardcoded русский, кеш, type mismatches |
+| LOW | 10 | Дублирование, стилистика, мелочи |
+| INFO | 28 | Пройденные проверки (подтверждение MASTERPLAN) |
 
 ---
 
-## 🔴 БАГИ (аудит 2026-03-20)
+## 🔴 CRITICAL (6)
 
-### БАГ #1 — КРИТИЧЕСКИЙ: Задания не срабатывают автоматически
-**Статус:** ✅ Исправлен в v7.1.7
-**Файл:** `finish.ts` — отсутствует вызов checkGameTasks после завершения игры
-**Затронуто:** DAILY_LOGIN, FIRST_GAME, WIN_N, WIN_BOT_N
-**Решение:**
-```typescript
-// В finish.ts, после выплат:
-setImmediate(() => checkGameTasks(userId, session).catch(...));
+### C1. `t is not defined` в WarChallengePopup *(RUNTIME CRASH)*
+- **Файл:** `frontend/src/components/ui/WarChallengePopup.tsx`
+- `useT()` импортирован (строка 1), но `const t = useT()` НЕ вызван внутри компонента
+- `t.warChallenge.title/subtitle` используются на строках 77, 92, 108, 122
+- Строка 28: повреждённый комментарий `// Автоотклонение через 30 t.warChallenge.secondsунд`
+- **Эффект:** Крэш при появлении вызова на войну
 
-// Новый файл backend/src/services/gameTasks.ts:
-async function checkGameTasks(userId, session) {
-  if (!session.sides.find(s => s.playerId === userId && !s.isBot)) return;
-  const won = session.winnerSideId === sideId;
-  // Считаем победы, проверяем задания
-}
-```
+### C2. ChessBoard: `pendingPromotion` state не объявлен *(RUNTIME CRASH)*
+- **Файл:** `frontend/src/components/game/ChessBoard.tsx`
+- `setPendingPromotion()` вызывается (строки 205, 258, 316), `pendingPromotion` читается (строки 300, 301, 317, 352)
+- `useState` для этого state ОТСУТСТВУЕТ
+- **Эффект:** Превращение пешки невозможно — крэш при попытке
 
-### БАГ #2 — СРЕДНИЙ: Потенциальный двойной BOT_WIN
-**Статус:** ✅ Закрыт — одна точка вызова, if/else по фазе исключает двойное начисление
-**Файл:** `finish.ts` строки ~238 и ~293
-**Решение:** Guard: проверять `SessionSide.winningAmount !== null` перед начислением
+### C3. CountryDetailModal полностью сломан *(25+ TS ошибок)*
+- **Файл:** `frontend/src/components/wars/CountryDetailModal.tsx`
+- Missing imports: `useUserStore`, `useInfoPopup`, `overlayStyle`, `modalStyle`, `handleBar`, `closeBtnStyle`, `goldBtnFull`, `challengeBtnStyle`, `StatBox`
+- Missing type properties: `Country.treasury`, `Country.maxMembers`, `Country.activeWar`, `Country.myMembership`
 
-### БАГ #3 — СРЕДНИЙ: Двойной join в турнире
-**Статус:** ✅ Исправлен в v7.1.8 — $transaction + P2002 guard
-**Файл:** `tournaments.ts` POST /join
-**Решение:** Добавить перед created:
-```typescript
-const existing = await prisma.tournamentPlayer.findFirst({ where: { tournamentId, userId } });
-if (existing) return res.status(409).json({ error: 'Вы уже зарегистрированы' });
-```
+### C4. DeclareWarModal / WarDetailModal / WarsIntroModal сломаны
+- **Файлы:** `frontend/src/components/wars/DeclareWarModal.tsx`, `WarDetailModal.tsx`, `WarsIntroModal.tsx`
+- Missing: `overlayStyle`, `modalStyle`, `handleBar`, `closeBtnStyle`, `inputStyle`, `chipBtn`, `goldBtnFull`, `formatTime`
+- **Эффект:** Вся секция "Войны" → модалы не работают
 
-### БАГ #4 — НИЗКИЙ: buyer переменная-тень в exchange.ts
-**Статус:** ✅ Исправлен в v7.1.8 — переименованы sellerUser/buyerUser
-**Файл:** `exchange.ts` ~строка 265
-**Решение:** Переименовать в `const [sellerUser, buyerUser]`
+### C5. BOT_TOKEN засвечен в git *(SECURITY)*
+- **Файл:** `.claude/settings.local.json` (закоммичен!)
+- Содержит полный production токен бота: `8741660434:AAG...`
+- Также содержит IP сервера `37.77.106.28`, SSH порт `2222`, user `root`
+- **Действие:** НЕМЕДЛЕННО ротировать токен через @BotFather
 
----
-
-## 📊 НАГРУЗОЧНАЯ ОЦЕНКА
-
-### Максимум на текущем сервере (2CPU/4GB)
-| Метрика | Максимум |
-|---------|---------|
-| Одновременных пользователей | ~800 |
-| Одновременных партий (Джарвис) | ~200 (CPU bottleneck) |
-| Одновременных батлов P2P | ~300 |
-| API запросов/сек | ~120 (rate limit) |
-| Открытых ордеров биржи | ~500 |
-
-### Масштабирование
-| Этап | Пользователи | Что нужно |
-|------|-------------|-----------|
-| Текущий | до 800 | — |
-| ×3 | до 2 500 | 4CPU/8GB + Redis Cluster |
-| ×10 | до 8 000 | 2-3 backend + PgBouncer + nginx LB |
-| ×50 | до 40 000 | Microservices + Kafka + PG replica |
-
-**Главный bottleneck:** Stockfish CPU (один воркер на партию)
-**Решение:** Worker pool с ограничением N параллельных Stockfish процессов
-
-### Проблемы производительности
-- **НАГР-01:** `battles:list` broadcast всем при каждом изменении → пагинация
-- **НАГР-02:** `price-history hours=720` без limit → добавить `take: 1000`
-- **НАГР-03:** 2 лишних findUnique в exchange execute → включить в include
+### C6. Admin middleware сломан — admin роуты недоступны
+- **Файл:** `backend/src/middleware/auth.ts` строка 32
+- `authMiddleware` устанавливает `req.user = { id: userId }` — без `isAdmin`
+- `adminOnly` проверяет `req.user?.isAdmin` → всегда `undefined`
+- **Эффект:** ВСЕ admin эндпоинты (airdrop, admin panel) возвращают 403
 
 ---
 
-## 🔄 ПУТЬ ИГРОКА
+## 🟠 HIGH (8)
 
-| Механика | Статус | Баги |
-|----------|--------|------|
-| Вход / авторизация | ✅ | — |
-| Джарвис (20 уровней) | ✅ | БАГ #1 (задания) |
-| Батл P2P | ✅ | БАГ #1 (задания) |
-| Турниры | ✅ | БАГ #1, БАГ #3 |
-| Войны стран | ✅ | — |
-| Задания | ⚠️ | БАГ #1 (критично) |
-| Магазин | ✅ | — |
-| Реферальная система | ✅ | — |
-| P2P Биржа | ✅ | БАГ #4 (минор) |
-| TON Connect | ✅ | — |
-| Airdrop (admin) | ✅ | — |
+### H1. Множественные обходы `updateBalance()`
+- **MASTERPLAN:** "Все операции с балансом ONLY через `updateBalance()`"
+- **Реальность:** Прямой `prisma.user.update({ balance: increment })` в:
+  - `exchange.ts` (7 мест)
+  - `gameTasks.ts` (2 места)
+  - `tasks.ts:241` (puzzle rewards)
+  - `tournaments.ts:242` (entry fee)
+  - `wars.ts:741` (war contribution)
+  - `cleanup.ts:97` (refund)
+  - `crons.ts:663` (order cancellation refund)
+- **Эффект:** Пропускаются: league recalc, totalEarned/totalSpent, emission tracking, cache invalidation
+
+### H2. `formatUser()` не возвращает `wins` и `losses`
+- **Файл:** `backend/src/routes/auth.ts`
+- Frontend использует `user.wins` и `user.losses` → получает `undefined`
+- `rank` внутри `militaryRank.rank`, а не `user.rank` отдельно
+
+### H3. TypeScript `strict: false` *(вся строгость отключена)*
+- **Файл:** `backend/tsconfig.json`
+- `noImplicitAny: false`, `strictNullChecks: false`, `strictFunctionTypes: false`
+- `noEmitOnError: false` — компилятор выдаёт JS даже с ошибками
+
+### H4. Debug login bypass в продакшне
+- **Файл:** `backend/src/services/auth.ts` строки 44-47
+- Если `DEBUG=true` + initData начинается с `"debug:"` → auth полностью обходится
+- `BOT_API_SECRET` по умолчанию `"internal_secret"`
+
+### H5. `.claude/` не в `.gitignore`
+- Файл `.claude/settings.local.json` содержит серверные данные и засвечен в git
+- **Действие:** Добавить `.claude/` в `.gitignore`, удалить из tracking
+
+### H6. api/index.ts: Missing type imports `ActiveMatch` и `Country`
+- **Файл:** `frontend/src/api/index.ts`
+- `ActiveMatch` (строка 184) и `Country` (строки 190, 192, 194) используются, но не импортированы
+
+### H7. BadgeDetailModal: `JARVIS_LEVELS` не определён
+- **Файл:** `frontend/src/components/profile/BadgeDetailModal.tsx` строка 10
+- `JARVIS_LEVELS` используется но не импортирован
+
+### H8. PgnReplayModal: `useEffect` не импортирован
+- **Файл:** `frontend/src/components/profile/PgnReplayModal.tsx` строка 12
 
 ---
 
-## 📈 СВОДНАЯ ОЦЕНКА
+## 🟡 MEDIUM (15)
 
-| Компонент | Оценка |
+### M1. i18n: English `gameSetup` содержит русский текст
+- **Файл:** `frontend/src/i18n/translations.ts` строки 208-211
+- `en.gameSetup.title: 'Настройка игры'`, `duration: 'Контроль времени'`, `color: 'Цвет'`
+
+### M2. i18n: English `notifications` содержит русский текст
+- **Файл:** `translations.ts` строки 262-266
+
+### M3. i18n: `en.profile` отсутствуют ключи `monthlyChampion`
+- Ключи `monthlyChampion`, `monthlyChampionDate`, `noChampionYet` есть в `ru`, но не в `en`
+
+### M4. ActiveSessionsModal: hardcoded русский текст
+- `TYPE_LABEL` и `STATUS_LABEL` — hardcoded Russian вместо i18n
+
+### M5. `game:create:bot` не сохраняет скины
+- **MASTERPLAN S3:** Скины создателя видны обоим игрокам
+- `createBotSession()` НЕ читает `boardSkinUrl`/`pieceSkinUrl` — только `createBattleSession()` делает
+
+### M6. Duplicate redis import
+- **Файл:** `backend/src/routes/exchange.ts` — `import { redis }` на строках 1 И 16
+
+### M7. `expiresIn: 0` на Telegram initData validation
+- **Файл:** `backend/src/services/auth.ts` строка 51
+- Replay attack вектор — старый initData принимается бессрочно
+
+### M8. No health check на backend service в docker-compose
+
+### M9. Bot i18n: 6 языков без ключей `welcome_returning`
+- uk, de, es, fr, tr, pt, zh — нет fallback для returning users
+
+### M10. `game:cancel` не создаёт Transaction запись
+
+### M11. Bot rewards regression: level 11-20 ниже 6-10
+- Level 10 = 50,000 ᚙ, level 11 = 11,000 ᚙ — вероятно ошибка
+
+### M12. ShopPage: Duplicate `border` key in style
+- Строки 629 и 634 — мертвый код
+
+### M13. GameSetupModal: `t` shadowed в `.map((t) => ...)`
+
+### M14. Avatar.tsx: `equippedItems` нет на типе `UserPublic`
+
+### M15. No CI build/test step перед деплоем
+
+---
+
+## 🟢 LOW (10)
+
+| # | Описание |
+|---|----------|
+| L1 | Hardcoded version `v7.2.0` в deploy notification |
+| L2 | Redundant `import os` в `bot/main.py` строка 93 |
+| L3 | Redundant `parse_mode="HTML"` в bot handlers |
+| L4 | Нет log rotation на postgres/redis контейнерах |
+| L5 | `format.ts`: Multiple `(session as any)` casts |
+| L6 | 3 uses of `any` в route files: tasks.ts:33, games.ts:46,78 |
+| L7 | Debug login возвращает другую форму user объекта |
+| L8 | Gzip compression дублируется в outer nginx и frontend nginx |
+| L9 | Duplicate type definitions `ActiveMatch`/`Country` в types/ |
+| L10 | Weak default `BOT_WEBHOOK_SECRET: "chesscoin_wh_secret"` |
+
+---
+
+## ✅ MASTERPLAN Compliance Check
+
+| Задача | Статус | Примечание |
+|--------|--------|------------|
+| **S1** — Visual tab (boards+figures) | ✅ PASS | 4 sub-tabs: boards, figures, sets, animations |
+| **S2** — Exchange tab в магазине | ✅ PASS | Locked/unlocked screen, full UI |
+| **S3** — Скины создателя в игре | ⚠️ PARTIAL | Работает для BATTLE, НЕ для BOT (M5) |
+| **E1** — P2POrder schema | ✅ PASS | Все поля, relations |
+| **E2** — GET /orders стакан | ✅ PASS | + ?mine=true |
+| **E3** — GET /price-history | ✅ PASS | ?hours=24/168/720 |
+| **E4** — POST /orders | ✅ PASS | 10K min, price validation |
+| **E5** — DELETE /orders/:id | ✅ PASS | Own OPEN only, coins returned |
+| **E6** — POST /orders/:id/execute | ✅ PASS | boc/txHash, idempotency |
+| **E7** — ExchangeTab frontend | ✅ PASS | Price, chart, orderbook, buttons |
+| **E8** — Create order modal | ✅ PASS | Slider, quick buttons, fee calc |
+| **E9** — Execute order modal | ✅ PASS | TonConnect integration |
+| **E10** — exchangeApi client | ✅ PASS | All methods + extras |
+| **Архитектура: updateBalance()** | ❌ FAIL | 14+ мест обходят (H1) |
+| **Архитектура: Max 3 sessions** | ✅ PASS | Validated in backend |
+| **Экономика: 0.5% fee** | ✅ PASS | Implemented |
+
+---
+
+## 🚨 Приоритет исправлений
+
+### Немедленно (security)
+1. ⛔ Ротировать BOT_TOKEN через @BotFather (C5)
+2. ⛔ Добавить `.claude/` в `.gitignore`, удалить из tracking (H5)
+3. ⛔ Очистить git history от токена (git filter-repo)
+
+### Блокирующие (runtime crashes)
+4. 🔴 Исправить WarChallengePopup — добавить `const t = useT()` (C1)
+5. 🔴 Исправить ChessBoard — добавить `pendingPromotion` state (C2)
+6. 🔴 Исправить admin middleware — включить `isAdmin` в `req.user` (C6)
+7. 🔴 Исправить wars модалы — восстановить imports (C3, C4)
+
+### Важные (архитектура)
+8. 🟠 Перевести updateBalance() — заменить 14 прямых обращений (H1)
+9. 🟠 formatUser() — добавить wins, losses, rank (H2)
+10. 🟠 Отключить debug bypass в production (H4)
+
+---
+
+## 📊 Общая оценка
+
+| Категория | Оценка |
 |-----------|--------|
-| Джарвис | 8/10 |
-| Батл P2P | 9/10 |
-| Турниры | 8/10 |
-| Войны | 10/10 |
-| Задания | 4/10 ← критично |
-| Магазин | 10/10 |
-| Реферальная | 9/10 |
-| P2P Биржа | 9/10 |
-| TON Connect | 9/10 |
-| Нагрузка | 7/10 |
-| **Общая** | **8.3/10** |
-
----
-
-## 📅 ИСТОРИЯ АУДИТОВ
-
-| Версия | Дата | Оценка | Ключевые находки |
-|--------|------|--------|-----------------|
-| v6.0.8 | 2026-03-19 | 9.7/10 | 14 багов → все исправлены |
-| v6.0.9 | 2026-03-19 | 9.6/10 | 4 MINOR → все исправлены |
-| **v7.1.3** | **2026-03-20** | **8.3/10** | **БАГ #1 (задания) критично** |
-
-> **Следующий аудит после:** исправления БАГ #1 → ожидаемая оценка 9.5+/10
-
----
-
-## v7.1.6 (март 2026) — 10 оптимизаций производительности
-
-| # | Файл | Описание |
-|---|------|----------|
-| OPT-1..10 | Множество файлов | Реализованы все 10 оптимизаций из PERFORMANCE.md |
-| clean-install.sh | scripts/ | Полная очистка сервера и чистая установка |
-| stockfishPool.ts | backend/services/game/ | Worker Pool — главная оптимизация CPU |
-
-**До:** ~800 пользователей на 2CPU/4GB  
-**После:** ~3 000-5 000 пользователей на том же железе
-
----
-
-## v7.1.7 (март 2026) — BUG #1 исправлен
-
-| Файл | Изменение |
-|------|----------|
-| schema.prisma | 6 новых TaskType |
-| migration_gameplay_task_types | SQL миграция |
-| gameTasks.ts (новый) | checkGameTasks + checkDailyLoginTask |
-| finish.ts | 4 вызова checkGameTasks |
-| auth.ts | checkDailyLoginTask при входе |
-| seed.ts | 8 новых геймплейных заданий |
-| gameTasks.test.ts (новый) | 30 тестов |
-
-**Тестов: 124 → 154**
-**Оценка заданий: 4/10 → 9/10**
-**Общая оценка: 8.3/10 → 9.5/10**
-
----
-
-## v7.1.8 (март 2026) — Закрыты все баги из аудита
-
-| # | Баг | Файл | Статус |
-|---|-----|------|--------|
-| #2 | Двойной BOT_WIN | finish.ts | ✅ Не реальный — один вызов |
-| #3 | Tournament join race | tournaments.ts | ✅ $transaction + P2002 |
-| #4 | buyer shadow | exchange.ts | ✅ sellerUser/buyerUser |
-| — | Health version устарел | index.ts | ✅ 7.1.7 + stockfish stats |
-| — | ErrorBoundary отсутствовал | App.tsx | ✅ Добавлен |
-
-**Все 4 бага из аудита закрыты. Оценка: 9.7/10**
-
----
-
-## v7.1.9 (март 2026) — Тестирование механик + БАГ #5
-
-### Протестировано 25 игровых механик
-
-| Статус | Кол-во |
-|--------|--------|
-| ✅ Работает | 24 |
-| ⚠️ Баг найден | 1 |
-
-### БАГ #5 — IMPORTANT: WORLD tournament prizes
-
-| Файл | crons.ts функция checkTournamentResults |
-|------|----------------------------------------|
-| Проблема | WORLD попадал в else → 10% вместо 70/20/10% |
-| Исправление | Добавлена ветка `t.type === 'WORLD'` |
-| Статус | ✅ Исправлен в v7.1.9 |
-
-**Итоговая оценка: 9.9/10 (ближайший к 10/10 за всё время)**
-
----
-
-## v7.2.0 (март 2026) — Слияние GitHub + архив
-
-| Источник | Добавлено |
-|----------|----------|
-| GitHub | SettingsPage, PuzzleDailyPage, PuzzleLessonPage, PromptModal, games.ts, WarsPage v2, shop TON-роуты, TradeOrder |
-| Наш архив | gameTasks, stockfishPool, exchange.ts, airdrop.ts, 154 тестов, фиксы #1 #3 #4 #5 |
-| Оба | Всё остальное |
-
-**Итоговая оценка v7.2.0: 10/10**
+| MASTERPLAN задачи (S1-S3, E1-E10) | **12/13** выполнено (S3 partial) |
+| Безопасность | ⛔ **КРИТИЧНО** — токен в git |
+| Стабильность frontend | ⚠️ **6 компонентов** с runtime crashes |
+| Стабильность backend | ✅ Работает, но с обходами архитектуры |
+| i18n | ⚠️ Русский текст в English locale |
+| TypeScript | ⚠️ strict off, **70+ ошибок** tsc |
+| Тесты | ⚠️ 8 файлов, но без auth/socket/shop покрытия |
+| Infrastructure | ✅ Docker/nginx/CI работают |

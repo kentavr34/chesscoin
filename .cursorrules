@@ -1,0 +1,16 @@
+Проект: Telegram Mini App + Telegram Bot API + frontend (React + Vite) + backend (Node.js).
+
+При расширении опирайся на этот стек:
+
+Frontend: React + Vite + TypeScript + Zustand + react-chessboard + react-router-dom + i18next + Socket.io client + TonConnect UI (@tonconnect/ui)
+Backend: Node.js + TypeScript + Express + Socket.io + Prisma + PostgreSQL + Redis
+Bot: Python 3 + aiogram 3
+Game logic: chess.js
+AI: Stockfish (воркеры/пул на backend)
+Realtime: WebSocket (Socket.io) + Redis adapter / pub-sub где используется
+Cache: Redis
+Блокчейн: TON (TonConnect 2.0, при необходимости TonCenter API)
+Инфраструктура: Docker Compose, nginx (см. репозиторий)
+
+При исправлении ошибок ВСЕГДА проверяй зависимости в package.json (frontend и backend отдельно) и не меняй структуру REST/Socket API без согласования.
+Перед предложением кода проверяй влияние на интеграцию с Telegram Mini App / initData и Telegram Bot API.
