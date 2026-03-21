@@ -24,32 +24,20 @@ export default defineConfig({
     outDir: "dist",
     sourcemap: false,
     assetsInlineLimit: 4096,
-    chunkSizeWarningLimit: 600,
-    // OPT-5: Минификация через esbuild (быстрее terser, по умолчанию)
+    chunkSizeWarningLimit: 800,
     minify: 'esbuild',
-    // OPT-5: CSS code splitting
-    cssCodeSplit: true,
     rollupOptions: {
       output: {
-        // OPT-5: Оптимальное разбиение — браузер кеширует vendor отдельно
         manualChunks(id) {
-          // Тяжёлые библиотеки — отдельные chunks
-          if (id.includes('react-dom'))       return 'react-dom';
-          if (id.includes('react'))           return 'react-core';
-          if (id.includes('react-router'))    return 'router';
-          if (id.includes('react-chessboard')) return 'chess-ui';
-          if (id.includes('chess.js'))        return 'chess-logic';
-          if (id.includes('lightweight-charts')) return 'charts';
-          if (id.includes('@tonconnect'))     return 'tonconnect';
-          if (id.includes('zustand'))         return 'state';
-          // Все остальные node_modules → vendor chunk
-          if (id.includes('node_modules'))    return 'vendor';
+          if (id.includes('node_modules')) {
+            // Только тяжёлые либы в отдельные чанки, React остаётся вместе
+            if (id.includes('lightweight-charts')) return 'charts';
+            if (id.includes('@tonconnect'))        return 'tonconnect';
+            if (id.includes('chess.js'))            return 'chess-logic';
+            return 'vendor';
+          }
         },
-        chunkFileNames:  'assets/[name]-[hash].js',
-        entryFileNames:  'assets/[name]-[hash].js',
-        assetFileNames:  'assets/[name]-[hash].[ext]',
       },
-
     },
   },
 });
