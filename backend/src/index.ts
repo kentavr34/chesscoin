@@ -43,7 +43,7 @@ import tournamentsRouter from "@/routes/tournaments";
 import screenshotterRouter from "@/routes/screenshotter";
 import { puzzlesRouter } from "@/routes/puzzles";
 import { adminRouter } from "@/routes/admin";
-import rateLimit from "express-rate-limit";
+import { rateLimit } from "express-rate-limit";
 
 const app = express();
 const httpServer = createServer(app);
