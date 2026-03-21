@@ -8,7 +8,7 @@ import React from 'react';
 interface State { hasError: boolean; error?: Error; }
 
 export class ErrorBoundary extends React.Component<{ children: React.ReactNode }, State> {
-  constructor(props: Record<string, unknown>) {
+  constructor(props: { children: React.ReactNode }) {
     super(props);
     this.state = { hasError: false };
   }
@@ -48,13 +48,25 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode }
           Произошла неожиданная ошибка. Попробуй перезагрузить приложение.
         </div>
         {this.state.error && (
+          <>
           <div style={{
-            fontSize: 10, color: '#3A3F58',
-            fontFamily: 'monospace', marginBottom: 24,
-            maxWidth: 300, wordBreak: 'break-all',
+            fontSize: 10, color: '#FF4D6A',
+            fontFamily: 'monospace', marginBottom: 8,
+            maxWidth: 340, wordBreak: 'break-all',
           }}>
             {this.state.error.message}
           </div>
+          <div style={{
+            fontSize: 8, color: '#4A5270',
+            fontFamily: 'monospace', marginBottom: 24,
+            maxWidth: 340, wordBreak: 'break-all',
+            maxHeight: 120, overflow: 'auto',
+            textAlign: 'left', lineHeight: 1.4,
+            background: 'rgba(0,0,0,0.3)', padding: 8, borderRadius: 8,
+          }}>
+            {this.state.error.stack}
+          </div>
+          </>
         )}
         <button
           onClick={() => window.location.reload()}
