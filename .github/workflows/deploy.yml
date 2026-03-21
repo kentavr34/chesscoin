@@ -1,37 +1,14 @@
-# ──────────────────────────────────────────────────────────────
-# ChessCoin — CI/CD Pipeline
-#
-# Триггер: push в ветку main
-#
-# Шаги:
-# 1. Деплой на VPS:
-#    - git pull
-#    - docker compose up --build -d
-#    - prisma migrate deploy
-#    - health check
-#
-# Секреты GitHub (Settings → Secrets → Actions):
-#   SSH_HOST              — IP адрес VPS
-#   SSH_USER              — пользователь (root)
-#   SSH_PRIVATE_KEY       — приватный SSH ключ (весь текст с -----BEGIN...)
-#   SSH_PORT              — порт SSH (2222)
-#   TELEGRAM_BOT_TOKEN    — токен бота (опционально)
-#   TELEGRAM_ADMIN_CHAT_ID — chat id админа (опционально)
-# ──────────────────────────────────────────────────────────────
-
 name: Deploy ChessCoin
 
 on:
   push:
     branches: [main]
-  workflow_dispatch:      # ручной запуск из GitHub UI
+  workflow_dispatch:
 
 jobs:
-  # ── Деплой на VPS ─────────────────────────────────────────────
   deploy:
     name: 🚀 Deploy to VPS
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
 
     steps:
       - name: Deploy via SSH
@@ -44,85 +21,54 @@ jobs:
           timeout: 300s
           script: |
             set -e
-            echo "──────────────────────────────────"
-            echo "🚀 ChessCoin Deploy $(date '+%Y-%m-%d %H:%M:%S')"
-            echo "──────────────────────────────────"
-
             cd /opt/chesscoin
-
-            echo "📥 Git pull..."
             git pull origin main
-
-            echo "🐳 Docker compose build & up..."
             docker compose up -d --build --remove-orphans
-
-            echo "⏳ Waiting for backend..."
             sleep 15
-
-            echo "🗄️  Prisma migrate deploy..."
             docker compose exec -T backend npx prisma migrate deploy
-
-            echo "❤️  Health check..."
             for i in {1..10}; do
               STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://chesscoin.app/health || echo "000")
               if [ "$STATUS" = "200" ]; then
                 echo "✅ Health check passed (attempt $i)"
                 break
               fi
-              echo "⏳ Attempt $i: status=$STATUS, waiting 5s..."
               sleep 5
               if [ $i -eq 10 ]; then
-                echo "❌ Health check failed after 10 attempts"
                 docker compose logs backend --tail=30
                 exit 1
               fi
             done
-
-            echo "📊 Container status:"
             docker compose ps
+            echo "✅ Deploy completed!"
 
-            echo ""
-            echo "✅ Deploy completed successfully!"
-
-  # ── Уведомление в Telegram (только если секреты заданы) ───────
   notify:
     name: 📱 Telegram Notification
     runs-on: ubuntu-latest
     needs: [deploy]
-    if: always() && secrets.TELEGRAM_BOT_TOKEN != ''
+    if: always()
     continue-on-error: true
 
     steps:
       - name: Notify success
-        if: needs.deploy.result == 'success' && env.TG_TOKEN != ''
+        if: needs.deploy.result == 'success'
         uses: appleboy/telegram-action@master
-        env:
-          TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        continue-on-error: true
         with:
           to: ${{ secrets.TELEGRAM_ADMIN_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
-            ✅ *ChessCoin v7.2.0 задеплоен успешно!*
-
-            📦 Коммит: `${{ github.sha }}`
-            👤 Автор: ${{ github.actor }}
-            🕐 Время: ${{ github.event.head_commit.timestamp }}
-
-            [Открыть приложение](https://chesscoin.app)
+            ✅ ChessCoin v7.2.0 задеплоен!
+            Коммит: ${{ github.sha }}
+            Автор: ${{ github.actor }}
 
       - name: Notify failure
-        if: needs.deploy.result == 'failure' && env.TG_TOKEN != ''
+        if: needs.deploy.result == 'failure'
         uses: appleboy/telegram-action@master
-        env:
-          TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        continue-on-error: true
         with:
           to: ${{ secrets.TELEGRAM_ADMIN_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
-            ❌ *ChessCoin деплой ПРОВАЛИЛСЯ*
-
-            📦 Коммит: `${{ github.sha }}`
-            👤 Автор: ${{ github.actor }}
-            🔴 Деплой: ${{ needs.deploy.result }}
-
-            [Логи GitHub Actions](https://github.com/${{ github.repository }}/actions)
+            ❌ ChessCoin деплой ПРОВАЛИЛСЯ
+            Коммит: ${{ github.sha }}
+            Автор: ${{ github.actor }}
