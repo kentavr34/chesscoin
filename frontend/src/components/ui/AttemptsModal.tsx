@@ -14,6 +14,10 @@ export const AttemptsModal: React.FC<Props> = ({ user, onClose }) => {
   const { setUser } = useUserStore();
 
   const COST_PER = 1000;
+  // Минимальный отображаемый лимит = 3, максимум с покупками = базовый + 3
+  const baseMax = Math.max(user.maxAttempts ?? 3, 3);
+  const hardMax = baseMax + 3;
+  const canBuyMore = hardMax - user.attempts;
 
   const handleBuy = async () => {
     setLoading(true);
@@ -41,38 +45,49 @@ export const AttemptsModal: React.FC<Props> = ({ user, onClose }) => {
           <button onClick={onClose} style={closeBtnStyle}>✕</button>
         </div>
         <div style={{ display: 'flex', gap: 8, justifyContent: 'center', margin: '12px 0 8px' }}>
-          {Array.from({ length: user.maxAttempts }).map((_, i) => (
+          {Array.from({ length: hardMax }).map((_, i) => (
             <span key={i} style={{
-              fontSize: 32,
+              fontSize: 28,
               color: i < user.attempts ? '#F5C842' : '#2A2F48',
               filter: i < user.attempts ? 'drop-shadow(0 0 8px rgba(245,200,66,0.8))' : undefined,
             }}>★</span>
           ))}
         </div>
         <p style={{ textAlign: 'center', fontSize: 13, color: '#A8B0C8', marginBottom: 4 }}>
-          Попытки: {user.attempts} из {user.maxAttempts}
+          Попытки: {user.attempts} из {hardMax}
         </p>
-        <div style={{ fontSize: 10, fontWeight: 700, color: '#6B7494', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 8 }}>
-          Количество
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, margin: '12px 0' }}>
-          <button onClick={() => setCount(Math.max(1, count - 1))} style={stepBtn('#232840', '#A8B0C8')}>−</button>
-          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 700, color: '#F0F2F8', minWidth: 32, textAlign: 'center' }}>{count}</span>
-          <button onClick={() => setCount(Math.min(3 - user.attempts, count + 1))} style={stepBtn('#F5C842', '#0B0D11')}>+</button>
-        </div>
+        {canBuyMore <= 0 && (
+          <p style={{ textAlign: 'center', fontSize: 12, color: '#F5C842', marginBottom: 8 }}>
+            Максимум достигнут. Попытки восстанавливаются каждые 8 часов.
+          </p>
+        )}
+        {canBuyMore > 0 && (
+          <>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#6B7494', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 8 }}>
+              Количество
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, margin: '12px 0' }}>
+              <button onClick={() => setCount(Math.max(1, count - 1))} style={stepBtn('#232840', '#A8B0C8')}>−</button>
+              <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 700, color: '#F0F2F8', minWidth: 32, textAlign: 'center' }}>{count}</span>
+              <button onClick={() => setCount(Math.min(canBuyMore, count + 1))} style={stepBtn('#F5C842', '#0B0D11')}>+</button>
+            </div>
+          </>
+        )}
         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderTop: '1px solid rgba(255,255,255,0.07)', borderBottom: '1px solid rgba(255,255,255,0.07)', marginBottom: 16 }}>
           <span style={{ fontSize: 13, color: '#A8B0C8' }}>Стоимость</span>
           <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14, fontWeight: 700, color: '#F5C842' }}>
             {(count * COST_PER).toLocaleString()} ᚙ
           </span>
         </div>
-        <button
-          onClick={handleBuy}
-          disabled={loading}
-          style={{ ...buyBtn, opacity: loading ? .6 : 1 }}
-        >
-          {loading ? '...' : `Купить ${count} попытк${count === 1 ? 'у' : 'и'}`}
-        </button>
+        {canBuyMore > 0 && (
+          <button
+            onClick={handleBuy}
+            disabled={loading}
+            style={{ ...buyBtn, opacity: loading ? .6 : 1 }}
+          >
+            {loading ? '...' : `Купить ${count} попытк${count === 1 ? 'у' : 'и'} · ${(count * COST_PER).toLocaleString()} ᚙ`}
+          </button>
+        )}
       </div>
     </div>
   );

@@ -504,7 +504,7 @@ type Tab = 'countries' | 'active' | 'history';
 export const WarsPage: React.FC = () => {
   const { user } = useUserStore();
   const [tab, setTab] = useState<Tab>('countries');
-  const [sort, setSort] = useState<'wins' | 'alpha'>('wins');
+  const sort = 'wins';
 
   // Data
   const [countries, setCountries] = useState<any[]>([]);
@@ -728,13 +728,6 @@ export const WarsPage: React.FC = () => {
       {/* ── TAB: СТРАНЫ ─────────────────────────────────────────────────────── */}
       {tab === 'countries' && (
         <>
-          {/* Sort */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '0 18px 8px' }}>
-            <button onClick={() => setSort(s => s === 'wins' ? 'alpha' : 'wins')} style={chipBtn(false)}>
-              {sort === 'wins' ? '🏆 Топ' : 'А-Я'}
-            </button>
-          </div>
-
           {loading && <div style={{ textAlign: 'center', color: '#6B7494', padding: 32 }}>Загрузка...</div>}
 
           {filteredCountries.map((c, i) => {

@@ -28,9 +28,12 @@ export const purchaseAttempts = async (
   count: number
 ): Promise<void> => {
   const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
-  const max = config.economy.maxAttempts;
+  // Базовый лимит: не менее 3 (защита от старых записей с maxAttempts=0)
+  const baseMax = Math.max(config.economy.maxAttempts, user.maxAttempts, 3);
+  // Максимум с учётом купленных: базовый + 3
+  const hardMax = baseMax + 3;
 
-  const canBuy = max - user.attempts;
+  const canBuy = hardMax - user.attempts;
   if (canBuy <= 0) {
     throw new Error("У вас уже максимальное количество попыток.");
   }
