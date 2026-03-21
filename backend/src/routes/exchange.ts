@@ -565,12 +565,6 @@ exchangeRouter.get('/leaderboard', authMiddleware, async (req: Request, res: Res
       const cached = await redis.get(cacheKey);
       if (cached) return res.json(JSON.parse(cached));
     } catch {}
-    // Opt: кеш лидерборда 5 минут
-    const cacheKey = `exchange:leaderboard:${period}`;
-    try {
-      const cached = await redis.get(cacheKey);
-      if (cached) return res.json(JSON.parse(cached));
-    } catch {}
     const since  = period === '7d'
       ? new Date(Date.now() - 7  * 86400_000)
       : period === '24h'
