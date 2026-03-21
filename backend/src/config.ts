@@ -122,9 +122,9 @@ const config = {
 
   // ─── TON / Крипто ────────────────────────────────
   ton: {
-    platformWallet: str("PLATFORM_TON_WALLET", ""),
-    toncenterApiKey: str("TONCENTER_API_KEY", ""),
-    network: str("TON_NETWORK", "mainnet") as "mainnet" | "testnet",
+    platformWallet: optional("PLATFORM_TON_WALLET", ""),
+    toncenterApiKey: optional("TONCENTER_API_KEY", ""),
+    network: optional("TON_NETWORK", "mainnet") as "mainnet" | "testnet",
   },
 } as const;
 
