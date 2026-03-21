@@ -31,7 +31,10 @@ router.post("/login", async (req: Request, res: Response) => {
       user: formatUser(result.user),
     });
   } catch (err: unknown) {
-    res.status(401).json({ error: (err instanceof Error ? err.message : String(err)) });
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error("[Auth/login] Error: " + msg);
+    if (err instanceof Error && err.stack) logger.error("[Auth/login] Stack: " + err.stack.split('\n').slice(0,3).join(' | '));
+    res.status(401).json({ error: msg });
   }
 });
 
