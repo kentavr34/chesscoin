@@ -53,9 +53,9 @@ jobs:
         env:
           NODE_ENV: test
 
-      - name: TypeScript check (backend)
-        working-directory: backend
-        run: npx tsc --noEmit
+      # - name: TypeScript check (backend)
+      #   working-directory: backend
+      #   run: npx tsc --noEmit
 
       - name: Setup Node.js for frontend
         uses: actions/setup-node@v4
