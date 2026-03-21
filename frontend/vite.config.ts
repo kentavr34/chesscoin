@@ -49,11 +49,7 @@ export default defineConfig({
         entryFileNames:  'assets/[name]-[hash].js',
         assetFileNames:  'assets/[name]-[hash].[ext]',
       },
-      // OPT-5: Tree shaking — убираем неиспользуемый код
-      treeshake: {
-        moduleSideEffects: false,
-        propertyReadSideEffects: false,
-      },
+
     },
   },
 });
