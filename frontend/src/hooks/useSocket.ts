@@ -1,0 +1,192 @@
+import type { SocketGameEvent } from '@/types'; // R1
+import { useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { getSocket } from '@/api/socket';
+import { authApi } from '@/api';
+import { useGameStore } from '@/store/useGameStore';
+import { useUserStore } from '@/store/useUserStore';
+import { useWarChallengeStore } from '@/store/useWarChallengeStore';
+import { sound } from '@/lib/sound';
+import { useSettingsStore } from '@/store/useSettingsStore';
+import { translations } from '@/i18n/translations';
+
+// Вспомогательная функция для показа тоста с кнопкой перехода
+const showActionToast = (text: string, actionLabel: string, onAction: () => void) => {
+  window.dispatchEvent(new CustomEvent('chesscoin:toast', {
+    detail: { text, type: 'info', actionLabel, onAction },
+  }));
+};
+
+export const useSocket = () => {
+  const { upsertSession, removeSession, setSessions, setBattles, setDrawOffered } =
+    useGameStore();
+  const { setWarChallenge } = useWarChallengeStore();
+  const { updateBalance, setUser } = useUserStore();
+  const navigate = useNavigate();
+  const initialized = useRef(false);
+
+  useEffect(() => {
+    if (initialized.current) return;
+    initialized.current = true;
+
+    const socket = getSocket();
+
+    // Получаем текущие сессии при подключении
+    socket.emit('game:current', (res) => {
+      if (res.ok && res.sessions) {
+        setSessions(res.sessions);
+        const loc = window.location.pathname;
+        const onLobby = loc === '/' || loc === '/battles';
+        if (res.sessions.length > 0 && onLobby) {
+          navigate('/game/' + res.sessions[0].id, { replace: true });
+        }
+      }
+    });
+
+    // Deep link: присоединиться к игре по коду
+    const pendingCode = (window as Record<string,unknown>).__pendingGameCode;
+    if (pendingCode) {
+      delete (window as Record<string,unknown>).__pendingGameCode;
+      socket.emit('game:join', { code: pendingCode }, (res) => {
+        if (res.ok && res.session) {
+          upsertSession(res.session);
+          navigate('/game/' + res.session.id);
+        } else {
+          const currentLang = useSettingsStore.getState().lang;
+          const errT = translations[currentLang].errors as Record<string, string>;
+          const fallback = currentLang === 'ru' ? 'Не удалось войти в игру' : 'Failed to join game';
+          const text = errT[res.error ?? ''] ?? (res.error ?? fallback);
+          window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text, type: 'error' } }));
+        }
+      });
+    }
+
+    socket.emit('battles:subscribe');
+
+    // U2: При переподключении — обновляем список сессий
+    // Это решает проблему устаревшего состояния доски после разрыва соединения
+    socket.on('connect', () => {
+      socket.emit('game:current', (res: Record<string,unknown>) => {
+        if (res?.ok && res?.sessions) {
+          setSessions(res.sessions);
+        }
+      });
+      socket.emit('battles:subscribe');
+    });
+
+    // ── Игра началась ──
+    socket.on('game:started', () => {
+      sound.gameStart();
+    });
+
+    // ── Обновление сессии ──
+    socket.on('game', (session) => {
+      upsertSession(session);
+      const mySide = session.sides.find((s) => s.id === session.mySideId);
+      if (mySide?.winningAmount) {
+        updateBalance(mySide.winningAmount);
+      }
+    });
+
+    // ── Конец игры ──
+    socket.on('game:over', (_data) => {
+      authApi.me().then(setUser).catch(() => {});
+    });
+
+    // ── Лобби ──
+    socket.on('battles:list', (battles) => {
+      setBattles(battles);
+    });
+
+    // ── Ничья ──
+    socket.on('game:draw_offered', ({ by }) => {
+      setDrawOffered(by);
+    });
+    socket.on('game:draw_declined', () => {
+      setDrawOffered(null);
+    });
+
+    // ── Персональные уведомления (войны, турниры, вызовы) ──
+    // Backend шлёт через: io.emit(`user:${userId}`, { type, ... })
+    const userId = useUserStore.getState().user?.id;
+    if (userId) {
+      const handlePersonal = (data: SocketGameEvent) => {
+        const currentLang = useSettingsStore.getState().lang;
+        const t = translations[currentLang];
+
+        if (data.type === 'war:challenge') {
+          // W1: показываем красивый попап вместо toast
+          setWarChallenge({
+            sessionId: data.sessionId,
+            sessionCode: data.sessionCode ?? '',
+            warId: data.warId ?? '',
+            challengerUserId: data.challengerUserId ?? '',
+            challengerName: data.challengerName,
+            challengerCountry: data.challengerCountry,
+            challengerFlag: data.challengerFlag,
+          });
+          try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('warning'); } catch {}
+        }
+
+        if (data.type === 'tournament:match') {
+          // T2: Турнирный матч — красивый toast с кнопкой перехода в игру
+          const opponentName = data.opponentName ?? '';
+          const text = `🏆 Турнирный матч! Раунд ${data.round ?? 1} · vs ${opponentName}`;
+          showActionToast(text, '⚔️ Играть', () => navigate('/battles'));
+          // Уведомляем TournamentsPage о новом матче
+          window.dispatchEvent(new CustomEvent('chesscoin:tournament:match', { detail: data }));
+          try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch {}
+        }
+
+        if (data.type === 'tournament:finished') {
+          // T7: Турнир завершён — через глобальный event (TournamentsPage подхватит)
+          window.dispatchEvent(new CustomEvent('chesscoin:tournament:finished', { detail: data }));
+          try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch {}
+        }
+
+        if (data.type === 'battle:challenge') {
+          // Вызов на клановое сражение (clan battle из NationsPage)
+          const currentLang2 = useSettingsStore.getState().lang;
+          const t2 = translations[currentLang2];
+          showActionToast(
+            t2.notifications.warChallenge(''),
+            t2.notifications.goToBattles,
+            () => navigate('/battles')
+          );
+        }
+
+        if (data.type === 'exchange:executed') {
+          // E13: Сделка на бирже исполнена — диспатчим событие (ExchangeTab подхватит)
+          window.dispatchEvent(new CustomEvent('chesscoin:exchange:executed', { detail: data }));
+          const role = (data as any).role as string;
+          const coins = Number(BigInt((data as any).amountCoins ?? '0')).toLocaleString();
+          const ton   = ((data as any).totalTon as number)?.toFixed(4) ?? '0';
+          const msg   = role === 'seller'
+            ? `💱 Ордер исполнен! Продано ${coins} ᚙ за ${ton} TON`
+            : `🛒 Куплено ${coins} ᚙ за ${ton} TON — зачислено на баланс`;
+          showActionToast(msg, '💱 Биржа', () => navigate('/shop'));
+          try { (window as any).Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch {}
+        }
+      };
+
+      // Socket.io не поддерживает динамические имена событий нативно,
+      // поэтому слушаем через onAny
+      socket.onAny((eventName: string, ...args: unknown[]) => {
+        if (eventName === `user:${userId}`) {
+          handlePersonal(args[0]);
+        }
+      });
+    }
+
+    return () => {
+      socket.off('game');
+      socket.off('game:over');
+      socket.off('game:started');
+      socket.off('battles:list');
+      socket.off('game:draw_offered');
+      socket.off('game:draw_declined');
+      socket.offAny();
+      socket.emit('battles:unsubscribe');
+    };
+  }, []);
+};

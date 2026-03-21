@@ -1,0 +1,42 @@
+-- v7.0.1: P2P Exchange + Session skins
+
+-- 1. Upgrade p2p_orders table
+ALTER TABLE "p2p_orders"
+  DROP COLUMN IF EXISTS "priceUsd",
+  DROP COLUMN IF EXISTS "totalUsd",
+  DROP COLUMN IF EXISTS "currency",
+  ADD COLUMN IF NOT EXISTS "priceTon"     DOUBLE PRECISION NOT NULL DEFAULT 0.001,
+  ADD COLUMN IF NOT EXISTS "totalTon"     DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+  ADD COLUMN IF NOT EXISTS "sellerWallet" TEXT NOT NULL DEFAULT '',
+  ADD COLUMN IF NOT EXISTS "buyerWallet"  TEXT,
+  ADD COLUMN IF NOT EXISTS "feeTon"       DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+  ADD COLUMN IF NOT EXISTS "txHash"       TEXT,
+  ADD COLUMN IF NOT EXISTS "txBoc"        TEXT;
+
+CREATE UNIQUE INDEX IF NOT EXISTS "p2p_orders_txHash_key" ON "p2p_orders"("txHash") WHERE "txHash" IS NOT NULL;
+CREATE INDEX IF NOT EXISTS "p2p_orders_createdAt_idx" ON "p2p_orders"("createdAt" DESC);
+
+-- 2. Add exchange TransactionTypes (PostgreSQL enum)
+DO $$ BEGIN
+  ALTER TYPE "TransactionType" ADD VALUE IF NOT EXISTS 'EXCHANGE_SELL';
+  ALTER TYPE "TransactionType" ADD VALUE IF NOT EXISTS 'EXCHANGE_BUY';
+  ALTER TYPE "TransactionType" ADD VALUE IF NOT EXISTS 'EXCHANGE_FREEZE';
+  ALTER TYPE "TransactionType" ADD VALUE IF NOT EXISTS 'EXCHANGE_UNFREEZE';
+  ALTER TYPE "TransactionType" ADD VALUE IF NOT EXISTS 'EXCHANGE_FEE';
+EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+-- 3. Session skins (S3)
+ALTER TABLE "sessions"
+  ADD COLUMN IF NOT EXISTS "boardSkinUrl" TEXT,
+  ADD COLUMN IF NOT EXISTS "pieceSkinUrl" TEXT;
+
+-- E15: BUY orders
+ALTER TABLE "p2p_orders"
+  ADD COLUMN IF NOT EXISTS "orderType" TEXT NOT NULL DEFAULT 'SELL';
+
+CREATE INDEX IF NOT EXISTS "p2p_orders_orderType_idx" ON "p2p_orders"("orderType");
+
+DO $$ BEGIN
+  ALTER TYPE "TransactionType" ADD VALUE IF NOT EXISTS 'EXCHANGE_BUY_FREEZE';
+  ALTER TYPE "TransactionType" ADD VALUE IF NOT EXISTS 'EXCHANGE_BUY_UNFREEZE';
+EXCEPTION WHEN duplicate_object THEN null; END $$;

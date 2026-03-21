@@ -1,0 +1,2 @@
+-- Add THEME to ItemType enum
+ALTER TYPE "ItemType" ADD VALUE IF NOT EXISTS 'THEME';

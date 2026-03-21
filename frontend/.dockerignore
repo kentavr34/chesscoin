@@ -1,0 +1,8 @@
+node_modules
+dist
+.env
+.env.*
+*.test.ts
+.git
+*.log
+README.md

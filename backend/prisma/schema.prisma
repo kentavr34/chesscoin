@@ -1,0 +1,1087 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "linux-musl-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────
+// PLATFORM CONFIG — токеномика и фазы
+// ─────────────────────────────────────────
+model PlatformConfig {
+  id String @id @default("singleton")
+
+  // Эмиссия
+  hardCap          BigInt @default(100000000000) // 100 млрд — абсолютный максимум
+  emissionCap      BigInt @default(30000000000)  // 30 млрд — порог отключения раздачи
+  totalEmitted     BigInt @default(0)             // сколько выдано игрокам всего
+  platformReserve  BigInt @default(100000000000) // резерв платформы (начинается с hard_cap)
+
+  // Фаза
+  currentPhase     Int    @default(1) // 1 = airdrop, 2 = рост, 3 = крипто
+
+  // Биржа (v6+)
+  tokenPriceUsd    Float  @default(0.001) // текущая цена ChessCoin в USD
+  priceUpdatedAt   DateTime @default(now())
+
+  // Статистика для ценообразования
+  totalUsersSnapshot Int @default(0)
+
+  updatedAt DateTime @updatedAt
+
+  @@map("platform_config")
+}
+
+// ─────────────────────────────────────────
+// USER
+// ─────────────────────────────────────────
+model User {
+  id String @id @default(uuid())
+
+  telegramId String  @unique
+  firstName  String
+  lastName   String?
+  username   String?
+  language   String  @default("ru")
+
+  // Аватар
+  avatar         String?      // URL активного аватара (Telegram, загруженный или премиум из магазина)
+  telegramAvatar String?      // Оригинальный аватар из Telegram — сохраняется всегда для возможности восстановления
+  avatarType     AvatarType   @default(TELEGRAM) // TELEGRAM / GRADIENT / UPLOAD / NFT
+  avatarGradient String?      // CSS градиент, генерируется из telegramId
+
+  // Баланс и статистика
+  balance      BigInt  @default(0)
+  totalEarned  BigInt  @default(0) // всего заработано за всё время
+  totalSpent   BigInt  @default(0) // всего потрачено за всё время
+
+  // Попытки
+  attempts     Int       @default(3)
+  maxAttempts  Int       @default(3)  // базовый лимит (3 бесплатных + до 3 купленных = 6 макс)
+  attemptSlots DateTime[] // таймстемп каждого использованного слота для независимого восстановления
+
+  // Лига и ELO
+  elo    Int    @default(1000)
+  league League @default(BRONZE)
+
+  // Рефералы
+  referrerId        String?
+  referrer          User?   @relation("ReferredBy", fields: [referrerId], references: [id])
+  referrals         User[]  @relation("ReferredBy")
+  referrerIncome    BigInt  @default(0) // сколько заработал через рефералов (1 уровень)
+  subReferrerIncome BigInt  @default(0) // сколько заработал через суб-рефералов (2 уровень)
+  referralActivated Boolean @default(false) // сыграл ли первую игру (для бонуса пригласившему)
+
+  // Активные сессии (до 3 одновременно)
+  activeSessions Session[] @relation("ActiveUserSessions")
+
+  // Все сессии (история)
+  sides SessionSide[] @relation("UserSessions")
+
+  // Задания
+  completedTasks CompletedTask[] @relation("UserCompletedTasks")
+  completedPuzzles CompletedPuzzle[] @relation("UserPuzzles")
+
+  // Инвентарь
+  inventory UserItem[] @relation("UserInventory")
+
+  // Транзакции
+  transactions Transaction[] @relation("UserTransactions")
+
+  // Турниры
+  tournaments TournamentPlayer[]
+
+  // v6: TON кошелёк
+  tonWalletAddress  String?  // подключается в v6
+  tonConnectedAt    DateTime?
+
+  // Военные звания (по числу рефералов)
+  militaryRank      String   @default("PRIVATE")
+  referralCount     Int      @default(0)
+
+  // JARVIS прогрессия
+  jarvisLevel      Int    @default(1)   // текущий разблокированный уровень (1-10)
+  jarvisBadges     String[] @default([])  // список пройденных уровней ["Beginner","Player",...]
+  jarvisBadgeDates Json?  @default("{}") // даты получения: {"Beginner":"2026-03-14",...}
+
+  // Login streak
+  loginStreak   Int       @default(0)
+  lastLoginDate DateTime?
+
+  // UI preferences
+  activeTheme      String  @default("default")  // chesscoin theme key
+
+  // Чемпион месяца
+  isMonthlyChampion    Boolean   @default(false)
+  monthlyChampionAt    DateTime?
+  monthlyChampionType  String?   // "ELO" | "BALANCE" | "REFERRALS"
+
+  // Достижения и турнирные бейджи
+  achievements         Json      @default("[]")
+  tournamentBadges     Json      @default("[]")
+
+  // Wars
+  hasSeenWarsIntro Boolean @default(false)
+  countryMember    CountryMember?
+  savedGames       SavedGame[]
+
+  // Служебное
+  isBot     Boolean @default(false)
+  isBanned  Boolean @default(false)
+  isAdmin   Boolean @default(false) // доступ к админ-панели
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Индексы для быстрых запросов
+  @@index([balance])
+  @@index([elo])
+  @@index([league])
+  @@index([referrerId])
+  @@index([telegramId])
+  // v6.1: P2P биржа
+  p2pSelling P2POrder[] @relation("P2PSeller")
+  tradeOrders TradeOrder[]
+  p2pBuying  P2POrder[] @relation("P2PBuyer")
+
+  @@map("users")
+}
+
+// ─────────────────────────────────────────
+// SESSION (игровая партия)
+// ─────────────────────────────────────────
+model Session {
+  id   String @id @default(uuid())
+  code String? @unique // код для присоединения к friendly/battle
+
+  status SessionStatus
+  type   SessionType
+  fen    String        // текущая позиция FEN
+  pgn    String        // полная история ходов PGN
+
+  currentSideId String?
+  winnerSideId  String?
+  isSurrender   Boolean @default(false)
+  isPrivate     Boolean @default(false)
+
+  duration      Int?      // длительность в секундах
+  turnStartedAt DateTime  @default(now())
+
+  bet      BigInt? // ставка в батле
+  botLevel Int?    // уровень бота 1-20
+
+  // Stage 2: донаты зрителей и реферальная ссылка
+  donationPool      BigInt  @default(0)
+  referralCreatorId String?
+
+  sides SessionSide[] @relation("SessionSides")
+
+  // Активные пользователи в этой сессии
+  activeUsers User[] @relation("ActiveUserSessions")
+
+  // Wars
+  warBattle WarBattle?
+  savedBy   SavedGame[]
+
+  // S3: скины создателя батла (видны обоим игрокам)
+  boardSkinUrl  String?  // URL изображения доски создателя
+  pieceSkinUrl  String?  // URL изображения фигур создателя
+
+  finishedAt DateTime?
+  startedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([status])
+  @@index([type])
+  @@index([code])
+  @@map("sessions")
+}
+
+model SessionSide {
+  id     String            @id @default(uuid())
+  status SessionSideStatus
+
+  sessionId String
+  session   Session @relation("SessionSides", fields: [sessionId], references: [id], onDelete: Cascade)
+
+  playerId String
+  player   User   @relation("UserSessions", fields: [playerId], references: [id])
+
+  isWhite     Boolean @default(true)
+  isBot       Boolean @default(false)
+  eatenPieces Json    @default("[]")
+
+  winningAmount BigInt?
+  timeLeft      Int?    // секунд осталось
+
+  updatedAt DateTime @updatedAt
+
+  @@index([playerId])
+  @@index([sessionId])
+  @@map("session_sides")
+}
+
+// ─────────────────────────────────────────
+// TRANSACTION
+// ─────────────────────────────────────────
+model Transaction {
+  id String @id @default(uuid())
+
+  userId String
+  user   User   @relation("UserTransactions", fields: [userId], references: [id])
+
+  amount  BigInt       // положительное = приход, отрицательное = расход
+  type    TransactionType
+  payload Json         // детали: sessionId, itemId, referralId и т.д.
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@index([type])
+  @@map("transactions")
+}
+
+// ─────────────────────────────────────────
+// TASKS (задания)
+// ─────────────────────────────────────────
+model Task {
+  id String @id @default(uuid())
+
+  taskType      TaskType
+  status        TaskStatus @default(ACTIVE)
+  icon          String
+  title         String
+  description   String?
+  metadata      Json       // { url, channelId, code, referralCount... }
+  winningAmount BigInt
+
+  completedBy CompletedTask[] @relation("CompletedTasks")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("tasks")
+}
+
+model CompletedTask {
+  id String @id @default(uuid())
+
+  taskId String
+  task   Task   @relation("CompletedTasks", fields: [taskId], references: [id])
+
+  userId String
+  user   User   @relation("UserCompletedTasks", fields: [userId], references: [id])
+
+  completedAt DateTime @default(now())
+
+  @@unique([userId, taskId])
+  @@map("completed_tasks")
+}
+
+// ─────────────────────────────────────────
+// ITEMS — рамки, скины, NFT (v5 + v6)
+// ─────────────────────────────────────────
+model Item {
+  id String @id @default(uuid())
+
+  type        ItemType
+  category    ItemCategory
+  name        String
+  description String?
+  imageUrl    String?
+  previewUrl  String?     // превью для магазина
+
+  priceCoins BigInt      // цена в ᚙ
+  rarity     ItemRarity  @default(COMMON)
+
+  isNft        Boolean  @default(false)
+  nftTokenId   String?  // заполняется в v6 при минтинге
+  totalSupply  Int?     // для NFT: ограниченный тираж
+  mintedCount  Int      @default(0)
+
+  isActive     Boolean  @default(true)
+  sortOrder    Int      @default(0)
+
+  owners    UserItem[] @relation("ItemOwners")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([type])
+  @@index([category])
+  @@index([isNft])
+  @@map("items")
+}
+
+model UserItem {
+  id String @id @default(uuid())
+
+  userId String
+  user   User   @relation("UserInventory", fields: [userId], references: [id])
+
+  itemId String
+  item   Item   @relation("ItemOwners", fields: [itemId], references: [id])
+
+  isEquipped   Boolean  @default(false) // надета ли сейчас
+  purchasedAt  DateTime @default(now())
+
+  // v6: NFT трансфер
+  nftTxHash    String?  // хэш транзакции минтинга
+  transferredAt DateTime?
+
+  @@unique([userId, itemId])
+  @@index([userId])
+  @@index([itemId])
+  @@map("user_items")
+}
+
+// ─────────────────────────────────────────
+// CLANS (сборные по странам)
+// ─────────────────────────────────────────
+model Clan {
+  id String @id @default(uuid())
+
+  name        String  @unique
+  countryCode String  @unique // "RU", "BR", "DE"...
+  flag        String  // emoji флага
+  description String?
+
+  treasury    BigInt  @default(0) // казна клана
+  elo         Int     @default(1000)
+  wins        Int     @default(0)
+  losses      Int     @default(0)
+
+  // Stage 3
+  leaderId          String?
+  maxMembers        Int      @default(100)
+  totalWarWins      Int      @default(0)
+  totalWarLosses    Int      @default(0)
+  achievements      Json     @default("[]")
+  lastPostedBattleId String?
+
+  members     ClanMember[] @relation("ClanMembers")
+
+  warsAsAttacker ClanWar[] @relation("AttackerClan")
+  warsAsDefender ClanWar[] @relation("DefenderClan")
+
+  battlesAsChallenger ClanBattle[] @relation("ClanBattleChallenger")
+  battlesAsDefender   ClanBattle[] @relation("ClanBattleDefender")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("clans")
+}
+
+model ClanMember {
+  id String @id @default(uuid())
+
+  clanId String
+  clan   Clan   @relation("ClanMembers", fields: [clanId], references: [id])
+
+  userId String @unique // один игрок — один клан
+  // user   User   @relation(fields: [userId], references: [id])
+
+  role      ClanRole  @default(SOLDIER)
+  contribution BigInt @default(0) // сколько внёс в казну
+
+  // Stage 3
+  warWins             Int      @default(0)
+  warLosses           Int      @default(0)
+  isPending           Boolean  @default(false)
+  pendingContribution BigInt   @default(0)
+
+  joinedAt DateTime @default(now())
+
+  @@index([clanId])
+  @@map("clan_members")
+}
+
+model ClanWar {
+  id String @id @default(uuid())
+
+  attackerClanId String
+  attackerClan   Clan   @relation("AttackerClan", fields: [attackerClanId], references: [id])
+
+  defenderClanId String
+  defenderClan   Clan   @relation("DefenderClan", fields: [defenderClanId], references: [id])
+
+  status      ClanWarStatus @default(IN_PROGRESS)
+  attackerWins Int          @default(0)
+  defenderWins Int          @default(0)
+  totalRounds  Int          @default(5)
+
+  betPerPlayer BigInt @default(0) // ставка каждого участника
+
+  // Stage 3 extensions
+  isPending        Boolean  @default(false)    // ожидает принятия лидером
+  duration         Int      @default(86400)    // в секундах
+  endAt            DateTime?
+  prize            BigInt   @default(0)
+  attackerTreasury BigInt   @default(0)
+  defenderTreasury BigInt   @default(0)
+  isPublished      Boolean  @default(false)
+  winnerClanId     String?
+
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+
+  @@map("clan_wars")
+}
+
+// ─────────────────────────────────────────
+// COUNTRIES — войны между странами
+// ─────────────────────────────────────────
+
+model Country {
+  id        String @id @default(uuid())
+
+  code      String @unique   // "RU", "BR", "US"...
+  nameRu    String           // Россия
+  nameEn    String           // Russia
+  flag      String           // 🇷🇺 emoji
+
+  treasury  BigInt @default(0) // казна (начисляется за победы в войнах)
+  wins      Int    @default(0)
+  losses    Int    @default(0)
+  maxMembers Int   @default(1000)
+
+  members        CountryMember[]
+  warsAsAttacker CountryWar[] @relation("WarAttacker")
+  warsAsDefender CountryWar[] @relation("WarDefender")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([wins])
+  @@map("countries")
+}
+
+model CountryMember {
+  id        String @id @default(uuid())
+
+  countryId String
+  country   Country @relation(fields: [countryId], references: [id])
+
+  userId    String @unique  // один игрок — одна страна
+  user      User   @relation(fields: [userId], references: [id])
+
+  warWins   Int @default(0)  // победы в войнах (определяет Главнокомандующего)
+  warLosses Int @default(0)
+
+  joinedAt  DateTime @default(now())
+
+  @@index([countryId, warWins])
+  @@map("country_members")
+}
+
+model CountryWar {
+  id String @id @default(uuid())
+
+  attackerCountryId String
+  attackerCountry   Country @relation("WarAttacker", fields: [attackerCountryId], references: [id])
+
+  defenderCountryId String
+  defenderCountry   Country @relation("WarDefender", fields: [defenderCountryId], references: [id])
+
+  status       CountryWarStatus @default(IN_PROGRESS)
+  attackerWins Int @default(0)
+  defenderWins Int @default(0)
+
+  prizePerWin      BigInt @default(100)  // монет в казну за каждую победу
+  duration         Int                   // секунды (3600 / 43200 / 86400 / 604800 / 2592000)
+  startedAt        DateTime @default(now())
+  endAt            DateTime
+  finishedAt       DateTime?
+  winnerCountryId  String?
+  declaredByUserId String  // userId Главнокомандующего
+
+  battles WarBattle[]
+
+  warningNotifiedAt DateTime? // когда было отправлено предупреждение за 1 час до конца
+
+  createdAt DateTime @default(now())
+
+  @@index([status])
+  @@index([attackerCountryId])
+  @@index([defenderCountryId])
+  @@map("country_wars")
+}
+
+model WarBattle {
+  id    String @id @default(uuid())
+
+  warId String
+  war   CountryWar @relation(fields: [warId], references: [id])
+
+  sessionId String  @unique
+  session   Session @relation(fields: [sessionId], references: [id])
+
+  attackerId        String
+  defenderId        String
+  attackerCountryId String
+  defenderCountryId String
+
+  winnerId        String?
+  winnerCountryId String?
+
+  status String @default("IN_PROGRESS")  // IN_PROGRESS | FINISHED
+
+  createdAt  DateTime @default(now())
+  finishedAt DateTime?
+
+  @@index([warId])
+  @@map("war_battles")
+}
+
+model SavedGame {
+  id        String @id @default(uuid())
+
+  userId    String
+  user      User   @relation(fields: [userId], references: [id])
+
+  sessionId String
+  session   Session @relation(fields: [sessionId], references: [id])
+
+  savedAt   DateTime @default(now())
+
+  @@unique([userId, sessionId])
+  @@index([userId])
+  @@map("saved_games")
+}
+
+// ─────────────────────────────────────────
+// CLAN BATTLES (командные соревнования)
+// ─────────────────────────────────────────
+
+model ClanBattle {
+  id                 String           @id @default(uuid())
+
+  challengerClanId   String
+  challengerClan     Clan             @relation("ClanBattleChallenger", fields: [challengerClanId], references: [id])
+
+  defenderClanId     String
+  defenderClan       Clan             @relation("ClanBattleDefender", fields: [defenderClanId], references: [id])
+
+  status             ClanBattleStatus @default(PENDING)
+
+  // Пул: взносы игроков обоих кланов
+  pool               BigInt           @default(0)
+
+  // Ограничение одновременных партий
+  maxSimultaneous    Int              @default(10)
+  activeGames        Int              @default(0) // текущее кол-во активных партий
+
+  // Итоги
+  challengerWins     Int              @default(0)
+  defenderWins       Int              @default(0)
+  totalGames         Int              @default(0)
+  winnerClanId       String?
+
+  // Время
+  duration           Int              // секунды: 3600 до 2592000
+  startedAt          DateTime?
+  endAt              DateTime?
+  finishedAt         DateTime?
+
+  // Публикация
+  isPublished        Boolean          @default(false)
+
+  contributions ClanBattleContribution[]
+  games         ClanBattleGame[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([challengerClanId])
+  @@index([defenderClanId])
+  @@map("clan_battles")
+}
+
+model ClanBattleContribution {
+  id        String @id @default(uuid())
+
+  battleId  String
+  battle    ClanBattle @relation(fields: [battleId], references: [id], onDelete: Cascade)
+
+  userId    String
+  clanId    String
+  amount    BigInt
+
+  paidOut   Boolean @default(false)
+  paidAmount BigInt @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@unique([battleId, userId])
+  @@index([battleId])
+  @@map("clan_battle_contributions")
+}
+
+model ClanBattleGame {
+  id        String @id @default(uuid())
+
+  battleId  String
+  battle    ClanBattle @relation(fields: [battleId], references: [id], onDelete: Cascade)
+
+  sessionId String  @unique // ссылка на Session
+  player1Id String
+  player2Id String
+  clan1Id   String  // клан игрока1
+  clan2Id   String  // клан игрока2
+
+  winnerId  String?  // userId победителя
+  winnerClanId String?
+
+  status    String   @default("IN_PROGRESS") // IN_PROGRESS | FINISHED
+
+  createdAt  DateTime @default(now())
+  finishedAt DateTime?
+
+  @@index([battleId])
+  @@index([sessionId])
+  @@map("clan_battle_games")
+}
+
+enum ClanBattleStatus {
+  PENDING      // ожидает принятия
+  IN_PROGRESS  // идёт
+  FINISHED     // завершён
+  CANCELLED    // отменён
+}
+
+// ─────────────────────────────────────────
+// TOURNAMENTS (v6)
+// ─────────────────────────────────────────
+model Tournament {
+  id          String            @id @default(cuid())
+  name        String
+  description String?
+  entryFee    BigInt            @default(10000)
+  maxPlayers  Int               @default(256)
+  status      TournamentStatus  @default(REGISTRATION)
+  startAt     DateTime?
+  endAt       DateTime?
+  prizePool   BigInt            @default(0)
+  donationPool BigInt           @default(0)
+  createdBy   String?           // userId создателя
+  // Stage 4: тип и период
+  type         String           @default("WORLD")   // WORLD | COUNTRY | WEEKLY | MONTHLY | SEASONAL | YEARLY
+  period       String?                              // "2026-W12", "2026-03", "2026-Q1", "2026"
+  winnerId     String?
+  isPublished  Boolean          @default(false)
+  lastPublishedAt DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  players TournamentPlayer[]
+  matches TournamentMatch[]
+
+  @@index([status])
+  @@map("tournaments")
+}
+
+model TournamentPlayer {
+  id           String     @id @default(cuid())
+  tournamentId String
+  userId       String
+  seed         Int?
+  eliminated   Boolean    @default(false)
+  joinedAt     DateTime   @default(now())
+  // Stage 4 stats
+  wins         Int        @default(0)
+  losses       Int        @default(0)
+  draws        Int        @default(0)
+  points       Float      @default(0)
+  skippedMatches Int      @default(0)
+  isActive     Boolean    @default(true)
+  contribution BigInt     @default(0)
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id])
+
+  @@unique([tournamentId, userId])
+  @@index([tournamentId])
+  @@index([userId])
+  @@map("tournament_players")
+}
+
+model TournamentMatch {
+  id           String   @id @default(cuid())
+  tournamentId String
+  player1Id    String?
+  player2Id    String?
+  winnerId     String?
+  round        Int      @default(1)
+  matchOrder   Int      @default(1)
+  sessionId    String?  // связанная игровая сессия
+  status       String   @default("PENDING") // PENDING | IN_PROGRESS | FINISHED
+  createdAt    DateTime @default(now())
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  @@index([tournamentId])
+  @@map("tournament_matches")
+}
+
+enum TournamentStatus {
+  REGISTRATION
+  IN_PROGRESS
+  FINISHED
+}
+
+// ─────────────────────────────────────────
+// WITHDRAWAL REQUESTS (v6 — заблокировано)
+// ─────────────────────────────────────────
+model WithdrawalRequest {
+  id String @id @default(uuid())
+
+  userId          String
+  amountCoins     BigInt
+  tonWalletAddress String
+  tonCommission   Float?  // комиссия в TON
+
+  status    WithdrawalStatus @default(PENDING)
+  txHash    String?          // хэш транзакции в блокчейне
+
+  createdAt DateTime @default(now())
+  processedAt DateTime?
+
+  @@index([userId])
+  @@index([status])
+  @@map("withdrawal_requests")
+}
+
+// ─────────────────────────────────────────
+// TON TRANSACTIONS (v6)
+// ─────────────────────────────────────────
+model TonTransaction {
+  id           String   @id @default(uuid())
+  userId       String
+  type         String   // DEPOSIT | WITHDRAWAL | PURCHASE
+  amountTon    Float
+  amountCoins  BigInt   @default(0)
+  txHash       String?
+  status       String   @default("PENDING") // PENDING | COMPLETED | FAILED
+  itemId       String?
+  createdAt    DateTime @default(now())
+  processedAt  DateTime?
+
+  @@index([userId])
+  @@index([status])
+  @@map("ton_transactions")
+}
+
+// ─────────────────────────────────────────
+// P2P ORDERS (v7 — заблокировано)
+// ─────────────────────────────────────────
+model P2POrder {
+  id String @id @default(uuid())
+
+  orderType    String   @default("SELL") // SELL | BUY (E15)
+
+  sellerId     String   // для SELL: продавец ᚙ; для BUY: покупатель ᚙ (создатель ордера)
+  buyerId      String?  // для SELL: покупатель; для BUY: продавец (тот кто принял)
+
+  amountCoins  BigInt   // количество ᚙ
+  priceTon     Float    // цена за 1_000_000 ᚙ в TON
+  totalTon     Float    // amountCoins / 1_000_000 * priceTon
+
+  sellerWallet String   // для SELL: кошелёк продавца; для BUY: кошелёк покупателя ᚙ
+  buyerWallet  String?  // заполняется при исполнении
+
+  feeTon       Float    @default(0) // 0.5%% комиссия платформы в TON
+  txHash       String?  // хэш TON-транзакции (proof оплаты)
+  txBoc        String?  // boc транзакции для верификации
+  verifyStatus String   @default("NONE") // NONE | PENDING | VERIFIED | FAILED
+
+  status P2POrderStatus @default(OPEN)
+
+  createdAt    DateTime  @default(now())
+  executedAt   DateTime?
+  cancelledAt  DateTime?
+
+  seller User  @relation("P2PSeller", fields: [sellerId], references: [id])
+  buyer  User? @relation("P2PBuyer",  fields: [buyerId],  references: [id])
+
+  @@unique([txHash])
+  @@index([status])
+  @@index([sellerId])
+  @@index([orderType])
+  @@index([createdAt(sort: Desc)])
+  @@map("p2p_orders")
+}
+
+// ─────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────
+
+enum AvatarType {
+  TELEGRAM
+  GRADIENT
+  UPLOAD
+  NFT
+}
+
+enum League {
+  BRONZE
+  SILVER
+  GOLD
+  DIAMOND
+  CHAMPION
+  STAR
+}
+
+enum SessionStatus {
+  WAITING_FOR_OPPONENT
+  IN_PROGRESS
+  FINISHED
+  TIME_EXPIRED
+  DRAW
+  CANCELLED
+}
+
+enum SessionType {
+  BATTLE
+  BOT
+  FRIENDLY
+}
+
+enum SessionSideStatus {
+  WAITING_FOR_OPPONENT
+  IN_PROGRESS
+  WON
+  LOST
+  OFFERED_A_DRAW
+  DRAW
+}
+
+enum TransactionType {
+  // Приход
+  WELCOME_BONUS
+  BOT_WIN
+  BOT_PIECE          // за съеденную фигуру (Фаза 1)
+  BATTLE_WIN
+  REFERRAL_BONUS     // бонус за первую игру реферала
+  REFERRAL_INCOME    // % от выигрыша реферала (уровень 1)
+  SUB_REFERRAL_INCOME // % от выигрыша (уровень 2)
+  TASK_REWARD
+  FRIENDLY_WIN
+  // Расход
+  BATTLE_BET         // ставка в батле
+  BATTLE_COMMISSION  // 10% комиссия стола
+  BOT_LOSS           // проигрыш боту (Фаза 2)
+  ATTEMPT_PURCHASE   // покупка попытки
+  ITEM_PURCHASE      // покупка скина/рамки
+  CLAN_CONTRIBUTION  // взнос в казну клана
+  TOURNAMENT_ENTRY   // взнос в турнир
+  WITHDRAWAL         // вывод (v6)
+  BATTLE_DONATION    // донат зрителя в батл
+  REFUND             // TAIL-1: возврат ставки при отмене зависшего батла
+  CLAN_WAR_WIN       // выигрыш в клановой войне
+  COUNTRY_WAR_WIN    // выигрыш в войне между странами
+  TOURNAMENT_WIN     // выигрыш в турнире
+  TON_DEPOSIT        // пополнение через TON
+  WALLET_UNLOCK      // разовый платёж за подключение кошелька
+  EXCHANGE_SELL      // продажа ᚙ через P2P биржу (приход TON, расход ᚙ)
+  EXCHANGE_BUY       // покупка ᚙ через P2P биржу (расход TON, приход ᚙ)
+  EXCHANGE_FREEZE    // заморозка ᚙ при создании ордера
+  EXCHANGE_UNFREEZE  // разморозка ᚙ при отмене ордера
+  EXCHANGE_FEE       // комиссия платформы 0.5%%
+  TRADE_BUY          // покупка монет через TON (магазин)
+  TRADE_SELL         // продажа монет через TON (магазин)
+  PUZZLE_REWARD      // награда за пазл/урок
+  EXCHANGE_BUY_FREEZE    // заморозка TON при создании BUY-ордера (резерв в записи)
+  EXCHANGE_BUY_UNFREEZE  // разморозка при отмене BUY-ордера
+}
+
+enum TaskType {
+  REFERRAL
+  ENTER_CODE
+  FOLLOW_LINK
+  SUBSCRIBE_TELEGRAM
+  // v7.1.7: геймплейные задания (срабатывают автоматически из finish.ts)
+  DAILY_LOGIN      // войти в игру (сбрасывается ежедневно)
+  FIRST_GAME       // сыграть первую партию (ever)
+  WIN_N            // одержать N побед в батлах
+  WIN_BOT_N        // победить бота N раз
+  WIN_STREAK_N     // N побед подряд
+  PLAY_N           // сыграть N партий (любых)
+}
+
+enum TaskStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum ItemType {
+  AVATAR_FRAME       // рамка профиля
+  BOARD_SKIN         // цвет/стиль доски
+  PIECE_SKIN         // стиль фигур
+  MOVE_ANIMATION     // анимация ходов
+  THEME              // визуальная тема интерфейса
+  PIECE_SET          // набор форм фигур
+  PREMIUM_AVATAR     // премиум аватар (покупается в магазине)
+  WIN_ANIMATION      // V3: анимация победы/мата
+  CAPTURE_EFFECT     // V3: эффект взятия фигуры
+  SPECIAL_MOVE       // V3: анимация спецхода/дебюта
+}
+
+enum ItemCategory {
+  BASIC
+  PREMIUM
+  NFT
+  SEASONAL          // ограниченные акционные
+}
+
+enum ItemRarity {
+  COMMON
+  RARE
+  EPIC
+  LEGENDARY
+}
+
+enum ClanRole {
+  SOLDIER
+  OFFICER
+  COMMANDER
+}
+
+enum ClanWarStatus {
+  IN_PROGRESS
+  FINISHED
+}
+
+enum CountryWarStatus {
+  IN_PROGRESS
+  FINISHED
+}
+
+enum WithdrawalStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum P2POrderStatus {
+  OPEN
+  EXECUTED
+  CANCELLED
+}
+
+// ─────────────────────────────────────────
+// Архив удалённых мёртвых игроков (для аналитики)
+// ─────────────────────────────────────────
+model AnalyticsCleanup {
+  id           String   @id @default(cuid())
+  removedCount Int
+  removedAt    DateTime @default(now())
+  snapshot     Json     // [{id, telegramId, firstName, createdAt, balance}]
+}
+
+// ─────────────────────────────────────────
+// Уведомления для администратора (бот читает и отправляет)
+// ─────────────────────────────────────────
+model AdminNotification {
+  id        String   @id @default(cuid())
+  type      String   // DEAD_PLAYERS_CLEANED | REFERRAL_ACTIVATED | etc.
+  payload   Json
+  sentAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([sentAt])
+}
+
+// Хранит реферальную связь до первого auth/login нового игрока
+model PendingReferral {
+  id                  String   @id @default(cuid())
+  newTelegramId       String   @unique
+  referrerTelegramId  String
+  createdAt           DateTime @default(now())
+
+  @@index([newTelegramId])
+}
+
+// ─────────────────────────────────────────
+// PUZZLE — шахматные задачи (из Lichess)
+// ─────────────────────────────────────────
+model Puzzle {
+  id          String   @id  // lichess PuzzleId
+  fen         String        // стартовая позиция FEN
+  moves       String[]      // правильные ходы (UCI: e2e4)
+  rating      Int           // сложность Lichess (500–3000)
+  themes      String[]      // тематики: fork, pin, mateIn2 …
+  reward      BigInt        // награда в ᚙ (вычисляется при импорте)
+  isDaily     Boolean  @default(false)
+  dailyDate   DateTime?     // дата когда был «задачей дня»
+  createdAt   DateTime @default(now())
+
+  completions CompletedPuzzle[]
+
+  @@index([rating])
+  @@index([isDaily, dailyDate])
+  @@map("puzzles")
+}
+
+model CompletedPuzzle {
+  id        String   @id @default(cuid())
+  userId    String
+  puzzleId  String
+  solvedAt  DateTime @default(now())
+  reward    BigInt
+
+  user   User   @relation("UserPuzzles", fields: [userId], references: [id], onDelete: Cascade)
+  puzzle Puzzle @relation(fields: [puzzleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, puzzleId])
+  @@index([userId])
+  @@map("completed_puzzles")
+}
+
+// ─── TradeOrder (из GitHub: TON-обмен в магазине) ─────────────────────────
+model TradeOrder {
+  id       String @id @default(cuid())
+
+  userId   String
+  user     User   @relation(fields: [userId], references: [id])
+
+  type     TradeOrderType    // BUY | SELL
+  currency TradeOrderCurrency // TON | STARS
+
+  amount   BigInt // количество монет ᚙ
+  price    Float  // цена за 1000 монет в TON/Stars
+
+  status   TradeOrderStatus @default(OPEN)
+
+  filledByUserId String?
+
+  createdAt  DateTime  @default(now())
+  filledAt   DateTime?
+  cancelledAt DateTime?
+
+  @@index([status])
+  @@index([userId])
+  @@map("trade_orders")
+}
+
+enum TradeOrderType {
+  BUY
+  SELL
+}
+
+enum TradeOrderCurrency {
+  TON
+  STARS
+}
+
+enum TradeOrderStatus {
+  OPEN
+  FILLED
+  CANCELLED
+}

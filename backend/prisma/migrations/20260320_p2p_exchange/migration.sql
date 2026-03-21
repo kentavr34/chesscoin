@@ -1,0 +1,16 @@
+-- v6.1.0: P2P Exchange
+-- Upgrade p2p_orders table with TON fields
+
+ALTER TABLE "p2p_orders"
+  DROP COLUMN IF EXISTS "priceUsd",
+  DROP COLUMN IF EXISTS "totalUsd",
+  DROP COLUMN IF EXISTS "currency",
+  ADD COLUMN IF NOT EXISTS "priceTon"     DOUBLE PRECISION NOT NULL DEFAULT 1.0,
+  ADD COLUMN IF NOT EXISTS "totalTon"     DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+  ADD COLUMN IF NOT EXISTS "sellerWallet" TEXT NOT NULL DEFAULT '',
+  ADD COLUMN IF NOT EXISTS "buyerWallet"  TEXT,
+  ADD COLUMN IF NOT EXISTS "feeTon"       DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+  ADD COLUMN IF NOT EXISTS "txHash"       TEXT,
+  ADD COLUMN IF NOT EXISTS "txBoc"        TEXT;
+
+CREATE INDEX IF NOT EXISTS "p2p_orders_createdAt_idx" ON "p2p_orders"("createdAt" DESC);

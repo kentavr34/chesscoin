@@ -1,0 +1,49 @@
+# ──────────────────────────────────────────────────────────────
+# ChessCoin — Мониторинг uptime
+# Пингует /health каждые 5 минут
+# При падении — уведомление в Telegram
+# ──────────────────────────────────────────────────────────────
+
+name: Uptime Monitor
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'   # каждые 5 минут
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: 🔍 Health Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check health endpoint
+        id: health
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            --max-time 10 \
+            https://chesscoin.app/health || echo "000")
+
+          echo "status=$STATUS" >> $GITHUB_OUTPUT
+
+          if [ "$STATUS" = "200" ]; then
+            echo "✅ ChessCoin is UP (HTTP $STATUS)"
+          else
+            echo "❌ ChessCoin is DOWN (HTTP $STATUS)"
+            exit 1
+          fi
+
+      - name: Notify on failure
+        if: failure()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_ADMIN_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            🚨 *ChessCoin DOWN!*
+
+            Health check провалился
+            HTTP статус: ${{ steps.health.outputs.status }}
+            Время: $(date '+%Y-%m-%d %H:%M UTC')
+
+            Проверь сервер: `docker compose logs --tail=50`
