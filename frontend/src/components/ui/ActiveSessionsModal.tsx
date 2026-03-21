@@ -24,7 +24,7 @@ const TYPE_LABEL: Record<string, string> = {
 
 const STATUS_LABEL: Record<string, { text: string; color: string }> = {
   IN_PROGRESS:          { text: 'Идёт игра',       color: 'var(--green, #00D68F)' },
-  WAITING_FOR_OPPONENT: { text: t.activeSessions.waiting,         color: 'var(--accent, #F5C842)' },
+  WAITING_FOR_OPPONENT: { text: 'Ожидание соперника', color: 'var(--accent, #F5C842)' },
 };
 
 export const ActiveSessionsModal: React.FC<ActiveSessionsModalProps> = ({
