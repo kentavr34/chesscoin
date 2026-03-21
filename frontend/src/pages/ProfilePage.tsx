@@ -622,7 +622,7 @@ export const ProfilePage: React.FC = () => {
             <>
               <div style={secStyle}>🏆 Турнирные победы</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 18px' }}>
-                {(user?.tournamentBadges .slice().reverse().map((badge: Record<string,unknown>, i: number) => {
+                {user?.tournamentBadges.slice().reverse().map((badge: Record<string,unknown>, i: number) => {
                   const placeEmoji = badge.place === 1 ? '🥇' : badge.place === 2 ? '🥈' : '🥉';
                   const placeColor = badge.place === 1 ? '#FFD700' : badge.place === 2 ? '#C0C0C0' : '#CD7F32';
                   return (
