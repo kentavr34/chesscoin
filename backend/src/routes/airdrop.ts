@@ -18,9 +18,7 @@ import { Router, Request, Response } from 'express';
 import { prisma } from '@/lib/prisma';
 import { authMiddleware } from '@/middleware/auth';
 import { TransactionType } from '@prisma/client';
-import { getLogger } from '@/lib/logger';
-
-const logger = getLogger('airdrop');
+import { logger } from '@/lib/logger';
 export const airdropRouter = Router();
 
 // Middleware: только для администраторов

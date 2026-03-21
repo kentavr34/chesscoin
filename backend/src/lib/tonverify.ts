@@ -17,9 +17,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import config from '@/config';
-import { getLogger } from '@/lib/logger';
-
-const logger = getLogger('tonverify');
+import { logger } from '@/lib/logger';
 
 const TONCENTER_BASE = config.ton.network === 'testnet'
   ? 'https://testnet.toncenter.com/api/v2'

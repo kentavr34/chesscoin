@@ -12,12 +12,10 @@ import { Router, Request, Response } from 'express';
 import { prisma } from '@/lib/prisma';
 import { authMiddleware } from '@/middleware/auth';
 import { TransactionType } from '@prisma/client';
-import { getLogger } from '@/lib/logger';
+import { logger } from '@/lib/logger';
 import { redis } from '@/lib/redis';
 import { verifyTonTransaction } from '@/lib/tonverify';
 import { getIo } from '@/lib/io';
-
-const logger = getLogger('exchange');
 export const exchangeRouter = Router();
 
 const PLATFORM_FEE_PERCENT = 0.005;
