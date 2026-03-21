@@ -621,20 +621,17 @@ export const WarsPage: React.FC = () => {
     return null;
   };
 
+  const warsRightAction = (
+    <button
+      onClick={() => setShowIntro(true)}
+      style={{ width: 36, height: 36, borderRadius: 11, background: '#1C2030', border: '1px solid rgba(255,255,255,0.13)', color: '#A8B0C8', fontSize: 16, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+    >
+      ⓘ
+    </button>
+  );
+
   return (
-    <PageLayout title="">
-      {/* Заголовок */}
-      <div style={{ padding: '10px 18px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-        <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 18, fontWeight: 800, color: '#F5C842', textAlign: 'center' }}>
-          Войны
-        </div>
-        <button
-          onClick={() => setShowIntro(true)}
-          style={{ position: 'absolute', right: 18, width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: '#A8B0C8', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-        >
-          ⓘ
-        </button>
-      </div>
+    <PageLayout title="Войны" rightAction={warsRightAction}>
 
       {/* Моя страна — плашка */}
       {myCountry && (
