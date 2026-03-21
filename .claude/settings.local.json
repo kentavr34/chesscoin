@@ -23,7 +23,10 @@
       "Bash(python3 -c \":*)",
       "Bash(xxd)",
       "Bash(node \"C:/Users/SAM/Desktop/chesscoin/fix_backticks.js\")",
-      "Bash(ssh -i /tmp/sshkey/id_ed25519 -o StrictHostKeyChecking=no -p 2222 root@37.77.106.28 \"cd /opt/chesscoin && git pull origin main && docker compose up -d --build 2>&1 && sleep 15 && docker logs chesscoin_backend --tail=15\")"
+      "Bash(ssh -i /tmp/sshkey/id_ed25519 -o StrictHostKeyChecking=no -p 2222 root@37.77.106.28 \"cd /opt/chesscoin && git pull origin main && docker compose up -d --build 2>&1 && sleep 15 && docker logs chesscoin_backend --tail=15\")",
+      "Bash(ssh -i /tmp/sshkey/id_ed25519 -o StrictHostKeyChecking=no -p 2222 root@37.77.106.28 \"sed -n ''105,115p'' /opt/chesscoin/app/dist/index.js 2>/dev/null || docker run --rm chesscoin-backend cat /app/dist/index.js 2>/dev/null | sed -n ''105,115p''\")",
+      "Bash(for f:*)",
+      "Bash(do tail:*)"
     ]
   }
 }

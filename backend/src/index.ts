@@ -34,7 +34,7 @@ import { shopRouter } from "@/routes/shop";
 import { exchangeRouter } from "@/routes/exchange";
 import { stockfishPool } from "@/services/game/stockfishPool";
 import { airdropRouter } from "@/routes/airdrop";
-import { gamesRouter } from "@/routes/games";
+import gamesRouter from "@/routes/games";
 import { tasksRouter } from "@/routes/tasks";
 import { botRouter } from "@/routes/bot";
 import { nationsRouter } from "@/routes/nations";
