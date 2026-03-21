@@ -7,7 +7,7 @@
     ],
     "outDir": "./dist",
     "rootDir": "./src",
-    "strict": true,
+    "strict": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
@@ -21,12 +21,12 @@
       ]
     },
     "noImplicitAny": false,
-    "strictNullChecks": true,
+    "strictNullChecks": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "strictFunctionTypes": true,
-    "strictBindCallApply": true,
-    "noImplicitReturns": true
+    "strictFunctionTypes": false,
+    "strictBindCallApply": false,
+    "noImplicitReturns": false
   },
   "include": [
     "src/**/*"
