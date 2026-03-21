@@ -141,9 +141,34 @@ export const loginWithTelegram = async (
     }
   }
 
-  // 5. Генерируем токены
+  // 5. Re-fetch user with all relations needed by formatUser
+  const fullUser = await prisma.user.findUniqueOrThrow({
+    where: { id: user.id },
+    include: {
+      activeSessions: {
+        select: {
+          id: true, type: true, status: true, fen: true, bet: true, botLevel: true,
+          sides: {
+            select: {
+              isWhite: true, timeLeft: true, isBot: true,
+              player: { select: { firstName: true, avatar: true } },
+            },
+          },
+        },
+      },
+      inventory: {
+        where: { isEquipped: true },
+        select: {
+          isEquipped: true,
+          item: { select: { id: true, type: true, name: true, imageUrl: true } },
+        },
+      },
+    },
+  });
+
+  // 6. Генерируем токены
   const tokens = generateTokens(user.id);
-  return { ...tokens, user };
+  return { ...tokens, user: fullUser };
 };
 
 // ─────────────────────────────────────────
