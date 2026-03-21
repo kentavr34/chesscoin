@@ -6,6 +6,7 @@ import { useSocket } from '@/hooks/useSocket';
 import { useUserStore } from '@/store/useUserStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { useGameStore } from '@/store/useGameStore';
+import { useWarChallengeStore } from '@/store/useWarChallengeStore';
 import { getSocket } from '@/api/socket';
 import { WarChallengePopup } from '@/components/ui/WarChallengePopup';
 import { useT } from '@/i18n/useT';
