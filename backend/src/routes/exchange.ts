@@ -1,4 +1,3 @@
-import { redis } from '@/lib/redis'; // OPT-8
 // ═══════════════════════════════════════════════════════════════
 // P2P БИРЖА ChessCoin v7.0.1
 // FLOW: Продавец создаёт ордер (монеты заморожены) →
@@ -216,7 +215,7 @@ exchangeRouter.post('/orders/:id/execute', authMiddleware, async (req: Request, 
     // PENDING = API недоступен или tx ещё не индексирован — разрешаем, но помечаем
     const verifyStatus = verification.status === 'ok' ? 'VERIFIED' : 'PENDING';
     if (verifyStatus === 'PENDING') {
-      logger.warn(`[exchange] Order ${orderId} will be re-verified in background: ${verification.reason}`);
+      logger.warn(`[exchange] Order ${orderId} will be re-verified in background: ${(verification as any).reason}`);
     }
 
     const updated = await prisma.$transaction(async (tx) => {

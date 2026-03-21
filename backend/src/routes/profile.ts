@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import { z } from "zod";
+import { logger, logError } from "@/lib/logger";
 import { validate } from "@/middleware/validate"; // R4
 import multer from "multer";
 import { prisma } from "@/lib/prisma";

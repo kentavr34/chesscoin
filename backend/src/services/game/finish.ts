@@ -374,7 +374,7 @@ const processBattlePayouts = async (
   });
 
   // Уведомление победителю через бота (MP-6)
-  const winnerPlayer = winnerSide.player;
+  const winnerPlayer = winnerSide.player as any;
   if (winnerPlayer?.telegramId) {
     await prisma.adminNotification.create({
       data: {

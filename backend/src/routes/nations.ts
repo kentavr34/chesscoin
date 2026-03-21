@@ -859,7 +859,7 @@ export async function settleClanBattle(battle: Record<string,unknown>) {
   // ничья = winnerClanId null → возврат взносов
 
   await prisma.clanBattle.update({
-    where: { id: battle.id },
+    where: { id: battle.id as string },
     data: {
       status:      "FINISHED",
       winnerClanId,
@@ -893,9 +893,9 @@ export async function settleClanBattle(battle: Record<string,unknown>) {
           payload: {
             userId: c.userId,
             result: "draw",
-            battleId: battle.id,
+            battleId: battle.id as string,
             refund: refund.toString(),
-          },
+          } as any,
         },
       });
     }
@@ -1012,13 +1012,13 @@ export async function settleClanBattle(battle: Record<string,unknown>) {
         payload: {
           userId: c.userId,
           result: "win",
-          battleId: battle.id,
+          battleId: battle.id as string,
           rank,
           wins: winsMap.get(c.userId as string) ?? 0,
           topPrize: topPrize.toString(),
           propShare: propShare.toString(),
           total: totalPayout.toString(),
-        },
+        } as any,
       },
     });
   }
@@ -1035,9 +1035,9 @@ export async function settleClanBattle(battle: Record<string,unknown>) {
         payload: {
           userId: c.userId,
           result: "loss",
-          battleId: battle.id,
+          battleId: battle.id as string,
           lost: BigInt((c as Record<string,unknown> & { amount: string | bigint }).amount as string).toString(),
-        },
+        } as any,
       },
     });
   }

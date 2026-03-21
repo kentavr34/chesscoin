@@ -3,7 +3,7 @@ import { PageLayout, useInfoPopup, InfoPopup } from '@/components/layout/PageLay
 import { Avatar } from '@/components/ui/Avatar';
 import { tournamentsApi } from '@/api';
 import { fmtBalance } from '@/utils/format';
-import type { TournamentFull, ActiveMatch } from '@/types'; // R1
+import type { TournamentFull, ActiveMatch, League } from '@/types'; // R1
 import { useT } from '@/i18n/useT';
 
 const showToast = (text: string, type: 'error' | 'info' = 'error') => {
@@ -75,10 +75,12 @@ export const TournamentsPage: React.FC = () => {
     };
 
     // Слушаем через socket store
-    const sock = (window as Record<string,unknown>).__chesscoinSocket;
+    const sock = (window as unknown as Record<string, unknown>).__chesscoinSocket as
+      | { on: (event: string, cb: (d: unknown) => void) => void }
+      | undefined;
     if (sock) {
       sock.on('tournament:match', (d: unknown) => handler(new CustomEvent('t', { detail: d })));
-      sock.on('tournament:finished', (d: unknown) => setTournamentFinish(d));
+      sock.on('tournament:finished', (d: unknown) => setTournamentFinish(d as { tournamentName?: string; prize?: string; place?: number }));
     }
 
     // T7: слушаем событие завершения турнира из useSocket
@@ -102,10 +104,11 @@ export const TournamentsPage: React.FC = () => {
       await load();
     } catch (e: unknown) {
       // T8: Красивое сообщение если требуется страна
-      if (e.message?.includes('COUNTRY_REQUIRED') || e.error === 'COUNTRY_REQUIRED') {
+      const err = e as Record<string, unknown>;
+      if ((err.message as string | undefined)?.includes('COUNTRY_REQUIRED') || err.error === 'COUNTRY_REQUIRED') {
         showToast('🌍 Сначала вступи в страну в разделе Войны', 'info');
       } else {
-        showToast(e.message ?? t.tournaments.joinError);
+        showToast((err.message as string | undefined) ?? t.tournaments.joinError);
       }
     } finally {
       setJoiningId(null);
@@ -316,8 +319,21 @@ const TournamentCard: React.FC<{
   );
 };
 
+interface TournamentPlayer {
+  id: string;
+  user?: { id: string; firstName: string; avatar?: string | null; avatarGradient?: string | null; elo: number; league: League };
+  wins: number;
+  losses: number;
+  draws: number;
+  points?: number;
+}
+interface TournamentDetail {
+  players?: TournamentPlayer[];
+  [key: string]: unknown;
+}
+
 const TournamentDetailModal: React.FC<{ tournamentId: string; onClose: () => void }> = ({ tournamentId, onClose }) => {
-  const [data, setData] = useState<Record<string, unknown> | null>(null);
+  const [data, setData] = useState<TournamentDetail | null>(null);
   useEffect(() => {
     tournamentsApi.get(tournamentId).then(r => setData(r.tournament)).catch(console.error);
   }, [tournamentId]);
@@ -329,7 +345,7 @@ const TournamentDetailModal: React.FC<{ tournamentId: string; onClose: () => voi
           <button onClick={onClose} style={closeBtn}>✕</button>
         </div>
         {!data && <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: 24 }}>Загрузка...</div>}
-        {data?.players?.map((p: Record<string,unknown>, i: number) => (
+        {data?.players?.map((p: TournamentPlayer, i: number) => (
           <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
             <span style={{ fontSize: 13, fontWeight: 700, color: i === 0 ? 'var(--accent, #F5C842)' : i === 1 ? '#C0C0C0' : i === 2 ? '#CD7F32' : 'var(--text-muted, #4A5270)', width: 24, textAlign: 'center' }}>
               {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}

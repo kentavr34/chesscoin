@@ -38,7 +38,7 @@ async function completeTask(userId: string, taskId: string, reward: bigint): Pro
       }),
       prisma.user.update({
         where: { id: userId },
-        data: { balance: { increment: reward } },
+        data: { balance: { increment: reward }, totalEarned: { increment: reward } },
       }),
       prisma.transaction.create({
         data: {
@@ -205,7 +205,7 @@ export async function checkDailyLoginTask(userId: string): Promise<void> {
         }),
         prisma.user.update({
           where: { id: userId },
-          data: { balance: { increment: task.winningAmount } },
+          data: { balance: { increment: task.winningAmount }, totalEarned: { increment: task.winningAmount } },
         }),
         prisma.transaction.create({
           data: {

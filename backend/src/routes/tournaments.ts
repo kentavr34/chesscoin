@@ -104,7 +104,7 @@ router.get("/my-matches", async (req: import("express").Request, res: import("ex
     });
     const playerIds = players.map(p => p.id);
 
-    const matches = await prisma.tournamentMatch.findMany({
+    const matches = await (prisma.tournamentMatch as any).findMany({
       where: {
         status: 'IN_PROGRESS',
         OR: [
@@ -114,8 +114,6 @@ router.get("/my-matches", async (req: import("express").Request, res: import("ex
       },
       include: {
         tournament: { select: { id: true, name: true, type: true } },
-        player1: { include: { user: { select: { id: true, firstName: true, avatar: true, avatarGradient: true } } } },
-        player2: { include: { user: { select: { id: true, firstName: true, avatar: true, avatarGradient: true } } } },
       },
       orderBy: { createdAt: 'desc' },
       take: 10,
@@ -144,7 +142,7 @@ router.get("/", async (req: import("express").Request, res: import("express").Re
     });
 
     res.json({
-      tournaments: tournaments.map((t: Record<string,unknown> & { entryFee: bigint; prizePool: bigint; donationPool: bigint; _count: { players: number }; players: Array<{ userId: string; score?: number; user?: Record<string,unknown> }> }) => ({
+      tournaments: (tournaments as any[]).map((t: any) => ({
         id: t.id,
         name: t.name,
         type: t.type,
@@ -440,7 +438,7 @@ export async function settleTournament(tournamentId: string) {
       });
       await prisma.user.update({
         where: { id: prize.userId },
-        data: { tournamentBadges: badges },
+        data: { tournamentBadges: badges as any },
       });
       logger.info(`[Tournaments] Badge awarded to ${prize.userId} — place ${prize.rank} in "${tournament.name}"`);
     } catch (e) {
@@ -624,27 +622,33 @@ export async function checkTournamentForfeits() {
   const deadline = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
   // Находим матчи IN_PROGRESS старше 24ч где сессия ещё WAITING_FOR_OPPONENT
-  const staleMatches = await prisma.tournamentMatch.findMany({
+  const staleMatches = await (prisma.tournamentMatch as any).findMany({
     where: {
       status: 'IN_PROGRESS',
       createdAt: { lt: deadline },
-      session: { status: 'WAITING_FOR_OPPONENT' },
     },
     include: {
       tournament: { select: { id: true, name: true } },
-      player1: { include: { user: { select: { id: true, firstName: true } } } },
-      player2: { include: { user: { select: { id: true, firstName: true } } } },
     },
-  });
+  }) as any[];
 
-  for (const match of staleMatches) {
+  // Filter to only matches whose session is still WAITING_FOR_OPPONENT
+  const filteredMatches: any[] = [];
+  for (const m of staleMatches) {
+    if (m.sessionId) {
+      const session = await prisma.session.findUnique({ where: { id: m.sessionId }, select: { status: true } });
+      if (session?.status === 'WAITING_FOR_OPPONENT') filteredMatches.push(m);
+    }
+  }
+
+  for (const match of filteredMatches) {
     try {
-      if (!match.player1 || !match.player2) continue;
+      if (!match.player1Id || !match.player2Id) continue;
 
       // Определяем кто не ответил — player2 (соперник, которому был отправлен вызов)
       // player1 создал батл и ожидал, player2 должен был принять
-      const forfeitPlayerId = match.player2.id;
-      const winnerId = match.player1.id;
+      const forfeitPlayerId = match.player2Id;
+      const winnerId = match.player1Id;
 
       // Присуждаем победу player1
       await prisma.tournamentMatch.update({
@@ -673,7 +677,12 @@ export async function checkTournamentForfeits() {
         });
       }
 
-      logger.info(`[Tournaments] Forfeit: match ${match.id} — ${match.player2.user?.firstName} auto-lost`);
+      // Look up player2 name for logging
+      const player2 = await prisma.tournamentPlayer.findUnique({
+        where: { id: forfeitPlayerId },
+        include: { user: { select: { firstName: true } } },
+      });
+      logger.info(`[Tournaments] Forfeit: match ${match.id} — ${player2?.user?.firstName ?? 'Unknown'} auto-lost`);
     } catch (err: unknown) {
       logger.error(`[Tournaments] Forfeit error for match ${match.id}:`, err);
     }

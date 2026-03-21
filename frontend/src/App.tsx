@@ -43,8 +43,9 @@ const AppInner: React.FC = () => {
     const socket = getSocket();
     socket.emit('game:join', { code: warChallenge.sessionCode }, (res: Record<string,unknown>) => {
       if (res?.ok && res?.session) {
-        upsertSession(res.session);
-        navigate('/game/' + res.session.id);
+        const session = res.session as import('@/types').GameSession;
+        upsertSession(session);
+        navigate('/game/' + session.id);
       } else {
         navigate('/battles');
       }

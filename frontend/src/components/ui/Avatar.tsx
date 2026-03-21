@@ -34,7 +34,7 @@ const getGradient = (userId?: string, avatarGradient?: string | null): string =>
 
 export const Avatar: React.FC<AvatarProps> = ({ user, size = 'm', gold, className = '', onClick }) => {
   const frameStyle = user?.equippedItems?.AVATAR_FRAME
-    ? AVATAR_FRAME_STYLE[(user as import("@/types").User).equippedItems.AVATAR_FRAME.name] ?? null
+    ? AVATAR_FRAME_STYLE[(user as import("@/types").User).equippedItems?.AVATAR_FRAME?.name ?? ''] ?? null
     : null;
   const { w, h, fs } = SIZES[size];
   const bg = getGradient(user?.id, user?.avatarGradient);

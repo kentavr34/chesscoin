@@ -27,7 +27,7 @@ export const LeaderboardPage: React.FC = () => {
 
   useEffect(() => {
     setLoading(true);
-    leaderboardApi.get({ league, limit: 50, period } as React.CSSProperties)
+    leaderboardApi.get({ league, limit: 50 })
       .then((r) => { setItems(r.users); setLoading(false); })
       .catch(() => setLoading(false));
   }, [league]);

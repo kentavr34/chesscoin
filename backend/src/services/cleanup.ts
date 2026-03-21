@@ -40,11 +40,11 @@ export const cleanDeadPlayers = async (): Promise<void> => {
         snapshot: dead.map((u: Record<string,unknown>) => ({
           id: u.id, telegramId: u.telegramId, firstName: u.firstName,
           createdAt: (u.createdAt as Date).toISOString(), balance: (u.balance as bigint).toString(),
-        })),
+        })) as any,
       },
     });
 
-    await prisma.user.deleteMany({ where: { id: { in: deadIds } } });
+    await prisma.user.deleteMany({ where: { id: { in: deadIds as string[] } } });
     logger.info(`[Cleanup] ✅ Removed ${dead.length} dead players`);
 
     await prisma.adminNotification.create({
@@ -94,15 +94,14 @@ const cleanStaleBattles = async (cutoff: Date): Promise<void> => {
         if (creator && battle.bet > 0n) {
           await tx.user.update({
             where: { id: creator.playerId },
-            data: { balance: { increment: battle.bet } },
+            data: { balance: { increment: battle.bet }, totalEarned: { increment: battle.bet } },
           });
           await tx.transaction.create({
             data: {
               userId: creator.playerId,
               amount: battle.bet,
               type: TransactionType.REFUND,
-              sessionId: battle.id,
-              description: "stale_battle_refund",
+              payload: { sessionId: battle.id, description: "stale_battle_refund" },
             },
           });
         }

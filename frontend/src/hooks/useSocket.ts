@@ -44,10 +44,10 @@ export const useSocket = () => {
     });
 
     // Deep link: присоединиться к игре по коду
-    const pendingCode = (window as Record<string,unknown>).__pendingGameCode;
+    const pendingCode = (window as unknown as Record<string,unknown>).__pendingGameCode as string | undefined;
     if (pendingCode) {
-      delete (window as Record<string,unknown>).__pendingGameCode;
-      socket.emit('game:join', { code: pendingCode }, (res) => {
+      delete (window as unknown as Record<string,unknown>).__pendingGameCode;
+      socket.emit('game:join', { code: pendingCode }, (res: { ok?: boolean; session?: import('@/types').GameSession; error?: string }) => {
         if (res.ok && res.session) {
           upsertSession(res.session);
           navigate('/game/' + res.session.id);
@@ -68,7 +68,7 @@ export const useSocket = () => {
     socket.on('connect', () => {
       socket.emit('game:current', (res: Record<string,unknown>) => {
         if (res?.ok && res?.sessions) {
-          setSessions(res.sessions);
+          setSessions(res.sessions as import('@/types').GameSession[]);
         }
       });
       socket.emit('battles:subscribe');
@@ -117,7 +117,7 @@ export const useSocket = () => {
         if (data.type === 'war:challenge') {
           // W1: показываем красивый попап вместо toast
           setWarChallenge({
-            sessionId: data.sessionId,
+            sessionId: data.sessionId ?? '',
             sessionCode: data.sessionCode ?? '',
             warId: data.warId ?? '',
             challengerUserId: data.challengerUserId ?? '',
@@ -173,7 +173,7 @@ export const useSocket = () => {
       // поэтому слушаем через onAny
       socket.onAny((eventName: string, ...args: unknown[]) => {
         if (eventName === `user:${userId}`) {
-          handlePersonal(args[0]);
+          handlePersonal(args[0] as SocketGameEvent);
         }
       });
     }

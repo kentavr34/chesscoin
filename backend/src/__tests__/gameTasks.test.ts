@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * gameTasks.test.ts — R2: Unit тесты автоматических заданий
  * BUG #1 fix verification

@@ -149,21 +149,8 @@ router.get("/me", authMiddleware, async (req: Request, res: Response) => {
 });
 
 // ─── Форматирование ───────────────────────────────
-import type { Prisma } from "@prisma/client";
 
-type FullUser = Prisma.UserGetPayload<{
-  include: {
-    activeSessions: {
-      select: {
-        id: true; type: true; status: true; fen: true; bet: true; botLevel: true;
-        sides: { select: { isWhite: true; timeLeft: true; isBot: true; player: { select: { firstName: true; avatar: true } } } };
-      };
-    };
-    inventory: { where: { isEquipped: true }; select: { isEquipped: true; item: { select: { id: true; type: true; name: true; imageUrl: true } } } };
-  };
-}>;
-
-const formatUser = (user: FullUser) => ({
+const formatUser = (user: any) => ({
   id: user.id,
   telegramId: user.telegramId,
   firstName: user.firstName,
@@ -182,6 +169,12 @@ const formatUser = (user: FullUser) => ({
   nextRestoreSeconds: (user.attempts ?? 0) < (user.maxAttempts ?? 0) ? getSecondsUntilNextRestore() : 0,
   elo: user.elo,
   league: user.league,
+  totalGames: user.totalGames ?? 0,
+  wins: user.wins ?? 0,
+  losses: user.losses ?? 0,
+  draws: user.draws ?? 0,
+  winStreak: user.winStreak ?? 0,
+  isBanned: user.isBanned ?? false,
   activeSessions: user.activeSessions ?? [],
   jarvisLevel: user.jarvisLevel ?? 1,
   jarvisBadges: user.jarvisBadges ?? [],

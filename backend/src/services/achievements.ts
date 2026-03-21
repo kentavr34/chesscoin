@@ -1,8 +1,8 @@
 /**
-import { logger, logError } from "@/lib/logger";
  * achievements.ts — система достижений ChessCoin
  * Вызывается из finish.ts, economy.ts, crons.ts
  */
+import { logger, logError } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { updateBalance } from "@/services/economy";
 import { TransactionType } from "@prisma/client";
@@ -47,7 +47,7 @@ export async function grantAchievement(userId: string, achievementId: string): P
     current.push({ id: achievementId, date: new Date().toISOString() });
     await prisma.user.update({
       where: { id: userId },
-      data: { achievements: current },
+      data: { achievements: current as any },
     });
 
     // Начисляем награду

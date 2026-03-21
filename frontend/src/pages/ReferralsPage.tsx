@@ -268,7 +268,7 @@ export const ReferralsPage: React.FC = () => {
           <div style={secLbl}>Мои рефералы ({data!.total})</div>
           {data!.referrals.map((ref) => (
             <div key={ref.id} style={refRow}>
-              <Avatar user={ref as import("@/types").UserPublic} size="s" />
+              <Avatar user={ref as unknown as import("@/types").UserPublic} size="s" />
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary, #F0F2F8)' }}>
                   {ref.firstName}

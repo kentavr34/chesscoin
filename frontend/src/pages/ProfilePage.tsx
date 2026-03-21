@@ -9,8 +9,57 @@ import { useT } from '@/i18n/useT';
 import type { Lang } from '@/i18n/translations';
 import { profileApi, authApi, warsApi } from '@/api';
 import { fmtBalance, fmtDate, leagueEmoji } from '@/utils/format';
-import type { Transaction } from '@/types';
+import type { Transaction, UserPublic } from '@/types';
 import { JARVIS_LEVELS } from '@/components/ui/JarvisModal';
+
+// Local type for Tab
+type Tab = 'info' | 'games' | 'saves' | 'ach';
+
+// Game history item returned by profileApi.getGames() — represents a player's side in a session
+interface GameHistoryItem {
+  id: string;
+  status: string;
+  winningAmount?: string | null;
+  session: {
+    id: string;
+    type: string;
+    pgn?: string | null;
+    bet?: string | null;
+    finishedAt?: string | null;
+    sides: Array<{
+      playerId: string;
+      status?: string;
+      player: UserPublic;
+    }>;
+  };
+}
+
+// Saved game item returned by warsApi.savedGames()
+interface SavedGameItem {
+  id: string;
+  session: {
+    id: string;
+    type?: string;
+    pgn?: string | null;
+    finishedAt?: string | null;
+    sides: Array<{
+      playerId?: string;
+      status?: string;
+      player: UserPublic;
+    }>;
+  };
+}
+
+// Tournament badge with extended fields
+interface TournamentBadge {
+  id: string;
+  name: string;
+  type: string;
+  date?: string;
+  place?: number;
+  tournamentName?: string;
+  prize?: string;
+}
 import { Chessboard } from 'react-chessboard';
 import { Chess } from 'chess.js';
 
@@ -32,8 +81,8 @@ export const ProfilePage: React.FC = () => {
 
   const [tab, setTab] = useState<Tab>('info');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [recentGames, setRecentGames]   = useState<any[]>([]);
-  const [savedGames, setSavedGames]     = useState<any[]>([]);
+  const [recentGames, setRecentGames]   = useState<GameHistoryItem[]>([]);
+  const [savedGames, setSavedGames]     = useState<SavedGameItem[]>([]);
   const [showSettings, setShowSettings] = useState(false);
   const [replayGame, setReplayGame] = useState<{ pgn: string; title?: string; sessionId?: string } | null>(null);
   const [selectedBadge, setSelectedBadge] = useState<{ name: string; date?: string } | null>(null);
@@ -89,14 +138,14 @@ export const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     if (tab === 'info') {
-      profileApi.getGames(10).then((r) => setRecentGames(r.games ?? [])).catch(() => {});
+      profileApi.getGames(10).then((r) => setRecentGames((r.games ?? []) as unknown as GameHistoryItem[])).catch(() => {});
     }
     if (tab === 'games') {
-      profileApi.getGames().then((r) => setRecentGames(r.games ?? [])).catch(() => {});
+      profileApi.getGames().then((r) => setRecentGames((r.games ?? []) as unknown as GameHistoryItem[])).catch(() => {});
       profileApi.getTransactions().then((r) => setTransactions(r.transactions)).catch(() => {});
     }
     if (tab === 'saves') {
-      warsApi.savedGames().then((r) => setSavedGames(r.savedGames)).catch(() => {});
+      warsApi.savedGames().then((r) => setSavedGames(r.savedGames as unknown as SavedGameItem[])).catch(() => {});
     }
   }, [tab]);
 
@@ -429,15 +478,15 @@ export const ProfilePage: React.FC = () => {
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '0 14px' }}>
-                {recentGames.slice(0, 15).map((g: Record<string,unknown>) => {
+                {recentGames.slice(0, 15).map((g) => {
                   const myStatus = g.status; // WON / LOST / DRAW
-                  const opponent = g.session?.sides?.find((s: Record<string,unknown>) => s.playerId !== user?.id);
+                  const opponent = g.session?.sides?.find((s) => s.playerId !== user?.id);
                   const oppPlayer = opponent?.player;
                   const isWon  = myStatus === 'WON';
                   const isDraw = myStatus === 'DRAW';
                   const statusColor = isWon ? 'var(--green,#00D68F)' : isDraw ? '#9B85FF' : 'var(--red,#FF4D6A)';
                   const statusLabel = isWon ? 'Победа' : isDraw ? 'Ничья' : 'Поражение';
-                  const earned = g.winningAmount ? fmtBalance(g.winningAmount) : null;
+                  const earned = g.winningAmount ? fmtBalance(String(g.winningAmount)) : null;
                   return (
                     <div key={g.id} style={{
                       display: 'flex', alignItems: 'center', gap: 10,
@@ -453,17 +502,17 @@ export const ProfilePage: React.FC = () => {
                         <Avatar user={oppPlayer} size="s" />
                       ) : (
                         <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
-                          {typeIcon[g.session?.type] ?? '♟'}
+                          {typeIcon[g.session?.type ?? ''] ?? '♟'}
                         </div>
                       )}
 
                       {/* Инфо */}
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary,#F0F2F8)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {oppPlayer ? `${oppPlayer.firstName}${oppPlayer.lastName ? ' ' + oppPlayer.lastName : ''}` : typeLabel[g.session?.type] ?? 'Партия'}
+                          {oppPlayer ? `${oppPlayer.firstName}${oppPlayer.lastName ? ' ' + oppPlayer.lastName : ''}` : typeLabel[g.session?.type ?? ''] ?? 'Партия'}
                         </div>
                         <div style={{ fontSize: 10, color: 'var(--text-muted,#4A5270)', marginTop: 2 }}>
-                          {typeLabel[g.session?.type] ?? ''} · {g.session?.finishedAt ? fmtDate(g.session.finishedAt) : ''}
+                          {typeLabel[g.session?.type ?? ''] ?? ''} · {g.session?.finishedAt ? fmtDate(g.session.finishedAt) : ''}
                           {g.session?.bet && BigInt(g.session.bet) > 0n ? ` · Ставка ${fmtBalance(g.session.bet)} ᚙ` : ''}
                         </div>
                       </div>
@@ -476,7 +525,7 @@ export const ProfilePage: React.FC = () => {
                         )}
                         {g.session?.pgn && (
                           <button
-                            onClick={() => setReplayGame({ pgn: g.session.pgn, title: oppPlayer ? `vs ${oppPlayer.firstName}` : 'Партия', sessionId: g.session.id })}
+                            onClick={() => setReplayGame({ pgn: g.session.pgn!, title: oppPlayer ? `vs ${oppPlayer.firstName}` : 'Партия', sessionId: g.session.id })}
                             style={{ fontSize: 9, padding: '2px 7px', background: 'rgba(245,200,66,0.08)', color: 'var(--accent,#F5C842)', border: '1px solid rgba(245,200,66,0.2)', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}
                           >♟ Разобрать</button>
                         )}
@@ -563,12 +612,12 @@ export const ProfilePage: React.FC = () => {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 18px' }}>
-              {savedGames.map((sg: Record<string,unknown>) => {
+              {savedGames.map((sg) => {
                 const s = sg.session;
                 const sides = s?.sides ?? [];
                 const p1 = sides[0]?.player;
                 const p2 = sides[1]?.player;
-                const winner = sides.find((sd: Record<string,unknown>) => sd.status === 'WON');
+                const winner = sides.find((sd) => sd.status === 'WON');
                 return (
                   <div key={sg.id} style={{ background: 'var(--bg-card, #13161E)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '12px 14px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
@@ -592,7 +641,7 @@ export const ProfilePage: React.FC = () => {
                         </div>
                       )}
                       <button
-                        onClick={() => warsApi.unsaveGame(s.id).then(() => setSavedGames(g => g.filter(x => x.id !== sg.id)))}
+                        onClick={() => s && warsApi.unsaveGame(s.id).then(() => setSavedGames(g => g.filter(x => x.id !== sg.id)))}
                         style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: '2px 6px' }}
                       >
                         ✕ убрать
@@ -600,7 +649,7 @@ export const ProfilePage: React.FC = () => {
                     </div>
                     {s?.pgn && (
                       <button
-                        onClick={() => setReplayGame({ pgn: s.pgn, title: `${p1?.firstName ?? '?'} vs ${p2?.firstName ?? '?'}`, sessionId: s.id })}
+                        onClick={() => setReplayGame({ pgn: s.pgn!, title: `${p1?.firstName ?? '?'} vs ${p2?.firstName ?? '?'}`, sessionId: s.id })}
                         style={{ width: '100%', padding: '7px 0', background: 'rgba(245,200,66,0.08)', color: 'var(--accent, #F5C842)', border: '1px solid rgba(245,200,66,0.2)', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
                       >
                         ♟ Разобрать партию
@@ -622,7 +671,7 @@ export const ProfilePage: React.FC = () => {
             <>
               <div style={secStyle}>🏆 Турнирные победы</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 18px' }}>
-                {user?.tournamentBadges.slice().reverse().map((badge: Record<string,unknown>, i: number) => {
+                {(user?.tournamentBadges as TournamentBadge[] | undefined)?.slice().reverse().map((badge, i: number) => {
                   const placeEmoji = badge.place === 1 ? '🥇' : badge.place === 2 ? '🥈' : '🥉';
                   const placeColor = badge.place === 1 ? '#FFD700' : badge.place === 2 ? '#C0C0C0' : '#CD7F32';
                   return (
@@ -636,10 +685,10 @@ export const ProfilePage: React.FC = () => {
                       <span style={{ fontSize: 28, flexShrink: 0 }}>{placeEmoji}</span>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>
-                          {badge.place} место · {badge.tournamentName}
+                          {badge.place} место · {badge.tournamentName ?? badge.name}
                         </div>
                         <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>
-                          {badge.type} · {new Date(badge.date).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' })}
+                          {badge.type} · {badge.date ? new Date(badge.date).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' }) : ''}
                         </div>
                       </div>
                       <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, color: placeColor }}>

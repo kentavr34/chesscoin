@@ -15,7 +15,7 @@ import type {
 // ── Сессии ───────────────────────────────────────────────────────────────────
 
 export type SessionSideWithPlayer = SessionSide & {
-  player: Pick<User, "id" | "firstName" | "lastName" | "username" | "avatar" | "avatarType" | "avatarGradient" | "elo">;
+  player: Pick<User, "id" | "firstName" | "lastName" | "username" | "avatar" | "avatarType" | "avatarGradient" | "elo" | "league">;
 };
 
 export type SessionWithSides = Session & {

@@ -41,7 +41,7 @@ export const TasksPage: React.FC = () => {
   const [dailyPuzzle, setDailyPuzzle] = useState<PuzzleItem | null>(null);
   const [puzzleLoading, setPuzzleLoading] = useState(true);
 
-  const totalReward = tasks.filter((t) => !t.isCompleted).reduce((s, t) => s + BigInt(t.reward), 0n);
+  const totalReward = tasks.filter((t) => !t.isCompleted).reduce((s, t) => s + BigInt(t.reward ?? '0'), 0n);
   const completed = tasks.filter((t) => t.isCompleted).length;
 
   useEffect(() => {
@@ -221,7 +221,7 @@ export const TasksPage: React.FC = () => {
                 )}
               </div>
               <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, color: 'var(--accent, #F5C842)', whiteSpace: 'nowrap', marginRight: 8 }}>
-                +{fmtBalance(task.reward)} ᚙ
+                +{fmtBalance(task.reward ?? '0')} ᚙ
               </span>
               <div style={{
                 width: 20, height: 20, borderRadius: '50%', flexShrink: 0,

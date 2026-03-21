@@ -28,7 +28,7 @@ shopRouter.get("/items", authMiddleware, async (req: Request, res: Response) => 
       },
     });
 
-    const itemsWithOwnership = items.map((item: Record<string,unknown> & { owners?: Array<{ userId?: string }> }) => ({
+    const itemsWithOwnership = (items as any[]).map((item: any) => ({
       ...item,
       owned: ((item.owners as Array<{ userId?: string; isEquipped?: boolean }> | undefined) ?? []).length > 0,
       equipped: ((item.owners as Array<{ userId?: string; isEquipped?: boolean }> | undefined) ?? [])[0]?.isEquipped ?? false,

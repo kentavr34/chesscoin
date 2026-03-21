@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * exchange.test.ts — R2: Unit тесты для P2P биржи
  *

@@ -43,7 +43,8 @@ export const PuzzleLessonPage: React.FC = () => {
 
   useEffect(() => {
     if (!id) return;
-    puzzlesApi.lesson(id).then((data: PuzzleLesson) => {
+    puzzlesApi.lesson(id).then((r) => {
+      const data = r.puzzle as unknown as PuzzleLesson;
       setLesson(data);
       const mvs = data.moves.split(' ').filter(Boolean);
       setMoves(mvs);
@@ -122,10 +123,10 @@ export const PuzzleLessonPage: React.FC = () => {
         setTestComplete(true);
         // Award reward
         if (!rewarded && id) {
-          puzzlesApi.completeLesson(id).then((res: { reward: string; balance: string; alreadyCompleted: boolean }) => {
+          puzzlesApi.completeLesson(id!, []).then((res) => {
             setRewarded(true);
-            if (!res.alreadyCompleted && user) {
-              setUser({ ...user, balance: res.balance });
+            if (!res.alreadySolved && user && res.reward) {
+              setUser({ ...user, balance: String(BigInt(user.balance) + BigInt(res.reward)) });
             }
           }).catch(() => {});
         }

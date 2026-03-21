@@ -13,6 +13,7 @@ import { JarvisModal, JARVIS_LEVELS } from '@/components/ui/JarvisModal';
 import { GameSetupModal } from '@/components/ui/GameSetupModal';
 import type { JarvisLevel } from '@/components/ui/JarvisModal';
 import { tasksApi, warsApi, puzzlesApi } from '@/api';
+import type { Task } from '@/types';
 import { useT } from '@/i18n/useT';
 
 // SVG иконки для карточек разделов
@@ -127,7 +128,7 @@ export const HomePage: React.FC = () => {
 
   useEffect(() => {
     if (!user || user.attempts >= user.maxAttempts) return;
-    const secs = user?.nextRestoreSeconds ?? 0 ?? 0;
+    const secs = user?.nextRestoreSeconds ?? 0;
     if (!secs) return;
     let remaining = secs;
     setAttemptTimer(remaining);
@@ -144,16 +145,16 @@ export const HomePage: React.FC = () => {
         setFloatingAmount(amt);
       }
     };
-    (sock as Record<string,unknown> & { on: (e:string, h:()=>void)=>void; off: (e:string, h:()=>void)=>void }).on('balance:updated', handler);
-    return () => { (sock as Record<string,unknown> & { on: (e:string, h:()=>void)=>void; off: (e:string, h:()=>void)=>void }).off('balance:updated', handler); };
+    (sock as any).on('balance:updated', handler);
+    return () => { (sock as any).off('balance:updated', handler); };
   }, []);
 
   const loadLiveData = useCallback(async () => {
     try {
       const r = await tasksApi.list();
       const tasks = r.tasks ?? [];
-      const done = tasks.filter((t: Record<string,unknown>) => t.completed).length;
-      const remaining = tasks.filter((t: Record<string,unknown>) => !t.completed).reduce((sum: number, t: Record<string,unknown>) => sum + Number(t.reward ?? 0), 0);
+      const done = tasks.filter((t: Task) => t.completed).length;
+      const remaining = tasks.filter((t: Task) => !t.completed).reduce((sum: number, t: Task) => sum + Number(t.reward ?? 0), 0);
       setTaskStats({ done, total: tasks.length, remaining });
     } catch {}
     try {
@@ -189,7 +190,7 @@ export const HomePage: React.FC = () => {
     if (!selectedLevel || startingBot) return;
     setStartingBot(true);
     setSelectedLevel(null);
-    getSocket().emit('game:create:bot', { color, botLevel: selectedLevel.level, timeSeconds: timeMinutes * 60 }, (res: Record<string,unknown>) => {
+    getSocket().emit('game:create:bot', { color, botLevel: selectedLevel.level, timeSeconds: timeMinutes * 60 }, (res: { ok?: boolean; session?: { id: string }; error?: string }) => {
       setStartingBot(false);
       if (res?.ok && res?.session) {
         navigate('/game/' + res.session.id);

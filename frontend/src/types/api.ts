@@ -118,4 +118,9 @@ export interface SocketGameEvent {
   opponentName?: string;
   prize?: string;
   place?: number;
+  warId?: string;
+  challengerUserId?: string;
+  challengerName?: string;
+  challengerCountry?: string;
+  challengerFlag?: string;
 }

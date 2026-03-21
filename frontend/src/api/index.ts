@@ -219,17 +219,27 @@ export const warsApi = {
     api.post<{ success: boolean; treasury: string }>(`/wars/countries/${countryId}/donate`, { amount }),
   members: (countryId: string) =>
     api.get<{ members: Record<string,unknown>[] }>(`/wars/countries/${countryId}/members`),
+  contribute: (countryId: string, amount: number) =>
+    api.post<{ success: boolean; treasury: string }>(`/wars/countries/${countryId}/donate`, { amount }),
 };
 
 export const puzzlesApi = {
   daily: () =>
     api.get<{ puzzle: PuzzleItem }>('/puzzles/daily'),
+  dailyPuzzle: () =>
+    api.get<{ puzzle: PuzzleItem; alreadySolved?: boolean }>('/puzzles/daily'),
   random: (difficulty: 'easy' | 'medium' | 'hard' = 'medium') =>
     api.get<{ puzzle: PuzzleItem }>(`/puzzles/random?difficulty=${difficulty}`),
   get: (id: string) =>
     api.get<{ puzzle: PuzzleItem }>(`/puzzles/${id}`),
+  lesson: (id: string) =>
+    api.get<{ puzzle: PuzzleItem }>(`/puzzles/${id}`),
   complete: (id: string, moves: string[], testMode = false) =>
     api.post<{ ok: boolean; correct: boolean; reward: string; alreadySolved?: boolean }>(`/puzzles/${id}/complete`, { moves, testMode }),
+  completeDaily: (id: string, moves: string[]) =>
+    api.post<{ ok: boolean; correct: boolean; reward: string; alreadySolved?: boolean }>(`/puzzles/${id}/complete`, { moves }),
+  completeLesson: (id: string, moves: string[]) =>
+    api.post<{ ok: boolean; correct: boolean; reward: string; alreadySolved?: boolean }>(`/puzzles/${id}/complete`, { moves }),
 };
 
 export interface PuzzleItem {

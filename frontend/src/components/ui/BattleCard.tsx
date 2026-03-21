@@ -22,6 +22,8 @@ interface BattleCardPlayer {
   avatar?: string | null;
   avatarGradient?: string;
   countryFlag?: string;
+  elo?: number;
+  league?: import('@/types').League;
 }
 
 interface BattleCardProps {
@@ -85,7 +87,7 @@ export const BattleCard: React.FC<BattleCardProps> = ({
           onClick={() => goProfile(player1)}
           style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: player1?.id ? 'pointer' : 'default', width: 52, flexShrink: 0 }}
         >
-          <Avatar user={player1} size="s" />
+          <Avatar user={player1 as unknown as import('@/types').UserPublic} size="s" />
           {player1?.countryFlag && <span style={{ fontSize: 12 }}>{player1.countryFlag}</span>}
           <div style={{ fontSize: 9, color: p1Color, fontWeight: 700, textAlign: 'center', maxWidth: 52, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {player1?.firstName ?? '?'}
@@ -133,7 +135,7 @@ export const BattleCard: React.FC<BattleCardProps> = ({
           onClick={() => goProfile(player2)}
           style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: player2?.id ? 'pointer' : 'default', width: 52, flexShrink: 0 }}
         >
-          <Avatar user={player2} size="s" />
+          <Avatar user={player2 as unknown as import('@/types').UserPublic} size="s" />
           {player2?.countryFlag && <span style={{ fontSize: 12 }}>{player2.countryFlag}</span>}
           <div style={{ fontSize: 9, color: p2Color, fontWeight: 700, textAlign: 'center', maxWidth: 52, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {player2?.firstName ?? '?'}

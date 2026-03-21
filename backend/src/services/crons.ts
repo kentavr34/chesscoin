@@ -13,6 +13,9 @@ import { updateBalance } from "@/services/economy";
 import { TransactionType } from "@prisma/client";
 import { ensureSystemTournaments, checkTournamentForfeits } from "@/routes/tournaments";
 import { settleClanBattle } from "@/routes/nations";
+import { verifyTonTransaction } from "@/lib/tonverify";
+
+type TelegramKeyboard = { inline_keyboard: Array<Array<{ text: string; url?: string; callback_data?: string }>> };
 
 const BOT_TOKEN = () => process.env.BOT_TOKEN ?? "";
 const CHANNEL_ID = () => process.env.TELEGRAM_CHANNEL_ID ?? "";

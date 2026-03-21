@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import { z } from "zod";
+import { logger, logError } from "@/lib/logger";
 import { prisma } from "../lib/prisma";
 import { authMiddleware } from "../middleware/auth";
 import { validate } from "@/middleware/validate";
@@ -144,7 +145,7 @@ tasksRouter.get("/puzzles", authMiddleware, async (req: Request, res: Response) 
       where: { userId },
       select: { puzzleId: true },
     });
-    const solvedIds = solved.map((s: Record<string,unknown>) => s.puzzleId);
+    const solvedIds = solved.map((s: Record<string,unknown>) => s.puzzleId) as string[];
 
     // Считаем сколько подходящих задач
     const count = await prisma.puzzle.count({

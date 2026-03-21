@@ -102,7 +102,7 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
       setConnectStep('paying');
       showToast('Подтвердите платёж 1 TON в кошельке...');
       const user = onUserRefresh as unknown as () => { id?: string };
-      const userId = (window as Record<string,unknown> & { __userId?: string }).__userId ?? '';
+      const userId = (window as unknown as { __userId?: string }).__userId ?? '';
       const boc = await sendVerificationPayment(userId);
 
       // Шаг 3: верифицируем на бэкенде
@@ -417,7 +417,7 @@ export const ShopPage: React.FC = () => {
   const location = useLocation();
   // Deep link: navigate('/shop', { state: { tab: 'frames', highlightItemId: 'item_123' } })
   const initTab = (location.state as Record<string,unknown>)?.tab as Tab ?? 'avatars'; // N6: по умолчанию Аватары
-  const highlightItemId: string | null = (location.state as Record<string,unknown>)?.highlightItemId ?? null;
+  const highlightItemId: string | null = ((location.state as Record<string,unknown>)?.highlightItemId as string) ?? null;
   const [tab, setTab] = useState<Tab>(initTab);
   const [visualSubType, setVisualSubType] = useState<'BOARD_SKIN'|'PIECE_SKIN'|'PIECE_SET'|'MOVE_ANIMATION'>('BOARD_SKIN');
   const [items, setItems] = useState<ShopItem[]>([]);
@@ -626,7 +626,7 @@ export const ShopPage: React.FC = () => {
                     key={key}
                     onClick={() => setTab(key)}
                     style={{
-                      padding: '10px 6px', border: 'none', borderRadius: 12,
+                      padding: '10px 6px', borderRadius: 12,
                       fontFamily: 'inherit', fontSize: 11, fontWeight: 700,
                       cursor: 'pointer', transition: 'all .15s',
                       background: tab === key ? 'rgba(245,200,66,0.15)' : 'var(--bg-card, #1C2030)',

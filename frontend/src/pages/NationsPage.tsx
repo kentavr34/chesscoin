@@ -460,7 +460,7 @@ const ContributeModal: React.FC<{ clanName: string; clanFlag: string; onClose: (
     try {
       await nationsApi.contribute(amount);
       onSuccess();
-    } catch (e: unknown) { showToast(e.message ?? 'Ошибка'); }
+    } catch (e: unknown) { showToast((e as Error).message ?? 'Ошибка'); }
     finally { setLoading(false); }
   };
   return (
@@ -506,7 +506,7 @@ const WarChallengeModal: React.FC<{ nations: Nation[]; onClose: () => void; onSu
     try {
       await nationsApi.challengeWar(targetId, duration);
       onSuccess();
-    } catch (e: unknown) { showToast(e.message ?? 'Ошибка'); }
+    } catch (e: unknown) { showToast((e as Error).message ?? 'Ошибка'); }
     finally { setLoading(false); }
   };
   return (
@@ -551,7 +551,7 @@ const JoinClanModal: React.FC<{ clanId: string; clan?: Nation; onClose: () => vo
       const res = await nationsApi.join(clanId, Number(contribution));
       if (res.pending) showToast('Ваша заявка отправлена на рассмотрение лидера клана', 'info');
       onSuccess();
-    } catch (e: unknown) { showToast(e.message ?? 'Ошибка'); }
+    } catch (e: unknown) { showToast((e as Error).message ?? 'Ошибка'); }
     finally { setLoading(false); }
   };
   return (
@@ -610,7 +610,7 @@ const BattleChallengeModal: React.FC<{
     try {
       await clanBattlesApi.challenge(targetId, duration, bet);
       onSuccess();
-    } catch (e: unknown) { showToast(e.message ?? 'Ошибка'); }
+    } catch (e: unknown) { showToast((e as Error).message ?? 'Ошибка'); }
     finally { setLoading(false); }
   };
 
@@ -681,7 +681,7 @@ const JoinBattleModal: React.FC<{
     try {
       await clanBattlesApi.join(battle.id, bet);
       onSuccess();
-    } catch (e: unknown) { showToast(e.message ?? 'Ошибка'); }
+    } catch (e: unknown) { showToast((e as Error).message ?? 'Ошибка'); }
     finally { setLoading(false); }
   };
 

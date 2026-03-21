@@ -373,7 +373,7 @@ const WarDetailModal: React.FC<{ warId: string; onClose: () => void }> = ({ warI
   useEffect(() => {
     warsApi.warDetail(warId).then(r => {
       setData(r.war);
-      setCountdown(r.war?.secondsLeft ?? 0);
+      setCountdown((r.war?.secondsLeft as number) ?? 0);
     }).catch(console.error);
   }, [warId]);
 
@@ -582,7 +582,7 @@ export const WarsPage: React.FC = () => {
     if (!donateAmt || isNaN(Number(donateAmt))) return;
     setDonating(true);
     try {
-      await warsApi.contribute(donateAmt);
+      await warsApi.contribute(myCountry.id, Number(donateAmt));
       toast('Донат отправлен в казну!', 'success');
       setDonateAmt('');
       setShowDonate(false);

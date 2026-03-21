@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * finish.test.ts — R2: Unit тесты для финансовой логики батлов
  *

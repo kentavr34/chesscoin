@@ -61,7 +61,7 @@ router.get("/", authMiddleware, async (req: Request, res: Response) => {
 
     const [users, total, myRank] = await Promise.all([
       prisma.user.findMany({
-        where,
+        where: where as any,
         orderBy: { [sort]: "desc" },
         take: limit,
         skip: offset,
@@ -72,7 +72,7 @@ router.get("/", authMiddleware, async (req: Request, res: Response) => {
           isMonthlyChampion: true,
         },
       }),
-      prisma.user.count({ where }),
+      prisma.user.count({ where: where as any }),
       // Позиция текущего пользователя
       prisma.user.count({
         where: {

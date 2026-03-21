@@ -34,7 +34,8 @@ export const PuzzleDailyPage: React.FC = () => {
 
   useEffect(() => {
     if (!id) return;
-    puzzlesApi.dailyPuzzle(id).then((data: DailyPuzzle) => {
+    puzzlesApi.dailyPuzzle().then((r) => {
+      const data = r.puzzle as unknown as DailyPuzzle;
       setPuzzle(data);
       const mvs = data.moves.split(' ').filter(Boolean);
       setMoves(mvs);
@@ -80,9 +81,9 @@ export const PuzzleDailyPage: React.FC = () => {
       if (nextIdx >= moves.length) {
         setComplete(true);
         if (!rewarded && id) {
-          puzzlesApi.completeDaily(id).then((res: { reward: string; balance: string }) => {
+          puzzlesApi.completeDaily(id!, []).then((res) => {
             setRewarded(true);
-            if (user) setUser({ ...user, balance: res.balance });
+            if (user && res.reward) setUser({ ...user, balance: String(BigInt(user.balance) + BigInt(res.reward)) });
           }).catch(() => {});
         }
       } else if (nextIdx % 2 === 1) {

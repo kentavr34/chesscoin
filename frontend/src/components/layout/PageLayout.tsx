@@ -129,6 +129,7 @@ export const useInfoPopup = (infoKey: string, slides: InfoSlide[]) => {
       const t = setTimeout(() => setShow(true), 600);
       return () => clearTimeout(t);
     }
+    return undefined;
   }, [infoKey]);
 
   const close = () => {

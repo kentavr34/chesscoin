@@ -169,7 +169,7 @@ puzzlesRouter.post("/:id/complete", authMiddleware, async (req: Request, res: Re
 
 // ── Вспомогательные ──────────────────────────────────────────────────────────
 
-function fmtPuzzle(p: Record<string,unknown> & { reward?: number }, completed: boolean) {
+function fmtPuzzle(p: any, completed: boolean) {
   return {
     id: p.id,
     fen: p.fen,

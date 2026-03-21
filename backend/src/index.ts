@@ -120,8 +120,17 @@ app.get("/health", async (_req: import("express").Request, res: import("express"
       prisma.platformConfig.findUnique({ where: { id: "singleton" } }),
       prisma.$queryRaw`SELECT 1`.then(() => true).catch(() => false),
     ]);
+    const mem = process.memoryUsage();
     res.json({
-      status: "ok", version: "7.2.0", stockfish: stockfishPool.stats(),
+      status: "ok", version: "7.2.0",
+      uptime: Math.floor(process.uptime()),
+      memory: {
+        rss: Math.round(mem.rss / 1024 / 1024),
+        heapUsed: Math.round(mem.heapUsed / 1024 / 1024),
+        heapTotal: Math.round(mem.heapTotal / 1024 / 1024),
+      },
+      stockfish: stockfishPool.stats(),
+      db: dbCheck ? "ok" : "error",
       phase: cfg?.currentPhase ?? 1,
       totalEmitted: cfg?.totalEmitted?.toString() ?? "0",
       emissionCap: cfg?.emissionCap?.toString() ?? "0",

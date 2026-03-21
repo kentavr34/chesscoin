@@ -48,7 +48,9 @@ export const loginWithTelegram = async (
   }
 
   try {
-    validate(initDataString, config.telegram.botToken, { expiresIn: 0 });
+    validate(initDataString, config.telegram.botToken, {
+      expiresIn: config.server.debug ? 0 : 86400, // 24h в проде, без лимита в dev
+    });
   } catch (e) {
     const errMsg = e instanceof Error ? e.message : JSON.stringify(e);
     logger.error("[Auth] initData validation failed: " + errMsg);

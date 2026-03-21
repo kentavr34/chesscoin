@@ -1,5 +1,5 @@
-/**
 import { logger, logError } from "@/lib/logger";
+/**
  * routes/admin.ts
  *
  * Защищённые эндпойнты для управления контентом магазина.

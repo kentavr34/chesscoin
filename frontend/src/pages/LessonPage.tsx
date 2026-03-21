@@ -64,7 +64,7 @@ export const LessonPage: React.FC = () => {
       if (puzzleId === 'daily') {
         data = await puzzlesApi.daily();
       } else if (puzzleId === 'random') {
-        const diff = (searchParams.get('difficulty') ?? 'medium') as import("chess.js").Square; // R1
+        const diff = (searchParams.get('difficulty') ?? 'medium') as 'easy' | 'medium' | 'hard';
         data = await puzzlesApi.random(diff);
       } else {
         data = await puzzlesApi.get(puzzleId!);

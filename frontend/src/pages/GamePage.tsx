@@ -19,6 +19,7 @@ import { useUserStore } from '@/store/useUserStore';
 import { getSocket } from '@/api/socket';
 import { fmtTime, fmtBalance } from '@/utils/format';
 import { JARVIS_LEVELS } from '@/components/ui/JarvisModal';
+import type { GameSession } from '@/types';
 import { useT } from '@/i18n/useT';
 
 export const GamePage: React.FC = () => {
@@ -108,7 +109,7 @@ export const GamePage: React.FC = () => {
     getSocket().emit('game:move', {
       sessionId: session.id, from, to, promotion: promotion ?? 'q',
     }, (res: Record<string,unknown>) => {
-      if (res?.ok && res.session) upsertSession(res.session);
+      if (res?.ok && res.session) upsertSession(res.session as GameSession);
       else if (!res?.ok) console.error('[Move]', res?.error);
     });
   }, [session]);
@@ -191,8 +192,9 @@ export const GamePage: React.FC = () => {
     removeSession(session.id);
     getSocket().emit('game:create:bot', { color, botLevel, timeSeconds }, (res: Record<string,unknown>) => {
       if (res?.ok && res.session) {
-        upsertSession(res.session);
-        navigate('/game/' + res.session.id, { replace: true });
+        const sess = res.session as GameSession;
+        upsertSession(sess);
+        navigate('/game/' + sess.id, { replace: true });
       }
     });
   }, [session]);
@@ -431,7 +433,7 @@ const PlayerRow: React.FC<{
   React.useEffect(() => {
     if (!danger || !isActive) return;
     if (localTime > 0 && localTime % 3 === 0) {
-      try { (window as Record<string,unknown> & { Telegram?: { WebApp?: Record<string,unknown> } }).Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium'); } catch {}
+      try { (window as unknown as { Telegram?: { WebApp?: { HapticFeedback?: { impactOccurred: (style: string) => void } } } }).Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium'); } catch {}
     }
   }, [localTime, danger, isActive]);
 

@@ -17,6 +17,8 @@ export interface UserPublic {
   avatarGradient?: string | null;
   elo: number;
   league: League;
+  equippedItems?: Record<string, { id: string; name: string; imageUrl?: string | null }>;
+  isMonthlyChampion?: boolean;
 }
 
 // Совпадает с formatUser() в backend/src/routes/auth.ts
@@ -97,6 +99,7 @@ export interface SessionSide {
   playerId: string;
   isWhite: boolean;
   isBot: boolean;
+  isMe?: boolean;
   status: string;
   eatenPieces: string[];
   winningAmount: string | null;
@@ -173,7 +176,7 @@ export interface Transaction {
   payload?: Record<string, unknown> | null;
 }
 
-export type ItemType = 'AVATAR_FRAME' | 'BOARD_SKIN' | 'PIECE_SKIN' | 'PIECE_SET' | 'MOVE_ANIMATION' | 'THEME' | 'PREMIUM_AVATAR';
+export type ItemType = 'AVATAR_FRAME' | 'BOARD_SKIN' | 'PIECE_SKIN' | 'PIECE_SET' | 'MOVE_ANIMATION' | 'THEME' | 'PREMIUM_AVATAR' | 'WIN_ANIMATION' | 'CAPTURE_EFFECT' | 'SPECIAL_MOVE';
 export type ItemRarity = 'COMMON' | 'RARE' | 'EPIC' | 'LEGENDARY';
 
 export interface ShopItem {
@@ -218,6 +221,7 @@ export type MilitaryRankType =
 
 export interface MilitaryRankInfo {
   rank: MilitaryRankType;
+  name?: string;
   label: string;
   emoji: string;
   minMembers: number;
