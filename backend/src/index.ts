@@ -46,6 +46,7 @@ import { adminRouter } from "@/routes/admin";
 import { rateLimit } from "express-rate-limit";
 
 const app = express();
+app.set('trust proxy', 1); // за nginx — нужно для express-rate-limit
 const httpServer = createServer(app);
 
 export const io = new Server(httpServer, {
