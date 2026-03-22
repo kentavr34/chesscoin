@@ -12,9 +12,10 @@ import { Worker } from "worker_threads";
 import path from "path";
 import { logger } from "@/lib/logger";
 
-// Максимум параллельных Stockfish процессов
-// 2 CPU: 15-20 воркеров | 4 CPU: 30-40 | 8 CPU: 60-80
-const MAX_WORKERS = Number(process.env.STOCKFISH_POOL_SIZE ?? 20);
+// Максимум параллельных Stockfish воркеров
+// Каждый воркер = 1 WASM engine + 1 Node.js thread (~50-80MB RAM)
+// 2 CPU / 2GB RAM: max 4 воркеров | 4 CPU: 8 | 8 CPU: 16
+const MAX_WORKERS = Number(process.env.STOCKFISH_POOL_SIZE ?? 4);
 const WORKER_PATH  = path.join(__dirname, "stockfishWorker.js");
 
 interface PoolWorker {

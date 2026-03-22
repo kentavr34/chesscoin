@@ -3,19 +3,29 @@
  * Запускается как Worker Thread — не блокирует основной event loop.
  * Общается с основным потоком через parentPort.
  *
- * Протокол сообщений:
- *   → { fen, level, requestId }       — посчитать лучший ход
- *   ← { move: {from,to} | null, requestId }  — ответ
+ * stockfish@16 API (WASM):
+ *   const sf = require("stockfish/src/stockfish-nnue-16-single.js");
+ *   const engine = await sf()();  // двойная фабрика, возвращает Promise
+ *   engine.postMessage("uci");
+ *   engine.addMessageListener((line: string) => { ... });
+ *
+ * Протокол:
+ *   → { fen, level, requestId }             — посчитать лучший ход
+ *   ← { move: {from,to} | null, requestId } — ответ
  */
 
 import { parentPort } from "worker_threads";
 import { Chess } from "chess.js";
-import { logger } from "@/lib/logger";
+
+// Minimal logger for worker thread (pino not available in workers)
+const log = {
+  info: (...args: unknown[]) => console.log("[StockfishWorker]", ...args),
+  warn: (...args: unknown[]) => console.warn("[StockfishWorker]", ...args),
+  error: (...args: unknown[]) => console.error("[StockfishWorker]", ...args),
+  debug: (...args: unknown[]) => {}, // silent in prod
+};
 
 // ─── Уровни J.A.R.V.I.S (20 уровней) ────────────────────────────────────────
-// elo: целевой UCI_Elo для Stockfish (1320–3190)
-// movetime: сколько мс думает движок
-// useSkill: true = использовать Skill Level (слабее), false = полная сила с ограничением времени
 const JARVIS_LEVELS = [
   { level: 1,  elo: 1320, movetime: 50,   useSkill: true,  skill: 0  },
   { level: 2,  elo: 1400, movetime: 80,   useSkill: true,  skill: 1  },
@@ -39,7 +49,7 @@ const JARVIS_LEVELS = [
   { level: 20, elo: 3190, movetime: 6000, useSkill: false, skill: 20 },
 ];
 
-// ─── Fallback: случайный ход (если Stockfish не ответил) ──────────────────────
+// ─── Fallback: случайный ход ──────────────────────────────────────────────────
 function getRandomMove(fen: string): { from: string; to: string } | null {
   try {
     const chess = new Chess(fen);
@@ -52,130 +62,136 @@ function getRandomMove(fen: string): { from: string; to: string } | null {
   }
 }
 
-// ─── Парсинг хода из UCI-ответа Stockfish ────────────────────────────────────
-// Stockfish отвечает строкой вида: "bestmove e2e4 ponder d7d5"
+// ─── Парсинг UCI хода ─────────────────────────────────────────────────────────
 function parseUciMove(uciMove: string): { from: string; to: string } | null {
   if (!uciMove || uciMove === "(none)") return null;
-  // UCI формат: e2e4, e7e5, e1g1 (рокировка), e7e8q (промоция)
   const from = uciMove.slice(0, 2);
   const to   = uciMove.slice(2, 4);
   if (!/^[a-h][1-8]$/.test(from) || !/^[a-h][1-8]$/.test(to)) return null;
   return { from, to };
 }
 
-// ─── Инициализация Stockfish ──────────────────────────────────────────────────
-// stockfish npm пакет экспортирует фабрику движка с UCI интерфейсом
-let stockfishFactory: unknown = null;
-let initError: string | null = null;
+// ─── Stockfish Engine Interface ───────────────────────────────────────────────
+interface StockfishEngine {
+  postMessage(msg: string): void;
+  addMessageListener(fn: (line: string) => void): void;
+  removeMessageListener(fn: (line: string) => void): void;
+  terminate(): void;
+}
 
-try {
-  // stockfish@16: main entry "src/stockfish.js" doesn't exist,
-  // load the single-threaded NNUE build directly
-  stockfishFactory = require("stockfish/src/stockfish-nnue-16-single.js");
-} catch {
+// ─── Async initialization ─────────────────────────────────────────────────────
+let engine: StockfishEngine | null = null;
+let initError: string | null = null;
+let engineReady = false; // true after "readyok"
+
+async function initEngine(): Promise<void> {
   try {
-    // Fallback: try the no-Worker variant
-    stockfishFactory = require("stockfish/src/stockfish-nnue-16-no-Worker.js");
+    // stockfish@16: require returns factory, factory() returns factory2, factory2() returns Promise<engine>
+    const sf = require("stockfish/src/stockfish-nnue-16-single.js");
+    engine = await sf()() as StockfishEngine;
+
+    // Wait for UCI + readyok
+    await new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error("UCI init timeout")), 10000);
+
+      const listener = (line: string) => {
+        if (line === "uciok") {
+          engine!.postMessage("isready");
+        }
+        if (line === "readyok") {
+          clearTimeout(timeout);
+          engineReady = true;
+          engine!.removeMessageListener(listener);
+          resolve();
+        }
+      };
+      engine!.addMessageListener(listener);
+      engine!.postMessage("uci");
+    });
+
+    log.info("Engine initialized successfully (WASM single-threaded)");
   } catch (e: unknown) {
-    initError = (e instanceof Error ? e.message : String(e));
-    logger.error("[StockfishWorker] Failed to load stockfish:", initError);
+    initError = e instanceof Error ? e.message : String(e);
+    log.error("Failed to initialize:", initError);
   }
 }
 
-// ─── Обработка запросов от основного потока ───────────────────────────────────
+// Start initialization immediately
+const initPromise = initEngine();
+
+// ─── Handle requests from main thread ─────────────────────────────────────────
 parentPort?.on("message", async ({ fen, level, requestId }: {
   fen: string;
   level: number;
   requestId: string;
 }) => {
+  // Wait for engine init on first request
+  await initPromise;
+
   const cfg = JARVIS_LEVELS[Math.max(0, Math.min(19, level - 1))];
 
-  // Если stockfish не загрузился — отдаём случайный ход
-  if (!stockfishFactory || initError) {
-    logger.warn("[StockfishWorker] Using random fallback, reason:", initError);
+  // Fallback if engine not available
+  if (!engine || !engineReady || initError) {
+    log.warn("Using random fallback, reason:", initError ?? "engine not ready");
     parentPort?.postMessage({ move: getRandomMove(fen), requestId });
     return;
   }
 
-  const timeoutMs = cfg.movetime + 4000; // запас 4 сек сверх movetime
+  const timeoutMs = cfg.movetime + 4000;
 
   try {
     const move = await new Promise<{ from: string; to: string } | null>((resolve) => {
       let resolved = false;
       const saferesolve = (v: { from: string; to: string } | null) => {
-        if (!resolved) { resolved = true; resolve(v); }
+        if (!resolved) {
+          resolved = true;
+          engine!.removeMessageListener(listener);
+          resolve(v);
+        }
       };
 
       const timer = setTimeout(() => {
-        logger.warn("[StockfishWorker] Timeout, using random fallback");
+        log.warn("Timeout, using random fallback");
         saferesolve(getRandomMove(fen));
       }, timeoutMs);
 
-      let engine: Record<string,unknown> & { postMessage: (m: string) => void; onmessage: ((e: { data: string }) => void) | null };
-      try {
-        engine = (stockfishFactory as unknown as () => typeof engine)();
-      } catch (e: unknown) {
-        clearTimeout(timer);
-        logger.warn("[StockfishWorker] Engine init error:", (e instanceof Error ? e.message : String(e)));
-        saferesolve(getRandomMove(fen));
-        return;
-      }
-
-      // J3: Правильная UCI последовательность с ожиданием uciok и readyok
-      // Только после readyok можно слать setoption и go
-      let uciOk = false;
-      let readyOk = false;
-
-      engine.onmessage = (event: { data: string }) => {
-        const line: string = typeof event === "string" ? event : (event?.data ?? "");
-
-        if (line === "uciok") {
-          uciOk = true;
-          // После uciok отправляем isready
-          engine.postMessage("isready");
-          return;
-        }
-
-        if (line === "readyok" && !readyOk) {
-          readyOk = true;
-          // J3: теперь движок готов — можно слать настройки и команду go
+      const listener = (line: string) => {
+        if (line === "readyok") {
+          // Engine ready for this request — send options and go
           if (cfg.useSkill) {
-            // Уровни 1-15: ограничиваем через Skill Level + UCI_LimitStrength + UCI_Elo
-            engine.postMessage("setoption name UCI_LimitStrength value true");
-            engine.postMessage(`setoption name UCI_Elo value ${cfg.elo}`);
-            engine.postMessage(`setoption name Skill Level value ${cfg.skill}`);
+            engine!.postMessage("setoption name UCI_LimitStrength value true");
+            engine!.postMessage(`setoption name UCI_Elo value ${cfg.elo}`);
+            engine!.postMessage(`setoption name Skill Level value ${cfg.skill}`);
           } else {
-            // Уровни 16-20: полная сила Stockfish, только лимит по времени
-            engine.postMessage("setoption name UCI_LimitStrength value false");
-            engine.postMessage(`setoption name Skill Level value 20`);
+            engine!.postMessage("setoption name UCI_LimitStrength value false");
+            engine!.postMessage("setoption name Skill Level value 20");
           }
-          engine.postMessage(`position fen ${fen}`);
-          engine.postMessage(`go movetime ${cfg.movetime}`);
+          engine!.postMessage(`position fen ${fen}`);
+          engine!.postMessage(`go movetime ${cfg.movetime}`);
           return;
         }
 
         if (line.startsWith("bestmove")) {
           clearTimeout(timer);
-          const parts = line.split(" ");
-          const uciMove = parts[1];
+          const uciMove = line.split(" ")[1];
           const parsed = parseUciMove(uciMove);
-          logger.debug(`[JARVIS] Lv${level} elo=${cfg.elo} movetime=${cfg.movetime}ms → ${uciMove}`);
-
-          try { engine.postMessage("quit"); } catch {}
           saferesolve(parsed ?? getRandomMove(fen));
         }
       };
 
-      // Стартуем UCI
-      engine.postMessage("uci");
+      engine!.addMessageListener(listener);
+      // Reset engine state and wait for readyok
+      engine!.postMessage("stop");
+      engine!.postMessage("ucinewgame");
+      engine!.postMessage("isready");
     });
 
     parentPort?.postMessage({ move, requestId });
   } catch (err: unknown) {
-    logger.error("[StockfishWorker] Unexpected error:", (err instanceof Error ? err.message : String(err)));
+    log.error("Unexpected error:", err instanceof Error ? err.message : String(err));
     parentPort?.postMessage({ move: getRandomMove(fen), requestId });
   }
 });
 
-// Сигнализируем основному потоку что воркер готов
+// Signal ready to main thread
 parentPort?.postMessage({ ready: true });
