@@ -39,13 +39,13 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode }
           color: 'var(--accent, #F5C842)',
           marginBottom: 12,
         }}>
-          Что-то пошло не так
+          Something went wrong
         </div>
         <div style={{
           fontSize: 13, color: '#8B92A8',
           lineHeight: 1.6, marginBottom: 32, maxWidth: 300,
         }}>
-          Произошла неожиданная ошибка. Попробуй перезагрузить приложение.
+          An unexpected error occurred. Try reloading the app.
         </div>
         {this.state.error && (
           <>
@@ -78,7 +78,7 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode }
             cursor: 'pointer', fontFamily: 'inherit',
           }}
         >
-          ♟ Перезагрузить
+          ♟ Reload
         </button>
       </div>
     );

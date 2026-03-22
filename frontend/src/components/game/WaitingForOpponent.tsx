@@ -34,7 +34,7 @@ export const WaitingForOpponent: React.FC<Props> = ({ session }) => {
     haptic.impact('light');
     const tg = window.Telegram?.WebApp;
     if (tg?.openTelegramLink) {
-      tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(inviteLink)}&text=${encodeURIComponent('♟ Сыграем в ChessCoin? Нажми, чтобы принять мой вызов!')}`);
+      tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(inviteLink)}&text=${encodeURIComponent('♟ Play ChessCoin? Click to accept my challenge!')}`);
     } else {
       window.open(`https://t.me/share/url?url=${encodeURIComponent(inviteLink)}`, '_blank');
     }
@@ -42,7 +42,7 @@ export const WaitingForOpponent: React.FC<Props> = ({ session }) => {
 
   const handleShareWhatsApp = () => {
     haptic.impact('light');
-    window.open(`https://wa.me/?text=${encodeURIComponent('♟ Сыграем в ChessCoin? ' + inviteLink)}`, '_blank');
+    window.open(`https://wa.me/?text=${encodeURIComponent('♟ Play ChessCoin? ' + inviteLink)}`, '_blank');
   };
 
   const handleCancel = () => {
@@ -64,7 +64,7 @@ export const WaitingForOpponent: React.FC<Props> = ({ session }) => {
 
         {/* Кнопка "← Назад" — не отменяет батл, только уходит */}
         <button onClick={handleBack} style={backBtnStyle}>
-          ← Вернуться к батлам
+          ← Back to battles
         </button>
 
         {/* Пульсирующий индикатор */}
@@ -74,10 +74,10 @@ export const WaitingForOpponent: React.FC<Props> = ({ session }) => {
             <span style={{ fontSize: 32 }}>⏳</span>
           </div>
           <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 18, fontWeight: 800, color: 'var(--text-primary, #F0F2F8)', marginTop: 12 }}>
-            Ожидание соперника
+            Waiting for opponent
           </div>
           <div style={{ fontSize: 12, color: 'var(--text-secondary, #8B92A8)', marginTop: 6 }}>
-            Ставка:{' '}
+            Bet:{' '}
             <span style={{ color: 'var(--accent, #F5C842)', fontWeight: 700 }}>
               {fmtBalance(session.bet ?? '0')} ᚙ
             </span>
@@ -87,7 +87,7 @@ export const WaitingForOpponent: React.FC<Props> = ({ session }) => {
         {/* Код партии */}
         <div style={codeBlock}>
           <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-muted, #4A5270)', letterSpacing: '.09em', textTransform: 'uppercase', marginBottom: 6 }}>
-            Код партии
+            Game code
           </div>
           <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 800, color: 'var(--accent, #F5C842)', letterSpacing: '.12em' }}>
             {session.code}
@@ -97,7 +97,7 @@ export const WaitingForOpponent: React.FC<Props> = ({ session }) => {
         {/* Ссылка */}
         <div style={{ marginBottom: 14 }}>
           <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-muted, #4A5270)', letterSpacing: '.09em', textTransform: 'uppercase', marginBottom: 8 }}>
-            Ссылка-приглашение
+            Invite link
           </div>
           <div style={linkBox}>
             <div style={{ flex: 1, overflow: 'hidden' }}>
@@ -110,7 +110,7 @@ export const WaitingForOpponent: React.FC<Props> = ({ session }) => {
             </button>
           </div>
           <div style={{ fontSize: 11, color: 'var(--text-muted, #4A5270)', marginTop: 6, textAlign: 'center' }}>
-            Друг автоматически попадёт в игру
+            Friend will automatically join the game
           </div>
         </div>
 
@@ -126,7 +126,7 @@ export const WaitingForOpponent: React.FC<Props> = ({ session }) => {
 
         {/* Отменить */}
         <button onClick={handleCancel} style={cancelBtn}>
-          Отменить батл
+          Cancel battle
         </button>
       </div>
 

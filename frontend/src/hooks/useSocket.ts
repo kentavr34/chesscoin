@@ -131,7 +131,7 @@ export const useSocket = () => {
         if (data.type === 'tournament:match') {
           // T2: Турнирный матч — красивый toast с кнопкой перехода в игру
           const opponentName = data.opponentName ?? '';
-          const text = `🏆 Турнирный матч! Раунд ${data.round ?? 1} · vs ${opponentName}`;
+          const text = `🏆 Tournament match! Round ${data.round ?? 1} · vs ${opponentName}`;
           showActionToast(text, '⚔️ Играть', () => navigate('/battles'));
           // Уведомляем TournamentsPage о новом матче
           window.dispatchEvent(new CustomEvent('chesscoin:tournament:match', { detail: data }));
@@ -162,8 +162,8 @@ export const useSocket = () => {
           const coins = Number(BigInt((data as any).amountCoins ?? '0')).toLocaleString();
           const ton   = ((data as any).totalTon as number)?.toFixed(4) ?? '0';
           const msg   = role === 'seller'
-            ? `💱 Ордер исполнен! Продано ${coins} ᚙ за ${ton} TON`
-            : `🛒 Куплено ${coins} ᚙ за ${ton} TON — зачислено на баланс`;
+            ? `💱 Order executed! Sold ${coins} ᚙ for ${ton} TON`
+            : `🛒 Bought ${coins} ᚙ for ${ton} TON — credited to balance`;
           showActionToast(msg, '💱 Биржа', () => navigate('/shop'));
           try { (window as any).Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch {}
         }

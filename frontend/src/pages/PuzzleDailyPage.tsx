@@ -151,7 +151,7 @@ export const PuzzleDailyPage: React.FC = () => {
       {/* Reward and difficulty */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 12 }}>
         <div style={{ padding: '4px 14px', background: '#1C2030', borderRadius: 20, fontSize: 12, color: '#F5C842', fontWeight: 600 }}>
-          Награда: {Number(puzzle.reward).toLocaleString()} ᚙ
+          Reward: {Number(puzzle.reward).toLocaleString()} ᚙ
         </div>
         <div style={{ padding: '4px 14px', background: '#1C2030', borderRadius: 20, fontSize: 12, color: '#A8B0C8' }}>
           {'★'.repeat(Math.min(5, Math.ceil(puzzle.difficulty / 20)))}{'☆'.repeat(5 - Math.min(5, Math.ceil(puzzle.difficulty / 20)))}
@@ -187,7 +187,7 @@ export const PuzzleDailyPage: React.FC = () => {
             width: '100%', padding: '12px 0', borderRadius: 12, border: 'none', cursor: 'pointer',
             background: '#1C2030', color: '#A8B0C8', fontWeight: 600, fontSize: 14,
           }}>
-            🔄 Начать заново
+            🔄 Start over
           </button>
         </div>
       )}
@@ -203,7 +203,7 @@ export const PuzzleDailyPage: React.FC = () => {
             marginTop: 16, padding: '12px 32px', background: '#F5C842', color: '#0B0D11',
             border: 'none', borderRadius: 12, fontWeight: 700, cursor: 'pointer', fontSize: 14,
           }}>
-            Готово
+            Done
           </button>
         </div>
       )}

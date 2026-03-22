@@ -136,7 +136,7 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
           <button
             onClick={jarvisInfo.open}
             style={{ ...backBtnStyle, fontSize: 16, color: 'var(--text-secondary, #8B92A8)' }}
-            title="Информация о J.A.R.V.I.S"
+            title="About J.A.R.V.I.S"
           >
             ℹ️
           </button>

@@ -196,11 +196,7 @@ export const HomePage: React.FC = () => {
         navigate('/game/' + res.session.id);
       } else if (res?.error) {
         // N2: показываем понятную ошибку вместо молчаливого выброса
-        const errText = res.error.includes('Джарвис') || res.error.includes('бот')
-          ? res.error
-          : res.error.includes('лимит') || res.error.includes('максимум')
-          ? res.error
-          : 'Failed to start game. Try again later.';
+        const errText = res.error || 'Failed to start game. Try again later.';
         import('@/components/ui/Toast').then(({ toast }) => toast.error(errText));
       }
     });

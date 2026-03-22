@@ -222,7 +222,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
           <button
             onClick={() => {
               const total = (earnedBig + pieceBig).toString();
-              const shareText = `♟ Я победил J.A.R.V.I.S ${botLevelName} в ChessCoin!\nВыиграл ${fmtBalance(total)} ᚙ\nПопробуй и ты:`;
+              const shareText = `♟ I beat J.A.R.V.I.S ${botLevelName} in ChessCoin!\nWon ${fmtBalance(total)} ᚙ\nTry it too:`;
               const botUrl = `https://t.me/chessgamecoin_bot?start=ref_${userTelegramId}`;
               try {
                 window.Telegram?.WebApp?.openTelegramLink?.(
@@ -257,7 +257,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
               transition: 'background .15s',
             }}
           >
-            ⚔️ Реванш
+            ⚔️ Rematch
           </button>
         )}
 
@@ -283,7 +283,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
               fontFamily: 'inherit',
             }}
           >
-            {gameSaved ? '✓ Партия сохранена' : '💾 Сохранить партию'}
+            {gameSaved ? '✓ Game saved' : '💾 Save game'}
           </button>
         )}
 

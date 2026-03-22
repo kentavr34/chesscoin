@@ -451,7 +451,7 @@ const PlayerRow: React.FC<{
           {label ?? player?.firstName ?? '?'}
         </div>
         <div style={{ fontSize: 10, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>
-          ELO {player?.elo ?? '—'}{isActive ? ' · Ход' : ''}
+          ELO {player?.elo ?? '—'}{isActive ? ' · Move' : ''}
         </div>
       </div>
       <div style={{
