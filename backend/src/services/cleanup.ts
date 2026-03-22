@@ -94,7 +94,7 @@ const cleanStaleBattles = async (cutoff: Date): Promise<void> => {
         if (creator && battle.bet > 0n) {
           await tx.user.update({
             where: { id: creator.playerId },
-            data: { balance: { increment: battle.bet }, totalEarned: { increment: battle.bet } },
+            data: { balance: { increment: battle.bet } }, // refund — не эмиссия, не totalEarned
           });
           await tx.transaction.create({
             data: {

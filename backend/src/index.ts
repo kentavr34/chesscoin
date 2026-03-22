@@ -1,5 +1,21 @@
 import "dotenv/config";
 import { logger, logError } from "@/lib/logger"; // Q2
+
+// ─── Глобальные обработчики необработанных ошибок ─────────────────────────────
+process.on("unhandledRejection", (reason) => {
+  logger.error("[PROCESS] Unhandled rejection:", reason instanceof Error ? reason.message : String(reason));
+  if (reason instanceof Error && reason.stack) {
+    logger.error("[PROCESS] Stack:", reason.stack);
+  }
+});
+
+process.on("uncaughtException", (err) => {
+  logger.error("[PROCESS] Uncaught exception:", err.message);
+  logger.error("[PROCESS] Stack:", err.stack);
+  // Даём время записать логи, потом выходим
+  setTimeout(() => process.exit(1), 1000);
+});
+
 import express from "express";
 import cors from "cors";
 import compression from "compression"; // OPT-2: gzip сжатие ответов

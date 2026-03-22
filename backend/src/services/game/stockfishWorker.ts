@@ -69,11 +69,17 @@ let stockfishFactory: unknown = null;
 let initError: string | null = null;
 
 try {
-  // stockfish@16 поставляет WASM + JS fallback
-  stockfishFactory = require("stockfish");
-} catch (e: unknown) {
-  initError = (e instanceof Error ? e.message : String(e));
-  logger.error("[StockfishWorker] Failed to load stockfish:", (e instanceof Error ? e.message : String(e)));
+  // stockfish@16: main entry "src/stockfish.js" doesn't exist,
+  // load the single-threaded NNUE build directly
+  stockfishFactory = require("stockfish/src/stockfish-nnue-16-single.js");
+} catch {
+  try {
+    // Fallback: try the no-Worker variant
+    stockfishFactory = require("stockfish/src/stockfish-nnue-16-no-Worker.js");
+  } catch (e: unknown) {
+    initError = (e instanceof Error ? e.message : String(e));
+    logger.error("[StockfishWorker] Failed to load stockfish:", initError);
+  }
 }
 
 // ─── Обработка запросов от основного потока ───────────────────────────────────

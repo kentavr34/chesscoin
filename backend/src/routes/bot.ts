@@ -174,7 +174,7 @@ botRouter.get("/notifications/pending", async (_req: import("express").Request, 
     });
     res.json({ notifications });
   } catch (err: unknown) {
-    res.status(500).json({ error: (err instanceof Error ? (err instanceof Error ? (err instanceof Error ? (err instanceof Error ? err.message : String(err)) : String(err)) : String(err)) : String(err)) });
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
 });
 
@@ -187,7 +187,7 @@ botRouter.post("/notifications/:id/sent", async (req: import("express").Request,
     });
     res.json({ ok: true });
   } catch (err: unknown) {
-    res.status(500).json({ error: (err instanceof Error ? (err instanceof Error ? (err instanceof Error ? (err instanceof Error ? err.message : String(err)) : String(err)) : String(err)) : String(err)) });
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
 });
 
@@ -207,7 +207,7 @@ botRouter.post("/referral-start", async (req: import("express").Request, res: im
     });
     res.json({ ok: true });
   } catch (err: unknown) {
-    res.status(500).json({ error: (err instanceof Error ? (err instanceof Error ? (err instanceof Error ? (err instanceof Error ? err.message : String(err)) : String(err)) : String(err)) : String(err)) });
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
 });
 

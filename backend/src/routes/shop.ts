@@ -209,7 +209,7 @@ shopRouter.post("/ton/connect", authMiddleware, async (req: Request, res: Respon
 
     res.json({ success: true, walletAddress });
   } catch (err) {
-    console.error("[shop/ton/connect]", err);
+    logger.error("[shop/ton/connect]", err);
     res.status(500).json({ error: "Ошибка подключения кошелька" });
   }
 });
@@ -239,7 +239,7 @@ shopRouter.post("/ton/buy", authMiddleware, async (req: Request, res: Response) 
 
     res.json({ coinsReceived: netCoins.toString(), tonAmount: ton });
   } catch (err) {
-    console.error("[shop/ton/buy]", err);
+    logger.error("[shop/ton/buy]", err);
     res.status(500).json({ error: "Ошибка покупки монет" });
   }
 });
@@ -276,7 +276,7 @@ shopRouter.post("/ton/sell", authMiddleware, async (req: Request, res: Response)
 
     res.json({ tonAmount: grossTon, netTon, feeTon, status: "PENDING" });
   } catch (err) {
-    console.error("[shop/ton/sell]", err);
+    logger.error("[shop/ton/sell]", err);
     res.status(500).json({ error: "Ошибка продажи монет" });
   }
 });
@@ -313,7 +313,7 @@ shopRouter.post("/ton/withdraw", authMiddleware, async (req: Request, res: Respo
 
     res.json({ netTon, feeTon, grossTon, toWallet: user.tonWalletAddress, status: "PENDING" });
   } catch (err) {
-    console.error("[shop/ton/withdraw]", err);
+    logger.error("[shop/ton/withdraw]", err);
     res.status(500).json({ error: "Ошибка вывода" });
   }
 });

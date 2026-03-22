@@ -731,13 +731,14 @@ const getStockfishMove = (
       if (msg.ready) return;
       if (msg.requestId !== requestId) return;
       clearTimeout(killTimer);
-      worker.terminate();
+      stockfishPool.release(worker); // OPT-6: возвращаем в пул (НЕ terminate!)
       resolve((msg.move ?? getRandomMove(fen)) as { from: string; to: string } | null);
     });
 
     worker.on("error", (err) => {
       logger.warn("[JARVIS] Worker error:", err.message, "→ random fallback");
       clearTimeout(killTimer);
+      stockfishPool.release(worker); // OPT-6: возвращаем в пул при ошибке
       resolve(getRandomMove(fen));
     });
 

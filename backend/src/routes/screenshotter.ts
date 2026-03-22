@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { prisma } from "@/lib/prisma";
 import { signAccessToken } from "@/services/auth";
+import { timingSafeEqual } from "crypto";
 import config from "@/config";
 
 const router = Router();
@@ -10,7 +11,8 @@ const router = Router();
 router.get("/token", async (req: Request, res: Response) => {
   const secret = req.query.secret as string;
   const expected = process.env.SCREENSHOT_SECRET;
-  if (!expected || secret !== expected) {
+  if (!expected || !secret || secret.length !== expected.length ||
+      !timingSafeEqual(Buffer.from(secret), Buffer.from(expected))) {
     return res.status(403).json({ error: "Forbidden" });
   }
 

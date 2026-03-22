@@ -138,25 +138,31 @@ airdropRouter.post('/execute', authMiddleware, adminOnly, async (req: Request, r
 
     for (let i = 0; i < distributions.length; i += BATCH) {
       const batch = distributions.slice(i, i + BATCH);
+      const batchTotal = batch.reduce((s, d) => s + d.amount, 0n);
 
-      await prisma.$transaction(
-        batch.map(d =>
-          prisma.user.update({
+      await prisma.$transaction(async (tx) => {
+        // Начисляем баланс + totalEarned каждому
+        for (const d of batch) {
+          await tx.user.update({
             where: { id: d.userId },
-            data:  { balance: { increment: d.amount } },
-          })
-        )
-      );
-
-      // Записываем транзакции
-      await prisma.transaction.createMany({
-        data: batch.map(d => ({
-          userId:  d.userId,
-          type:    TransactionType.WELCOME_BONUS, // используем как generic reward
-          amount:  d.amount,
-          payload: { label: label ?? 'Airdrop', mode, airdrop: true },
-        })),
-        skipDuplicates: true,
+            data:  { balance: { increment: d.amount }, totalEarned: { increment: d.amount } },
+          });
+        }
+        // Записываем транзакции
+        await tx.transaction.createMany({
+          data: batch.map(d => ({
+            userId:  d.userId,
+            type:    TransactionType.WELCOME_BONUS,
+            amount:  d.amount,
+            payload: { label: label ?? 'Airdrop', mode, airdrop: true } as any,
+          })),
+          skipDuplicates: true,
+        });
+        // Трекаем эмиссию
+        await tx.platformConfig.update({
+          where: { id: 'singleton' },
+          data:  { totalEmitted: { increment: batchTotal } },
+        });
       });
 
       processed += batch.length;

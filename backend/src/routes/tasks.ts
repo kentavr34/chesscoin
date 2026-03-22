@@ -65,7 +65,7 @@ tasksRouter.get("/", authMiddleware, async (req: Request, res: Response) => {
 
     res.json({ tasks: result });
   } catch (err) {
-    console.error("[tasks/list]", err);
+    logger.error("[tasks/list]", err);
     res.status(500).json({ error: "Ошибка загрузки заданий" });
   }
 });
