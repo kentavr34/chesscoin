@@ -34,20 +34,20 @@ export const validateCanStartSession = async (
 
   if (type === SessionType.BOT) {
     if (botSessions.length >= config.sessions.maxBotSessions) {
-      throw new Error("Вы уже играете с Джарвисом. Завершите текущую партию, чтобы начать новую.");
+      throw new Error("You are already playing with J.A.R.V.I.S. Finish your current game first.");
     }
   }
 
   if (type === SessionType.BATTLE) {
     const maxBattles = config.sessions.maxActive - 1; // оставляем слот для бота
     if (battleSessions.length >= maxBattles) {
-      throw new Error("Максимум активных батлов достигнут. Завершите одну из текущих партий.");
+      throw new Error("Max active battles reached. Finish one of your current games.");
     }
   }
 
   // Общий лимит как защита
   if (user.activeSessions.length >= config.sessions.maxActive) {
-    throw new Error("Достигнут лимит активных игр. Завершите одну из текущих партий.");
+    throw new Error("Active game limit reached. Finish one of your current games.");
   }
 
   return user;

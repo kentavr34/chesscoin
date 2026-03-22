@@ -261,7 +261,7 @@ router.post(
   async (req: Request, res: Response) => {
     try {
       const userId = (req as AuthRequest).userId;
-      if (!req.file) return res.status(400).json({ error: "Файл не передан" });
+      if (!req.file) return res.status(400).json({ error: "No file provided" });
 
       const ext = req.file.mimetype.split("/")[1]?.replace("jpeg", "jpg") || "jpg";
       const key = `avatars/${userId}.${ext}`;
@@ -318,7 +318,7 @@ router.post("/ton-wallet", authMiddleware, validate(WalletSchema), async (req: R
     const userId = (req as AuthRequest).userId;
     const { walletAddress } = req.body;
     if (!walletAddress || typeof walletAddress !== 'string' || walletAddress.length < 20) {
-      return res.status(400).json({ error: "Некорректный адрес кошелька" });
+      return res.status(400).json({ error: "Invalid wallet address" });
     }
     // Check wallet not already linked to another account
     const existing = await prisma.user.findFirst({
@@ -326,7 +326,7 @@ router.post("/ton-wallet", authMiddleware, validate(WalletSchema), async (req: R
       select: { id: true },
     });
     if (existing) {
-      return res.status(409).json({ error: "Этот кошелёк уже привязан к другому аккаунту" });
+      return res.status(409).json({ error: "This wallet is already linked to another account" });
     }
     await prisma.user.update({
       where: { id: userId },
@@ -362,10 +362,10 @@ router.post("/ton-wallet/verify", authMiddleware, async (req: Request, res: Resp
     const { walletAddress, boc } = req.body;
 
     if (!walletAddress || typeof walletAddress !== "string" || walletAddress.length < 20) {
-      return res.status(400).json({ error: "Некорректный адрес кошелька" });
+      return res.status(400).json({ error: "Invalid wallet address" });
     }
     if (!boc || typeof boc !== "string") {
-      return res.status(400).json({ error: "Отсутствует подтверждение транзакции" });
+      return res.status(400).json({ error: "Missing transaction confirmation" });
     }
 
     // Проверяем что кошелёк не привязан к другому аккаунту
@@ -374,7 +374,7 @@ router.post("/ton-wallet/verify", authMiddleware, async (req: Request, res: Resp
       select: { id: true },
     });
     if (existing) {
-      return res.status(409).json({ error: "Этот кошелёк уже привязан к другому аккаунту" });
+      return res.status(409).json({ error: "This wallet is already linked to another account" });
     }
 
     // Проверяем что пользователь ещё не подключил кошелёк
@@ -383,7 +383,7 @@ router.post("/ton-wallet/verify", authMiddleware, async (req: Request, res: Resp
       select: { tonWalletAddress: true, tonConnectedAt: true },
     });
     if (user?.tonWalletAddress) {
-      return res.status(400).json({ error: "Кошелёк уже подключён" });
+      return res.status(400).json({ error: "Wallet already connected" });
     }
 
     // Верификация транзакции через TON Center API
@@ -391,7 +391,7 @@ router.post("/ton-wallet/verify", authMiddleware, async (req: Request, res: Resp
     if (platformWallet) {
       const verified = await verifyTonPayment(walletAddress, platformWallet, boc);
       if (!verified) {
-        return res.status(402).json({ error: "Платёж 1 TON не подтверждён. Попробуйте снова через 30 секунд." });
+        return res.status(402).json({ error: "1 TON payment not confirmed. Try again in 30 seconds." });
       }
     } else {
       logger.warn("[TON] PLATFORM_TON_WALLET не задан — верификация пропущена (dev mode)");
@@ -486,25 +486,25 @@ router.post("/ton/withdraw", authMiddleware, async (req: Request, res: Response)
     const userId = (req as AuthRequest).userId;
     const { amountCoins } = req.body;
     if (!amountCoins || BigInt(amountCoins) < 1_000_000n) {
-      return res.status(400).json({ error: "Минимальная сумма вывода: 1,000,000 ᚙ" });
+      return res.status(400).json({ error: "Minimum withdrawal: 1,000,000 ᚙ" });
     }
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: { balance: true, tonWalletAddress: true },
     });
-    if (!user) return res.status(404).json({ error: "Пользователь не найден" });
+    if (!user) return res.status(404).json({ error: "User not found" });
     if (!user.tonWalletAddress) {
-      return res.status(400).json({ error: "Сначала подключите TON кошелёк" });
+      return res.status(400).json({ error: "Connect TON wallet first" });
     }
     if (user.balance < BigInt(amountCoins)) {
-      return res.status(400).json({ error: "Недостаточно монет" });
+      return res.status(400).json({ error: "Not enough coins" });
     }
     // Check no pending withdrawal exists
     const pending = await prisma.withdrawalRequest.findFirst({
       where: { userId, status: "PENDING" },
     });
     if (pending) {
-      return res.status(409).json({ error: "У вас уже есть активная заявка на вывод" });
+      return res.status(409).json({ error: "You already have an active withdrawal request" });
     }
     // Calculate TON equivalent (placeholder rate: 1 TON = 1,000,000 ᚙ)
     const tonAmount = Number(amountCoins) / 1_000_000;
@@ -573,11 +573,11 @@ router.post("/ton/buy", authMiddleware, async (req: Request, res: Response) => {
     const userId = (req as AuthRequest).userId;
     const { amountTon } = req.body;
     if (!amountTon || parseFloat(amountTon) < 0.1) {
-      return res.status(400).json({ error: "Минимальная покупка: 0.1 TON" });
+      return res.status(400).json({ error: "Minimum purchase: 0.1 TON" });
     }
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { tonWalletAddress: true } });
     if (!user?.tonWalletAddress) {
-      return res.status(400).json({ error: "Сначала подключите TON кошелёк" });
+      return res.status(400).json({ error: "Connect TON wallet first" });
     }
     const coinsPerTon = 1_000_000;
     const gross = Math.round(parseFloat(amountTon) * coinsPerTon);
@@ -603,11 +603,11 @@ router.post("/ton/sell", authMiddleware, async (req: Request, res: Response) => 
     const userId = (req as AuthRequest).userId;
     const { amountCoins } = req.body;
     if (!amountCoins || BigInt(amountCoins) < 1_000_000n) {
-      return res.status(400).json({ error: "Минимальная продажа: 1,000,000 ᚙ (= 1 TON)" });
+      return res.status(400).json({ error: "Minimum sale: 1,000,000 ᚙ (= 1 TON)" });
     }
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { balance: true, tonWalletAddress: true } });
-    if (!user?.tonWalletAddress) return res.status(400).json({ error: "Сначала подключите TON кошелёк" });
-    if (user.balance < BigInt(amountCoins)) return res.status(400).json({ error: "Недостаточно монет" });
+    if (!user?.tonWalletAddress) return res.status(400).json({ error: "Connect TON wallet first" });
+    if (user.balance < BigInt(amountCoins)) return res.status(400).json({ error: "Not enough coins" });
     const coinsPerTon = 1_000_000;
     const tonGross = Number(amountCoins) / coinsPerTon;
     const tonFee = tonGross * 0.005;

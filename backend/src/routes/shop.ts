@@ -38,7 +38,7 @@ shopRouter.get("/items", authMiddleware, async (req: Request, res: Response) => 
     res.json({ items: itemsWithOwnership });
   } catch (err: unknown) {
     logger.error("[shop/items]", err);
-    res.status(500).json({ error: "Ошибка загрузки магазина" });
+    res.status(500).json({ error: "Failed to load shop" });
   }
 });
 
@@ -52,19 +52,19 @@ shopRouter.post("/purchase", authMiddleware, async (req: Request, res: Response)
 
     const item = await prisma.item.findUnique({ where: { id: itemId } });
     if (!item || !item.isActive)
-      return res.status(404).json({ error: "Предмет не найден" });
+      return res.status(404).json({ error: "Item not found" });
 
     // Проверяем что не куплен
     const existing = await prisma.userItem.findUnique({
       where: { userId_itemId: { userId, itemId } },
     });
-    if (existing) return res.status(409).json({ error: "Предмет уже куплен" });
+    if (existing) return res.status(409).json({ error: "Item already purchased" });
 
     // Проверяем баланс
     const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) return res.status(404).json({ error: "Пользователь не найден" });
+    if (!user) return res.status(404).json({ error: "User not found" });
     if (user.balance < item.priceCoins)
-      return res.status(400).json({ error: "Недостаточно ᚙ" });
+      return res.status(400).json({ error: "Not enough ᚙ" });
 
     // Снять монеты через updateBalance (создаёт транзакцию автоматически)
     await updateBalance(userId, -BigInt(item.priceCoins.toString()), TransactionType.ITEM_PURCHASE, { itemId: item.id, itemName: item.name });
@@ -77,7 +77,7 @@ shopRouter.post("/purchase", authMiddleware, async (req: Request, res: Response)
     res.json({ success: true, message: `Куплено: ${item.name}` });
   } catch (err: unknown) {
     logger.error("[shop/purchase]", err);
-    res.status(500).json({ error: "Ошибка покупки" });
+    res.status(500).json({ error: "Purchase error" });
   }
 });
 
@@ -93,7 +93,7 @@ shopRouter.post("/equip", authMiddleware, async (req: Request, res: Response) =>
       where: { userId_itemId: { userId, itemId } },
       include: { item: true },
     });
-    if (!userItem) return res.status(404).json({ error: "Предмет не в инвентаре" });
+    if (!userItem) return res.status(404).json({ error: "Item not in inventory" });
 
     const itemType = userItem.item.type;
 
@@ -128,7 +128,7 @@ shopRouter.post("/equip", authMiddleware, async (req: Request, res: Response) =>
     res.json({ success: true, message: `Надето: ${userItem.item.name}` });
   } catch (err: unknown) {
     logger.error("[shop/equip]", err);
-    res.status(500).json({ error: "Ошибка экипировки" });
+    res.status(500).json({ error: "Equip error" });
   }
 });
 
@@ -145,7 +145,7 @@ shopRouter.post("/unequip", authMiddleware, async (req: Request, res: Response) 
       where: { userId_itemId: { userId, itemId } },
       include: { item: true },
     });
-    if (!userItem) return res.status(404).json({ error: "Предмет не в инвентаре" });
+    if (!userItem) return res.status(404).json({ error: "Item not in inventory" });
 
     await prisma.userItem.update({
       where: { userId_itemId: { userId, itemId } },
@@ -170,7 +170,7 @@ shopRouter.post("/unequip", authMiddleware, async (req: Request, res: Response) 
     res.json({ success: true });
   } catch (err: unknown) {
     logger.error("[shop/unequip]", err);
-    res.status(500).json({ error: "Ошибка снятия предмета" });
+    res.status(500).json({ error: "Unequip error" });
   }
 });
 
@@ -189,7 +189,7 @@ shopRouter.post("/ton/connect", authMiddleware, async (req: Request, res: Respon
   try {
     const { walletAddress } = req.body;
     if (!walletAddress || !String(walletAddress).match(/^(UQ|EQ)[A-Za-z0-9_-]{46}$/)) {
-      return res.status(400).json({ error: "Неверный формат адреса TON (UQ... или EQ...)" });
+      return res.status(400).json({ error: "Invalid TON address format (UQ... or EQ...)" });
     }
 
     const userId = req.user!.id;
@@ -199,7 +199,7 @@ shopRouter.post("/ton/connect", authMiddleware, async (req: Request, res: Respon
       where: { tonWalletAddress: walletAddress, id: { not: userId } },
     });
     if (existing) {
-      return res.status(409).json({ error: "Этот адрес уже привязан к другому аккаунту" });
+      return res.status(409).json({ error: "This address is already linked to another account" });
     }
 
     await prisma.user.update({
@@ -210,7 +210,7 @@ shopRouter.post("/ton/connect", authMiddleware, async (req: Request, res: Respon
     res.json({ success: true, walletAddress });
   } catch (err) {
     logger.error("[shop/ton/connect]", err);
-    res.status(500).json({ error: "Ошибка подключения кошелька" });
+    res.status(500).json({ error: "Wallet connection error" });
   }
 });
 
@@ -220,13 +220,13 @@ shopRouter.post("/ton/buy", authMiddleware, async (req: Request, res: Response) 
     const userId = req.user!.id;
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user?.tonWalletAddress) {
-      return res.status(403).json({ error: "Сначала подключите TON кошелёк" });
+      return res.status(403).json({ error: "Connect TON wallet first" });
     }
 
     const { tonAmount } = req.body;
     const ton = parseFloat(tonAmount);
     if (!ton || ton < 0.1) {
-      return res.status(400).json({ error: "Минимальная сумма: 0.1 TON" });
+      return res.status(400).json({ error: "Minimum amount: 0.1 TON" });
     }
 
     const COINS_PER_TON = 1_000_000;
@@ -240,7 +240,7 @@ shopRouter.post("/ton/buy", authMiddleware, async (req: Request, res: Response) 
     res.json({ coinsReceived: netCoins.toString(), tonAmount: ton });
   } catch (err) {
     logger.error("[shop/ton/buy]", err);
-    res.status(500).json({ error: "Ошибка покупки монет" });
+    res.status(500).json({ error: "Coin purchase error" });
   }
 });
 
@@ -250,16 +250,16 @@ shopRouter.post("/ton/sell", authMiddleware, async (req: Request, res: Response)
     const userId = req.user!.id;
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user?.tonWalletAddress) {
-      return res.status(403).json({ error: "Сначала подключите TON кошелёк" });
+      return res.status(403).json({ error: "Connect TON wallet first" });
     }
 
     const { coinsAmount } = req.body;
     const coins = BigInt(String(coinsAmount).replace(/\D/g, "") || "0");
     if (coins < 1_000_000n) {
-      return res.status(400).json({ error: "Минимум 1,000,000 ᚙ" });
+      return res.status(400).json({ error: "Minimum 1,000,000 ᚙ" });
     }
     if (user.balance < coins) {
-      return res.status(400).json({ error: "Недостаточно монет" });
+      return res.status(400).json({ error: "Not enough coins" });
     }
 
     const COINS_PER_TON = 1_000_000;
@@ -277,7 +277,7 @@ shopRouter.post("/ton/sell", authMiddleware, async (req: Request, res: Response)
     res.json({ tonAmount: grossTon, netTon, feeTon, status: "PENDING" });
   } catch (err) {
     logger.error("[shop/ton/sell]", err);
-    res.status(500).json({ error: "Ошибка продажи монет" });
+    res.status(500).json({ error: "Coin sale error" });
   }
 });
 
@@ -287,16 +287,16 @@ shopRouter.post("/ton/withdraw", authMiddleware, async (req: Request, res: Respo
     const userId = req.user!.id;
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user?.tonWalletAddress) {
-      return res.status(403).json({ error: "Сначала подключите TON кошелёк" });
+      return res.status(403).json({ error: "Connect TON wallet first" });
     }
 
     const { coinsAmount } = req.body;
     const coins = BigInt(String(coinsAmount).replace(/\D/g, "") || "0");
     if (coins < 1_000_000n) {
-      return res.status(400).json({ error: "Минимум 1,000,000 ᚙ для вывода" });
+      return res.status(400).json({ error: "Minimum 1,000,000 ᚙ for withdrawal" });
     }
     if (user.balance < coins) {
-      return res.status(400).json({ error: "Недостаточно монет" });
+      return res.status(400).json({ error: "Not enough coins" });
     }
 
     const COINS_PER_TON = 1_000_000;
@@ -314,6 +314,6 @@ shopRouter.post("/ton/withdraw", authMiddleware, async (req: Request, res: Respo
     res.json({ netTon, feeTon, grossTon, toWallet: user.tonWalletAddress, status: "PENDING" });
   } catch (err) {
     logger.error("[shop/ton/withdraw]", err);
-    res.status(500).json({ error: "Ошибка вывода" });
+    res.status(500).json({ error: "Withdrawal error" });
   }
 });

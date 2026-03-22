@@ -30,14 +30,14 @@ import { uploadToS3, deleteFromS3 } from "@/lib/s3";
 
 // ── R4: Zod схемы валидации ───────────────────────────────────────────────────
 const BalanceSchema = z.object({
-  amount: z.string().regex(/^-?\d+$/, "Должно быть целым числом (положительным или отрицательным)"),
+  amount: z.string().regex(/^-?\d+$/, "Must be an integer (positive or negative)"),
   reason: z.string().min(1).max(200).optional().default("admin_adjustment"),
 });
 
 const BroadcastSchema = z.object({
-  text: z.string().min(1, "Текст обязателен").max(4096, "Макс 4096 символов"),
+  text: z.string().min(1, "Text is required").max(4096, "Max 4096 characters"),
   buttonText: z.string().max(50).optional(),
-  buttonUrl: z.string().url("Некорректный URL").optional(),
+  buttonUrl: z.string().url("Invalid URL").optional(),
 });
 
 const ChannelSchema = z.object({
@@ -107,10 +107,10 @@ adminRouter.post(
   upload.single("file"),
   async (req: Request, res: Response) => {
     try {
-      if (!req.file) return res.status(400).json({ error: "Файл не передан" });
+      if (!req.file) return res.status(400).json({ error: "No file provided" });
 
       const { name, rarity = "COMMON", price = "1000" } = req.body;
-      if (!name?.trim()) return res.status(400).json({ error: "name обязателен" });
+      if (!name?.trim()) return res.status(400).json({ error: "name is required" });
 
       const slug = toSlug(name.trim());
 
@@ -118,13 +118,13 @@ adminRouter.post(
       const existing = await prisma.item.findFirst({
         where: { type: ItemType.PREMIUM_AVATAR, name: name.trim() },
       });
-      if (existing) return res.status(409).json({ error: `Аватар «${name}» уже существует` });
+      if (existing) return res.status(409).json({ error: `Avatar '${name}' already exists` });
 
       // B5: Проверяем что sharp установлен
       if (!sharp) {
         return res.status(500).json({
-          error: "sharp не установлен. Выполни: npm install sharp",
-          hint: "Без sharp загрузка аватаров недоступна. Установи пакет и перезапусти сервер."
+          error: "sharp is not installed. Run: npm install sharp",
+          hint: "Avatar upload requires sharp. Install the package and restart."
         });
       }
 
@@ -144,10 +144,10 @@ adminRouter.post(
 
       const SORT: Record<string, number> = { COMMON: 10, RARE: 20, EPIC: 30, LEGENDARY: 40 };
       const RARITY_DESC: Record<string, string> = {
-        COMMON: "Стандартный премиум-аватар",
-        RARE: "Редкий аватар с уникальным дизайном",
-        EPIC: "Эпический аватар с эффектами",
-        LEGENDARY: "Легендарный аватар — единицы обладают им",
+        COMMON: "Standard premium avatar",
+        RARE: "Rare avatar with unique design",
+        EPIC: "Epic avatar with effects",
+        LEGENDARY: "Legendary avatar — only a few own it",
       };
 
       // Создаём запись в БД
@@ -157,7 +157,7 @@ adminRouter.post(
           category: category as ItemCategory,
           rarity: rarity as ItemRarity,
           name: name.trim(),
-          description: RARITY_DESC[rarity] ?? "Премиум-аватар",
+          description: RARITY_DESC[rarity] ?? "Premium avatar",
           imageUrl,
           previewUrl: imageUrl,
           priceCoins: BigInt(price),
@@ -210,7 +210,7 @@ adminRouter.patch("/avatars/:id", authMiddleware, adminOnly, async (req: Request
     const { name, rarity, price, isActive } = req.body;
 
     const item = await prisma.item.findUnique({ where: { id } });
-    if (!item) return res.status(404).json({ error: "Аватар не найден" });
+    if (!item) return res.status(404).json({ error: "Avatar not found" });
 
     const updated = await prisma.item.update({
       where: { id },
@@ -235,7 +235,7 @@ adminRouter.delete("/avatars/:id", authMiddleware, adminOnly, async (req: Reques
   try {
     const { id } = req.params;
     const item = await prisma.item.findUnique({ where: { id } });
-    if (!item) return res.status(404).json({ error: "Аватар не найден" });
+    if (!item) return res.status(404).json({ error: "Avatar not found" });
 
     // Считаем владельцев — если куплен, не удаляем с S3, только деактивируем
     const ownersCount = await prisma.userItem.count({ where: { itemId: id } });
@@ -250,7 +250,7 @@ adminRouter.delete("/avatars/:id", authMiddleware, adminOnly, async (req: Reques
 
     // Есть владельцы — только скрываем из магазина
     await prisma.item.update({ where: { id }, data: { isActive: false } });
-    res.json({ success: true, deleted: false, message: "Аватар скрыт из магазина (есть владельцы)" });
+    res.json({ success: true, deleted: false, message: "Avatar hidden from shop (has owners)" });
   } catch (err: unknown) {
     res.status(500).json({ error: (err instanceof Error ? err.message : String(err)) });
   }
@@ -273,7 +273,7 @@ adminRouter.post(
         where: { telegramId },
         select: { id: true, firstName: true, isAdmin: true },
       });
-      if (!target) return res.status(404).json({ error: "Пользователь не найден" });
+      if (!target) return res.status(404).json({ error: "User not found" });
 
       await prisma.user.update({
         where: { telegramId },
@@ -370,7 +370,7 @@ adminRouter.post("/broadcast", authMiddleware, adminOnly, validate(BroadcastSche
     if (!locked) {
       return res.status(429).json({
         error: "BROADCAST_IN_PROGRESS",
-        message: "Рассылка уже выполняется. Подождите 2 минуты.",
+        message: "Broadcast already in progress. Wait 2 minutes.",
       });
     }
 

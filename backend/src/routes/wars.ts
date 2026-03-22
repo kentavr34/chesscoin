@@ -13,16 +13,16 @@ import { TransactionType, CountryWarStatus } from "@prisma/client";
 
 // ── R4: Zod схемы ─────────────────────────────────────────────────────────────
 const DeclareWarSchema = z.object({
-  defenderCountryId: z.string().cuid("Некорректный ID страны"),
+  defenderCountryId: z.string().cuid("Invalid country ID"),
   duration: z.number().int().positive().optional(),
 });
 
 const ChallengeSchema = z.object({
-  opponentUserId: z.string().cuid("Некорректный ID пользователя"),
+  opponentUserId: z.string().cuid("Invalid user ID"),
 });
 
 const DonateWarSchema = z.object({
-  amount: z.string().regex(/^\d+$/, "Сумма должна быть числом"),
+  amount: z.string().regex(/^\d+$/, "Amount must be a number"),
 });
 
 export const warsRouter = Router();
@@ -641,7 +641,7 @@ warsRouter.post("/:warId/challenge", authMiddleware, validate(ChallengeSchema), 
     if (activeBattlesCount >= 10) {
       return res.status(400).json({
         error: "WAR_BATTLES_LIMIT",
-        message: "Достигнут лимит одновременных сражений (10). Дождитесь завершения текущих партий.",
+        message: "Concurrent battle limit reached (10). Wait for current games to finish.",
       });
     }
 
@@ -689,7 +689,7 @@ warsRouter.post("/:warId/challenge", authMiddleware, validate(ChallengeSchema), 
         sessionCode,           // FIX #4: добавлен code для game:join
         warId,
         challengerUserId: userId,
-        message: "Вас вызвали на военную дуэль!",
+        message: "You have been challenged to a war duel!",
       });
     } catch {}
 

@@ -34,7 +34,7 @@ nationsRouter.get("/clans", authMiddleware, async (req: Request, res: Response) 
     res.json({ clans: result });
   } catch (err: unknown) {
     logger.error("[nations/clans]", err);
-    res.status(500).json({ error: "Ошибка загрузки сборных" });
+    res.status(500).json({ error: "Failed to load teams" });
   }
 });
 
@@ -60,7 +60,7 @@ nationsRouter.get("/my", authMiddleware, async (req: Request, res: Response) => 
     res.json({ clan, membership, activeWar });
   } catch (err: unknown) {
     logger.error("[nations/my]", err);
-    res.status(500).json({ error: "Ошибка" });
+    res.status(500).json({ error: "Error" });
   }
 });
 
@@ -69,7 +69,7 @@ nationsRouter.get("/members", authMiddleware, async (req: Request, res: Response
   try {
     const userId = req.user!.id;
     const membership = await prisma.clanMember.findUnique({ where: { userId } });
-    if (!membership) return res.status(400).json({ error: "Вы не в клане" });
+    if (!membership) return res.status(400).json({ error: "You are not in a clan" });
 
     const members = await prisma.clanMember.findMany({
       where: { clanId: membership.clanId },
@@ -95,7 +95,7 @@ nationsRouter.get("/members", authMiddleware, async (req: Request, res: Response
     res.json({ members: result });
   } catch (err: unknown) {
     logger.error("[nations/members]", err);
-    res.status(500).json({ error: "Ошибка" });
+    res.status(500).json({ error: "Error" });
   }
 });
 
@@ -110,16 +110,16 @@ nationsRouter.post("/join", authMiddleware, async (req: Request, res: Response) 
       where: { id: clanId },
       include: { _count: { select: { members: { where: { isPending: false } } } } },
     });
-    if (!clan) return res.status(404).json({ error: "Сборная не найдена" });
+    if (!clan) return res.status(404).json({ error: "Team not found" });
 
     if (clan._count.members >= clan.maxMembers) {
-      return res.status(400).json({ error: "Клан переполнен (максимум 100 бойцов)" });
+      return res.status(400).json({ error: "Clan is full (max 100 fighters)" });
     }
 
     const existing = await prisma.clanMember.findUnique({ where: { userId } });
     if (existing) {
-      if (existing.clanId === clanId) return res.status(409).json({ error: "Вы уже в этой сборной" });
-      return res.status(409).json({ error: "Вы уже состоите в другой сборной" });
+      if (existing.clanId === clanId) return res.status(409).json({ error: "You are already in this team" });
+      return res.status(409).json({ error: "You are already in another team" });
     }
 
     // Если клан без лидера — первый участник становится лидером
@@ -143,7 +143,7 @@ nationsRouter.post("/join", authMiddleware, async (req: Request, res: Response) 
     res.json({ success: true, pending: member.isPending, clan: { id: clan.id, name: clan.name, flag: clan.flag } });
   } catch (err: unknown) {
     logger.error("[nations/join]", err);
-    res.status(500).json({ error: "Ошибка вступления в сборную" });
+    res.status(500).json({ error: "Failed to join team" });
   }
 });
 
@@ -152,7 +152,7 @@ nationsRouter.post("/leave", authMiddleware, async (req: Request, res: Response)
   try {
     const userId = req.user!.id;
     const membership = await prisma.clanMember.findUnique({ where: { userId } });
-    if (!membership) return res.status(404).json({ error: "Вы не состоите в сборной" });
+    if (!membership) return res.status(404).json({ error: "You are not in a team" });
 
     // Возвращаем взнос при выходе
     if (membership.contribution > 0n) {
@@ -179,7 +179,7 @@ nationsRouter.post("/leave", authMiddleware, async (req: Request, res: Response)
     res.json({ success: true });
   } catch (err: unknown) {
     logger.error("[nations/leave]", err);
-    res.status(500).json({ error: "Ошибка выхода из сборной" });
+    res.status(500).json({ error: "Failed to leave team" });
   }
 });
 
@@ -192,12 +192,12 @@ nationsRouter.post("/members/:memberId/approve", authMiddleware, async (req: Req
 
     const myMembership = await prisma.clanMember.findUnique({ where: { userId } });
     if (!myMembership || myMembership.role !== "COMMANDER") {
-      return res.status(403).json({ error: "Только лидер клана может одобрять участников" });
+      return res.status(403).json({ error: "Only clan leader can approve members" });
     }
 
     const member = await prisma.clanMember.findUnique({ where: { id: memberId } });
     if (!member || member.clanId !== myMembership.clanId || !member.isPending) {
-      return res.status(404).json({ error: "Заявка не найдена" });
+      return res.status(404).json({ error: "Application not found" });
     }
 
     if (!approve) {
@@ -224,7 +224,7 @@ nationsRouter.post("/members/:memberId/approve", authMiddleware, async (req: Req
     res.json({ success: true, approved: true });
   } catch (err: unknown) {
     logger.error("[nations/members/approve]", err);
-    res.status(500).json({ error: "Ошибка" });
+    res.status(500).json({ error: "Error" });
   }
 });
 
@@ -236,12 +236,12 @@ nationsRouter.post("/members/:targetUserId/kick", authMiddleware, async (req: Re
 
     const myMembership = await prisma.clanMember.findUnique({ where: { userId } });
     if (!myMembership || myMembership.role !== "COMMANDER") {
-      return res.status(403).json({ error: "Только лидер клана может исключать участников" });
+      return res.status(403).json({ error: "Only clan leader can kick members" });
     }
 
     const target = await prisma.clanMember.findUnique({ where: { userId: targetUserId } });
     if (!target || target.clanId !== myMembership.clanId) {
-      return res.status(404).json({ error: "Участник не найден" });
+      return res.status(404).json({ error: "Member not found" });
     }
 
     // Возвращаем взнос исключённому
@@ -263,7 +263,7 @@ nationsRouter.post("/members/:targetUserId/kick", authMiddleware, async (req: Re
     res.json({ success: true });
   } catch (err: unknown) {
     logger.error("[nations/kick]", err);
-    res.status(500).json({ error: "Ошибка" });
+    res.status(500).json({ error: "Error" });
   }
 });
 
@@ -272,13 +272,13 @@ nationsRouter.post("/contribute", authMiddleware, async (req: Request, res: Resp
   try {
     const userId = req.user!.id;
     const { amount } = req.body;
-    if (!amount || BigInt(amount) <= 0n) return res.status(400).json({ error: "Сумма обязательна" });
+    if (!amount || BigInt(amount) <= 0n) return res.status(400).json({ error: "Amount is required" });
 
     const membership = await prisma.clanMember.findUnique({ where: { userId } });
-    if (!membership || membership.isPending) return res.status(400).json({ error: "Вы не в клане или ожидаете одобрения" });
+    if (!membership || membership.isPending) return res.status(400).json({ error: "You are not in a clan or pending approval" });
 
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { balance: true } });
-    if (!user || user.balance < BigInt(amount)) return res.status(400).json({ error: "Недостаточно монет" });
+    if (!user || user.balance < BigInt(amount)) return res.status(400).json({ error: "Not enough coins" });
 
     await updateBalance(userId, -BigInt(amount), TransactionType.CLAN_CONTRIBUTION, {
       clanId: membership.clanId, reason: "voluntary_contribution",
@@ -292,7 +292,7 @@ nationsRouter.post("/contribute", authMiddleware, async (req: Request, res: Resp
     res.json({ success: true });
   } catch (err: unknown) {
     logger.error("[nations/contribute]", err);
-    res.status(500).json({ error: "Ошибка взноса" });
+    res.status(500).json({ error: "Contribution error" });
   }
 });
 
@@ -304,14 +304,14 @@ nationsRouter.post("/war/challenge", authMiddleware, async (req: Request, res: R
 
     const myMembership = await prisma.clanMember.findUnique({ where: { userId } });
     if (!myMembership || myMembership.role !== "COMMANDER") {
-      return res.status(403).json({ error: "Только лидер клана может объявлять войну" });
+      return res.status(403).json({ error: "Only clan leader can declare war" });
     }
 
     const attackerClan = await prisma.clan.findUnique({ where: { id: myMembership.clanId } });
     const defenderClan = await prisma.clan.findUnique({ where: { id: defenderClanId } });
-    if (!attackerClan || !defenderClan) return res.status(404).json({ error: "Клан не найден" });
+    if (!attackerClan || !defenderClan) return res.status(404).json({ error: "Clan not found" });
 
-    if (attackerClan.id === defenderClan.id) return res.status(400).json({ error: "Нельзя объявить войну самим себе" });
+    if (attackerClan.id === defenderClan.id) return res.status(400).json({ error: "Cannot declare war on yourself" });
 
     // Проверяем наличие офицера (минимум лейтенант) в атакующем клане
     const officerRanks = ["LIEUTENANT", "SR_LIEUTENANT", "CAPTAIN", "MAJOR", "LT_COLONEL", "COLONEL", "BRIGADIER", "MAJ_GENERAL", "LT_GENERAL", "COL_GENERAL", "MARSHAL", "EMPEROR"];
@@ -326,7 +326,7 @@ nationsRouter.post("/war/challenge", authMiddleware, async (req: Request, res: R
         })
       : null;
     if (!officerUser) {
-      return res.status(403).json({ error: "Для объявления войны в клане должен быть хотя бы один офицер (Лейтенант и выше)" });
+      return res.status(403).json({ error: "Your clan needs at least one officer (Lieutenant+) to declare war" });
     }
 
     // Проверяем нет ли уже активной войны
@@ -339,7 +339,7 @@ nationsRouter.post("/war/challenge", authMiddleware, async (req: Request, res: R
         ],
       },
     });
-    if (existing) return res.status(400).json({ error: "У вашего клана уже есть активная война" });
+    if (existing) return res.status(400).json({ error: "Your clan already has an active war" });
 
     const validDurations = [3600, 86400, 604800, 2592000];
     const warDuration = validDurations.includes(duration) ? duration : 86400;
@@ -373,7 +373,7 @@ nationsRouter.post("/war/challenge", authMiddleware, async (req: Request, res: R
     res.json({ success: true, war });
   } catch (err: unknown) {
     logger.error("[nations/war/challenge]", err);
-    res.status(500).json({ error: "Ошибка объявления войны" });
+    res.status(500).json({ error: "Failed to declare war" });
   }
 });
 
@@ -385,7 +385,7 @@ nationsRouter.post("/war/:id/accept", authMiddleware, async (req: Request, res: 
 
     const myMembership = await prisma.clanMember.findUnique({ where: { userId } });
     if (!myMembership || myMembership.role !== "COMMANDER") {
-      return res.status(403).json({ error: "Только лидер клана может принять вызов" });
+      return res.status(403).json({ error: "Only clan leader can accept challenge" });
     }
 
     const war = await prisma.clanWar.findUnique({
@@ -396,8 +396,8 @@ nationsRouter.post("/war/:id/accept", authMiddleware, async (req: Request, res: 
       },
     });
 
-    if (!war || !war.isPending) return res.status(404).json({ error: "Вызов не найден" });
-    if (war.defenderClanId !== myMembership.clanId) return res.status(403).json({ error: "Не ваш вызов" });
+    if (!war || !war.isPending) return res.status(404).json({ error: "Challenge not found" });
+    if (war.defenderClanId !== myMembership.clanId) return res.status(403).json({ error: "Not your challenge" });
 
     const totalPrize = war.attackerClan.treasury + war.defenderClan.treasury;
 
@@ -438,7 +438,7 @@ nationsRouter.post("/war/:id/accept", authMiddleware, async (req: Request, res: 
     res.json({ success: true });
   } catch (err: unknown) {
     logger.error("[nations/war/accept]", err);
-    res.status(500).json({ error: "Ошибка принятия вызова" });
+    res.status(500).json({ error: "Failed to accept challenge" });
   }
 });
 
@@ -456,7 +456,7 @@ nationsRouter.get("/wars", authMiddleware, async (_req: Request, res: Response) 
     res.json({ wars });
   } catch (err: unknown) {
     logger.error("[nations/wars]", err);
-    res.status(500).json({ error: "Ошибка загрузки войн" });
+    res.status(500).json({ error: "Failed to load wars" });
   }
 });
 
@@ -476,7 +476,7 @@ nationsRouter.get("/war-challenges", authMiddleware, async (req: Request, res: R
     });
     res.json({ challenges });
   } catch (err: unknown) {
-    res.status(500).json({ error: "Ошибка" });
+    res.status(500).json({ error: "Error" });
   }
 });
 
@@ -497,7 +497,7 @@ nationsRouter.post("/battle/challenge", authMiddleware, async (req: Request, res
 
     const myMembership = await prisma.clanMember.findUnique({ where: { userId } });
     if (!myMembership || myMembership.isPending) {
-      return res.status(403).json({ error: "Вы не состоите в клане" });
+      return res.status(403).json({ error: "You are not in a clan" });
     }
 
     // Правило: в клане должен быть хотя бы 1 офицер (OFFICER или COMMANDER)
@@ -510,14 +510,14 @@ nationsRouter.post("/battle/challenge", authMiddleware, async (req: Request, res
     });
     if (!hasOfficer) {
       return res.status(403).json({
-        error: "Для вызова на сражение в клане должен быть хотя бы один офицер (лейтенант)",
+        error: "Your clan needs at least one officer (Lieutenant+) to challenge",
       });
     }
 
     const challengerClan = await prisma.clan.findUnique({ where: { id: myMembership.clanId } });
     const defenderClan   = await prisma.clan.findUnique({ where: { id: defenderClanId } });
-    if (!challengerClan || !defenderClan) return res.status(404).json({ error: "Клан не найден" });
-    if (challengerClan.id === defenderClan.id) return res.status(400).json({ error: "Нельзя вызвать свой клан" });
+    if (!challengerClan || !defenderClan) return res.status(404).json({ error: "Clan not found" });
+    if (challengerClan.id === defenderClan.id) return res.status(400).json({ error: "Cannot challenge your own clan" });
 
     // Не более 3 одновременных активных вызовов от одного клана
     const activeChallenges = await prisma.clanBattle.count({
@@ -527,7 +527,7 @@ nationsRouter.post("/battle/challenge", authMiddleware, async (req: Request, res
       },
     });
     if (activeChallenges >= 3) {
-      return res.status(400).json({ error: "У вашего клана уже 3 активных сражения" });
+      return res.status(400).json({ error: "Your clan already has 3 active battles" });
     }
 
     const validMin = 3600;
@@ -551,7 +551,7 @@ nationsRouter.post("/battle/challenge", authMiddleware, async (req: Request, res
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { balance: true } });
     if (!user || user.balance < betAmount) {
       await prisma.clanBattle.delete({ where: { id: battle.id } });
-      return res.status(400).json({ error: "Недостаточно монет" });
+      return res.status(400).json({ error: "Not enough coins" });
     }
 
     await updateBalance(userId, -betAmount, TransactionType.CLAN_CONTRIBUTION, {
@@ -584,7 +584,7 @@ nationsRouter.post("/battle/challenge", authMiddleware, async (req: Request, res
     res.json({ success: true, battle });
   } catch (err: unknown) {
     logger.error("[nations/battle/challenge]", err);
-    res.status(500).json({ error: "Ошибка создания вызова" });
+    res.status(500).json({ error: "Failed to create challenge" });
   }
 });
 
@@ -598,28 +598,28 @@ nationsRouter.post("/battle/:id/join", authMiddleware, async (req: Request, res:
     if (!bet) return res.status(400).json({ error: "bet обязателен" });
 
     const membership = await prisma.clanMember.findUnique({ where: { userId } });
-    if (!membership || membership.isPending) return res.status(403).json({ error: "Вы не в клане" });
+    if (!membership || membership.isPending) return res.status(403).json({ error: "You are not in a clan" });
 
     const battle = await prisma.clanBattle.findUnique({ where: { id } });
-    if (!battle) return res.status(404).json({ error: "Сражение не найдено" });
+    if (!battle) return res.status(404).json({ error: "Battle not found" });
     if (battle.status !== "PENDING" && battle.status !== "IN_PROGRESS") {
-      return res.status(400).json({ error: "Сражение недоступно для вступления" });
+      return res.status(400).json({ error: "Battle is not available to join" });
     }
 
     // Проверяем, что игрок из одного из кланов-участников
     if (membership.clanId !== battle.challengerClanId && membership.clanId !== battle.defenderClanId) {
-      return res.status(403).json({ error: "Вы не состоите ни в одном из кланов-участников" });
+      return res.status(403).json({ error: "You are not in any participating clan" });
     }
 
     // Нельзя вносить дважды
     const existing = await prisma.clanBattleContribution.findUnique({
       where: { battleId_userId: { battleId: id, userId } },
     });
-    if (existing) return res.status(409).json({ error: "Вы уже участвуете в этом сражении" });
+    if (existing) return res.status(409).json({ error: "You are already in this battle" });
 
     const betAmount = BigInt(bet);
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { balance: true } });
-    if (!user || user.balance < betAmount) return res.status(400).json({ error: "Недостаточно монет" });
+    if (!user || user.balance < betAmount) return res.status(400).json({ error: "Not enough coins" });
 
     await updateBalance(userId, -betAmount, TransactionType.CLAN_CONTRIBUTION, {
       reason: "clan_battle_join", battleId: id,
@@ -648,7 +648,7 @@ nationsRouter.post("/battle/:id/join", authMiddleware, async (req: Request, res:
     res.json({ success: true, pool: (BigInt(battle.pool) + betAmount).toString() });
   } catch (err: unknown) {
     logger.error("[nations/battle/join]", err);
-    res.status(500).json({ error: "Ошибка вступления в сражение" });
+    res.status(500).json({ error: "Failed to join battle" });
   }
 });
 
@@ -663,7 +663,7 @@ nationsRouter.post("/battle/:id/start-game", authMiddleware, async (req: Request
 
     const battle = await prisma.clanBattle.findUnique({ where: { id } });
     if (!battle || battle.status !== "IN_PROGRESS") {
-      return res.status(400).json({ error: "Сражение не активно" });
+      return res.status(400).json({ error: "Battle is not active" });
     }
 
     // Проверяем лимит одновременных партий
@@ -681,12 +681,12 @@ nationsRouter.post("/battle/:id/start-game", authMiddleware, async (req: Request
       where: { battleId_userId: { battleId: id, userId: opponentId } },
     });
     if (!myContrib || !oppContrib) {
-      return res.status(400).json({ error: "Оба игрока должны вступить в сражение" });
+      return res.status(400).json({ error: "Both players must join the battle" });
     }
 
     // Они должны быть из разных кланов
     if (myContrib.clanId === oppContrib.clanId) {
-      return res.status(400).json({ error: "Нельзя играть против игрока своего клана" });
+      return res.status(400).json({ error: "Cannot play against your own clan member" });
     }
 
     // Создаём запись (реальная сессия создаётся через socket game:create:battle)
@@ -698,7 +698,7 @@ nationsRouter.post("/battle/:id/start-game", authMiddleware, async (req: Request
     res.json({ success: true, battleId: id });
   } catch (err: unknown) {
     logger.error("[nations/battle/start-game]", err);
-    res.status(500).json({ error: "Ошибка старта партии" });
+    res.status(500).json({ error: "Failed to start game" });
   }
 });
 
@@ -710,7 +710,7 @@ nationsRouter.post("/battle/:id/record-result", authMiddleware, async (req: Requ
     const { sessionId, winnerId, winnerClanId, player1Id, player2Id, clan1Id, clan2Id } = req.body;
 
     const battle = await prisma.clanBattle.findUnique({ where: { id } });
-    if (!battle || battle.status !== "IN_PROGRESS") return res.status(400).json({ error: "Батл не активен" });
+    if (!battle || battle.status !== "IN_PROGRESS") return res.status(400).json({ error: "Battle is not active" });
 
     // Записываем игру
     await prisma.clanBattleGame.upsert({
@@ -733,7 +733,7 @@ nationsRouter.post("/battle/:id/record-result", authMiddleware, async (req: Requ
     res.json({ success: true });
   } catch (err: unknown) {
     logger.error("[nations/battle/record-result]", err);
-    res.status(500).json({ error: "Ошибка записи результата" });
+    res.status(500).json({ error: "Failed to record result" });
   }
 });
 
@@ -752,7 +752,7 @@ nationsRouter.get("/battles", authMiddleware, async (_req: Request, res: Respons
     res.json({ battles });
   } catch (err: unknown) {
     logger.error("[nations/battles]", err);
-    res.status(500).json({ error: "Ошибка загрузки сражений" });
+    res.status(500).json({ error: "Failed to load battles" });
   }
 });
 
@@ -771,7 +771,7 @@ nationsRouter.get("/battle/:id", authMiddleware, async (req: Request, res: Respo
         games:          { orderBy: { createdAt: "desc" }, take: 20 },
       },
     });
-    if (!battle) return res.status(404).json({ error: "Сражение не найдено" });
+    if (!battle) return res.status(404).json({ error: "Battle not found" });
 
     const myContrib = battle.contributions.find((c: Record<string,unknown>) => c.userId === userId) ?? null;
 
@@ -785,7 +785,7 @@ nationsRouter.get("/battle/:id", authMiddleware, async (req: Request, res: Respo
     });
   } catch (err: unknown) {
     logger.error("[nations/battle/:id]", err);
-    res.status(500).json({ error: "Ошибка загрузки сражения" });
+    res.status(500).json({ error: "Failed to load battle" });
   }
 });
 
@@ -798,7 +798,7 @@ nationsRouter.post("/battle/:id/settle", authMiddleware, async (req: Request, re
 
     const myMembership = await prisma.clanMember.findUnique({ where: { userId } });
     if (!myMembership || myMembership.role !== "COMMANDER") {
-      return res.status(403).json({ error: "Только лидер клана может досрочно завершить сражение" });
+      return res.status(403).json({ error: "Only clan leader can end battle early" });
     }
 
     const battle = await prisma.clanBattle.findUnique({
@@ -806,14 +806,14 @@ nationsRouter.post("/battle/:id/settle", authMiddleware, async (req: Request, re
       include: { contributions: true },
     });
     if (!battle || battle.status !== "IN_PROGRESS") {
-      return res.status(400).json({ error: "Сражение не активно" });
+      return res.status(400).json({ error: "Battle is not active" });
     }
 
     await settleClanBattle(battle);
     res.json({ success: true });
   } catch (err: unknown) {
     logger.error("[nations/battle/settle]", err);
-    res.status(500).json({ error: "Ошибка завершения сражения" });
+    res.status(500).json({ error: "Failed to end battle" });
   }
 });
 
@@ -833,7 +833,7 @@ nationsRouter.post("/challenge-player", authMiddleware, async (req: Request, res
 
     res.json({ success: true });
   } catch (err: unknown) {
-    res.status(500).json({ error: "Ошибка отправки вызова" });
+    res.status(500).json({ error: "Failed to send challenge" });
   }
 });
 

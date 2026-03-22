@@ -42,7 +42,7 @@ botRouter.post("/notify", async (req: Request, res: Response) => {
       select: { id: true, isBanned: true },
     });
     if (!user || user.isBanned)
-      return res.status(404).json({ error: "Пользователь не найден или забанен" });
+      return res.status(404).json({ error: "User not found or banned" });
 
     // Отправляем через Telegram Bot API
     const botToken = process.env.BOT_TOKEN;
@@ -69,7 +69,7 @@ botRouter.post("/notify", async (req: Request, res: Response) => {
     res.json({ success: true });
   } catch (err: unknown) {
     logger.error("[bot/notify]", err);
-    res.status(500).json({ error: "Ошибка отправки уведомления" });
+    res.status(500).json({ error: "Failed to send notification" });
   }
 });
 
@@ -96,7 +96,7 @@ botRouter.get("/stats", async (_req: Request, res: Response) => {
     });
   } catch (err: unknown) {
     logger.error("[bot/stats]", err);
-    res.status(500).json({ error: "Ошибка получения статистики" });
+    res.status(500).json({ error: "Failed to get stats" });
   }
 });
 
@@ -147,7 +147,7 @@ botRouter.post("/broadcast", async (req: Request, res: Response) => {
     res.json({ sent, failed });
   } catch (err: unknown) {
     logger.error("[bot/broadcast]", err);
-    res.status(500).json({ error: "Ошибка рассылки" });
+    res.status(500).json({ error: "Broadcast error" });
   }
 });
 
@@ -165,9 +165,9 @@ botRouter.post("/ban", async (req: Request, res: Response) => {
     res.json({ success: true, userId: user.id });
   } catch (err: unknown) {
     if ((err as Record<string,unknown>).code === "P2025")
-      return res.status(404).json({ error: "Пользователь не найден" });
+      return res.status(404).json({ error: "User not found" });
     logger.error("[bot/ban]", err);
-    res.status(500).json({ error: "Ошибка бана" });
+    res.status(500).json({ error: "Ban error" });
   }
 });
 
@@ -304,7 +304,7 @@ botRouter.get("/stats/detailed", async (_req: Request, res: Response) => {
     });
   } catch (err: unknown) {
     logger.error("[bot/stats/detailed]", err);
-    res.status(500).json({ error: "Ошибка получения детальной статистики" });
+    res.status(500).json({ error: "Failed to get detailed stats" });
   }
 });
 
@@ -323,7 +323,7 @@ botRouter.get("/tasks", async (_req: Request, res: Response) => {
     })));
   } catch (err: unknown) {
     logger.error("[bot/tasks GET]", err);
-    res.status(500).json({ error: "Ошибка получения заданий" });
+    res.status(500).json({ error: "Failed to get tasks" });
   }
 });
 
@@ -332,7 +332,7 @@ botRouter.post("/tasks/create", async (req: Request, res: Response) => {
   try {
     const { taskType, title, description, winningAmount, metadata, icon, status } = req.body;
     if (!taskType || !title || winningAmount == null || !metadata || !icon) {
-      return res.status(400).json({ error: "Обязательные поля: taskType, title, winningAmount, metadata, icon" });
+      return res.status(400).json({ error: "Required fields: taskType, title, winningAmount, metadata, icon" });
     }
     const task = await prisma.task.create({
       data: {
@@ -348,7 +348,7 @@ botRouter.post("/tasks/create", async (req: Request, res: Response) => {
     res.json({ ...task, winningAmount: task.winningAmount.toString() });
   } catch (err: unknown) {
     logger.error("[bot/tasks/create]", err);
-    res.status(500).json({ error: "Ошибка создания задания" });
+    res.status(500).json({ error: "Failed to create task" });
   }
 });
 
@@ -356,7 +356,7 @@ botRouter.post("/tasks/create", async (req: Request, res: Response) => {
 botRouter.put("/tasks/:id/toggle", async (req: Request, res: Response) => {
   try {
     const existing = await prisma.task.findUnique({ where: { id: req.params.id } });
-    if (!existing) return res.status(404).json({ error: "Задание не найдено" });
+    if (!existing) return res.status(404).json({ error: "Task not found" });
     const newStatus = existing.status === "ACTIVE" ? "ARCHIVED" : "ACTIVE";
     const updated = await prisma.task.update({
       where: { id: req.params.id },
@@ -365,7 +365,7 @@ botRouter.put("/tasks/:id/toggle", async (req: Request, res: Response) => {
     res.json({ ...updated, winningAmount: updated.winningAmount.toString(), status: updated.status });
   } catch (err: unknown) {
     logger.error("[bot/tasks toggle]", err);
-    res.status(500).json({ error: "Ошибка изменения статуса" });
+    res.status(500).json({ error: "Failed to change status" });
   }
 });
 
@@ -377,9 +377,9 @@ botRouter.delete("/tasks/:id", async (req: Request, res: Response) => {
     await prisma.task.delete({ where: { id: req.params.id } });
     res.json({ ok: true });
   } catch (err: unknown) {
-    if ((err as Record<string,unknown>).code === "P2025") return res.status(404).json({ error: "Задание не найдено" });
+    if ((err as Record<string,unknown>).code === "P2025") return res.status(404).json({ error: "Task not found" });
     logger.error("[bot/tasks delete]", err);
-    res.status(500).json({ error: "Ошибка удаления задания" });
+    res.status(500).json({ error: "Failed to delete task" });
   }
 });
 
@@ -396,7 +396,7 @@ botRouter.post("/cleanup/dead", async (_req: Request, res: Response) => {
     res.json({ removed: beforeCount });
   } catch (err: unknown) {
     logger.error("[bot/cleanup/dead]", err);
-    res.status(500).json({ error: "Ошибка очистки мёртвых аккаунтов" });
+    res.status(500).json({ error: "Failed to clean dead accounts" });
   }
 });
 
@@ -458,14 +458,14 @@ botRouter.post("/cleanup/sessions", async (_req: Request, res: Response) => {
     res.json({ cancelledWaiting, drawnStuck, refundedBets });
   } catch (err: unknown) {
     logger.error("[bot/cleanup/sessions]", err);
-    res.status(500).json({ error: "Ошибка очистки сессий" });
+    res.status(500).json({ error: "Failed to clean sessions" });
   }
 });
 
 // ── POST /api/v1/bot/restart ──────────────────────────────────────────────────
 // Graceful shutdown — Docker/compose автоматически рестартует контейнер
 botRouter.post("/restart", async (_req: Request, res: Response) => {
-  res.json({ ok: true, message: "Перезапуск инициирован" });
+  res.json({ ok: true, message: "Restart initiated" });
   setTimeout(() => {
     logger.info("[bot/restart] Graceful shutdown by admin command");
     process.exit(0);

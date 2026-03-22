@@ -194,7 +194,7 @@ async function createWarMatch(
         sessionId: session.id,
         sessionCode,
         warId: war.id,
-        message: "Ваша партия в войне готова! Вступайте в бой!",
+        message: "Your war match is ready! Join the battle!",
       });
     } catch {}
   }

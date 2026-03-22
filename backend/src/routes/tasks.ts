@@ -66,7 +66,7 @@ tasksRouter.get("/", authMiddleware, async (req: Request, res: Response) => {
     res.json({ tasks: result });
   } catch (err) {
     logger.error("[tasks/list]", err);
-    res.status(500).json({ error: "Ошибка загрузки заданий" });
+    res.status(500).json({ error: "Failed to load tasks" });
   }
 });
 
@@ -80,13 +80,13 @@ tasksRouter.post("/complete", authMiddleware, validate(CompleteTaskSchema), asyn
 
     const task = await prisma.task.findUnique({ where: { id: taskId } });
     if (!task || task.status !== "ACTIVE")
-      return res.status(404).json({ error: "Задание не найдено" });
+      return res.status(404).json({ error: "Task not found" });
 
     // Проверяем что не выполнено
     const existing = await prisma.completedTask.findUnique({
       where: { userId_taskId: { userId, taskId } },
     });
-    if (existing) return res.status(409).json({ error: "Задание уже выполнено" });
+    if (existing) return res.status(409).json({ error: "Task already completed" });
 
     // Для FOLLOW_LINK / SUBSCRIBE_TELEGRAM — доверяем клиенту (v5)
     // Для REFERRAL — проверяем количество рефералов
@@ -108,7 +108,7 @@ tasksRouter.post("/complete", authMiddleware, validate(CompleteTaskSchema), asyn
       const meta = task.metadata as Record<string, unknown>;
       const { code } = req.body;
       if (!code || code !== meta?.code)
-        return res.status(400).json({ error: "Неверный код" });
+        return res.status(400).json({ error: "Invalid code" });
     }
 
     // Начислить награду через updateBalance (создаёт транзакцию автоматически)
@@ -122,7 +122,7 @@ tasksRouter.post("/complete", authMiddleware, validate(CompleteTaskSchema), asyn
     });
   } catch (err: unknown) {
     logger.error("[tasks/complete]", err);
-    res.status(500).json({ error: "Ошибка выполнения задания" });
+    res.status(500).json({ error: "Failed to complete task" });
   }
 });
 
@@ -153,7 +153,7 @@ tasksRouter.get("/puzzles", authMiddleware, async (req: Request, res: Response) 
     });
 
     if (count === 0) {
-      return res.status(404).json({ error: "Нет доступных задач — вы решили все!" });
+      return res.status(404).json({ error: "No puzzles available — you solved them all!" });
     }
 
     // Случайная задача (OFFSET RANDOM — для небольших наборов ок)
@@ -179,7 +179,7 @@ tasksRouter.get("/puzzles/daily", authMiddleware, async (req: Request, res: Resp
       where: { isDaily: true },
       orderBy: { dailyDate: "desc" },
     });
-    if (!puzzle) return res.status(404).json({ error: "Задача дня не назначена" });
+    if (!puzzle) return res.status(404).json({ error: "Daily puzzle not assigned" });
 
     const alreadySolved = await prisma.completedPuzzle.findUnique({
       where: { userId_puzzleId: { userId, puzzleId: puzzle.id } },
@@ -203,14 +203,14 @@ tasksRouter.post("/puzzles/:id/complete", authMiddleware, async (req: Request, r
 
   try {
     const puzzle = await prisma.puzzle.findUnique({ where: { id: puzzleId } });
-    if (!puzzle) return res.status(404).json({ error: "Задача не найдена" });
+    if (!puzzle) return res.status(404).json({ error: "Puzzle not found" });
 
     // Проверяем не решена ли уже
     const existing = await prisma.completedPuzzle.findUnique({
       where: { userId_puzzleId: { userId, puzzleId } },
     });
     if (existing) {
-      return res.status(400).json({ error: "Задача уже решена", alreadySolved: true });
+      return res.status(400).json({ error: "Puzzle already solved", alreadySolved: true });
     }
 
     // Верификация: нормализуем ходы к нижнему регистру без пробелов
@@ -225,7 +225,7 @@ tasksRouter.post("/puzzles/:id/complete", authMiddleware, async (req: Request, r
 
     if (!isCorrect) {
       return res.status(422).json({
-        error: "Неверное решение",
+        error: "Wrong solution",
         correct: false,
         hint: correct[submitted.length] ?? null, // следующий правильный ход (подсказка)
       });

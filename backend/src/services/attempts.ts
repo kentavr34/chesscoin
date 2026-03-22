@@ -12,7 +12,7 @@ export const useAttempt = async (userId: string): Promise<void> => {
   const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
 
   if (user.attempts <= 0) {
-    throw new Error("Недостаточно попыток. Подожди восстановления или купи.");
+    throw new Error("Not enough attempts. Wait for recovery or buy more.");
   }
 
   await prisma.user.update({
@@ -33,7 +33,7 @@ export const purchaseAttempts = async (
 
   const canBuy = max - user.attempts;
   if (canBuy <= 0) {
-    throw new Error("У вас уже максимальное количество попыток.");
+    throw new Error("You already have max attempts.");
   }
 
   const actualCount = Math.min(count, canBuy);

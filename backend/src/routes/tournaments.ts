@@ -213,7 +213,7 @@ router.post("/:id/join", async (req: import("express").Request, res: import("exp
         where: { userId: req.userId },
       });
       if (!membership) {
-        return res.status(400).json({ error: "COUNTRY_REQUIRED", message: "Для участия в Чемпионате Страны необходимо вступить в страну. Перейди в раздел Войны и выбери страну." });
+        return res.status(400).json({ error: "COUNTRY_REQUIRED", message: "Join a country first to participate in the Country Championship. Go to Wars and choose your country." });
       }
     }
 
@@ -278,7 +278,7 @@ router.post("/:id/join", async (req: import("express").Request, res: import("exp
 router.post("/:id/donate", validate(DonateTournamentSchema), async (req: import("express").Request, res: import("express").Response) => { // R4
   try {
     const { amount } = req.body;
-    if (!amount || BigInt(amount) <= 0n) return res.status(400).json({ error: "Сумма обязательна" });
+    if (!amount || BigInt(amount) <= 0n) return res.status(400).json({ error: "Amount is required" });
 
     const tournament = await prisma.tournament.findUnique({ where: { id: req.params.id } });
     if (!tournament || tournament.status === "FINISHED") return res.status(404).json({ error: "NOT_FOUND" });
