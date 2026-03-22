@@ -5,8 +5,16 @@ import aiohttp
 
 logger = logging.getLogger(__name__)
 
-BACKEND_URL = os.getenv("BACKEND_URL", "http://backend:3000/api/v1")
+_raw_backend_url = os.getenv("BACKEND_URL", "http://backend:3000/api/v1")
 BOT_API_SECRET = os.getenv("BOT_API_SECRET", "")
+
+# aiohttp.ClientSession(base_url=...) does NOT support paths in base_url.
+# Split "http://backend:3000/api/v1" → base="http://backend:3000", prefix="/api/v1"
+from urllib.parse import urlparse
+
+_parsed = urlparse(_raw_backend_url)
+BACKEND_BASE = f"{_parsed.scheme}://{_parsed.netloc}"
+BACKEND_PREFIX = _parsed.path.rstrip("/")  # e.g. "/api/v1"
 
 
 class BackendClient:
@@ -17,7 +25,7 @@ class BackendClient:
 
     async def __aenter__(self):
         self._session = aiohttp.ClientSession(
-            base_url=BACKEND_URL,
+            base_url=BACKEND_BASE,
             headers={
                 "Authorization": f"Bearer {BOT_API_SECRET}",
                 "Content-Type": "application/json",
@@ -30,15 +38,19 @@ class BackendClient:
         if self._session:
             await self._session.close()
 
+    def _url(self, path: str) -> str:
+        """Prepend BACKEND_PREFIX to relative paths."""
+        return f"{BACKEND_PREFIX}{path}"
+
     async def _post(self, path: str, payload: dict) -> dict:
-        async with self._session.post(path, json=payload) as resp:
+        async with self._session.post(self._url(path), json=payload) as resp:
             data = await resp.json()
             if not resp.ok:
                 raise RuntimeError(f"Backend {resp.status}: {data}")
             return data
 
     async def _get(self, path: str, params: dict | None = None) -> dict:
-        async with self._session.get(path, params=params) as resp:
+        async with self._session.get(self._url(path), params=params) as resp:
             data = await resp.json()
             if not resp.ok:
                 raise RuntimeError(f"Backend {resp.status}: {data}")
@@ -135,7 +147,7 @@ class BackendClient:
 
     async def toggle_task(self, task_id: str) -> dict:
         """Переключить статус задания ACTIVE ↔ ARCHIVED."""
-        async with self._session.put(f"/bot/tasks/{task_id}/toggle") as resp:
+        async with self._session.put(self._url(f"/bot/tasks/{task_id}/toggle")) as resp:
             data = await resp.json()
             if not resp.ok:
                 raise RuntimeError(f"Backend {resp.status}: {data}")
@@ -143,7 +155,7 @@ class BackendClient:
 
     async def delete_task(self, task_id: str) -> dict:
         """Удалить задание (вместе со всеми записями о выполнении)."""
-        async with self._session.delete(f"/bot/tasks/{task_id}") as resp:
+        async with self._session.delete(self._url(f"/bot/tasks/{task_id}")) as resp:
             data = await resp.json()
             if not resp.ok:
                 raise RuntimeError(f"Backend {resp.status}: {data}")

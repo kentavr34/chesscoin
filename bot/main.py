@@ -71,6 +71,18 @@ async def main():
         token=BOT_TOKEN,
         default=DefaultBotProperties(parse_mode=ParseMode.HTML),
     )
+
+    # ── Validate token BEFORE starting polling ──────────────────────────────
+    # Prevents infinite retry loop on invalid/revoked token
+    try:
+        me = await bot.get_me()
+        logger.info(f"[Bot] Token valid: @{me.username} (id={me.id})")
+    except Exception as e:
+        logger.critical(f"[Bot] BOT_TOKEN is INVALID — cannot start: {e}")
+        logger.critical("[Bot] Please update BOT_TOKEN in .env and restart")
+        await bot.session.close()
+        return  # Exit cleanly instead of infinite crash loop
+
     dp = Dispatcher(storage=MemoryStorage())
 
     dp.include_router(start_router)
