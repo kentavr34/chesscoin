@@ -8,6 +8,7 @@ import { sound } from '@/lib/sound';
 import { haptic } from '@/lib/haptic';
 import { useUserStore } from '@/store/useUserStore';
 import { WIN_ANIMATION_CONFIG } from '@/lib/equippedItems';
+import { useT } from '@/i18n/useT';
 
 interface VictoryScreenProps {
   result: 'win' | 'lose' | 'draw';
@@ -32,6 +33,7 @@ function makeSparks(n: number): Spark[] {
 }
 
 export const VictoryScreen: React.FC<VictoryScreenProps> = ({ result, opponentName, earned, onDone }) => {
+  const t = useT();
   const [phase, setPhase] = useState<'enter' | 'show' | 'exit'>('enter');
   const [sparks, setSparks] = useState<Spark[]>([]);
   const [wave2, setWave2] = useState<Spark[]>([]);
@@ -89,12 +91,12 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({ result, opponentNa
         <div style={bigEmoji}>{emoji}</div>
 
         {/* Заголовок */}
-        <div style={victoryTitle}>ПОБЕДА!</div>
+        <div style={victoryTitle}>{t.gameResult.win.toUpperCase()}</div>
 
         {/* Имя соперника */}
         {opponentName && (
           <div style={opponentText}>
-            Вы победили {opponentName}
+            {t.game.youWon} {opponentName}
           </div>
         )}
 
