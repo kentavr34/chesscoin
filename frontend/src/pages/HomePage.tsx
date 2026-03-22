@@ -84,12 +84,12 @@ const OnboardingTour: React.FC<{ onDone: () => void }> = ({ onDone }) => {
           ))}
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
-          {step > 0 && <button onClick={() => setStep(s => s - 1)} style={{ flex: 1, padding: '12px 0', background: 'var(--bg-card, #1C2030)', color: 'var(--text-secondary, #8B92A8)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>← Назад</button>}
+          {step > 0 && <button onClick={() => setStep(s => s - 1)} style={{ flex: 1, padding: '12px 0', background: 'var(--bg-card, #1C2030)', color: 'var(--text-secondary, #8B92A8)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>← {t.common.back}</button>}
           <button onClick={() => isLast ? onDone() : setStep(s => s + 1)} style={{ flex: 1, padding: '12px 0', background: 'linear-gradient(90deg,#7B61FF,#9B85FF)', color: '#fff', border: 'none', borderRadius: 14, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
             {isLast ? t.home.letsGo : t.home.next}
           </button>
         </div>
-        <button onClick={onDone} style={{ marginTop: 10, background: 'none', border: 'none', color: 'var(--text-muted, #4A5270)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}>Пропустить</button>
+        <button onClick={onDone} style={{ marginTop: 10, background: 'none', border: 'none', color: 'var(--text-muted, #4A5270)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}>{t.home.skip}</button>
       </div>
     </div>
   );

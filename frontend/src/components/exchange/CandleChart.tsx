@@ -5,6 +5,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useEffect, useRef } from 'react';
 import type { PriceCandle } from '@/api';
+import { useT } from '@/i18n/useT';
 
 interface CandleChartProps {
   candles: PriceCandle[];
@@ -13,6 +14,7 @@ interface CandleChartProps {
 }
 
 export const CandleChart: React.FC<CandleChartProps> = ({ candles, up, height = 80 }) => {
+  const t = useT();
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef     = useRef<any>(null);
   const seriesRef    = useRef<any>(null);
@@ -96,7 +98,7 @@ export const CandleChart: React.FC<CandleChartProps> = ({ candles, up, height = 
   if (candles.length < 2) {
     return (
       <div style={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted, #4A5270)', fontSize: 11 }}>
-        Нет данных для графика
+        {t.exchange.noChartData}
       </div>
     );
   }

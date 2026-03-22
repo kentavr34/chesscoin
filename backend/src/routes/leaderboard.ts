@@ -20,6 +20,19 @@ router.get("/", authMiddleware, async (req: Request, res: Response) => {
 
     const userId = (req as AuthRequest).userId;
 
+    // Fetch current user's elo once — used for rank calculation
+    const currentUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { elo: true },
+    });
+    const myElo = currentUser?.elo ?? 0;
+
+    // User's global rank (always fresh, user-specific)
+    const myRank =
+      (await prisma.user.count({
+        where: { isBanned: false, isBot: false, elo: { gt: myElo } },
+      })) + 1;
+
     // Фильтр по периоду — через транзакции (приближение)
     let periodFilter: Record<string, unknown> = {};
     if (period === "week") {
@@ -52,15 +65,41 @@ router.get("/", authMiddleware, async (req: Request, res: Response) => {
       const cached = await redis.get(cacheKey);
       if (cached) {
         const parsed = JSON.parse(cached);
-        // myRank is always fresh (user-specific)
-        const myElo = (await prisma.user.findUnique({ where: { id: userId }, select: { elo: true } }))?.elo ?? 0;
-        const myRank = await prisma.user.count({ where: { isBanned: false, isBot: false, elo: { gt: myElo } } });
-        return res.json({ ...parsed, myRank: myRank + 1 });
+        return res.json({ ...parsed, myRank });
       }
     }
 
-    const [users, total, myRank] = await Promise.all([
-      prisma.user.findMany({
+    // For large offsets, use cursor-based pagination to avoid slow SKIP scans.
+    // We first grab the ID at `offset` position, then fetch from that cursor.
+    let users;
+    if (offset > 500) {
+      // Get the cursor row: the single row at `offset` position
+      const cursorRows = await prisma.user.findMany({
+        where: where as any,
+        orderBy: { [sort]: "desc" },
+        take: 1,
+        skip: offset,
+        select: { id: true },
+      });
+
+      if (cursorRows.length > 0) {
+        users = await prisma.user.findMany({
+          where: where as any,
+          orderBy: { [sort]: "desc" },
+          take: limit,
+          cursor: { id: cursorRows[0].id },
+          select: {
+            id: true, firstName: true, lastName: true, username: true,
+            avatar: true, avatarGradient: true,
+            elo: true, league: true, balance: true,
+            isMonthlyChampion: true,
+          },
+        });
+      } else {
+        users = [];
+      }
+    } else {
+      users = await prisma.user.findMany({
         where: where as any,
         orderBy: { [sort]: "desc" },
         take: limit,
@@ -71,20 +110,14 @@ router.get("/", authMiddleware, async (req: Request, res: Response) => {
           elo: true, league: true, balance: true,
           isMonthlyChampion: true,
         },
-      }),
-      prisma.user.count({ where: where as any }),
-      // Позиция текущего пользователя
-      prisma.user.count({
-        where: {
-          isBanned: false, isBot: false,
-          elo: { gt: (await prisma.user.findUnique({ where: { id: userId }, select: { elo: true } }))?.elo ?? 0 },
-        },
-      }),
-    ]);
+      });
+    }
+
+    const total = await prisma.user.count({ where: where as any });
 
     const payload = {
       total,
-      myRank: myRank + 1,
+      myRank,
       users: users.map(u => ({ ...u, balance: u.balance.toString() })),
     };
 

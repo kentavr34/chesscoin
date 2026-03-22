@@ -18,6 +18,7 @@ import { fmtBalance } from '@/utils/format';
 import type { User } from '@/types';
 import { sendTonPayment } from '@/lib/tonconnect';
 import { createChart, IChartApi, ColorType, LineStyle, type Time } from 'lightweight-charts';
+import { useT } from '@/i18n/useT';
 
 interface ExchangeTabProps {
   user: User | null;
@@ -35,6 +36,7 @@ const PERIODS = [
 
 // ── CandleChart (E14: TradingView lightweight-charts) ─────────
 const CandleChart: React.FC<{ candles: PriceCandle[]; up: boolean; height?: number }> = ({ candles, up, height = 120 }) => {
+  const t = useT();
   const containerRef = React.useRef<HTMLDivElement>(null);
   const chartRef     = React.useRef<IChartApi | null>(null);
 
@@ -100,7 +102,7 @@ const CandleChart: React.FC<{ candles: PriceCandle[]; up: boolean; height?: numb
     <div ref={containerRef} style={{ width: '100%', height, borderRadius: 8, overflow: 'hidden' }}>
       {candles.length < 2 && (
         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted, #4A5270)', fontSize: 11, pointerEvents: 'none' }}>
-          Нет данных за этот период
+          {t.exchange.noDataForPeriod}
         </div>
       )}
     </div>
@@ -153,6 +155,7 @@ const CreateOrderModal: React.FC<{
   onCreated: () => void;
   showToast: (m: string) => void;
 }> = ({ userBalance, onClose, onCreated, showToast }) => {
+  const t = useT();
   const maxCoins = Math.min(Number(BigInt(userBalance)), 100_000_000);
   const [amount, setAmount] = useState(Math.max(10_000, Math.min(100_000, maxCoins)));
   const [price, setPrice]   = useState(0.001); // TON за 1M ᚙ
@@ -164,16 +167,16 @@ const CreateOrderModal: React.FC<{
   const QUICK = [10_000, 100_000, 1_000_000, 10_000_000].filter(v => v <= maxCoins);
 
   const handleCreate = async () => {
-    if (amount < 10_000) return showToast('Минимум 10 000 ᚙ');
-    if (price < MIN_PRICE) return showToast(`Минимальная цена ${MIN_PRICE} TON/1M`);
+    if (amount < 10_000) return showToast(t.exchange.minCoins);
+    if (price < MIN_PRICE) return showToast(t.exchange.minPrice(MIN_PRICE));
     setLoading(true);
     try {
       await exchangeApi.createOrder(String(amount), price);
-      showToast('✅ Ордер выставлен! Монеты заморожены.');
+      showToast(t.exchange.orderCreated);
       onCreated();
       onClose();
     } catch (e: unknown) {
-      showToast((e as Error).message ?? 'Ошибка создания ордера');
+      showToast((e as Error).message ?? t.exchange.orderCreateError);
     } finally {
       setLoading(false);
     }
@@ -245,6 +248,7 @@ const ExecuteOrderModal: React.FC<{
   showToast: (m: string) => void;
   onUserRefresh: () => void;
 }> = ({ order, buyerWallet, onClose, onExecuted, showToast, onUserRefresh }) => {
+  const t = useT();
   const [step, setStep] = useState<'confirm' | 'paying' | 'verifying' | 'done' | 'error'>('confirm');
   const [errMsg, setErrMsg] = useState('');
 
@@ -329,35 +333,35 @@ const ExecuteOrderModal: React.FC<{
 
         {step === 'paying' && (<>
           <div style={{ fontSize: 44, marginBottom: 16 }}>⏳</div>
-          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>Ожидаем подтверждение</div>
-          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 8 }}>Подтверди транзакцию в TON кошельке</div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>{t.exchange.awaitingConfirmation}</div>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 8 }}>{t.exchange.confirmInWallet}</div>
         </>)}
 
         {step === 'verifying' && (<>
           <div style={{ fontSize: 44, marginBottom: 16 }}>🔍</div>
-          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>Верифицируем транзакцию</div>
-          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 8 }}>Проверяем блокчейн...</div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>{t.exchange.verifying}</div>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 8 }}>{t.exchange.checkingBlockchain}</div>
         </>)}
 
         {step === 'done' && (<>
           <div style={{ fontSize: 56, marginBottom: 12 }}>✅</div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: '#00D68F', marginBottom: 8 }}>Успешно!</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: '#00D68F', marginBottom: 8 }}>{t.common.success}!</div>
           <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 20 }}>
-            {fmtBalance(order.amountCoins)} ᚙ зачислены на баланс
+            {t.exchange.credited(fmtBalance(order.amountCoins))}
           </div>
-          <button onClick={onClose} style={{ width: '100%', padding: '14px', background: 'rgba(0,214,143,0.15)', color: '#00D68F', border: '1px solid rgba(0,214,143,0.3)', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Закрыть</button>
+          <button onClick={onClose} style={{ width: '100%', padding: '14px', background: 'rgba(0,214,143,0.15)', color: '#00D68F', border: '1px solid rgba(0,214,143,0.3)', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.common.close}</button>
         </>)}
 
         {step === 'error' && (<>
           <div style={{ fontSize: 44, marginBottom: 12 }}>⚠️</div>
-          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--red, #FF4D6A)', marginBottom: 8 }}>Операция прервана</div>
+          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--red, #FF4D6A)', marginBottom: 8 }}>{t.exchange.operationAborted}</div>
           <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 20 }}>
             {errMsg}<br />
-            <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>Монеты не списались с баланса.</span>
+            <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>{t.exchange.coinsNotCharged}</span>
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
-            <button onClick={onClose} style={{ flex: 1, padding: '13px', background: 'rgba(255,255,255,0.06)', color: 'var(--text-secondary)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Закрыть</button>
-            <button onClick={handlePay} style={{ flex: 1, padding: '13px', background: 'rgba(0,152,234,0.12)', color: '#0098EA', border: '1px solid rgba(0,152,234,0.25)', borderRadius: 14, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Повторить</button>
+            <button onClick={onClose} style={{ flex: 1, padding: '13px', background: 'rgba(255,255,255,0.06)', color: 'var(--text-secondary)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.common.close}</button>
+            <button onClick={handlePay} style={{ flex: 1, padding: '13px', background: 'rgba(0,152,234,0.12)', color: '#0098EA', border: '1px solid rgba(0,152,234,0.25)', borderRadius: 14, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.exchange.retry}</button>
           </div>
         </>)}
       </div>
@@ -372,6 +376,7 @@ const CreateBuyOrderModal: React.FC<{
   onCreated: () => void;
   showToast: (m: string) => void;
 }> = ({ onClose, onCreated, showToast }) => {
+  const t = useT();
   const [amount, setAmount] = useState(100_000);
   const [price, setPrice]   = useState(0.001);
   const [loading, setLoading] = useState(false);
@@ -379,15 +384,15 @@ const CreateBuyOrderModal: React.FC<{
   const QUICK = [10_000, 100_000, 1_000_000, 10_000_000];
 
   const handleCreate = async () => {
-    if (amount < 10_000) return showToast('Минимум 10 000 ᚙ');
-    if (price < MIN_PRICE) return showToast(`Минимальная цена ${MIN_PRICE} TON/1M`);
+    if (amount < 10_000) return showToast(t.exchange.minCoins);
+    if (price < MIN_PRICE) return showToast(t.exchange.minPrice(MIN_PRICE));
     setLoading(true);
     try {
       await exchangeApi.createBuyOrder(String(amount), price);
-      showToast('✅ BUY-ордер выставлен! Ждём продавца.');
+      showToast(t.exchange.buyOrderCreated);
       onCreated();
     } catch (e: unknown) {
-      showToast((e as Error).message ?? 'Ошибка');
+      showToast((e as Error).message ?? t.common.error);
     } finally { setLoading(false); }
   };
 
@@ -442,6 +447,7 @@ const FillBuyOrderModal: React.FC<{
   onFilled: () => void;
   showToast: (m: string) => void;
 }> = ({ order, sellerWallet, userBalance, onClose, onFilled, showToast }) => {
+  const t = useT();
   const [step, setStep] = useState<'confirm'|'paying'|'verifying'|'done'|'error'>('confirm');
   const [errMsg, setErrMsg] = useState('');
   const balance = BigInt(userBalance);
@@ -489,16 +495,16 @@ const FillBuyOrderModal: React.FC<{
             ))}
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
-            <button onClick={onClose} style={{ flex: 1, padding: '13px', background: 'rgba(255,255,255,0.06)', color: 'var(--text-secondary)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Отмена</button>
+            <button onClick={onClose} style={{ flex: 1, padding: '13px', background: 'rgba(255,255,255,0.06)', color: 'var(--text-secondary)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.common.cancel}</button>
             <button onClick={handleFill} disabled={!hasEnough} style={{ flex: 1, padding: '13px', background: 'rgba(0,214,143,0.15)', color: '#00D68F', border: '1px solid rgba(0,214,143,0.3)', borderRadius: 14, fontSize: 13, fontWeight: 800, cursor: hasEnough ? 'pointer' : 'not-allowed', fontFamily: 'inherit', opacity: hasEnough ? 1 : 0.5 }}>
-              📤 Продать за {order.totalTon.toFixed(4)} TON
+              {t.exchange.sellFor(order.totalTon.toFixed(4))}
             </button>
           </div>
         </>)}
-        {step === 'paying' && (<><div style={{ fontSize: 44, marginBottom: 12 }}>⏳</div><div style={{ fontSize: 14, color: 'var(--text-primary)' }}>Покупатель переводит TON...</div></>)}
-        {step === 'verifying' && (<><div style={{ fontSize: 44, marginBottom: 12 }}>🔍</div><div style={{ fontSize: 14, color: 'var(--text-primary)' }}>Верифицируем транзакцию...</div></>)}
-        {step === 'done' && (<><div style={{ fontSize: 56, marginBottom: 12 }}>✅</div><div style={{ fontSize: 15, fontWeight: 800, color: '#00D68F', marginBottom: 8 }}>Продажа успешна!</div><div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 16 }}>{Number(orderCoins).toLocaleString()} ᚙ переданы покупателю</div><button onClick={onClose} style={{ width: '100%', padding: '13px', background: 'rgba(0,214,143,0.12)', color: '#00D68F', border: '1px solid rgba(0,214,143,0.25)', borderRadius: 14, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Закрыть</button></>)}
-        {step === 'error' && (<><div style={{ fontSize: 44, marginBottom: 12 }}>⚠️</div><div style={{ fontSize: 14, fontWeight: 800, color: 'var(--red,#FF4D6A)', marginBottom: 8 }}>Ошибка</div><div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 16 }}>{errMsg}</div><div style={{ display: 'flex', gap: 10 }}><button onClick={onClose} style={{ flex: 1, padding: '12px', background: 'rgba(255,255,255,0.06)', color: 'var(--text-secondary)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Закрыть</button><button onClick={handleFill} style={{ flex: 1, padding: '12px', background: 'rgba(0,214,143,0.1)', color: '#00D68F', border: '1px solid rgba(0,214,143,0.2)', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Повторить</button></div></>)}
+        {step === 'paying' && (<><div style={{ fontSize: 44, marginBottom: 12 }}>⏳</div><div style={{ fontSize: 14, color: 'var(--text-primary)' }}>{t.exchange.buyerPaying}</div></>)}
+        {step === 'verifying' && (<><div style={{ fontSize: 44, marginBottom: 12 }}>🔍</div><div style={{ fontSize: 14, color: 'var(--text-primary)' }}>{t.exchange.verifying}...</div></>)}
+        {step === 'done' && (<><div style={{ fontSize: 56, marginBottom: 12 }}>✅</div><div style={{ fontSize: 15, fontWeight: 800, color: '#00D68F', marginBottom: 8 }}>{t.exchange.saleSuccess}</div><div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 16 }}>{t.exchange.transferred(Number(orderCoins).toLocaleString())}</div><button onClick={onClose} style={{ width: '100%', padding: '13px', background: 'rgba(0,214,143,0.12)', color: '#00D68F', border: '1px solid rgba(0,214,143,0.25)', borderRadius: 14, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.common.close}</button></>)}
+        {step === 'error' && (<><div style={{ fontSize: 44, marginBottom: 12 }}>⚠️</div><div style={{ fontSize: 14, fontWeight: 800, color: 'var(--red,#FF4D6A)', marginBottom: 8 }}>{t.common.error}</div><div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 16 }}>{errMsg}</div><div style={{ display: 'flex', gap: 10 }}><button onClick={onClose} style={{ flex: 1, padding: '12px', background: 'rgba(255,255,255,0.06)', color: 'var(--text-secondary)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.common.close}</button><button onClick={handleFill} style={{ flex: 1, padding: '12px', background: 'rgba(0,214,143,0.1)', color: '#00D68F', border: '1px solid rgba(0,214,143,0.2)', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.exchange.retry}</button></div></>)}
       </div>
     </div>
   );
@@ -506,6 +512,7 @@ const FillBuyOrderModal: React.FC<{
 
 // ── Главный компонент ExchangeTab (E7) ────────────────────────
 export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUserRefresh }) => {
+  const t = useT();
   const hasWallet = !!user?.tonWalletAddress;
   const [period, setPeriod]           = useState<24|168|720>(24);
   const [priceData, setPriceData]     = useState<{ currentPrice: number; change24h: number; candles: PriceCandle[]; volume24h: number } | null>(null);
@@ -578,11 +585,11 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
   const handleCancelOrder = async (orderId: string) => {
     try {
       await exchangeApi.cancelOrder(orderId);
-      showToast('✅ Ордер отменён, монеты возвращены');
+      showToast(t.exchange.orderCancelled);
       loadOrders();
       onUserRefresh();
     } catch (e: unknown) {
-      showToast((e as Error).message ?? 'Ошибка отмены');
+      showToast((e as Error).message ?? t.exchange.cancelError);
     }
   };
 

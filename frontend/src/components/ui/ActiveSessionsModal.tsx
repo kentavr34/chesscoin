@@ -16,21 +16,21 @@ interface ActiveSessionsModalProps {
   onClose: () => void;
 }
 
-const TYPE_LABEL: Record<string, string> = {
-  BOT:      '🤖 Джарвис',
-  BATTLE:   '⚔️ Батл',
-  FRIENDLY: '🤝 Дружеский',
-};
-
-const STATUS_LABEL: Record<string, { text: string; color: string }> = {
-  IN_PROGRESS:          { text: 'Идёт игра',       color: 'var(--green, #00D68F)' },
-  WAITING_FOR_OPPONENT: { text: 'Ожидание соперника', color: 'var(--accent, #F5C842)' },
-};
-
 export const ActiveSessionsModal: React.FC<ActiveSessionsModalProps> = ({
   sessions, onClose }) => {
   const t = useT();
   const navigate = useNavigate();
+
+  const TYPE_LABEL: Record<string, string> = {
+    BOT:      t.activeSessions.typeBot,
+    BATTLE:   t.activeSessions.typeBattle,
+    FRIENDLY: t.activeSessions.typeFriendly,
+  };
+
+  const STATUS_LABEL: Record<string, { text: string; color: string }> = {
+    IN_PROGRESS:          { text: t.activeSessions.statusInProgress, color: 'var(--green, #00D68F)' },
+    WAITING_FOR_OPPONENT: { text: t.activeSessions.statusWaiting,    color: 'var(--accent, #F5C842)' },
+  };
 
   const handleSelect = (session: GameSession) => {
     onClose();
@@ -63,7 +63,7 @@ export const ActiveSessionsModal: React.FC<ActiveSessionsModalProps> = ({
         {/* Заголовок */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text-primary, #F0F2F8)' }}>
-            ⚔️ Активные игры
+            ⚔️ {t.activeSessions.title}
           </div>
           <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)' }}>
             {sessions.length} / 3
@@ -125,7 +125,7 @@ export const ActiveSessionsModal: React.FC<ActiveSessionsModalProps> = ({
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{ fontSize: 11, color: statusInfo.color, fontWeight: 600 }}>
-                      {myTurn ? '● Твой ход!' : statusInfo.text}
+                      {myTurn ? `● ${t.activeSessions.myTurn}` : statusInfo.text}
                     </div>
                     {/* MINOR-04 fix: явная проверка != null перед BigInt */}
                     {session.type === 'BATTLE' && session.bet != null && BigInt(session.bet) > 0n && (
@@ -157,7 +157,7 @@ export const ActiveSessionsModal: React.FC<ActiveSessionsModalProps> = ({
             fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
           }}
         >
-          Закрыть
+          {t.common.close}
         </button>
       </div>
     </div>

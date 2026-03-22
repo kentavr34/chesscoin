@@ -26,7 +26,7 @@ export const AttemptsModal: React.FC<Props> = ({ user, onClose }) => {
       setUser(updated);
       onClose();
     } catch (err: unknown) {
-      window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text: (err instanceof Error ? err.message : String(err)) ?? 'Ошибка', type: 'error' } }));
+      window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text: (err instanceof Error ? err.message : String(err)) ?? t.common.error, type: 'error' } }));
     } finally {
       setLoading(false);
     }
@@ -55,7 +55,7 @@ export const AttemptsModal: React.FC<Props> = ({ user, onClose }) => {
           {t.attempts.current(user.attempts, user.maxAttempts)}
         </p>
         <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted, #4A5270)', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 8 }}>
-          Количество
+          {t.attempts.qty}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, margin: '12px 0' }}>
           <button onClick={() => setCount(Math.max(1, count - 1))} style={stepBtn('var(--bg-input, #232840)', 'var(--text-secondary, #8B92A8)')}>−</button>

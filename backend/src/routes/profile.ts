@@ -156,10 +156,14 @@ router.get("/transactions", authMiddleware, async (req: Request, res: Response) 
   }
 });
 
-// GET /profile/referrals — реферальная информация
+// GET /profile/referrals — реферальная информация (cursor-based pagination)
 router.get("/referrals", authMiddleware, async (req: Request, res: Response) => {
   try {
     const userId = (req as AuthRequest).userId;
+
+    const limit = Math.min(Math.max(parseInt(req.query.limit as string) || 20, 1), 100);
+    const cursor = req.query.cursor as string | undefined;
+    const sort = (req.query.sort as string) === "coins" ? "coins" : "time";
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -167,32 +171,80 @@ router.get("/referrals", authMiddleware, async (req: Request, res: Response) => 
         telegramId: true,
         referrerIncome: true,
         subReferrerIncome: true,
-        referrals: {
-          select: {
-            id: true, firstName: true, lastName: true,
-            avatar: true, avatarGradient: true,
-            referralActivated: true, elo: true,
-            createdAt: true,
-          },
-          orderBy: { createdAt: "desc" },
-        },
       },
     });
 
     if (!user) return res.status(404).json({ error: "Not found" });
 
+    // Build cursor-based where/orderBy for referrals query
+    const baseWhere: Record<string, unknown> = { referrerId: userId };
+
+    if (sort === "coins") {
+      // Composite cursor: `${balance}_${id}`
+      if (cursor) {
+        const sepIdx = cursor.lastIndexOf("_");
+        const cursorBalance = BigInt(cursor.substring(0, sepIdx));
+        const cursorId = cursor.substring(sepIdx + 1);
+        baseWhere.OR = [
+          { balance: { lt: cursorBalance } },
+          { balance: cursorBalance, id: { gt: cursorId } },
+        ];
+      }
+    } else {
+      // sort by time — cursor is ISO date string
+      if (cursor) {
+        baseWhere.createdAt = { lt: new Date(cursor) };
+      }
+    }
+
+    const orderBy =
+      sort === "coins"
+        ? [{ balance: "desc" as const }, { id: "asc" as const }]
+        : [{ createdAt: "desc" as const }];
+
+    const referrals = await prisma.user.findMany({
+      where: baseWhere,
+      select: {
+        id: true, firstName: true, lastName: true,
+        avatar: true, avatarGradient: true,
+        referralActivated: true, elo: true,
+        balance: true, createdAt: true,
+      },
+      orderBy,
+      take: limit + 1,
+    });
+
+    const hasMore = referrals.length > limit;
+    if (hasMore) referrals.pop();
+
+    // Compute next cursor
+    let nextCursor: string | null = null;
+    if (hasMore && referrals.length > 0) {
+      const last = referrals[referrals.length - 1];
+      nextCursor =
+        sort === "coins"
+          ? `${last.balance.toString()}_${last.id}`
+          : last.createdAt.toISOString();
+    }
+
+    // Aggregate counts (lightweight — count only, no data)
+    const [totalCount, activeCount] = await Promise.all([
+      prisma.user.count({ where: { referrerId: userId } }),
+      prisma.user.count({ where: { referrerId: userId, referralActivated: true } }),
+    ]);
+
     const totalIncome = user.referrerIncome + user.subReferrerIncome;
-    // Активные = сыграли хотя бы одну партию
-    const activeCount = user.referrals.filter((r) => r.referralActivated).length;
 
     res.json({
-      total: user.referrals.length,
+      total: totalCount,
       active: activeCount,
       totalIncome: totalIncome.toString(),
       level1Income: user.referrerIncome.toString(),
       level2Income: user.subReferrerIncome.toString(),
       refLink: `https://t.me/chessgamecoin_bot?start=ref_${user.telegramId}`,
-      referrals: user.referrals,
+      referrals,
+      cursor: nextCursor,
+      hasMore,
     });
   } catch (err: unknown) {
     res.status(500).json({ error: (err instanceof Error ? err.message : String(err)) });

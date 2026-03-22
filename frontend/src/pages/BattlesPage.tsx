@@ -96,7 +96,7 @@ export const BattlesPage: React.FC = () => {
                   <div style={bhotStyle}>{t.battles.topStake}</div>
                 )}
                 <div style={{ display: 'flex', alignItems: 'center', padding: 14, gap: 8 }}>
-                  <BPlayer user={mySide?.player} name={mySide?.player.firstName ?? 'Вы'} />
+                  <BPlayer user={mySide?.player} name={mySide?.player.firstName ?? t.common.me} />
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                     <span style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-muted, #4A5270)', letterSpacing: '.1em' }}>VS</span>
                     <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 20, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>
@@ -132,7 +132,7 @@ export const BattlesPage: React.FC = () => {
                   }
                 }}
                 style={{ ...watchBtn, color: '#9B85FF', borderColor: 'rgba(123,97,255,0.3)', background: 'rgba(123,97,255,0.08)' }}
-              >💸 Донат</button>
+              >💸 {t.battles.spectatorDonate}</button>
               <button style={watchBtn}>→</button>
                 </div>
               </div>
@@ -146,7 +146,7 @@ export const BattlesPage: React.FC = () => {
           <div style={secStyle}>{/* waiting section */}</div>
           {waitingSessions.length === 0 && (
             <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', fontSize: 13, padding: '32px 0' }}>
-              Нет ожидающих батлов
+              {t.battles.noWaiting}
             </div>
           )}
           {waitingSessions.map((battle) => (
@@ -157,7 +157,7 @@ export const BattlesPage: React.FC = () => {
                   {battle.creator?.firstName ?? t.battles.creator}
                 </div>
                 <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 3 }}>
-                  {battle.duration / 60} мин · ELO {battle.creator?.elo ?? '?'}
+                  {battle.duration / 60} min · ELO {battle.creator?.elo ?? '?'}
                 </div>
                 <div style={{ marginTop: 6, display: 'flex', gap: 6, alignItems: 'center' }}>
                   <span style={tagGold}>{fmtBalance(battle.bet)} ᚙ</span>
@@ -170,7 +170,7 @@ export const BattlesPage: React.FC = () => {
               </div>
               {battle.creator && user && battle.creator.elo !== user.elo && (
                 <button onClick={() => handleJoin(battle)} style={acceptBtn}>
-                  Принять
+                  {t.battles.accept}
                 </button>
               )}
             </div>
@@ -214,12 +214,12 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [loading, setLoading] = useState(false);
 
   const DURATIONS = [
-    { label: '1 мин', value: 60, icon: '⚡' },
-    { label: '3 мин', value: 180, icon: '🔥' },
-    { label: '5 мин', value: 300, icon: '♟' },
-    { label: '10 мин', value: 600, icon: '🎯' },
-    { label: '20 мин', value: 1200, icon: '🏆' },
-    { label: '30 мин', value: 1800, icon: '👑' },
+    { label: t.battles.duration1m, value: 60, icon: '⚡' },
+    { label: t.battles.duration3m, value: 180, icon: '🔥' },
+    { label: t.battles.duration5m, value: 300, icon: '♟' },
+    { label: t.battles.duration10m, value: 600, icon: '🎯' },
+    { label: t.battles.duration20m, value: 1200, icon: '🏆' },
+    { label: t.battles.duration30m, value: 1800, icon: '👑' },
   ];
 
   const QUICK_BETS = [10000, 50000, 100000, 500000];
@@ -243,16 +243,16 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         upsertSession(res.session);
         if (!isPublic && res.session.code) {
           const myRef = user?.referralCode ?? user?.telegramId;
-          const shareText = `⚔️ Вызываю тебя на шахматный батл!\n💰 Ставка: ${fmtBalance(String(bet))} ᚙ\n\nПрими вызов:`;
+          const shareText = t.battles.challengeShare(fmtBalance(String(bet)));
           const botUrl = `https://t.me/chessgamecoin_bot?start=battle_${res.session.code}_ref_${myRef}`;
           try {
             window.Telegram?.WebApp?.openTelegramLink?.(
               `https://t.me/share/url?url=${encodeURIComponent(botUrl)}&text=${encodeURIComponent(shareText)}`
             );
           } catch {}
-          showToast('⚔️ Приватный батл создан! Отправь ссылку другу', 'info');
+          showToast(t.battles.privateBattleCreated, 'info');
         } else {
-          showToast('⚔️ Батл создан! Ожидаем соперника...', 'info');
+          showToast(t.battles.battleCreated, 'info');
         }
         onClose();
       } else {
@@ -271,7 +271,7 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         </div>
 
         {/* Ставка */}
-        <div style={bmSectionLbl}>Ставка</div>
+        <div style={bmSectionLbl}>{t.battles.betLabel}</div>
         <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 30, fontWeight: 800, color: 'var(--accent, #F5C842)', textAlign: 'center', marginBottom: 12 }}>
           {fmtBalance(bet)} ᚙ
         </div>
@@ -310,12 +310,12 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           </>
         ) : (
           <div style={{ textAlign: 'center', color: 'var(--red, #FF4D6A)', fontSize: 13, padding: '8px 0 20px', marginBottom: 4 }}>
-            Нужно минимум {fmtBalance(MIN_BET)} ᚙ для батла
+            {t.battles.needMin(fmtBalance(MIN_BET))}
           </div>
         )}
 
         {/* Цвет — 3 колонки как в GameSetupModal */}
-        <div style={bmSectionLbl}>Выбор цвета</div>
+        <div style={bmSectionLbl}>{t.battles.colorChoice}</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 20 }}>
           {(['random', 'white', 'black'] as const).map((c) => (
             <button key={c} onClick={() => setColor(c)} style={bmColorBtn(color === c)}>
@@ -330,7 +330,7 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         </div>
 
         {/* Время — 3×2 сетка как в GameSetupModal */}
-        <div style={bmSectionLbl}>Контроль времени</div>
+        <div style={bmSectionLbl}>{t.battles.timeControl}</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 20 }}>
           {DURATIONS.map((d) => (
             <button key={d.value} onClick={() => setDuration(d.value)} style={bmTimeBtn(duration === d.value)}>

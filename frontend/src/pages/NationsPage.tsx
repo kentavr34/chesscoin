@@ -453,6 +453,7 @@ export const NationsPage: React.FC = () => {
 
 // ─── Sub-modals ───────────────────────────────────────────────────────────────
 const ContributeModal: React.FC<{ clanName: string; clanFlag: string; onClose: () => void; onSuccess: () => void }> = ({ clanName, clanFlag, onClose, onSuccess }) => {
+  const t = useT();
   const [amount, setAmount] = useState('10000');
   const [loading, setLoading] = useState(false);
   const handleSubmit = async () => {
@@ -460,7 +461,7 @@ const ContributeModal: React.FC<{ clanName: string; clanFlag: string; onClose: (
     try {
       await nationsApi.contribute(amount);
       onSuccess();
-    } catch (e: unknown) { showToast((e as Error).message ?? 'Ошибка'); }
+    } catch (e: unknown) { showToast((e as Error).message ?? t.common.error); }
     finally { setLoading(false); }
   };
   return (
@@ -496,6 +497,7 @@ const ContributeModal: React.FC<{ clanName: string; clanFlag: string; onClose: (
 };
 
 const WarChallengeModal: React.FC<{ nations: Nation[]; onClose: () => void; onSuccess: () => void }> = ({ nations, onClose, onSuccess }) => {
+  const t = useT();
   const [targetId, setTargetId] = useState('');
   const [duration, setDuration] = useState(86400);
   const [loading, setLoading] = useState(false);
@@ -506,7 +508,7 @@ const WarChallengeModal: React.FC<{ nations: Nation[]; onClose: () => void; onSu
     try {
       await nationsApi.challengeWar(targetId, duration);
       onSuccess();
-    } catch (e: unknown) { showToast((e as Error).message ?? 'Ошибка'); }
+    } catch (e: unknown) { showToast((e as Error).message ?? t.common.error); }
     finally { setLoading(false); }
   };
   return (
@@ -543,6 +545,7 @@ const WarChallengeModal: React.FC<{ nations: Nation[]; onClose: () => void; onSu
 };
 
 const JoinClanModal: React.FC<{ clanId: string; clan?: Nation; onClose: () => void; onSuccess: () => void }> = ({ clanId, clan, onClose, onSuccess }) => {
+  const t = useT();
   const [contribution, setContribution] = useState('0');
   const [loading, setLoading] = useState(false);
   const handleSubmit = async () => {
@@ -551,7 +554,7 @@ const JoinClanModal: React.FC<{ clanId: string; clan?: Nation; onClose: () => vo
       const res = await nationsApi.join(clanId, Number(contribution));
       if (res.pending) showToast('Ваша заявка отправлена на рассмотрение лидера клана', 'info');
       onSuccess();
-    } catch (e: unknown) { showToast((e as Error).message ?? 'Ошибка'); }
+    } catch (e: unknown) { showToast((e as Error).message ?? t.common.error); }
     finally { setLoading(false); }
   };
   return (
@@ -592,6 +595,7 @@ const BattleChallengeModal: React.FC<{
   onClose: () => void;
   onSuccess: () => void;
 }> = ({ myClan, nations, onClose, onSuccess }) => {
+  const t = useT();
   const [targetId, setTargetId]   = useState('');
   const [duration, setDuration]   = useState(86400);
   const [bet, setBet]             = useState('10000');
@@ -610,7 +614,7 @@ const BattleChallengeModal: React.FC<{
     try {
       await clanBattlesApi.challenge(targetId, duration, bet);
       onSuccess();
-    } catch (e: unknown) { showToast((e as Error).message ?? 'Ошибка'); }
+    } catch (e: unknown) { showToast((e as Error).message ?? t.common.error); }
     finally { setLoading(false); }
   };
 
@@ -671,6 +675,7 @@ const JoinBattleModal: React.FC<{
   onClose: () => void;
   onSuccess: () => void;
 }> = ({ battle, myClanId, onClose, onSuccess }) => {
+  const t = useT();
   const [bet, setBet]     = useState('10000');
   const [loading, setLoading] = useState(false);
 
@@ -681,7 +686,7 @@ const JoinBattleModal: React.FC<{
     try {
       await clanBattlesApi.join(battle.id, bet);
       onSuccess();
-    } catch (e: unknown) { showToast((e as Error).message ?? 'Ошибка'); }
+    } catch (e: unknown) { showToast((e as Error).message ?? t.common.error); }
     finally { setLoading(false); }
   };
 

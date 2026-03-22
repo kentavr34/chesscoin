@@ -5,6 +5,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { warsApi } from '@/api';
 import { useUserStore } from '@/store/useUserStore';
 import { fmtBalance } from '@/utils/format';
+import { useT } from '@/i18n/useT';
 
 const toast = (text: string, type: 'error' | 'success' | 'info' = 'error') =>
   window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text, type } }));
@@ -24,57 +25,51 @@ const WarCountdown: React.FC<{ initialSeconds: number; active: boolean }> = ({ i
 // ─────────────────────────────────────────────────────────────────────────────
 // WARSINTROMODAL
 // ─────────────────────────────────────────────────────────────────────────────
-const WarsIntroModal: React.FC<{ onClose: () => void }> = ({ onClose }) => (
-  <div style={overlayStyle} onClick={(e) => e.target === e.currentTarget && onClose()}>
-    <div style={{ ...modalStyle, padding: 24, maxWidth: 420, margin: 'auto', borderRadius: 24, bottom: 'auto', top: '10%' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-        <div style={{ fontSize: 22, fontFamily: "'Unbounded',sans-serif", fontWeight: 800, color: '#F5C842' }}>⚔️ Войны</div>
-        <button onClick={onClose} style={closeBtnStyle}>✕</button>
+const WarsIntroModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+  const t = useT();
+  return (
+    <div style={overlayStyle} onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div style={{ ...modalStyle, padding: 24, maxWidth: 420, margin: 'auto', borderRadius: 24, bottom: 'auto', top: '10%' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+          <div style={{ fontSize: 22, fontFamily: "'Unbounded',sans-serif", fontWeight: 800, color: '#F5C842' }}>{t.wars.warIntro.title}</div>
+          <button onClick={onClose} style={closeBtnStyle}>✕</button>
+        </div>
+        <div style={{ fontSize: 13, color: '#C8CDDF', lineHeight: 1.7 }} dangerouslySetInnerHTML={{ __html:
+          `<p style="margin-bottom:10px">${t.wars.warIntro.p1}</p>` +
+          `<p style="margin-bottom:10px">${t.wars.warIntro.p2}</p>` +
+          `<p style="margin-bottom:10px">${t.wars.warIntro.p3}</p>` +
+          `<p style="margin-bottom:10px">${t.wars.warIntro.p4}</p>` +
+          `<p>${t.wars.warIntro.p5}</p>`
+        }} />
+        <button onClick={onClose} style={{ ...goldBtnFull, marginTop: 20 }}>
+          {t.wars.warIntro.btn}
+        </button>
       </div>
-      <div style={{ fontSize: 13, color: '#C8CDDF', lineHeight: 1.7 }}>
-        <p style={{ marginBottom: 10 }}>
-          🌍 <b>Войны между странами</b> — вступи в любую страну и сражайся за её сборную!
-        </p>
-        <p style={{ marginBottom: 10 }}>
-          👑 <b>Главнокомандующий</b> — боец с наибольшим числом побед. Только он может объявить войну другой стране.
-        </p>
-        <p style={{ marginBottom: 10 }}>
-          ⚔️ <b>Во время войны</b> — вызывай бойцов противника на дуэль бесплатно. Каждая победа пополняет казну страны!
-        </p>
-        <p style={{ marginBottom: 10 }}>
-          🏆 <b>Победившая страна</b> получает призовой фонд, а её бойцы поднимаются в рейтинге.
-        </p>
-        <p>
-          🔄 <b>Трансферы разрешены</b> — можно сражаться за любимую страну, не только за родную!
-        </p>
-      </div>
-      <button onClick={onClose} style={{ ...goldBtnFull, marginTop: 20 }}>
-        Понятно, поехали! ⚔️
-      </button>
     </div>
-  </div>
-);
+  );
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DECLARE WAR MODAL
 // ─────────────────────────────────────────────────────────────────────────────
-const DURATIONS = [
-  { label: '1 час', value: 3600 },
-  { label: '12 часов', value: 43200 },
-  { label: '24 часа', value: 86400 },
-  { label: '7 дней', value: 604800 },
-];
+const WAR_DURATIONS_VALUES = [3600, 43200, 86400, 604800] as const;
 
 const DeclareWarModal: React.FC<{
   myCountryId: string;
   onClose: () => void;
   onDeclared: () => void;
 }> = ({ myCountryId, onClose, onDeclared }) => {
+  const t = useT();
   const [countries, setCountries] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<string | null>(null);
   const [duration, setDuration] = useState(86400);
   const [loading, setLoading] = useState(false);
+
+  const DURATIONS = WAR_DURATIONS_VALUES.map(v => ({
+    label: t.wars.declareModal.durations[String(v) as keyof typeof t.wars.declareModal.durations],
+    value: v,
+  }));
 
   useEffect(() => {
     warsApi.countries('alpha').then(r => setCountries(r.countries.filter((c: any) => c.id !== myCountryId)));
@@ -90,11 +85,11 @@ const DeclareWarModal: React.FC<{
     setLoading(true);
     try {
       await warsApi.declare(selected, duration);
-      toast('Война объявлена!', 'success');
+      toast(t.wars.warDeclared, 'success');
       onDeclared();
       onClose();
     } catch (e: any) {
-      toast(e.message ?? 'Ошибка');
+      toast(e.message ?? t.common.error);
     } finally {
       setLoading(false);
     }
@@ -105,12 +100,12 @@ const DeclareWarModal: React.FC<{
       <div style={modalStyle}>
         <div style={handleBar} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <div style={{ fontSize: 16, fontWeight: 700, color: '#F5C842' }}>⚔️ Объявить войну</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: '#F5C842' }}>⚔️ {t.wars.declareModal.title}</div>
           <button onClick={onClose} style={closeBtnStyle}>✕</button>
         </div>
 
         <input
-          placeholder="Поиск страны..."
+          placeholder={t.wars.declareModal.search}
           value={search}
           onChange={e => setSearch(e.target.value)}
           style={inputStyle}
@@ -131,7 +126,7 @@ const DeclareWarModal: React.FC<{
               <span style={{ fontSize: 22 }}>{c.flag}</span>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: '#F0F2F8' }}>{c.nameRu}</div>
-                <div style={{ fontSize: 10, color: '#A8B0C8' }}>Бойцов: {c.memberCount} • Побед: {c.wins}</div>
+                <div style={{ fontSize: 10, color: '#A8B0C8' }}>{t.wars.fighters(c.memberCount)} • {t.common.wins}: {c.wins}</div>
               </div>
               {selected === c.id && <span style={{ color: '#F5C842', fontSize: 16 }}>✓</span>}
             </div>
@@ -139,7 +134,7 @@ const DeclareWarModal: React.FC<{
         </div>
 
         <div style={{ fontSize: 11, color: '#A8B0C8', marginBottom: 8, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.05em' }}>
-          Длительность
+          {t.wars.declareModal.duration}
         </div>
         <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
           {DURATIONS.map(d => (
@@ -150,7 +145,7 @@ const DeclareWarModal: React.FC<{
         </div>
 
         <button onClick={handleDeclare} disabled={!selected || loading} style={{ ...goldBtnFull, opacity: !selected || loading ? 0.5 : 1 }}>
-          {loading ? '...' : '⚔️ Объявить войну'}
+          {loading ? t.wars.declareModal.declaring : t.wars.declareModal.btn}
         </button>
       </div>
     </div>
@@ -166,6 +161,7 @@ const CountryDetailModal: React.FC<{
   onClose: () => void;
   onJoined: () => void;
 }> = ({ countryId, activeWarId, onClose, onJoined }) => {
+  const t = useT();
   const navigate = useNavigate();
   const { user } = useUserStore();
   const [data, setData] = useState<{ country: any; members: any[]; isCommander: boolean } | null>(null);
@@ -183,11 +179,11 @@ const CountryDetailModal: React.FC<{
     setJoining(true);
     try {
       await warsApi.join(countryId);
-      toast('Вы вступили в страну!', 'success');
+      toast(t.wars.joined, 'success');
       onJoined();
       onClose();
     } catch (e: any) {
-      toast(e.message ?? 'Ошибка');
+      toast(e.message ?? t.common.error);
     } finally {
       setJoining(false);
     }
@@ -198,11 +194,11 @@ const CountryDetailModal: React.FC<{
     setDonating(true);
     try {
       await warsApi.leave(); // placeholder - should be contribute
-      toast('Донат отправлен!', 'success');
+      toast(t.wars.btnDonate, 'success');
       setDonateAmt('');
       warsApi.country(countryId).then(setData);
     } catch (e: any) {
-      toast(e.message ?? 'Ошибка');
+      toast(e.message ?? t.common.error);
     } finally {
       setDonating(false);
     }
@@ -212,11 +208,11 @@ const CountryDetailModal: React.FC<{
     setLeaving(true);
     try {
       await warsApi.leave();
-      toast('Вы покинули страну', 'success');
+      toast(t.wars.leaveCountry, 'success');
       onJoined();
       onClose();
     } catch (e: any) {
-      toast(e.message ?? 'Ошибка');
+      toast(e.message ?? t.common.error);
     } finally {
       setLeaving(false);
     }
@@ -224,17 +220,17 @@ const CountryDetailModal: React.FC<{
 
   const handleChallenge = async (opponentUserId: string) => {
     if (!activeWarId) {
-      toast('Нет активной войны с этой страной', 'info');
+      toast(t.wars.noActiveWar, 'info');
       return;
     }
     setChallenging(opponentUserId);
     try {
       const r = await warsApi.challenge(activeWarId, opponentUserId);
-      toast('Вызов отправлен!', 'success');
+      toast(t.wars.challengeSent, 'success');
       navigate(`/game/${r.sessionId}`);
       onClose();
     } catch (e: any) {
-      toast(e.message ?? 'Ошибка');
+      toast(e.message ?? t.common.error);
     } finally {
       setChallenging(null);
     }
@@ -365,6 +361,7 @@ const CountryDetailModal: React.FC<{
 // WAR DETAIL MODAL (просмотр партий войны)
 // ─────────────────────────────────────────────────────────────────────────────
 const WarDetailModal: React.FC<{ warId: string; onClose: () => void }> = ({ warId, onClose }) => {
+  const t = useT();
   const navigate = useNavigate();
   const [data, setData] = useState<any>(null);
   const [saving, setSaving] = useState<string | null>(null);
@@ -388,9 +385,9 @@ const WarDetailModal: React.FC<{ warId: string; onClose: () => void }> = ({ warI
     setSaving(sessionId);
     try {
       await warsApi.saveGame(sessionId);
-      toast('Партия сохранена!', 'success');
+      toast(t.wars.battleSaved, 'success');
     } catch (e: any) {
-      toast(e.message ?? 'Ошибка');
+      toast(e.message ?? t.common.error);
     } finally {
       setSaving(null);
     }
@@ -502,6 +499,7 @@ const WarDetailModal: React.FC<{ warId: string; onClose: () => void }> = ({ warI
 type Tab = 'countries' | 'active' | 'history';
 
 export const WarsPage: React.FC = () => {
+  const t = useT();
   const { user } = useUserStore();
   const [tab, setTab] = useState<Tab>('countries');
   const [sort, setSort] = useState<'wins' | 'alpha'>('wins');
@@ -583,12 +581,12 @@ export const WarsPage: React.FC = () => {
     setDonating(true);
     try {
       await warsApi.contribute(myCountry.id, Number(donateAmt));
-      toast('Донат отправлен в казну!', 'success');
+      toast(t.wars.btnDonate + '!', 'success');
       setDonateAmt('');
       setShowDonate(false);
       loadAll();
     } catch (e: any) {
-      toast(e.message ?? 'Ошибка');
+      toast(e.message ?? t.common.error);
     } finally {
       setDonating(false);
     }
@@ -598,11 +596,11 @@ export const WarsPage: React.FC = () => {
     setLeaving(true);
     try {
       await warsApi.leave();
-      toast('Вы покинули страну', 'success');
+      toast(t.wars.leaveCountry, 'success');
       setShowLeaveConfirm(false);
       loadAll();
     } catch (e: any) {
-      toast(e.message ?? 'Ошибка');
+      toast(e.message ?? t.common.error);
     } finally {
       setLeaving(false);
     }
@@ -626,7 +624,7 @@ export const WarsPage: React.FC = () => {
       {/* Заголовок */}
       <div style={{ padding: '10px 18px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
         <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 18, fontWeight: 800, color: '#F5C842', textAlign: 'center' }}>
-          Войны
+          {t.wars.title}
         </div>
         <button
           onClick={() => setShowIntro(true)}
@@ -704,7 +702,7 @@ export const WarsPage: React.FC = () => {
       {/* Поиск — всегда над табами */}
       <div style={{ margin: '8px 18px 8px' }}>
         <input
-          placeholder="🔍 Поиск страны..."
+          placeholder={`🔍 ${t.wars.searchPlaceholder}`}
           value={searchCountry}
           onChange={e => setSearchCountry(e.target.value)}
           style={{ ...inputStyle, width: '100%', margin: 0, boxSizing: 'border-box' }}
@@ -713,12 +711,12 @@ export const WarsPage: React.FC = () => {
 
       {/* Tabs */}
       <div style={{ display: 'flex', margin: '0 18px 10px', background: '#1C2030', borderRadius: 12, padding: 3 }}>
-        {([['countries', 'Страны'], ['active', 'Войны'], ['history', 'История']] as [Tab, string][]).map(([t, label]) => (
-          <button key={t} onClick={() => setTab(t)} style={{
+        {([['countries', t.wars.tabs.countries], ['active', t.wars.tabs.active], ['history', t.wars.tabs.history]] as [Tab, string][]).map(([tabKey, label]) => (
+          <button key={tabKey} onClick={() => setTab(tabKey)} style={{
             flex: 1, padding: '8px 4px', border: 'none', borderRadius: 9, fontFamily: 'inherit',
             fontSize: 11, fontWeight: 600, cursor: 'pointer',
-            background: tab === t ? '#232840' : 'transparent',
-            color: tab === t ? '#F0F2F8' : '#A8B0C8',
+            background: tab === tabKey ? '#232840' : 'transparent',
+            color: tab === tabKey ? '#F0F2F8' : '#A8B0C8',
           }}>
             {label}
           </button>
