@@ -136,10 +136,26 @@ router.get("/me", authMiddleware, async (req: Request, res: Response) => {
             item: { select: { id: true, type: true, name: true, imageUrl: true } },
           },
         },
+        countryMember: {
+          include: {
+            country: { select: { id: true, flag: true, nameRu: true, nameEn: true } },
+          },
+        },
       },
     });
 
-    const meResult = formatUser(fullUser);
+    // Определяем isCommander: первый по warWins в своей стране
+    let isCountryCommander = false;
+    if (fullUser.countryMember?.countryId) {
+      const topMember = await prisma.countryMember.findFirst({
+        where: { countryId: fullUser.countryMember.countryId },
+        orderBy: [{ warWins: "desc" }, { joinedAt: "asc" }],
+        select: { userId: true },
+      });
+      isCountryCommander = topMember?.userId === userId;
+    }
+
+    const meResult = formatUser(fullUser, isCountryCommander);
     // Кешируем на 30 секунд
     try { await redis.setex(cacheKey, 30, JSON.stringify(meResult)); } catch {}
     res.json(meResult);
@@ -150,7 +166,7 @@ router.get("/me", authMiddleware, async (req: Request, res: Response) => {
 
 // ─── Форматирование ───────────────────────────────
 
-const formatUser = (user: any) => ({
+const formatUser = (user: any, isCommander = false) => ({
   id: user.id,
   telegramId: user.telegramId,
   firstName: user.firstName,
@@ -201,6 +217,11 @@ const formatUser = (user: any) => ({
   createdAt: user.createdAt,
   hasSeenWarsIntro: user.hasSeenWarsIntro ?? false,
   activeTheme: user.activeTheme ?? 'default',
+  countryMember: user.countryMember ? {
+    country: user.countryMember.country,
+    role: isCommander ? 'COMMANDER' : 'FIGHTER',
+    isCommander,
+  } : null,
   equippedItems: user.inventory.reduce((acc: Record<string, unknown>, ui) => {
     acc[ui.item.type] = { id: ui.item.id, name: ui.item.name, imageUrl: ui.item.imageUrl };
     return acc;

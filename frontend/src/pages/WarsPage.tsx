@@ -160,13 +160,12 @@ const CountryDetailModal: React.FC<{
   activeWarId?: string | null;
   onClose: () => void;
   onJoined: () => void;
-}> = ({ countryId, activeWarId, onClose, onJoined }) => {
+}> = ({ countryId, onClose, onJoined }) => {
   const t = useT();
   const navigate = useNavigate();
   const { user } = useUserStore();
   const [data, setData] = useState<{ country: any; members: any[]; isCommander: boolean } | null>(null);
   const [joining, setJoining] = useState(false);
-  const [challenging, setChallenging] = useState<string | null>(null);
   const [donateAmt, setDonateAmt] = useState('');
   const [donating, setDonating] = useState(false);
   const [leaving, setLeaving] = useState(false);
@@ -215,24 +214,6 @@ const CountryDetailModal: React.FC<{
       toast(e.message ?? t.common.error);
     } finally {
       setLeaving(false);
-    }
-  };
-
-  const handleChallenge = async (opponentUserId: string) => {
-    if (!activeWarId) {
-      toast(t.wars.noActiveWar, 'info');
-      return;
-    }
-    setChallenging(opponentUserId);
-    try {
-      const r = await warsApi.challenge(activeWarId, opponentUserId);
-      toast(t.wars.challengeSent, 'success');
-      navigate(`/game/${r.sessionId}`);
-      onClose();
-    } catch (e: any) {
-      toast(e.message ?? t.common.error);
-    } finally {
-      setChallenging(null);
     }
   };
 
@@ -337,15 +318,7 @@ const CountryDetailModal: React.FC<{
                   ELO {m.user?.elo ?? '—'} • {m.warWins}W / {m.warLosses}L
                 </div>
               </div>
-              {m.userId !== user?.id && activeWarId && (
-                <button
-                  onClick={() => handleChallenge(m.userId)}
-                  disabled={challenging === m.userId}
-                  style={challengeBtnStyle}
-                >
-                  {challenging === m.userId ? '...' : '⚔️'}
-                </button>
-              )}
+              {/* Matchmaking is automatic — no manual challenges */}
             </div>
           ))}
           {members.length === 0 && (
@@ -363,6 +336,7 @@ const CountryDetailModal: React.FC<{
 const WarDetailModal: React.FC<{ warId: string; onClose: () => void }> = ({ warId, onClose }) => {
   const t = useT();
   const navigate = useNavigate();
+  const { user } = useUserStore();
   const [data, setData] = useState<any>(null);
   const [saving, setSaving] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(0);
@@ -436,24 +410,56 @@ const WarDetailModal: React.FC<{ warId: string; onClose: () => void }> = ({ warI
               </div>
             )}
 
+            {/* Auto-matchmaking indicator */}
+            {war.status === 'IN_PROGRESS' && (
+              <div style={{ padding: '8px 12px', background: 'rgba(123,97,255,0.08)', border: '1px solid rgba(123,97,255,0.2)', borderRadius: 12, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#9B85FF', animation: 'pulse 2s ease-in-out infinite' }} />
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#9B85FF' }}>{t.wars.autoMatchmaking}</div>
+                  <div style={{ fontSize: 10, color: '#A8B0C8' }}>
+                    {t.wars.queueStatus(
+                      (war.battles ?? []).filter((b: any) => b.status === 'IN_PROGRESS').length,
+                      10
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Список партий */}
             <div style={{ fontSize: 11, fontWeight: 700, color: '#A8B0C8', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10 }}>
               {t.wars.battles} ({war.battles?.length ?? 0})
             </div>
             <div style={{ maxHeight: 320, overflowY: 'auto' }}>
-              {(war.battles ?? []).map((b: any) => {
+              {(war.battles ?? [])
+                .sort((a: any, b: any) => {
+                  // Active matches first, user's own match at the very top
+                  const aIsMyMatch = a.attackerId === user?.id || a.defenderId === user?.id;
+                  const bIsMyMatch = b.attackerId === user?.id || b.defenderId === user?.id;
+                  if (aIsMyMatch && !bIsMyMatch) return -1;
+                  if (!aIsMyMatch && bIsMyMatch) return 1;
+                  const aActive = a.status === 'IN_PROGRESS' ? 0 : 1;
+                  const bActive = b.status === 'IN_PROGRESS' ? 0 : 1;
+                  return aActive - bActive;
+                })
+                .map((b: any) => {
                 const p1 = b.session?.sides?.[0]?.player;
                 const p2 = b.session?.sides?.[1]?.player;
                 const isDone = b.status === 'FINISHED';
+                const isMyMatch = b.attackerId === user?.id || b.defenderId === user?.id;
                 return (
                   <div key={b.id} style={{
                     display: 'flex', alignItems: 'center', gap: 8, padding: '10px 0',
                     borderBottom: '1px solid rgba(255,255,255,0.05)',
+                    ...(isMyMatch && !isDone ? { background: 'rgba(245,200,66,0.05)', borderRadius: 12, padding: '10px 8px', margin: '2px -8px', border: '1px solid rgba(245,200,66,0.15)' } : {}),
                   }}>
                     <div style={{ cursor: 'pointer' }} onClick={() => p1 && navigate(`/profile/${p1.id}`)}>
                       <Avatar user={p1} size="s" />
                     </div>
                     <div style={{ flex: 1, textAlign: 'center' }}>
+                      {isMyMatch && !isDone && (
+                        <div style={{ fontSize: 8, fontWeight: 800, color: '#F5C842', letterSpacing: '.1em', marginBottom: 1 }}>{t.wars.yourMatch}</div>
+                      )}
                       <div style={{ fontSize: 11, fontWeight: 700, color: isDone ? (b.winnerId === b.attackerId ? '#00D68F' : '#FF4D6A') : '#F5C842' }}>
                         {isDone ? (b.winnerId === b.attackerId ? t.wars.victory : t.wars.defeat) : t.wars.inGame}
                       </div>
@@ -462,12 +468,20 @@ const WarDetailModal: React.FC<{ warId: string; onClose: () => void }> = ({ warI
                     <div style={{ cursor: 'pointer' }} onClick={() => p2 && navigate(`/profile/${p2.id}`)}>
                       <Avatar user={p2} size="s" />
                     </div>
-                    {!isDone && b.sessionId && (
+                    {!isDone && b.sessionId && isMyMatch && (
+                      <button
+                        onClick={() => { onClose(); navigate(`/game/${b.sessionId}`); }}
+                        style={{ padding: '5px 8px', background: '#F5C842', color: '#0B0D11', border: 'none', borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}
+                      >
+                        {t.wars.goToMatch}
+                      </button>
+                    )}
+                    {!isDone && b.sessionId && !isMyMatch && (
                       <button
                         onClick={() => { onClose(); navigate(`/game/${b.sessionId}?spectate=1`); }}
                         style={{ padding: '5px 8px', background: 'rgba(245,200,66,0.1)', color: '#F5C842', border: '1px solid rgba(245,200,66,0.25)', borderRadius: 8, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}
                       >
-                        👁 {t.wars.watch}
+                        👁 {t.wars.spectateMatch}
                       </button>
                     )}
                     {b.session?.pgn && isDone && (
@@ -682,9 +696,15 @@ export const WarsPage: React.FC = () => {
           {myActiveWar && (
             <div
               onClick={() => setSelectedWarId(myActiveWar.id)}
-              style={{ marginTop: 10, padding: '8px 12px', background: 'rgba(255,77,106,0.08)', border: '1px solid rgba(255,77,106,0.2)', borderRadius: 12, cursor: 'pointer' }}
+              style={{ marginTop: 10, padding: '10px 14px', background: 'rgba(255,77,106,0.08)', border: '1px solid rgba(255,77,106,0.2)', borderRadius: 14, cursor: 'pointer' }}
             >
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#FF4D6A', marginBottom: 3 }}>{t.wars.warInProgress}</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#FF4D6A' }}>{t.wars.warInProgress}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#9B85FF', animation: 'pulse 2s ease-in-out infinite' }} />
+                  <span style={{ fontSize: 9, color: '#9B85FF', fontWeight: 600 }}>{t.wars.autoMatchmaking}</span>
+                </div>
+              </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ fontSize: 12, color: '#C8CDDF' }}>
                   {myActiveWar.attackerCountry?.nameRu} vs {myActiveWar.defenderCountry?.nameRu}

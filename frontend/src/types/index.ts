@@ -76,6 +76,7 @@ export interface User extends UserPublic {
   countryMember?: {            // R1
     country?: { id: string; flag: string; nameRu: string; nameEn: string };
     role?: string;
+    isCommander?: boolean;
   } | null;
 }
 

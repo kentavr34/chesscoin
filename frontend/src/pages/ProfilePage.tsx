@@ -77,7 +77,7 @@ export const ProfilePage: React.FC = () => {
   // Поддерживаем оба способа: /profile/:userId и navigate('/profile', {state:{userId}})
   const viewedUserId: string | undefined = params.userId ?? (location.state as Record<string,unknown>)?.userId as string | undefined;
   const isOwnProfile = !viewedUserId || viewedUserId === user?.id;
-  const profileInfo = useInfoPopup('profile', [{ icon: '🏅', title: 'Твой профиль', desc: 'Здесь твоя статистика, бейджи и история партий. ELO показывает твой уровень — чем выше, тем сильнее соперники.' }, { icon: '🎖️', title: 'Военное звание', desc: 'Звание растёт с количеством рефералов. Чем выше звание — тем больший процент от побед друзей ты получаешь.' }, { icon: '💰', title: 'Лиги и награды', desc: 'Накапливай монеты чтобы подниматься по лигам: Bronze → Silver → Gold → Diamond → Champion.' }]);
+  const profileInfo = useInfoPopup('profile', [{ icon: '🏅', title: 'Your Profile', desc: 'Your stats, badges and game history. ELO shows your level — the higher, the stronger opponents.' }, { icon: '🎖️', title: 'Military Rank', desc: 'Rank grows with referrals. Higher rank — bigger percentage from friends\' wins.' }, { icon: '💰', title: 'Leagues & Rewards', desc: 'Earn coins to climb leagues: Bronze → Silver → Gold → Diamond → Champion.' }]);
 
   const [tab, setTab] = useState<Tab>('info');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -172,7 +172,7 @@ export const ProfilePage: React.FC = () => {
 
   return (
     <>
-    {isOwnProfile && profileInfo.show && <InfoPopup infoKey="profile" slides={[{ icon: '🏅', title: 'Твой профиль', desc: 'Здесь твоя статистика, бейджи и история партий. ELO показывает твой уровень — чем выше, тем сильнее соперники.' }, { icon: '🎖️', title: 'Военное звание', desc: 'Звание растёт с количеством рефералов. Чем выше звание — тем больший процент от побед друзей ты получаешь.' }, { icon: '💰', title: 'Лиги и награды', desc: 'Накапливай монеты чтобы подниматься по лигам: Bronze → Silver → Gold → Diamond → Champion.' }]} onClose={profileInfo.close} />}
+    {isOwnProfile && profileInfo.show && <InfoPopup infoKey="profile" slides={[{ icon: '🏅', title: 'Your Profile', desc: 'Your stats, badges and game history. ELO shows your level — the higher, the stronger opponents.' }, { icon: '🎖️', title: 'Military Rank', desc: 'Rank grows with referrals. Higher rank — bigger percentage from friends\' wins.' }, { icon: '💰', title: 'Leagues & Rewards', desc: 'Earn coins to climb leagues: Bronze → Silver → Gold → Diamond → Champion.' }]} onClose={profileInfo.close} />}
     <PageLayout backTo="/" rightAction={rightAction} centered>
       {/* Toast */}
       {toast && (
@@ -238,7 +238,7 @@ export const ProfilePage: React.FC = () => {
                   border: '1.5px solid rgba(255,255,255,0.2)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 11,
-                }} title="Купить в магазине">
+                }} title={t.profile.buyInShop}>
                   🛍
                 </div>
               )}
@@ -270,12 +270,17 @@ export const ProfilePage: React.FC = () => {
             onClick={() => navigate('/battles', { state: { challengeUserId: viewedUserId } })}
             style={{ marginTop: 10, padding: '9px 20px', background: 'rgba(245,200,66,0.12)', border: '1px solid rgba(245,200,66,0.3)', borderRadius: 12, color: 'var(--accent, #F5C842)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
           >
-            ⚔️ Сразиться
+            ⚔️ {t.profile.challengeBtn ?? 'Challenge'}
           </button>
         )}
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8, justifyContent: 'center' }}>
           <span style={tagGold}>{leagueEmoji[user.league]} #1</span>
           <span style={tagVi}>ELO {user.elo}</span>
+          {user?.countryMember?.isCommander && (
+            <span style={{ ...tagGr, background: 'linear-gradient(135deg, rgba(245,200,66,0.15), rgba(255,215,0,0.08))', color: '#FFD700', borderColor: 'rgba(255,215,0,0.35)', fontWeight: 800 }}>
+              👑 {t.profile.commanderBadge}
+            </span>
+          )}
           {user?.militaryRank && (
             <span style={{ ...tagGr, background: 'rgba(255,159,67,0.1)', color: '#FF9F43', borderColor: 'rgba(255,159,67,0.2)' }}>
               {user?.militaryRank.emoji} {user?.militaryRank.label}
@@ -297,7 +302,7 @@ export const ProfilePage: React.FC = () => {
           <button
             onClick={() => navigate('/referrals')}
             style={{ width: 44, height: 44, borderRadius: 14, background: 'rgba(245,200,66,0.1)', border: '1px solid rgba(245,200,66,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, cursor: 'pointer', flexShrink: 0 }}
-            title="История транзакций"
+            title={t.profile.txHistory}
           >👜</button>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -319,10 +324,10 @@ export const ProfilePage: React.FC = () => {
           <span style={{ fontSize: 24, animation: 'pulse 2s ease-in-out infinite' }}>👑</span>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 13, fontWeight: 800, color: '#FFD700', fontFamily: "'Unbounded',sans-serif" }}>
-              Чемпион месяца
+              {t.profile.monthlyChampion ?? 'Monthly Champion'}
             </div>
             <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>
-              По рейтингу ELO {user?.monthlyChampionAt ? `· ${new Date(user?.monthlyChampionAt).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' })}` : ''}
+              ELO rating {user?.monthlyChampionAt ? `· ${new Date(user?.monthlyChampionAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}` : ''}
             </div>
           </div>
         </div>
@@ -347,17 +352,17 @@ export const ProfilePage: React.FC = () => {
         return (
           <div style={{ margin: '0 18px 10px', padding: '12px 16px', background: 'var(--bg-card, #13161E)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent, #F5C842)' }}>{leagueEmoji[user.league]} Лига {user.league}</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent, #F5C842)' }}>{leagueEmoji[user.league]} {t.profile.league(user.league)}</div>
               {info.next ? (
-                <div style={{ fontSize: 10, color: 'var(--text-secondary, #8B92A8)' }}>до {leagueEmoji[info.next]} {info.next}: {fmtBalance(remaining.toString())} ᚙ</div>
+                <div style={{ fontSize: 10, color: 'var(--text-secondary, #8B92A8)' }}>{t.profile.toLeague(`${leagueEmoji[info.next]} ${info.next}`, fmtBalance(remaining.toString()))}</div>
               ) : (
-                <div style={{ fontSize: 10, color: 'var(--green, #00D68F)', fontWeight: 700 }}>★ Максимальная лига</div>
+                <div style={{ fontSize: 10, color: 'var(--green, #00D68F)', fontWeight: 700 }}>{t.profile.maxLeague}</div>
               )}
             </div>
             <div style={{ height: 5, background: 'var(--bg-card, #1C2030)', borderRadius: 3, overflow: 'hidden' }}>
               <div style={{ height: '100%', width: `${progress}%`, background: 'linear-gradient(90deg,#F5C842,#FFD966)', borderRadius: 3, transition: 'width .5s' }} />
             </div>
-            <div style={{ fontSize: 9, color: 'var(--text-muted, #4A5270)', marginTop: 4 }}>{progress}% до следующей лиги</div>
+            <div style={{ fontSize: 9, color: 'var(--text-muted, #4A5270)', marginTop: 4 }}>{t.profile.leagueProgress(progress)}</div>
           </div>
         );
       })()}
@@ -403,7 +408,7 @@ export const ProfilePage: React.FC = () => {
               if (eloHistory.length < 2) {
                 return (
                   <div style={{ height: 50, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={{ fontSize: 11, color: 'var(--text-muted,#4A5270)' }}>Сыграйте партии для графика</span>
+                    <span style={{ fontSize: 11, color: 'var(--text-muted,#4A5270)' }}>{t.profile.playGamesForChart}</span>
                   </div>
                 );
               }
@@ -433,7 +438,7 @@ export const ProfilePage: React.FC = () => {
                     <circle cx={toX(eloHistory.length - 1)} cy={toY(user.elo)} r="3.5" fill="#9B85FF" />
                   </svg>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-                    <span style={{ fontSize: 9, color: 'var(--text-muted,#4A5270)' }}>{games.length + 1} точек</span>
+                    <span style={{ fontSize: 9, color: 'var(--text-muted,#4A5270)' }}>{t.profile.points(games.length + 1)}</span>
                     <span style={{ fontSize: 10, fontWeight: 700, color: trendColor }}>{trend} {Math.abs(curElo - prevElo)} ELO</span>
                   </div>
                 </>
@@ -466,15 +471,15 @@ export const ProfilePage: React.FC = () => {
           BOT: '🤖', BATTLE: '⚔️', WAR: '🌍', TOURNAMENT: '🏆',
         };
         const typeLabel: Record<string, string> = {
-          BOT: 'vs JARVIS', BATTLE: 'Батл', WAR: 'Война', TOURNAMENT: 'Турнир',
+          BOT: 'vs JARVIS', BATTLE: t.profile.typeBattle, WAR: t.profile.typeWar, TOURNAMENT: t.profile.typeTournament,
         };
         return (
           <>
             {/* Последние партии */}
-            <div style={secStyle}>🎮 Последние партии</div>
+            <div style={secStyle}>{t.profile.recentGames}</div>
             {recentGames.length === 0 ? (
               <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: '24px 0', fontSize: 13 }}>
-                Партии не сыграны
+                {t.profile.noGamesPlayed}
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '0 14px' }}>
@@ -485,7 +490,7 @@ export const ProfilePage: React.FC = () => {
                   const isWon  = myStatus === 'WON';
                   const isDraw = myStatus === 'DRAW';
                   const statusColor = isWon ? 'var(--green,#00D68F)' : isDraw ? '#9B85FF' : 'var(--red,#FF4D6A)';
-                  const statusLabel = isWon ? 'Победа' : isDraw ? 'Ничья' : 'Поражение';
+                  const statusLabel = isWon ? t.profile.gameWon : isDraw ? t.profile.gameDraw : t.profile.gameLost;
                   const earned = g.winningAmount ? fmtBalance(String(g.winningAmount)) : null;
                   return (
                     <div key={g.id} style={{
@@ -509,11 +514,11 @@ export const ProfilePage: React.FC = () => {
                       {/* Инфо */}
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary,#F0F2F8)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {oppPlayer ? `${oppPlayer.firstName}${oppPlayer.lastName ? ' ' + oppPlayer.lastName : ''}` : typeLabel[g.session?.type ?? ''] ?? 'Партия'}
+                          {oppPlayer ? `${oppPlayer.firstName}${oppPlayer.lastName ? ' ' + oppPlayer.lastName : ''}` : typeLabel[g.session?.type ?? ''] ?? t.profile.gameLabel}
                         </div>
                         <div style={{ fontSize: 10, color: 'var(--text-muted,#4A5270)', marginTop: 2 }}>
                           {typeLabel[g.session?.type ?? ''] ?? ''} · {g.session?.finishedAt ? fmtDate(g.session.finishedAt) : ''}
-                          {g.session?.bet && BigInt(g.session.bet) > 0n ? ` · Ставка ${fmtBalance(g.session.bet)} ᚙ` : ''}
+                          {g.session?.bet && BigInt(g.session.bet) > 0n ? ` · ${fmtBalance(g.session.bet)} ᚙ` : ''}
                         </div>
                       </div>
 
@@ -525,9 +530,9 @@ export const ProfilePage: React.FC = () => {
                         )}
                         {g.session?.pgn && (
                           <button
-                            onClick={() => setReplayGame({ pgn: g.session.pgn!, title: oppPlayer ? `vs ${oppPlayer.firstName}` : 'Партия', sessionId: g.session.id })}
+                            onClick={() => setReplayGame({ pgn: g.session.pgn!, title: oppPlayer ? `vs ${oppPlayer.firstName}` : t.profile.gameLabel, sessionId: g.session.id })}
                             style={{ fontSize: 9, padding: '2px 7px', background: 'rgba(245,200,66,0.08)', color: 'var(--accent,#F5C842)', border: '1px solid rgba(245,200,66,0.2)', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}
-                          >♟ Разобрать</button>
+                          >♟ Replay</button>
                         )}
                       </div>
                     </div>
@@ -704,16 +709,16 @@ export const ProfilePage: React.FC = () => {
           {/* Игровые достижения */}
           {(() => {
             const ACHS = [
-              { id: 'first_blood',   icon: '⚔️', name: 'Первая кровь',    desc: 'Первая партия' },
-              { id: 'winner_10',     icon: '🏆', name: 'Победитель',       desc: '10 побед' },
-              { id: 'winner_100',    icon: '👑', name: 'Легенда',           desc: '100 побед' },
-              { id: 'jarvis_hunter', icon: '🤖', name: 'Охотник на J.A.R.V.I.S', desc: 'Макс. уровень' },
-              { id: 'recruiter',     icon: '👥', name: 'Вербовщик',        desc: '10 рефералов' },
-              { id: 'millionaire',   icon: '💰', name: 'Миллионер',        desc: '1M ᚙ' },
-              { id: 'patriot',       icon: '🌍', name: 'Патриот',          desc: '10 войн' },
-              { id: 'puzzler',       icon: '🧩', name: 'Шахматист',        desc: '50 задач' },
-              { id: 'streak_7',      icon: '🔥', name: 'Огонь',            desc: '7 дней подряд' },
-              { id: 'streak_30',     icon: '💎', name: 'Несломимый',       desc: '30 дней подряд' },
+              { id: 'first_blood',   icon: '⚔️', name: 'First Blood',    desc: 'First game' },
+              { id: 'winner_10',     icon: '🏆', name: t.profile.achievementWinner10,  desc: t.profile.achievementWinner10Desc },
+              { id: 'winner_100',    icon: '👑', name: t.profile.achievementWinner100, desc: t.profile.achievementWinner100Desc },
+              { id: 'jarvis_hunter', icon: '🤖', name: 'J.A.R.V.I.S Hunter', desc: 'Max level' },
+              { id: 'recruiter',     icon: '👥', name: t.profile.achievementRecruiter,  desc: t.profile.achievementRecruiterDesc },
+              { id: 'millionaire',   icon: '💰', name: t.profile.achievementMillionaire, desc: t.profile.achievementMillionaireDesc },
+              { id: 'patriot',       icon: '🌍', name: t.profile.achievementPatriot,    desc: t.profile.achievementPatriotDesc },
+              { id: 'puzzler',       icon: '🧩', name: t.profile.achievementPuzzler,    desc: t.profile.achievementPuzzlerDesc },
+              { id: 'streak_7',      icon: '🔥', name: t.profile.achievementStreak7,    desc: t.profile.achievementStreak7Desc },
+              { id: 'streak_30',     icon: '💎', name: t.profile.achievementStreak30,   desc: t.profile.achievementStreak30Desc },
             ];
             const earned: Record<string, string> = {};
             (user?.achievements ?? []).forEach((a: { id: string; date: string }) => { earned[a.id] = a.date; });
@@ -721,7 +726,7 @@ export const ProfilePage: React.FC = () => {
             return (
               <>
                 <div style={{ ...secStyle, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span>🎖 Достижения</span>
+                  <span>🎖 {t.profile.tabs.achievements}</span>
                   <span style={{ fontSize: 10, color: 'var(--text-secondary, #8B92A8)', textTransform: 'none', fontWeight: 600 }}>
                     {earnedCount}/{ACHS.length}
                   </span>
