@@ -11,7 +11,7 @@ import { useT } from '@/i18n/useT';
 
 const LEAGUES = ['DIAMOND', 'PLATINUM', 'GOLD', 'SILVER', 'BRONZE'];
 const LEAGUE_LABELS: Record<string, string> = {
-  DIAMOND: '💎 Алмаз', PLATINUM: '⭐ Платина', GOLD: '🥇 Золото', SILVER: '🥈 Серебро', BRONZE: '🥉 Бронза',
+  DIAMOND: '💎 Diamond', PLATINUM: '⭐ Platinum', GOLD: '🥇 Gold', SILVER: '🥈 Silver', BRONZE: '🥉 Bronze',
 };
 const POS_COLOR: Record<number, string> = { 1: 'var(--accent, #F5C842)', 2: '#C0C0C0', 3: '#CD7F32' };
 
@@ -130,13 +130,13 @@ const LbRow: React.FC<{ rank: number; user: import("@/types").UserPublic; balanc
     cursor: 'pointer',
   }}>
     <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 700, color: POS_COLOR[rank] ?? 'var(--text-muted, #4A5270)', width: 24, textAlign: 'center', flexShrink: 0 }}>
-      {isMe ? t.common.me ?? 'Вы' : rank}
+      {isMe ? t.common.me : rank}
     </span>
     <Avatar user={user} size="s" gold={isMe} />
     <div style={{ flex: 1 }}>
       <div style={{ fontSize: 13, fontWeight: 600, color: isMe ? 'var(--accent, #F5C842)' : 'var(--text-primary, #F0F2F8)', display: 'flex', alignItems: 'center', gap: 5 }}>
         {user.firstName}
-        {user.isMonthlyChampion && <span style={{ fontSize: 14 }} title="Чемпион месяца">👑</span>}
+        {user.isMonthlyChampion && <span style={{ fontSize: 14 }} title="Monthly Champion">👑</span>}
       </div>
       <div style={{ fontSize: 10, color: 'var(--text-secondary, #8B92A8)', marginTop: 1 }}>{user.username ? `@${user.username} · ` : ''}ELO {user.elo}</div>
     </div>

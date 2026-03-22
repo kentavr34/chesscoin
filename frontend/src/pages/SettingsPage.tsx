@@ -61,17 +61,17 @@ export const SettingsPage: React.FC = () => {
         <div style={{ fontSize: 11, color: '#A8B0C8', marginTop: 2 }}>{hint}</div>
       </div>
       <span style={{ fontSize: 11, color: '#6B7494', background: '#1C2030', borderRadius: 6, padding: '2px 8px' }}>
-        Скоро
+        Soon
       </span>
     </div>
   );
 
   return (
-    <PageLayout title="Настройки" onBack={() => navigate(-1)}>
+    <PageLayout title="Settings" onBack={() => navigate(-1)}>
       <div style={{ paddingBottom: 40 }}>
-        {sectionTitle('Язык и интерфейс')}
+        {sectionTitle('Language & Interface')}
         <div style={{ background: '#13161E', borderRadius: 16, margin: '0 16px' }}>
-          {row('Язык приложения',
+          {row('App language',
             <div style={{ display: 'flex', gap: 6 }}>
               {(['ru', 'en'] as const).map((l) => (
                 <button key={l} onClick={() => setLang(l)} style={{
@@ -85,27 +85,27 @@ export const SettingsPage: React.FC = () => {
               ))}
             </div>
           )}
-          {row('Вибрация', toggle(vibration, toggleVibration), false)}
+          {row('Vibration', toggle(vibration, toggleVibration), false)}
         </div>
 
-        {sectionTitle('Аккаунт')}
+        {sectionTitle('Account')}
         <div style={{ background: '#13161E', borderRadius: 16, margin: '0 16px' }}>
-          {disabledRow('Дата рождения', 'Для персонализации контента')}
-          {disabledRow('Email', 'Привязать почту для восстановления')}
-          {disabledRow('Телефон', 'Дополнительная защита')}
-          {disabledRow('Face ID / Touch ID', 'Биометрический вход', )}
+          {disabledRow('Date of birth', 'For content personalization')}
+          {disabledRow('Email', 'Link email for recovery')}
+          {disabledRow('Phone', 'Additional security')}
+          {disabledRow('Face ID / Touch ID', 'Biometric login', )}
         </div>
 
-        {sectionTitle('Безопасность')}
+        {sectionTitle('Security')}
         <div style={{ background: '#13161E', borderRadius: 16, margin: '0 16px' }}>
-          {disabledRow('Сменить пароль', 'Установить PIN-код')}
-          {disabledRow('Двухфакторная аутентификация', '2FA через Telegram')}
+          {disabledRow('Change password', 'Set PIN code')}
+          {disabledRow('Two-factor authentication', '2FA via Telegram')}
         </div>
 
-        {sectionTitle('О приложении')}
+        {sectionTitle('About')}
         <div style={{ background: '#13161E', borderRadius: 16, margin: '0 16px' }}>
-          {row('Версия', <span style={{ fontSize: 13, color: '#A8B0C8' }}>v7.2.0</span>)}
-          {row('Политика конфиденциальности',
+          {row('Version', <span style={{ fontSize: 13, color: '#A8B0C8' }}>v7.2.0</span>)}
+          {row('Privacy policy',
             <span style={{ fontSize: 18, color: '#6B7494' }}>›</span>, false
           )}
         </div>

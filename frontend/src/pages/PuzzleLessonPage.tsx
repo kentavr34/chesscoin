@@ -147,7 +147,7 @@ export const PuzzleLessonPage: React.FC = () => {
       return true;
     } else {
       setTestWrong(true);
-      setErrorMsg('Неверный ход! Попробуйте ещё раз.');
+      setErrorMsg('Wrong move! Try again.');
       setTimeout(() => setTestWrong(false), 800);
       return false;
     }
@@ -235,9 +235,9 @@ export const PuzzleLessonPage: React.FC = () => {
         <div style={{ margin: '16px', padding: '16px', background: '#13161E', borderRadius: 16, textAlign: 'center' }}>
           <div style={{ fontSize: 28 }}>🏆</div>
           <div style={{ fontSize: 16, fontWeight: 700, color: '#F5C842', marginTop: 8 }}>
-            {rewarded ? `+${Number(lesson.reward).toLocaleString()} ᚙ начислено!` : 'Урок уже пройден ранее'}
+            {rewarded ? `+${Number(lesson.reward).toLocaleString()} ᚙ earned!` : 'Lesson already completed'}
           </div>
-          <div style={{ fontSize: 13, color: '#A8B0C8', marginTop: 4 }}>Отличная работа!</div>
+          <div style={{ fontSize: 13, color: '#A8B0C8', marginTop: 4 }}>Great work!</div>
           <button onClick={() => navigate(-1)} style={{
             marginTop: 16, padding: '12px 32px', background: '#7B61FF', color: '#fff',
             border: 'none', borderRadius: 12, fontWeight: 600, cursor: 'pointer', fontSize: 14,

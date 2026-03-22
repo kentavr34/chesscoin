@@ -8,24 +8,24 @@ import { toast } from '@/components/ui/Toast';
 import { useT } from '@/i18n/useT';
 
 const RANK_THRESHOLDS = [
-  { rank: 'EMPEROR',      label: 'Император',         emoji: '👑',     minReferrals: 1_000_000, bonus: 40_000,  pct: 15 },
-  { rank: 'MARSHAL',      label: 'Маршал',             emoji: '🏅',     minReferrals: 500_000,   bonus: 35_000,  pct: 14 },
-  { rank: 'COL_GENERAL',  label: 'Генерал-полковник',  emoji: '🌟🌟🌟', minReferrals: 300_000,   bonus: 30_000,  pct: 13 },
-  { rank: 'LT_GENERAL',   label: 'Генерал-лейтенант',  emoji: '🌟🌟',  minReferrals: 200_000,   bonus: 25_000,  pct: 12 },
-  { rank: 'MAJ_GENERAL',  label: 'Генерал-майор',      emoji: '🌟',     minReferrals: 100_000,   bonus: 20_000,  pct: 11 },
-  { rank: 'BRIGADIER',    label: 'Бригадир',           emoji: '🎖️',    minReferrals: 80_000,    bonus: 15_000,  pct: 10 },
-  { rank: 'COLONEL',      label: 'Полковник',          emoji: '⭐⭐⭐',  minReferrals: 60_000,    bonus: 14_000,  pct:  9 },
-  { rank: 'LT_COLONEL',   label: 'Подполковник',       emoji: '⭐⭐',   minReferrals: 40_000,    bonus: 13_000,  pct:  8 },
-  { rank: 'MAJOR',        label: 'Майор',              emoji: '⭐',     minReferrals: 20_000,    bonus: 12_000,  pct:  7 },
-  { rank: 'CAPTAIN',      label: 'Капитан',            emoji: '🔵🔵🔵🔵',minReferrals: 10_000,   bonus: 10_000,  pct:  6 },
-  { rank: 'SR_LIEUTENANT',label: 'Ст. Лейтенант',      emoji: '🔵🔵🔵', minReferrals: 5_000,    bonus:  9_000,  pct:  5 },
-  { rank: 'LIEUTENANT',   label: 'Лейтенант',          emoji: '🔵🔵',   minReferrals: 3_000,    bonus:  8_000,  pct:  5 },
-  { rank: 'JR_LIEUTENANT',label: 'Мл. Лейтенант',      emoji: '🔵',     minReferrals: 1_000,    bonus:  7_000,  pct:  5 },
-  { rank: 'WARRANT',      label: 'Прапорщик',          emoji: '🔶',     minReferrals: 500,       bonus:  6_000,  pct:  4 },
-  { rank: 'SERGEANT',     label: 'Сержант',            emoji: '🔷',     minReferrals: 100,       bonus:  5_000,  pct:  3 },
-  { rank: 'CORPORAL',     label: 'Ефрейтор',           emoji: '🔹',     minReferrals: 50,        bonus:  4_000,  pct:  2 },
-  { rank: 'PRIVATE',      label: 'Рядовой',            emoji: '🪖',     minReferrals: 10,        bonus:  3_000,  pct:  1 },
-  { rank: 'RECRUIT',      label: 'Новобранец',         emoji: '🙂',     minReferrals: 0,         bonus:      0,  pct:  0 },
+  { rank: 'EMPEROR',      label: 'Emperor',            emoji: '👑',     minReferrals: 1_000_000, bonus: 40_000,  pct: 15 },
+  { rank: 'MARSHAL',      label: 'Marshal',            emoji: '🏅',     minReferrals: 500_000,   bonus: 35_000,  pct: 14 },
+  { rank: 'COL_GENERAL',  label: 'Colonel General',    emoji: '🌟🌟🌟', minReferrals: 300_000,   bonus: 30_000,  pct: 13 },
+  { rank: 'LT_GENERAL',   label: 'Lieutenant General', emoji: '🌟🌟',  minReferrals: 200_000,   bonus: 25_000,  pct: 12 },
+  { rank: 'MAJ_GENERAL',  label: 'Major General',      emoji: '🌟',     minReferrals: 100_000,   bonus: 20_000,  pct: 11 },
+  { rank: 'BRIGADIER',    label: 'Brigadier',          emoji: '🎖️',    minReferrals: 80_000,    bonus: 15_000,  pct: 10 },
+  { rank: 'COLONEL',      label: 'Colonel',            emoji: '⭐⭐⭐',  minReferrals: 60_000,    bonus: 14_000,  pct:  9 },
+  { rank: 'LT_COLONEL',   label: 'Lt. Colonel',        emoji: '⭐⭐',   minReferrals: 40_000,    bonus: 13_000,  pct:  8 },
+  { rank: 'MAJOR',        label: 'Major',              emoji: '⭐',     minReferrals: 20_000,    bonus: 12_000,  pct:  7 },
+  { rank: 'CAPTAIN',      label: 'Captain',            emoji: '🔵🔵🔵🔵',minReferrals: 10_000,   bonus: 10_000,  pct:  6 },
+  { rank: 'SR_LIEUTENANT',label: 'Sr. Lieutenant',     emoji: '🔵🔵🔵', minReferrals: 5_000,    bonus:  9_000,  pct:  5 },
+  { rank: 'LIEUTENANT',   label: 'Lieutenant',         emoji: '🔵🔵',   minReferrals: 3_000,    bonus:  8_000,  pct:  5 },
+  { rank: 'JR_LIEUTENANT',label: 'Jr. Lieutenant',     emoji: '🔵',     minReferrals: 1_000,    bonus:  7_000,  pct:  5 },
+  { rank: 'WARRANT',      label: 'Warrant Officer',    emoji: '🔶',     minReferrals: 500,       bonus:  6_000,  pct:  4 },
+  { rank: 'SERGEANT',     label: 'Sergeant',           emoji: '🔷',     minReferrals: 100,       bonus:  5_000,  pct:  3 },
+  { rank: 'CORPORAL',     label: 'Corporal',           emoji: '🔹',     minReferrals: 50,        bonus:  4_000,  pct:  2 },
+  { rank: 'PRIVATE',      label: 'Private',            emoji: '🪖',     minReferrals: 10,        bonus:  3_000,  pct:  1 },
+  { rank: 'RECRUIT',      label: 'Recruit',            emoji: '🙂',     minReferrals: 0,         bonus:      0,  pct:  0 },
 ];
 
 interface Referral {
@@ -74,7 +74,7 @@ export const ReferralsPage: React.FC = () => {
     const tg = window.Telegram?.WebApp;
     if (tg?.openTelegramLink) {
       tg.openTelegramLink(
-        `https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent('♟ Играй в ChessCoin — зарабатывай монеты в шахматах!')}`
+        `https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent('♟ Play ChessCoin — earn coins by playing chess!')}`
       );
     } else {
       handleCopy();
@@ -83,40 +83,40 @@ export const ReferralsPage: React.FC = () => {
 
   return (
     <PageLayout title={t.profile.refSection} backTo="/profile" centered>
-      {/* Шапка */}
+      {/* Header */}
       <div style={heroCard}>
         <div style={{ fontSize: 36, marginBottom: 8 }}>👥</div>
         <div style={{ fontFamily: "Inter,sans-serif", fontSize: 16, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>
-          Реферальная программа
+          Referral Program
         </div>
         <div style={{ fontSize: 12, color: 'var(--text-secondary, #8B92A8)', marginTop: 6, lineHeight: 1.6 }}>
-          Приглашай друзей и зарабатывай автоматически
+          Invite friends and earn automatically
         </div>
 
         <div style={incomeBadge}>
           <div>
-            <div style={microLbl}>Заработано всего</div>
+            <div style={microLbl}>Total earned</div>
             <div style={incomeNum}>{fmtBalance(data?.totalIncome ?? '0')} ᚙ</div>
           </div>
           <div style={{ width: 1, background: 'var(--border, rgba(255,255,255,0.08))', alignSelf: 'stretch' }} />
           <div style={{ textAlign: 'right' }}>
-            <div style={microLbl}>Рефералов</div>
+            <div style={microLbl}>Referrals</div>
             <div style={{ ...incomeNum, color: 'var(--text-primary, #F0F2F8)' }}>
               {data?.active ?? 0} <span style={{ fontSize: 12, opacity: .5 }}>/ {data?.total ?? 0}</span>
             </div>
           </div>
         </div>
 
-        {/* Ссылка */}
+        {/* Link */}
         <div style={linkBox}>
           <div style={{ fontSize: 11, color: 'var(--text-muted, #4A5270)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {refLink}
           </div>
-          <button onClick={handleCopy} style={copyBtn}>Копировать</button>
+          <button onClick={handleCopy} style={copyBtn}>Copy</button>
         </div>
 
         <button onClick={handleShare} style={shareBtn}>
-          ↗ Поделиться в Telegram
+          ↗ Share on Telegram
         </button>
       </div>
 
@@ -132,23 +132,23 @@ export const ReferralsPage: React.FC = () => {
 
         return (
           <div style={{ margin: '12px 18px 0', padding: '16px', background: 'var(--bg-card, #13161E)', border: '1px solid rgba(123,97,255,0.25)', borderRadius: 18 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.09em', textTransform: 'uppercase', color: 'var(--text-muted, #4A5270)', marginBottom: 10 }}>Военное звание</div>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.09em', textTransform: 'uppercase', color: 'var(--text-muted, #4A5270)', marginBottom: 10 }}>Military Rank</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
               <div style={{ fontSize: 28 }}>{currentRank.emoji}</div>
               <div>
                 <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--accent, #F5C842)' }}>{currentRank.label}</div>
-                <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>{referralCount} рефералов</div>
+                <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>{referralCount} referrals</div>
                 {currentRank.bonus > 0 && (
                   <div style={{ fontSize: 10, color: '#7B61FF', marginTop: 2 }}>
-                    +{currentRank.bonus.toLocaleString()} ᚙ за реферала · {currentRank.pct}% от выигрыша
+                    +{currentRank.bonus.toLocaleString()} ᚙ per referral · {currentRank.pct}% of winnings
                   </div>
                 )}
               </div>
               {nextRank && (
                 <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-                  <div style={{ fontSize: 9, color: 'var(--text-muted, #4A5270)', marginBottom: 2 }}>Следующий ранг</div>
+                  <div style={{ fontSize: 9, color: 'var(--text-muted, #4A5270)', marginBottom: 2 }}>Next rank</div>
                   <div style={{ fontSize: 12, fontWeight: 700, color: '#7B61FF' }}>{nextRank.emoji} {nextRank.label}</div>
-                  <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>{nextRank.minReferrals.toLocaleString()} реф.</div>
+                  <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>{nextRank.minReferrals.toLocaleString()} ref.</div>
                 </div>
               )}
             </div>
@@ -158,11 +158,11 @@ export const ReferralsPage: React.FC = () => {
                   <div style={{ height: '100%', width: `${progress}%`, background: 'linear-gradient(90deg,#7B61FF,#F5C842)', borderRadius: 999, transition: 'width .5s' }} />
                 </div>
                 <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', marginTop: 6, textAlign: 'right' }}>
-                  {nextRank.minReferrals - referralCount} до следующего звания
+                  {nextRank.minReferrals - referralCount} until next rank
                 </div>
               </>
             )}
-            {/* Rank ladder — высшие сверху, текущий выделен 📍 */}
+            {/* Rank ladder — highest on top, current marked 📍 */}
             <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 4 }}>
               {RANK_THRESHOLDS.map(r => {
                 const unlocked = referralCount >= r.minReferrals;
@@ -186,12 +186,12 @@ export const ReferralsPage: React.FC = () => {
                         fontSize: 8, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase',
                         color: '#F5C842', background: 'rgba(245,200,66,0.18)',
                         padding: '2px 6px', borderRadius: '0 0 6px 6px',
-                      }}>ВЫ</div>
+                      }}>YOU</div>
                     )}
                     <span style={{ fontSize: 20, width: 28, textAlign: 'center', flexShrink: 0 }}>{r.emoji}</span>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 12, fontWeight: isCurrent ? 800 : 700, color: isCurrent ? 'var(--accent, #F5C842)' : unlocked ? 'var(--text-primary, #F0F2F8)' : 'var(--text-secondary, #8B92A8)' }}>{r.label}</div>
-                      <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', marginTop: 1 }}>{r.minReferrals.toLocaleString()} реф.</div>
+                      <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', marginTop: 1 }}>{r.minReferrals.toLocaleString()} ref.</div>
                     </div>
                     {r.bonus > 0 && (
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
@@ -210,13 +210,13 @@ export const ReferralsPage: React.FC = () => {
         );
       })()}
 
-      {/* Условия программы */}
+      {/* Program rules */}
       {(() => {
         const referralCount = user?.referralCount ?? (data?.total ?? 0);
         const currentRankIdx = RANK_THRESHOLDS.findIndex(r => referralCount >= r.minReferrals);
         const currentRank = RANK_THRESHOLDS[Math.max(0, currentRankIdx)];
-        // N13: firstGameBonus — всегда 3 000 ᚙ (базовый реферальный бонус при первой партии друга)
-        // activationBonus — это бонус за активацию звания, не за реферала
+        // N13: firstGameBonus — always 3,000 ᚙ (base referral bonus on friend's first game)
+        // activationBonus — rank activation bonus, not per-referral bonus
         const FIRST_GAME_BONUS = 3_000;
         const firstGameBonus = user?.militaryRank?.activationBonus
           ? Math.max(FIRST_GAME_BONUS, Number(user.militaryRank.activationBonus))
@@ -227,23 +227,23 @@ export const ReferralsPage: React.FC = () => {
           {
             ico: '🎁',
             title: `+${firstGameBonus.toLocaleString()} ᚙ`,
-            sub: 'когда друг сыграет первую партию',
+            sub: 'when a friend plays their first game',
           },
           {
             ico: '⚔️',
-            title: l1Percent > 0 ? `${l1Percent}% от выигрыша` : '50% от выигрыша',
-            sub: 'за каждую победу друга (уровень 1)',
+            title: l1Percent > 0 ? `${l1Percent}% of winnings` : '50% of winnings',
+            sub: 'for every win by your friend (level 1)',
           },
           {
             ico: '🔗',
-            title: '10% от выигрыша',
-            sub: 'от побед друзей вашего друга (уровень 2)',
+            title: '10% of winnings',
+            sub: "from your friend's friends' wins (level 2)",
           },
         ];
 
         return (
           <>
-            <div style={secLbl}>Как это работает</div>
+            <div style={secLbl}>How it works</div>
             <div style={{ margin: '0 18px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
               {rules.map((r) => (
                 <div key={r.ico} style={ruleRow}>
@@ -255,17 +255,17 @@ export const ReferralsPage: React.FC = () => {
                 </div>
               ))}
               <div style={{ fontSize: 11, color: 'var(--text-muted, #4A5270)', padding: '6px 0', lineHeight: 1.5 }}>
-                * Бонус начисляется только после первой завершённой партии реферала. Размер зависит от вашего военного звания.
+                * Bonus is credited only after the referral completes their first game. Amount depends on your military rank.
               </div>
             </div>
           </>
         );
       })()}
 
-      {/* Список рефералов */}
+      {/* Referral list */}
       {!loading && (data?.referrals?.length ?? 0) > 0 && (
         <>
-          <div style={secLbl}>Мои рефералы ({data!.total})</div>
+          <div style={secLbl}>My referrals ({data!.total})</div>
           {data!.referrals.map((ref) => (
             <div key={ref.id} style={refRow}>
               <Avatar user={ref as unknown as import("@/types").UserPublic} size="s" />
@@ -279,9 +279,9 @@ export const ReferralsPage: React.FC = () => {
               </div>
               <div>
                 {ref.referralActivated ? (
-                  <span style={tagGreen}>✓ Активен</span>
+                  <span style={tagGreen}>✓ Active</span>
                 ) : (
-                  <span style={tagGray}>⏳ Ждёт</span>
+                  <span style={tagGray}>⏳ Pending</span>
                 )}
               </div>
             </div>
@@ -291,7 +291,7 @@ export const ReferralsPage: React.FC = () => {
 
       {!loading && (data?.total ?? 0) === 0 && (
         <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', fontSize: 13, padding: '32px 0' }}>
-          Пока нет рефералов.<br />Поделитесь ссылкой с друзьями!
+          No referrals yet.<br />Share your link with friends!
         </div>
       )}
     </PageLayout>

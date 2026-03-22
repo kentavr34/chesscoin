@@ -30,7 +30,7 @@ export const TournamentsPage: React.FC = () => {
   const [joiningId, setJoiningId] = useState<string | null>(null);
   const [myMatches, setMyMatches] = useState<ActiveMatch[]>([]); // T6
   const [tournamentFinish, setTournamentFinish] = useState<{ tournamentName?: string; prize?: string; place?: number } | null>(null);
-  const tourInfo = useInfoPopup('tournaments', [{ icon: '🏆', title: 'Турниры ChessCoin', desc: 'Вступай в турниры, соревнуйся с другими игроками и выигрывай монеты. Система автоматически назначает тебе соперников.' }, { icon: '🌍', title: 'Чемпион Страны', desc: 'Для участия нужно вступить в страну (раздел Войны). Победитель становится Чемпионом Страны и получает бейдж в профиль.' }, { icon: '⚔️', title: 'Как проходит матч', desc: 'После вступления система найдёт соперника и пришлёт уведомление. Матч нужно сыграть в течение 24 часов — иначе засчитывается поражение.' }]); // T7
+  const tourInfo = useInfoPopup('tournaments', [{ icon: '🏆', title: 'ChessCoin Tournaments', desc: 'Join tournaments, compete with other players and win coins. The system automatically assigns opponents to you.' }, { icon: '🌍', title: 'Country Champion', desc: 'You need to join a country (Wars section) to participate. The winner becomes the Country Champion and receives a profile badge.' }, { icon: '⚔️', title: 'How a match works', desc: 'After joining, the system will find an opponent and send a notification. The match must be played within 24 hours — otherwise a loss is recorded.' }]); // T7
 
   const load = async () => {
     try {
@@ -45,20 +45,20 @@ export const TournamentsPage: React.FC = () => {
     }
   };
 
-  // T2+T7: Socket-обработчик турнирных событий
+  // T2+T7: Socket handler for tournament events
   useEffect(() => {
     const handler = (e: CustomEvent) => {
       const data = e.detail;
       if (!data) return;
 
-      // T2: назначен матч
+      // T2: match assigned
       if (data.type === 'tournament:match') {
-        load(); // обновляем список матчей
+        load(); // refresh match list
         window.dispatchEvent(new CustomEvent('chesscoin:toast', {
           detail: {
-            text: `🏆 Турнирный матч! Соперник: ${data.opponentName}`,
+            text: `🏆 Tournament match! Opponent: ${data.opponentName}`,
             type: 'info',
-            actionLabel: 'Играть',
+            actionLabel: 'Play',
             onAction: () => {
               import('react-router-dom').then(({ useNavigate: _ }) => {
                 window.location.hash = '#/battles';
@@ -68,13 +68,13 @@ export const TournamentsPage: React.FC = () => {
         }));
       }
 
-      // T7: турнир завершён
+      // T7: tournament finished
       if (data.type === 'tournament:finished') {
         setTournamentFinish(data);
       }
     };
 
-    // Слушаем через socket store
+    // Listen via socket store
     const sock = (window as unknown as Record<string, unknown>).__chesscoinSocket as
       | { on: (event: string, cb: (d: unknown) => void) => void }
       | undefined;
@@ -83,7 +83,7 @@ export const TournamentsPage: React.FC = () => {
       sock.on('tournament:finished', (d: unknown) => setTournamentFinish(d as { tournamentName?: string; prize?: string; place?: number }));
     }
 
-    // T7: слушаем событие завершения турнира из useSocket
+    // T7: listen for tournament finish event from useSocket
     const finishHandler = (e: Event) => {
       const data = (e as CustomEvent).detail;
       if (data) setTournamentFinish(data);
@@ -103,10 +103,10 @@ export const TournamentsPage: React.FC = () => {
       await tournamentsApi.join(id);
       await load();
     } catch (e: unknown) {
-      // T8: Красивое сообщение если требуется страна
+      // T8: User-friendly message when country is required
       const err = e as Record<string, unknown>;
       if ((err.message as string | undefined)?.includes('COUNTRY_REQUIRED') || err.error === 'COUNTRY_REQUIRED') {
-        showToast('🌍 Сначала вступи в страну в разделе Войны', 'info');
+        showToast('🌍 Join a country in Wars section first', 'info');
       } else {
         showToast((err.message as string | undefined) ?? t.tournaments.joinError);
       }
@@ -135,35 +135,35 @@ export const TournamentsPage: React.FC = () => {
   return (
     <PageLayout title={t.tournaments.title} centered>
 
-      {tourInfo.show && <InfoPopup infoKey="tournaments" slides={[{ icon: '🏆', title: 'Турниры ChessCoin', desc: 'Вступай в турниры, соревнуйся с другими игроками и выигрывай монеты. Система автоматически назначает тебе соперников.' }, { icon: '🌍', title: 'Чемпион Страны', desc: 'Для участия нужно вступить в страну (раздел Войны). Победитель становится Чемпионом Страны и получает бейдж в профиль.' }, { icon: '⚔️', title: 'Как проходит матч', desc: 'После вступления система найдёт соперника и пришлёт уведомление. Матч нужно сыграть в течение 24 часов — иначе засчитывается поражение.' }]} onClose={tourInfo.close} />}
-      {/* T7: Попап завершения турнира и получения приза */}
+      {tourInfo.show && <InfoPopup infoKey="tournaments" slides={[{ icon: '🏆', title: 'ChessCoin Tournaments', desc: 'Join tournaments, compete with other players and win coins. The system automatically assigns opponents to you.' }, { icon: '🌍', title: 'Country Champion', desc: 'You need to join a country (Wars section) to participate. The winner becomes the Country Champion and receives a profile badge.' }, { icon: '⚔️', title: 'How a match works', desc: 'After joining, the system will find an opponent and send a notification. The match must be played within 24 hours — otherwise a loss is recorded.' }]} onClose={tourInfo.close} />}
+      {/* T7: Tournament finish and prize popup */}
       {tournamentFinish && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 400, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div style={{ width: '100%', maxWidth: 340, background: 'linear-gradient(135deg,#161927,#1A2040)', border: '1px solid rgba(245,200,66,0.35)', borderRadius: 28, padding: '32px 24px', textAlign: 'center', boxShadow: '0 0 60px rgba(245,200,66,0.15)' }}>
             <div style={{ fontSize: 60, marginBottom: 16 }}>🏆</div>
             <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 16, fontWeight: 800, color: 'var(--accent, #F5C842)', marginBottom: 8 }}>
-              {tournamentFinish.tournamentName ?? 'Турнир завершён!'}
+              {tournamentFinish.tournamentName ?? 'Tournament finished!'}
             </div>
             <div style={{ fontSize: 22, fontWeight: 800, color: '#00D68F', marginBottom: 6, fontFamily: 'JetBrains Mono, monospace' }}>
               +{tournamentFinish.prize ? `${Number(tournamentFinish.prize).toLocaleString()} ᚙ` : '—'}
             </div>
             {tournamentFinish.place && (
               <div style={{ fontSize: 13, color: 'var(--text-secondary, #8B92A8)', marginBottom: 24 }}>
-                {tournamentFinish.place === 1 ? '🥇' : tournamentFinish.place === 2 ? '🥈' : '🥉'} {tournamentFinish.place} место
+                {tournamentFinish.place === 1 ? '🥇' : tournamentFinish.place === 2 ? '🥈' : '🥉'} {tournamentFinish.place} place
               </div>
             )}
             <button onClick={() => setTournamentFinish(null)} style={{ width: '100%', padding: '14px', background: 'var(--accent, #F5C842)', border: 'none', borderRadius: 14, color: '#0B0D11', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-              Отлично! 🎉
+              Awesome! 🎉
             </button>
           </div>
         </div>
       )}
 
-      {/* T6: Активные турнирные матчи */}
+      {/* T6: Active tournament matches */}
       {myMatches.length > 0 && (
         <div style={{ margin: '0 18px 12px' }}>
           <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent, #F5C842)', letterSpacing: '.08em', textTransform: 'uppercase' as const, marginBottom: 8 }}>
-            ⚔️ Твои активные матчи
+            ⚔️ Your active matches
           </div>
           {myMatches.map((match: ActiveMatch) => {
             const isP1 = match.player1?.userId === match.myUserId;
@@ -173,10 +173,10 @@ export const TournamentsPage: React.FC = () => {
                 <div style={{ fontSize: 20 }}>🏆</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>
-                    {match.tournament?.name} · Раунд {match.round}
+                    {match.tournament?.name} · Round {match.round}
                   </div>
                   <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>
-                    vs {opponent?.firstName ?? 'Соперник'}
+                    vs {opponent?.firstName ?? 'Opponent'}
                   </div>
                 </div>
                 {match.sessionId && (
@@ -184,7 +184,7 @@ export const TournamentsPage: React.FC = () => {
                     onClick={() => window.dispatchEvent(new CustomEvent('chesscoin:navigate', { detail: `/battles` }))}
                     style={{ padding: '7px 12px', background: 'var(--accent, #F5C842)', border: 'none', borderRadius: 10, color: '#0B0D11', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
                   >
-                    Играть →
+                    Play →
                   </button>
                 )}
               </div>
@@ -198,7 +198,7 @@ export const TournamentsPage: React.FC = () => {
         <button style={segBtn(filter === 'joined')} onClick={() => setFilter('joined')}>{t.tournaments.tabJoined}</button>
       </div>
 
-      {loading && <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: 32 }}>Загрузка...</div>}
+      {loading && <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: 32 }}>Loading...</div>}
 
       {!loading && filtered.length === 0 && (
         <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: 32, fontSize: 13 }}>
@@ -250,7 +250,7 @@ const TournamentCard: React.FC<{
   const t = useT();
   const color = TYPE_COLORS[tour.type] ?? 'var(--accent, #F5C842)';
   const icon = TYPE_ICONS[tour.type] ?? '🏆';
-  const endDate = tour.endAt ? new Date(tour.endAt).toLocaleDateString('ru-RU') : null;
+  const endDate = tour.endAt ? new Date(tour.endAt).toLocaleDateString('en-US') : null;
 
   return (
     <div style={{ margin: '0 18px 10px', background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 20, overflow: 'hidden' }}>
@@ -259,11 +259,11 @@ const TournamentCard: React.FC<{
           <span style={{ fontSize: 28 }}>{icon}</span>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 14, fontWeight: 800, color }}>{tour.name}</div>
-            {tour.period && <div style={{ fontSize: 10, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>Период: {tour.period}</div>}
+            {tour.period && <div style={{ fontSize: 10, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>Period: {tour.period}</div>}
           </div>
           {tour.isJoined && (
             <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--green, #00D68F)', background: 'rgba(0,214,143,0.1)', padding: '3px 8px', borderRadius: 6 }}>
-              ✓ Участник
+              ✓ Joined
             </div>
           )}
         </div>
@@ -271,19 +271,19 @@ const TournamentCard: React.FC<{
 
       <div style={{ display: 'flex', padding: '10px 16px', gap: 16 }}>
         <div>
-          <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>Участники</div>
+          <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>Players</div>
           <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)', marginTop: 2 }}>
             {tour.currentPlayers.toLocaleString()}
           </div>
         </div>
         <div>
-          <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>Взнос</div>
+          <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>Entry fee</div>
           <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 700, color: 'var(--accent, #F5C842)', marginTop: 2 }}>
             {fmtBalance(tour.entryFee)} ᚙ
           </div>
         </div>
         <div>
-          <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>Призовой фонд</div>
+          <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>Prize pool</div>
           <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 700, color, marginTop: 2 }}>
             {fmtBalance(tour.totalPool ?? tour.prizePool)} ᚙ
           </div>
@@ -297,16 +297,16 @@ const TournamentCard: React.FC<{
             <span style={{ fontSize: 13, color: 'var(--green, #00D68F)' }}>✓ {tour.myStats.wins}</span>
             <span style={{ fontSize: 13, color: 'var(--red, #FF4D6A)' }}>✗ {tour.myStats.losses}</span>
             <span style={{ fontSize: 13, color: 'var(--text-secondary, #8B92A8)' }}>= {tour.myStats.draws}</span>
-            <span style={{ fontSize: 13, color: 'var(--accent, #F5C842)', marginLeft: 'auto' }}>Очки: {tour.myStats.points.toFixed(1)}</span>
+            <span style={{ fontSize: 13, color: 'var(--accent, #F5C842)', marginLeft: 'auto' }}>Points: {tour.myStats.points.toFixed(1)}</span>
           </div>
         </div>
       )}
 
-      {endDate && <div style={{ padding: '0 16px 4px', fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>До: {endDate}</div>}
+      {endDate && <div style={{ padding: '0 16px 4px', fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>Ends: {endDate}</div>}
 
       <div style={{ display: 'flex', gap: 8, padding: '10px 16px 14px' }}>
         <button onClick={onView} style={viewBtn}>{t.tournaments.leaderboard}</button>
-        <button onClick={onDonate} style={donateBtn}>💸 Донат</button>
+        <button onClick={onDonate} style={donateBtn}>💸 Donate</button>
         {!tour.isJoined ? (
           <button onClick={onJoin} disabled={joining} style={{ ...joinBtnStyle, opacity: joining ? 0.6 : 1 }}>
             {joining ? t.tournaments.joining : t.tournaments.join}
@@ -341,10 +341,10 @@ const TournamentDetailModal: React.FC<{ tournamentId: string; onClose: () => voi
     <div style={overlayStyle} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div style={modalStyle}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>🏆 Лидерборд</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>🏆 Leaderboard</div>
           <button onClick={onClose} style={closeBtn}>✕</button>
         </div>
-        {!data && <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: 24 }}>Загрузка...</div>}
+        {!data && <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: 24 }}>Loading...</div>}
         {data?.players?.map((p: TournamentPlayer, i: number) => (
           <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
             <span style={{ fontSize: 13, fontWeight: 700, color: i === 0 ? 'var(--accent, #F5C842)' : i === 1 ? '#C0C0C0' : i === 2 ? '#CD7F32' : 'var(--text-muted, #4A5270)', width: 24, textAlign: 'center' }}>
@@ -361,7 +361,7 @@ const TournamentDetailModal: React.FC<{ tournamentId: string; onClose: () => voi
           </div>
         ))}
         {!data?.players?.length && data && (
-          <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: 16 }}>Нет участников</div>
+          <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: 16 }}>No participants</div>
         )}
       </div>
     </div>
@@ -382,8 +382,8 @@ const DonateModal: React.FC<{ tournamentId: string; onClose: () => void; onSucce
     <div style={overlayStyle} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div style={modalStyle}>
         <div style={handleBar} />
-        <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)', marginBottom: 8 }}>💸 Донат в кассу</div>
-        <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginBottom: 16 }}>Все монеты идут победителям турнира!</div>
+        <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)', marginBottom: 8 }}>💸 Donate to prize pool</div>
+        <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginBottom: 16 }}>All coins go to tournament winners!</div>
         <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
           {['10000', '50000', '100000', '500000'].map(v => (
             <button key={v} onClick={() => setAmount(v)} style={chipBtn(amount === v)}>{fmtBalance(v)}</button>

@@ -98,7 +98,7 @@ export const PuzzleDailyPage: React.FC = () => {
       return true;
     } else {
       setWrong(true);
-      setErrorMsg('Неверный ход! Попробуйте ещё раз.');
+      setErrorMsg('Wrong move! Try again.');
       setTimeout(() => setWrong(false), 800);
       return false;
     }
@@ -106,7 +106,7 @@ export const PuzzleDailyPage: React.FC = () => {
 
   if (loading) {
     return (
-      <PageLayout title="Задача дня" onBack={() => navigate(-1)}>
+      <PageLayout title="Daily Puzzle" onBack={() => navigate(-1)}>
         <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}>
           <div style={{ width: 32, height: 32, border: '3px solid #F5C842', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.75s linear infinite' }} />
           <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
@@ -117,8 +117,8 @@ export const PuzzleDailyPage: React.FC = () => {
 
   if (!puzzle) {
     return (
-      <PageLayout title="Задача дня" onBack={() => navigate(-1)}>
-        <div style={{ textAlign: 'center', padding: 40, color: '#A8B0C8' }}>Задача не найдена</div>
+      <PageLayout title="Daily Puzzle" onBack={() => navigate(-1)}>
+        <div style={{ textAlign: 'center', padding: 40, color: '#A8B0C8' }}>Puzzle not found</div>
       </PageLayout>
     );
   }
@@ -196,9 +196,9 @@ export const PuzzleDailyPage: React.FC = () => {
         <div style={{ margin: '16px', padding: '20px 16px', background: '#13161E', borderRadius: 16, textAlign: 'center' }}>
           <div style={{ fontSize: 32 }}>✅</div>
           <div style={{ fontSize: 16, fontWeight: 700, color: '#F5C842', marginTop: 8 }}>
-            {rewarded ? `+${Number(puzzle.reward).toLocaleString()} ᚙ получено!` : 'Задача уже была решена'}
+            {rewarded ? `+${Number(puzzle.reward).toLocaleString()} ᚙ earned!` : 'Puzzle already solved'}
           </div>
-          <div style={{ fontSize: 13, color: '#A8B0C8', marginTop: 4 }}>Приходи завтра за новой задачей!</div>
+          <div style={{ fontSize: 13, color: '#A8B0C8', marginTop: 4 }}>Come back tomorrow for a new puzzle!</div>
           <button onClick={() => navigate(-1)} style={{
             marginTop: 16, padding: '12px 32px', background: '#F5C842', color: '#0B0D11',
             border: 'none', borderRadius: 12, fontWeight: 700, cursor: 'pointer', fontSize: 14,

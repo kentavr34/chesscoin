@@ -218,7 +218,7 @@ export const GamePage: React.FC = () => {
       {/* Spectator banner */}
       {isSpectator && (
         <div style={{ background: 'rgba(245,200,66,0.1)', border: '1px solid rgba(245,200,66,0.2)', borderRadius: 10, margin: '6px 12px 0', padding: '7px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: 12, color: 'var(--accent, #F5C842)', fontWeight: 600 }}>👁 Режим наблюдателя</span>
+          <span style={{ fontSize: 12, color: 'var(--accent, #F5C842)', fontWeight: 600 }}>👁 {t.game.spectating}</span>
           <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', color: 'var(--text-secondary, #8B92A8)', fontSize: 12, cursor: 'pointer', padding: 0 }}>{t.common.back}</button>
         </div>
       )}
@@ -230,7 +230,7 @@ export const GamePage: React.FC = () => {
         {session.bet && (
           <div style={{ textAlign: 'center', padding: '4px 0 2px' }}>
             <span style={tagStyle('var(--accent, #F5C842)', 'rgba(245,200,66,0.12)')}>
-              ⚔ СТАВКА {fmtBalance(session.bet)} ᚙ
+              ⚔ BET {fmtBalance(session.bet)} ᚙ
             </span>
           </div>
         )}
@@ -390,7 +390,7 @@ const MoveHistory: React.FC<{ pgn: string }> = ({ pgn }) => {
   const moves = parsePgnMoves(pgn);
   const last8 = moves.slice(-8);
   if (last8.length === 0) {
-    return <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: 'var(--text-muted, #4A5270)', marginTop: 4 }}>— партия началась —</div>;
+    return <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: 'var(--text-muted, #4A5270)', marginTop: 4 }}>— game started —</div>;
   }
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 12px', marginTop: 4 }}>

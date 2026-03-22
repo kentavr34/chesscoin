@@ -24,10 +24,10 @@ const groupByCategory = (tasks: Task[]): Record<string, Task[]> => {
 };
 
 const CAT_LABEL: Record<string, string> = {
-  DAILY: '🌅 Ежедневные',
-  LEARN: '📚 Обучение',
-  SOCIAL: '📢 Социальные',
-  OTHER: '📋 Прочее',
+  DAILY: '🌅 Daily',
+  LEARN: '📚 Learning',
+  SOCIAL: '📢 Social',
+  OTHER: '📋 Other',
 };
 
 export const TasksPage: React.FC = () => {
@@ -36,7 +36,7 @@ export const TasksPage: React.FC = () => {
   const { user, setUser } = useUserStore();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const tasksInfo = useInfoPopup('tasks', [{ icon: '📋', title: 'Задания', desc: 'Выполняй задания и получай монеты ᚙ. Ежедневные задания обновляются каждый день.' }, { icon: '👥', title: 'Реферальные задания', desc: 'Приглашай друзей и выполняй реферальные задания — бонус растёт с каждым новым игроком.' }]);
+  const tasksInfo = useInfoPopup('tasks', [{ icon: '📋', title: 'Tasks', desc: 'Complete tasks and earn coins ᚙ. Daily tasks refresh every day.' }, { icon: '👥', title: 'Referral Tasks', desc: 'Invite friends and complete referral tasks — the bonus grows with each new player.' }]);
   const [claiming, setClaiming] = useState<string | null>(null);
   const [dailyPuzzle, setDailyPuzzle] = useState<PuzzleItem | null>(null);
   const [puzzleLoading, setPuzzleLoading] = useState(true);
@@ -61,7 +61,7 @@ export const TasksPage: React.FC = () => {
       const updated = await authApi.me();
       setUser(updated);
     } catch (e: unknown) {
-      window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text: (e instanceof Error ? e.message : String(e)) ?? 'Ошибка', type: 'error' } }));
+      window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text: (e instanceof Error ? e.message : String(e)) ?? 'Error', type: 'error' } }));
     } finally {
       setClaiming(null);
     }
@@ -71,25 +71,25 @@ export const TasksPage: React.FC = () => {
 
   return (
     <>
-    {tasksInfo.show && <InfoPopup infoKey="tasks" slides={[{ icon: '📋', title: 'Задания', desc: 'Выполняй задания и получай монеты ᚙ. Ежедневные задания обновляются каждый день.' }, { icon: '👥', title: 'Реферальные задания', desc: 'Приглашай друзей и выполняй реферальные задания — бонус растёт с каждым новым игроком.' }]} onClose={tasksInfo.close} />}
+    {tasksInfo.show && <InfoPopup infoKey="tasks" slides={[{ icon: '📋', title: 'Tasks', desc: 'Complete tasks and earn coins ᚙ. Daily tasks refresh every day.' }, { icon: '👥', title: 'Referral Tasks', desc: 'Invite friends and complete referral tasks — the bonus grows with each new player.' }]} onClose={tasksInfo.close} />}
     <PageLayout title={t.tasks.title} centered>
-      {/* Прогресс */}
+      {/* Progress */}
       <div style={progressStrip}>
         <span style={{ fontSize: 20 }}>📊</span>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary, #F0F2F8)' }}>
-            {completed} из {tasks.length} выполнено · +{fmtBalance(String(totalReward))} ᚙ осталось
+            {completed} of {tasks.length} completed · +{fmtBalance(String(totalReward))} ᚙ remaining
           </div>
-          <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>Обновление через 08:38</div>
+          <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>Refresh in 08:38</div>
           <div style={{ height: 3, background: '#181B22', borderRadius: 2, marginTop: 7, overflow: 'hidden' }}>
             <div style={{ height: '100%', width: `${tasks.length ? (completed / tasks.length) * 100 : 0}%`, background: 'linear-gradient(90deg,#F5C842,#FFD966)', borderRadius: 2, transition: 'width .6s' }} />
           </div>
         </div>
       </div>
 
-      {/* ── Задача дня ─────────────────────────────────────────────── */}
+      {/* ── Daily Puzzle ─────────────────────────────────────────────── */}
       <div style={{ margin: '12px 18px 0' }}>
-        <div style={secStyle}>📅 Задача дня</div>
+        <div style={secStyle}>📅 Daily Puzzle</div>
         {puzzleLoading ? (
           <div style={{ height: 80, background: 'var(--bg-card, #1C2030)', borderRadius: 14, margin: '0 0 4px' }} />
         ) : dailyPuzzle ? (
@@ -115,10 +115,10 @@ export const TasksPage: React.FC = () => {
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>
-                {dailyPuzzle.completed ? 'Задача дня решена!' : 'Реши задачу дня'}
+                {dailyPuzzle.completed ? 'Daily puzzle solved!' : 'Solve daily puzzle'}
               </div>
               <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>
-                Рейтинг {dailyPuzzle.rating} · {dailyPuzzle.themes.slice(0, 2).join(', ')}
+                Rating {dailyPuzzle.rating} · {dailyPuzzle.themes.slice(0, 2).join(', ')}
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
@@ -126,21 +126,21 @@ export const TasksPage: React.FC = () => {
                 {dailyPuzzle.completed ? `+${fmtBalance(dailyPuzzle.earnedReward ?? dailyPuzzle.reward)}` : `+${fmtBalance(dailyPuzzle.reward)}`} ᚙ
               </div>
               <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', marginTop: 2 }}>
-                {dailyPuzzle.completed ? 'получено' : '→ Решить'}
+                {dailyPuzzle.completed ? 'earned' : '→ Solve'}
               </div>
             </div>
           </div>
         ) : (
           <div style={{ padding: '12px 0', textAlign: 'center', fontSize: 12, color: 'var(--text-muted, #4A5270)' }}>
-            Задача дня недоступна
+            Daily puzzle unavailable
           </div>
         )}
 
-        {/* Кнопки практики */}
+        {/* Practice buttons */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginTop: 8, marginBottom: 4 }}>
           {(['easy', 'medium', 'hard'] as const).map((diff) => {
             const icons = { easy: '🟢', medium: '🟡', hard: '🔴' };
-            const labels = { easy: 'Лёгкая', medium: 'Средняя', hard: 'Сложная' };
+            const labels = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
             return (
               <div key={diff} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <button
@@ -164,7 +164,7 @@ export const TasksPage: React.FC = () => {
                     color: 'var(--accent, #F5C842)', fontSize: 9, fontWeight: 700,
                     cursor: 'pointer', fontFamily: 'inherit',
                   }}
-                  title="Тест-режим: без подсказок, награда ×1.5"
+                  title="Test mode: no hints, reward ×1.5"
                 >
                   🎯 ×1.5
                 </button>
@@ -180,11 +180,11 @@ export const TasksPage: React.FC = () => {
         <div style={{ textAlign: 'center', padding: '48px 24px' }}>
           <div style={{ fontSize: 56, marginBottom: 16 }}>📋</div>
           <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)', marginBottom: 8 }}>
-            Задания скоро появятся
+            Tasks coming soon
           </div>
           <div style={{ fontSize: 13, color: 'var(--text-secondary, #8B92A8)', lineHeight: 1.6 }}>
-            Выполняй задания и получай монеты ᚙ.<br />
-            Следи за обновлениями в нашем канале!
+            Complete tasks and earn coins ᚙ.<br />
+            Stay tuned for updates in our channel!
           </div>
         </div>
       )}
@@ -209,7 +209,7 @@ export const TasksPage: React.FC = () => {
                 {task.maxProgress && !task.isCompleted && (
                   <div style={{ marginTop: 6 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-                      <span style={{ fontSize: 9, color: 'var(--text-muted, #4A5270)' }}>Прогресс</span>
+                      <span style={{ fontSize: 9, color: 'var(--text-muted, #4A5270)' }}>Progress</span>
                       <span style={{ fontSize: 9, color: '#9B85FF', fontWeight: 700 }}>
                         {task.progress ?? 0} / {task.maxProgress}
                       </span>
