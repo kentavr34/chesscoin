@@ -2,15 +2,15 @@ import { useT } from '@/i18n/useT';
 /**
  * AdminPage.tsx
  *
- * Панель управления для владельца/админа.
- * Доступна только пользователям с isAdmin = true.
- * Маршрут: /admin
+ * Admin panel for the owner/admin.
+ * Only accessible to users with isAdmin = true.
+ * Route: /admin
  *
- * Возможности:
- *   — Загрузка новых премиум-аватаров (drag & drop или выбор файла)
- *   — Список всех аватаров с количеством владельцев
- *   — Изменение цены / редкости / активности
- *   — Удаление (soft delete если есть владельцы, hard delete если нет)
+ * Features:
+ *   - Upload new premium avatars (drag & drop or file selection)
+ *   - List all avatars with owner count
+ *   - Change price / rarity / active status
+ *   - Delete (soft delete if owners exist, hard delete if none)
  */
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -102,7 +102,7 @@ export const AdminPage: React.FC = () => {
     setTimeout(() => setToast(null), 3000);
   };
 
-  // Проверяем права доступа
+  // Check access rights
   useEffect(() => {
     api.get('/admin/stats').then((r: any) => setStats(r)).catch(() => {});
     api.get('/admin/users').then((r: any) => setUsers(r.users ?? [])).catch(() => {});
@@ -119,7 +119,7 @@ export const AdminPage: React.FC = () => {
     try {
       const r = await api.post(`/admin/users/${id}/ban`, {});
       setUsers(prev => prev.map(u => u.id === id ? { ...u, isBanned: (r as Record<string,unknown>).isBanned } : u));
-      showToast((r as Record<string,unknown>).isBanned ? 'Пользователь заблокирован' : 'Блокировка снята');
+      showToast((r as Record<string,unknown>).isBanned ? 'User banned' : 'Ban removed');
     } catch (e: unknown) { showToast((e instanceof Error ? e.message : String(e)), false); }
   };
 
@@ -129,7 +129,7 @@ export const AdminPage: React.FC = () => {
       const url = isChannel ? '/admin/channel' : '/admin/broadcast';
       const text = isChannel ? channelText : broadcastText;
       const r = await api.post(url, { text, buttonText: broadcastBtn || undefined, buttonUrl: broadcastUrl || undefined });
-      showToast(isChannel ? `✅ Опубликовано в канал` : `✅ Отправлено: ${(r as Record<string,unknown>).sent}, ошибок: ${(r as Record<string,unknown>).failed}`);
+      showToast(isChannel ? `✅ Published to channel` : `✅ Sent: ${(r as Record<string,unknown>).sent}, errors: ${(r as Record<string,unknown>).failed}`);
       if (!isChannel) { setBroadcastText(''); setBroadcastBtn(''); setBroadcastUrl(''); }
       else setChannelText('');
     } catch (e: unknown) { showToast((e instanceof Error ? e.message : String(e)), false); }
@@ -148,7 +148,7 @@ export const AdminPage: React.FC = () => {
       const r = await adminApi.listAvatars();
       setAvatars(r.items);
     } catch {
-      showToast('Ошибка загрузки списка', false);
+      showToast('Loading error', false);
     } finally {
       setLoading(false);
     }
@@ -158,17 +158,17 @@ export const AdminPage: React.FC = () => {
     if (isAdmin) loadAvatars();
   }, [isAdmin, loadAvatars]);
 
-  // ── Нет доступа ────────────────────────────────────────────────────────────
+  // ── Access denied ────────────────────────────────────────────────────────────
   if (isAdmin === false) {
     return (
-      <PageLayout title="⛔ Нет доступа" backTo="/">
+      <PageLayout title="⛔ Access denied" backTo="/">
         <div style={{ padding: '60px 24px', textAlign: 'center' }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
           <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)', marginBottom: 8 }}>
-            Только для администраторов
+            Admins only
           </div>
           <div style={{ fontSize: 13, color: 'var(--text-secondary, #8B92A8)' }}>
-            Твой аккаунт не имеет прав администратора.
+            Your account does not have admin privileges.
           </div>
         </div>
       </PageLayout>
@@ -179,14 +179,14 @@ export const AdminPage: React.FC = () => {
     return (
       <PageLayout title="Admin" backTo="/">
         <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-muted, #4A5270)' }}>
-          Проверка прав...
+          Checking permissions...
         </div>
       </PageLayout>
     );
   }
 
   return (
-    <PageLayout title="🛠 Админ-панель" backTo="/" centered>
+    <PageLayout title="🛠 Admin Panel" backTo="/" centered>
       {/* Toast */}
       {toast && (
         <div style={{
@@ -205,9 +205,9 @@ export const AdminPage: React.FC = () => {
       <div style={{ margin: '8px 18px 0', padding: '12px 16px', background: 'rgba(245,200,66,0.08)', border: '1px solid rgba(245,200,66,0.2)', borderRadius: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
         <span style={{ fontSize: 20 }}>👑</span>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--accent, #F5C842)' }}>Администратор</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--accent, #F5C842)' }}>Administrator</div>
           <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>
-            {user?.firstName} · Аватаров в магазине: {avatars.filter(a => a.isActive).length}
+            {user?.firstName} · Avatars in shop: {avatars.filter(a => a.isActive).length}
           </div>
         </div>
       </div>
@@ -230,7 +230,7 @@ export const AdminPage: React.FC = () => {
       {tab === 'upload' && (
         <UploadTab
           onSuccess={(item) => {
-            showToast(`✅ Аватар «${item.name}» загружен!`);
+            showToast(`✅ Avatar "${item.name}" uploaded!`);
             setAvatars(prev => [item, ...prev]);
             setTab('list');
           }}
@@ -244,18 +244,18 @@ export const AdminPage: React.FC = () => {
           loading={loading}
           onUpdate={(updated) => {
             setAvatars(prev => prev.map(a => a.id === updated.id ? updated : a));
-            showToast('Сохранено');
+            showToast('Saved');
           }}
           onDelete={(id, deleted) => {
             if (deleted) setAvatars(prev => prev.filter(a => a.id !== id));
             else setAvatars(prev => prev.map(a => a.id === id ? { ...a, isActive: false } : a));
-            showToast(deleted ? 'Аватар удалён' : 'Аватар скрыт из магазина');
+            showToast(deleted ? 'Avatar deleted' : 'Avatar hidden from shop');
           }}
           onError={(msg) => showToast(msg, false)}
         />
       )}
 
-      {/* A5: Статистика */}
+      {/* A5: Statistics */}
       {tab === 'stats' && stats && (
         <div style={{ margin: '0 18px' }}>
           {[
@@ -274,7 +274,7 @@ export const AdminPage: React.FC = () => {
         </div>
       )}
 
-      {/* A1: Пользователи */}
+      {/* A1: Users */}
       {tab === 'users' && (
         <div style={{ margin: '0 18px' }}>
           <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
@@ -295,10 +295,10 @@ export const AdminPage: React.FC = () => {
         </div>
       )}
 
-      {/* A2+A3: Рассылка */}
+      {/* A2+A3: Broadcast */}
       {tab === 'broadcast' && (
         <div style={{ margin: '0 18px' }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary, #8B92A8)', marginBottom: 8, textTransform: 'uppercase' as const, letterSpacing: '.06em' }}>📢 Рассылка всем игрокам</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary, #8B92A8)', marginBottom: 8, textTransform: 'uppercase' as const, letterSpacing: '.06em' }}>📢 Broadcast to all players</div>
           <textarea value={broadcastText} onChange={e => setBroadcastText(e.target.value)} placeholder={t.admin.broadcastPlaceholder} rows={4} style={{ width: '100%', padding: 12, background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, color: 'var(--text-primary, #F0F2F8)', fontSize: 13, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' as const }} />
           <input value={broadcastBtn} onChange={e => setBroadcastBtn(e.target.value)} placeholder={t.admin.buttonTextPlaceholder} style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, color: 'var(--text-primary, #F0F2F8)', fontSize: 13, fontFamily: 'inherit', marginTop: 8, boxSizing: 'border-box' as const }} />
           <input value={broadcastUrl} onChange={e => setBroadcastUrl(e.target.value)} placeholder={t.admin.buttonUrlPlaceholder} style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, color: 'var(--text-primary, #F0F2F8)', fontSize: 13, fontFamily: 'inherit', marginTop: 8, boxSizing: 'border-box' as const }} />
@@ -306,7 +306,7 @@ export const AdminPage: React.FC = () => {
             {sending ? t.admin.sending : t.admin.sendBroadcast}
           </button>
 
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary, #8B92A8)', margin: '20px 0 8px', textTransform: 'uppercase' as const, letterSpacing: '.06em' }}>📣 Пост в канал</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary, #8B92A8)', margin: '20px 0 8px', textTransform: 'uppercase' as const, letterSpacing: '.06em' }}>📣 Post to channel</div>
           <textarea value={channelText} onChange={e => setChannelText(e.target.value)} placeholder={t.admin.channelPlaceholder} rows={4} style={{ width: '100%', padding: 12, background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, color: 'var(--text-primary, #F0F2F8)', fontSize: 13, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' as const }} />
           <button onClick={() => sendBroadcast(true)} disabled={sending || !channelText} style={{ width: '100%', marginTop: 8, padding: '14px', background: sending ? '#2A2F48' : 'rgba(0,152,234,0.15)', border: '1px solid rgba(0,152,234,0.3)', borderRadius: 14, color: sending ? '#8B92A8' : '#0098EA', fontWeight: 700, fontSize: 14, cursor: sending ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
             {sending ? t.admin.publishing : t.admin.publish}
@@ -314,10 +314,10 @@ export const AdminPage: React.FC = () => {
         </div>
       )}
 
-      {/* A4 / MINOR-02: Создание нестандартного турнира */}
+      {/* A4 / MINOR-02: Custom tournament creation */}
       {tab === 'tournament' && (
         <div style={{ margin: '0 18px' }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary, #8B92A8)', marginBottom: 12, textTransform: 'uppercase' as const, letterSpacing: '.06em' }}>🏆 Создать турнир</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary, #8B92A8)', marginBottom: 12, textTransform: 'uppercase' as const, letterSpacing: '.06em' }}>🏆 Create tournament</div>
           {[
             { label: t.admin.tourName, val: tourName, set: setTourName, placeholder: 'ChessCoin Championship 2026' },
           ].map(({ label, val, set, placeholder }) => (
@@ -328,7 +328,7 @@ export const AdminPage: React.FC = () => {
             </div>
           ))}
           <div style={{ marginBottom: 10 }}>
-            <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', marginBottom: 4, textTransform: 'uppercase' as const, letterSpacing: '.06em' }}>Тип</div>
+            <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', marginBottom: 4, textTransform: 'uppercase' as const, letterSpacing: '.06em' }}>Type</div>
             <select value={tourType} onChange={e => setTourType(e.target.value)}
               style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, color: 'var(--text-primary, #F0F2F8)', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' as const }}>
               {['WORLD', 'COUNTRY', 'SEASONAL', 'MONTHLY', 'WEEKLY'].map(t => (
@@ -338,12 +338,12 @@ export const AdminPage: React.FC = () => {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
             <div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', marginBottom: 4, textTransform: 'uppercase' as const, letterSpacing: '.06em' }}>Взнос ᚙ</div>
+              <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', marginBottom: 4, textTransform: 'uppercase' as const, letterSpacing: '.06em' }}>Entry fee ᚙ</div>
               <input value={tourFee} onChange={e => setTourFee(e.target.value)} type="number"
                 style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, color: 'var(--text-primary, #F0F2F8)', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' as const }} />
             </div>
             <div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', marginBottom: 4, textTransform: 'uppercase' as const, letterSpacing: '.06em' }}>Дней</div>
+              <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', marginBottom: 4, textTransform: 'uppercase' as const, letterSpacing: '.06em' }}>Days</div>
               <input value={tourDays} onChange={e => setTourDays(e.target.value)} type="number"
                 style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, color: 'var(--text-primary, #F0F2F8)', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' as const }} />
             </div>
@@ -354,7 +354,7 @@ export const AdminPage: React.FC = () => {
               setTourCreating(true);
               try {
                 await api.post('/admin/tournaments', { name: tourName, type: tourType, entryFee: tourFee, durationDays: tourDays });
-                showToast(`✅ Турнир «${tourName}» создан!`);
+                showToast(`✅ Tournament "${tourName}" created!`);
                 setTourName('');
               } catch (e: unknown) { showToast((e instanceof Error ? e.message : String(e)), false); }
               setTourCreating(false);
@@ -364,52 +364,52 @@ export const AdminPage: React.FC = () => {
           </button>
         </div>
       )}
-      {/* Airdrop вкладка */}
+      {/* Airdrop tab */}
       {tab === 'airdrop' && (
         <div style={{ padding: '0 18px 32px' }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 16 }}>🪂 Массовое начисление ᚙ</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 16 }}>🪂 Mass distribution ᚙ</div>
 
-          {/* Режим */}
-          <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 6, fontWeight: 700 }}>РЕЖИМ</div>
+          {/* Mode */}
+          <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 6, fontWeight: 700 }}>MODE</div>
           <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
-            {([['fixed','Фиксировано'],['multiplier','Множитель'],['proportional','Пропорционально']] as const).map(([m, l]) => (
+            {([['fixed','Fixed'],['multiplier','Multiplier'],['proportional','Proportional']] as const).map(([m, l]) => (
               <button key={m} onClick={() => setAirdropMode(m)} style={{ flex: 1, padding: '8px 4px', borderRadius: 10, border: 'none', fontFamily: 'inherit', fontSize: 10, fontWeight: 700, cursor: 'pointer', background: airdropMode === m ? 'rgba(245,200,66,0.15)' : 'var(--bg-card,#1C2030)', color: airdropMode === m ? 'var(--accent,#F5C842)' : 'var(--text-secondary)' }}>{l}</button>
             ))}
           </div>
 
-          {/* Параметры по режиму */}
+          {/* Parameters by mode */}
           {airdropMode === 'fixed' && (
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 6 }}>СУММА КАЖДОМУ (ᚙ)</div>
-              <input value={airdropAmount} onChange={e => setAirdropAmount(e.target.value)} placeholder="например 5000" style={{ width: '100%', padding: '10px 12px', background: 'var(--bg-input,#1A1E2E)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'var(--text-primary)', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' }} />
+              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 6 }}>AMOUNT PER USER (ᚙ)</div>
+              <input value={airdropAmount} onChange={e => setAirdropAmount(e.target.value)} placeholder="e.g. 5000" style={{ width: '100%', padding: '10px 12px', background: 'var(--bg-input,#1A1E2E)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'var(--text-primary)', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' }} />
             </div>
           )}
           {airdropMode === 'multiplier' && (
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 6 }}>МНОЖИТЕЛЬ (текущий баланс × X)</div>
-              <input value={airdropMultiplier} onChange={e => setAirdropMultiplier(e.target.value)} placeholder="например 1.5" style={{ width: '100%', padding: '10px 12px', background: 'var(--bg-input,#1A1E2E)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'var(--text-primary)', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' }} />
+              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 6 }}>MULTIPLIER (current balance × X)</div>
+              <input value={airdropMultiplier} onChange={e => setAirdropMultiplier(e.target.value)} placeholder="e.g. 1.5" style={{ width: '100%', padding: '10px 12px', background: 'var(--bg-input,#1A1E2E)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'var(--text-primary)', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' }} />
             </div>
           )}
           {airdropMode === 'proportional' && (
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 6 }}>ОБЩИЙ ПУЛ (ᚙ)</div>
-              <input value={airdropPool} onChange={e => setAirdropPool(e.target.value)} placeholder="например 10000000" style={{ width: '100%', padding: '10px 12px', background: 'var(--bg-input,#1A1E2E)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'var(--text-primary)', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' }} />
+              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 6 }}>TOTAL POOL (ᚙ)</div>
+              <input value={airdropPool} onChange={e => setAirdropPool(e.target.value)} placeholder="e.g. 10000000" style={{ width: '100%', padding: '10px 12px', background: 'var(--bg-input,#1A1E2E)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'var(--text-primary)', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' }} />
             </div>
           )}
 
-          {/* Фильтр и метка */}
+          {/* Filter and label */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
             <div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 6 }}>МИН. БАЛАНС (ᚙ)</div>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 6 }}>MIN. BALANCE (ᚙ)</div>
               <input value={airdropMinBalance} onChange={e => setAirdropMinBalance(e.target.value)} placeholder="0" style={{ width: '100%', padding: '10px 12px', background: 'var(--bg-input,#1A1E2E)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'var(--text-primary)', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' }} />
             </div>
             <div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 6 }}>НАЗВАНИЕ</div>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 6 }}>LABEL</div>
               <input value={airdropLabel} onChange={e => setAirdropLabel(e.target.value)} placeholder="Token Launch Airdrop" style={{ width: '100%', padding: '10px 12px', background: 'var(--bg-input,#1A1E2E)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'var(--text-primary)', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' }} />
             </div>
           </div>
 
-          {/* Кнопки */}
+          {/* Buttons */}
           <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
             <button
               disabled={airdropLoading}
@@ -420,34 +420,34 @@ export const AdminPage: React.FC = () => {
                   const r = await fetch('/api/v1/admin/airdrop/execute', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('access_token')}` }, body: JSON.stringify(body) });
                   const d = await r.json();
                   setAirdropPreview(d);
-                } catch (e) { alert('Ошибка') } finally { setAirdropLoading(false); }
+                } catch (e) { alert('Error') } finally { setAirdropLoading(false); }
               }}
               style={{ flex: 1, padding: '12px', background: 'rgba(255,255,255,0.07)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, fontFamily: 'inherit', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-              👁 Предпросмотр
+              👁 Preview
             </button>
             <button
               disabled={airdropLoading || !airdropPreview}
               onClick={async () => {
-                if (!confirm(`Начислить ${airdropPreview?.totalAirdrop} ᚙ для ${airdropPreview?.participants} игроков?`)) return;
+                if (!confirm(`Distribute ${airdropPreview?.totalAirdrop} ᚙ to ${airdropPreview?.participants} players?`)) return;
                 setAirdropLoading(true);
                 try {
                   const body = { mode: airdropMode, dryRun: false, minBalance: airdropMinBalance || '0', label: airdropLabel, fixedAmount: airdropAmount, multiplier: airdropMultiplier, totalPool: airdropPool };
                   const r = await fetch('/api/v1/admin/airdrop/execute', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('access_token')}` }, body: JSON.stringify(body) });
                   const d = await r.json();
-                  alert(`✅ Airdrop выполнен: ${d.participants} игроков, ${d.totalAirdrop} ᚙ`);
+                  alert(`✅ Airdrop completed: ${d.participants} players, ${d.totalAirdrop} ᚙ`);
                   setAirdropPreview(null);
-                } catch (e) { alert('Ошибка') } finally { setAirdropLoading(false); }
+                } catch (e) { alert('Error') } finally { setAirdropLoading(false); }
               }}
               style={{ flex: 1, padding: '12px', background: 'rgba(245,200,66,0.15)', color: 'var(--accent,#F5C842)', border: '1px solid rgba(245,200,66,0.3)', borderRadius: 12, fontFamily: 'inherit', fontSize: 12, fontWeight: 700, cursor: airdropPreview ? 'pointer' : 'not-allowed', opacity: airdropPreview ? 1 : 0.5 }}>
-              🪂 Запустить
+              🪂 Execute
             </button>
           </div>
 
-          {/* Предпросмотр */}
+          {/* Preview */}
           {airdropPreview && (
             <div style={{ background: 'var(--bg-card,#1C2030)', borderRadius: 14, padding: '14px' }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 10 }}>
-                Участников: {airdropPreview.participants} · Итого: {Number(airdropPreview.totalAirdrop).toLocaleString()} ᚙ
+                Participants: {airdropPreview.participants} · Total: {Number(airdropPreview.totalAirdrop).toLocaleString()} ᚙ
               </div>
               {airdropPreview.preview?.slice(0, 5).map((p: {name:string; amount:string}, i: number) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-secondary)', marginBottom: 4 }}>
@@ -456,7 +456,7 @@ export const AdminPage: React.FC = () => {
                 </div>
               ))}
               {airdropPreview.participants > 5 && (
-                <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 6 }}>...и ещё {airdropPreview.participants - 5} игроков</div>
+                <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 6 }}>...and {airdropPreview.participants - 5} more players</div>
               )}
             </div>
           )}
@@ -482,12 +482,12 @@ const UploadTab: React.FC<{
   const [uploading, setUploading] = useState(false);
 
   const handleFile = (f: File) => {
-    if (!f.type.startsWith('image/')) { onError('Только изображения'); return; }
+    if (!f.type.startsWith('image/')) { onError('Images only'); return; }
     setFile(f);
     const reader = new FileReader();
     reader.onload = (e) => setPreview(e.target?.result as string);
     reader.readAsDataURL(f);
-    // Предзаполняем имя из filename если пустое
+    // Pre-fill name from filename if empty
     if (!name) {
       const n = f.name.replace(/\.[^.]+$/, '').replace(/[_-]/g, ' ');
       setName(n.charAt(0).toUpperCase() + n.slice(1));
@@ -507,8 +507,8 @@ const UploadTab: React.FC<{
   };
 
   const handleUpload = async () => {
-    if (!file) { onError('Выбери файл'); return; }
-    if (!name.trim()) { onError('Введи название'); return; }
+    if (!file) { onError('Select file'); return; }
+    if (!name.trim()) { onError('Enter name'); return; }
 
     setUploading(true);
     try {
@@ -526,7 +526,7 @@ const UploadTab: React.FC<{
       setPrice('750');
       onSuccess(r.item);
     } catch (err: unknown) {
-      onError((err instanceof Error ? err.message : String(err)) || 'Ошибка загрузки');
+      onError((err instanceof Error ? err.message : String(err)) || 'Upload error');
     } finally {
       setUploading(false);
     }
@@ -561,7 +561,7 @@ const UploadTab: React.FC<{
 
         {preview ? (
           <>
-            {/* Предпросмотр в круге */}
+            {/* Circle preview */}
             <div style={{
               width: 100, height: 100, borderRadius: '50%',
               overflow: 'hidden', border: `2px solid ${RARITY_COLOR[rarity]}`,
@@ -573,39 +573,39 @@ const UploadTab: React.FC<{
               {file?.name} · {((file?.size ?? 0) / 1024).toFixed(0)} KB
             </div>
             <div style={{ fontSize: 11, color: 'var(--accent, #F5C842)' }}>
-              Нажми чтобы сменить файл
+              Click to change file
             </div>
           </>
         ) : (
           <>
             <div style={{ fontSize: 40 }}>🖼</div>
             <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>
-              Перетащи сюда или нажми
+              Drag here or click
             </div>
             <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)' }}>
-              PNG, JPG, WebP · до 10 МБ · любой размер
+              PNG, JPG, WebP · up to 10 MB · any size
             </div>
             <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>
-              Сервер автоматически обрежет в квадрат 400×400 WebP
+              Server will auto-crop to 400×400 WebP
             </div>
           </>
         )}
       </div>
 
-      {/* Название */}
+      {/* Name */}
       <div>
-        <div style={labelStyle}>Название аватара</div>
+        <div style={labelStyle}>Avatar name</div>
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Например: Golden Dragon"
+          placeholder="e.g. Golden Dragon"
           style={inputStyle}
         />
       </div>
 
-      {/* Редкость */}
+      {/* Rarity */}
       <div>
-        <div style={labelStyle}>Редкость</div>
+        <div style={labelStyle}>Rarity</div>
         <div style={{ display: 'flex', gap: 6 }}>
           {RARITY_OPTIONS.map((r) => (
             <button
@@ -623,9 +623,9 @@ const UploadTab: React.FC<{
         </div>
       </div>
 
-      {/* Цена */}
+      {/* Price */}
       <div>
-        <div style={labelStyle}>Цена (ᚙ монеты)</div>
+        <div style={labelStyle}>Price (ᚙ coins)</div>
         <div style={{ display: 'flex', gap: 6 }}>
           {['500', '1000', '2000', '5000', '10000', '25000'].map((p) => (
             <button
@@ -645,12 +645,12 @@ const UploadTab: React.FC<{
           type="number"
           value={price}
           onChange={(e) => setPrice(e.target.value)}
-          placeholder="Или введи вручную"
+          placeholder="Or enter manually"
           style={{ ...inputStyle, marginTop: 6 }}
         />
       </div>
 
-      {/* Итоговая карточка предпросмотра */}
+      {/* Final preview card */}
       {preview && name && (
         <div style={{ padding: 12, background: 'var(--bg-card, #1C2030)', border: `1px solid ${RARITY_COLOR[rarity]}33`, borderRadius: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ width: 52, height: 52, borderRadius: '50%', overflow: 'hidden', border: `2px solid ${RARITY_COLOR[rarity]}`, flexShrink: 0 }}>
@@ -666,7 +666,7 @@ const UploadTab: React.FC<{
         </div>
       )}
 
-      {/* Кнопка загрузки */}
+      {/* Upload button */}
       <button
         onClick={handleUpload}
         disabled={uploading || !file || !name.trim()}
@@ -681,7 +681,7 @@ const UploadTab: React.FC<{
           fontFamily: 'inherit',
           transition: 'all .2s',
         }}>
-        {uploading ? '⏳ Загружаю на S3...' : '⬆️ Загрузить аватар'}
+        {uploading ? '⏳ Uploading to S3...' : '⬆️ Upload avatar'}
       </button>
     </div>
   );
@@ -716,7 +716,7 @@ const ListTab: React.FC<{
       onUpdate(r.item);
       setEditingId(null);
     } catch (err: unknown) {
-      onError((err instanceof Error ? err.message : String(err)) || 'Ошибка сохранения');
+      onError((err instanceof Error ? err.message : String(err)) || 'Save error');
     } finally {
       setActionId(null);
     }
@@ -736,8 +736,8 @@ const ListTab: React.FC<{
 
   const handleDelete = async (item: AdminAvatarItem) => {
     const msg = item.ownersCount > 0
-      ? `У аватара «${item.name}» есть ${item.ownersCount} владельцев. Он будет скрыт из магазина, но не удалён с S3. Продолжить?`
-      : `Удалить аватар «${item.name}»? Файл будет удалён с S3.`;
+      ? `Avatar "${item.name}" has ${item.ownersCount} owners. It will be hidden from the shop but not deleted from S3. Continue?`
+      : `Delete avatar "${item.name}"? The file will be removed from S3.`;
     if (!confirm(msg)) return;
 
     setActionId(item.id);
@@ -752,14 +752,14 @@ const ListTab: React.FC<{
   };
 
   if (loading) return (
-    <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted, #4A5270)' }}>Загрузка...</div>
+    <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted, #4A5270)' }}>Loading...</div>
   );
 
   if (avatars.length === 0) return (
     <div style={{ textAlign: 'center', padding: 40 }}>
       <div style={{ fontSize: 36, marginBottom: 12 }}>🖼</div>
       <div style={{ fontSize: 13, color: 'var(--text-muted, #4A5270)' }}>
-        Нет аватаров. Загрузи первый!
+        No avatars yet. Upload your first one!
       </div>
     </div>
   );
@@ -767,7 +767,7 @@ const ListTab: React.FC<{
   return (
     <div style={{ padding: '0 18px 24px', display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div style={{ fontSize: 11, color: 'var(--text-muted, #4A5270)', marginBottom: 4 }}>
-        Всего: {avatars.length} · Активных: {avatars.filter(a => a.isActive).length}
+        Total: {avatars.length} · Active: {avatars.filter(a => a.isActive).length}
       </div>
 
       {avatars.map((item) => {
@@ -782,9 +782,9 @@ const ListTab: React.FC<{
             borderRadius: 16, padding: 12,
             opacity: item.isActive ? 1 : 0.5,
           }}>
-            {/* Заголовок */}
+            {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: isEditing ? 12 : 0 }}>
-              {/* Круглый превью */}
+              {/* Round preview */}
               <div style={{ width: 44, height: 44, borderRadius: '50%', overflow: 'hidden', border: `2px solid ${color}`, flexShrink: 0 }}>
                 {item.imageUrl
                   ? <img src={item.imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -800,11 +800,11 @@ const ListTab: React.FC<{
                   <span style={{ fontSize: 10, color, fontWeight: 600 }}>{RARITY_LABEL[item.rarity]}</span>
                   <span style={{ fontSize: 10, color: 'var(--accent, #F5C842)', fontFamily: 'JetBrains Mono,monospace' }}>{fmtBalance(item.priceCoins)} ᚙ</span>
                   <span style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>👤 {item.ownersCount}</span>
-                  {!item.isActive && <span style={{ fontSize: 9, color: '#FF4D6A', fontWeight: 700 }}>СКРЫТ</span>}
+                  {!item.isActive && <span style={{ fontSize: 9, color: '#FF4D6A', fontWeight: 700 }}>HIDDEN</span>}
                 </div>
               </div>
 
-              {/* Кнопки управления */}
+              {/* Action buttons */}
               <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
                 {!isEditing && (
                   <button onClick={() => startEdit(item)} style={iconBtn('#7B61FF')}>✏️</button>
@@ -824,13 +824,13 @@ const ListTab: React.FC<{
               </div>
             </div>
 
-            {/* Форма редактирования */}
+            {/* Edit form */}
             {isEditing && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <input
                   value={editData.name}
                   onChange={(e) => setEditData(d => ({ ...d, name: e.target.value }))}
-                  placeholder="Название"
+                  placeholder="Name"
                   style={inputStyle}
                 />
                 <div style={{ display: 'flex', gap: 6 }}>
@@ -849,7 +849,7 @@ const ListTab: React.FC<{
                   type="number"
                   value={editData.price}
                   onChange={(e) => setEditData(d => ({ ...d, price: e.target.value }))}
-                  placeholder="Цена ᚙ"
+                  placeholder="Price ᚙ"
                   style={inputStyle}
                 />
                 <div style={{ display: 'flex', gap: 6 }}>
@@ -857,12 +857,12 @@ const ListTab: React.FC<{
                     onClick={() => saveEdit(item.id)}
                     disabled={busy}
                     style={{ flex: 1, padding: '8px', background: 'var(--green, #00D68F)', color: '#000', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-                    {busy ? '...' : '✓ Сохранить'}
+                    {busy ? '...' : '✓ Save'}
                   </button>
                   <button
                     onClick={() => setEditingId(null)}
                     style={{ flex: 1, padding: '8px', background: 'rgba(255,255,255,0.06)', color: 'var(--text-secondary, #8B92A8)', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-                    Отмена
+                    Cancel
                   </button>
                 </div>
               </div>
