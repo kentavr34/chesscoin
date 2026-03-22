@@ -115,7 +115,7 @@ export const BattleCard: React.FC<BattleCardProps> = React.memo(({
                 onClick={onSpectate}
                 style={{ padding: '4px 8px', background: 'rgba(245,200,66,0.1)', color: 'var(--accent, #F5C842)', border: '1px solid rgba(245,200,66,0.25)', borderRadius: 7, fontSize: 10, cursor: 'pointer', fontFamily: 'inherit' }}
               >
-                👁 Смотреть
+                👁 {t.game?.watch ?? 'Watch'}
               </button>
             )}
             {status === 'FINISHED' && onSave && (

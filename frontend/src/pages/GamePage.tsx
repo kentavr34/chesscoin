@@ -289,7 +289,7 @@ export const GamePage: React.FC = () => {
       <div style={{ padding: '4px 12px', flexShrink: 0 }}>
         <PlayerRow player={mySide?.player ?? user as import("@/types").User & { telegramId: string }}
           timeLeft={mySide?.timeLeft ?? 0}
-          isActive={isMyTurn && !isGameOver} label="Вы" isMe />
+          isActive={isMyTurn && !isGameOver} label={t.game.you} isMe />
       </div>
 
       {/* Кнопки */}
@@ -313,7 +313,7 @@ export const GamePage: React.FC = () => {
         background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.07)',
         borderRadius: 14, flexShrink: 0,
       }}>
-        <div style={labelStyle}>История ходов</div>
+        <div style={labelStyle}>{t.game.moveHistory}</div>
         <MoveHistory pgn={session.pgn} />
       </div>
 
@@ -324,7 +324,7 @@ export const GamePage: React.FC = () => {
         <Overlay>
           <ModalBox>
             <div style={modalTitle}>{t.game.drawOffered}</div>
-            <div style={modalSub}>Соперник предлагает ничью. Принять?</div>
+            <div style={modalSub}>{t.game.drawOffered}. {t.game.acceptDraw}?</div>
             <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
               <button onClick={() => {
                 getSocket().emit('game:accept_draw', { sessionId: session.id }, () => {});
@@ -345,7 +345,7 @@ export const GamePage: React.FC = () => {
           <ModalBox>
             <div style={modalTitle}>{t.game.confirmSurrender}</div>
             <div style={modalSub}>
-              {session.bet ? `Вы потеряете ${fmtBalance(session.bet)} ᚙ` : 'Засчитается поражение'}
+              {session.bet ? t.game.surrenderLoss(fmtBalance(session.bet)) : t.game.surrenderDefault}
             </div>
             <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
               <button onClick={handleSurrender} style={btnDanger}>{t.game.confirmSurrenderYes}</button>

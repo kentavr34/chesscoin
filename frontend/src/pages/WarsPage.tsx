@@ -34,13 +34,13 @@ const WarsIntroModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           <div style={{ fontSize: 22, fontFamily: "'Unbounded',sans-serif", fontWeight: 800, color: '#F5C842' }}>{t.wars.warIntro.title}</div>
           <button onClick={onClose} style={closeBtnStyle}>✕</button>
         </div>
-        <div style={{ fontSize: 13, color: '#C8CDDF', lineHeight: 1.7 }} dangerouslySetInnerHTML={{ __html:
-          `<p style="margin-bottom:10px">${t.wars.warIntro.p1}</p>` +
-          `<p style="margin-bottom:10px">${t.wars.warIntro.p2}</p>` +
-          `<p style="margin-bottom:10px">${t.wars.warIntro.p3}</p>` +
-          `<p style="margin-bottom:10px">${t.wars.warIntro.p4}</p>` +
-          `<p>${t.wars.warIntro.p5}</p>`
-        }} />
+        <div style={{ fontSize: 13, color: '#C8CDDF', lineHeight: 1.7 }}>
+          <p style={{ marginBottom: 10 }}>{t.wars.warIntro.p1}</p>
+          <p style={{ marginBottom: 10 }}>{t.wars.warIntro.p2}</p>
+          <p style={{ marginBottom: 10 }}>{t.wars.warIntro.p3}</p>
+          <p style={{ marginBottom: 10 }}>{t.wars.warIntro.p4}</p>
+          <p>{t.wars.warIntro.p5}</p>
+        </div>
         <button onClick={onClose} style={{ ...goldBtnFull, marginTop: 20 }}>
           {t.wars.warIntro.btn}
         </button>
