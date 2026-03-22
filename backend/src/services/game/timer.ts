@@ -120,6 +120,15 @@ export const startTimerWatcher = () => {
     else logger.info("[Timer] Watching Redis keyspace events");
   });
 
+  // PERF-001: Периодическая очистка watchedSessions от мёртвых записей
+  // (на случай если сессия завершилась без вызова stopAllTimers)
+  setInterval(() => {
+    if (watchedSessions.size > 500) {
+      logger.warn(`[Timer] watchedSessions size: ${watchedSessions.size}, forcing cleanup`);
+      watchedSessions.clear();
+    }
+  }, 3600_000); // каждый час
+
   redisSub.on("message", async (_channel, message) => {
     if (!message.startsWith("timer:")) return;
 

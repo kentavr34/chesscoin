@@ -59,7 +59,7 @@ export const adminRouter = Router();
 
 // ── Middleware: только админы ─────────────────────────────────────────────────
 const adminOnly = async (req: Request, res: Response, next: Function) => {
-  const userId = req.user!.id;
+  const userId = req.user?.id;
   if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
   const user = await prisma.user.findUnique({

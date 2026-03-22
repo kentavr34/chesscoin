@@ -141,6 +141,10 @@ model User {
   @@index([league])
   @@index([referrerId])
   @@index([telegramId])
+  @@index([createdAt])
+  @@index([lastLoginDate])
+  @@index([isBot, isBanned])
+  @@index([totalEarned])
   // v6.1: P2P биржа
   p2pSelling P2POrder[] @relation("P2PSeller")
   tradeOrders TradeOrder[]
@@ -197,6 +201,9 @@ model Session {
   @@index([status])
   @@index([type])
   @@index([code])
+  @@index([startedAt])
+  @@index([status, type])
+  @@index([status, bet])
   @@map("sessions")
 }
 

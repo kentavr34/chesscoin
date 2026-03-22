@@ -77,7 +77,7 @@ router.get("/me", authMiddleware, async (req: Request, res: Response) => {
       });
 
       // BUG #1 fix: проверяем задание DAILY_LOGIN (fire-and-forget)
-      setImmediate(() => checkDailyLoginTask(userId).catch(() => {}));
+      setImmediate(() => checkDailyLoginTask(userId).catch(e => logError("[Auth/dailyTask]", e)));
 
       // Бонусы за стрик
       const STREAK_BONUSES: Record<number, bigint> = {

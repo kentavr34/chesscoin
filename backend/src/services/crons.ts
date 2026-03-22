@@ -138,15 +138,27 @@ async function checkClanWarResults() {
       // FIX #5: раньше комиссия считалась дважды — сначала prizeRest включал 65% без учёта
       // комиссии, а потом ещё раз применялось * 90n / 100n к каждой выплате.
 
-      // Получаем победы участников в этой войне
-      const memberWarWins = await Promise.all(
-        winnerMembers.map(async m => {
-          const member = await prisma.clanMember.findUnique({ where: { id: m.id } });
-          return { userId: m.userId, wins: member?.warWins ?? 0, contribution: m.contribution };
-        })
-      );
+      // Получаем победы участников в этой войне (batch query вместо N+1)
+      const memberDetails = await prisma.clanMember.findMany({
+        where: { id: { in: winnerMembers.map(m => m.id) } },
+        select: { id: true, warWins: true },
+      });
+      const winsMap = new Map(memberDetails.map(m => [m.id, m.warWins]));
+      const memberWarWins = winnerMembers.map(m => ({
+        userId: m.userId,
+        wins: winsMap.get(m.id) ?? 0,
+        contribution: m.contribution,
+      }));
 
       memberWarWins.sort((a, b) => b.wins - a.wins);
+
+      // Batch-загрузка telegramId для уведомлений (вместо N+1 запросов в цикле)
+      const userIds = memberWarWins.map(m => m.userId);
+      const usersForNotify = await prisma.user.findMany({
+        where: { id: { in: userIds } },
+        select: { id: true, telegramId: true, firstName: true },
+      });
+      const userMap = new Map(usersForNotify.map(u => [u.id, u]));
 
       // Один раз снимаем 10% комиссии со всего фонда
       const commission = totalPrize * 10n / 100n;
@@ -180,9 +192,9 @@ async function checkClanWarResults() {
           await updateBalance(m.userId, amount, TransactionType.CLAN_WAR_WIN, {
             warId: war.id, winnerId: winner.id,
           });
-          // Уведомить пользователя
+          // Уведомить пользователя (используем batch-загруженные данные)
           try {
-            const user = await prisma.user.findUnique({ where: { id: m.userId }, select: { telegramId: true, firstName: true } });
+            const user = userMap.get(m.userId);
             if (user?.telegramId && BOT_TOKEN()) {
               const amtK = (Number(amount) / 1000).toFixed(1);
               await fetch(`https://api.telegram.org/bot${BOT_TOKEN()}/sendMessage`, {
@@ -195,7 +207,7 @@ async function checkClanWarResults() {
                 }),
               });
             }
-          } catch {}
+          } catch (e) { logError("[Cron/ClanWars] notify", e); }
         }
       }
 
@@ -306,7 +318,7 @@ async function checkTournamentResults() {
                 parse_mode: "HTML",
               }),
             });
-          } catch {}
+          } catch (e) { logError("[Cron/Tournament] notify", e); }
         }
       }
 
@@ -384,30 +396,36 @@ async function checkCountryWarResults() {
       // Уведомляем всех бойцов обеих стран через бота
       const winnerCountry = attackerWon ? war.attackerCountry : war.defenderCountry;
       const loserCountry  = attackerWon ? war.defenderCountry : war.attackerCountry;
+      // Batch-загрузка участников + их telegramId (вместо N+1)
       const allMembers = await prisma.countryMember.findMany({
         where: { countryId: { in: [winnerCountryId, loserCountryId] } },
         select: { userId: true, countryId: true },
       });
-      for (const m of allMembers) {
-        const user = await prisma.user.findUnique({ where: { id: m.userId }, select: { telegramId: true } });
-        if (user?.telegramId) {
-          const won = m.countryId === winnerCountryId;
-          await prisma.adminNotification.create({
-            data: {
-              type: "WAR_FINISHED",
-              payload: {
-                telegramId: user.telegramId,
-                won,
-                winnerName: winnerCountry.nameRu,
-                winnerFlag: winnerCountry.flag,
-                loserName: loserCountry.nameRu,
-                loserFlag: loserCountry.flag,
-                attackerWins: war.attackerWins,
-                defenderWins: war.defenderWins,
-              },
-            },
-          }).catch(() => {});
-        }
+      const memberUserIds = allMembers.map(m => m.userId);
+      const usersWithTg = await prisma.user.findMany({
+        where: { id: { in: memberUserIds } },
+        select: { id: true, telegramId: true },
+      });
+      const tgMap = new Map(usersWithTg.map(u => [u.id, u.telegramId]));
+
+      // Batch-создание уведомлений
+      const notificationsData = allMembers
+        .filter(m => tgMap.get(m.userId))
+        .map(m => ({
+          type: "WAR_FINISHED" as const,
+          payload: {
+            telegramId: tgMap.get(m.userId)!,
+            won: m.countryId === winnerCountryId,
+            winnerName: winnerCountry.nameRu,
+            winnerFlag: winnerCountry.flag,
+            loserName: loserCountry.nameRu,
+            loserFlag: loserCountry.flag,
+            attackerWins: war.attackerWins,
+            defenderWins: war.defenderWins,
+          },
+        }));
+      if (notificationsData.length > 0) {
+        await prisma.adminNotification.createMany({ data: notificationsData }).catch(e => logError("[Cron/CountryWar] notifications", e));
       }
 
       logger.info(`[Cron/CountryWar] Finished war ${war.id}: winner=${winnerCountryId}`);
@@ -434,28 +452,34 @@ async function sendWarWarnings() {
     });
 
     for (const war of soon) {
+      // Batch-загрузка вместо N+1
       const allMembers = await prisma.countryMember.findMany({
         where: { countryId: { in: [war.attackerCountryId, war.defenderCountryId] } },
         select: { userId: true },
       });
-      for (const m of allMembers) {
-        const user = await prisma.user.findUnique({ where: { id: m.userId }, select: { telegramId: true } });
-        if (user?.telegramId) {
-          await prisma.adminNotification.create({
-            data: {
-              type: "WAR_ENDING_SOON",
-              payload: {
-                telegramId: user.telegramId,
-                attackerName: war.attackerCountry.nameRu,
-                attackerFlag: war.attackerCountry.flag,
-                defenderName: war.defenderCountry.nameRu,
-                defenderFlag: war.defenderCountry.flag,
-                attackerWins: war.attackerWins,
-                defenderWins: war.defenderWins,
-              },
-            },
-          }).catch(() => {});
-        }
+      const warnUserIds = allMembers.map(m => m.userId);
+      const warnUsers = await prisma.user.findMany({
+        where: { id: { in: warnUserIds } },
+        select: { id: true, telegramId: true },
+      });
+      const warnTgMap = new Map(warnUsers.map(u => [u.id, u.telegramId]));
+
+      const warnNotifications = allMembers
+        .filter(m => warnTgMap.get(m.userId))
+        .map(m => ({
+          type: "WAR_ENDING_SOON" as const,
+          payload: {
+            telegramId: warnTgMap.get(m.userId)!,
+            attackerName: war.attackerCountry.nameRu,
+            attackerFlag: war.attackerCountry.flag,
+            defenderName: war.defenderCountry.nameRu,
+            defenderFlag: war.defenderCountry.flag,
+            attackerWins: war.attackerWins,
+            defenderWins: war.defenderWins,
+          },
+        }));
+      if (warnNotifications.length > 0) {
+        await prisma.adminNotification.createMany({ data: warnNotifications }).catch(e => logError("[Cron/WarWarning] notifications", e));
       }
       await prisma.countryWar.update({
         where: { id: war.id },

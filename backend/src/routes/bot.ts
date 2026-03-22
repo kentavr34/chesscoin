@@ -12,7 +12,16 @@ function botSecretMiddleware(req: Request, res: Response, next: NextFunction) {
   const secret = process.env.BOT_API_SECRET;
   const auth = req.headers.authorization;
 
-  if (!secret || auth !== `Bearer ${secret}`) {
+  // SEC-001: timing-safe comparison to prevent timing attacks
+  if (!secret || !auth) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  const expected = `Bearer ${secret}`;
+  if (auth.length !== expected.length) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  const { timingSafeEqual } = require("crypto");
+  if (!timingSafeEqual(Buffer.from(auth), Buffer.from(expected))) {
     return res.status(401).json({ error: "Unauthorized" });
   }
   next();
