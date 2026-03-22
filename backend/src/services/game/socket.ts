@@ -330,6 +330,12 @@ export const setupSocketHandlers = (io: Server) => {
             include: { sides: { include: { player: { select: { id: true, firstName: true, lastName: true, username: true, elo: true, avatar: true, avatarType: true, avatarGradient: true, league: true } } } } },
           });
 
+          if (!updatedSession) {
+            logger.error("[Socket] Session not found after move:", sessionId);
+            if (callback) callback({ ok: false, error: "Session not found" });
+            return;
+          }
+
           await cacheSession(updatedSession);
           const formatted = formatSession(updatedSession, userId);
           io.to(sessionId).emit("game", formatted);
@@ -449,7 +455,11 @@ export const setupSocketHandlers = (io: Server) => {
 
     // ── Предложить / принять / отклонить ничью ───────────
     socket.on("game:offer_draw", async (data: { sessionId: string }) => {
-      io.to(data.sessionId).emit("game:draw_offered", { by: userId });
+      try {
+        io.to(data.sessionId).emit("game:draw_offered", { by: userId });
+      } catch (err: unknown) {
+        logger.error("[Socket] game:offer_draw error:", (err as Error).message);
+      }
     });
 
     socket.on("game:accept_draw", async (data: { sessionId: string }, callback?: Function) => {
@@ -461,12 +471,17 @@ export const setupSocketHandlers = (io: Server) => {
         io.to(data.sessionId).emit("game:over", { status: "DRAW" });
         if (callback) callback({ ok: true });
       } catch (err: unknown) {
+        logger.error("[Socket] game:accept_draw error:", (err as Error).message);
         if (callback) callback({ ok: false, error: (err as Error).message });
       }
     });
 
     socket.on("game:decline_draw", async (data: { sessionId: string }) => {
-      io.to(data.sessionId).emit("game:draw_declined", { by: userId });
+      try {
+        io.to(data.sessionId).emit("game:draw_declined", { by: userId });
+      } catch (err: unknown) {
+        logger.error("[Socket] game:decline_draw error:", (err as Error).message);
+      }
     });
 
     // ── Спектатор ────────────────────────────────────────
@@ -498,9 +513,13 @@ export const setupSocketHandlers = (io: Server) => {
     };
 
     socket.on("battles:subscribe", async () => {
-      socket.join("lobby");
-      const battles = await getActiveBattles();
-      socket.emit("battles:list", formatBattlesList(battles, buildSpectatorCounts(battles)));
+      try {
+        socket.join("lobby");
+        const battles = await getActiveBattles();
+        socket.emit("battles:list", formatBattlesList(battles, buildSpectatorCounts(battles)));
+      } catch (err: unknown) {
+        logger.error("[Socket] battles:subscribe error:", (err as Error).message);
+      }
     });
 
     socket.on("battles:unsubscribe", () => {
@@ -643,13 +662,18 @@ const makeBotMove = async (socket: AuthSocket, io: Server, sessionId: string) =>
     }
 
     const humanSide = session.sides.find(s => !s.isBot);
+    if (!humanSide) {
+      logger.error("[BotMove] No human side found in session:", sessionId);
+      return;
+    }
+
     await prisma.session.update({
       where: { id: sessionId },
-      data: { currentSideId: humanSide?.id },
+      data: { currentSideId: humanSide.id },
     });
 
     // Переключаем таймер обратно к человеку после хода бота
-    if (botSide && humanSide) {
+    if (botSide) {
       await switchTimer(sessionId, botSide.id, humanSide.id);
     }
 
@@ -658,7 +682,12 @@ const makeBotMove = async (socket: AuthSocket, io: Server, sessionId: string) =>
       include: { sides: { include: { player: { select: { id: true, firstName: true, lastName: true, username: true, elo: true, avatar: true, avatarType: true, avatarGradient: true, league: true } } } } },
     });
 
-    io.to(sessionId).emit("game", formatSession(updatedSession, humanSide?.playerId ?? null));
+    if (!updatedSession) {
+      logger.error("[BotMove] Session not found after update:", sessionId);
+      return;
+    }
+
+    io.to(sessionId).emit("game", formatSession(updatedSession, humanSide.playerId));
   } catch (err: unknown) {
     logger.error("[BotMove] Error:", err);
   }

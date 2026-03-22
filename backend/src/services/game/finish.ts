@@ -21,10 +21,15 @@ export const finishSession = async (
     isDraw?: boolean;
   } = {}
 ) => {
-  const session = await prisma.session.findUniqueOrThrow({
+  const session = await prisma.session.findUnique({
     where: { id: sessionId },
     include: { sides: { include: { player: true } } },
   });
+
+  if (!session) {
+    logger.error("[finishSession] Session not found:", sessionId);
+    throw new Error(`Session ${sessionId} not found`);
+  }
 
   if (session.status === SessionStatus.FINISHED ||
       session.status === SessionStatus.DRAW ||
