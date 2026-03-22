@@ -40,6 +40,7 @@ import { startTimerWatcher } from "@/services/game/timer";
 import { setIo } from "@/lib/io";
 import { setupSocketHandlers } from "@/services/game/socket";
 import { startGameCrons } from "@/services/crons";
+import { startWarMatchmakingCron } from "@/services/game/warMatchmaking";
 
 // Routes
 import authRoutes from "@/routes/auth";
@@ -186,6 +187,7 @@ const start = async () => {
     startAttemptsCron();
     startCleanupCron();
     startGameCrons();
+    startWarMatchmakingCron();
 
     httpServer.listen(config.server.port, () => {
       logger.info(`[Server] ✅ Port ${config.server.port} · ${config.server.nodeEnv}`);

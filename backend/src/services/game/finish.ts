@@ -187,6 +187,11 @@ async function updateWarBattle(sessionId: string, winnerSideId?: string, isDraw:
     }
 
     logger.info(`[WarBattle] Battle ${warBattle.id} finished: winner=${winnerId} country=${winnerCountryId}`);
+
+    // Триггер автоматического матчмейкинга — заполнить освободившийся слот
+    import("@/services/game/warMatchmaking")
+      .then((m) => m.onWarBattleComplete(warBattle.warId))
+      .catch((err) => logError("[WarBattle] matchmaking trigger error:", err));
   } catch (err: unknown) {
     logError("[WarBattle] updateWarBattle error:", err);
   }

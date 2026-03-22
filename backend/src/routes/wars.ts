@@ -580,6 +580,17 @@ warsRouter.post("/declare", authMiddleware, validate(DeclareWarSchema), async (r
       }
     }
 
+    // Автоматический матчмейкинг — запустить первые партии через 5 секунд
+    setTimeout(async () => {
+      try {
+        const { scheduleWarMatches } = await import("@/services/game/warMatchmaking");
+        const created = await scheduleWarMatches(war.id);
+        logger.info(`[Wars] Auto-matchmaking started for war ${war.id}: ${created} matches created`);
+      } catch (err) {
+        logError("[Wars] Auto-matchmaking start error:", err);
+      }
+    }, 5000);
+
     res.json({ success: true, war: formatWar(war) });
   } catch (e: unknown) {
     logError("[Wars]", e);
