@@ -114,11 +114,13 @@ app.use(`${API}/profile`,     profileRoutes);
 app.use(`${API}/attempts`,    attemptsRoutes);
 app.use(`${API}/shop`,        shopRouter);
 app.use(`${API}/tasks`,       tasksRouter);
+app.use(`${API}/bot`, rateLimit({ windowMs: 60_000, max: 60, message: { error: 'Too many bot API requests' } }));
 app.use(`${API}/bot`,         botRouter);
 app.use(`${API}/nations`,       nationsRouter);
 app.use(`${API}/wars`,          warsRouter);
 app.use(`${API}/tournaments`,   tournamentsRouter);
 app.use(`${API}/puzzles`,       puzzlesRouter);
+app.use(`${API}/admin`, rateLimit({ windowMs: 60_000, max: 30, message: { error: 'Too many admin requests' } }));
 app.use(`${API}/admin`,         adminRouter);
 app.use(`${API}/screenshotter`, screenshotterRouter);
 // M3: Биржа — строгие лимиты (защита от спама ордерами)

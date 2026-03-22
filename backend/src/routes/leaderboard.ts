@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { redis } from "@/lib/redis";
 import { authMiddleware, AuthRequest } from "@/middleware/auth";
@@ -43,11 +44,11 @@ router.get("/", authMiddleware, async (req: Request, res: Response) => {
       periodFilter = { lastLoginDate: { gte: since } };
     }
 
-    const where = {
+    const where: Prisma.UserWhereInput = {
       isBanned: false,
       isBot: false,
       ...periodFilter,
-      ...(league ? { league: league } : {}),
+      ...(league ? { league: league as Prisma.EnumLeagueFilter } : {}),
       ...(search ? {
         OR: [
           { firstName: { contains: search, mode: "insensitive" as const } },
@@ -69,14 +70,17 @@ router.get("/", authMiddleware, async (req: Request, res: Response) => {
       }
     }
 
+    // Sort is validated by Zod enum — safe to use as dynamic key
+    const orderBy: Prisma.UserOrderByWithRelationInput = { [sort]: "desc" };
+
     // For large offsets, use cursor-based pagination to avoid slow SKIP scans.
     // We first grab the ID at `offset` position, then fetch from that cursor.
     let users;
     if (offset > 500) {
       // Get the cursor row: the single row at `offset` position
       const cursorRows = await prisma.user.findMany({
-        where: where as any,
-        orderBy: { [sort]: "desc" },
+        where,
+        orderBy,
         take: 1,
         skip: offset,
         select: { id: true },
@@ -84,8 +88,8 @@ router.get("/", authMiddleware, async (req: Request, res: Response) => {
 
       if (cursorRows.length > 0) {
         users = await prisma.user.findMany({
-          where: where as any,
-          orderBy: { [sort]: "desc" },
+          where,
+          orderBy,
           take: limit,
           cursor: { id: cursorRows[0].id },
           select: {
@@ -100,8 +104,8 @@ router.get("/", authMiddleware, async (req: Request, res: Response) => {
       }
     } else {
       users = await prisma.user.findMany({
-        where: where as any,
-        orderBy: { [sort]: "desc" },
+        where,
+        orderBy,
         take: limit,
         skip: offset,
         select: {
@@ -113,7 +117,7 @@ router.get("/", authMiddleware, async (req: Request, res: Response) => {
       });
     }
 
-    const total = await prisma.user.count({ where: where as any });
+    const total = await prisma.user.count({ where });
 
     const payload = {
       total,
