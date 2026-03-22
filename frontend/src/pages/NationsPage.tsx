@@ -66,7 +66,7 @@ export const NationsPage: React.FC = () => {
   useEffect(() => { if (tab === 'members') loadMembers(); }, [tab]);
 
   const handleLeave = async () => {
-    if (!confirm('Выйти из клана? Ваш взнос будет возвращён.')) return;
+    if (!confirm(t.nations.leaveConfirm)) return;
     await nationsApi.leave();
     await load();
     setTab('ranking');
@@ -78,7 +78,7 @@ export const NationsPage: React.FC = () => {
   };
 
   const handleKick = async (targetUserId: string) => {
-    if (!confirm('Исключить бойца из клана?')) return;
+    if (!confirm(t.nations.kickConfirm)) return;
     await nationsApi.kickMember(targetUserId);
     await loadMembers();
   };
@@ -93,7 +93,7 @@ export const NationsPage: React.FC = () => {
   const activeMembers = members.filter(m => !m.isPending);
 
   return (
-    <PageLayout title={t.leaderboard.title.replace('Рейтинг','Сборные')} backTo="/" centered>
+    <PageLayout title={t.nations.title} backTo="/" centered>
       {/* Мой клан — шапка */}
       {myClan && myMembership && (
         <div style={clanHeroStyle}>
@@ -102,16 +102,16 @@ export const NationsPage: React.FC = () => {
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary, #F0F2F8)' }}>{myClan.name}</div>
               <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 3 }}>
-                {isLeader ? '👑 Лидер' : '⚔️ Боец'} · {myClan._count?.members ?? 0} бойцов
+                {isLeader ? t.nations.leader : t.nations.fighter} · {t.nations.fightersCount(myClan._count?.members ?? 0)}
               </div>
             </div>
-            <button onClick={handleLeave} style={leaveBtn}>Выйти</button>
+            <button onClick={handleLeave} style={leaveBtn}>{t.nations.leave}</button>
           </div>
 
           <div style={{ display: 'flex', gap: 16, marginBottom: 14 }}>
-            <Stat val={fmtBalance(myClan.treasury ?? '0')} lbl="Казна ᚙ" color="var(--accent, #F5C842)" />
-            <Stat val={myClan.totalWarWins ?? 0} lbl="Побед" color="var(--green, #00D68F)" />
-            <Stat val={myClan.totalWarLosses ?? 0} lbl="Поражений" color="var(--red, #FF4D6A)" />
+            <Stat val={fmtBalance(myClan.treasury ?? '0')} lbl={t.nations.treasury} color="var(--accent, #F5C842)" />
+            <Stat val={myClan.totalWarWins ?? 0} lbl={t.nations.wins} color="var(--green, #00D68F)" />
+            <Stat val={myClan.totalWarLosses ?? 0} lbl={t.nations.losses} color="var(--red, #FF4D6A)" />
             <Stat val={myClan.elo ?? 1000} lbl="ELO" color="#9B85FF" />
           </div>
 
@@ -119,7 +119,7 @@ export const NationsPage: React.FC = () => {
           {activeWar && !activeWar.isPending && (
             <div style={warBannerStyle}>
               <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--red, #FF4D6A)', letterSpacing: '.08em', marginBottom: 8 }}>
-                ⚔️ АКТИВНАЯ ВОЙНА
+                {t.nations.activeWar}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ fontSize: 24 }}>{activeWar.attackerClan.flag}</span>
@@ -128,14 +128,14 @@ export const NationsPage: React.FC = () => {
                     {activeWar.attackerWins}:{activeWar.defenderWins}
                   </div>
                   <div style={{ fontSize: 10, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>
-                    💰 {fmtBalance(activeWar.prize ?? '0')} ᚙ на кону
+                    💰 {fmtBalance(activeWar.prize ?? '0')} ᚙ {t.nations.atStake}
                   </div>
                 </div>
                 <span style={{ fontSize: 24 }}>{activeWar.defenderClan.flag}</span>
               </div>
               {activeWar.endAt && (
                 <div style={{ fontSize: 10, color: 'var(--text-secondary, #8B92A8)', textAlign: 'center', marginTop: 6 }}>
-                  Завершится: {new Date(activeWar.endAt).toLocaleDateString('ru-RU')}
+                  {t.nations.endsAt(new Date(activeWar.endAt).toLocaleDateString())}
                 </div>
               )}
             </div>
@@ -148,10 +148,10 @@ export const NationsPage: React.FC = () => {
                 <div key={ch.id} style={challengeCardStyle}>
                   <span style={{ fontSize: 22 }}>{ch.attackerClan.flag}</span>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--red, #FF4D6A)' }}>⚔️ Вызов войны!</div>
-                    <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)' }}>{ch.attackerClan.name} · Казна {fmtBalance(ch.attackerClan.treasury ?? '0')} ᚙ</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--red, #FF4D6A)' }}>{t.nations.warChallenge}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)' }}>{ch.attackerClan.name} · {t.nations.treasuryLabel} {fmtBalance(ch.attackerClan.treasury ?? '0')} ᚙ</div>
                   </div>
-                  <button onClick={() => handleAcceptWar(ch.id)} style={acceptWarBtn}>Принять</button>
+                  <button onClick={() => handleAcceptWar(ch.id)} style={acceptWarBtn}>{t.nations.accept}</button>
                 </div>
               ))}
             </div>
@@ -159,39 +159,39 @@ export const NationsPage: React.FC = () => {
 
           {/* Кнопки действий */}
           <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
-            <button onClick={() => setShowContribute(true)} style={secBtn}>💰 Взнос</button>
+            <button onClick={() => setShowContribute(true)} style={secBtn}>{t.nations.contribute}</button>
             {isLeader && !activeWar && (
               <button onClick={() => setShowWarChallenge(true)} style={{ ...secBtn, background: 'rgba(255,77,106,0.1)', borderColor: 'rgba(255,77,106,0.3)', color: 'var(--red, #FF4D6A)' }}>
-                ⚔️ Объявить войну
+                {t.nations.declareWar}
               </button>
             )}
             <button
               onClick={() => setShowBattleChallenge(true)}
               style={{ ...secBtn, background: 'rgba(123,97,255,0.1)', borderColor: 'rgba(123,97,255,0.3)', color: '#7B61FF' }}
             >
-              🏆 Сражение
+              {t.nations.battle}
             </button>
-            <button onClick={() => setTab('members')} style={secBtn}>👥 Бойцы</button>
+            <button onClick={() => setTab('members')} style={secBtn}>{t.nations.fighters}</button>
           </div>
         </div>
       )}
 
       {/* Вкладки */}
       <div style={segStyle}>
-        {myClan && <button style={segBtn(tab === 'clan')} onClick={() => setTab('clan')}>🏰 Клан</button>}
-        <button style={segBtn(tab === 'battles')} onClick={() => setTab('battles')}>🏆 Сражения</button>
-        <button style={segBtn(tab === 'wars')} onClick={() => setTab('wars')}>⚔️ Войны</button>
-        {myClan && <button style={segBtn(tab === 'members')} onClick={() => setTab('members')}>👥 Бойцы</button>}
-        <button style={segBtn(tab === 'ranking')} onClick={() => setTab('ranking')}>🥇 Топ</button>
+        {myClan && <button style={segBtn(tab === 'clan')} onClick={() => setTab('clan')}>{t.nations.tabs.clan}</button>}
+        <button style={segBtn(tab === 'battles')} onClick={() => setTab('battles')}>{t.nations.tabs.battles}</button>
+        <button style={segBtn(tab === 'wars')} onClick={() => setTab('wars')}>{t.nations.tabs.wars}</button>
+        {myClan && <button style={segBtn(tab === 'members')} onClick={() => setTab('members')}>{t.nations.tabs.members}</button>}
+        <button style={segBtn(tab === 'ranking')} onClick={() => setTab('ranking')}>{t.nations.tabs.ranking}</button>
       </div>
 
       {/* Список войн */}
       {tab === 'wars' && (
         <>
-          <div style={secStyle}>Активные клановые войны</div>
+          <div style={secStyle}>{t.nations.activeWars}</div>
           {wars.length === 0 && (
             <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: 32, fontSize: 13 }}>
-              Нет активных войн
+              {t.nations.noActiveWars}
             </div>
           )}
           {wars.map(war => (
@@ -216,7 +216,7 @@ export const NationsPage: React.FC = () => {
               </div>
               {war.endAt && (
                 <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', textAlign: 'center' }}>
-                  До {new Date(war.endAt).toLocaleDateString('ru-RU')}
+                  {t.nations.untilDate(new Date(war.endAt).toLocaleDateString())}
                 </div>
               )}
             </div>
@@ -228,27 +228,24 @@ export const NationsPage: React.FC = () => {
       {tab === 'battles' && (
         <>
           <div style={{ margin: '0 18px 12px', padding: '12px 14px', background: 'rgba(123,97,255,0.08)', border: '1px solid rgba(123,97,255,0.2)', borderRadius: 14 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: '#7B61FF', marginBottom: 4 }}>⚡ Как работают сражения</div>
-            <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', lineHeight: 1.6 }}>
-              Любой член клана может вызвать другой клан на командное соревнование.<br />
-              Все участники вносят ставку в общую кассу. Побеждает клан с <b style={{ color: 'var(--text-primary, #F0F2F8)' }}>лучшим win rate</b>.<br />
-              Максимум <b style={{ color: 'var(--text-primary, #F0F2F8)' }}>10 партий одновременно</b> — побеждает мастерство, а не количество.<br />
-              <span style={{ color: '#FF9F43' }}>⚠ Для вызова нужен минимум 1 офицер в клане.</span>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#7B61FF', marginBottom: 4 }}>{t.nations.howBattlesWork}</div>
+            <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', lineHeight: 1.6, whiteSpace: 'pre-line' }}>
+              {t.nations.battlesDesc}
             </div>
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 18px 10px' }}>
-            <div style={secStyle}>Активные сражения ({battles.length})</div>
+            <div style={secStyle}>{t.nations.activeBattles(battles.length)}</div>
             {myClan && (
               <button onClick={() => setShowBattleChallenge(true)} style={{ padding: '7px 14px', background: '#7B61FF', color: '#fff', border: 'none', borderRadius: 10, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-                + Новый вызов
+                {t.nations.newChallenge}
               </button>
             )}
           </div>
 
           {battles.length === 0 && (
             <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: '24px 0', fontSize: 13 }}>
-              Нет активных сражений.<br />Брось вызов другому клану!
+              {t.nations.noBattles}
             </div>
           )}
 
@@ -262,7 +259,7 @@ export const NationsPage: React.FC = () => {
             const hours = timeLeft != null ? Math.floor(timeLeft / 3600000) : null;
             const days  = hours != null ? Math.floor(hours / 24) : null;
             const timeStr = days != null
-              ? days > 0 ? `${days}д ${hours! % 24}ч` : `${hours}ч`
+              ? days > 0 ? `${days}d ${hours! % 24}h` : `${hours}h`
               : '—';
 
             return (
@@ -270,10 +267,10 @@ export const NationsPage: React.FC = () => {
                 {/* Статус */}
                 <div style={{ background: 'rgba(123,97,255,0.08)', padding: '8px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: 10, fontWeight: 700, color: b.status === 'IN_PROGRESS' ? 'var(--green, #00D68F)' : '#FF9F43', letterSpacing: '.07em' }}>
-                    {b.status === 'IN_PROGRESS' ? '⚡ ИДЁТ' : '⏳ ОЖИДАНИЕ'}
+                    {b.status === 'IN_PROGRESS' ? t.nations.inProgress : t.nations.waiting}
                   </span>
                   <span style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>
-                    {b.status === 'IN_PROGRESS' && timeLeft != null ? `⏰ ${timeStr}` : `⏳ Длительность: ${Math.floor(b.duration / 3600)}ч`}
+                    {b.status === 'IN_PROGRESS' && timeLeft != null ? `⏰ ${timeStr}` : t.nations.duration(Math.floor(b.duration / 3600))}
                   </span>
                 </div>
 
@@ -289,10 +286,10 @@ export const NationsPage: React.FC = () => {
                     <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginBottom: 4 }}>vs</div>
                     <div style={{ fontSize: 10, color: 'var(--accent, #F5C842)', fontWeight: 700 }}>💰 {fmtBalance(b.pool)} ᚙ</div>
                     <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', marginTop: 4 }}>
-                      {b.activeGames}/{b.maxSimultaneous} партий
+                      {b.activeGames}/{b.maxSimultaneous} {t.nations.games}
                     </div>
                     <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>
-                      {b._count?.contributions ?? 0} игроков
+                      {b._count?.contributions ?? 0} {t.nations.players}
                     </div>
                   </div>
                   <div style={{ flex: 1, textAlign: 'center' }}>
@@ -316,13 +313,13 @@ export const NationsPage: React.FC = () => {
                 {isParticipant && !isJoined && (
                   <div style={{ padding: '0 14px 14px' }}>
                     <button onClick={() => setShowJoinBattle(b)} style={{ width: '100%', padding: '10px', background: '#7B61FF', color: '#fff', border: 'none', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-                      ⚔️ Вступить в сражение
+                      {t.nations.joinBattle}
                     </button>
                   </div>
                 )}
                 {isJoined && (
                   <div style={{ padding: '0 14px 12px', fontSize: 11, color: 'var(--green, #00D68F)', textAlign: 'center' }}>
-                    ✓ Вы участвуете · ставка {fmtBalance(b.myContribution!.amount)} ᚙ
+                    {t.nations.participating} · {t.nations.betAmount(fmtBalance(b.myContribution!.amount))}
                   </div>
                 )}
               </div>
@@ -336,14 +333,14 @@ export const NationsPage: React.FC = () => {
         <>
           {pendingMembers.length > 0 && isLeader && (
             <>
-              <div style={{ ...secStyle, color: '#FF9F43' }}>⏳ Ожидают одобрения ({pendingMembers.length})</div>
+              <div style={{ ...secStyle, color: '#FF9F43' }}>{t.nations.pendingApproval(pendingMembers.length)}</div>
               {pendingMembers.map(m => (
                 <div key={m.id} style={memberCardStyle}>
                   <Avatar user={m.user} size="s" />
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary, #F0F2F8)' }}>{m.user?.firstName ?? 'Игрок'}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary, #F0F2F8)' }}>{m.user?.firstName ?? t.nations.player}</div>
                     <div style={{ fontSize: 10, color: 'var(--text-secondary, #8B92A8)' }}>
-                      ELO {m.user?.elo ?? '?'} · Взнос: {fmtBalance(m.pendingContribution ?? '0')} ᚙ
+                      ELO {m.user?.elo ?? '?'} · {t.nations.contribution}: {fmtBalance(m.pendingContribution ?? '0')} ᚙ
                     </div>
                   </div>
                   <button onClick={() => handleApprove(m.id, true)} style={approveBtn}>✓</button>
@@ -353,7 +350,7 @@ export const NationsPage: React.FC = () => {
             </>
           )}
 
-          <div style={secStyle}>Бойцы клана ({activeMembers.length})</div>
+          <div style={secStyle}>{t.nations.clanFighters(activeMembers.length)}</div>
           {activeMembers.map((m, i) => (
             <div key={m.id} style={memberCardStyle}>
               <span style={{ fontSize: 11, color: i < 3 ? 'var(--accent, #F5C842)' : 'var(--text-muted, #4A5270)', width: 20, flexShrink: 0 }}>
@@ -362,11 +359,11 @@ export const NationsPage: React.FC = () => {
               <Avatar user={m.user} size="s" />
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary, #F0F2F8)' }}>{m.user?.firstName ?? 'Игрок'}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary, #F0F2F8)' }}>{m.user?.firstName ?? t.nations.player}</span>
                   {m.role === 'COMMANDER' && <span style={{ fontSize: 10, color: 'var(--accent, #F5C842)' }}>👑</span>}
                 </div>
                 <div style={{ fontSize: 10, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>
-                  ELO {m.user?.elo ?? '?'} · {m.warWins}W/{m.warLosses}L · Взнос {fmtBalance(m.contribution ?? '0')} ᚙ
+                  ELO {m.user?.elo ?? '?'} · {m.warWins}W/{m.warLosses}L · {t.nations.contribution} {fmtBalance(m.contribution ?? '0')} ᚙ
                 </div>
               </div>
               {isLeader && m.userId !== user?.id && !m.isPending && (
@@ -380,8 +377,8 @@ export const NationsPage: React.FC = () => {
       {/* Рейтинг */}
       {tab === 'ranking' && (
         <>
-          <div style={secStyle}>Рейтинг сборных</div>
-          {loading && <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: 24 }}>Загрузка...</div>}
+          <div style={secStyle}>{t.nations.ranking}</div>
+          {loading && <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: 24 }}>{t.common.loading}</div>}
           {nations.map((n, i) => (
             <div key={n.id} style={nationRowStyle}>
               <span style={{ fontSize: 13, fontWeight: 700, color: i === 0 ? 'var(--accent, #F5C842)' : i === 1 ? '#C0C0C0' : i === 2 ? '#CD7F32' : 'var(--text-muted, #4A5270)', width: 20 }}>
@@ -391,7 +388,7 @@ export const NationsPage: React.FC = () => {
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary, #F0F2F8)' }}>{n.name}</div>
                 <div style={{ fontSize: 10, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>
-                  {n._count?.members ?? n.memberCount ?? 0} бойцов · ELO {n.elo ?? n.avgElo ?? 1000}
+                  {t.nations.fightersCount(n._count?.members ?? n.memberCount ?? 0)} · ELO {n.elo ?? n.avgElo ?? 1000}
                 </div>
               </div>
               <div style={{ textAlign: 'right' }}>
@@ -399,7 +396,7 @@ export const NationsPage: React.FC = () => {
                   {n.elo ?? n.avgElo ?? 1000}
                 </div>
                 {n.id !== (myClan?.id) && !myClan && (
-                  <button onClick={() => setShowJoin(n.id)} style={joinBtn}>Вступить</button>
+                  <button onClick={() => setShowJoin(n.id)} style={joinBtn}>{t.nations.join}</button>
                 )}
               </div>
             </div>
@@ -469,11 +466,11 @@ const ContributeModal: React.FC<{ clanName: string; clanFlag: string; onClose: (
       <div style={modalStyle}>
         <div style={handleBar} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>{clanFlag} Взнос в казну {clanName}</div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>{t.nations.contributeTitle(clanFlag, clanName)}</div>
           <button onClick={onClose} style={closeBtnStyle}>✕</button>
         </div>
         <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginBottom: 16 }}>
-          Ваш взнос укрепляет казну клана. При победе в войне — получите пропорциональную долю приза.
+          {t.nations.contributeDesc}
         </div>
         <input
           type="number"
@@ -481,7 +478,7 @@ const ContributeModal: React.FC<{ clanName: string; clanFlag: string; onClose: (
           onChange={e => setAmount(e.target.value)}
           style={inputStyle}
           min="1000"
-          placeholder="Сумма ᚙ"
+          placeholder={t.nations.amount}
         />
         <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
           {['10000', '50000', '100000', '500000'].map(v => (
@@ -489,7 +486,7 @@ const ContributeModal: React.FC<{ clanName: string; clanFlag: string; onClose: (
           ))}
         </div>
         <button onClick={handleSubmit} disabled={loading} style={goldBtnFull}>
-          {loading ? 'Отправляем...' : `Внести ${fmtBalance(amount)} ᚙ`}
+          {loading ? t.nations.sending : t.nations.contributeBtn(fmtBalance(amount))}
         </button>
       </div>
     </div>
@@ -501,9 +498,9 @@ const WarChallengeModal: React.FC<{ nations: Nation[]; onClose: () => void; onSu
   const [targetId, setTargetId] = useState('');
   const [duration, setDuration] = useState(86400);
   const [loading, setLoading] = useState(false);
-  const DURATIONS = [{ v: 3600, l: '1 час' }, { v: 86400, l: '1 день' }, { v: 604800, l: '1 неделя' }, { v: 2592000, l: '1 месяц' }];
+  const DURATIONS = [{ v: 3600, l: t.nations.dur1h }, { v: 86400, l: t.nations.dur1d }, { v: 604800, l: t.nations.dur1w }, { v: 2592000, l: t.nations.dur1m }];
   const handleSubmit = async () => {
-    if (!targetId) { showToast('Выберите страну'); return; }
+    if (!targetId) { showToast(t.nations.selectCountry); return; }
     setLoading(true);
     try {
       await nationsApi.challengeWar(targetId, duration);
@@ -516,11 +513,11 @@ const WarChallengeModal: React.FC<{ nations: Nation[]; onClose: () => void; onSu
       <div style={modalStyle}>
         <div style={handleBar} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-          <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--red, #FF4D6A)' }}>⚔️ Объявить клановую войну</div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--red, #FF4D6A)' }}>{t.nations.declareWarTitle}</div>
           <button onClick={onClose} style={closeBtnStyle}>✕</button>
         </div>
-        <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginBottom: 16 }}>На кону будет казна обоих кланов!</div>
-        <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 8 }}>Выберите врага</div>
+        <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginBottom: 16 }}>{t.nations.warStakeDesc}</div>
+        <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 8 }}>{t.nations.selectEnemy}</div>
         <div style={{ maxHeight: 200, overflowY: 'auto', marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
           {nations.map(n => (
             <button key={n.id} onClick={() => setTargetId(n.id)} style={{ ...nationSelectBtn, ...(targetId === n.id ? nationSelectBtnActive : {}) }}>
@@ -530,14 +527,14 @@ const WarChallengeModal: React.FC<{ nations: Nation[]; onClose: () => void; onSu
             </button>
           ))}
         </div>
-        <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 8 }}>Время войны</div>
+        <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 8 }}>{t.nations.warDuration}</div>
         <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
           {DURATIONS.map(d => (
             <button key={d.v} onClick={() => setDuration(d.v)} style={chipBtn(duration === d.v)}>{d.l}</button>
           ))}
         </div>
         <button onClick={handleSubmit} disabled={loading} style={{ ...goldBtnFull, background: 'rgba(255,77,106,0.15)', color: 'var(--red, #FF4D6A)', border: '1px solid rgba(255,77,106,0.3)' }}>
-          {loading ? 'Отправляем вызов...' : '⚔️ Бросить вызов!'}
+          {loading ? t.nations.sendingChallenge : t.nations.challengeBtn}
         </button>
       </div>
     </div>
@@ -552,7 +549,7 @@ const JoinClanModal: React.FC<{ clanId: string; clan?: Nation; onClose: () => vo
     setLoading(true);
     try {
       const res = await nationsApi.join(clanId, Number(contribution));
-      if (res.pending) showToast('Ваша заявка отправлена на рассмотрение лидера клана', 'info');
+      if (res.pending) showToast(t.nations.joinPending, 'info');
       onSuccess();
     } catch (e: unknown) { showToast((e as Error).message ?? t.common.error); }
     finally { setLoading(false); }
@@ -568,21 +565,21 @@ const JoinClanModal: React.FC<{ clanId: string; clan?: Nation; onClose: () => vo
           <div style={{ fontSize: 48 }}>{clan?.flag}</div>
           <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>{clan?.name}</div>
           <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 4 }}>
-            {clan?._count?.members ?? 0} бойцов · ELO {clan?.elo ?? 1000}
+            {t.nations.fightersCount(clan?._count?.members ?? 0)} · ELO {clan?.elo ?? 1000}
           </div>
         </div>
         <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginBottom: 12 }}>
-          Необязательный взнос в казну клана при вступлении (повышает приоритет одобрения):
+          {t.nations.optionalContribution}
         </div>
         <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
           {['0', '10000', '50000', '100000'].map(v => (
             <button key={v} onClick={() => setContribution(v)} style={chipBtn(contribution === v)}>
-              {v === '0' ? 'Без взноса' : fmtBalance(v)}
+              {v === '0' ? t.nations.noContribution : fmtBalance(v)}
             </button>
           ))}
         </div>
         <button onClick={handleSubmit} disabled={loading} style={goldBtnFull}>
-          {loading ? 'Вступаем...' : 'Вступить в клан'}
+          {loading ? t.nations.joining : t.nations.joinClan}
         </button>
       </div>
     </div>
@@ -602,14 +599,14 @@ const BattleChallengeModal: React.FC<{
   const [loading, setLoading]     = useState(false);
 
   const DURATIONS = [
-    { v: 3600,    l: '1 час' },
-    { v: 86400,   l: '1 день' },
-    { v: 604800,  l: '1 нед.' },
-    { v: 2592000, l: '1 мес.' },
+    { v: 3600,    l: t.nations.durShort1h },
+    { v: 86400,   l: t.nations.durShort1d },
+    { v: 604800,  l: t.nations.durShort1w },
+    { v: 2592000, l: t.nations.durShort1m },
   ];
 
   const handleSubmit = async () => {
-    if (!targetId) { showToast('Выберите противника'); return; }
+    if (!targetId) { showToast(t.nations.selectCountry); return; }
     setLoading(true);
     try {
       await clanBattlesApi.challenge(targetId, duration, bet);
@@ -622,13 +619,12 @@ const BattleChallengeModal: React.FC<{
     <div style={overlayStyle} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div style={modalStyle}>
         <div style={handleBar} />
-        <div style={{ fontSize: 17, fontWeight: 700, color: '#7B61FF', marginBottom: 4 }}>🏆 Командное сражение</div>
-        <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginBottom: 16 }}>
-          Победитель определяется по win rate — не по числу партий!<br />
-          Макс. {10} одновременных партий между кланами.
+        <div style={{ fontSize: 17, fontWeight: 700, color: '#7B61FF', marginBottom: 4 }}>{t.nations.teamBattle}</div>
+        <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginBottom: 16, whiteSpace: 'pre-line' }}>
+          {t.nations.battleDesc}
         </div>
 
-        <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 8 }}>Противник</div>
+        <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 8 }}>{t.nations.opponent}</div>
         <div style={{ maxHeight: 160, overflowY: 'auto', marginBottom: 14, display: 'flex', flexDirection: 'column', gap: 6 }}>
           {nations.map(n => (
             <button key={n.id} onClick={() => setTargetId(n.id)}
@@ -640,19 +636,19 @@ const BattleChallengeModal: React.FC<{
           ))}
         </div>
 
-        <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 8 }}>Длительность</div>
+        <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 8 }}>{t.nations.durationLabel}</div>
         <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
           {DURATIONS.map(d => (
             <button key={d.v} onClick={() => setDuration(d.v)} style={chipBtn(duration === d.v)}>{d.l}</button>
           ))}
         </div>
 
-        <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 8 }}>Ваша ставка (войдёт в кассу)</div>
+        <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 8 }}>{t.nations.yourBet}</div>
         <input
           type="number" value={bet}
           onChange={e => setBet(e.target.value)}
           style={{ ...inputStyle, marginBottom: 8 }}
-          min="1000" placeholder="Сумма ᚙ"
+          min="1000" placeholder={t.nations.betPlaceholder}
         />
         <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
           {['5000', '10000', '50000', '100000'].map(v => (
@@ -662,7 +658,7 @@ const BattleChallengeModal: React.FC<{
 
         <button onClick={handleSubmit} disabled={loading}
           style={{ ...goldBtnFull, background: '#7B61FF', color: '#fff' }}>
-          {loading ? 'Отправляем...' : '🏆 Бросить вызов!'}
+          {loading ? t.nations.challengeSending : t.nations.challengeSubmit}
         </button>
       </div>
     </div>
@@ -696,19 +692,19 @@ const JoinBattleModal: React.FC<{
         <div style={handleBar} />
         <div style={{ textAlign: 'center', marginBottom: 16 }}>
           <div style={{ fontSize: 32, marginBottom: 4 }}>{myClan.flag} ⚔️</div>
-          <div style={{ fontSize: 16, fontWeight: 700, color: '#7B61FF' }}>Вступить в сражение</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: '#7B61FF' }}>{t.nations.joinBattleTitle}</div>
           <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 4 }}>
-            Касса: {fmtBalance(battle.pool)} ᚙ · {battle._count?.contributions ?? 0} участников
+            {t.nations.pool}: {fmtBalance(battle.pool)} ᚙ · {battle._count?.contributions ?? 0} {t.nations.participants}
           </div>
         </div>
         <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginBottom: 12 }}>
-          Ваша ставка добавится в общую кассу. При победе клана получите пропорциональную долю!
+          {t.nations.joinBattleDesc}
         </div>
         <input
           type="number" value={bet}
           onChange={e => setBet(e.target.value)}
           style={{ ...inputStyle, marginBottom: 8 }}
-          min="1000" placeholder="Ставка ᚙ"
+          min="1000" placeholder={t.nations.betInputPlaceholder}
         />
         <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
           {['5000', '10000', '50000', '100000'].map(v => (
@@ -717,7 +713,7 @@ const JoinBattleModal: React.FC<{
         </div>
         <button onClick={handleSubmit} disabled={loading}
           style={{ ...goldBtnFull, background: '#7B61FF', color: '#fff' }}>
-          {loading ? 'Вступаем...' : `⚔️ Вступить · ${fmtBalance(bet)} ᚙ`}
+          {loading ? t.nations.joiningBattle : t.nations.joinBattleBtn(fmtBalance(bet))}
         </button>
       </div>
     </div>
