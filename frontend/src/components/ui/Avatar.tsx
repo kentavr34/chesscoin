@@ -32,7 +32,7 @@ const getGradient = (userId?: string, avatarGradient?: string | null): string =>
   return GRADIENTS[idx];
 };
 
-export const Avatar: React.FC<AvatarProps> = ({ user, size = 'm', gold, className = '', onClick }) => {
+export const Avatar: React.FC<AvatarProps> = React.memo(({ user, size = 'm', gold, className = '', onClick }) => {
   const frameStyle = user?.equippedItems?.AVATAR_FRAME
     ? AVATAR_FRAME_STYLE[(user as import("@/types").User).equippedItems?.AVATAR_FRAME?.name ?? ''] ?? null
     : null;
@@ -74,4 +74,4 @@ export const Avatar: React.FC<AvatarProps> = ({ user, size = 'm', gold, classNam
       }
     </div>
   );
-};
+});

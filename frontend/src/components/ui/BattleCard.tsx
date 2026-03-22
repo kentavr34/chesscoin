@@ -46,7 +46,7 @@ const STATUS_CONFIG = {
   FINISHED:    { textKey: 'finished', color: 'var(--text-secondary, #8B92A8)' },
 };
 
-export const BattleCard: React.FC<BattleCardProps> = ({
+export const BattleCard: React.FC<BattleCardProps> = React.memo(({
   player1, player2, status, winner, spectatorCount,
   sessionId, onSpectate, onSave, saving, label, compact,
 }) => {
@@ -144,4 +144,4 @@ export const BattleCard: React.FC<BattleCardProps> = ({
       </div>
     </div>
   );
-};
+});
