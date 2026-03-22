@@ -824,8 +824,6 @@ nationsRouter.post("/challenge-player", authMiddleware, async (req: Request, res
     const { targetUserId, bet } = req.body;
     if (!targetUserId || !bet) return res.status(400).json({ error: "targetUserId и bet обязательны" });
 
-    // Создаём приватный батл-вызов
-    const socket = require("@/api/socket");
     // Уведомляем целевого игрока
     getIo().emit(`user:${targetUserId}`, {
       type: "battle:challenge",

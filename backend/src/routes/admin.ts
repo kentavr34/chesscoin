@@ -20,9 +20,10 @@ import { validate } from "@/middleware/validate"; // R4
 let sharp: unknown; try { sharp = require("sharp"); } catch { sharp = null; }
 import multer from "multer";
 import { prisma } from "@/lib/prisma";
-import { ItemType, ItemCategory, ItemRarity } from "@prisma/client"; // R1
+import { ItemType, ItemCategory, ItemRarity, TransactionType } from "@prisma/client"; // R1
 import { redis } from "@/lib/redis";
 import { safeStringify } from "@/lib/json"; // Q6: safe BigInt serialization
+import { updateBalance } from "@/services/economy";
 import { authMiddleware } from "@/middleware/auth";
 import { uploadToS3, deleteFromS3 } from "@/lib/s3";
 
@@ -352,8 +353,6 @@ adminRouter.post("/users/:id/balance", authMiddleware, adminOnly, validate(Balan
   try {
     const { amount, reason } = req.body; // R4: validated by BalanceSchema
     if (!amount) return res.status(400).json({ error: "amount required" });
-    const { updateBalance } = require("@/services/economy");
-    const { TransactionType } = require("@prisma/client"); // BUG-06 fix
     await updateBalance(req.params.id, BigInt(amount), TransactionType.REFERRAL_BONUS, { reason });
     const user = await prisma.user.findUnique({ where: { id: req.params.id }, select: { balance: true } });
     res.json({ ok: true, newBalance: user?.balance.toString() });

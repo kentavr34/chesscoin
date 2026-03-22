@@ -7,6 +7,8 @@ import { prisma } from "@/lib/prisma";
 import config from "@/config";
 import { authMiddleware, AuthRequest } from "@/middleware/auth";
 import { uploadToS3, deleteFromS3 } from "@/lib/s3";
+import { updateBalance } from "@/services/economy";
+import { TransactionType } from "@prisma/client";
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -510,8 +512,7 @@ router.post("/ton/withdraw", authMiddleware, async (req: Request, res: Response)
     const netTon = tonAmount - commission;
 
     // Deduct from balance
-    const { updateBalance } = await import("@/services/economy");
-    const { TransactionType } = await import("@prisma/client");
+    // updateBalance and TransactionType imported at top level
     await updateBalance(userId, -BigInt(amountCoins), TransactionType.WITHDRAWAL, {
       tonWallet: user.tonWalletAddress,
       tonAmount: netTon,
@@ -583,8 +584,7 @@ router.post("/ton/buy", authMiddleware, async (req: Request, res: Response) => {
     const fee = Math.round(gross * 0.005);
     const net = gross - fee;
     // Начисляем монеты сразу (реальная оплата TON — вне платформы, пользователь подтверждает)
-    const { updateBalance } = await import("@/services/economy");
-    const { TransactionType } = await import("@prisma/client");
+    // updateBalance and TransactionType imported at top level
     await updateBalance(userId, BigInt(net), TransactionType.TON_DEPOSIT, {
       amountTon: parseFloat(amountTon),
       coinsGross: gross,
@@ -612,8 +612,7 @@ router.post("/ton/sell", authMiddleware, async (req: Request, res: Response) => 
     const tonGross = Number(amountCoins) / coinsPerTon;
     const tonFee = tonGross * 0.005;
     const tonNet = tonGross - tonFee;
-    const { updateBalance } = await import("@/services/economy");
-    const { TransactionType } = await import("@prisma/client");
+    // updateBalance and TransactionType imported at top level
     await updateBalance(userId, -BigInt(amountCoins), TransactionType.WITHDRAWAL, {
       type: "sell",
       tonWallet: user.tonWalletAddress,
