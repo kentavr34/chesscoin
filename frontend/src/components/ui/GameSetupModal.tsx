@@ -16,18 +16,18 @@ interface GameSetupModalProps {
 const JARVIS_INFO_SLIDES = [
   {
     icon: '🤖',
-    title: 'J.A.R.V.I.S — ИИ противник',
-    desc: 'Играй против искусственного интеллекта. Побеждай — открывай следующий уровень и получай монеты. Каждый уровень сложнее предыдущего.',
+    title: 'J.A.R.V.I.S — AI Opponent',
+    desc: 'Play against artificial intelligence. Win to unlock the next level and earn coins. Each level is harder than the last.',
   },
   {
     icon: '🏅',
-    title: '20 уровней мастерства',
-    desc: 'От Beginner до Mystic. Победа на каждом уровне даёт уникальный бейдж в профиль — другие игроки увидят твой ранг.',
+    title: '20 Mastery Levels',
+    desc: 'From Beginner to Mystic. Winning each level grants a unique badge for your profile — other players will see your rank.',
   },
   {
     icon: '💰',
-    title: 'Монеты за победу',
-    desc: 'Чем выше уровень — тем больше награда. На Mystic уровне за победу начисляется до 75 000 ᚙ! Проигрыш монеты не списывает.',
+    title: 'Coins for Victory',
+    desc: 'The higher the level, the bigger the reward. At Mystic level you earn up to 75,000 ᚙ per win! Losing does not deduct coins.',
   },
 ];
 
@@ -81,16 +81,16 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
           </div>
 
           <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 22, fontWeight: 800, color: 'var(--accent, #F5C842)', textAlign: 'center', marginBottom: 6 }}>
-            Запускаем бой!
+            Launching battle!
           </div>
           <div style={{ fontSize: 13, color: 'var(--text-secondary, #8B92A8)', textAlign: 'center', marginBottom: 28 }}>
-            J.A.R.V.I.S {selectedLevel.name} · {time < 60 ? `${time} мин` : '1 час'}
+            J.A.R.V.I.S {selectedLevel.name} · {time < 60 ? `${time} min` : '1 hr'}
           </div>
 
           {/* VS banner */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginBottom: 28 }}>
             <div style={playerChipStyle}>
-              {resolvedColor === 'white' ? '♔' : '♚'} Вы
+              {resolvedColor === 'white' ? '♔' : '♚'} You
             </div>
             <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-muted, #4A5270)' }}>VS</span>
             <div style={{ ...playerChipStyle, background: 'rgba(155,133,255,0.12)', borderColor: 'rgba(155,133,255,0.3)', color: '#9B85FF' }}>
@@ -106,7 +106,7 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
               </span>
             </div>
             <div style={{ fontSize: 11, color: 'var(--text-muted, #4A5270)', marginTop: 10, letterSpacing: '.06em' }}>
-              СЕКУНДЫ ДО СТАРТА
+              SECONDS TO START
             </div>
           </div>
         </div>
@@ -129,7 +129,7 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
               🤖 {selectedLevel.name}
             </div>
             <div style={{ fontSize: 11, color: 'var(--accent, #F5C842)', marginTop: 2 }}>
-              Уровень {selectedLevel.level} / 20 · +{selectedLevel.reward.toLocaleString()} ᚙ за победу
+              Level {selectedLevel.level} / 20 · +{selectedLevel.reward.toLocaleString()} ᚙ per win
             </div>
           </div>
           {/* J4: кнопка открыть инфо вручную */}
@@ -174,14 +174,14 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
               <span style={{ fontSize: 16, display: 'block', marginBottom: 2 }}>
                 {t === 1 ? '⚡' : t === 3 ? '🔥' : t === 5 ? '♟' : t === 15 ? '🎯' : t === 30 ? '🏆' : '👑'}
               </span>
-              {t < 60 ? `${t} мин` : '1 час'}
+              {t < 60 ? `${t} min` : '1 hr'}
             </button>
           ))}
         </div>
 
         {/* Start button */}
         <button onClick={handleStart} style={startBtnStyle}>
-          ♟ Начать партию
+          ♟ Start game
         </button>
       </div>
     </div>

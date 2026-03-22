@@ -1,108 +1,108 @@
 /**
- * chessOpenings.ts — V3: Определение дебютов и спецходов по PGN/FEN
+ * chessOpenings.ts — V3: Opening detection and special moves by PGN/FEN
  *
- * Анализирует позицию и возвращает название дебюта или спецхода.
- * Используется для объявлений MoveAnnouncer.
+ * Analyzes position and returns opening name or special move.
+ * Used for MoveAnnouncer announcements.
  */
 
 import { Chess } from 'chess.js';
 
 export interface MoveAnnouncement {
-  text: string;        // "Испанская партия"
-  subtext?: string;    // "Начало дебюта"
+  text: string;        // "Ruy Lopez"
+  subtext?: string;    // "Lopez Opening"
   type: 'opening' | 'special' | 'tactical';
 }
 
-// ── Дебюты по первым ходам (ECO-подобная база) ───────────────────────────────
+// ── Openings by first moves (ECO-like database) ───────────────────────────────
 
 const OPENINGS: Array<{ moves: string; name: string; sub?: string }> = [
-  // e4 дебюты
-  { moves: '1. e4 e5 2. Nf3 Nc6 3. Bb5', name: 'Испанская партия', sub: 'Дебют Рюи Лопеса' },
-  { moves: '1. e4 e5 2. Nf3 Nc6 3. Bc4', name: 'Итальянская партия', sub: 'Классический дебют' },
-  { moves: '1. e4 e5 2. Nf3 Nc6 3. d4',  name: 'Шотландская партия', sub: 'Открытая игра' },
-  { moves: '1. e4 e5 2. Nf3 Nf6',        name: 'Русская защита', sub: 'Защита Петрова' },
-  { moves: '1. e4 e5 2. Nc3',            name: 'Венская партия' },
-  { moves: '1. e4 e5 2. f4',             name: 'Королевский гамбит', sub: '♔ Агрессивная атака' },
-  { moves: '1. e4 c5',                   name: 'Сицилианская защита', sub: 'Главный дебют' },
-  { moves: '1. e4 e6',                   name: 'Французская защита' },
-  { moves: '1. e4 c6',                   name: 'Защита Каро-Канн' },
-  { moves: '1. e4 d5 2. exd5 Qxd5',     name: 'Скандинавская защита' },
-  { moves: '1. e4 d5 2. exd5 Nf6',      name: 'Современная скандинавская' },
-  { moves: '1. e4 Nf6',                  name: 'Защита Алёхина' },
-  { moves: '1. e4 g6',                   name: 'Современная защита' },
-  { moves: '1. e4 d6',                   name: 'Защита Пирца' },
-  // d4 дебюты
-  { moves: '1. d4 d5 2. c4',            name: 'Ферзевый гамбит', sub: 'Классический план' },
-  { moves: '1. d4 Nf6 2. c4 g6',        name: 'Защита Грюнфельда' },
-  { moves: '1. d4 Nf6 2. c4 e6',        name: 'Защита Нимцовича' },
-  { moves: '1. d4 Nf6 2. c4 c5',        name: 'Защита Бенони' },
-  { moves: '1. d4 f5',                  name: 'Нидерландская защита' },
-  { moves: '1. d4 d5 2. Nf3 Nf6 3. e3', name: 'Ферзевый гамбит отказанный' },
-  // Фланговые дебюты
-  { moves: '1. c4',                     name: 'Английское начало' },
-  { moves: '1. Nf3',                    name: 'Начало Рети' },
-  { moves: '1. b3',                     name: 'Дебют Нимцовича-Ларсена' },
-  { moves: '1. g3',                     name: 'Дебют Бёрда' },
-  // Мат
-  { moves: '1. e4 e5 2. Qh5 Nc6 3. Bc4 Nf6 4. Qxf7', name: 'Детский мат', sub: '😈 Классика' },
+  // e4 openings
+  { moves: '1. e4 e5 2. Nf3 Nc6 3. Bb5', name: 'Ruy Lopez', sub: 'Lopez Opening' },
+  { moves: '1. e4 e5 2. Nf3 Nc6 3. Bc4', name: 'Italian Game', sub: 'Classic Opening' },
+  { moves: '1. e4 e5 2. Nf3 Nc6 3. d4',  name: 'Scotch Game', sub: 'Open Game' },
+  { moves: '1. e4 e5 2. Nf3 Nf6',        name: 'Petrov\'s Defense', sub: 'Petrov\'s Defense' },
+  { moves: '1. e4 e5 2. Nc3',            name: 'Vienna Game' },
+  { moves: '1. e4 e5 2. f4',             name: 'King\'s Gambit', sub: '♔ Aggressive Attack' },
+  { moves: '1. e4 c5',                   name: 'Sicilian Defense', sub: 'Main Opening' },
+  { moves: '1. e4 e6',                   name: 'French Defense' },
+  { moves: '1. e4 c6',                   name: 'Caro-Kann Defense' },
+  { moves: '1. e4 d5 2. exd5 Qxd5',     name: 'Scandinavian Defense' },
+  { moves: '1. e4 d5 2. exd5 Nf6',      name: 'Modern Scandinavian' },
+  { moves: '1. e4 Nf6',                  name: 'Alekhine\'s Defense' },
+  { moves: '1. e4 g6',                   name: 'Modern Defense' },
+  { moves: '1. e4 d6',                   name: 'Pirc Defense' },
+  // d4 openings
+  { moves: '1. d4 d5 2. c4',            name: 'Queen\'s Gambit', sub: 'Classic Plan' },
+  { moves: '1. d4 Nf6 2. c4 g6',        name: 'Gr\u00FCnfeld Defense' },
+  { moves: '1. d4 Nf6 2. c4 e6',        name: 'Nimzo-Indian Defense' },
+  { moves: '1. d4 Nf6 2. c4 c5',        name: 'Benoni Defense' },
+  { moves: '1. d4 f5',                  name: 'Dutch Defense' },
+  { moves: '1. d4 d5 2. Nf3 Nf6 3. e3', name: 'Queen\'s Gambit Declined' },
+  // Flank openings
+  { moves: '1. c4',                     name: 'English Opening' },
+  { moves: '1. Nf3',                    name: 'R\u00E9ti Opening' },
+  { moves: '1. b3',                     name: 'Nimzo-Larsen Attack' },
+  { moves: '1. g3',                     name: 'Bird\'s Opening' },
+  // Mate
+  { moves: '1. e4 e5 2. Qh5 Nc6 3. Bc4 Nf6 4. Qxf7', name: 'Scholar\'s Mate', sub: 'Classic' },
 ];
 
-// ── Специальные ходы ──────────────────────────────────────────────────────────
+// ── Special moves ──────────────────────────────────────────────────────────
 
 export function detectSpecialMove(pgn: string, lastSan: string, lastFen: string): MoveAnnouncement | null {
   if (!lastSan) return null;
 
-  // Шах и мат
+  // Checkmate
   if (lastSan.endsWith('#')) {
-    return { text: 'ШАХ И МАТ', subtext: '♔ Партия завершена', type: 'special' };
+    return { text: 'CHECKMATE', subtext: '♔ Game over', type: 'special' };
   }
 
-  // Шах
+  // Check
   if (lastSan.endsWith('+')) {
     const checks = (pgn.match(/\+/g) ?? []).length;
-    if (checks >= 3) return { text: 'Тройной шах', subtext: '⚡', type: 'tactical' };
-    return null; // одиночный шах — без объявления (частый)
+    if (checks >= 3) return { text: 'Triple check', subtext: '⚡', type: 'tactical' };
+    return null; // single check — no announcement (frequent)
   }
 
-  // Рокировка
+  // Castling
   if (lastSan === 'O-O') {
-    return { text: 'Рокировка!', subtext: '♜ Короткая', type: 'special' };
+    return { text: 'Castling!', subtext: '♜ Kingside', type: 'special' };
   }
   if (lastSan === 'O-O-O') {
-    return { text: 'Длинная рокировка', subtext: '♜ Ферзевый фланг', type: 'special' };
+    return { text: 'Long castling', subtext: '♜ Queenside', type: 'special' };
   }
 
-  // Взятие на проходе
+  // En passant
   if (lastSan.includes('e.p.') || (lastSan.includes('x') && lastSan.length <= 4 && pgn.includes('e.p.'))) {
-    return { text: 'Взятие на проходе', subtext: 'En passant', type: 'tactical' };
+    return { text: 'En passant', subtext: 'En passant', type: 'tactical' };
   }
 
-  // Вилка (N берёт с шахом — атакует несколько фигур)
+  // Fork (N captures with check — attacks multiple pieces)
   if (lastSan.startsWith('N') && lastSan.endsWith('+')) {
-    return { text: 'Вилка!', subtext: '♞ Два удара', type: 'tactical' };
+    return { text: 'Fork!', subtext: '♞ Double attack', type: 'tactical' };
   }
 
-  // Ферзь берёт (агрессивный ход)
+  // Queen captures (aggressive move)
   if (lastSan.startsWith('Q') && lastSan.includes('x') && lastSan.endsWith('+')) {
-    return { text: 'Жертва ферзя!', subtext: '♛ Атакующий удар', type: 'tactical' };
+    return { text: 'Queen sacrifice!', subtext: '♛ Attacking blow', type: 'tactical' };
   }
 
   return null;
 }
 
-// ── Определение дебюта по позиции ─────────────────────────────────────────────
+// ── Opening detection by position ─────────────────────────────────────────────
 
 export function detectOpening(pgn: string): MoveAnnouncement | null {
-  if (!pgn || pgn.split(' ').length > 25) return null; // только первые ~8 ходов
+  if (!pgn || pgn.split(' ').length > 25) return null; // only first ~8 moves
 
-  // Нормализуем PGN — убираем номера ходов
+  // Normalize PGN — remove move numbers
   const normalize = (s: string) => s.replace(/\d+\.\s*/g, '').replace(/\s+/g, ' ').trim();
   const normalPgn = normalize(pgn);
 
   for (const opening of OPENINGS) {
     const normalMoves = normalize(opening.moves);
     if (normalPgn.startsWith(normalMoves)) {
-      // Показываем только при точном совпадении (не показываем повторно)
+      // Show only on exact match (don't show repeatedly)
       const pgnMoveCount = normalPgn.split(' ').length;
       const openingMoveCount = normalMoves.split(' ').length;
       if (pgnMoveCount === openingMoveCount) {
@@ -118,7 +118,7 @@ export function detectOpening(pgn: string): MoveAnnouncement | null {
   return null;
 }
 
-// ── Стили для разных анимаций спецходов ───────────────────────────────────────
+// ── Styles for special move animations ───────────────────────────────────────
 
 export interface SpecialMoveStyle {
   color: string;
@@ -127,30 +127,19 @@ export interface SpecialMoveStyle {
 }
 
 export const SPECIAL_MOVE_STYLES: Record<string, SpecialMoveStyle> = {
-  'Классик':   { color: '#F5C842',  shadow: '0 0 20px rgba(245,200,66,0.6)',  animation: 'fadeSlideUp' },
   'Classic':   { color: '#F5C842',  shadow: '0 0 20px rgba(245,200,66,0.6)',  animation: 'fadeSlideUp' },
-  'Неон':      { color: '#00FF9D',  shadow: '0 0 30px rgba(0,255,157,0.8), 0 0 60px rgba(0,255,157,0.4)', animation: 'neonFlicker' },
-  'Neon':      { color: '#00FF9D',  shadow: '0 0 30px rgba(0,255,157,0.8)',   animation: 'neonFlicker' },
-  'Огонь':     { color: '#FF6B35',  shadow: '0 0 25px rgba(255,107,53,0.8)',  animation: 'fireShake' },
+  'Neon':      { color: '#00FF9D',  shadow: '0 0 30px rgba(0,255,157,0.8), 0 0 60px rgba(0,255,157,0.4)', animation: 'neonFlicker' },
   'Fire':      { color: '#FF6B35',  shadow: '0 0 25px rgba(255,107,53,0.8)',  animation: 'fireShake' },
-  'Лёд':       { color: '#64C8FF',  shadow: '0 0 25px rgba(100,200,255,0.8)', animation: 'iceFreeze' },
   'Ice':       { color: '#64C8FF',  shadow: '0 0 25px rgba(100,200,255,0.8)', animation: 'iceFreeze' },
-  'Золото':    { color: '#FFD700',  shadow: '0 0 30px rgba(255,215,0,0.9)',   animation: 'goldShine' },
   'Gold':      { color: '#FFD700',  shadow: '0 0 30px rgba(255,215,0,0.9)',   animation: 'goldShine' },
-  'Матрица':   { color: '#00FF00',  shadow: '0 0 20px rgba(0,255,0,0.7)',     animation: 'matrixGlitch' },
   'Matrix':    { color: '#00FF00',  shadow: '0 0 20px rgba(0,255,0,0.7)',     animation: 'matrixGlitch' },
-  'Кровь':     { color: '#FF1744',  shadow: '0 0 25px rgba(255,23,68,0.8)',   animation: 'bloodDrip' },
   'Blood':     { color: '#FF1744',  shadow: '0 0 25px rgba(255,23,68,0.8)',   animation: 'bloodDrip' },
-  'Галактика': { color: '#9B85FF',  shadow: '0 0 30px rgba(155,133,255,0.8)', animation: 'galaxySpin' },
   'Galaxy':    { color: '#9B85FF',  shadow: '0 0 30px rgba(155,133,255,0.8)', animation: 'galaxySpin' },
-  'Радуга':    { color: 'transparent', shadow: '0 0 20px rgba(255,255,255,0.4)', animation: 'rainbowShift' },
   'Rainbow':   { color: 'transparent', shadow: '0 0 20px rgba(255,255,255,0.4)', animation: 'rainbowShift' },
-  'Призрак':   { color: 'rgba(200,200,255,0.9)', shadow: '0 0 40px rgba(200,200,255,0.5)', animation: 'ghostFade' },
   'Ghost':     { color: 'rgba(200,200,255,0.9)', shadow: '0 0 40px rgba(200,200,255,0.5)', animation: 'ghostFade' },
-  'Молния':    { color: '#FFEB3B',  shadow: '0 0 40px rgba(255,235,59,0.9), 0 0 80px rgba(255,235,59,0.5)', animation: 'lightningStrike' },
+  'Lightning': { color: '#FFEB3B',  shadow: '0 0 40px rgba(255,235,59,0.9), 0 0 80px rgba(255,235,59,0.5)', animation: 'lightningStrike' },
   'Thunder':   { color: '#FFEB3B',  shadow: '0 0 40px rgba(255,235,59,0.9)', animation: 'lightningStrike' },
-  'Дракон':    { color: '#FF6B00',  shadow: '0 0 40px rgba(255,107,0,0.9), 0 0 80px rgba(255,0,0,0.4)', animation: 'dragonBurn' },
-  'Dragon':    { color: '#FF6B00',  shadow: '0 0 40px rgba(255,107,0,0.9)',  animation: 'dragonBurn' },
+  'Dragon':    { color: '#FF6B00',  shadow: '0 0 40px rgba(255,107,0,0.9), 0 0 80px rgba(255,0,0,0.4)', animation: 'dragonBurn' },
 };
 
 export const DEFAULT_STYLE: SpecialMoveStyle = {

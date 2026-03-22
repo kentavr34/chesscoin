@@ -12,7 +12,7 @@ export interface PromptModalProps {
 }
 
 export const PromptModal: React.FC<PromptModalProps> = ({
-  icon, title, message, placeholder, confirmLabel, cancelLabel = 'Отмена',
+  icon, title, message, placeholder, confirmLabel, cancelLabel = 'Cancel',
   onConfirm, onCancel,
 }) => {
   const [visible, setVisible] = useState(false);

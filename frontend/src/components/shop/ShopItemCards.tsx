@@ -31,9 +31,13 @@ const BoardPreview: React.FC<{ light: string; dark: string }> = ({ light, dark }
 
 const PiecePreview: React.FC<{ name: string }> = ({ name }) => {
   const filters: Record<string, string> = {
+    'Golden pieces':      'sepia(1) saturate(4) hue-rotate(5deg) brightness(1.1)',
     'Золотые фигуры':     'sepia(1) saturate(4) hue-rotate(5deg) brightness(1.1)',
+    'Crystal pieces':     'brightness(1.3) saturate(0.3) hue-rotate(180deg)',
     'Кристальные фигуры': 'brightness(1.3) saturate(0.3) hue-rotate(180deg)',
+    'Silver pieces':      'grayscale(1) brightness(1.4)',
     'Серебряные фигуры':  'grayscale(1) brightness(1.4)',
+    'Neon pieces':        'brightness(0) invert(1) sepia(1) saturate(5) hue-rotate(80deg)',
     'Неоновые фигуры':    'brightness(0) invert(1) sepia(1) saturate(5) hue-rotate(80deg)',
   };
   return (
@@ -99,9 +103,9 @@ export const ItemCard: React.FC<ItemCardProps> = ({ item, loading, highlighted, 
         <div style={{ fontSize: 10, color: rarityColor, marginTop: 2, fontWeight: 600 }}>{(t.shop.rarity as Record<string,string>)[item.rarity] ?? item.rarity}</div>
       </div>
       {item.equipped ? (
-        <div style={{ fontSize: 11, color: 'var(--green, #00D68F)', fontWeight: 700, textAlign: 'center', padding: '4px 0' }}>✓ Надето</div>
+        <div style={{ fontSize: 11, color: 'var(--green, #00D68F)', fontWeight: 700, textAlign: 'center', padding: '4px 0' }}>✓ Equipped</div>
       ) : item.owned ? (
-        <button onClick={onEquip} disabled={loading} style={{ ...btnStyle, background: '#7B61FF', color: '#fff' }}>{loading ? '...' : (t.shop as any).equip ?? 'Надеть'}</button>
+        <button onClick={onEquip} disabled={loading} style={{ ...btnStyle, background: '#7B61FF', color: '#fff' }}>{loading ? '...' : (t.shop as any).equip ?? 'Equip'}</button>
       ) : (
         <button onClick={onPurchase} disabled={loading} style={{ ...btnStyle, background: 'var(--accent, #F5C842)', color: 'var(--bg, #0B0D11)' }}>{loading ? '...' : `${fmtBalance(item.priceCoins)} ᚙ`}</button>
       )}
@@ -143,16 +147,16 @@ export const AvatarItemCard: React.FC<AvatarItemCardProps> = ({ item, loading, h
       <div>
         <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)', lineHeight: 1.3 }}>{item.name}</div>
         <div style={{ fontSize: 10, color: rarityColor, marginTop: 2, fontWeight: 600 }}>
-          {item.rarity === 'COMMON' ? 'Обычный' : item.rarity === 'RARE' ? 'Редкий' : item.rarity === 'EPIC' ? 'Эпический' : 'Легендарный'}
+          {item.rarity === 'COMMON' ? 'Common' : item.rarity === 'RARE' ? 'Rare' : item.rarity === 'EPIC' ? 'Epic' : 'Legendary'}
         </div>
       </div>
       {item.equipped ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <div style={{ fontSize: 11, color: 'var(--green, #00D68F)', fontWeight: 700, textAlign: 'center', padding: '3px 0' }}>✓ Применён</div>
-          <button onClick={onUnequip} disabled={loading} style={{ ...btnStyle, background: 'rgba(255,77,106,0.12)', color: 'var(--red, #FF4D6A)', border: '1px solid rgba(255,77,106,0.25)' }}>{loading ? '...' : 'Снять'}</button>
+          <div style={{ fontSize: 11, color: 'var(--green, #00D68F)', fontWeight: 700, textAlign: 'center', padding: '3px 0' }}>✓ Equipped</div>
+          <button onClick={onUnequip} disabled={loading} style={{ ...btnStyle, background: 'rgba(255,77,106,0.12)', color: 'var(--red, #FF4D6A)', border: '1px solid rgba(255,77,106,0.25)' }}>{loading ? '...' : 'Unequip'}</button>
         </div>
       ) : item.owned ? (
-        <button onClick={onEquip} disabled={loading} style={{ ...btnStyle, background: 'linear-gradient(135deg,#7B61FF,#9B85FF)', color: '#fff' }}>{loading ? '...' : '✨ Применить'}</button>
+        <button onClick={onEquip} disabled={loading} style={{ ...btnStyle, background: 'linear-gradient(135deg,#7B61FF,#9B85FF)', color: '#fff' }}>{loading ? '...' : '✨ Equip'}</button>
       ) : (
         <button onClick={onPurchase} disabled={loading} style={{ ...btnStyle, background: 'var(--accent, #F5C842)', color: 'var(--bg, #0B0D11)' }}>{loading ? '...' : `${fmtBalance(item.priceCoins)} ᚙ`}</button>
       )}

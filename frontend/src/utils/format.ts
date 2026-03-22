@@ -58,6 +58,6 @@ export const leagueEmoji: Record<string, string> = {
 // Тип сессии → метка
 export const sessionTypeLabel: Record<string, string> = {
   BOT: 'J.A.R.V.I.S',
-  BATTLE: 'Батл',
-  FRIENDLY: 'Дружеская',
+  BATTLE: 'Battle',
+  FRIENDLY: 'Friendly',
 };

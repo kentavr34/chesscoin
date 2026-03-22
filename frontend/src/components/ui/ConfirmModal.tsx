@@ -93,7 +93,7 @@ export const useConfirm = (): [
               cursor: 'pointer', fontFamily: 'inherit',
             }}
           >
-            {opts.cancelLabel ?? 'Отмена'}
+            {opts.cancelLabel ?? 'Cancel'}
           </button>
           <button
             onClick={() => handle(true)}
@@ -112,7 +112,7 @@ export const useConfirm = (): [
               cursor: 'pointer', fontFamily: 'inherit',
             }}
           >
-            {opts.okLabel ?? 'Подтвердить'}
+            {opts.okLabel ?? 'Confirm'}
           </button>
         </div>
       </div>

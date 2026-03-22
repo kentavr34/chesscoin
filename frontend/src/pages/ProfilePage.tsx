@@ -571,26 +571,26 @@ export const ProfilePage: React.FC = () => {
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary,#F0F2F8)' }}>
                         {
-                          tx.type === 'BATTLE_WIN'         ? 'Победа в батле'     :
-                          tx.type === 'BOT_WIN'            ? 'Победа над ботом'   :
-                          tx.type === 'TOURNAMENT_WIN'     ? 'Победа в турнире'   :
-                          tx.type === 'COUNTRY_WAR_WIN'    ? 'Победа в войне'     :
-                          tx.type === 'TASK_REWARD'        ? 'Выполнение задания' :
-                          tx.type === 'REFERRAL_BONUS'     ? 'Реферальный бонус'  :
-                          tx.type === 'REFERRAL_INCOME'    ? 'Доход с реферала'   :
-                          tx.type === 'WELCOME_BONUS'      ? 'Приветственный бонус':
-                          tx.type === 'BATTLE_BET'         ? 'Ставка в батле'     :
-                          tx.type === 'TOURNAMENT_ENTRY'   ? 'Взнос в турнир'     :
-                          tx.type === 'ITEM_PURCHASE'      ? 'Покупка в магазине' :
-                          tx.type === 'TON_DEPOSIT'        ? 'Пополнение TON'     :
-                          tx.type === 'WALLET_UNLOCK'      ? 'Подключение кошелька':
-                          tx.type === 'WITHDRAWAL'         ? 'Вывод TON'          :
-                          tx.type === 'EXCHANGE_SELL'      ? 'Продажа ᚙ на бирже' :
-                          tx.type === 'EXCHANGE_BUY'       ? 'Покупка ᚙ на бирже' :
-                          tx.type === 'EXCHANGE_FREEZE'    ? 'Заморозка ордера'   :
-                          tx.type === 'EXCHANGE_UNFREEZE'  ? 'Отмена ордера'      :
-                          tx.type === 'EXCHANGE_FEE'       ? 'Комиссия биржи'     :
-                          tx.type === 'REFUND'             ? 'Возврат средств'    :
+                          tx.type === 'BATTLE_WIN'         ? 'Battle win'         :
+                          tx.type === 'BOT_WIN'            ? 'Bot win'            :
+                          tx.type === 'TOURNAMENT_WIN'     ? 'Tournament win'     :
+                          tx.type === 'COUNTRY_WAR_WIN'    ? 'War win'            :
+                          tx.type === 'TASK_REWARD'        ? 'Task reward'        :
+                          tx.type === 'REFERRAL_BONUS'     ? 'Referral bonus'     :
+                          tx.type === 'REFERRAL_INCOME'    ? 'Referral income'    :
+                          tx.type === 'WELCOME_BONUS'      ? 'Welcome bonus'      :
+                          tx.type === 'BATTLE_BET'         ? 'Battle bet'         :
+                          tx.type === 'TOURNAMENT_ENTRY'   ? 'Tournament entry'   :
+                          tx.type === 'ITEM_PURCHASE'      ? 'Shop purchase'      :
+                          tx.type === 'TON_DEPOSIT'        ? 'TON deposit'        :
+                          tx.type === 'WALLET_UNLOCK'      ? 'Wallet unlock'      :
+                          tx.type === 'WITHDRAWAL'         ? 'TON withdrawal'     :
+                          tx.type === 'EXCHANGE_SELL'      ? 'Exchange sell'       :
+                          tx.type === 'EXCHANGE_BUY'       ? 'Exchange buy'       :
+                          tx.type === 'EXCHANGE_FREEZE'    ? 'Order freeze'       :
+                          tx.type === 'EXCHANGE_UNFREEZE'  ? 'Order cancel'       :
+                          tx.type === 'EXCHANGE_FEE'       ? 'Exchange fee'       :
+                          tx.type === 'REFUND'             ? 'Refund'             :
                           tx.type
                         }
                       </div>

@@ -175,7 +175,7 @@ export const HomePage: React.FC = () => {
 
   const jarvisLevel = user?.jarvisLevel ?? 1;
   const jarvisCfg = JARVIS_LEVELS[Math.max(0, Math.min(19, jarvisLevel - 1))];
-  const militaryRank = user?.militaryRank?.name ?? 'Новобранец';
+  const militaryRank = user?.militaryRank?.name ?? 'Recruit';
   const militaryEmoji = user?.militaryRank?.emoji ?? '😊';
   const battles = user?.wins ?? 0;
   const rank = user?.rank ?? 1;
@@ -200,7 +200,7 @@ export const HomePage: React.FC = () => {
           ? res.error
           : res.error.includes('лимит') || res.error.includes('максимум')
           ? res.error
-          : 'Не удалось начать игру. Попробуйте позже.';
+          : 'Failed to start game. Try again later.';
         import('@/components/ui/Toast').then(({ toast }) => toast.error(errText));
       }
     });
@@ -233,9 +233,9 @@ export const HomePage: React.FC = () => {
             <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.08em', color: '#6A7090', textTransform: 'uppercase' as const, marginBottom: 1 }}>JARVIS</div>
             <div style={{ fontSize: 15, fontWeight: 800, color: '#9B85FF' }}>{jarvisCfg.name}</div>
             <div style={{ fontSize: 10, color: '#5A6080', marginBottom: 7 }}>Lv.{jarvisLevel} / 20</div>
-            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.06em', color: '#6A7090', textTransform: 'uppercase' as const, marginBottom: 2 }}>ЗВАНИЕ</div>
+            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.06em', color: '#6A7090', textTransform: 'uppercase' as const, marginBottom: 2 }}>RANK</div>
             <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>{militaryEmoji} {militaryRank}</div>
-            <div style={{ fontSize: 10, color: '#5A6080', marginTop: 2 }}>Бойцов: {battles}</div>
+            <div style={{ fontSize: 10, color: '#5A6080', marginTop: 2 }}>Battles: {battles}</div>
           </div>
         </div>
 
@@ -243,7 +243,7 @@ export const HomePage: React.FC = () => {
 
         {/* Баланс */}
         <div style={{ position: 'relative', zIndex: 1, marginBottom: 10 }}>
-          <div style={lblStyle}>БАЛАНС</div>
+          <div style={lblStyle}>BALANCE</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 26, fontWeight: 800, color: 'var(--accent, #F5C842)', letterSpacing: '-.04em', lineHeight: 1 }}>
               {fmtBalance(user.balance)} <span style={{ fontSize: 13, opacity: 0.5 }}>ᚙ</span>
@@ -255,7 +255,7 @@ export const HomePage: React.FC = () => {
         {/* Стрик — визуальный виджет 7 дней */}
         {(user?.loginStreak ?? 0) >= 1 && (() => {
           const streak = user?.loginStreak ?? 0;
-          const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+          const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
           const today = new Date().getDay(); // 0=вс
           const todayIdx = today === 0 ? 6 : today - 1;
           const nextBonus = streak < 3 ? 3 : streak < 7 ? 7 : 30;
@@ -264,8 +264,8 @@ export const HomePage: React.FC = () => {
             <div style={{ marginBottom: 10, position: 'relative', zIndex: 1 }}>
               <div style={{ background: 'rgba(255,159,67,0.08)', border: '1px solid rgba(255,159,67,0.2)', borderRadius: 14, padding: '10px 12px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: '#FF9F43' }}>🔥 {streak} {streak === 1 ? 'день' : streak < 5 ? 'дня' : 'дней'} подряд</span>
-                  <span style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>до +{bonusAmt} ᚙ: {nextBonus - (streak % nextBonus || nextBonus)} дн.</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: '#FF9F43' }}>🔥 {streak} day(s) in a row</span>
+                  <span style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>to +{bonusAmt} ᚙ: {nextBonus - (streak % nextBonus || nextBonus)} d.</span>
                 </div>
                 <div style={{ display: 'flex', gap: 4, justifyContent: 'space-between' }}>
                   {days.map((day, i) => {
@@ -292,7 +292,7 @@ export const HomePage: React.FC = () => {
         {/* Попытки */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
           <div>
-            <div style={lblStyle}>ПОПЫТКИ</div>
+            <div style={lblStyle}>ATTEMPTS</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4 }}>
               {Array.from({ length: user.maxAttempts }).map((_, i) => (
                 <span key={i} style={{ fontSize: 20, color: i < user.attempts ? 'var(--accent, #F5C842)' : '#2A2F48', filter: i < user.attempts ? 'drop-shadow(0 0 6px rgba(245,200,66,0.7))' : undefined }}>★</span>
@@ -305,7 +305,7 @@ export const HomePage: React.FC = () => {
           <div style={{ textAlign: 'right' }}>
             {user.attempts < user.maxAttempts ? (
               <div onClick={() => setShowAttempts(true)} style={{ cursor: 'pointer' }}>
-                <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginBottom: 2, lineHeight: 1.4 }}>До следующей<br/>осталось:</div>
+                <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginBottom: 2, lineHeight: 1.4 }}>Next in:</div>
                 <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 700, color: 'var(--accent, #F5C842)', display: 'flex', alignItems: 'center', gap: 4 }}>
                   <span>⏱</span>{attemptTimer > 0 ? fmtCountdown(attemptTimer) : '...'}
                 </div>
@@ -333,7 +333,7 @@ export const HomePage: React.FC = () => {
       )}
 
       {/* Война стран */}
-      <div style={secStyle}>ВОЙНА СТРАН</div>
+      <div style={secStyle}>COUNTRY WARS</div>
       {myCountry ? (
         <div onClick={() => navigate('/wars')} style={{ ...stripStyle, borderColor: myWar ? 'rgba(245,200,66,0.18)' : 'var(--border, rgba(255,255,255,0.07))' }}>
           <span style={{ fontSize: 26 }}>{myCountry.flag}</span>
@@ -341,12 +341,12 @@ export const HomePage: React.FC = () => {
             {myWar ? (
               <>
                 <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary, #F0F2F8)' }}>{myWar.attackerCountry?.flag} vs {myWar.defenderCountry?.flag}</div>
-                <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>Идёт война</div>
+                <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>War in progress</div>
               </>
             ) : (
               <>
                 <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary, #F0F2F8)' }}>{myCountry.nameRu}</div>
-                <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>{myCountry.memberCount ?? 1} Бойцов · П: {myCountry.wins ?? 0}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>{myCountry.memberCount ?? 1} Fighters · W: {myCountry.wins ?? 0}</div>
               </>
             )}
           </div>
@@ -359,15 +359,15 @@ export const HomePage: React.FC = () => {
         <div onClick={() => navigate('/wars')} style={stripStyle}>
           <span style={{ fontSize: 22 }}>🌍</span>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary, #F0F2F8)' }}>Вступи в страну</div>
-            <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>Сражайся за свою сборную</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary, #F0F2F8)' }}>Join a country</div>
+            <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>Fight for your team</div>
           </div>
           <span style={{ fontSize: 16, color: '#5A6080' }}>→</span>
         </div>
       )}
 
       {/* Разделы */}
-      <div style={secStyle}>РАЗДЕЛЫ</div>
+      <div style={secStyle}>SECTIONS</div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '0 16px' }}>
         <div onClick={startBotGame} style={{ ...gameCardStyle, opacity: startingBot ? 0.6 : 1 }}>
           <div style={cardIcoWrapper}><IcoJarvis /></div>
@@ -377,22 +377,22 @@ export const HomePage: React.FC = () => {
         </div>
         <div onClick={() => navigate('/battles')} style={gameCardStyle}>
           <div style={cardIcoWrapper}><IcoBattle /></div>
-          <div style={cardTitle}>Батлы</div>
+          <div style={cardTitle}>Battles</div>
           <div style={cardSub}>{t.home.battlesCard.sub}</div>
           <span style={cardTag('var(--red, #FF4D6A)', 'rgba(255,77,106,0.13)')}>PVP</span>
         </div>
         <div onClick={() => navigate('/tournaments')} style={gameCardStyle}>
           <div style={cardIcoWrapper}><IcoTournament /></div>
-          <div style={cardTitle}>Турниры</div>
+          <div style={cardTitle}>Tournaments</div>
           <div style={cardSub}>{t.home.tournamentsCard.sub}</div>
-          <span style={cardTag('var(--accent, #F5C842)', 'rgba(245,200,66,0.13)')}>СКОРО</span>
+          <span style={cardTag('var(--accent, #F5C842)', 'rgba(245,200,66,0.13)')}>SOON</span>
         </div>
         <div onClick={() => navigate('/wars')} style={gameCardStyle}>
           <div style={cardIcoWrapper}><IcoWars /></div>
-          <div style={cardTitle}>Войны</div>
+          <div style={cardTitle}>Wars</div>
           <div style={cardSub}>{t.home.warsCard.sub(myCountry?.nameRu ?? null)}</div>
           <span style={cardTag('var(--green, #00D68F)', 'rgba(0,214,143,0.12)')}>
-            {myWar ? `${myWar.attackerWins}:${myWar.defenderWins}` : myCountry ? `${myCountry.wins ?? 0}П` : '→'}
+            {myWar ? `${myWar.attackerWins}:${myWar.defenderWins}` : myCountry ? `${myCountry.wins ?? 0}W` : '→'}
           </span>
         </div>
       </div>
@@ -405,7 +405,7 @@ export const HomePage: React.FC = () => {
           {taskStats ? (
             <>
               <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary, #F0F2F8)' }}>
-                {taskStats.done} из {taskStats.total} выполнено{taskStats.remaining > 0 && ` · +${fmtBalance(taskStats.remaining)} ᚙ`}
+                {taskStats.done} of {taskStats.total} completed{taskStats.remaining > 0 && ` · +${fmtBalance(taskStats.remaining)} ᚙ`}
               </div>
               <div style={{ fontSize: 11, color: taskStats.done === taskStats.total ? 'var(--green, #00D68F)' : 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>
                 {taskStats.done === taskStats.total ? t.home.tasksAllDone : t.home.tasksClick}
@@ -415,7 +415,7 @@ export const HomePage: React.FC = () => {
               </div>
             </>
           ) : (
-            <div style={{ fontSize: 13, color: 'var(--text-secondary, #8B92A8)' }}>Загрузка...</div>
+            <div style={{ fontSize: 13, color: 'var(--text-secondary, #8B92A8)' }}>Loading...</div>
           )}
         </div>
       </div>
@@ -435,13 +435,13 @@ export const HomePage: React.FC = () => {
       {welcomeStep === 1 && (
         <div style={toastStyle('var(--accent, #F5C842)')}>
           <div style={{ fontSize: 36 }}>🎁</div>
-          <div><div style={{ fontSize: 14, fontWeight: 800, color: 'var(--accent, #F5C842)', marginBottom: 3 }}>Приветственный бонус!</div><div style={{ fontSize: 12, color: 'var(--text-primary, #C8CDDF)' }}>Тебе начислено <b style={{ color: 'var(--accent, #F5C842)' }}>5,000 ᚙ</b></div></div>
+          <div><div style={{ fontSize: 14, fontWeight: 800, color: 'var(--accent, #F5C842)', marginBottom: 3 }}>Welcome bonus!</div><div style={{ fontSize: 12, color: 'var(--text-primary, #C8CDDF)' }}>You received <b style={{ color: 'var(--accent, #F5C842)' }}>5,000 ᚙ</b></div></div>
         </div>
       )}
       {welcomeStep === 2 && (
         <div style={toastStyle('#7B61FF')}>
           <div style={{ fontSize: 36 }}>⚡</div>
-          <div><div style={{ fontSize: 14, fontWeight: 800, color: '#7B61FF', marginBottom: 3 }}>3 попытки в день</div><div style={{ fontSize: 12, color: 'var(--text-primary, #C8CDDF)' }}>Каждые 8 часов +1 попытка</div></div>
+          <div><div style={{ fontSize: 14, fontWeight: 800, color: '#7B61FF', marginBottom: 3 }}>3 attempts per day</div><div style={{ fontSize: 12, color: 'var(--text-primary, #C8CDDF)' }}>+1 attempt every 8 hours</div></div>
         </div>
       )}
 

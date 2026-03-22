@@ -64,7 +64,7 @@ export async function connectWallet(): Promise<ConnectedWallet> {
     // Таймаут 5 минут
     setTimeout(() => {
       unsubscribe();
-      reject(new Error('Timeout: кошелёк не подключён'));
+      reject(new Error('Timeout: wallet not connected'));
     }, 5 * 60 * 1000);
   });
 }
@@ -74,7 +74,7 @@ export async function sendVerificationPayment(userId: string): Promise<string> {
   const tc = await getTonConnect();
 
   if (!tc.connected) {
-    throw new Error('Кошелёк не подключён');
+    throw new Error('Wallet not connected');
   }
 
   // 1 TON в нано (1 TON = 1_000_000_000 нано)
@@ -128,7 +128,7 @@ export async function sendTonPayment(params: TonPaymentParams): Promise<TonPayme
   const tc = await getTonConnect();
 
   if (!tc.connected) {
-    throw new Error('Кошелёк не подключён. Подключи TON кошелёк и попробуй снова.');
+    throw new Error('Wallet not connected. Connect TON wallet and try again.');
   }
 
   const PLATFORM_FEE = 0.005; // 0.5%

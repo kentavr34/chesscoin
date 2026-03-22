@@ -73,7 +73,7 @@ export const MiniProfileSheet: React.FC<Props> = ({ userId, onClose }) => {
           </div>
         ) : !user ? (
           <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: 24, fontSize: 13 }}>
-            Профиль недоступен
+            Profile unavailable
           </div>
         ) : (
           <>
@@ -108,9 +108,9 @@ export const MiniProfileSheet: React.FC<Props> = ({ userId, onClose }) => {
             {/* Статистика */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 16 }}>
               {[
-                { label: 'Победы', val: user.wins ?? 0, color: '#00D68F' },
-                { label: 'Поражения', val: user.losses ?? 0, color: '#FF4D6A' },
-                { label: 'Ничьи', val: user.draws ?? 0, color: '#8B92A8' },
+                { label: 'Wins', val: user.wins ?? 0, color: '#00D68F' },
+                { label: 'Losses', val: user.losses ?? 0, color: '#FF4D6A' },
+                { label: 'Draws', val: user.draws ?? 0, color: '#8B92A8' },
               ].map(({ label, val, color }) => (
                 <div key={label} style={{ textAlign: 'center', background: 'var(--bg, #0B0D11)', borderRadius: 12, padding: '10px 8px' }}>
                   <div style={{ fontSize: 18, fontWeight: 800, color, fontFamily: "'JetBrains Mono',monospace" }}>{val}</div>
@@ -128,7 +128,7 @@ export const MiniProfileSheet: React.FC<Props> = ({ userId, onClose }) => {
                 }}
                 style={btnGold}
               >
-                ⚔️ Сразиться
+                ⚔️ Challenge
               </button>
               <button
                 onClick={() => {
@@ -137,7 +137,7 @@ export const MiniProfileSheet: React.FC<Props> = ({ userId, onClose }) => {
                 }}
                 style={btnGhost}
               >
-                Профиль →
+                Profile →
               </button>
             </div>
           </>

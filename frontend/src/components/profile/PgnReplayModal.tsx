@@ -33,7 +33,7 @@ export const PgnReplayModal: React.FC<{ pgn: string; title?: string; sessionId?:
       onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div style={{ background: 'var(--bg-card, #13161E)', borderRadius: 24, padding: 20, width: '100%', maxWidth: 420, border: '1px solid rgba(255,255,255,0.08)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--accent, #F5C842)' }}>♟ {title ?? 'Разбор партии'}</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--accent, #F5C842)' }}>♟ {title ?? 'Game replay'}</div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-secondary, #8B92A8)', fontSize: 16, cursor: 'pointer', padding: 0 }}>✕</button>
         </div>
 
@@ -41,7 +41,7 @@ export const PgnReplayModal: React.FC<{ pgn: string; title?: string; sessionId?:
 
         {/* Move counter */}
         <div style={{ textAlign: 'center', marginTop: 10, fontSize: 12, color: 'var(--text-secondary, #8B92A8)' }}>
-          Ход {step} / {fens.length - 1}
+          Move {step} / {fens.length - 1}
           {step > 0 && moves[step - 1] && <span style={{ color: 'var(--accent, #F5C842)', marginLeft: 6 }}>{moves[step - 1]}</span>}
         </div>
 
@@ -70,7 +70,7 @@ export const PgnReplayModal: React.FC<{ pgn: string; title?: string; sessionId?:
             }}
             style={{ width: '100%', marginTop: 8, padding: '9px', background: saved ? 'rgba(0,214,143,0.1)' : 'rgba(123,97,255,0.1)', border: `1px solid ${saved ? 'rgba(0,214,143,0.2)' : 'rgba(123,97,255,0.2)'}`, borderRadius: 10, color: saved ? 'var(--green, #00D68F)' : '#9B85FF', fontSize: 12, fontWeight: 600, cursor: saved ? 'default' : 'pointer', fontFamily: 'inherit' }}
           >
-            {saved ? '✓ Сохранено' : '💾 Сохранить партию'}
+            {saved ? '✓ Saved' : '💾 Save game'}
           </button>
         )}
 

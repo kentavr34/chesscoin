@@ -15,11 +15,11 @@ interface PromotionModalProps {
   onSelect: (piece: 'q' | 'r' | 'b' | 'n') => void;
 }
 
-const PIECES: Array<{ code: 'q' | 'r' | 'b' | 'n'; labelRu: string; emoji: { white: string; black: string } }> = [
-  { code: 'q', labelRu: 'Ферзь', emoji: { white: '♕', black: '♛' } },
-  { code: 'r', labelRu: 'Ладья', emoji: { white: '♖', black: '♜' } },
-  { code: 'b', labelRu: 'Слон',  emoji: { white: '♗', black: '♝' } },
-  { code: 'n', labelRu: 'Конь',  emoji: { white: '♘', black: '♞' } },
+const PIECES: Array<{ code: 'q' | 'r' | 'b' | 'n'; label: string; emoji: { white: string; black: string } }> = [
+  { code: 'q', label: 'Queen',  emoji: { white: '♕', black: '♛' } },
+  { code: 'r', label: 'Rook',   emoji: { white: '♖', black: '♜' } },
+  { code: 'b', label: 'Bishop', emoji: { white: '♗', black: '♝' } },
+  { code: 'n', label: 'Knight', emoji: { white: '♘', black: '♞' } },
 ];
 
 const PIECE_FILE: Record<string, Record<string, string>> = {
@@ -102,15 +102,15 @@ export const PromotionModal: React.FC<PromotionModalProps> = ({ color, onSelect 
         <div style={crownRow}>
           <span style={crownEmoji}>♟</span>
           <div style={titleCol}>
-            <div style={titleStyle}>Пешка дошла!</div>
-            <div style={subtitleStyle}>Выберите фигуру</div>
+            <div style={titleStyle}>Pawn promoted!</div>
+            <div style={subtitleStyle}>Choose a piece</div>
           </div>
           <span style={crownEmoji}>👑</span>
         </div>
 
         {/* Фигуры */}
         <div style={grid}>
-          {PIECES.map(({ code, labelRu, emoji }) => {
+          {PIECES.map(({ code, label, emoji }) => {
             const isChosen = confirmed === code;
             return (
               <button
@@ -128,12 +128,12 @@ export const PromotionModal: React.FC<PromotionModalProps> = ({ color, onSelect 
                 ) : (
                   <img
                     src={getPieceUrl(code)}
-                    alt={labelRu}
+                    alt={label}
                     style={{ width: 54, height: 54, filter: pieceFilter }}
                     draggable={false}
                   />
                 )}
-                <span style={labelStyle}>{labelRu}</span>
+                <span style={labelStyle}>{label}</span>
                 {isChosen && <span style={checkMark}>✓</span>}
               </button>
             );
@@ -142,7 +142,7 @@ export const PromotionModal: React.FC<PromotionModalProps> = ({ color, onSelect 
 
         {confirmed && (
           <div style={confirmMsg}>
-            🎉 Отличный выбор!
+            🎉 Great choice!
           </div>
         )}
       </div>

@@ -81,7 +81,7 @@ export const WarChallengePopup: React.FC<Props> = ({ data, onAccept, onDecline }
 
         {/* Имя и страна */}
         <div style={{ fontSize: 13, color: 'var(--text-secondary, #8B92A8)', marginBottom: 6 }}>
-          {data.challengerName ?? 'Боец противника'}
+          {data.challengerName ?? 'Enemy fighter'}
           {data.challengerCountry && (
             <span style={{ color: 'var(--text-muted, #4A5270)' }}> · {data.challengerCountry}</span>
           )}

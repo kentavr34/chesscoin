@@ -61,7 +61,7 @@ export const JarvisModal: React.FC<JarvisModalProps> = ({ currentJarvisLevel, on
               🤖 J.A.R.V.I.S
             </div>
             <div style={{ fontSize: 12, color: 'var(--text-secondary, #8B92A8)', marginTop: 3 }}>
-              Выберите уровень сложности
+              Choose difficulty level
             </div>
           </div>
           <button onClick={onClose} style={closeBtnStyle}>✕</button>
@@ -91,7 +91,7 @@ export const JarvisModal: React.FC<JarvisModalProps> = ({ currentJarvisLevel, on
                       {lvl.name}
                     </div>
                     <div style={{ fontSize: 11, color: 'var(--text-muted, #4A5270)', marginTop: 2 }}>
-                      {lvl.errorRate === 0 ? 'Без ошибок' : `${lvl.errorRate}%`}
+                      {lvl.errorRate === 0 ? 'No errors' : `${lvl.errorRate}%`}
                     </div>
                   </div>
                 </div>
@@ -119,7 +119,7 @@ export const JarvisModal: React.FC<JarvisModalProps> = ({ currentJarvisLevel, on
         {/* Footer hint */}
         <div style={{ marginTop: 16, padding: '16px', background: 'rgba(123,97,255,0.08)', border: '1px solid rgba(123,97,255,0.15)', borderRadius: 14 }}>
           <div style={{ fontSize: 15, color: 'var(--text-secondary, #8B92A8)', lineHeight: 1.6 }}>
-            🏆 Побеждайте уровни по очереди. За каждый пройденный уровень вы получаете бейдж J.A.R.V.I.S в профиле.
+            🏆 Beat levels in order. For each completed level you earn a J.A.R.V.I.S badge on your profile.
           </div>
         </div>
       </div>
