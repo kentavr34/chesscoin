@@ -542,7 +542,7 @@ export const ProfilePage: React.FC = () => {
             )}
 
             {/* История транзакций — под играми */}
-            <div style={{ ...secStyle, marginTop: 8 }}>💸 История баланса</div>
+            <div style={{ ...secStyle, marginTop: 8 }}>💸 {t.profile.txHistory}</div>
             {transactions.length === 0 ? (
               <div style={{ textAlign: 'center', color: 'var(--text-muted,#4A5270)', padding: 24, fontSize: 13 }}>{t.profile.noTx}</div>
             ) : (
@@ -649,7 +649,7 @@ export const ProfilePage: React.FC = () => {
                         onClick={() => s && warsApi.unsaveGame(s.id).then(() => setSavedGames(g => g.filter(x => x.id !== sg.id)))}
                         style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: '2px 6px' }}
                       >
-                        ✕ убрать
+                        ✕ remove
                       </button>
                     </div>
                     {s?.pgn && (
@@ -657,7 +657,7 @@ export const ProfilePage: React.FC = () => {
                         onClick={() => setReplayGame({ pgn: s.pgn!, title: `${p1?.firstName ?? '?'} vs ${p2?.firstName ?? '?'}`, sessionId: s.id })}
                         style={{ width: '100%', padding: '7px 0', background: 'rgba(245,200,66,0.08)', color: 'var(--accent, #F5C842)', border: '1px solid rgba(245,200,66,0.2)', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
                       >
-                        ♟ Разобрать партию
+                        ♟ Replay game
                       </button>
                     )}
                   </div>
@@ -674,7 +674,7 @@ export const ProfilePage: React.FC = () => {
           {/* Турнирные бейджи */}
           {(user?.tournamentBadges?.length ?? 0) > 0 && (
             <>
-              <div style={secStyle}>🏆 Турнирные победы</div>
+              <div style={secStyle}>🏆 Tournament wins</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 18px' }}>
                 {(user?.tournamentBadges as TournamentBadge[] | undefined)?.slice().reverse().map((badge, i: number) => {
                   const placeEmoji = badge.place === 1 ? '🥇' : badge.place === 2 ? '🥈' : '🥉';
@@ -690,10 +690,10 @@ export const ProfilePage: React.FC = () => {
                       <span style={{ fontSize: 28, flexShrink: 0 }}>{placeEmoji}</span>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>
-                          {badge.place} место · {badge.tournamentName ?? badge.name}
+                          {badge.place} place · {badge.tournamentName ?? badge.name}
                         </div>
                         <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>
-                          {badge.type} · {badge.date ? new Date(badge.date).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' }) : ''}
+                          {badge.type} · {badge.date ? new Date(badge.date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : ''}
                         </div>
                       </div>
                       <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, color: placeColor }}>

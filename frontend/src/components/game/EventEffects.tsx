@@ -84,7 +84,7 @@ export const EventEffects: React.FC<EventEffectsProps> = ({
         <div style={mateBannerContainer}>
           <div style={mateBanner}>
             {winAnimStyle === 'lightning' ? '⚡' : winAnimStyle === 'explosion' ? '💥' : '👑'}
-            <span style={mateText}>ШАХ И МАТ!</span>
+            <span style={mateText}>CHECKMATE!</span>
             {winAnimStyle === 'lightning' ? '⚡' : winAnimStyle === 'explosion' ? '💥' : '👑'}
           </div>
         </div>

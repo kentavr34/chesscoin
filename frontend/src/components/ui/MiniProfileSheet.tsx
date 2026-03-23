@@ -85,7 +85,7 @@ export const MiniProfileSheet: React.FC<Props> = ({ userId, onClose }) => {
                   <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>
                     {user.firstName} {user.lastName ?? ''}
                   </span>
-                  {user.isMonthlyChampion && <span title="Чемпион месяца">👑</span>}
+                  {user.isMonthlyChampion && <span title="Monthly Champion">👑</span>}
                   {user.countryMember?.country?.flag && (
                     <span style={{ fontSize: 16 }}>{user.countryMember.country.flag}</span>
                   )}

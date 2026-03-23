@@ -152,10 +152,10 @@ export const AvatarCropModal: React.FC<Props> = ({ file, onConfirm, onCancel }) 
       padding: 20,
     }}>
       <div style={{ color: 'var(--text-primary, #F0F2F8)', fontSize: 15, fontWeight: 700, marginBottom: 8 }}>
-        Настроить аватар
+        Customize avatar
       </div>
       <div style={{ fontSize: 12, color: 'var(--text-secondary, #8B92A8)', marginBottom: 20 }}>
-        Перетащи и масштабируй двумя пальцами
+        Drag and pinch to zoom
       </div>
 
       {/* Превью с маской */}
@@ -208,14 +208,14 @@ export const AvatarCropModal: React.FC<Props> = ({ file, onConfirm, onCancel }) 
           onClick={onCancel}
           style={{ padding: '11px 24px', background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 14, color: 'var(--text-secondary, #8B92A8)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
         >
-          Отмена
+          Cancel
         </button>
         <button
           onClick={handleConfirm}
           disabled={loading}
           style={{ padding: '11px 28px', background: 'var(--accent, #F5C842)', borderRadius: 14, border: 'none', color: '#0B0D11', fontSize: 14, fontWeight: 700, cursor: loading ? 'wait' : 'pointer', fontFamily: 'inherit', opacity: loading ? 0.7 : 1 }}
         >
-          {loading ? '⏳' : '✓ Готово'}
+          {loading ? '⏳' : '✓ Done'}
         </button>
       </div>
     </div>

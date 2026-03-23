@@ -85,7 +85,7 @@ export const MoveAnnouncer: React.FC<MoveAnnouncerProps> = ({ announcement, onDo
             ? '#F5C842'
             : '#FF4D6A',
         }}>
-          {announcement.type === 'opening' ? '📖 Дебют' : announcement.type === 'special' ? '⭐ Спецход' : '⚡ Тактика'}
+          {announcement.type === 'opening' ? '📖 Opening' : announcement.type === 'special' ? '⭐ Special' : '⚡ Tactics'}
         </div>
       </div>
     </div>
