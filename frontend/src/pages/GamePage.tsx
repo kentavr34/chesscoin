@@ -390,7 +390,7 @@ const MoveHistory: React.FC<{ pgn: string }> = ({ pgn }) => {
   const moves = parsePgnMoves(pgn);
   const last8 = moves.slice(-8);
   if (last8.length === 0) {
-    return <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: 'var(--text-muted, #4A5270)', marginTop: 4 }}>— game started —</div>;
+    return <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: 'var(--text-muted, #4A5270)', marginTop: 4 }}>— ♟ —</div>;
   }
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 12px', marginTop: 4 }}>
