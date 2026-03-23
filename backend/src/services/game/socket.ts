@@ -456,6 +456,7 @@ export const setupSocketHandlers = (io: Server) => {
     // ── Предложить / принять / отклонить ничью ───────────
     socket.on("game:offer_draw", async (data: { sessionId: string }) => {
       try {
+        await redis.setex(`draw:offered:${data.sessionId}`, 300, userId);
         io.to(data.sessionId).emit("game:draw_offered", { by: userId });
       } catch (err: unknown) {
         logger.error("[Socket] game:offer_draw error:", (err as Error).message);
@@ -464,6 +465,16 @@ export const setupSocketHandlers = (io: Server) => {
 
     socket.on("game:accept_draw", async (data: { sessionId: string }, callback?: Function) => {
       try {
+        const offeredBy = await redis.get(`draw:offered:${data.sessionId}`);
+        if (!offeredBy) {
+          if (callback) callback({ ok: false, error: "No draw offer pending" });
+          return;
+        }
+        if (offeredBy === userId) {
+          if (callback) callback({ ok: false, error: "Cannot accept own draw offer" });
+          return;
+        }
+        await redis.del(`draw:offered:${data.sessionId}`);
         await stopAllTimers(data.sessionId);
         const finished = await finishSession(data.sessionId, SessionStatus.DRAW, { isDraw: true });
         const formatted = formatSession(finished, userId);
@@ -478,6 +489,7 @@ export const setupSocketHandlers = (io: Server) => {
 
     socket.on("game:decline_draw", async (data: { sessionId: string }) => {
       try {
+        await redis.del(`draw:offered:${data.sessionId}`);
         io.to(data.sessionId).emit("game:draw_declined", { by: userId });
       } catch (err: unknown) {
         logger.error("[Socket] game:decline_draw error:", (err as Error).message);
@@ -716,26 +728,26 @@ const getStockfishMove = (
     // movetime на уровень + 5 сек запаса до полного kill
     // BUG-02 fix: расширено до 20 уровней (было 10)
     const levelMovetimes = [
-      50,   // 1  Beginner
-      100,  // 2  Rookie
-      200,  // 3  Player
-      300,  // 4  Challenger
-      500,  // 5  Fighter
-      800,  // 6  Guardian
-      1200, // 7  Warrior
-      2000, // 8  Knight
-      3000, // 9  Expert
-      4000, // 10 Tactician
-      5000, // 11 Master
-      6000, // 12 Grandmaster
-      7500, // 13 Professional
-      9000, // 14 Champion
-      11000,// 15 Elite
-      13000,// 16 Epic
-      15000,// 17 Legendary
-      18000,// 18 Immortal
-      22000,// 19 Divine
-      30000,// 20 Mystic
+      200,  // 1  Beginner
+      300,  // 2  Rookie
+      400,  // 3  Player
+      500,  // 4  Amateur
+      600,  // 5  Skilled
+      800,  // 6  Advanced
+      1000, // 7  Expert
+      1200, // 8  Master
+      1500, // 9  Grandmaster
+      1800, // 10 Champion
+      2000, // 11 Prodigy
+      2500, // 12 Virtuoso
+      3000, // 13 Titan
+      3500, // 14 Legend
+      4000, // 15 Immortal
+      5000, // 16 Demigod
+      6000, // 17 Overlord
+      7000, // 18 Transcendent
+      8000, // 19 Legendary
+      10000,// 20 Mystic (max 10 sec)
     ];
     const movetime = levelMovetimes[Math.max(0, Math.min(19, level - 1))];
     const hardTimeout = movetime + 6000;

@@ -127,7 +127,6 @@ puzzlesRouter.post("/:id/complete", authMiddleware, async (req: Request, res: Re
   const userId = req.user!.id;
   const { id } = req.params;
   const playerMoves: string[] = req.body.moves ?? [];
-  const testMode: boolean = req.body.testMode === true;
 
   try {
     const puzzle = await prisma.puzzle.findUnique({ where: { id } });
@@ -143,10 +142,7 @@ puzzlesRouter.post("/:id/complete", authMiddleware, async (req: Request, res: Re
       return res.status(400).json({ ok: false, error: 'Incorrect solution', correct: false });
     }
 
-    // Тест-режим: награда ×1.5
-    const finalReward = testMode
-      ? (puzzle.reward * 3n) / 2n
-      : puzzle.reward;
+    const finalReward = puzzle.reward;
 
     await prisma.completedPuzzle.create({
       data: { userId, puzzleId: id, reward: finalReward },
@@ -155,7 +151,6 @@ puzzlesRouter.post("/:id/complete", authMiddleware, async (req: Request, res: Re
     await updateBalance(userId, finalReward, TransactionType.TASK_REWARD, {
       puzzleId: id,
       rating: puzzle.rating,
-      testMode,
     }, { isEmission: true });
 
     // Проверяем достижение Puzzler (50 головоломок)

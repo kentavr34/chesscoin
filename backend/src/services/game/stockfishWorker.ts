@@ -26,27 +26,30 @@ const log = {
 };
 
 // ─── Уровни J.A.R.V.I.S (20 уровней) ────────────────────────────────────────
+// Elo 800-2850+: от абсолютного новичка до уровня чемпиона мира
+// Время ответа: max 10 секунд (Mystic). Пропорция сложности сохранена.
+// Уровни 19-20: полная сила Stockfish (практически непобедим)
 const JARVIS_LEVELS = [
-  { level: 1,  elo: 1320, movetime: 50,   useSkill: true,  skill: 0  },
-  { level: 2,  elo: 1400, movetime: 80,   useSkill: true,  skill: 1  },
-  { level: 3,  elo: 1500, movetime: 120,  useSkill: true,  skill: 2  },
-  { level: 4,  elo: 1600, movetime: 180,  useSkill: true,  skill: 3  },
-  { level: 5,  elo: 1700, movetime: 250,  useSkill: true,  skill: 5  },
-  { level: 6,  elo: 1800, movetime: 350,  useSkill: true,  skill: 6  },
-  { level: 7,  elo: 1900, movetime: 500,  useSkill: true,  skill: 8  },
-  { level: 8,  elo: 2000, movetime: 700,  useSkill: true,  skill: 10 },
-  { level: 9,  elo: 2100, movetime: 1000, useSkill: true,  skill: 12 },
-  { level: 10, elo: 2200, movetime: 1400, useSkill: true,  skill: 14 },
-  { level: 11, elo: 2300, movetime: 1800, useSkill: true,  skill: 15 },
-  { level: 12, elo: 2400, movetime: 2200, useSkill: true,  skill: 16 },
-  { level: 13, elo: 2500, movetime: 2700, useSkill: true,  skill: 17 },
-  { level: 14, elo: 2600, movetime: 3200, useSkill: true,  skill: 18 },
-  { level: 15, elo: 2700, movetime: 3500, useSkill: true,  skill: 19 },
-  { level: 16, elo: 2800, movetime: 4000, useSkill: false, skill: 20 },
-  { level: 17, elo: 2900, movetime: 4500, useSkill: false, skill: 20 },
-  { level: 18, elo: 3000, movetime: 5000, useSkill: false, skill: 20 },
-  { level: 19, elo: 3100, movetime: 5500, useSkill: false, skill: 20 },
-  { level: 20, elo: 3190, movetime: 6000, useSkill: false, skill: 20 },
+  { level: 1,  elo: 800,  movetime: 200,  useSkill: true,  skill: 0  }, // Beginner
+  { level: 2,  elo: 1000, movetime: 300,  useSkill: true,  skill: 1  }, // Rookie
+  { level: 3,  elo: 1200, movetime: 400,  useSkill: true,  skill: 2  }, // Player
+  { level: 4,  elo: 1350, movetime: 500,  useSkill: true,  skill: 4  }, // Amateur
+  { level: 5,  elo: 1500, movetime: 600,  useSkill: true,  skill: 5  }, // Skilled
+  { level: 6,  elo: 1650, movetime: 800,  useSkill: true,  skill: 7  }, // Advanced
+  { level: 7,  elo: 1800, movetime: 1000, useSkill: true,  skill: 9  }, // Expert
+  { level: 8,  elo: 1950, movetime: 1200, useSkill: true,  skill: 11 }, // Master
+  { level: 9,  elo: 2050, movetime: 1500, useSkill: true,  skill: 13 }, // Grandmaster
+  { level: 10, elo: 2200, movetime: 1800, useSkill: true,  skill: 14 }, // Champion
+  { level: 11, elo: 2350, movetime: 2000, useSkill: true,  skill: 15 }, // Prodigy
+  { level: 12, elo: 2450, movetime: 2500, useSkill: true,  skill: 16 }, // Virtuoso
+  { level: 13, elo: 2550, movetime: 3000, useSkill: true,  skill: 17 }, // Titan
+  { level: 14, elo: 2650, movetime: 3500, useSkill: true,  skill: 18 }, // Legend
+  { level: 15, elo: 2700, movetime: 4000, useSkill: true,  skill: 19 }, // Immortal
+  { level: 16, elo: 2750, movetime: 5000, useSkill: true,  skill: 20 }, // Demigod
+  { level: 17, elo: 2800, movetime: 6000, useSkill: true,  skill: 20 }, // Overlord
+  { level: 18, elo: 2850, movetime: 7000, useSkill: true,  skill: 20 }, // Transcendent
+  { level: 19, elo: 2850, movetime: 8000, useSkill: false, skill: 20 }, // Legendary (full strength)
+  { level: 20, elo: 2850, movetime: 10000,useSkill: false, skill: 20 }, // Mystic (max Stockfish)
 ];
 
 // ─── Fallback: случайный ход ──────────────────────────────────────────────────
