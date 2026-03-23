@@ -54,10 +54,10 @@
 - **Статус:** ✅
 
 ### T3. nations/battle/record-result — подделка результатов 🔴 P0
-- **Файл:** `backend/src/routes/nations.ts` ~707–731
-- **Проблема:** Эндпоинт принимает `winnerId` из тела без проверки реальной партии
-- **Решение:** Проверять `sessionId` в БД, привязывать к `finishSession`
-- **Статус:** ⬜
+- **Файл:** `backend/src/routes/nations.ts`
+- **Проблема:** Эндпоинт принимал `winnerId` без проверки реальной партии
+- **Решение:** Добавлена серверная валидация: sessionId обязателен, сессия должна быть завершена (FINISHED/DRAW/TIME_EXPIRED), winnerId должен быть участником сессии.
+- **Статус:** ✅
 
 ### T4. Debug-авторизация в продакшене 🔴 P0
 - **Файл:** `backend/src/services/auth.ts`
@@ -67,9 +67,9 @@
 
 ### T5. Screenshotter — JWT без аутентификации 🔴 P0
 - **Файл:** `backend/src/routes/screenshotter.ts`
-- **Проблема:** Выдаёт JWT по query-параметру `secret`. Нет rate-limit, слабый секрет
-- **Решение:** Добавить rate-limit, усилить секрет, ограничить scope токена
-- **Статус:** ⬜
+- **Проблема:** Выдаёт JWT без rate-limit
+- **Решение:** Добавлен rate limit 5 req/min на эндпоинт screenshotter/token.
+- **Статус:** ✅
 
 ### T6. Секреты в git (BOT_TOKEN) 🔴 P0
 - **Файл:** `.claude/settings.local.json`
@@ -145,10 +145,10 @@
 - **Статус:** ⬜
 
 ### T19. Health endpoint — скрыть чувствительную информацию 🟡 P2
-- **Файл:** `backend/src/index.ts` ~135–156
-- **Проблема:** Публичный эндпоинт отдаёт memory, Stockfish stats, emission
-- **Решение:** Ограничить для неавторизованных или вынести в admin-only
-- **Статус:** ⬜
+- **Файл:** `backend/src/index.ts`
+- **Проблема:** Публичный эндпоинт отдавал memory, Stockfish stats, emission
+- **Решение:** Публичный /health теперь возвращает только status, version, uptime, db. Детали убраны.
+- **Статус:** ✅
 
 ### T20. initData expiresIn: 0 — replay attack 🟡 P2
 - **Файл:** `backend/src/services/auth.ts` ~51
@@ -195,10 +195,10 @@
 - **Статус:** ✅
 
 ### G7. HomePage: стартует на jarvisLevel, а не jarvisLevel+1 🟡 P2
-- **Файл:** `frontend/src/pages/HomePage.tsx` ~193–220
-- **Проблема:** Фронтенд отправляет `botLevel: jarvisLevel`, бэкенд разрешает `jarvisLevel + 1`
-- **Решение:** Отправлять `botLevel: Math.min(20, jarvisLevel + 1)` если не все пройдены
-- **Статус:** ⬜
+- **Файл:** `frontend/src/pages/HomePage.tsx`
+- **Проблема:** Фронтенд отправлял `botLevel: jarvisLevel`
+- **Решение:** `nextBotLevel = Math.min(20, jarvisLevel + 1)` — игрок стартует на следующем уровне.
+- **Статус:** ✅
 
 ### G8. Награды Jarvis 11–20 — регрессия 🟡 P2
 - **Файл:** `backend/src/config.ts`
@@ -207,16 +207,16 @@
 - **Статус:** ✅
 
 ### G9. Ремотч — неправильное время 🟢 P3
-- **Файл:** `frontend/src/pages/GamePage.tsx` ~183–199
-- **Проблема:** `timeSeconds` берётся из оставшегося времени. Если часы сели → бэкенд сбрасывает до 600
-- **Решение:** Передавать оригинальный `session.duration`, не остаток
-- **Статус:** ⬜
+- **Файл:** `frontend/src/pages/GamePage.tsx`
+- **Проблема:** `timeSeconds` брался из оставшегося времени
+- **Решение:** Используется `session.duration` — оригинальное время партии.
+- **Статус:** ✅
 
 ### G10. Скины бота не сохраняются 🟢 P3
-- **Файл:** `backend/src/services/game/session.ts` → `createBotSession`
-- **Проблема:** Не читает `boardSkinUrl`/`pieceSkinUrl` пользователя (работает только в BATTLE)
-- **Решение:** Копировать скины из equippedItems при создании BOT-сессии
-- **Статус:** ⬜
+- **Файл:** `backend/src/services/game/session.ts`
+- **Проблема:** BOT-сессия не читала скины пользователя
+- **Решение:** `createBotSession` теперь читает equippedItems (BOARD_SKIN, PIECE_SKIN) и записывает в сессию — как в BATTLE.
+- **Статус:** ✅
 
 ### G11. VictoryScreen — не рендерится 🟢 P3
 - **Файл:** `frontend/src/pages/GamePage.tsx`
@@ -374,10 +374,10 @@
 
 | Блок | ⬜ Не начато | ✅ Завершено | Всего |
 |------|------------|------------|-------|
-| T — Технические | 16 | 4 | 20 |
-| G — Игровая механика | 19 | 6 | 25 |
+| T — Технические | 12 | 8 | 20 |
+| G — Игровая механика | 16 | 9 | 25 |
 | D — Дизайн и UX | 13 | 0 | 13 |
-| **Итого** | **48** | **10** | **58** |
+| **Итого** | **41** | **17** | **58** |
 
 ### По приоритетам
 
