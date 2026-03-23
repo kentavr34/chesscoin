@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Avatar } from '@/components/ui/Avatar';
@@ -95,13 +95,40 @@ const OnboardingTour: React.FC<{ onDone: () => void }> = ({ onDone }) => {
   );
 };
 
+// ── Isolated timer component — prevents re-rendering the entire HomePage ──
+const AttemptTimer: React.FC<{
+  nextRestoreSeconds: number; attempts: number; maxAttempts: number; onOpen: () => void;
+}> = React.memo(({ nextRestoreSeconds, attempts, maxAttempts, onOpen }) => {
+  const t = useT();
+  const [timer, setTimer] = useState(nextRestoreSeconds);
+  useEffect(() => {
+    if (attempts >= maxAttempts) return;
+    let remaining = nextRestoreSeconds;
+    setTimer(remaining);
+    if (!remaining) return;
+    const iv = setInterval(() => { remaining = Math.max(0, remaining - 1); setTimer(remaining); }, 1000);
+    return () => clearInterval(iv);
+  }, [nextRestoreSeconds, attempts, maxAttempts]);
+
+  if (attempts >= maxAttempts) {
+    return <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: 'var(--text-muted, #4A5270)' }}>⏱ 00:00</div>;
+  }
+  return (
+    <div onClick={onOpen} style={{ cursor: 'pointer' }}>
+      <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginBottom: 2, lineHeight: 1.4 }}>{t.home.nextIn}</div>
+      <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 700, color: 'var(--accent, #F5C842)', display: 'flex', alignItems: 'center', gap: 4 }}>
+        <span>⏱</span>{timer > 0 ? fmtCountdown(timer) : '...'}
+      </div>
+    </div>
+  );
+});
+
 export const HomePage: React.FC = () => {
   const t = useT();
   const navigate = useNavigate();
   const { user } = useUserStore();
   const { sessions } = useGameStore();
   const [showAttempts, setShowAttempts] = useState(false);
-  const [attemptTimer, setAttemptTimer] = useState(0);
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('chesscoin_onboarding_done'));
   const [welcomeStep, setWelcomeStep] = useState<0|1|2>(0);
   const [startingBot, setStartingBot] = useState(false);
@@ -125,16 +152,6 @@ export const HomePage: React.FC = () => {
     setTimeout(() => setWelcomeStep(2), 3500);
     setTimeout(() => setWelcomeStep(0), 7000);
   };
-
-  useEffect(() => {
-    if (!user || user.attempts >= user.maxAttempts) return;
-    const secs = user?.nextRestoreSeconds ?? 0;
-    if (!secs) return;
-    let remaining = secs;
-    setAttemptTimer(remaining);
-    const iv = setInterval(() => { remaining = Math.max(0, remaining - 1); setAttemptTimer(remaining); }, 1000);
-    return () => clearInterval(iv);
-  }, [user?.nextRestoreSeconds, user?.attempts]);
 
   // Слушаем socket: balance:updated → показываем FloatingCoins
   useEffect(() => {
@@ -299,16 +316,12 @@ export const HomePage: React.FC = () => {
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            {user.attempts < user.maxAttempts ? (
-              <div onClick={() => setShowAttempts(true)} style={{ cursor: 'pointer' }}>
-                <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginBottom: 2, lineHeight: 1.4 }}>{t.home.nextIn}</div>
-                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 700, color: 'var(--accent, #F5C842)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <span>⏱</span>{attemptTimer > 0 ? fmtCountdown(attemptTimer) : '...'}
-                </div>
-              </div>
-            ) : (
-              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: 'var(--text-muted, #4A5270)' }}>⏱ 00:00</div>
-            )}
+            <AttemptTimer
+              nextRestoreSeconds={user.nextRestoreSeconds ?? 0}
+              attempts={user.attempts}
+              maxAttempts={user.maxAttempts}
+              onOpen={() => setShowAttempts(true)}
+            />
           </div>
         </div>
       </div>
