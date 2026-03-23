@@ -10,6 +10,14 @@
 
 ChessCoin is a Telegram Mini App — a chess gaming platform with in-game token economy and P2P exchange. See `README.md` for full architecture and env var documentation.
 
+### Key documents
+- `GAME_MECHANICS.md` — полное описание игровых режимов, механик и возможностей (для игроков, разработчиков и AI)
+- `ROADMAP.md` — дорожная карта разработки: все задачи, приоритеты, статусы, протокол обновления версий
+- `AUDIT.md` — текущий аудит кода (67 находок)
+- `.cursorrules` — стек проекта
+
+**Перед началом работы** обязательно следуйте протоколу обновления из `ROADMAP.md` (раздел «Протокол обновления версий»).
+
 ### Services
 
 | Service | Port | Start command |
