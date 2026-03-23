@@ -35,6 +35,14 @@ This project requires **Node.js 20** (not 22+). The `tsx watch` command in the `
 export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" && nvm use 20
 ```
 
+### Docker daemon
+
+The Docker daemon must be running before starting DB/Redis containers. If `sudo docker ps` fails, start it:
+```
+sudo dockerd &>/tmp/dockerd.log &
+sleep 3
+```
+
 ### Docker containers for PostgreSQL and Redis
 
 If containers don't exist yet, create them:
