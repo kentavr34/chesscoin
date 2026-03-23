@@ -9,61 +9,9 @@
  */
 
 import { describe, it, expect } from '@jest/globals';
+import { MILITARY_RANKS, RANK_BONUSES, getMilitaryRank, getRankBonuses } from '@/utils/militaryRank';
 
-// ── Данные рангов (совпадают с militaryRank.ts) ───────────────────────────────
-const RANK_BONUSES: Record<string, { activationBonus: bigint; l1Percent: number }> = {
-  RECRUIT:       { activationBonus:       0n, l1Percent:  0 },
-  PRIVATE:       { activationBonus:   3_000n, l1Percent:  1 },
-  CORPORAL:      { activationBonus:   4_000n, l1Percent:  2 },
-  SERGEANT:      { activationBonus:   5_000n, l1Percent:  3 },
-  WARRANT:       { activationBonus:   6_000n, l1Percent:  4 },
-  JR_LIEUTENANT: { activationBonus:   7_000n, l1Percent:  5 },
-  LIEUTENANT:    { activationBonus:   8_000n, l1Percent:  5 },
-  SR_LIEUTENANT: { activationBonus:   9_000n, l1Percent:  5 },
-  CAPTAIN:       { activationBonus:  10_000n, l1Percent:  6 },
-  MAJOR:         { activationBonus:  12_000n, l1Percent:  7 },
-  LT_COLONEL:    { activationBonus:  13_000n, l1Percent:  8 },
-  COLONEL:       { activationBonus:  14_000n, l1Percent:  9 },
-  BRIGADIER:     { activationBonus:  15_000n, l1Percent: 10 },
-  MAJ_GENERAL:   { activationBonus:  20_000n, l1Percent: 11 },
-  LT_GENERAL:    { activationBonus:  25_000n, l1Percent: 12 },
-  COL_GENERAL:   { activationBonus:  30_000n, l1Percent: 13 },
-  MARSHAL:       { activationBonus:  35_000n, l1Percent: 14 },
-  EMPEROR:       { activationBonus:  40_000n, l1Percent: 15 },
-};
-
-const RANK_THRESHOLDS = [
-  { rank: 'EMPEROR',       minMembers: 1_000_000 },
-  { rank: 'MARSHAL',       minMembers: 500_000   },
-  { rank: 'COL_GENERAL',   minMembers: 300_000   },
-  { rank: 'LT_GENERAL',    minMembers: 200_000   },
-  { rank: 'MAJ_GENERAL',   minMembers: 100_000   },
-  { rank: 'BRIGADIER',     minMembers: 80_000    },
-  { rank: 'COLONEL',       minMembers: 60_000    },
-  { rank: 'LT_COLONEL',    minMembers: 40_000    },
-  { rank: 'MAJOR',         minMembers: 20_000    },
-  { rank: 'CAPTAIN',       minMembers: 10_000    },
-  { rank: 'SR_LIEUTENANT', minMembers: 5_000     },
-  { rank: 'LIEUTENANT',    minMembers: 3_000     },
-  { rank: 'JR_LIEUTENANT', minMembers: 1_000     },
-  { rank: 'WARRANT',       minMembers: 500       },
-  { rank: 'SERGEANT',      minMembers: 100       },
-  { rank: 'CORPORAL',      minMembers: 50        },
-  { rank: 'PRIVATE',       minMembers: 10        },
-  { rank: 'RECRUIT',       minMembers: 0         },
-];
-
-function getMilitaryRank(count: number): string {
-  for (const r of RANK_THRESHOLDS) {
-    if (count >= r.minMembers) return r.rank;
-  }
-  return 'RECRUIT';
-}
-
-function getRankBonuses(count: number) {
-  const rank = getMilitaryRank(count);
-  return RANK_BONUSES[rank];
-}
+const getRank = (count: number): string => getMilitaryRank(count).rank;
 
 function calcReferralIncome(winAmount: bigint, referrerCount: number): { l1: bigint; l2: bigint } {
   const { l1Percent } = getRankBonuses(referrerCount);
@@ -76,45 +24,45 @@ function calcReferralIncome(winAmount: bigint, referrerCount: number): { l1: big
 
 describe('Military rank progression', () => {
   it('0 рефералов → RECRUIT', () => {
-    expect(getMilitaryRank(0)).toBe('RECRUIT');
+    expect(getRank(0)).toBe('RECRUIT');
   });
 
   it('9 рефералов → RECRUIT', () => {
-    expect(getMilitaryRank(9)).toBe('RECRUIT');
+    expect(getRank(9)).toBe('RECRUIT');
   });
 
   it('10 рефералов → PRIVATE (первый боевой ранг)', () => {
-    expect(getMilitaryRank(10)).toBe('PRIVATE');
+    expect(getRank(10)).toBe('PRIVATE');
   });
 
   it('100 рефералов → SERGEANT', () => {
-    expect(getMilitaryRank(100)).toBe('SERGEANT');
+    expect(getRank(100)).toBe('SERGEANT');
   });
 
   it('1000 рефералов → JR_LIEUTENANT', () => {
-    expect(getMilitaryRank(1_000)).toBe('JR_LIEUTENANT');
+    expect(getRank(1_000)).toBe('JR_LIEUTENANT');
   });
 
   it('10 000 рефералов → CAPTAIN', () => {
-    expect(getMilitaryRank(10_000)).toBe('CAPTAIN');
+    expect(getRank(10_000)).toBe('CAPTAIN');
   });
 
   it('1 000 000 рефералов → EMPEROR (максимум)', () => {
-    expect(getMilitaryRank(1_000_000)).toBe('EMPEROR');
+    expect(getRank(1_000_000)).toBe('EMPEROR');
   });
 
   it('больше 1M рефералов → всё равно EMPEROR', () => {
-    expect(getMilitaryRank(5_000_000)).toBe('EMPEROR');
+    expect(getRank(5_000_000)).toBe('EMPEROR');
   });
 
-  it('граница: 49 → RECRUIT, 50 → CORPORAL', () => {
-    expect(getMilitaryRank(49)).toBe('RECRUIT');
-    expect(getMilitaryRank(50)).toBe('CORPORAL');
+  it('граница: 49 → PRIVATE, 50 → CORPORAL', () => {
+    expect(getRank(49)).toBe('PRIVATE');
+    expect(getRank(50)).toBe('CORPORAL');
   });
 
   it('все ранги отсортированы по убыванию порога', () => {
-    for (let i = 1; i < RANK_THRESHOLDS.length; i++) {
-      expect(RANK_THRESHOLDS[i-1].minMembers).toBeGreaterThan(RANK_THRESHOLDS[i].minMembers);
+    for (let i = 1; i < MILITARY_RANKS.length; i++) {
+      expect(MILITARY_RANKS[i - 1].minMembers).toBeGreaterThan(MILITARY_RANKS[i].minMembers);
     }
   });
 });
@@ -205,11 +153,11 @@ describe('Referral income calculation', () => {
     expect(l1).toBe(149_999_999n); // Math.floor(999_999_999 * 15 / 100)
   });
 
-  it('ранг меняется при достижении порога (49→50: RECRUIT→CORPORAL)', () => {
+  it('ранг меняется при достижении порога (49→50: PRIVATE→CORPORAL)', () => {
     const win = 10_000n;
-    const before = calcReferralIncome(win, 49); // RECRUIT → 0%
+    const before = calcReferralIncome(win, 49); // PRIVATE → 1%
     const after  = calcReferralIncome(win, 50); // CORPORAL → 2%
-    expect(before.l1).toBe(0n);
+    expect(before.l1).toBe(100n);
     expect(after.l1).toBe(200n); // 10000 * 2%
   });
 });

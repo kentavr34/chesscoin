@@ -61,6 +61,20 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node",
+    "transform": {
+      "^.+\\.tsx?$": [
+        "ts-jest",
+        {
+          "tsconfig": {
+            "paths": {
+              "@/*": [
+                "./src/*"
+              ]
+            }
+          }
+        }
+      ]
+    },
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/src/$1"
     },
@@ -78,18 +92,6 @@
         "branches": 60,
         "functions": 70,
         "lines": 70
-      }
-    },
-    "setupFilesAfterFramework": [],
-    "globals": {
-      "ts-jest": {
-        "tsconfig": {
-          "paths": {
-            "@/*": [
-              "./src/*"
-            ]
-          }
-        }
       }
     }
   }
