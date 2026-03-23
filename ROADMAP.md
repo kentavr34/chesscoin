@@ -44,14 +44,14 @@
 ### T1. Безопасность WebSocket — эксплойт принудительной ничьи 🔴 P0
 - **Файл:** `backend/src/services/game/socket.ts` ~457–476
 - **Проблема:** `game:accept_draw` завершает партию ничьёй без проверки, что противник предлагал ничью и что принимающий — другая сторона
-- **Решение:** Хранить `drawOfferedBy` в Redis. При `accept_draw` проверять, что принимающий ≠ предложивший
-- **Статус:** ⬜
+- **Решение:** `drawOfferedBy` хранится в Redis (TTL 5 мин). При `accept_draw` проверяется, что предложение существует и принимающий ≠ предложивший. При `decline_draw` ключ удаляется.
+- **Статус:** ✅
 
 ### T2. Puzzle testMode — 1.5x награда без проверки прав 🔴 P0
-- **Файл:** `backend/src/routes/puzzles.ts` ~130–149
-- **Проблема:** `{ testMode: true }` в теле запроса даёт увеличенную награду любому
-- **Решение:** Удалить `testMode` или привязать к `isAdmin`
-- **Статус:** ⬜
+- **Файл:** `backend/src/routes/puzzles.ts`
+- **Проблема:** `{ testMode: true }` в теле запроса давал увеличенную награду любому
+- **Решение:** `testMode` полностью удалён из кода. Награда всегда = `puzzle.reward`.
+- **Статус:** ✅
 
 ### T3. nations/battle/record-result — подделка результатов 🔴 P0
 - **Файл:** `backend/src/routes/nations.ts` ~707–731
@@ -60,10 +60,10 @@
 - **Статус:** ⬜
 
 ### T4. Debug-авторизация в продакшене 🔴 P0
-- **Файл:** `backend/src/services/auth.ts` ~44–47
+- **Файл:** `backend/src/services/auth.ts`
 - **Проблема:** `DEBUG=true` + initData с `"debug:"` = полный обход Telegram-подписи
-- **Решение:** Привязать к `NODE_ENV !== 'production'`, не к `DEBUG`
-- **Статус:** ⬜
+- **Решение:** Debug bypass теперь требует `NODE_ENV !== 'production'` И `DEBUG=true`. `expiresIn` для initData = 86400 в production, 0 только в dev.
+- **Статус:** ✅
 
 ### T5. Screenshotter — JWT без аутентификации 🔴 P0
 - **Файл:** `backend/src/routes/screenshotter.ts`
@@ -78,10 +78,10 @@
 - **Статус:** ⬜
 
 ### T7. Admin middleware — все admin-эндпоинты возвращают 403 🟠 P1
-- **Файл:** `backend/src/middleware/auth.ts` ~32
+- **Файл:** `backend/src/middleware/auth.ts`
 - **Проблема:** `authMiddleware` кладёт `{ id }` без `isAdmin`, `adminOnly` проверяет `req.user?.isAdmin` → undefined
-- **Решение:** Загружать `isAdmin` из БД в middleware
-- **Статус:** ⬜
+- **Решение:** Создан `adminMiddleware` — загружает `isAdmin` из БД через Prisma. Проверяет реальный флаг `isAdmin` на модели User.
+- **Статус:** ✅
 
 ### T8. updateBalance обходится в 14+ местах 🟠 P1
 - **Файлы:** `exchange.ts` (7), `gameTasks.ts` (2), `tasks.ts`, `tournaments.ts`, `wars.ts`, `cleanup.ts`, `crons.ts`
@@ -161,10 +161,10 @@
 ## БЛОК G — Игровая механика
 
 ### G1. Jarvis крашится при старте игры 🔴 P0
-- **Файл:** `frontend/src/pages/GamePage.tsx` ~47–53
-- **Проблема:** Race condition: сессия не в store → `navigate('/')` → выбрасывает на главную. Плюс `JARVIS_LEVELS[idx].name` при выходе за диапазон → TypeError
-- **Решение:** Retry/задержка для поиска сессии, bounds check на JARVIS_LEVELS, Error Boundary
-- **Статус:** ⬜
+- **Файл:** `frontend/src/pages/GamePage.tsx`
+- **Проблема:** Race condition: сессия не в store → `navigate('/')` → выбрасывает на главную
+- **Решение:** Добавлена задержка 1.5 сек с retry из store перед редиректом. Bounds check на `JARVIS_LEVELS` index (Math.min + optional chaining).
+- **Статус:** ✅
 
 ### G2. Пешечное превращение — крэш 🔴 P0
 - **Файл:** `frontend/src/components/game/ChessBoard.tsx`
@@ -173,28 +173,26 @@
 - **Статус:** ⬜
 
 ### G3. Калибровка Stockfish — 20 уровней с правильной прогрессией 🟠 P1
-- **Файл:** `backend/src/services/game/stockfishWorker.ts` ~28–50
-- **Проблема:** Уровни 16–20 одинаковые (full strength, разница только 4–6 сек movetime). Уровни 1–10 слишком слабые. Random fallback при перегрузке
-- **Решение:** Пересмотреть шкалу Elo/Skill/movetime/depth. Mystic = максимум Stockfish, movetime ≤10 сек. Убрать random fallback
-- **Статус:** ⬜
+- **Файл:** `backend/src/services/game/stockfishWorker.ts`, `socket.ts`
+- **Проблема:** Уровни 16–20 были одинаковые (full strength). Время ответа до 30 сек.
+- **Решение:** Elo пересмотрен: 800→2850. Уровни 16-18: UCI_LimitStrength=true, Elo 2750-2850. Уровни 19-20: полная сила (непобедимый). Max movetime = 10 сек. Таблица таймаутов в socket.ts синхронизирована.
+- **Статус:** ✅
 
 ### G4. История партий — полностью сломана 🟠 P1
-- **Файлы:** `frontend/src/pages/ProfilePage.tsx`, `backend/src/routes/profile.ts`
-- **Проблема:** Бэкенд возвращает плоский формат (`result`, `sessionId`, `opponent`), фронтенд ожидает вложенный (`status`, `session.pgn`, `session.sides`)
-- **Решение:** Привести формат в соответствие (адаптировать фронтенд под плоский формат)
-- **Статус:** ⬜
+- **Файлы:** `frontend/src/pages/ProfilePage.tsx`
+- **Проблема:** Фронтенд ожидал вложенный формат, бэкенд возвращал плоский
+- **Решение:** `GameHistoryItem` адаптирован под плоский API: `g.result`, `g.sessionId`, `g.pgn`, `g.opponent`, `g.type`, `g.bet`, `g.finishedAt`. Для BOT-игр показывается `J.A.R.V.I.S Lv.N`.
+- **Статус:** ✅
 
 ### G5. Кнопка Replay никогда не появляется 🟠 P1
-- **Файл:** `frontend/src/pages/ProfilePage.tsx` ~531–536
-- **Проблема:** `g.session?.pgn` всегда falsy из-за несовпадения формата (G4)
-- **Решение:** Исправится вместе с G4
-- **Статус:** ⬜
+- **Проблема:** `g.session?.pgn` всегда falsy
+- **Решение:** Исправлено вместе с G4 → `g.pgn` доступен напрямую
+- **Статус:** ✅
 
 ### G6. ELO-график пустой 🟠 P1
-- **Файл:** `frontend/src/pages/ProfilePage.tsx` ~402–405
-- **Проблема:** Использует `g.status === 'WON'`, а бэкенд шлёт `result`
-- **Решение:** Исправится вместе с G4
-- **Статус:** ⬜
+- **Проблема:** Использовал `g.status`, бэкенд шлёт `result`
+- **Решение:** Исправлено вместе с G4 → `g.result === 'WON'`
+- **Статус:** ✅
 
 ### G7. HomePage: стартует на jarvisLevel, а не jarvisLevel+1 🟡 P2
 - **Файл:** `frontend/src/pages/HomePage.tsx` ~193–220
@@ -203,10 +201,10 @@
 - **Статус:** ⬜
 
 ### G8. Награды Jarvis 11–20 — регрессия 🟡 P2
-- **Файл:** `backend/src/config.ts` → `economy.botRewards`
-- **Проблема:** Уровень 10 = 50,000ᚙ, уровень 11 = 11,000ᚙ (в 4.5 раза меньше)
-- **Решение:** Пересмотреть шкалу: 1→1K, 5→5K, 10→15K, 15→50K, 18→200K, 19→500K, 20→1M
-- **Статус:** ⬜
+- **Файл:** `backend/src/config.ts`
+- **Проблема:** Уровень 10 = 50,000ᚙ, уровень 11 = 11,000ᚙ (регрессия)
+- **Решение:** Шкала пересмотрена: 1→1K, 5→7K, 10→40K, 11→55K, 15→170K, 18→400K, 19→600K, 20→1M. Монотонный рост.
+- **Статус:** ✅
 
 ### G9. Ремотч — неправильное время 🟢 P3
 - **Файл:** `frontend/src/pages/GamePage.tsx` ~183–199
@@ -376,10 +374,10 @@
 
 | Блок | ⬜ Не начато | ✅ Завершено | Всего |
 |------|------------|------------|-------|
-| T — Технические | 20 | 0 | 20 |
-| G — Игровая механика | 25 | 0 | 25 |
+| T — Технические | 16 | 4 | 20 |
+| G — Игровая механика | 19 | 6 | 25 |
 | D — Дизайн и UX | 13 | 0 | 13 |
-| **Итого** | **58** | **0** | **58** |
+| **Итого** | **48** | **10** | **58** |
 
 ### По приоритетам
 
