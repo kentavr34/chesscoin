@@ -23,26 +23,27 @@ const groupByCategory = (tasks: Task[]): Record<string, Task[]> => {
   }, {} as Record<string, Task[]>);
 };
 
-const CAT_LABEL: Record<string, string> = {
-  DAILY: '🌅 Daily',
-  LEARN: '📚 Learning',
-  SOCIAL: '📢 Social',
-  OTHER: '📋 Other',
-};
-
 export const TasksPage: React.FC = () => {
   const t = useT();
+  const tp = t.tasksPage;
   const navigate = useNavigate();
   const { user, setUser } = useUserStore();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const tasksInfo = useInfoPopup('tasks', [{ icon: '📋', title: 'Tasks', desc: 'Complete tasks and earn coins ᚙ. Daily tasks refresh every day.' }, { icon: '👥', title: 'Referral Tasks', desc: 'Invite friends and complete referral tasks — the bonus grows with each new player.' }]);
+  const tasksInfo = useInfoPopup('tasks', [{ icon: '📋', title: tp.infoTitle, desc: tp.infoDesc }, { icon: '👥', title: tp.infoRefTitle, desc: tp.infoRefDesc }]);
   const [claiming, setClaiming] = useState<string | null>(null);
   const [dailyPuzzle, setDailyPuzzle] = useState<PuzzleItem | null>(null);
   const [puzzleLoading, setPuzzleLoading] = useState(true);
 
-  const totalReward = tasks.filter((t) => !t.isCompleted).reduce((s, t) => s + BigInt(t.reward ?? '0'), 0n);
-  const completed = tasks.filter((t) => t.isCompleted).length;
+  const CAT_LABEL: Record<string, string> = {
+    DAILY: tp.catDaily,
+    LEARN: tp.catLearn,
+    SOCIAL: tp.catSocial,
+    OTHER: tp.catOther,
+  };
+
+  const totalReward = tasks.filter((tk) => !tk.isCompleted).reduce((s, tk) => s + BigInt(tk.reward ?? '0'), 0n);
+  const completed = tasks.filter((tk) => tk.isCompleted).length;
 
   useEffect(() => {
     tasksApi.list().then((r) => setTasks(r.tasks)).finally(() => setLoading(false));
@@ -57,7 +58,7 @@ export const TasksPage: React.FC = () => {
     setClaiming(task.id);
     try {
       await tasksApi.complete(task.id);
-      setTasks((prev) => prev.map((t) => t.id === task.id ? { ...t, isCompleted: true } : t));
+      setTasks((prev) => prev.map((tk) => tk.id === task.id ? { ...tk, isCompleted: true } : tk));
       const updated = await authApi.me();
       setUser(updated);
     } catch (e: unknown) {
@@ -71,16 +72,16 @@ export const TasksPage: React.FC = () => {
 
   return (
     <>
-    {tasksInfo.show && <InfoPopup infoKey="tasks" slides={[{ icon: '📋', title: 'Tasks', desc: 'Complete tasks and earn coins ᚙ. Daily tasks refresh every day.' }, { icon: '👥', title: 'Referral Tasks', desc: 'Invite friends and complete referral tasks — the bonus grows with each new player.' }]} onClose={tasksInfo.close} />}
+    {tasksInfo.show && <InfoPopup infoKey="tasks" slides={[{ icon: '📋', title: tp.infoTitle, desc: tp.infoDesc }, { icon: '👥', title: tp.infoRefTitle, desc: tp.infoRefDesc }]} onClose={tasksInfo.close} />}
     <PageLayout title={t.tasks.title} centered>
       {/* Progress */}
       <div style={progressStrip}>
         <span style={{ fontSize: 20 }}>📊</span>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary, #F0F2F8)' }}>
-            {completed} of {tasks.length} completed · +{fmtBalance(String(totalReward))} ᚙ remaining
+            {completed} / {tasks.length} {tp.completed} · +{fmtBalance(String(totalReward))} ᚙ {tp.remaining}
           </div>
-          <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>Refresh in 08:38</div>
+          <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>{tp.refreshIn} 08:38</div>
           <div style={{ height: 3, background: '#181B22', borderRadius: 2, marginTop: 7, overflow: 'hidden' }}>
             <div style={{ height: '100%', width: `${tasks.length ? (completed / tasks.length) * 100 : 0}%`, background: 'linear-gradient(90deg,#F5C842,#FFD966)', borderRadius: 2, transition: 'width .6s' }} />
           </div>
@@ -89,7 +90,7 @@ export const TasksPage: React.FC = () => {
 
       {/* ── Daily Puzzle ─────────────────────────────────────────────── */}
       <div style={{ margin: '12px 18px 0' }}>
-        <div style={secStyle}>📅 Daily Puzzle</div>
+        <div style={secStyle}>{tp.dailyPuzzle}</div>
         {puzzleLoading ? (
           <div style={{ height: 80, background: 'var(--bg-card, #1C2030)', borderRadius: 14, margin: '0 0 4px' }} />
         ) : dailyPuzzle ? (
@@ -115,10 +116,10 @@ export const TasksPage: React.FC = () => {
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>
-                {dailyPuzzle.completed ? 'Daily puzzle solved!' : 'Solve daily puzzle'}
+                {dailyPuzzle.completed ? tp.dailySolved : tp.dailySolve}
               </div>
               <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>
-                Rating {dailyPuzzle.rating} · {dailyPuzzle.themes.slice(0, 2).join(', ')}
+                {t.lesson.rating} {dailyPuzzle.rating} · {dailyPuzzle.themes.slice(0, 2).join(', ')}
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
@@ -126,13 +127,13 @@ export const TasksPage: React.FC = () => {
                 {dailyPuzzle.completed ? `+${fmtBalance(dailyPuzzle.earnedReward ?? dailyPuzzle.reward)}` : `+${fmtBalance(dailyPuzzle.reward)}`} ᚙ
               </div>
               <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', marginTop: 2 }}>
-                {dailyPuzzle.completed ? 'earned' : '→ Solve'}
+                {dailyPuzzle.completed ? tp.earned : tp.solve}
               </div>
             </div>
           </div>
         ) : (
           <div style={{ padding: '12px 0', textAlign: 'center', fontSize: 12, color: 'var(--text-muted, #4A5270)' }}>
-            Daily puzzle unavailable
+            {tp.unavailable}
           </div>
         )}
 
@@ -140,7 +141,7 @@ export const TasksPage: React.FC = () => {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginTop: 8, marginBottom: 4 }}>
           {(['easy', 'medium', 'hard'] as const).map((diff) => {
             const icons = { easy: '🟢', medium: '🟡', hard: '🔴' };
-            const labels = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
+            const labels = { easy: tp.easy, medium: tp.medium, hard: tp.hard };
             return (
               <div key={diff} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <button
@@ -164,7 +165,7 @@ export const TasksPage: React.FC = () => {
                     color: 'var(--accent, #F5C842)', fontSize: 9, fontWeight: 700,
                     cursor: 'pointer', fontFamily: 'inherit',
                   }}
-                  title="Test mode: no hints, reward ×1.5"
+                  title={tp.testMode}
                 >
                   🎯 ×1.5
                 </button>
@@ -180,11 +181,10 @@ export const TasksPage: React.FC = () => {
         <div style={{ textAlign: 'center', padding: '48px 24px' }}>
           <div style={{ fontSize: 56, marginBottom: 16 }}>📋</div>
           <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)', marginBottom: 8 }}>
-            Tasks coming soon
+            {tp.comingSoon}
           </div>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary, #8B92A8)', lineHeight: 1.6 }}>
-            Complete tasks and earn coins ᚙ.<br />
-            Stay tuned for updates in our channel!
+          <div style={{ fontSize: 13, color: 'var(--text-secondary, #8B92A8)', lineHeight: 1.6, whiteSpace: 'pre-line' }}>
+            {tp.emptyDesc}
           </div>
         </div>
       )}
@@ -209,7 +209,7 @@ export const TasksPage: React.FC = () => {
                 {task.maxProgress && !task.isCompleted && (
                   <div style={{ marginTop: 6 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-                      <span style={{ fontSize: 9, color: 'var(--text-muted, #4A5270)' }}>Progress</span>
+                      <span style={{ fontSize: 9, color: 'var(--text-muted, #4A5270)' }}>{tp.progress}</span>
                       <span style={{ fontSize: 9, color: '#9B85FF', fontWeight: 700 }}>
                         {task.progress ?? 0} / {task.maxProgress}
                       </span>

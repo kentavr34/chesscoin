@@ -7,18 +7,19 @@ import { useT } from '@/i18n/useT';
 export const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const t = useT();
+  const s = t.profile.settings;
   const { lang, setLang } = useSettingsStore();
   const [vibration, setVibration] = useState(() => {
-    const s = localStorage.getItem('chesscoin-settings');
-    if (s) { try { return JSON.parse(s).vibration !== false; } catch {} }
+    const stored = localStorage.getItem('chesscoin-settings');
+    if (stored) { try { return JSON.parse(stored).vibration !== false; } catch {} }
     return true;
   });
 
   const toggleVibration = () => {
     const next = !vibration;
     setVibration(next);
-    const s = localStorage.getItem('chesscoin-settings');
-    const prev = s ? JSON.parse(s) : {};
+    const stored = localStorage.getItem('chesscoin-settings');
+    const prev = stored ? JSON.parse(stored) : {};
     localStorage.setItem('chesscoin-settings', JSON.stringify({ ...prev, vibration: next }));
   };
 
@@ -61,17 +62,17 @@ export const SettingsPage: React.FC = () => {
         <div style={{ fontSize: 11, color: '#A8B0C8', marginTop: 2 }}>{hint}</div>
       </div>
       <span style={{ fontSize: 11, color: '#6B7494', background: '#1C2030', borderRadius: 6, padding: '2px 8px' }}>
-        Soon
+        {s.soon}
       </span>
     </div>
   );
 
   return (
-    <PageLayout title="Settings" onBack={() => navigate(-1)}>
+    <PageLayout title={s.title} onBack={() => navigate(-1)}>
       <div style={{ paddingBottom: 40 }}>
-        {sectionTitle('Language & Interface')}
+        {sectionTitle(s.langInterface)}
         <div style={{ background: '#13161E', borderRadius: 16, margin: '0 16px' }}>
-          {row('App language',
+          {row(s.appLang,
             <div style={{ display: 'flex', gap: 6 }}>
               {(['ru', 'en'] as const).map((l) => (
                 <button key={l} onClick={() => setLang(l)} style={{
@@ -85,27 +86,27 @@ export const SettingsPage: React.FC = () => {
               ))}
             </div>
           )}
-          {row('Vibration', toggle(vibration, toggleVibration), false)}
+          {row(s.vibration, toggle(vibration, toggleVibration), false)}
         </div>
 
-        {sectionTitle('Account')}
+        {sectionTitle(s.account)}
         <div style={{ background: '#13161E', borderRadius: 16, margin: '0 16px' }}>
-          {disabledRow('Date of birth', 'For content personalization')}
-          {disabledRow('Email', 'Link email for recovery')}
-          {disabledRow('Phone', 'Additional security')}
-          {disabledRow('Face ID / Touch ID', 'Biometric login', )}
+          {disabledRow(s.dob, s.dobHint)}
+          {disabledRow(s.email, s.emailHint)}
+          {disabledRow(s.phone, s.phoneHint)}
+          {disabledRow(s.biometric, s.biometricHint)}
         </div>
 
-        {sectionTitle('Security')}
+        {sectionTitle(s.security)}
         <div style={{ background: '#13161E', borderRadius: 16, margin: '0 16px' }}>
-          {disabledRow('Change password', 'Set PIN code')}
-          {disabledRow('Two-factor authentication', '2FA via Telegram')}
+          {disabledRow(s.changePin, s.changePinHint)}
+          {disabledRow(s.twoFa, s.twoFaHint)}
         </div>
 
-        {sectionTitle('About')}
+        {sectionTitle(s.about)}
         <div style={{ background: '#13161E', borderRadius: 16, margin: '0 16px' }}>
-          {row('Version', <span style={{ fontSize: 13, color: '#A8B0C8' }}>v7.2.0</span>)}
-          {row('Privacy policy',
+          {row(s.version, <span style={{ fontSize: 13, color: '#A8B0C8' }}>v7.2.0</span>)}
+          {row(s.privacy,
             <span style={{ fontSize: 18, color: '#6B7494' }}>›</span>, false
           )}
         </div>

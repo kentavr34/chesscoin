@@ -22,6 +22,7 @@ type TFilter = 'all' | 'joined';
 
 export const TournamentsPage: React.FC = () => {
   const t = useT();
+  const tt = t.tournaments;
   const [tournaments, setTournaments] = useState<TournamentFull[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<TFilter>('all');
@@ -30,7 +31,7 @@ export const TournamentsPage: React.FC = () => {
   const [joiningId, setJoiningId] = useState<string | null>(null);
   const [myMatches, setMyMatches] = useState<ActiveMatch[]>([]); // T6
   const [tournamentFinish, setTournamentFinish] = useState<{ tournamentName?: string; prize?: string; place?: number } | null>(null);
-  const tourInfo = useInfoPopup('tournaments', [{ icon: '🏆', title: 'ChessCoin Tournaments', desc: 'Join tournaments, compete with other players and win coins. The system automatically assigns opponents to you.' }, { icon: '🌍', title: 'Country Champion', desc: 'You need to join a country (Wars section) to participate. The winner becomes the Country Champion and receives a profile badge.' }, { icon: '⚔️', title: 'How a match works', desc: 'After joining, the system will find an opponent and send a notification. The match must be played within 24 hours — otherwise a loss is recorded.' }]); // T7
+  const tourInfo = useInfoPopup('tournaments', tt.infoSlides as unknown as { icon: string; title: string; desc: string }[]);
 
   const load = async () => {
     try {
@@ -56,9 +57,9 @@ export const TournamentsPage: React.FC = () => {
         load(); // refresh match list
         window.dispatchEvent(new CustomEvent('chesscoin:toast', {
           detail: {
-            text: `🏆 Tournament match! Opponent: ${data.opponentName}`,
+            text: tt.tournamentMatch(data.opponentName),
             type: 'info',
-            actionLabel: 'Play',
+            actionLabel: tt.play,
             onAction: () => {
               import('react-router-dom').then(({ useNavigate: _ }) => {
                 window.location.hash = '#/battles';
@@ -106,9 +107,9 @@ export const TournamentsPage: React.FC = () => {
       // T8: User-friendly message when country is required
       const err = e as Record<string, unknown>;
       if ((err.message as string | undefined)?.includes('COUNTRY_REQUIRED') || err.error === 'COUNTRY_REQUIRED') {
-        showToast('🌍 Join a country in Wars section first', 'info');
+        showToast(tt.countryRequired, 'info');
       } else {
-        showToast((err.message as string | undefined) ?? t.tournaments.joinError);
+        showToast((err.message as string | undefined) ?? tt.joinError);
       }
     } finally {
       setJoiningId(null);
@@ -116,7 +117,7 @@ export const TournamentsPage: React.FC = () => {
   };
 
   const handleLeave = async (id: string) => {
-    if (!confirm(t.tournaments.leaveConfirm)) return;
+    if (!confirm(tt.leaveConfirm)) return;
     try {
       await tournamentsApi.leave(id);
       await load();
@@ -133,27 +134,27 @@ export const TournamentsPage: React.FC = () => {
   const typeOrder = ['WORLD', 'YEARLY', 'SEASONAL', 'MONTHLY', 'WEEKLY', 'COUNTRY'];
 
   return (
-    <PageLayout title={t.tournaments.title} centered>
+    <PageLayout title={tt.title} centered>
 
-      {tourInfo.show && <InfoPopup infoKey="tournaments" slides={[{ icon: '🏆', title: 'ChessCoin Tournaments', desc: 'Join tournaments, compete with other players and win coins. The system automatically assigns opponents to you.' }, { icon: '🌍', title: 'Country Champion', desc: 'You need to join a country (Wars section) to participate. The winner becomes the Country Champion and receives a profile badge.' }, { icon: '⚔️', title: 'How a match works', desc: 'After joining, the system will find an opponent and send a notification. The match must be played within 24 hours — otherwise a loss is recorded.' }]} onClose={tourInfo.close} />}
+      {tourInfo.show && <InfoPopup infoKey="tournaments" slides={tt.infoSlides as unknown as { icon: string; title: string; desc: string }[]} onClose={tourInfo.close} />}
       {/* T7: Tournament finish and prize popup */}
       {tournamentFinish && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 400, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div style={{ width: '100%', maxWidth: 340, background: 'linear-gradient(135deg,#161927,#1A2040)', border: '1px solid rgba(245,200,66,0.35)', borderRadius: 28, padding: '32px 24px', textAlign: 'center', boxShadow: '0 0 60px rgba(245,200,66,0.15)' }}>
             <div style={{ fontSize: 60, marginBottom: 16 }}>🏆</div>
             <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 16, fontWeight: 800, color: 'var(--accent, #F5C842)', marginBottom: 8 }}>
-              {tournamentFinish.tournamentName ?? 'Tournament finished!'}
+              {tournamentFinish.tournamentName ?? tt.title}
             </div>
             <div style={{ fontSize: 22, fontWeight: 800, color: '#00D68F', marginBottom: 6, fontFamily: 'JetBrains Mono, monospace' }}>
               +{tournamentFinish.prize ? `${Number(tournamentFinish.prize).toLocaleString()} ᚙ` : '—'}
             </div>
             {tournamentFinish.place && (
               <div style={{ fontSize: 13, color: 'var(--text-secondary, #8B92A8)', marginBottom: 24 }}>
-                {tournamentFinish.place === 1 ? '🥇' : tournamentFinish.place === 2 ? '🥈' : '🥉'} {tournamentFinish.place} place
+                {tournamentFinish.place === 1 ? '🥇' : tournamentFinish.place === 2 ? '🥈' : '🥉'} {tournamentFinish.place} {t.common.place}
               </div>
             )}
             <button onClick={() => setTournamentFinish(null)} style={{ width: '100%', padding: '14px', background: 'var(--accent, #F5C842)', border: 'none', borderRadius: 14, color: '#0B0D11', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-              Awesome! 🎉
+              {tt.awesome}
             </button>
           </div>
         </div>
@@ -163,7 +164,7 @@ export const TournamentsPage: React.FC = () => {
       {myMatches.length > 0 && (
         <div style={{ margin: '0 18px 12px' }}>
           <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent, #F5C842)', letterSpacing: '.08em', textTransform: 'uppercase' as const, marginBottom: 8 }}>
-            ⚔️ Your active matches
+            {tt.yourActiveMatches}
           </div>
           {myMatches.map((match: ActiveMatch) => {
             const isP1 = match.player1?.userId === match.myUserId;
@@ -176,7 +177,7 @@ export const TournamentsPage: React.FC = () => {
                     {match.tournament?.name} · Round {match.round}
                   </div>
                   <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>
-                    vs {opponent?.firstName ?? 'Opponent'}
+                    vs {opponent?.firstName ?? t.game.opponent}
                   </div>
                 </div>
                 {match.sessionId && (
@@ -184,7 +185,7 @@ export const TournamentsPage: React.FC = () => {
                     onClick={() => window.dispatchEvent(new CustomEvent('chesscoin:navigate', { detail: `/battles` }))}
                     style={{ padding: '7px 12px', background: 'var(--accent, #F5C842)', border: 'none', borderRadius: 10, color: '#0B0D11', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
                   >
-                    Play →
+                    {tt.play}
                   </button>
                 )}
               </div>
@@ -194,15 +195,15 @@ export const TournamentsPage: React.FC = () => {
       )}
 
       <div style={segStyle}>
-        <button style={segBtn(filter === 'all')} onClick={() => setFilter('all')}>{t.tournaments.tabAll}</button>
-        <button style={segBtn(filter === 'joined')} onClick={() => setFilter('joined')}>{t.tournaments.tabJoined}</button>
+        <button style={segBtn(filter === 'all')} onClick={() => setFilter('all')}>{tt.tabAll}</button>
+        <button style={segBtn(filter === 'joined')} onClick={() => setFilter('joined')}>{tt.tabJoined}</button>
       </div>
 
-      {loading && <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: 32 }}>Loading...</div>}
+      {loading && <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: 32 }}>{t.common.loading}</div>}
 
       {!loading && filtered.length === 0 && (
         <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: 32, fontSize: 13 }}>
-          {filter === 'joined' ? t.tournaments.noJoined : t.tournaments.noActive}
+          {filter === 'joined' ? tt.noJoined : tt.noActive}
         </div>
       )}
 
@@ -248,6 +249,7 @@ const TournamentCard: React.FC<{
   onView: () => void; onDonate: () => void; joining: boolean;
 }> = ({ tour, onJoin, onLeave, onView, onDonate, joining }) => {
   const t = useT();
+  const tt = t.tournaments;
   const color = TYPE_COLORS[tour.type] ?? 'var(--accent, #F5C842)';
   const icon = TYPE_ICONS[tour.type] ?? '🏆';
   const endDate = tour.endAt ? new Date(tour.endAt).toLocaleDateString('en-US') : null;
@@ -259,11 +261,11 @@ const TournamentCard: React.FC<{
           <span style={{ fontSize: 28 }}>{icon}</span>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 14, fontWeight: 800, color }}>{tour.name}</div>
-            {tour.period && <div style={{ fontSize: 10, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>Period: {tour.period}</div>}
+            {tour.period && <div style={{ fontSize: 10, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>{tt.period}: {tour.period}</div>}
           </div>
           {tour.isJoined && (
             <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--green, #00D68F)', background: 'rgba(0,214,143,0.1)', padding: '3px 8px', borderRadius: 6 }}>
-              ✓ Joined
+              {tt.joined}
             </div>
           )}
         </div>
@@ -271,19 +273,19 @@ const TournamentCard: React.FC<{
 
       <div style={{ display: 'flex', padding: '10px 16px', gap: 16 }}>
         <div>
-          <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>Players</div>
+          <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>{tt.playersLabel}</div>
           <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)', marginTop: 2 }}>
             {tour.currentPlayers.toLocaleString()}
           </div>
         </div>
         <div>
-          <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>Entry fee</div>
+          <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>{tt.entryFeeLabel}</div>
           <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 700, color: 'var(--accent, #F5C842)', marginTop: 2 }}>
             {fmtBalance(tour.entryFee)} ᚙ
           </div>
         </div>
         <div>
-          <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>Prize pool</div>
+          <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>{tt.prizePool}</div>
           <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 700, color, marginTop: 2 }}>
             {fmtBalance(tour.totalPool ?? tour.prizePool)} ᚙ
           </div>
@@ -292,7 +294,7 @@ const TournamentCard: React.FC<{
 
       {tour.isJoined && tour.myStats && (
         <div style={{ margin: '0 14px 10px', padding: '8px 12px', background: 'rgba(0,214,143,0.06)', border: '1px solid rgba(0,214,143,0.15)', borderRadius: 12 }}>
-          <div style={{ fontSize: 10, color: 'var(--green, #00D68F)', fontWeight: 700, marginBottom: 4 }}>{t.tournaments.myStats}</div>
+          <div style={{ fontSize: 10, color: 'var(--green, #00D68F)', fontWeight: 700, marginBottom: 4 }}>{tt.myStats}</div>
           <div style={{ display: 'flex', gap: 14 }}>
             <span style={{ fontSize: 13, color: 'var(--green, #00D68F)' }}>✓ {tour.myStats.wins}</span>
             <span style={{ fontSize: 13, color: 'var(--red, #FF4D6A)' }}>✗ {tour.myStats.losses}</span>
@@ -302,17 +304,17 @@ const TournamentCard: React.FC<{
         </div>
       )}
 
-      {endDate && <div style={{ padding: '0 16px 4px', fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>Ends: {endDate}</div>}
+      {endDate && <div style={{ padding: '0 16px 4px', fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>{tt.ends}: {endDate}</div>}
 
       <div style={{ display: 'flex', gap: 8, padding: '10px 16px 14px' }}>
-        <button onClick={onView} style={viewBtn}>{t.tournaments.leaderboard}</button>
-        <button onClick={onDonate} style={donateBtn}>💸 Donate</button>
+        <button onClick={onView} style={viewBtn}>{tt.leaderboard}</button>
+        <button onClick={onDonate} style={donateBtn}>{tt.donateToPrize}</button>
         {!tour.isJoined ? (
           <button onClick={onJoin} disabled={joining} style={{ ...joinBtnStyle, opacity: joining ? 0.6 : 1 }}>
-            {joining ? t.tournaments.joining : t.tournaments.join}
+            {joining ? tt.joining : tt.join}
           </button>
         ) : (
-          <button onClick={onLeave} style={leaveBtnStyle}>{t.tournaments.leave}</button>
+          <button onClick={onLeave} style={leaveBtnStyle}>{tt.leave}</button>
         )}
       </div>
     </div>
@@ -333,6 +335,8 @@ interface TournamentDetail {
 }
 
 const TournamentDetailModal: React.FC<{ tournamentId: string; onClose: () => void }> = ({ tournamentId, onClose }) => {
+  const t = useT();
+  const tt = t.tournaments;
   const [data, setData] = useState<TournamentDetail | null>(null);
   useEffect(() => {
     tournamentsApi.get(tournamentId).then(r => setData(r.tournament)).catch(console.error);
@@ -341,10 +345,10 @@ const TournamentDetailModal: React.FC<{ tournamentId: string; onClose: () => voi
     <div style={overlayStyle} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div style={modalStyle}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>🏆 Leaderboard</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>🏆 {tt.leaderboard}</div>
           <button onClick={onClose} style={closeBtn}>✕</button>
         </div>
-        {!data && <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: 24 }}>Loading...</div>}
+        {!data && <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: 24 }}>{t.common.loading}</div>}
         {data?.players?.map((p: TournamentPlayer, i: number) => (
           <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
             <span style={{ fontSize: 13, fontWeight: 700, color: i === 0 ? 'var(--accent, #F5C842)' : i === 1 ? '#C0C0C0' : i === 2 ? '#CD7F32' : 'var(--text-muted, #4A5270)', width: 24, textAlign: 'center' }}>
@@ -361,7 +365,7 @@ const TournamentDetailModal: React.FC<{ tournamentId: string; onClose: () => voi
           </div>
         ))}
         {!data?.players?.length && data && (
-          <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: 16 }}>No participants</div>
+          <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: 16 }}>{tt.noParticipants}</div>
         )}
       </div>
     </div>
@@ -370,6 +374,7 @@ const TournamentDetailModal: React.FC<{ tournamentId: string; onClose: () => voi
 
 const DonateModal: React.FC<{ tournamentId: string; onClose: () => void; onSuccess: () => void }> = ({ tournamentId, onClose, onSuccess }) => {
   const t = useT();
+  const tt = t.tournaments;
   const [amount, setAmount] = useState('10000');
   const [loading, setLoading] = useState(false);
   const handleSubmit = async () => {
@@ -382,15 +387,15 @@ const DonateModal: React.FC<{ tournamentId: string; onClose: () => void; onSucce
     <div style={overlayStyle} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div style={modalStyle}>
         <div style={handleBar} />
-        <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)', marginBottom: 8 }}>💸 Donate to prize pool</div>
-        <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginBottom: 16 }}>All coins go to tournament winners!</div>
+        <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)', marginBottom: 8 }}>{tt.donateToPrize}</div>
+        <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginBottom: 16 }}>{tt.allCoinsToWinners}</div>
         <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
           {['10000', '50000', '100000', '500000'].map(v => (
             <button key={v} onClick={() => setAmount(v)} style={chipBtn(amount === v)}>{fmtBalance(v)}</button>
           ))}
         </div>
         <button onClick={handleSubmit} disabled={loading} style={goldBtnFull}>
-          {loading ? t.tournaments.donateError : `${t.shop.tonTab.buy} ${fmtBalance(amount)} ᚙ`}
+          {loading ? tt.donateError : `${t.shop.tonTab.buy} ${fmtBalance(amount)} ᚙ`}
         </button>
       </div>
     </div>
