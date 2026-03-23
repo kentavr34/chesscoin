@@ -177,7 +177,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
   const mergedSqs = { ...lastMoveSqs, ...optionSqs };
 
   // ── Обработчик клика по клетке (основное управление — тап) ──────────────────
-  const handleSquareClick = (sq: Square, piece?: RCBPiece) => {
+  const handleSquareClick = useCallback((sq: Square, piece?: RCBPiece) => {
     if (!isMyTurn || isGameOver) return;
 
     const chess = new Chess(localFen);
@@ -243,10 +243,10 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
       setSelected(null);
       setOptionSqs({});
     }
-  };
+  }, [isMyTurn, isGameOver, localFen, orientation, onMove, onCapture, selected]);
 
   // ── Drag & drop (дополнительно к тапам) ─────────────────────────────────────
-  const handlePieceDrop = (from: string, to: string): boolean => {
+  const handlePieceDrop = useCallback((from: string, to: string): boolean => {
     if (!isMyTurn || isGameOver) return false;
     const chess = new Chess(localFen);
     try {
@@ -286,15 +286,14 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
     } catch {
       return false;
     }
-  };
+  }, [isMyTurn, isGameOver, localFen, onMove, onCapture]);
 
-  const handleDragBegin = (_: RCBPiece, sq: Square) => {
+  const handleDragBegin = useCallback((_: RCBPiece, sq: Square) => {
     if (!isMyTurn || isGameOver) return;
     const chess = new Chess(localFen);
     setSelected(sq);
     showOptions(sq, chess);
-  };
-
+  }, [isMyTurn, isGameOver, localFen]);
 
   // V1: Обработчик выбора фигуры промоции
   const handlePromotionSelect = useCallback((piece: 'q' | 'r' | 'b' | 'n') => {

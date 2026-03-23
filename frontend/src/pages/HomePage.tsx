@@ -145,8 +145,8 @@ export const HomePage: React.FC = () => {
         setFloatingAmount(amt);
       }
     };
-    (sock as any).on('balance:updated', handler);
-    return () => { (sock as any).off('balance:updated', handler); };
+    sock.on('balance:updated' as never, handler);
+    return () => { sock.off('balance:updated' as never, handler); };
   }, []);
 
   const loadLiveData = useCallback(async () => {

@@ -553,7 +553,7 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
       ]);
       setOrders(all.orders);
       setMyOrders(mine.orders);
-      setBuyOrders(buys.orders as any);
+      setBuyOrders(buys.orders as BuyP2POrder[]);
     } catch {} finally {
       setLoadingOrders(false);
     }

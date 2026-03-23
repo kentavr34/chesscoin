@@ -123,4 +123,8 @@ export interface SocketGameEvent {
   challengerName?: string;
   challengerCountry?: string;
   challengerFlag?: string;
+  // exchange:executed event fields
+  role?: string;
+  amountCoins?: string;
+  totalTon?: number;
 }

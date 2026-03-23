@@ -403,10 +403,10 @@ const MoveHistory: React.FC<{ pgn: string }> = ({ pgn }) => {
   );
 };
 
-// ── PlayerRow — с тикающим таймером ─────────────────────────────────────────
+// ── PlayerRow — с тикающим таймером (мемоизирован) ───────────────────────────
 const PlayerRow: React.FC<{
   player?: import("@/types").UserPublic; timeLeft: number; isActive: boolean; label?: string; isMe?: boolean;
-}> = ({ player, timeLeft, isActive, label, isMe }) => {
+}> = React.memo(({ player, timeLeft, isActive, label, isMe }) => {
   const [localTime, setLocalTime] = React.useState(timeLeft);
   const [pulseOn, setPulseOn] = React.useState(false);
 
@@ -433,7 +433,7 @@ const PlayerRow: React.FC<{
   React.useEffect(() => {
     if (!danger || !isActive) return;
     if (localTime > 0 && localTime % 3 === 0) {
-      try { (window as unknown as { Telegram?: { WebApp?: { HapticFeedback?: { impactOccurred: (style: string) => void } } } }).Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium'); } catch {}
+      try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium'); } catch {}
     }
   }, [localTime, danger, isActive]);
 
@@ -464,7 +464,7 @@ const PlayerRow: React.FC<{
       </div>
     </div>
   );
-};
+});
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const Overlay: React.FC<{ children: React.ReactNode }> = ({ children }) => (

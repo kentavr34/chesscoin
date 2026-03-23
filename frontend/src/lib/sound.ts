@@ -6,7 +6,7 @@
 let ctx: AudioContext | null = null;
 
 function getCtx(): AudioContext {
-  if (!ctx) ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+  if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
   // Resume if suspended (browser autoplay policy)
   if (ctx.state === 'suspended') ctx.resume().catch(() => {});
   return ctx;

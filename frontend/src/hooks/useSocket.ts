@@ -158,14 +158,14 @@ export const useSocket = () => {
         if (data.type === 'exchange:executed') {
           // E13: Сделка на бирже исполнена — диспатчим событие (ExchangeTab подхватит)
           window.dispatchEvent(new CustomEvent('chesscoin:exchange:executed', { detail: data }));
-          const role = (data as any).role as string;
-          const coins = Number(BigInt((data as any).amountCoins ?? '0')).toLocaleString();
-          const ton   = ((data as any).totalTon as number)?.toFixed(4) ?? '0';
+          const role = data.role ?? '';
+          const coins = Number(BigInt(data.amountCoins ?? '0')).toLocaleString();
+          const ton   = data.totalTon?.toFixed(4) ?? '0';
           const msg   = role === 'seller'
             ? `💱 Order executed! Sold ${coins} ᚙ for ${ton} TON`
             : `🛒 Bought ${coins} ᚙ for ${ton} TON — credited to balance`;
           showActionToast(msg, '💱 Exchange', () => navigate('/shop'));
-          try { (window as any).Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch {}
+          try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch {}
         }
       };
 

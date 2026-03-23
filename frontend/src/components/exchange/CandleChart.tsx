@@ -4,6 +4,7 @@
 // Установка: npm install lightweight-charts
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useEffect, useRef } from 'react';
+import type { IChartApi, UTCTimestamp } from 'lightweight-charts';
 import type { PriceCandle } from '@/api';
 import { useT } from '@/i18n/useT';
 
@@ -16,8 +17,8 @@ interface CandleChartProps {
 export const CandleChart: React.FC<CandleChartProps> = ({ candles, up, height = 80 }) => {
   const t = useT();
   const containerRef = useRef<HTMLDivElement>(null);
-  const chartRef     = useRef<any>(null);
-  const seriesRef    = useRef<any>(null);
+  const chartRef     = useRef<IChartApi | null>(null);
+  const seriesRef    = useRef<unknown>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -61,7 +62,7 @@ export const CandleChart: React.FC<CandleChartProps> = ({ candles, up, height = 
       const data = candles
         .filter(c => c.open && c.high && c.low && c.close)
         .map(c => ({
-          time:  Math.floor(new Date(c.time).getTime() / 1000) as any,
+          time:  Math.floor(new Date(c.time).getTime() / 1000) as UTCTimestamp,
           open:  c.open,
           high:  c.high,
           low:   c.low,

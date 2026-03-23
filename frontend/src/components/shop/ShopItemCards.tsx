@@ -105,7 +105,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({ item, loading, highlighted, 
       {item.equipped ? (
         <div style={{ fontSize: 11, color: 'var(--green, #00D68F)', fontWeight: 700, textAlign: 'center', padding: '4px 0' }}>✓ Equipped</div>
       ) : item.owned ? (
-        <button onClick={onEquip} disabled={loading} style={{ ...btnStyle, background: '#7B61FF', color: '#fff' }}>{loading ? '...' : (t.shop as any).equip ?? 'Equip'}</button>
+        <button onClick={onEquip} disabled={loading} style={{ ...btnStyle, background: '#7B61FF', color: '#fff' }}>{loading ? '...' : t.shop.equip}</button>
       ) : (
         <button onClick={onPurchase} disabled={loading} style={{ ...btnStyle, background: 'var(--accent, #F5C842)', color: 'var(--bg, #0B0D11)' }}>{loading ? '...' : `${fmtBalance(item.priceCoins)} ᚙ`}</button>
       )}
