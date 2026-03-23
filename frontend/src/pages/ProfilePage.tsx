@@ -15,23 +15,21 @@ import { JARVIS_LEVELS } from '@/components/ui/JarvisModal';
 // Local type for Tab
 type Tab = 'info' | 'games' | 'saves' | 'ach';
 
-// Game history item returned by profileApi.getGames() — represents a player's side in a session
+// Game history item — flat format from GET /profile/games
 interface GameHistoryItem {
-  id: string;
-  status: string;
+  sessionId: string;
+  type: string;
+  result: string;
+  isWhite: boolean;
   winningAmount?: string | null;
-  session: {
-    id: string;
-    type: string;
-    pgn?: string | null;
-    bet?: string | null;
-    finishedAt?: string | null;
-    sides: Array<{
-      playerId: string;
-      status?: string;
-      player: UserPublic;
-    }>;
-  };
+  bet?: string | null;
+  botLevel?: number | null;
+  pgn?: string | null;
+  duration?: number | null;
+  startedAt?: string | null;
+  finishedAt?: string | null;
+  opponent?: UserPublic | null;
+  hasBot?: boolean;
 }
 
 // Saved game item returned by warsApi.savedGames()
@@ -401,8 +399,8 @@ export const ProfilePage: React.FC = () => {
               // Аппроксимируем: +16 победа, -16 поражение, 0 ничья (K=32/2)
               for (const g of games) {
                 eloHistory.push(elo);
-                if (g.status === 'WON') elo = Math.max(100, elo - 16);
-                else if (g.status === 'LOST') elo = elo + 16;
+                if (g.result === 'WON') elo = Math.max(100, elo - 16);
+                else if (g.result === 'LOST') elo = elo + 16;
               }
               eloHistory.push(user.elo); // текущее
               if (eloHistory.length < 2) {
@@ -484,16 +482,15 @@ export const ProfilePage: React.FC = () => {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '0 14px' }}>
                 {recentGames.slice(0, 15).map((g) => {
-                  const myStatus = g.status; // WON / LOST / DRAW
-                  const opponent = g.session?.sides?.find((s) => s.playerId !== user?.id);
-                  const oppPlayer = opponent?.player;
-                  const isWon  = myStatus === 'WON';
-                  const isDraw = myStatus === 'DRAW';
+                  const myResult = g.result;
+                  const oppPlayer = g.opponent;
+                  const isWon  = myResult === 'WON';
+                  const isDraw = myResult === 'DRAW';
                   const statusColor = isWon ? 'var(--green,#00D68F)' : isDraw ? '#9B85FF' : 'var(--red,#FF4D6A)';
                   const statusLabel = isWon ? t.profile.gameWon : isDraw ? t.profile.gameDraw : t.profile.gameLost;
                   const earned = g.winningAmount ? fmtBalance(String(g.winningAmount)) : null;
                   return (
-                    <div key={g.id} style={{
+                    <div key={g.sessionId} style={{
                       display: 'flex', alignItems: 'center', gap: 10,
                       padding: '10px 12px', background: 'var(--bg-card,#1C2030)',
                       border: `1px solid ${isWon ? 'rgba(0,214,143,0.12)' : isDraw ? 'rgba(155,133,255,0.12)' : 'rgba(255,77,106,0.10)'}`,
@@ -507,18 +504,18 @@ export const ProfilePage: React.FC = () => {
                         <Avatar user={oppPlayer} size="s" />
                       ) : (
                         <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
-                          {typeIcon[g.session?.type ?? ''] ?? '♟'}
+                          {typeIcon[g.type ?? ''] ?? '♟'}
                         </div>
                       )}
 
                       {/* Инфо */}
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary,#F0F2F8)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {oppPlayer ? `${oppPlayer.firstName}${oppPlayer.lastName ? ' ' + oppPlayer.lastName : ''}` : typeLabel[g.session?.type ?? ''] ?? t.profile.gameLabel}
+                          {oppPlayer ? `${oppPlayer.firstName}${(oppPlayer as any).lastName ? ' ' + (oppPlayer as any).lastName : ''}` : g.hasBot ? `J.A.R.V.I.S Lv.${g.botLevel ?? '?'}` : typeLabel[g.type ?? ''] ?? t.profile.gameLabel}
                         </div>
                         <div style={{ fontSize: 10, color: 'var(--text-muted,#4A5270)', marginTop: 2 }}>
-                          {typeLabel[g.session?.type ?? ''] ?? ''} · {g.session?.finishedAt ? fmtDate(g.session.finishedAt) : ''}
-                          {g.session?.bet && BigInt(g.session.bet) > 0n ? ` · ${fmtBalance(g.session.bet)} ᚙ` : ''}
+                          {typeLabel[g.type ?? ''] ?? ''} · {g.finishedAt ? fmtDate(g.finishedAt) : ''}
+                          {g.bet && BigInt(g.bet) > 0n ? ` · ${fmtBalance(g.bet)} ᚙ` : ''}
                         </div>
                       </div>
 
@@ -528,9 +525,9 @@ export const ProfilePage: React.FC = () => {
                         {earned && isWon && (
                           <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono',monospace", color: 'var(--accent,#F5C842)' }}>+{earned} ᚙ</span>
                         )}
-                        {g.session?.pgn && (
+                        {g.pgn && (
                           <button
-                            onClick={() => setReplayGame({ pgn: g.session.pgn!, title: oppPlayer ? `vs ${oppPlayer.firstName}` : t.profile.gameLabel, sessionId: g.session.id })}
+                            onClick={() => setReplayGame({ pgn: g.pgn!, title: oppPlayer ? `vs ${oppPlayer.firstName}` : t.profile.gameLabel, sessionId: g.sessionId })}
                             style={{ fontSize: 9, padding: '2px 7px', background: 'rgba(245,200,66,0.08)', color: 'var(--accent,#F5C842)', border: '1px solid rgba(245,200,66,0.2)', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}
                           >♟ Replay</button>
                         )}
