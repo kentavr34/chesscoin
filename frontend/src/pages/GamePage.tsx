@@ -193,10 +193,8 @@ export const GamePage: React.FC = () => {
     if (!session) return;
     const botLevel = session.botLevel ?? 1;
     const mySide = session.sides.find((s) => s.id === session.mySideId);
-    const botSide = session.sides.find((s) => s.id !== session.mySideId);
     const color = mySide?.isWhite ? 'white' : 'black';
-    // Use the bot side's remaining timeLeft as proxy for original duration (bot moves instantly)
-    const timeSeconds = botSide?.timeLeft ?? mySide?.timeLeft ?? 300;
+    const timeSeconds = (session as any).duration ?? 600;
     setShowResult(false);
     removeSession(session.id);
     getSocket().emit('game:create:bot', { color, botLevel, timeSeconds }, (res: Record<string,unknown>) => {

@@ -709,8 +709,23 @@ nationsRouter.post("/battle/:id/record-result", authMiddleware, async (req: Requ
     const { id } = req.params;
     const { sessionId, winnerId, winnerClanId, player1Id, player2Id, clan1Id, clan2Id } = req.body;
 
+    if (!sessionId) return res.status(400).json({ error: "sessionId is required" });
+
     const battle = await prisma.clanBattle.findUnique({ where: { id } });
     if (!battle || battle.status !== "IN_PROGRESS") return res.status(400).json({ error: "Battle is not active" });
+
+    const session = await prisma.session.findUnique({
+      where: { id: sessionId },
+      select: { status: true, sides: { select: { playerId: true } } },
+    });
+    if (!session) return res.status(400).json({ error: "Session not found" });
+    if (!["FINISHED", "DRAW", "TIME_EXPIRED"].includes(session.status)) {
+      return res.status(400).json({ error: "Session is not finished" });
+    }
+    const sessionPlayerIds = session.sides.map(s => s.playerId);
+    if (winnerId && !sessionPlayerIds.includes(winnerId)) {
+      return res.status(400).json({ error: "Winner is not a participant of this session" });
+    }
 
     // Записываем игру
     await prisma.clanBattleGame.upsert({

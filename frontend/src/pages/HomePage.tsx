@@ -191,16 +191,16 @@ export const HomePage: React.FC = () => {
   useEffect(() => { loadLiveData(); }, [loadLiveData]);
 
   const jarvisLevel = user?.jarvisLevel ?? 1;
-  const jarvisCfg = JARVIS_LEVELS[Math.max(0, Math.min(19, jarvisLevel - 1))];
+  const nextBotLevel = Math.min(20, jarvisLevel < 20 ? jarvisLevel + 1 : 20);
+  const jarvisCfg = JARVIS_LEVELS[Math.max(0, Math.min(19, nextBotLevel - 1))];
   const militaryRank = user?.militaryRank?.name ?? 'Recruit';
   const militaryEmoji = user?.militaryRank?.emoji ?? '😊';
   const battles = user?.wins ?? 0;
   const rank = user?.rank ?? 1;
 
-  // J1: сразу открываем GameSetupModal с текущим уровнем — JarvisModal убран из основного флоу
   const startBotGame = () => {
     if (!user || user.attempts <= 0) { setShowAttempts(true); return; }
-    setSelectedLevel(jarvisCfg);  // устанавливаем текущий уровень сразу
+    setSelectedLevel(jarvisCfg);
   };
 
   const handleGameStart = (color: 'white' | 'black', timeMinutes: number) => {

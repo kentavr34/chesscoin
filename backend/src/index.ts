@@ -134,25 +134,12 @@ app.use(`${API}/games`, gamesRouter);
 
 app.get("/health", async (_req: import("express").Request, res: import("express").Response) => {
   try {
-    // M1: Детальный health check — проверяем БД и Redis
-    const [cfg, dbCheck] = await Promise.all([
-      prisma.platformConfig.findUnique({ where: { id: "singleton" } }),
-      prisma.$queryRaw`SELECT 1`.then(() => true).catch(() => false),
-    ]);
-    const mem = process.memoryUsage();
+    const dbCheck = await prisma.$queryRaw`SELECT 1`.then(() => true).catch(() => false);
     res.json({
-      status: "ok", version: "7.2.0",
+      status: "ok",
+      version: "7.2.0",
       uptime: Math.floor(process.uptime()),
-      memory: {
-        rss: Math.round(mem.rss / 1024 / 1024),
-        heapUsed: Math.round(mem.heapUsed / 1024 / 1024),
-        heapTotal: Math.round(mem.heapTotal / 1024 / 1024),
-      },
-      stockfish: stockfishPool.stats(),
       db: dbCheck ? "ok" : "error",
-      phase: cfg?.currentPhase ?? 1,
-      totalEmitted: cfg?.totalEmitted?.toString() ?? "0",
-      emissionCap: cfg?.emissionCap?.toString() ?? "0",
     });
   } catch (err) {
     res.status(503).json({ status: "error", version: "7.2.0", error: "Service unavailable" });

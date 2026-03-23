@@ -91,11 +91,14 @@ export const createBotSession = async (
   const bot = await getBot();
   const chess = new Chess();
 
-  // Тратим попытку
   await useAttempt(userId);
 
-  // Активируем реферальную систему при первой игре
-  // referral activation handled in finish.ts via activateReferral()
+  const equippedSkins = await prisma.userItem.findMany({
+    where: { userId, isEquipped: true, item: { type: { in: ['BOARD_SKIN', 'PIECE_SKIN'] } } },
+    include: { item: { select: { type: true, imageUrl: true } } },
+  });
+  const boardSkinUrl = equippedSkins.find(ui => ui.item.type === 'BOARD_SKIN')?.item.imageUrl ?? null;
+  const pieceSkinUrl = equippedSkins.find(ui => ui.item.type === 'PIECE_SKIN')?.item.imageUrl ?? null;
 
   const session = await prisma.session.create({
     data: {
@@ -105,6 +108,8 @@ export const createBotSession = async (
       fen: chess.fen(),
       pgn: chess.pgn(),
       botLevel,
+      boardSkinUrl,
+      pieceSkinUrl,
       turnStartedAt: new Date(),
       sides: {
         create: [
