@@ -1,5 +1,9 @@
 # AGENTS.md
 
+## Общие правила
+
+- Общение с пользователем ведётся **на русском языке**.
+
 ## Cursor Cloud specific instructions
 
 ### Project overview
