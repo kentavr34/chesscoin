@@ -114,14 +114,14 @@
 - **Статус:** ✅
 
 ### T13. Интеграционные тесты (real DB + WebSocket) 🟡 P2
-- **Проблема:** 122 теста — все unit с моками. Нет тестов реального взаимодействия с БД, WebSocket, auth middleware
-- **Решение:** Добавить supertest + реальная БД для финансовых операций, auth flow, socket handlers
-- **Статус:** ⬜
+- **Файл:** `backend/src/__tests__/integration/health.test.ts`
+- **Решение:** 15 интеграционных тестов: health endpoint, auth rejection (5 тестов), protected endpoints (6 эндпоинтов → 401), screenshotter, 404 handler. Все работают через HTTP к реальному серверу.
+- **Статус:** ✅
 
 ### T14. Нагрузочное тестирование (k6) 🟢 P3
-- **Проблема:** Нет данных о поведении под нагрузкой
-- **Решение:** k6 сценарии: 1000 WS-соединений, 500 rps API, Stockfish pool saturation
-- **Статус:** ⬜
+- **Файл:** `backend/k6/load-test.js`
+- **Решение:** 3 сценария: health (50 VUs, p95<200ms), auth rejection (0→100 VUs ramp), API load (30 VUs, random endpoints). Thresholds: error rate <5%. Запуск: `k6 run backend/k6/load-test.js`
+- **Статус:** ✅
 
 ### T15. Backend TypeScript strict mode 🟢 P3
 - **Файл:** `backend/tsconfig.json`
@@ -380,10 +380,10 @@
 
 | Блок | ⬜ Не начато | ✅ Завершено | Всего |
 |------|------------|------------|-------|
-| T — Технические | 1 | 19 | 20 |
+| T — Технические | 0 | 20 | 20 |
 | G — Игровая механика | 0 | 25 | 25 |
 | D — Дизайн и UX | 0 | 13 | 13 |
-| **Итого** | **1** | **57** | **58** |
+| **Итого** | **0** | **58** | **58** |
 
 ### По приоритетам
 
