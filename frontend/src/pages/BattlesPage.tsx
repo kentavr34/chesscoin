@@ -27,21 +27,30 @@ const donateToBattle = (sessionId: string, amount: string, cb: (ok: boolean) => 
   socket.emit('battle:donate', { sessionId, amount }, (res: Record<string,unknown>) => cb(res?.ok as boolean));
 };
 
-type Tab = 'active' | 'waiting';
+type Tab = 'live' | 'waiting' | 'private';
 
 export const BattlesPage: React.FC = () => {
   const t = useT();
   const navigate = useNavigate();
   const { battles, sessions, upsertSession } = useGameStore();
   const { user } = useUserStore();
-  const [tab, setTab] = useState<Tab>('active');
+  const [tab, setTab] = useState<Tab>('live');
   const [showCreate, setShowCreate] = useState(false);
 
-  // Инфо-попап при первом входе
   const info = useInfoPopup('battles', [...t.battles.info] as Parameters<typeof InfoPopup>[0]["slides"]);
 
-  const activeSessions = sessions.filter((s) => s.status === 'IN_PROGRESS');
-  const waitingSessions = battles; // из лобби сокета
+  // Live — активные публичные партии (IN_PROGRESS)
+  const liveSessions = sessions.filter((s) => s.status === 'IN_PROGRESS');
+
+  // Ожидающие — публичные, отсортированные по ставке (desc)
+  const waitingSessions = [...battles].sort((a, b) => {
+    const betA = BigInt(a.bet || '0');
+    const betB = BigInt(b.bet || '0');
+    return betB > betA ? 1 : betB < betA ? -1 : 0;
+  });
+
+  // Приватные — мои ожидающие
+  const myWaitingSessions = sessions.filter((s) => s.status === 'WAITING_FOR_OPPONENT');
 
   const handleJoin = (battle: BattleLobbyItem) => {
     const socket = getSocket();
@@ -74,66 +83,61 @@ export const BattlesPage: React.FC = () => {
         <InfoPopup infoKey="battles" slides={[...t.battles.info] as Parameters<typeof InfoPopup>[0]["slides"]} onClose={info.close} />
       )}
 
-      {/* Сегментные вкладки */}
+      {/* Три вкладки: Live / Ожидающие / Приватные */}
       <div style={segStyle}>
-        <button style={segBtn(tab === 'active')} onClick={() => setTab('active')}>{t.battles.tabActive}</button>
-        <button style={segBtn(tab === 'waiting')} onClick={() => setTab('waiting')}>{t.battles.tabWaiting}</button>
+        <button style={segBtn(tab === 'live')} onClick={() => setTab('live')}>
+          🔴 Live {liveSessions.length > 0 && <span style={{ marginLeft: 4, fontSize: 10, opacity: 0.7 }}>({liveSessions.length})</span>}
+        </button>
+        <button style={segBtn(tab === 'waiting')} onClick={() => setTab('waiting')}>
+          ⚔️ {t.battles.tabWaiting ?? 'Вызовы'} {waitingSessions.length > 0 && <span style={{ marginLeft: 4, fontSize: 10, opacity: 0.7 }}>({waitingSessions.length})</span>}
+        </button>
+        <button style={segBtn(tab === 'private')} onClick={() => setTab('private')}>
+          🔒 {t.battles.private_ ?? 'Private'} {myWaitingSessions.length > 0 && <span style={{ marginLeft: 4, fontSize: 10, opacity: 0.7 }}>({myWaitingSessions.length})</span>}
+        </button>
       </div>
 
-      {tab === 'active' && (
+      {/* ── LIVE — активные публичные партии ── */}
+      {tab === 'live' && (
         <>
-          {activeSessions.length === 0 && (
-            <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', fontSize: 13, padding: '32px 0' }}>
-              {t.battles.noActive}
+          {liveSessions.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>🏟</div>
+              <div style={{ fontSize: 14, color: 'var(--text-secondary, #8B92A8)', fontWeight: 600 }}>{t.battles.noActive ?? 'No live battles'}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted, #4A5270)', marginTop: 4 }}>{t.battles.createFirst ?? 'Create a battle or wait for others'}</div>
             </div>
           )}
-          {activeSessions.map((s, idx) => {
+          {liveSessions.map((s) => {
             const mySide = s.sides.find((sd) => sd.id === s.mySideId);
             const opSide = s.sides.find((sd) => sd.id !== s.mySideId);
+            const sourceIcon = (s as any).sourceType === 'TOURNAMENT' ? '🏆' : (s as any).sourceType === 'WAR' ? '⚔️🏴' : '⚔️';
             return (
               <div key={s.id} onClick={() => navigate('/game/' + s.id)} style={bcardStyle}>
-                {idx === 0 && (
-                  <div style={bhotStyle}>{t.battles.topStake}</div>
-                )}
-                <div style={{ display: 'flex', alignItems: 'center', padding: 14, gap: 8 }}>
-                  <BPlayer user={mySide?.player} name={mySide?.player.firstName ?? t.common.me} />
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 14px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#FF4D6A', animation: 'pulse 1.5s infinite' }} />
+                    <span style={{ fontSize: 10, fontWeight: 700, color: '#FF4D6A', letterSpacing: '.08em', textTransform: 'uppercase' as const }}>LIVE</span>
+                    <span style={{ fontSize: 12 }}>{sourceIcon}</span>
+                  </div>
+                  {s.bet && <span style={tagGold}>{fmtBalance(s.bet)} ᚙ</span>}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', padding: '12px 14px', gap: 8 }}>
+                  <BPlayer user={mySide?.player} name={mySide?.player?.firstName ?? '?'} />
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
                     <span style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-muted, #4A5270)', letterSpacing: '.1em' }}>VS</span>
-                    <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 20, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>
+                    <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 18, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>
                       {fmtTime(mySide?.timeLeft ?? 300)}
                     </span>
-                    <span style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', fontWeight: 600 }}>
-                      {s.type === 'BOT' ? t.battles.bot : t.battles.battle}
-                    </span>
                   </div>
-                  <BPlayer user={opSide?.player} name={opSide?.player.firstName ?? '?'} right />
-                  {s.bet && (
-                    <div style={{ textAlign: 'right', minWidth: 64 }}>
-                      <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 16, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>
-                        {fmtBalance(s.bet)}
-                      </div>
-                      <div style={{ fontSize: 10, color: 'var(--text-secondary, #8B92A8)' }}>ᚙ</div>
-                    </div>
-                  )}
+                  <BPlayer user={opSide?.player} name={opSide?.player?.firstName ?? '?'} right />
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 14px', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
-                  <span style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)' }}>
-                    {s.isMyTurn ? t.battles.myTurn : t.battles.opponentTurn}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 14px', borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.02)' }}>
+                  <span style={{ fontSize: 11, color: s.isMyTurn ? 'var(--green, #00D68F)' : 'var(--text-secondary, #8B92A8)', fontWeight: 600 }}>
+                    {s.isMyTurn ? '● ' + (t.battles.myTurn ?? 'Your turn') : t.battles.opponentTurn ?? 'Opponent'}
                   </span>
-                  <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const amt = prompt(t.battles.donatePrompt);
-                  if (amt && Number(amt) > 0) {
-                    donateToBattle(s.id, amt, (ok) => {
-                      if (ok) showToast(t.battles.donateSent, 'info');
-                      else showToast(t.battles.donateError, 'error');
-                    });
-                  }
-                }}
-                style={{ ...watchBtn, color: '#9B85FF', borderColor: 'rgba(123,97,255,0.3)', background: 'rgba(123,97,255,0.08)' }}
-              >💸 {t.battles.spectatorDonate}</button>
-              <button style={watchBtn}>→</button>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button onClick={(e) => { e.stopPropagation(); navigate('/game/' + s.id + '?spectate=1'); }} style={watchBtn}>👁 {t.battles.watch ?? 'Watch'}</button>
+                    <button onClick={(e) => { e.stopPropagation(); navigate('/game/' + s.id); }} style={{ ...watchBtn, background: 'var(--accent, #F5C842)', color: 'var(--bg, #0B0D11)', borderColor: 'transparent' }}>→</button>
+                  </div>
                 </div>
               </div>
             );
@@ -141,40 +145,72 @@ export const BattlesPage: React.FC = () => {
         </>
       )}
 
+      {/* ── ОЖИДАЮЩИЕ — публичные вызовы, сортировка по ставке ── */}
       {tab === 'waiting' && (
         <>
-          <div style={secStyle}>{/* waiting section */}</div>
           {waitingSessions.length === 0 && (
-            <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', fontSize: 13, padding: '32px 0' }}>
-              {t.battles.noWaiting}
+            <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>⚔️</div>
+              <div style={{ fontSize: 14, color: 'var(--text-secondary, #8B92A8)', fontWeight: 600 }}>{t.battles.noWaiting ?? 'No open challenges'}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted, #4A5270)', marginTop: 4 }}>{t.battles.beFirst ?? 'Be the first to create one!'}</div>
             </div>
           )}
-          {waitingSessions.map((battle) => (
-            <div key={battle.id} style={wcardStyle}>
+          {waitingSessions.map((battle, idx) => (
+            <div key={battle.id} style={{ ...wcardStyle, borderColor: idx === 0 ? 'rgba(245,200,66,0.2)' : 'rgba(255,255,255,0.07)' }}>
               <Avatar user={battle.creator as import('@/types').UserPublic | null} size="m" />
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>
-                  {battle.creator?.firstName ?? t.battles.creator}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>
+                    {battle.creator?.firstName ?? '?'}
+                  </span>
+                  {idx === 0 && <span style={{ fontSize: 9, padding: '1px 6px', background: 'rgba(245,200,66,0.15)', color: '#F5C842', borderRadius: 4, fontWeight: 700 }}>TOP</span>}
                 </div>
-                <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 3 }}>
-                  {battle.duration / 60} min · ELO {battle.creator?.elo ?? '?'}
+                <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>
+                  {Math.round((battle.duration ?? 300) / 60)} min · ELO {battle.creator?.elo ?? '?'}
                 </div>
                 <div style={{ marginTop: 6, display: 'flex', gap: 6, alignItems: 'center' }}>
                   <span style={tagGold}>{fmtBalance(battle.bet)} ᚙ</span>
                   {(battle.spectatorCount ?? 0) > 0 && (
-                    <span style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>
-                      👁 {battle.spectatorCount}
-                    </span>
+                    <span style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>👁 {battle.spectatorCount}</span>
                   )}
                 </div>
               </div>
-              {battle.creator && user && battle.creator.elo !== user.elo && (
-                <button onClick={() => handleJoin(battle)} style={acceptBtn}>
-                  {t.battles.accept}
-                </button>
-              )}
+              <button onClick={() => handleJoin(battle)} style={acceptBtn}>
+                {t.battles.accept ?? 'Accept'}
+              </button>
             </div>
           ))}
+        </>
+      )}
+
+      {/* ── ПРИВАТНЫЕ — мои ожидающие / полученные вызовы ── */}
+      {tab === 'private' && (
+        <>
+          {myWaitingSessions.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>🔒</div>
+              <div style={{ fontSize: 14, color: 'var(--text-secondary, #8B92A8)', fontWeight: 600 }}>{t.battles.noPrivate ?? 'No private battles'}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted, #4A5270)', marginTop: 4 }}>{t.battles.createPrivate ?? 'Create one and share the link!'}</div>
+            </div>
+          )}
+          {myWaitingSessions.map((s) => {
+            const mySide = s.sides.find((sd) => sd.id === s.mySideId);
+            const sourceIcon = (s as any).sourceType === 'TOURNAMENT' ? '🏆' : (s as any).sourceType === 'WAR' ? '⚔️🏴' : '🔒';
+            return (
+              <div key={s.id} style={wcardStyle}>
+                <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(245,200,66,0.1)', border: '2px solid rgba(245,200,66,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>{sourceIcon}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>
+                    {t.battles.waitingForOpponent ?? 'Waiting for opponent'}
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>
+                    {s.bet ? `${fmtBalance(s.bet)} ᚙ` : 'Friendly'}
+                  </div>
+                </div>
+                <button onClick={() => navigate('/game/' + s.id)} style={{ ...acceptBtn, background: '#9B85FF' }}>→</button>
+              </div>
+            );
+          })}
         </>
       )}
 
