@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import { authMiddleware, AuthRequest } from "@/middleware/auth";
 import { purchaseAttempts, getSecondsUntilNextRestore } from "@/services/attempts";
 import { prisma } from "@/lib/prisma";
+import { redis } from "@/lib/redis";
 
 const router = Router();
 
@@ -12,6 +13,9 @@ router.post("/purchase", authMiddleware, async (req: Request, res: Response) => 
     const count = req.body.count ? parseInt(req.body.count) : 1;
 
     await purchaseAttempts(userId, count);
+
+    // Инвалидируем кеш user:me чтобы фронтенд получил актуальные данные
+    try { await redis.del(`user:me:${userId}`); } catch {}
 
     const user = await prisma.user.findUniqueOrThrow({
       where: { id: userId },

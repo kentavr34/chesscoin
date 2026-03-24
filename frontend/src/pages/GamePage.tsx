@@ -47,10 +47,19 @@ export const GamePage: React.FC = () => {
   const session = sessions.find((s) => s.id === sessionId) ?? sessions[0];
 
   useEffect(() => {
-    if (isSpectator) return; // spectator uses own session flow
-    if (!session && sessions.length > 0) navigate('/game/' + sessions[0].id, { replace: true });
-    if (!session && sessions.length === 0) navigate('/', { replace: true });
-  }, [sessions, session, isSpectator]);
+    if (isSpectator) return;
+    if (session) return;
+    const retryTimer = setTimeout(() => {
+      const found = useGameStore.getState().sessions.find((s) => s.id === sessionId);
+      if (found) return;
+      if (useGameStore.getState().sessions.length > 0) {
+        navigate('/game/' + useGameStore.getState().sessions[0].id, { replace: true });
+      } else {
+        navigate('/', { replace: true });
+      }
+    }, 1500);
+    return () => clearTimeout(retryTimer);
+  }, [sessions, session, sessionId, isSpectator, navigate]);
 
   // Показываем модал результата при завершении
   useEffect(() => {
@@ -184,10 +193,8 @@ export const GamePage: React.FC = () => {
     if (!session) return;
     const botLevel = session.botLevel ?? 1;
     const mySide = session.sides.find((s) => s.id === session.mySideId);
-    const botSide = session.sides.find((s) => s.id !== session.mySideId);
     const color = mySide?.isWhite ? 'white' : 'black';
-    // Use the bot side's remaining timeLeft as proxy for original duration (bot moves instantly)
-    const timeSeconds = botSide?.timeLeft ?? mySide?.timeLeft ?? 300;
+    const timeSeconds = (session as any).duration ?? 600;
     setShowResult(false);
     removeSession(session.id);
     getSocket().emit('game:create:bot', { color, botLevel, timeSeconds }, (res: Record<string,unknown>) => {
@@ -355,6 +362,16 @@ export const GamePage: React.FC = () => {
         </Overlay>
       )}
 
+      {/* V3: Победный экран */}
+      {showVictory && resultData && (
+        <VictoryScreen
+          result={resultData.result}
+          opponentName={opSide?.player?.firstName}
+          earned={resultData.earned}
+          onDone={() => setShowVictory(false)}
+        />
+      )}
+
       {/* Модал результата */}
       {showResult && resultData && (
         <GameResultModal
@@ -362,7 +379,7 @@ export const GamePage: React.FC = () => {
           earned={resultData.earned}
           commission={resultData.commission}
           pieceCoins={resultData.pieceCoins}
-          botLevelName={isBotGame && session?.botLevel ? JARVIS_LEVELS[Math.max(0, (session.botLevel ?? 1) - 1)].name : undefined}
+          botLevelName={isBotGame && session?.botLevel ? JARVIS_LEVELS[Math.max(0, Math.min(JARVIS_LEVELS.length - 1, (session.botLevel ?? 1) - 1))]?.name : undefined}
           userTelegramId={(user as import("@/types").User & { telegramId: string })?.telegramId}
           sessionId={session?.id}
           onClose={handleResultClose}

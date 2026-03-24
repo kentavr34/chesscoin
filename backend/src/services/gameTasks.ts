@@ -31,24 +31,8 @@ async function completeTask(userId: string, taskId: string, reward: bigint): Pro
     });
     if (exists) return false; // уже выполнено
 
-    // Записываем выполнение + начисляем награду в $transaction
-    await prisma.$transaction([
-      prisma.completedTask.create({
-        data: { userId, taskId },
-      }),
-      prisma.user.update({
-        where: { id: userId },
-        data: { balance: { increment: reward }, totalEarned: { increment: reward } },
-      }),
-      prisma.transaction.create({
-        data: {
-          userId,
-          type:    TransactionType.TASK_REWARD,
-          amount:  reward,
-          payload: { taskId },
-        },
-      }),
-    ]);
+    await prisma.completedTask.create({ data: { userId, taskId } });
+    await updateBalance(userId, reward, TransactionType.TASK_REWARD, { taskId }, { isEmission: true });
 
     logger.info(`[gameTasks] User ${userId} completed task ${taskId} (+${reward} ᚙ)`);
     return true;
@@ -198,24 +182,10 @@ export async function checkDailyLoginTask(userId: string): Promise<void> {
         continue;
       }
 
-      // Начисляем награду
-      await prisma.$transaction([
-        prisma.completedTask.create({
-          data: { userId, taskId: task.id },
-        }),
-        prisma.user.update({
-          where: { id: userId },
-          data: { balance: { increment: task.winningAmount }, totalEarned: { increment: task.winningAmount } },
-        }),
-        prisma.transaction.create({
-          data: {
-            userId,
-            type:    TransactionType.TASK_REWARD,
-            amount:  task.winningAmount,
-            payload: { taskId: task.id, date: todayStr, type: 'daily_login' },
-          },
-        }),
-      ]);
+      await prisma.completedTask.create({ data: { userId, taskId: task.id } });
+      await updateBalance(userId, task.winningAmount, TransactionType.TASK_REWARD, {
+        taskId: task.id, date: todayStr, type: 'daily_login',
+      }, { isEmission: true });
 
       // Помечаем в Redis на 24 часа
       await redis.setex(dailyKey, 86400, '1');

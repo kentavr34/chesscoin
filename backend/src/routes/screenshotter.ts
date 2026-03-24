@@ -2,13 +2,14 @@ import { Router, Request, Response } from "express";
 import { prisma } from "@/lib/prisma";
 import { signAccessToken } from "@/services/auth";
 import { timingSafeEqual } from "crypto";
+import { rateLimit } from "express-rate-limit";
 import config from "@/config";
 
 const router = Router();
 
-// GET /api/v1/screenshotter/token?secret=...
-// Возвращает JWT для тестового пользователя — ТОЛЬКО для скриншотов/мониторинга
-router.get("/token", async (req: Request, res: Response) => {
+const screenshotterLimit = rateLimit({ windowMs: 60_000, max: 5, message: { error: "Too many requests" } });
+
+router.get("/token", screenshotterLimit, async (req: Request, res: Response) => {
   const secret = req.query.secret as string;
   const expected = process.env.SCREENSHOT_SECRET;
   if (!expected || !secret || secret.length !== expected.length ||

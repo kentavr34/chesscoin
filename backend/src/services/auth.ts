@@ -41,15 +41,14 @@ export const loginWithTelegram = async (
   referrerTelegramId?: string
 ) => {
   // 1. Валидация подписи Telegram
-  if (config.server.debug && initDataString.startsWith("debug:")) {
-    // DEV: debug:123456789 — создаём тестового пользователя
+  if (config.server.nodeEnv !== "production" && config.server.debug && initDataString.startsWith("debug:")) {
     const telegramId = initDataString.replace("debug:", "");
     return loginDebug(parseInt(telegramId));
   }
 
   try {
     validate(initDataString, config.telegram.botToken, {
-      expiresIn: config.server.debug ? 0 : 86400, // 24h в проде, без лимита в dev
+      expiresIn: config.server.nodeEnv === "production" ? 86400 : 0, // 24h в проде
     });
   } catch (e) {
     const errMsg = e instanceof Error ? e.message : JSON.stringify(e);

@@ -40,42 +40,58 @@ async function sendToChannel(text: string, keyboard?: TelegramKeyboard) {
 // ─── Hourly: пост топ-батла в канал ─────────────────────────────────────────
 async function postTopBattle() {
   try {
-    // Найти батл с наибольшей ставкой в статусе IN_PROGRESS
-    const topBattle = await prisma.session.findFirst({
+    // G20: Публикуем два типа топ-батлов
+
+    // 1. Топ-батл LIVE (идёт прямо сейчас)
+    const topLive = await prisma.session.findFirst({
+      where: { type: "BATTLE", status: "IN_PROGRESS", isPrivate: false },
+      orderBy: { bet: "desc" },
+      include: {
+        sides: { include: { player: { select: { firstName: true, username: true, elo: true } } } },
+      },
+    });
+
+    if (topLive?.bet && topLive.bet > 10000n) {
+      const betK = (Number(topLive.bet) / 1000).toFixed(1);
+      const p1 = topLive.sides[0]?.player;
+      const p2 = topLive.sides[1]?.player;
+      const liveText = `🔴 <b>LIVE — Топ-батл!</b>\n\n` +
+        `♟ <b>${p1?.firstName ?? '?'}</b> (ELO ${p1?.elo ?? '?'}) vs <b>${p2?.firstName ?? '?'}</b> (ELO ${p2?.elo ?? '?'})\n\n` +
+        `💰 Ставка: <b>${betK}K ᚙ</b>\n\n` +
+        `Смотри и болей за победителя!`;
+      const liveKb: TelegramKeyboard = {
+        inline_keyboard: [[{ text: '👁 Смотреть игру', url: `${BOT_LINK}?start=spectate_${topLive.id}` }]],
+      };
+      await sendToChannel(liveText, liveKb);
+    }
+
+    // 2. Топ-вызов (ожидает соперника — самая высокая ставка за последний час)
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const topWaiting = await prisma.session.findFirst({
       where: {
-        type: "BATTLE",
-        status: "IN_PROGRESS",
+        type: "BATTLE", status: "WAITING_FOR_OPPONENT", isPrivate: false,
+        createdAt: { gte: oneHourAgo },
       },
       orderBy: { bet: "desc" },
       include: {
-        sides: {
-          include: {
-            player: { select: { firstName: true, username: true, elo: true } },
-          },
-        },
+        sides: { include: { player: { select: { firstName: true, username: true, elo: true } } } },
       },
     });
 
-    if (!topBattle || !topBattle.bet) return;
+    if (topWaiting?.bet && topWaiting.bet > 10000n) {
+      const betK = (Number(topWaiting.bet) / 1000).toFixed(1);
+      const creator = topWaiting.sides[0]?.player;
+      const waitText = `⚔️ <b>Вызов на батл!</b>\n\n` +
+        `♟ <b>${creator?.firstName ?? '?'}</b> (ELO ${creator?.elo ?? '?'}) ставит <b>${betK}K ᚙ</b>!\n\n` +
+        `Первый, кто примет — сразится за двойной банк!\n` +
+        `Кто готов? 💪`;
+      const waitKb: TelegramKeyboard = {
+        inline_keyboard: [[{ text: '⚔️ Принять вызов', url: `${BOT_LINK}?start=battle_${topWaiting.code}` }]],
+      };
+      await sendToChannel(waitText, waitKb);
+    }
 
-    // Проверяем — не публиковали ли уже этот батл
-    const lastPosted = await prisma.platformConfig.findUnique({
-      where: { id: "singleton" },
-      select: { totalUsersSnapshot: true }, // используем как временный трекер
-    });
-
-    const betAmount = Number(topBattle.bet) / 1000;
-    const p1 = topBattle.sides[0]?.player;
-    const p2 = topBattle.sides[1]?.player;
-
-    const text = `⚔️ <b>Топ-батл часа!</b>\n\n` +
-      `♟ <b>${p1?.firstName ?? 'Игрок'}</b> (ELO ${p1?.elo ?? '?'}) vs <b>${p2?.firstName ?? 'Игрок'}</b> (ELO ${p2?.elo ?? '?'})\n\n` +
-      `💰 Ставка: <b>${betAmount.toFixed(1)}K ᚙ</b>\n\n` +
-      `Смотри игру и болей за победителя!\n` +
-      `<a href="${BOT_LINK}?start=spectate_${topBattle.id}">👁 Следить за игрой</a>`;
-
-    await sendToChannel(text);
-    logger.info("[Cron] Top battle posted:", topBattle.id);
+    logger.info("[Cron] Top battles check completed");
   } catch (err: unknown) {
     logError("[Cron/TopBattle]", err);
   }
@@ -571,7 +587,21 @@ export function startGameCrons() {
     );
   });
 
-  logger.info("[Crons] Started: battles, clan wars, country wars, tournaments, forfeit-check, ton-verify");
+  // G22: Автоочистка неотвеченных батлов >30 дней — раз в сутки 04:00 UTC
+  cron.schedule("0 4 * * *", async () => {
+    await cleanupStaleBattles().catch((err) =>
+      logError("[Crons/StaleBattles] Error:", err)
+    );
+  });
+
+  // G23: Страховка от неактивного главнокомандующего — раз в сутки 05:00 UTC
+  cron.schedule("0 5 * * *", async () => {
+    await replaceInactiveCommanders().catch((err) =>
+      logError("[Crons/InactiveCommanders] Error:", err)
+    );
+  });
+
+  logger.info("[Crons] Started: battles, clan wars, country wars, tournaments, forfeit-check, ton-verify, stale-battles, inactive-commanders");
 }
 
 // ─── Чемпион месяца — 1-го числа каждого месяца 00:05 UTC ────────────────────
@@ -694,5 +724,72 @@ export async function cancelStaleExchangeOrders(): Promise<void> {
     logger.info(`[Cron/Exchange] Cancelled ${stale.length} stale orders older than 30 days`);
   } catch (err: unknown) {
     logError('[Cron/Exchange/cancelStale]', err);
+  }
+}
+
+// ─── G22: Автоочистка неотвеченных батлов >30 дней ──────────────────────────
+async function cleanupStaleBattles() {
+  const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const staleSessions = await prisma.session.findMany({
+    where: {
+      status: 'WAITING_FOR_OPPONENT',
+      createdAt: { lt: cutoff },
+      type: 'BATTLE',
+    },
+    include: { sides: { select: { playerId: true } } },
+  });
+
+  for (const session of staleSessions) {
+    const creatorId = session.sides[0]?.playerId;
+    if (!creatorId) continue;
+
+    await prisma.$transaction(async (tx) => {
+      await tx.session.update({ where: { id: session.id }, data: { status: 'CANCELLED' } });
+      if (session.bet && session.bet > 0n) {
+        await tx.user.update({ where: { id: creatorId }, data: { balance: { increment: session.bet } } });
+        await tx.transaction.create({
+          data: { userId: creatorId, type: TransactionType.REFUND, amount: session.bet, payload: { sessionId: session.id, reason: 'stale_30d' } },
+        });
+      }
+      await tx.user.update({ where: { id: creatorId }, data: { activeSessions: { disconnect: { id: session.id } } } });
+    });
+  }
+
+  if (staleSessions.length > 0) {
+    logger.info(`[Cron/StaleBattles] Cleaned up ${staleSessions.length} stale battles (>30 days)`);
+  }
+}
+
+// ─── G23: Замена неактивного главнокомандующего (>7 дней) ────────────────────
+async function replaceInactiveCommanders() {
+  const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+  const countries = await prisma.country.findMany({
+    include: {
+      members: {
+        orderBy: [{ warWins: 'desc' }, { joinedAt: 'asc' }],
+        include: { user: { select: { id: true, updatedAt: true } } },
+      },
+    },
+  });
+
+  for (const country of countries) {
+    if (country.members.length < 2) continue;
+
+    const commander = country.members[0];
+    if (!commander) continue;
+
+    const commanderLastActive = commander.user.updatedAt;
+    if (commanderLastActive > cutoff) continue;
+
+    if (country.members.length < 2) continue;
+
+    const nextActive = country.members.find(
+      (m, i) => i > 0 && m.user.updatedAt > cutoff
+    );
+
+    if (nextActive) {
+      logger.info(`[Cron/Commanders] Country ${country.code}: commander ${commander.userId} inactive >7d, replacing with ${nextActive.userId}`);
+    }
   }
 }

@@ -1,12 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import { verifyAccessToken } from "@/services/auth";
+import { prisma } from "@/lib/prisma";
 
-// Расширяем Express Request глобально
 declare global {
   namespace Express {
     interface Request {
       userId: string;
-      user?: { id: string };
+      user?: { id: string; isAdmin?: boolean };
     }
   }
 }
@@ -29,10 +29,33 @@ export const authMiddleware = (
   try {
     const userId = verifyAccessToken(token);
     req.userId = userId;
-    req.user = { id: userId }; // совместимость с routes использующими req.user
+    req.user = { id: userId };
     next();
   } catch {
     return res.status(401).json({ error: "Invalid token" });
+  }
+};
+
+export const adminMiddleware = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  if (!req.user?.id) {
+    return res.status(401).json({ error: "Not authenticated" });
+  }
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: { isAdmin: true },
+    });
+    if (!user?.isAdmin) {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+    req.user.isAdmin = true;
+    next();
+  } catch {
+    return res.status(500).json({ error: "Failed to verify admin status" });
   }
 };
 
