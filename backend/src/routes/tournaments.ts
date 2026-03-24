@@ -689,4 +689,102 @@ export async function checkTournamentForfeits() {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// G25: Командные турниры — создание (только для офицеров)
+// ─────────────────────────────────────────────────────────────────────────────
+const CreateTeamTournamentSchema = z.object({
+  name: z.string().min(3).max(100),
+  description: z.string().max(500).optional(),
+  entryFee: z.string().regex(/^\d+$/),
+  maxPlayers: z.number().min(4).max(64).default(16),
+  teamSize: z.number().min(2).max(10).default(5),
+});
+
+router.post("/team/create", validate(CreateTeamTournamentSchema), async (req, res) => {
+  try {
+    const userId = req.user!.id;
+    const { name, description, entryFee, maxPlayers, teamSize } = req.body;
+
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { referralCount: true, firstName: true },
+    });
+
+    // G25: Только офицеры (≥50 рефералов = CORPORAL и выше) могут создавать командные турниры
+    if ((user.referralCount ?? 0) < 50) {
+      return res.status(403).json({ error: "Officer rank required (50+ referrals) to create team tournaments" });
+    }
+
+    const fee = BigInt(entryFee);
+    if (fee < 1000n) return res.status(400).json({ error: "Min entry fee: 1000" });
+
+    const now = new Date();
+    const endAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 дней на регистрацию + игру
+
+    const tournament = await prisma.tournament.create({
+      data: {
+        name,
+        description: description ? `TEAM|${teamSize}|${description}` : `TEAM|${teamSize}`,
+        type: 'TEAM',
+        entryFee: fee,
+        maxPlayers,
+        status: 'REGISTRATION',
+        createdBy: userId,
+        startAt: now,
+        endAt,
+      },
+    });
+
+    res.json({
+      id: tournament.id,
+      name: tournament.name,
+      type: 'TEAM',
+      teamSize,
+      entryFee: fee.toString(),
+      maxPlayers,
+      status: 'REGISTRATION',
+    });
+  } catch (err: unknown) {
+    res.status(500).json({ error: (err instanceof Error ? err.message : String(err)) });
+  }
+});
+
+// GET /tournaments/team — список командных турниров
+router.get("/team", async (req, res) => {
+  try {
+    const tournaments = await prisma.tournament.findMany({
+      where: { type: 'TEAM' },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+      include: {
+        _count: { select: { players: true } },
+      },
+    });
+
+    res.json({
+      tournaments: tournaments.map(t => {
+        const parts = (t.description ?? '').split('|');
+        const teamSize = parts[0] === 'TEAM' ? parseInt(parts[1] ?? '5') : 5;
+        return {
+          id: t.id,
+          name: t.name,
+          type: 'TEAM',
+          teamSize,
+          entryFee: t.entryFee.toString(),
+          prizePool: t.prizePool.toString(),
+          donationPool: t.donationPool.toString(),
+          maxPlayers: t.maxPlayers,
+          playerCount: t._count.players,
+          status: t.status,
+          createdBy: t.createdBy,
+          startAt: t.startAt,
+          endAt: t.endAt,
+        };
+      }),
+    });
+  } catch (err: unknown) {
+    res.status(500).json({ error: (err instanceof Error ? err.message : String(err)) });
+  }
+});
+
 export default router;
