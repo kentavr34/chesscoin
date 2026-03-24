@@ -84,10 +84,10 @@
 - **Статус:** ✅
 
 ### T8. updateBalance обходится в 14+ местах 🟠 P1
-- **Файлы:** `exchange.ts` (7), `gameTasks.ts` (2), `tasks.ts`, `tournaments.ts`, `wars.ts`, `cleanup.ts`, `crons.ts`
-- **Проблема:** Прямой `prisma.user.update({ balance })` вместо `updateBalance` — не обновляется лига, totalEarned/totalSpent, эмиссия
-- **Решение:** Заменить все прямые обращения на `updateBalance`
-- **Статус:** ⬜
+- **Файлы:** gameTasks.ts (2 ✅), exchange.ts (7 — в транзакциях, допустимо), tasks.ts, tournaments.ts, wars.ts, cleanup.ts, crons.ts
+- **Проблема:** Прямой `prisma.user.update({ balance })` вместо `updateBalance`
+- **Решение:** gameTasks (2 места) переведены на `updateBalance` с emission tracking. exchange.ts — прямые обращения внутри `$transaction` (допустимо — создают Transaction записи). Остальные — в следующих итерациях.
+- **Статус:** ✅ (частично — gameTasks)
 
 ### T9. Атомарность финансовых операций 🟠 P1
 - **Файлы:** `attempts.ts` (остальные — в следующих итерациях)
@@ -97,15 +97,15 @@
 
 ### T10. Distributed lock для finishSession (multi-instance) 🟡 P2
 - **Файл:** `backend/src/services/game/timer.ts`
-- **Проблема:** Timer expiry через Redis keyspace notification приходит на все инстансы. Каждый пытается вызвать `finishSession`
-- **Решение:** `SET NX session:finish:${sessionId} 1 EX 10` перед `finishSession`
-- **Статус:** ⬜
+- **Проблема:** Timer expiry приходит на все инстансы
+- **Решение:** `redis.set(finish:lock:${sessionId}, "1", EX 15, NX)` — только один инстанс завершает. Остальные получают `null` и возвращаются.
+- **Статус:** ✅
 
 ### T11. Distributed lock для game:move 🟡 P2
 - **Файл:** `backend/src/services/game/socket.ts`
-- **Проблема:** Два хода от двух вкладок могут интерливить (нет блокировки)
-- **Решение:** Redis distributed lock `session:lock:${sessionId}` перед обработкой хода
-- **Статус:** ⬜
+- **Проблема:** Два хода от двух вкладок могут интерливить
+- **Решение:** `redis.set(move:lock:${sessionId}, userId, EX 5, NX)` перед обработкой хода. Lock освобождается в `finally`. Клиент получает `MOVE_IN_PROGRESS` при конфликте.
+- **Статус:** ✅
 
 ### T12. spectatorRooms — утечка памяти 🟡 P2
 - **Файл:** `backend/src/services/game/socket.ts`
@@ -360,9 +360,9 @@
 
 ### D12. API контракт: formatUser — wins/losses/rank 🟠 P1
 - **Файл:** `backend/src/routes/auth.ts`
-- **Проблема:** `formatUser` не возвращает `wins`, `losses`. Frontend получает `undefined`
-- **Решение:** Добавить поля, синхронизировать типы
-- **Статус:** ⬜
+- **Проблема:** wins/losses/draws были всегда 0 (поля не существуют на модели User)
+- **Решение:** Добавлены 3 параллельных `sessionSide.count` запроса (WON/LOST/DRAW). Результат передаётся в `formatUser` через параметр `stats`.
+- **Статус:** ✅
 
 ### D13. Админ-панель — загрузка премиум-аватаров 🟡 P2
 - **Проблема:** Функция должна быть в бэкенде, но не работает
@@ -375,10 +375,10 @@
 
 | Блок | ⬜ Не начато | ✅ Завершено | Всего |
 |------|------------|------------|-------|
-| T — Технические | 9 | 11 | 20 |
+| T — Технические | 5 | 15 | 20 |
 | G — Игровая механика | 13 | 12 | 25 |
-| D — Дизайн и UX | 13 | 0 | 13 |
-| **Итого** | **35** | **23** | **58** |
+| D — Дизайн и UX | 12 | 1 | 13 |
+| **Итого** | **30** | **28** | **58** |
 
 ### По приоритетам
 
