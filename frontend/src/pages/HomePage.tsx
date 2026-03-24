@@ -335,15 +335,28 @@ export const HomePage: React.FC = () => {
       {/* Активные игры */}
       {activeSessions.length > 0 && (
         <>
-          <div style={secStyle}>{t.home.activeGames}</div>
-          <div onClick={() => activeSessions.length === 1 ? navigate('/game/' + activeSessions[0].id) : setShowSessions(true)} style={{ ...stripStyle, borderColor: 'rgba(0,214,143,0.2)', background: 'linear-gradient(135deg,rgba(0,214,143,0.06),transparent)' }}>
-            <span style={{ fontSize: 20 }}>⚔️</span>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--green, #00D68F)' }}>{activeSessions.length} {activeSessions.length === 1 ? t.home.activeSingle : t.home.activeMultiple}</div>
-              <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>{myTurnSessions.length > 0 ? t.home.myTurn(myTurnSessions.length) : t.home.opponentTurn}</div>
-            </div>
-            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--green, #00D68F)' }}>→</span>
-          </div>
+          <div style={secStyle}>{t.home.activeGames} ({activeSessions.length})</div>
+          {activeSessions.map((s) => {
+            const opSide = s.sides?.find((sd) => sd.id !== s.mySideId);
+            const isBot = s.type === 'BOT';
+            const opName = isBot ? `🤖 Lv.${s.botLevel ?? '?'}` : (opSide?.player?.firstName ?? '?');
+            const myTurn = s.isMyTurn;
+            return (
+              <div key={s.id} onClick={() => navigate('/game/' + s.id)} style={{ ...stripStyle, borderColor: myTurn ? 'rgba(0,214,143,0.25)' : 'rgba(255,255,255,0.07)', background: myTurn ? 'linear-gradient(135deg,rgba(0,214,143,0.06),transparent)' : undefined }}>
+                <span style={{ fontSize: 18 }}>{isBot ? '🤖' : '⚔️'}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: myTurn ? 'var(--green, #00D68F)' : '#F0F2F8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
+                    vs {opName}
+                  </div>
+                  <div style={{ fontSize: 10, color: '#8B92A8', marginTop: 1 }}>
+                    {myTurn ? `● ${t.home.myTurn?.(1) ?? 'Your turn'}` : t.home.opponentTurn ?? 'Waiting...'}
+                    {s.bet && BigInt(s.bet) > 0n ? ` · ${fmtBalance(s.bet)} ᚙ` : ''}
+                  </div>
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 700, color: myTurn ? 'var(--green, #00D68F)' : '#8B92A8' }}>→</span>
+              </div>
+            );
+          })}
         </>
       )}
 
