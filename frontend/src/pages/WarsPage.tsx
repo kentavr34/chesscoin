@@ -746,12 +746,7 @@ export const WarsPage: React.FC = () => {
       {/* ── TAB: СТРАНЫ ─────────────────────────────────────────────────────── */}
       {tab === 'countries' && (
         <>
-          {/* Sort */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '0 18px 8px' }}>
-            <button onClick={() => setSort(s => s === 'wins' ? 'alpha' : 'wins')} style={chipBtn(false)}>
-              {sort === 'wins' ? t.wars.sortTop : t.wars.sortAlpha}
-            </button>
-          </div>
+          {/* Сортировка автоматическая: по победам → участникам → алфавит */}
 
           {loading && <div style={{ textAlign: 'center', color: '#6B7494', padding: 32 }}>{t.common.loading}</div>}
 

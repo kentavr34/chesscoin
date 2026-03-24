@@ -2,6 +2,7 @@ import { ItemType, ItemCategory } from "@prisma/client"; // TAIL-2
 import { logger, logError } from "@/lib/logger";
 import { Router, Request, Response } from "express";
 import { prisma } from "../lib/prisma";
+import { redis } from "@/lib/redis";
 import { authMiddleware } from "../middleware/auth";
 import { updateBalance } from "@/services/economy";
 import { TransactionType } from "@prisma/client";
@@ -125,7 +126,8 @@ shopRouter.post("/equip", authMiddleware, async (req: Request, res: Response) =>
       });
     }
 
-    res.json({ success: true, message: `Надето: ${userItem.item.name}` });
+    try { await redis.del(`user:me:${userId}`); } catch {}
+    res.json({ success: true, message: `Equipped: ${userItem.item.name}` });
   } catch (err: unknown) {
     logger.error("[shop/equip]", err);
     res.status(500).json({ error: "Equip error" });
@@ -167,6 +169,7 @@ shopRouter.post("/unequip", authMiddleware, async (req: Request, res: Response) 
       });
     }
 
+    try { await redis.del(`user:me:${userId}`); } catch {}
     res.json({ success: true });
   } catch (err: unknown) {
     logger.error("[shop/unequip]", err);

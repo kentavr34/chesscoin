@@ -295,6 +295,11 @@ export const ProfilePage: React.FC = () => {
           {user?.militaryRank && (
             <span style={{ ...tagGr, background: 'rgba(255,159,67,0.1)', color: '#FF9F43', borderColor: 'rgba(255,159,67,0.2)' }}>
               {user?.militaryRank.emoji} {user?.militaryRank.label}
+              {(user?.referralCount ?? 0) > 0 && (
+                <span style={{ marginLeft: 4, fontSize: 10, opacity: 0.8 }}>
+                  — {(user.referralCount ?? 0).toLocaleString()} {t.profile.fighters ?? '👥'}
+                </span>
+              )}
             </span>
           )}
           <span style={tagRobot}>🤖 {JARVIS_LEVELS[Math.max(0, (user?.jarvisLevel ?? 1) - 1)].name}</span>
