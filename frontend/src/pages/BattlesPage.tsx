@@ -246,11 +246,14 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           const shareText = t.battles.challengeShare(fmtBalance(String(bet)));
           const botUrl = `https://t.me/chessgamecoin_bot?start=battle_${res.session.code}_ref_${myRef}`;
           try {
+            navigator.clipboard?.writeText(botUrl).catch(() => {});
+          } catch {}
+          try {
             window.Telegram?.WebApp?.openTelegramLink?.(
               `https://t.me/share/url?url=${encodeURIComponent(botUrl)}&text=${encodeURIComponent(shareText)}`
             );
           } catch {}
-          showToast(t.battles.privateBattleCreated, 'info');
+          showToast(t.battles.privateBattleCreated + ' 📋', 'info');
         } else {
           showToast(t.battles.battleCreated, 'info');
         }
