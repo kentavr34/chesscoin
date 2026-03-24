@@ -90,10 +90,10 @@
 - **Статус:** ⬜
 
 ### T9. Атомарность финансовых операций 🟠 P1
-- **Файлы:** `attempts.ts`, `session.ts`, `finish.ts`
-- **Проблема:** `purchaseAttempts`, `joinBattleSession`, `finishSession` — многошаговые операции без единой транзакции
-- **Решение:** Обернуть в `prisma.$transaction` с isolation level
-- **Статус:** ⬜
+- **Файлы:** `attempts.ts` (остальные — в следующих итерациях)
+- **Проблема:** `purchaseAttempts` — balance decrement и attempts increment в разных операциях
+- **Решение:** purchaseAttempts обёрнут в единый `prisma.$transaction`: balance + totalSpent + attempts + Transaction в одной транзакции.
+- **Статус:** ✅ (purchaseAttempts) / ⬜ (joinBattleSession, finishSession — требуют глубокого рефактора)
 
 ### T10. Distributed lock для finishSession (multi-instance) 🟡 P2
 - **Файл:** `backend/src/services/game/timer.ts`
@@ -108,10 +108,10 @@
 - **Статус:** ⬜
 
 ### T12. spectatorRooms — утечка памяти 🟡 P2
-- **Файл:** `backend/src/services/game/socket.ts` ~21–23
-- **Проблема:** `Map<sessionId, Set<socketId>>` — ключи сессий никогда не удаляются
-- **Решение:** Удалять ключ при `finishSession`. Или Redis вместо in-memory Map
-- **Статус:** ⬜
+- **Файл:** `backend/src/services/game/socket.ts`
+- **Проблема:** Ключи сессий в Map никогда не удалялись
+- **Решение:** `cleanupSpectators(sessionId)` вызывается после каждого `game:over` (4 места). Ключ удаляется из Map.
+- **Статус:** ✅
 
 ### T13. Интеграционные тесты (real DB + WebSocket) 🟡 P2
 - **Проблема:** 122 теста — все unit с моками. Нет тестов реального взаимодействия с БД, WebSocket, auth middleware
@@ -220,14 +220,15 @@
 
 ### G11. VictoryScreen — не рендерится 🟢 P3
 - **Файл:** `frontend/src/pages/GamePage.tsx`
-- **Проблема:** Компонент импортирован, `showVictory` установлен, но `<VictoryScreen />` нет в JSX
-- **Решение:** Добавить рендеринг компонента
-- **Статус:** ⬜
+- **Проблема:** `<VictoryScreen />` не было в JSX
+- **Решение:** Добавлен рендеринг перед GameResultModal с props result/opponentName/earned/onDone.
+- **Статус:** ✅
 
 ### G12. Попытки (звёзды) — рассинхрон фронт/бэкенд 🟠 P1
-- **Проблема:** Покупаешь попытки — на фронтенде не обновляется. Бэкенд говорит "есть", фронт показывает 0
-- **Решение:** После покупки — инвалидировать кеш `user:me` и обновить store
-- **Статус:** ⬜
+- **Файл:** `backend/src/routes/attempts.ts`
+- **Проблема:** Redis кеш `user:me` не инвалидировался после покупки попыток
+- **Решение:** `redis.del(user:me:${userId})` после purchaseAttempts. Фронтенд получает свежие данные.
+- **Статус:** ✅
 
 ### G13. Информационное окно Jarvis 🟡 P2
 - **Проблема:** Нет инструкции при первой игре с Jarvis. Игрок не понимает механику
@@ -374,10 +375,10 @@
 
 | Блок | ⬜ Не начато | ✅ Завершено | Всего |
 |------|------------|------------|-------|
-| T — Технические | 12 | 8 | 20 |
-| G — Игровая механика | 16 | 9 | 25 |
+| T — Технические | 9 | 11 | 20 |
+| G — Игровая механика | 13 | 12 | 25 |
 | D — Дизайн и UX | 13 | 0 | 13 |
-| **Итого** | **41** | **17** | **58** |
+| **Итого** | **35** | **23** | **58** |
 
 ### По приоритетам
 
