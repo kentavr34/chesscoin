@@ -68,7 +68,7 @@ export const BattlesPage: React.FC = () => {
   const rightAction = (
     <div style={{ display: 'flex', gap: 8 }}>
       <button onClick={info.open} style={{ ...tbaStyle, fontSize: 14, fontWeight: 700 }}>?</button>
-      <button onClick={() => navigate('/profile', { state: { tab: 'games' } })} style={{ ...tbaStyle, fontSize: 16 }} title="History">🕐</button>
+      <button onClick={() => navigate('/battles/history')} style={{ ...tbaStyle, fontSize: 16 }} title="History">🕐</button>
     </div>
   );
 

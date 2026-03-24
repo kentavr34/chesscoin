@@ -17,6 +17,7 @@ import type { Lang } from '@/i18n/translations';
 import { lazy, Suspense } from 'react';
 const HomePage        = lazy(() => import('@/pages/HomePage').then(m => ({ default: m.HomePage })));
 const BattlesPage     = lazy(() => import('@/pages/BattlesPage').then(m => ({ default: m.BattlesPage })));
+const BattleHistoryPage = lazy(() => import('@/pages/BattleHistoryPage').then(m => ({ default: m.BattleHistoryPage })));
 const GamePage        = lazy(() => import('@/pages/GamePage').then(m => ({ default: m.GamePage })));
 const LeaderboardPage = lazy(() => import('@/pages/LeaderboardPage').then(m => ({ default: m.LeaderboardPage })));
 const NationsPage     = lazy(() => import('@/pages/NationsPage').then(m => ({ default: m.NationsPage })));
@@ -69,6 +70,7 @@ const AppInner: React.FC = () => {
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/battles" element={<BattlesPage />} />
+      <Route path="/battles/history" element={<BattleHistoryPage />} />
       <Route path="/game" element={<GamePage />} />
       <Route path="/game/:sessionId" element={<GamePage />} />
       <Route path="/leaderboard" element={<LeaderboardPage />} />
