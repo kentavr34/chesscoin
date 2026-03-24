@@ -10,9 +10,11 @@
     "migrate:dev": "prisma migrate dev",
     "generate": "prisma generate",
     "seed": "tsx -r tsconfig-paths/register prisma/seed.ts",
-    "test": "jest",
-    "test:coverage": "jest --coverage",
-    "test:watch": "jest --watch"
+    "test": "jest --testPathIgnorePatterns='integration'",
+    "test:integration": "jest --testPathPattern='integration' --forceExit",
+    "test:all": "jest --forceExit",
+    "test:coverage": "jest --coverage --testPathIgnorePatterns='integration'",
+    "test:watch": "jest --watch --testPathIgnorePatterns='integration'"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1009.0",
