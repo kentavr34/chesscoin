@@ -127,7 +127,7 @@ export const HomePage: React.FC = () => {
   const t = useT();
   const navigate = useNavigate();
   const { user } = useUserStore();
-  const { sessions } = useGameStore();
+  const { sessions, upsertSession } = useGameStore();
   const [showAttempts, setShowAttempts] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('chesscoin_onboarding_done'));
   const [welcomeStep, setWelcomeStep] = useState<0|1|2>(0);
@@ -213,12 +213,12 @@ export const HomePage: React.FC = () => {
     if (!selectedLevel || startingBot) return;
     setStartingBot(true);
     setSelectedLevel(null);
-    getSocket().emit('game:create:bot', { color, botLevel: selectedLevel.level, timeSeconds: timeMinutes * 60 }, (res: { ok?: boolean; session?: { id: string }; error?: string }) => {
+    getSocket().emit('game:create:bot', { color, botLevel: selectedLevel.level, timeSeconds: timeMinutes * 60 }, (res: { ok?: boolean; session?: Record<string, unknown>; error?: string }) => {
       setStartingBot(false);
       if (res?.ok && res?.session) {
-        navigate('/game/' + res.session.id);
+        upsertSession(res.session as import('@/types').GameSession);
+        navigate('/game/' + (res.session as { id: string }).id);
       } else if (res?.error) {
-        // N2: показываем понятную ошибку вместо молчаливого выброса
         const errText = res.error || 'Failed to start game. Try again later.';
         import('@/components/ui/Toast').then(({ toast }) => toast.error(errText));
       }

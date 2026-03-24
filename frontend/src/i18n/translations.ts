@@ -322,7 +322,7 @@ export const translations = {
       monthlyChampion: '👑 Monthly Champion',
       monthlyChampionDate: (date: string) => `Since ${date}`,
       noChampionYet: 'Not champion yet — raise your ELO!',
-      tabs: { info: 'Info', games: 'Games', saves: 'Saves', achievements: 'Achievements', settings: 'Settings' },
+      tabs: { info: '📊 Analytics', games: 'Games', saves: '💾 Saved', achievements: '🏆 Achievements', settings: 'Settings' },
       stats: 'Statistics', wins: 'Wins', losses: 'Losses', draws: 'Draws', eloChart: 'ELO Chart',
       games: 'Games', elo: 'ELO', streak: 'Streak', refSection: 'Referrals', refLink: 'Referral Link',
       invite: 'Invite', txHistory: 'Transaction History', noTx: 'No transactions',
@@ -832,7 +832,7 @@ export const translations = {
       monthlyChampionDate: (date: string) => `С ${date}`,
       noChampionYet: 'Ещё не чемпион — поднимай ELO!',
 
-      tabs: { info: 'Инфо', games: 'Игры', saves: 'Сохранения', achievements: 'Достижения', settings: 'Настройки' },
+      tabs: { info: '📊 Аналитика', games: 'Игры', saves: '💾 Сохранённые', achievements: '🏆 Достижения', settings: 'Настройки' },
       stats: 'Статистика', wins: 'Победы', losses: 'Поражения', draws: 'Ничьи', eloChart: 'График ELO',
       games: 'Игры', elo: 'ELO', streak: 'Серия', refSection: 'Рефералы', refLink: 'Реферальная ссылка',
       invite: 'Пригласить', txHistory: 'История транзакций', noTx: 'Нет транзакций',

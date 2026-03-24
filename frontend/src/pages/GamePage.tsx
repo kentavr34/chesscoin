@@ -246,26 +246,30 @@ export const GamePage: React.FC = () => {
         )}
       </div>
 
-      {/* Статистика над доской: зрители + сохранение */}
-      {!isBotGame && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '2px 14px 4px', fontSize: 11 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {(session as any).sourceType === 'TOURNAMENT' && <span style={{ fontSize: 13 }}>🏆</span>}
-            {(session as any).sourceType === 'WAR' && <span style={{ fontSize: 13 }}>⚔️🏴</span>}
-            <span style={{ color: '#8B92A8' }}>👁 {(session as any).spectatorCount ?? 0}</span>
-          </div>
-          <button
-            onClick={() => {
-              import('@/api').then(({ warsApi }) => {
-                warsApi.saveGame(session.id).then(() => {
-                  import('@/components/ui/Toast').then(({ toast }) => toast.info('💾 Saved!'));
-                }).catch(() => {});
-              });
-            }}
-            style={{ background: 'rgba(245,200,66,0.08)', border: '1px solid rgba(245,200,66,0.15)', borderRadius: 8, padding: '3px 10px', color: '#F5C842', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-          >💾 Save</button>
+      {/* Статистика над доской: badge + зрители LIVE + сохранение */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '2px 14px 4px', fontSize: 11 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {isBotGame && <span style={{ fontSize: 11, color: '#9B85FF', fontWeight: 600 }}>🤖 Lv.{session.botLevel}</span>}
+          {!isBotGame && (session as any).sourceType === 'TOURNAMENT' && <span style={{ fontSize: 12 }}>🏆</span>}
+          {!isBotGame && (session as any).sourceType === 'WAR' && <span style={{ fontSize: 12 }}>⚔️</span>}
+          {!isBotGame && (
+            <span style={{ color: '#8B92A8', display: 'flex', alignItems: 'center', gap: 3 }}>
+              <span style={{ width: 5, height: 5, borderRadius: '50%', background: isGameOver ? '#4A5270' : '#FF4D6A', display: 'inline-block' }} />
+              👁 {(session as any).spectatorCount ?? 0}
+            </span>
+          )}
         </div>
-      )}
+        <button
+          onClick={() => {
+            import('@/api').then(({ warsApi }) => {
+              warsApi.saveGame(session.id).then(() => {
+                import('@/components/ui/Toast').then(({ toast }) => toast.info('💾 Saved!'));
+              }).catch(() => {});
+            });
+          }}
+          style={{ background: 'rgba(245,200,66,0.08)', border: '1px solid rgba(245,200,66,0.15)', borderRadius: 8, padding: '3px 10px', color: '#F5C842', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+        >💾 Save</button>
+      </div>
 
       {/* Доска */}
       <div style={{ padding: '0 10px', flexShrink: 0, position: 'relative' }}>
