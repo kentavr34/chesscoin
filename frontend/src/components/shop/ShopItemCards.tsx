@@ -84,11 +84,18 @@ export const ItemCard: React.FC<ItemCardProps> = ({ item, loading, highlighted, 
       setTimeout(() => cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
   }, [highlighted]);
 
+  const [imgError, setImgError] = React.useState(false);
   const renderPreview = () => {
-    if (item.imageUrl) return <img src={item.imageUrl} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />;
+    if (item.imageUrl && !imgError) return <img src={item.imageUrl} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" onError={() => setImgError(true)} />;
     if (item.type === 'BOARD_SKIN') { const c = BOARD_KNOWN[item.name] ?? ['#E8EDF9','#8B9DD4']; return <BoardPreview light={c[0]} dark={c[1]} />; }
     if (item.type === 'PIECE_SKIN') return <PiecePreview name={item.name} />;
     if (item.type === 'PIECE_SET')  return <PieceSetPreview name={item.name} />;
+    if (item.type === 'AVATAR_FRAME') return <span style={{ fontSize: 36, opacity: 0.6 }}>🖼</span>;
+    if (item.type === 'MOVE_ANIMATION') return <span style={{ fontSize: 36, opacity: 0.6 }}>✨</span>;
+    if (item.type === 'WIN_ANIMATION') return <span style={{ fontSize: 36, opacity: 0.6 }}>🎉</span>;
+    if (item.type === 'CAPTURE_EFFECT') return <span style={{ fontSize: 36, opacity: 0.6 }}>💥</span>;
+    if (item.type === 'SPECIAL_MOVE') return <span style={{ fontSize: 36, opacity: 0.6 }}>⚡</span>;
+    if (item.type === 'THEME') return <span style={{ fontSize: 36, opacity: 0.6 }}>🎨</span>;
     return <span style={{ fontSize: 32, opacity: 0.4 }}>🎮</span>;
   };
 
@@ -138,8 +145,8 @@ export const AvatarItemCard: React.FC<AvatarItemCardProps> = ({ item, loading, h
       {item.equipped && <div style={{ position: 'absolute', top: 8, right: 8, background: 'var(--accent, #F5C842)', color: '#000', fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 6 }}>ACTIVE</div>}
       <div style={{ width: '100%', aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 8 }}>
         <div style={{ width: '80%', aspectRatio: '1', borderRadius: '50%', overflow: 'hidden', border: `2px solid ${item.equipped ? 'var(--accent, #F5C842)' : `${rarityColor}66`}`, boxShadow: item.equipped ? `0 0 12px ${rarityColor}66` : undefined }}>
-          {item.imageUrl
-            ? <img src={item.imageUrl} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
+          {item.imageUrl && !imgError
+            ? <img src={item.imageUrl} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" onError={() => setImgError(true)} />
             : <div style={{ width: '100%', height: '100%', background: 'var(--bg-card,#13161E)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, opacity: 0.4 }}>👤</div>
           }
         </div>
