@@ -401,7 +401,8 @@ const wcardStyle: React.CSSProperties = {
   display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer',
 };
 const fabStyle: React.CSSProperties = {
-  position: 'fixed', bottom: 94, right: 18, width: 48, height: 48,
+  position: 'fixed', bottom: 'max(80px, calc(70px + env(safe-area-inset-bottom, 14px)))',
+  right: 18, width: 48, height: 48,
   borderRadius: '50%', background: 'var(--accent, #F5C842)', color: 'var(--bg, #0B0D11)',
   fontSize: 22, fontWeight: 800, display: 'flex', alignItems: 'center',
   justifyContent: 'center', cursor: 'pointer',

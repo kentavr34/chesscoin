@@ -123,7 +123,8 @@ export const PuzzleDailyPage: React.FC = () => {
     );
   }
 
-  const playerColor = puzzle.fen.includes(' b ') ? 'black' : 'white';
+  // In Lichess puzzles, the first move is the opponent's. Player's color is the OPPOSITE of whose turn it is.
+  const playerColor = puzzle.fen.includes(' b ') ? 'white' : 'black';
 
   return (
     <PageLayout

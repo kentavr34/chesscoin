@@ -172,7 +172,8 @@ export const PuzzleLessonPage: React.FC = () => {
   }
 
   const boardFen = mode === 'lesson' ? fen : testFen;
-  const playerColor = lesson.fen.includes(' b ') ? 'black' : 'white';
+  // In Lichess puzzles, the first move is the opponent's. Player's color is the OPPOSITE of whose turn it is.
+  const playerColor = lesson.fen.includes(' b ') ? 'white' : 'black';
 
   return (
     <PageLayout title={lesson.title} onBack={() => navigate(-1)}>
@@ -232,18 +233,33 @@ export const PuzzleLessonPage: React.FC = () => {
 
       {/* Test complete */}
       {testComplete && (
-        <div style={{ margin: '16px', padding: '16px', background: '#13161E', borderRadius: 16, textAlign: 'center' }}>
-          <div style={{ fontSize: 28 }}>🏆</div>
-          <div style={{ fontSize: 16, fontWeight: 700, color: '#F5C842', marginTop: 8 }}>
-            {rewarded ? `+${Number(lesson.reward).toLocaleString()} ᚙ earned!` : 'Lesson already completed'}
+        <div style={{ margin: '16px', padding: '24px 16px', background: 'linear-gradient(135deg, rgba(123,97,255,0.12), rgba(245,200,66,0.08))', border: '1px solid rgba(245,200,66,0.2)', borderRadius: 20, textAlign: 'center' }}>
+          <div style={{ fontSize: 48, marginBottom: 8 }}>🎉</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: '#F5C842', marginBottom: 4 }}>
+            {rewarded ? 'Congratulations!' : 'Already completed!'}
           </div>
-          <div style={{ fontSize: 13, color: '#A8B0C8', marginTop: 4 }}>Great work!</div>
-          <button onClick={() => navigate(-1)} style={{
-            marginTop: 16, padding: '12px 32px', background: '#7B61FF', color: '#fff',
-            border: 'none', borderRadius: 12, fontWeight: 600, cursor: 'pointer', fontSize: 14,
-          }}>
-            Back to lessons
-          </button>
+          {rewarded && (
+            <div style={{ fontSize: 18, fontWeight: 700, color: '#00D68F', marginBottom: 8 }}>
+              +{Number(lesson.reward).toLocaleString()} ᚙ
+            </div>
+          )}
+          <div style={{ fontSize: 14, color: '#A8B0C8', marginBottom: 16 }}>
+            {rewarded ? 'Puzzle solved perfectly!' : 'You already earned the reward for this puzzle.'}
+          </div>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+            <button onClick={() => navigate(-1)} style={{
+              padding: '12px 24px', background: '#7B61FF', color: '#fff',
+              border: 'none', borderRadius: 12, fontWeight: 600, cursor: 'pointer', fontSize: 14,
+            }}>
+              ← Back to lessons
+            </button>
+            <button onClick={() => navigate('/')} style={{
+              padding: '12px 24px', background: '#1C2030', color: '#A8B0C8',
+              border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, fontWeight: 600, cursor: 'pointer', fontSize: 14,
+            }}>
+              Main menu
+            </button>
+          </div>
         </div>
       )}
 
