@@ -89,6 +89,13 @@ export const ProfilePage: React.FC = () => {
   const [toast, setToast] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [viewedProfile, setViewedProfile] = useState<Record<string, unknown> | null>(null);
+
+  useEffect(() => {
+    if (isOwnProfile || !viewedUserId) return;
+    profileApi.getUser(viewedUserId).then((data) => setViewedProfile(data as unknown as Record<string, unknown>)).catch(() => navigate('/'));
+  }, [viewedUserId, isOwnProfile]);
+
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 2500);
@@ -148,11 +155,17 @@ export const ProfilePage: React.FC = () => {
   }, [tab]);
 
   if (!user) return null;
+  if (!isOwnProfile && !viewedProfile) return null;
 
-  const totalGames = user.totalGames ?? 0;
-  const wins = user.wins ?? 0;
-  const losses = user.losses ?? 0;
-  const draws = user.draws ?? 0;
+  const displayUser = isOwnProfile ? user : viewedProfile;
+  const displayStats = isOwnProfile
+    ? { totalGames: user.totalGames ?? 0, wins: user.wins ?? 0, losses: user.losses ?? 0, draws: user.draws ?? 0 }
+    : { totalGames: (viewedProfile?.stats as any)?.total ?? 0, wins: (viewedProfile?.stats as any)?.wins ?? 0, losses: (viewedProfile?.stats as any)?.losses ?? 0, draws: (viewedProfile?.stats as any)?.draws ?? 0 };
+
+  const totalGames = displayStats.totalGames;
+  const wins = displayStats.wins;
+  const losses = displayStats.losses;
+  const draws = displayStats.draws;
   const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
   const lossRate = totalGames > 0 ? Math.round((losses / totalGames) * 100) : 0;
   const drawRate = 100 - winRate - lossRate;

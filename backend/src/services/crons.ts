@@ -571,7 +571,21 @@ export function startGameCrons() {
     );
   });
 
-  logger.info("[Crons] Started: battles, clan wars, country wars, tournaments, forfeit-check, ton-verify");
+  // G22: Автоочистка неотвеченных батлов >30 дней — раз в сутки 04:00 UTC
+  cron.schedule("0 4 * * *", async () => {
+    await cleanupStaleBattles().catch((err) =>
+      logError("[Crons/StaleBattles] Error:", err)
+    );
+  });
+
+  // G23: Страховка от неактивного главнокомандующего — раз в сутки 05:00 UTC
+  cron.schedule("0 5 * * *", async () => {
+    await replaceInactiveCommanders().catch((err) =>
+      logError("[Crons/InactiveCommanders] Error:", err)
+    );
+  });
+
+  logger.info("[Crons] Started: battles, clan wars, country wars, tournaments, forfeit-check, ton-verify, stale-battles, inactive-commanders");
 }
 
 // ─── Чемпион месяца — 1-го числа каждого месяца 00:05 UTC ────────────────────
@@ -694,5 +708,72 @@ export async function cancelStaleExchangeOrders(): Promise<void> {
     logger.info(`[Cron/Exchange] Cancelled ${stale.length} stale orders older than 30 days`);
   } catch (err: unknown) {
     logError('[Cron/Exchange/cancelStale]', err);
+  }
+}
+
+// ─── G22: Автоочистка неотвеченных батлов >30 дней ──────────────────────────
+async function cleanupStaleBattles() {
+  const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const staleSessions = await prisma.session.findMany({
+    where: {
+      status: 'WAITING_FOR_OPPONENT',
+      createdAt: { lt: cutoff },
+      type: 'BATTLE',
+    },
+    include: { sides: { select: { playerId: true } } },
+  });
+
+  for (const session of staleSessions) {
+    const creatorId = session.sides[0]?.playerId;
+    if (!creatorId) continue;
+
+    await prisma.$transaction(async (tx) => {
+      await tx.session.update({ where: { id: session.id }, data: { status: 'CANCELLED' } });
+      if (session.bet && session.bet > 0n) {
+        await tx.user.update({ where: { id: creatorId }, data: { balance: { increment: session.bet } } });
+        await tx.transaction.create({
+          data: { userId: creatorId, type: TransactionType.REFUND, amount: session.bet, payload: { sessionId: session.id, reason: 'stale_30d' } },
+        });
+      }
+      await tx.user.update({ where: { id: creatorId }, data: { activeSessions: { disconnect: { id: session.id } } } });
+    });
+  }
+
+  if (staleSessions.length > 0) {
+    logger.info(`[Cron/StaleBattles] Cleaned up ${staleSessions.length} stale battles (>30 days)`);
+  }
+}
+
+// ─── G23: Замена неактивного главнокомандующего (>7 дней) ────────────────────
+async function replaceInactiveCommanders() {
+  const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+  const countries = await prisma.country.findMany({
+    include: {
+      members: {
+        orderBy: [{ warWins: 'desc' }, { joinedAt: 'asc' }],
+        include: { user: { select: { id: true, updatedAt: true } } },
+      },
+    },
+  });
+
+  for (const country of countries) {
+    if (country.members.length < 2) continue;
+
+    const commander = country.members[0];
+    if (!commander) continue;
+
+    const commanderLastActive = commander.user.updatedAt;
+    if (commanderLastActive > cutoff) continue;
+
+    if (country.members.length < 2) continue;
+
+    const nextActive = country.members.find(
+      (m, i) => i > 0 && m.user.updatedAt > cutoff
+    );
+
+    if (nextActive) {
+      logger.info(`[Cron/Commanders] Country ${country.code}: commander ${commander.userId} inactive >7d, replacing with ${nextActive.userId}`);
+    }
   }
 }
