@@ -61,6 +61,7 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node",
+    "workerThreads": false,
     "setupFiles": ["<rootDir>/src/__tests__/setup.ts"],
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/src/$1"
