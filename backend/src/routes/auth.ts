@@ -144,6 +144,13 @@ router.get("/me", authMiddleware, async (req: Request, res: Response) => {
       },
     });
 
+    // Считаем wins/losses/draws из реальных партий
+    const [winsCount, lossesCount, drawsCount] = await Promise.all([
+      prisma.sessionSide.count({ where: { playerId: userId, status: 'WON', isBot: false } }),
+      prisma.sessionSide.count({ where: { playerId: userId, status: 'LOST', isBot: false } }),
+      prisma.sessionSide.count({ where: { playerId: userId, status: 'DRAW', isBot: false } }),
+    ]);
+
     // Определяем isCommander: первый по warWins в своей стране
     let isCountryCommander = false;
     if (fullUser.countryMember?.countryId) {
@@ -155,7 +162,7 @@ router.get("/me", authMiddleware, async (req: Request, res: Response) => {
       isCountryCommander = topMember?.userId === userId;
     }
 
-    const meResult = formatUser(fullUser, isCountryCommander);
+    const meResult = formatUser(fullUser, isCountryCommander, { wins: winsCount, losses: lossesCount, draws: drawsCount });
     // Кешируем на 30 секунд
     try { await redis.setex(cacheKey, 30, JSON.stringify(meResult)); } catch {}
     res.json(meResult);
@@ -166,7 +173,7 @@ router.get("/me", authMiddleware, async (req: Request, res: Response) => {
 
 // ─── Форматирование ───────────────────────────────
 
-const formatUser = (user: any, isCommander = false) => ({
+const formatUser = (user: any, isCommander = false, stats?: { wins: number; losses: number; draws: number }) => ({
   id: user.id,
   telegramId: user.telegramId,
   firstName: user.firstName,
@@ -185,10 +192,10 @@ const formatUser = (user: any, isCommander = false) => ({
   nextRestoreSeconds: (user.attempts ?? 0) < (user.maxAttempts ?? 0) ? getSecondsUntilNextRestore() : 0,
   elo: user.elo,
   league: user.league,
-  totalGames: user.totalGames ?? 0,
-  wins: user.wins ?? 0,
-  losses: user.losses ?? 0,
-  draws: user.draws ?? 0,
+  totalGames: stats ? stats.wins + stats.losses + stats.draws : 0,
+  wins: stats?.wins ?? 0,
+  losses: stats?.losses ?? 0,
+  draws: stats?.draws ?? 0,
   winStreak: user.winStreak ?? 0,
   isBanned: user.isBanned ?? false,
   activeSessions: user.activeSessions ?? [],

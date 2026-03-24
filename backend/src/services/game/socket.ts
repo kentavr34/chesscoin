@@ -243,6 +243,16 @@ export const setupSocketHandlers = (io: Server) => {
         try {
           const { sessionId, from, to, promotion = "q" } = data;
 
+          // Distributed lock: предотвращает интерливинг ходов
+          const moveLock = `move:lock:${sessionId}`;
+          const acquired = await redis.set(moveLock, userId, "EX", 5, "NX");
+          if (!acquired) {
+            if (callback) callback({ ok: false, error: "MOVE_IN_PROGRESS" });
+            return;
+          }
+
+          try {
+
           const session = await prisma.session.findUnique({
             where: { id: sessionId },
             select: {
@@ -351,6 +361,10 @@ export const setupSocketHandlers = (io: Server) => {
             setTimeout(async () => {
               await makeBotMove(socket, io, sessionId);
             }, 400 + Math.random() * 600);
+          }
+
+          } finally {
+            await redis.del(moveLock).catch(() => {});
           }
         } catch (err: unknown) {
           if (callback) callback({ ok: false, error: (err as Error).message });

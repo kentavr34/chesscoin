@@ -174,7 +174,14 @@ export const startTimerWatcher = () => {
         loserSideId = expiredSide.id;
       }
 
-      // Завершаем по истечению времени
+      // Distributed lock: только один инстанс завершает сессию
+      const lockKey = `finish:lock:${session.id}`;
+      const locked = await redis.set(lockKey, "1", "EX", 15, "NX");
+      if (!locked) {
+        logger.info(`[Timer] Session ${session.id} already being finished by another instance`);
+        return;
+      }
+
       const finished = await finishSession(
         session.id,
         SessionStatus.TIME_EXPIRED,
