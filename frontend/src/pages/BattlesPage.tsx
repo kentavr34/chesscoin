@@ -377,7 +377,7 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           onClick={handleCreate}
           disabled={loading || !canCreate}
           style={{
-            width: '100%', padding: '18px 14px',
+            width: '100%', padding: '14px',
             background: canCreate ? 'var(--accent, #F5C842)' : '#2A2F48',
             border: 'none', borderRadius: 14,
             color: canCreate ? 'var(--bg, #0B0D11)' : 'var(--text-muted, #4A5270)',
@@ -474,8 +474,9 @@ const bmSheetStyle: React.CSSProperties = {
   borderBottom: 'none',
   borderRadius: '24px 24px 0 0',
   padding: '16px 18px',
-  paddingBottom: 'max(24px, env(safe-area-inset-bottom, 24px))',
-  maxHeight: '88vh', overflowY: 'auto',
+  paddingBottom: 'max(32px, env(safe-area-inset-bottom, 32px))',
+  maxHeight: '85vh', overflowY: 'auto',
+  WebkitOverflowScrolling: 'touch' as any,
 };
 const bmHandleStyle: React.CSSProperties = {
   width: 36, height: 4, background: '#2A2F48', borderRadius: 2, margin: '4px auto 0',
@@ -485,7 +486,7 @@ const bmSectionLbl: React.CSSProperties = {
   textTransform: 'uppercase', color: 'var(--text-muted, #4A5270)', marginBottom: 10,
 };
 const bmColorBtn = (active: boolean): React.CSSProperties => ({
-  padding: '18px 8px', borderRadius: 14, cursor: 'pointer', minHeight: 76,
+  padding: '12px 8px', borderRadius: 14, cursor: 'pointer', minHeight: 60,
   background: active ? 'rgba(245,200,66,0.1)' : 'var(--bg-card, #1C2030)',
   border: `2px solid ${active ? 'var(--accent, #F5C842)' : 'var(--border, rgba(255,255,255,0.07))'}`,
   color: active ? 'var(--accent, #F5C842)' : 'var(--text-secondary, #8B92A8)',
@@ -493,7 +494,7 @@ const bmColorBtn = (active: boolean): React.CSSProperties => ({
   transform: active ? 'scale(1.04)' : 'scale(1)',
 });
 const bmTimeBtn = (active: boolean): React.CSSProperties => ({
-  padding: '14px 8px', borderRadius: 12, cursor: 'pointer', minHeight: 68,
+  padding: '10px 8px', borderRadius: 12, cursor: 'pointer', minHeight: 52,
   background: active ? 'rgba(123,97,255,0.15)' : 'var(--bg-card, #1C2030)',
   border: `1px solid ${active ? 'rgba(123,97,255,0.4)' : 'var(--border, rgba(255,255,255,0.07))'}`,
   color: active ? '#9B85FF' : 'var(--text-secondary, #8B92A8)',
