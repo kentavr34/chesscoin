@@ -82,10 +82,10 @@ export const BattlesPage: React.FC = () => {
       {/* Две вкладки: Public / Private */}
       <div style={segStyle}>
         <button style={segBtn(tab === 'public')} onClick={() => setTab('public')}>
-          ⚔️ {t.battles.public_ ?? 'Public'}
+          {t.battles.public_ ?? '⚔️ Public'}
         </button>
         <button style={segBtn(tab === 'private')} onClick={() => setTab('private')}>
-          🔒 {t.battles.private_ ?? 'Private'}
+          {t.battles.private_ ?? '🔒 Private'}
           {myPrivateSessions.length > 0 && <span style={{ marginLeft: 4, background: '#FF4D6A', color: '#fff', fontSize: 9, fontWeight: 800, padding: '1px 5px', borderRadius: 8, minWidth: 16, textAlign: 'center' as const }}>{myPrivateSessions.length}</span>}
         </button>
       </div>
