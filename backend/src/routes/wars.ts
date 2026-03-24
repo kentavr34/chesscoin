@@ -108,7 +108,7 @@ warsRouter.get("/countries/:id", authMiddleware, async (req: Request, res: Respo
       orderBy: [{ warWins: "desc" }, { joinedAt: "asc" }],
       include: {
         user: {
-          select: { id: true, firstName: true, lastName: true, username: true, elo: true, league: true, avatar: true, avatarType: true, avatarGradient: true },
+          select: { id: true, firstName: true, lastName: true, username: true, elo: true, league: true, avatar: true, avatarType: true, avatarGradient: true, jarvisLevel: true, isMonthlyChampion: true, monthlyChampionType: true },
         },
       },
     });

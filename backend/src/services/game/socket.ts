@@ -202,8 +202,11 @@ export const setupSocketHandlers = (io: Server) => {
           if (callback) callback({ ok: true, session: formatted });
           socket.emit("game", formatted);
 
-          const battles = await getActiveBattles();
-          io.to("lobby").emit("battles:list", formatBattlesList(battles, buildSpectatorCounts(battles)));
+          // T18: отправляем только добавленный батл (diff вместо полного списка)
+          if (!data.isPrivate) {
+            const newBattle = formatBattlesList([session], buildSpectatorCounts([session]))[0];
+            io.to("lobby").emit("battles:added", newBattle);
+          }
         } catch (err: unknown) {
           if (callback) callback({ ok: false, error: (err as Error).message });
         }
@@ -225,8 +228,8 @@ export const setupSocketHandlers = (io: Server) => {
 
           await setTimer(session.id);
 
-          const battles = await getActiveBattles();
-          io.to("lobby").emit("battles:list", formatBattlesList(battles, buildSpectatorCounts(battles)));
+          // T18: diff — убираем батл из лобби (он начался)
+          io.to("lobby").emit("battles:removed", session.id);
         } catch (err: unknown) {
           if (callback) callback({ ok: false, error: (err as Error).message });
         }
@@ -408,8 +411,7 @@ export const setupSocketHandlers = (io: Server) => {
           if (callback) callback({ ok: true });
 
           if (session.type === SessionType.BATTLE) {
-            const battles = await getActiveBattles();
-            io.to("lobby").emit("battles:list", formatBattlesList(battles, buildSpectatorCounts(battles)));
+            io.to("lobby").emit("battles:removed", data.sessionId);
           }
         } catch (err: unknown) {
           if (callback) callback({ ok: false, error: (err as Error).message });
@@ -465,8 +467,8 @@ export const setupSocketHandlers = (io: Server) => {
           });
 
           if (callback) callback({ ok: true });
-          const battles = await getActiveBattles();
-          io.to("lobby").emit("battles:list", formatBattlesList(battles, buildSpectatorCounts(battles)));
+          // T18: diff — убираем отменённый батл
+          io.to("lobby").emit("battles:removed", data.sessionId);
         } catch (err: unknown) {
           if (callback) callback({ ok: false, error: (err as Error).message });
         }

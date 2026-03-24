@@ -261,6 +261,8 @@ export const joinBattleSession = async (userId: string, code: string) => {
     data: {
       status: SessionStatus.IN_PROGRESS,
       startedAt: new Date(),
+      // G19: приватные батлы становятся публичными при начале игры (видны в Live)
+      isPrivate: false,
       sides: {
         create: {
           playerId: userId,

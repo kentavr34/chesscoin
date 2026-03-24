@@ -51,6 +51,11 @@ export const formatSession = (session: SessionWithSides, userId: string | null) 
     // S3: скины создателя батла (видны обоим игрокам)
     boardSkinUrl: (session as any).boardSkinUrl ?? null,
     pieceSkinUrl: (session as any).pieceSkinUrl ?? null,
+    // G18: метаданные источника (турнир, война, обычный батл)
+    sourceType: (session as any).sourceType ?? null,
+    sourceMeta: (session as any).sourceMeta ?? null,
+    duration: (session as any).duration ?? null,
+    pieceCoins: (session as any).pieceCoins ?? null,
   };
 };
 
@@ -60,9 +65,12 @@ export const formatBattlesList = (sessions: SessionWithSides[], spectatorCounts?
     id: s.id,
     code: s.code,
     bet: s.bet?.toString() ?? "0",
+    status: s.status,
     duration: (s as Record<string, unknown> & typeof s).duration,
     createdAt: (s as Record<string, unknown> & typeof s).createdAt,
     spectatorCount: spectatorCounts?.get(s.id) ?? 0,
+    sourceType: (s as any).sourceType ?? null,
+    sourceMeta: (s as any).sourceMeta ?? null,
     creator: s.sides[0]
       ? {
           firstName: s.sides[0].player.firstName,
