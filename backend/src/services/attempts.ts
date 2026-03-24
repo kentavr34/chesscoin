@@ -43,10 +43,14 @@ export const purchaseAttempts = async (
     throw new Error(`Недостаточно монет. Нужно ${totalCost} ᚙ.`);
   }
 
-  await updateBalance(userId, -totalCost, TransactionType.ATTEMPT_PURCHASE, { count: actualCount });
-  await prisma.user.update({
-    where: { id: userId },
-    data: { attempts: { increment: actualCount } },
+  await prisma.$transaction(async (tx) => {
+    await tx.user.update({
+      where: { id: userId },
+      data: { balance: { decrement: totalCost }, totalSpent: { increment: totalCost }, attempts: { increment: actualCount } },
+    });
+    await tx.transaction.create({
+      data: { userId, type: TransactionType.ATTEMPT_PURCHASE, amount: -totalCost, payload: { count: actualCount } },
+    });
   });
 };
 

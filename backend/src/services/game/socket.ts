@@ -21,6 +21,10 @@ import { formatSession, formatBattlesList } from "./format";
 // Счётчик зрителей: sessionId → Set<socketId>
 // Используем Set чтобы не было дублей при реконнекте
 const spectatorRooms = new Map<string, Set<string>>();
+
+export const cleanupSpectators = (sessionId: string) => {
+  spectatorRooms.delete(sessionId);
+};
 import { updateBalance, canEmit } from "@/services/economy";
 
 interface SocketData {
@@ -309,6 +313,7 @@ export const setupSocketHandlers = (io: Server) => {
             const formattedFinished = { ...formatSession(finished, userId), pieceCoins: pieceCoinsRaw ?? '0' };
             io.to(sessionId).emit("game", formattedFinished);
             io.to(sessionId).emit("game:over", { status: finished.status });
+            cleanupSpectators(sessionId);
             if (callback) callback({ ok: true, session: formattedFinished });
             return;
           }
@@ -385,6 +390,7 @@ export const setupSocketHandlers = (io: Server) => {
           const formatted = formatSession(finished, userId);
           io.to(data.sessionId).emit("game", formatted);
           io.to(data.sessionId).emit("game:over", { status: "FINISHED", surrender: true });
+          cleanupSpectators(data.sessionId);
           if (callback) callback({ ok: true });
 
           if (session.type === SessionType.BATTLE) {
@@ -480,6 +486,7 @@ export const setupSocketHandlers = (io: Server) => {
         const formatted = formatSession(finished, userId);
         io.to(data.sessionId).emit("game", formatted);
         io.to(data.sessionId).emit("game:over", { status: "DRAW" });
+        cleanupSpectators(data.sessionId);
         if (callback) callback({ ok: true });
       } catch (err: unknown) {
         logger.error("[Socket] game:accept_draw error:", (err as Error).message);
@@ -670,6 +677,7 @@ const makeBotMove = async (socket: AuthSocket, io: Server, sessionId: string) =>
       const formattedFinished = { ...formatSession(finished, uid), pieceCoins: pieceCoinsRaw ?? '0' };
       io.to(sessionId).emit("game", formattedFinished);
       io.to(sessionId).emit("game:over", { status: finished.status });
+      cleanupSpectators(sessionId);
       return;
     }
 

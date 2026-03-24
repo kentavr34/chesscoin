@@ -362,6 +362,16 @@ export const GamePage: React.FC = () => {
         </Overlay>
       )}
 
+      {/* V3: Победный экран */}
+      {showVictory && resultData && (
+        <VictoryScreen
+          result={resultData.result}
+          opponentName={opSide?.player?.firstName}
+          earned={resultData.earned}
+          onDone={() => setShowVictory(false)}
+        />
+      )}
+
       {/* Модал результата */}
       {showResult && resultData && (
         <GameResultModal
