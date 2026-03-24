@@ -8,7 +8,7 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": false,
-    "noEmitOnError": false,
+    "noEmitOnError": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,

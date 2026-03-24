@@ -31,6 +31,24 @@ tasksRouter.get("/", authMiddleware, async (req: Request, res: Response) => {
       completed.map((c) => [c.taskId, c.completedAt])
     );
 
+    // G16: Авто-начисление реферальных заданий
+    for (const task of tasks) {
+      if (completedSet.has(task.id)) continue;
+      if (task.taskType === 'REFERRAL') {
+        const meta = task.metadata as Record<string, unknown>;
+        const required = Number(meta?.referralCount ?? 1);
+        const actual = await prisma.user.count({ where: { referrerId: userId, referralActivated: true } });
+        if (actual >= required) {
+          try {
+            await prisma.completedTask.create({ data: { userId, taskId: task.id } });
+            await updateBalance(userId, task.winningAmount, TransactionType.TASK_REWARD, { taskId: task.id, auto: true }, { isEmission: true });
+            completedSet.set(task.id, new Date());
+            logger.info(`[tasks] Auto-completed REFERRAL task ${task.id} for user ${userId}`);
+          } catch {}
+        }
+      }
+    }
+
     const getCategory = (task: any): string => {
       const meta = task.metadata as any;
       if (meta?.category) return meta.category;
@@ -231,19 +249,8 @@ tasksRouter.post("/puzzles/:id/complete", authMiddleware, async (req: Request, r
       });
     }
 
-    // Начисляем награду
-    await prisma.$transaction([
-      prisma.completedPuzzle.create({
-        data: { userId, puzzleId, reward: puzzle.reward },
-      }),
-      prisma.user.update({
-        where: { id: userId },
-        data: {
-          balance: { increment: puzzle.reward },
-          totalEarned: { increment: puzzle.reward },
-        },
-      }),
-    ]);
+    await prisma.completedPuzzle.create({ data: { userId, puzzleId, reward: puzzle.reward } });
+    await updateBalance(userId, puzzle.reward, TransactionType.TASK_REWARD, { puzzleId, rating: puzzle.rating }, { isEmission: true });
 
     res.json({
       success: true,
