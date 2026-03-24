@@ -275,13 +275,12 @@ export const ProfilePage: React.FC = () => {
           {user.firstName} {user.lastName ?? ''}
         </div>
         <div style={{ fontSize: 12, color: 'var(--text-secondary, #8B92A8)', marginTop: 3 }}>@{user.username ?? 'unknown'}</div>
-        {/* 2.3 Кнопка "Сразиться" на чужом профиле */}
         {!isOwnProfile && (
           <button
             onClick={() => navigate('/battles', { state: { challengeUserId: viewedUserId } })}
-            style={{ marginTop: 10, padding: '9px 20px', background: 'rgba(245,200,66,0.12)', border: '1px solid rgba(245,200,66,0.3)', borderRadius: 12, color: 'var(--accent, #F5C842)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+            style={{ marginTop: 12, padding: '11px 28px', background: 'var(--accent, #F5C842)', border: 'none', borderRadius: 14, color: '#0B0D11', fontSize: 14, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(245,200,66,0.3)', display: 'flex', alignItems: 'center', gap: 6 }}
           >
-            ⚔️ {t.profile.challengeBtn ?? 'Challenge'}
+            ⚔️ {t.profile.challengeBtn ?? 'Challenge to Duel'}
           </button>
         )}
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8, justifyContent: 'center' }}>

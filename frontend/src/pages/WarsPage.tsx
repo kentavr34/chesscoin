@@ -314,8 +314,12 @@ const CountryDetailModal: React.FC<{
                   {m.isCommander && <span style={{ fontSize: 10, color: '#F5C842', marginRight: 4 }}>{t.wars.commanderTag}</span>}
                   {m.user?.firstName} {m.user?.lastName ?? ''}
                 </div>
-                <div style={{ fontSize: 10, color: '#A8B0C8' }}>
-                  ELO {m.user?.elo ?? '—'} • {m.warWins}W / {m.warLosses}L
+                <div style={{ fontSize: 10, color: '#A8B0C8', display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <span>ELO {m.user?.elo ?? '—'}</span>
+                  <span>•</span>
+                  <span>{m.warWins}W / {m.warLosses}L</span>
+                  {m.user?.jarvisLevel > 1 && <span style={{ color: '#9B85FF' }}>🤖 Lv.{m.user.jarvisLevel}</span>}
+                  {m.user?.isMonthlyChampion && <span style={{ color: '#F5C842' }}>🏆</span>}
                 </div>
               </div>
               {/* Matchmaking is automatic — no manual challenges */}

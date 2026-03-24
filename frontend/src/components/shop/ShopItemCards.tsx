@@ -110,7 +110,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({ item, loading, highlighted, 
         <div style={{ fontSize: 10, color: rarityColor, marginTop: 2, fontWeight: 600 }}>{(t.shop.rarity as Record<string,string>)[item.rarity] ?? item.rarity}</div>
       </div>
       {item.equipped ? (
-        <div style={{ fontSize: 11, color: 'var(--green, #00D68F)', fontWeight: 700, textAlign: 'center', padding: '4px 0' }}>✓ Equipped</div>
+        <div style={{ fontSize: 11, color: 'var(--green, #00D68F)', fontWeight: 700, textAlign: 'center', padding: '5px 8px', background: 'rgba(0,214,143,0.08)', borderRadius: 8, border: '1px solid rgba(0,214,143,0.2)' }}>✓ {t.shop.equipped ?? 'Equipped'}</div>
       ) : item.owned ? (
         <button onClick={onEquip} disabled={loading} style={{ ...btnStyle, background: '#7B61FF', color: '#fff' }}>{loading ? '...' : t.shop.equip}</button>
       ) : (
