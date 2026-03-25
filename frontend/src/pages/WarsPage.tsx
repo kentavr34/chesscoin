@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PageLayout } from '@/components/layout/PageLayout';
+import { PageLayout, useInfoPopup, InfoPopup } from '@/components/layout/PageLayout';
 import { Avatar } from '@/components/ui/Avatar';
 import { warsApi } from '@/api';
 import { useUserStore } from '@/store/useUserStore';
@@ -531,6 +531,13 @@ export const WarsPage: React.FC = () => {
   const [isCommander, setIsCommander] = useState(false);
   const [myActiveWar, setMyActiveWar] = useState<any>(null);
 
+  // Info popup
+  const warsInfo = useInfoPopup('wars', [
+    { icon: '🌍', title: t.wars.warIntro?.title ?? 'Country Wars', desc: t.wars.warIntro?.p1 ?? 'Join a country and fight for its honor in chess battles against other nations.' },
+    { icon: '⚔️', title: t.wars.warIntro?.commanderTitle ?? 'Commander', desc: t.wars.warIntro?.p2 ?? 'The first member becomes Commander-in-Chief. Accept or reject new fighters.' },
+    { icon: '🏆', title: t.wars.warIntro?.prizeTitle ?? 'Prizes', desc: t.wars.warIntro?.p3 ?? 'Win battles for your country. The winning nation shares the prize pool!' },
+  ]);
+
   // UI State
   const [loading, setLoading] = useState(true);
   const [showIntro, setShowIntro] = useState(false);
@@ -639,6 +646,8 @@ export const WarsPage: React.FC = () => {
 
   return (
     <PageLayout title="">
+      {/* Info popup при первом входе */}
+      {warsInfo.show && <InfoPopup infoKey="wars" slides={warsInfo.slides} onClose={warsInfo.close} />}
       {/* Заголовок */}
       <div style={{ padding: '10px 18px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
         <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 18, fontWeight: 800, color: '#F5C842', textAlign: 'center' }}>

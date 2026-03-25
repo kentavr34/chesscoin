@@ -10,6 +10,7 @@ import { fmtBalance, fmtTime } from '@/utils/format';
 import { translations } from '@/i18n/translations';
 import type { BattleLobbyItem } from '@/types';
 import { useT } from '@/i18n/useT';
+import { SPACING, RADIUS, COLOR, FONT } from '@/lib/styles';
 
 const showToast = (text: string, type: 'error' | 'info' = 'error') => {
   window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text, type } }));
@@ -121,9 +122,9 @@ export const BattlesPage: React.FC = () => {
                           <span style={{ fontSize: 9, fontWeight: 800, color: '#FF4D6A', letterSpacing: '.08em' }}>LIVE</span>
                           <span style={{ fontSize: 14 }}>{sourceIcon}</span>
                         </div>
-                        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 16, fontWeight: 700, color: '#F0F2F8' }}>
-                          {fmtTime(mySide?.timeLeft ?? opSide?.timeLeft ?? 300)}
-                        </span>
+                    <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 16, fontWeight: 700, color: '#F0F2F8' }}>
+                      ⏱ {fmtTime(mySide?.timeLeft ?? opSide?.timeLeft ?? 300)}
+                    </span>
                         {s.bet && <span style={{ fontSize: 10, color: '#F5C842', fontWeight: 700 }}>{fmtBalance(s.bet)} ᚙ</span>}
                       </div>
 
@@ -427,7 +428,7 @@ const wcardStyle: React.CSSProperties = {
   display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer',
 };
 const fabStyle: React.CSSProperties = {
-  position: 'fixed', bottom: 'max(72px, calc(60px + env(safe-area-inset-bottom, 12px)))',
+  position: 'fixed', bottom: 'max(96px, calc(82px + env(safe-area-inset-bottom, 14px)))',
   right: 16, width: 52, height: 52,
   borderRadius: '50%', background: 'var(--accent, #F5C842)', color: 'var(--bg, #0B0D11)',
   fontSize: 22, fontWeight: 800, display: 'flex', alignItems: 'center',
