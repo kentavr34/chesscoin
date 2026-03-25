@@ -237,7 +237,7 @@ router.post("/:id/join", async (req: import("express").Request, res: import("exp
           // Атомарно: списание + prizePool + создание игрока
           await tx.user.update({
             where: { id: req.userId },
-            data: { balance: { decrement: tournament.entryFee } },
+            data: { balance: { decrement: tournament.entryFee }, totalSpent: { increment: tournament.entryFee } },
           });
           await tx.transaction.create({
             data: { userId: req.userId, type: TransactionType.TOURNAMENT_ENTRY, amount: -(tournament.entryFee as bigint), payload: { tournamentId: tournament.id } },
