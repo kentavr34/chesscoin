@@ -633,6 +633,33 @@ export const setupSocketHandlers = (io: Server) => {
       }
     );
 
+    // ── Очередь для войн ──────────────────────────────
+    socket.on(
+      "war:queue_join",
+      async (data: { warId: string; countryId: string }, callback?: Function) => {
+        try {
+          await redis.sadd(`war:queue:${data.warId}:${data.countryId}`, userId);
+          // Auto expire key after 1 hour in case they get stuck
+          await redis.expire(`war:queue:${data.warId}:${data.countryId}`, 3600);
+          if (callback) callback({ ok: true });
+        } catch (err: unknown) {
+          if (callback) callback({ ok: false, error: (err as Error).message });
+        }
+      }
+    );
+
+    socket.on(
+      "war:queue_leave",
+      async (data: { warId: string; countryId: string }, callback?: Function) => {
+        try {
+          await redis.srem(`war:queue:${data.warId}:${data.countryId}`, userId);
+          if (callback) callback({ ok: true });
+        } catch (err: unknown) {
+          if (callback) callback({ ok: false, error: (err as Error).message });
+        }
+      }
+    );
+
     // ── Ping ─────────────────────────────────────────────
     socket.on("ping", () => socket.emit("pong"));
   });

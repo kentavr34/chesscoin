@@ -17,27 +17,27 @@ from __future__ import annotations
 TRANSLATIONS: dict[str, dict[str, str]] = {
     # ── Русский ───────────────────────────────────────────────────────────────
     "ru": {
-        "welcome_title":        "♟ Привет, <b>{name}</b>! Добро пожаловать в ChessCoin",
+        "welcome_title":        "♟ Привет, <b>{name}</b>! Добро пожаловать в <b>ChessCoin</b> — первую шахматную Web3 платформу в Telegram.",
         "welcome_returning":    "♟ С возвращением, <b>{name}</b>!",
         "welcome_back_text":    (
-            "Твои монеты ждут тебя.\n"
-            "♟ Продолжай играть и зарабатывать!\n\n"
-            "<i>Открой приложение и вперёд!</i>"
+            "Все твои монеты и достижения сохранены.\n"
+            "🏆 Готов к новым победам?\n\n"
+            "<i>Жми «Играть» и докажи свое мастерство на доске!</i>"
         ),
         "welcome_bonus":        (
             "Твой стартовый бонус:\n"
             "<b>┌─────────────────────────┐</b>\n"
-            "<b>│  🎁  +5 000 ᚙ  на старт  │</b>\n"
+            "<b>│  🎁  +5 000 ᚙ  на баланс │</b>\n"
             "<b>└─────────────────────────┘</b>"
         ),
-        "referral_bonus_line":  "🎁 Реферальный бонус <b>+3 000 ᚙ</b> — после первой партии!\n\n",
+        "referral_bonus_line":  "🎁 Реферальный бонус <b>+3 000 ᚙ</b> — после первой сыгранной партии!\n\n",
         "welcome_features":     (
-            "Что тебя ждёт:\n"
-            "⚔️ Батлы на монеты с живыми игроками\n"
-            "🤖 J.A.R.V.I.S — до <b>+20 000 ᚙ</b> за победу\n"
-            "🌍 Войны сборных стран\n"
-            "👥 Рефералы: <b>50%</b> с побед друзей\n\n"
-            "<i>Монеты зачислены — открывай и играй!</i>"
+            "<b>Что тебя ждет внутри?</b>\n"
+            "⚔️ <b>PvP батлы</b> — играй на монеты с реальными людьми.\n"
+            "🤖 <b>Тренировки</b> — побеждай бота J.A.R.V.I.S. и забирай до +20 000 ᚙ.\n"
+            "🌍 <b>Войны стран</b> — защищай честь своей страны и получай призы.\n"
+            "👥 <b>Рефералы</b> — зови друзей и пожизненно получай 50% с их побед.\n\n"
+            "<i>Монеты уже начислены. Открывай приложение прямо сейчас!</i>"
         ),
         "battle_invite":        (
             "♟ Привет, <b>{name}</b>! Тебя позвали на батл\n\n"
@@ -82,27 +82,27 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
 
     # ── English ───────────────────────────────────────────────────────────────
     "en": {
-        "welcome_title":        "♟ Hey <b>{name}</b>! Welcome to ChessCoin",
+        "welcome_title":        "♟ Hey <b>{name}</b>! Welcome to <b>ChessCoin</b> — the first Web3 chess platform in Telegram.",
         "welcome_returning":    "♟ Welcome back, <b>{name}</b>!",
         "welcome_back_text":    (
-            "Your coins are waiting.\n"
-            "♟ Keep playing and earning!\n\n"
-            "<i>Open the app and go!</i>"
+            "All your coins and achievements are saved.\n"
+            "🏆 Ready for new victories?\n\n"
+            "<i>Tap «Play» and prove your mastery on the board!</i>"
         ),
         "welcome_bonus":        (
             "Your starting bonus:\n"
             "<b>┌─────────────────────────┐</b>\n"
-            "<b>│  🎁  +5 000 ᚙ  to start  │</b>\n"
+            "<b>│  🎁  +5 000 ᚙ  balance   │</b>\n"
             "<b>└─────────────────────────┘</b>"
         ),
         "referral_bonus_line":  "🎁 Referral bonus <b>+3 000 ᚙ</b> — after your first game!\n\n",
         "welcome_features":     (
-            "What's waiting for you:\n"
-            "⚔️ Battles with real players for stakes\n"
-            "🤖 J.A.R.V.I.S — up to <b>+20 000 ᚙ</b> per win\n"
-            "🌍 Country team wars\n"
-            "👥 Referrals: <b>50%</b> from friends' wins\n\n"
-            "<i>Coins credited — open the app and play!</i>"
+            "<b>What's waiting for you inside?</b>\n"
+            "⚔️ <b>PvP Battles</b> — play for coins against real players.\n"
+            "🤖 <b>Training</b> — beat the J.A.R.V.I.S. bot and win up to +20,000 ᚙ.\n"
+            "🌍 <b>Country Wars</b> — defend your country's honor and claim prizes.\n"
+            "👥 <b>Referrals</b> — invite friends and get 50% of their wins forever.\n\n"
+            "<i>Coins are already credited. Open the app right now!</i>"
         ),
         "battle_invite":        (
             "♟ Hey <b>{name}</b>! You're invited to a battle\n\n"

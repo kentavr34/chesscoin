@@ -47,14 +47,13 @@ BOT_COMMANDS_EN = [
 
 async def set_commands(bot: Bot):
     """Регистрирует команды в меню бота для всех языков."""
-    from aiogram.types import BotCommandScopeDefault, BotCommandScopeAllPrivateChats
+    from aiogram.types import BotCommandScopeDefault, MenuButtonWebApp, WebAppInfo
 
     # Дефолт — английский (для всех остальных языков)
     await bot.set_my_commands(BOT_COMMANDS_EN, scope=BotCommandScopeDefault())
 
     # Русский язык
     try:
-        from aiogram.types import BotCommandScopeAllPrivateChats
         await bot.set_my_commands(
             BOT_COMMANDS_RU,
             scope=BotCommandScopeDefault(),
@@ -62,6 +61,15 @@ async def set_commands(bot: Bot):
         )
     except Exception as e:
         logger.warning(f"Could not set RU commands: {e}")
+
+    # Устанавливаем кнопку меню слева внизу
+    try:
+        frontend_url = os.getenv("WEBAPP_URL", "https://chesscoin.app")
+        await bot.set_chat_menu_button(
+            menu_button=MenuButtonWebApp(text="Play ♟", web_app=WebAppInfo(url=frontend_url))
+        )
+    except Exception as e:
+        logger.warning(f"Could not set menu button: {e}")
 
     logger.info("✅ Bot commands registered in Telegram menu")
 

@@ -173,8 +173,14 @@ const start = async () => {
     startTimerWatcher();
     startAttemptsCron();
     startCleanupCron();
-    startGameCrons();
-    startWarMatchmakingCron();
+    
+    if (process.env.RUN_CRONS === 'true') {
+      logger.info("[Scale] This node is a Cron Worker. Starting background matchmaking & tasks.");
+      startGameCrons();
+      startWarMatchmakingCron();
+    } else {
+      logger.info("[Scale] This node is a Web/Socket Server. Crons are disabled (needs RUN_CRONS=true).");
+    }
 
     httpServer.listen(config.server.port, () => {
       logger.info(`[Server] ✅ Port ${config.server.port} · ${config.server.nodeEnv}`);

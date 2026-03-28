@@ -104,7 +104,7 @@ router.get("/my-matches", async (req: import("express").Request, res: import("ex
     });
     const playerIds = players.map(p => p.id);
 
-    const matches = await (prisma.tournamentMatch as any).findMany({
+    const matches: any = await (prisma.tournamentMatch as any).findMany({
       where: {
         status: 'IN_PROGRESS',
         OR: [
@@ -119,7 +119,22 @@ router.get("/my-matches", async (req: import("express").Request, res: import("ex
       take: 10,
     });
 
-    res.json({ matches });
+    const sessionIds = matches.map((m: any) => m.sessionId).filter(Boolean);
+    let sessionsMap = new Map();
+    if (sessionIds.length > 0) {
+      const sessions = await prisma.session.findMany({
+        where: { id: { in: sessionIds } },
+        select: { id: true, code: true }
+      });
+      sessionsMap = new Map(sessions.map(s => [s.id, s.code]));
+    }
+
+    const matchesWithCode = matches.map((m: any) => ({
+      ...m,
+      sessionCode: m.sessionId ? sessionsMap.get(m.sessionId) : null
+    }));
+
+    res.json({ matches: matchesWithCode });
   } catch (err: unknown) {
     res.status(500).json({ error: (err instanceof Error ? err.message : String(err)) });
   }

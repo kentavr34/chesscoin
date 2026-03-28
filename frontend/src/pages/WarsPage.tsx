@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { PageLayout, useInfoPopup, InfoPopup } from '@/components/layout/PageLayout';
 import { Avatar } from '@/components/ui/Avatar';
 import { warsApi } from '@/api';
+import { getSocket } from '@/api/socket';
 import { useUserStore } from '@/store/useUserStore';
 import { fmtBalance } from '@/utils/format';
 import { useT } from '@/i18n/useT';
@@ -550,6 +551,37 @@ export const WarsPage: React.FC = () => {
   const [donating, setDonating] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  
+  // Queue state
+  const [inQueue, setInQueue] = useState(false);
+
+  useEffect(() => {
+    const sock = getSocket();
+    const handleEvents = (data: any) => {
+      if (data.type === 'war:match_created' && data.sessionId) {
+        setInQueue(false);
+        toast('Битва найдена! Подключение...', 'success');
+        window.dispatchEvent(new CustomEvent('chesscoin:navigate', { detail: `/game/${data.sessionId}` }));
+      }
+    };
+    if (user?.id) sock.on(`user:${user.id}`, handleEvents);
+    return () => {
+      if (user?.id) sock.off(`user:${user.id}`, handleEvents);
+    };
+  }, [user]);
+
+  const toggleQueue = () => {
+    if (!myActiveWar || !myCountry) return;
+    const sock = getSocket();
+    if (inQueue) {
+      sock.emit('war:queue_leave', { warId: myActiveWar.id, countryId: myCountry.id });
+      setInQueue(false);
+    } else {
+      sock.emit('war:queue_join', { warId: myActiveWar.id, countryId: myCountry.id });
+      setInQueue(true);
+    }
+  };
+
 
   const loadAll = useCallback(async () => {
     try {
@@ -707,26 +739,61 @@ export const WarsPage: React.FC = () => {
             </button>
           </div>
           {myActiveWar && (
-            <div
-              onClick={() => setSelectedWarId(myActiveWar.id)}
-              style={{ marginTop: 10, padding: '10px 14px', background: 'rgba(255,77,106,0.08)', border: '1px solid rgba(255,77,106,0.2)', borderRadius: 14, cursor: 'pointer' }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#FF4D6A' }}>{t.wars.warInProgress}</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#9B85FF', animation: 'pulse 2s ease-in-out infinite' }} />
-                  <span style={{ fontSize: 9, color: '#9B85FF', fontWeight: 600 }}>{t.wars.autoMatchmaking}</span>
+            <div style={{ marginTop: 10, padding: '12px 14px', background: 'rgba(255,77,106,0.08)', border: '1px solid rgba(255,77,106,0.2)', borderRadius: 14 }}>
+              <div 
+                onClick={() => setSelectedWarId(myActiveWar.id)} 
+                style={{ cursor: 'pointer', marginBottom: 12 }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#FF4D6A', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    {t.wars.warInProgress}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ fontSize: 13, color: '#C8CDDF', fontWeight: 600 }}>
+                    {myActiveWar.attackerCountry?.nameRu} <span style={{ color: '#8B92A8', margin: '0 4px', fontSize: 11 }}>VS</span> {myActiveWar.defenderCountry?.nameRu}
+                  </div>
+                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 800, color: '#F5C842', background: 'rgba(245,200,66,0.1)', padding: '2px 8px', borderRadius: 6 }}>
+                    {myActiveWar.attackerWins} : {myActiveWar.defenderWins}
+                  </div>
+                </div>
+                <div style={{ fontSize: 10, color: '#A8B0C8', marginTop: 4 }}>
+                  ⏱ <WarCountdown initialSeconds={myActiveWar.secondsLeft ?? 0} active={true} />
                 </div>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ fontSize: 12, color: '#C8CDDF' }}>
-                  {myActiveWar.attackerCountry?.nameRu} vs {myActiveWar.defenderCountry?.nameRu}
-                </div>
-                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14, fontWeight: 800, color: '#F5C842' }}>
-                  {myActiveWar.attackerWins} : {myActiveWar.defenderWins}
-                </div>
-              </div>
-              <div style={{ fontSize: 10, color: '#A8B0C8', marginTop: 2 }}>⏱ <WarCountdown initialSeconds={myActiveWar.secondsLeft ?? 0} active={true} /></div>
+              
+              <button
+                onClick={toggleQueue}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  background: inQueue ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #FF4D6A 0%, #D8315B 100%)',
+                  border: inQueue ? '1px solid rgba(255,255,255,0.2)' : 'none',
+                  borderRadius: 12,
+                  color: inQueue ? '#C8CDDF' : '#FFFFFF',
+                  fontSize: 13,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: 8,
+                  boxShadow: inQueue ? 'none' : '0 4px 12px rgba(255,77,106,0.3)',
+                  transition: '0.2s ease'
+                }}
+              >
+                {inQueue ? (
+                  <>
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#00D68F', animation: 'pulse 1.5s infinite' }} />
+                    В очереди (Поиск...)
+                  </>
+                ) : (
+                  <>
+                    <span>⚔️</span> В бой за страну!
+                  </>
+                )}
+              </button>
             </div>
           )}
         </div>

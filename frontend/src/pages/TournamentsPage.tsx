@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { PageLayout, useInfoPopup, InfoPopup } from '@/components/layout/PageLayout';
 import { Avatar } from '@/components/ui/Avatar';
 import { tournamentsApi } from '@/api';
+import { getSocket } from '@/api/socket';
 import { fmtBalance } from '@/utils/format';
 import type { TournamentFull, ActiveMatch, League } from '@/types'; // R1
+
 import { useT } from '@/i18n/useT';
 
 const showToast = (text: string, type: 'error' | 'info' = 'error') => {
@@ -182,7 +184,20 @@ export const TournamentsPage: React.FC = () => {
                 </div>
                 {match.sessionId && (
                   <button
-                    onClick={() => window.dispatchEvent(new CustomEvent('chesscoin:navigate', { detail: `/battles` }))}
+                    onClick={() => {
+                      if (isP1) {
+                        window.dispatchEvent(new CustomEvent('chesscoin:navigate', { detail: `/game/${match.sessionId}` }));
+                      } else {
+                        if ((match as any).sessionCode) {
+                          getSocket().emit('game:join', { code: (match as any).sessionCode }, (res: any) => {
+                            if (res.ok) window.dispatchEvent(new CustomEvent('chesscoin:navigate', { detail: `/game/${match.sessionId}` }));
+                            else showToast(res.error || 'Error joining match');
+                          });
+                        } else {
+                          window.dispatchEvent(new CustomEvent('chesscoin:navigate', { detail: `/game/${match.sessionId}` }));
+                        }
+                      }
+                    }}
                     style={{ padding: '7px 12px', background: 'var(--accent, #F5C842)', border: 'none', borderRadius: 10, color: '#0B0D11', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
                   >
                     {tt.play}

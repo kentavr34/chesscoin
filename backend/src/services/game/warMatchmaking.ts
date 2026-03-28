@@ -64,13 +64,12 @@ export async function scheduleWarMatches(warId: string): Promise<number> {
       busyIds.add(b.defenderId);
     }
 
-    // Свободные бойцы
-    const freeAttackers = attackerMembers
-      .map((m) => m.userId)
-      .filter((id) => !busyIds.has(id));
-    const freeDefenders = defenderMembers
-      .map((m) => m.userId)
-      .filter((id) => !busyIds.has(id));
+    // Свободные бойцы ИЗ ОЧЕРЕДИ
+    const queuedAttackersRaw = await redis.smembers(`war:queue:${warId}:${war.attackerCountryId}`);
+    const queuedDefendersRaw = await redis.smembers(`war:queue:${warId}:${war.defenderCountryId}`);
+
+    const freeAttackers = queuedAttackersRaw.filter((id) => !busyIds.has(id));
+    const freeDefenders = queuedDefendersRaw.filter((id) => !busyIds.has(id));
 
     if (freeAttackers.length === 0 || freeDefenders.length === 0) return 0;
 
@@ -198,6 +197,12 @@ async function createWarMatch(
       });
     } catch {}
   }
+
+  // Удалить из очереди
+  await redis.srem(`war:queue:${war.id}:${war.attackerCountryId}`, attackerUserId);
+  await redis.srem(`war:queue:${war.id}:${war.defenderCountryId}`, defenderUserId);
+  io.to(`war:lobby:${war.id}`).emit("war:queue_update", { countryId: war.attackerCountryId, count: await redis.scard(`war:queue:${war.id}:${war.attackerCountryId}`) });
+  io.to(`war:lobby:${war.id}`).emit("war:queue_update", { countryId: war.defenderCountryId, count: await redis.scard(`war:queue:${war.id}:${war.defenderCountryId}`) });
 
   // Установить таймер для белых
   const whiteSide = session.sides.find(
