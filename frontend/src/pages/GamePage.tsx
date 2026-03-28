@@ -274,15 +274,16 @@ export const GamePage: React.FC = () => {
       {/* Доска */}
       <div style={{ padding: '0 10px', flexShrink: 0, position: 'relative' }}>
         <ChessBoard
-          fen={session.fen}
+          sessionId={session?.id}
+          fen={session?.fen ?? new Chess().fen()}
           orientation={isWhite ? 'white' : 'black'}
           isMyTurn={isMyTurn}
           isGameOver={isGameOver}
           onMove={handleMove}
           onCapture={handleCapture}
           lastMove={lastMove}
-          sessionBoardSkinUrl={session.boardSkinUrl ?? null}
-          sessionPieceSkinUrl={session.pieceSkinUrl ?? null}
+          sessionBoardSkinUrl={session?.boardSkinUrl}
+          sessionPieceSkinUrl={session?.pieceSkinUrl}
         />
         <CoinPopupLayer triggerRef={coinTriggerRef} />
         {/* V3: Анонс хода */}
@@ -327,7 +328,7 @@ export const GamePage: React.FC = () => {
       {/* Кнопки */}
       {!isGameOver ? (
         <div style={{ display: 'flex', gap: 6, padding: '6px 12px', flexShrink: 0 }}>
-          <button onClick={() => { if (window.confirm(t.game.confirmSurrender)) navigate('/'); }} style={actionBtn()}>{t.common.back}</button>
+          <button onClick={() => navigate('/')} style={actionBtn()}>{t.common.back}</button>
           <button onClick={() => getSocket().emit('game:offer_draw', { sessionId: session.id })}
             style={actionBtn()}>{t.game.offerDraw}</button>
           <button onClick={() => setConfirmSurrender(true)}

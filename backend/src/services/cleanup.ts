@@ -54,15 +54,15 @@ export const cleanDeadPlayers = async (): Promise<void> => {
       },
     });
   }
-
-  // B2: Чистка зависших батлов WAITING_FOR_OPPONENT старше 30 дней
-  await cleanStaleBattles(cutoff);
 };
 
-// B2: Отменяем батлы в статусе WAITING_FOR_OPPONENT старше 30 дней
+// B2: Отменяем батлы в статусе WAITING_FOR_OPPONENT старше 7 дней
 // и возвращаем ставку создателю
-const cleanStaleBattles = async (cutoff: Date): Promise<void> => {
-  logger.info("[Cleanup] Checking stale battles...");
+export const cleanStaleBattles = async (): Promise<void> => {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 7);
+
+  logger.info("[Cleanup] Checking stale battles (older than 7 days)...");
 
   const staleBattles = await prisma.session.findMany({
     where: {
@@ -88,13 +88,12 @@ const cleanStaleBattles = async (cutoff: Date): Promise<void> => {
     const creator = battle.sides[0];
     try {
       // Q1 fix: возврат ставки + отмена батла в одной атомарной транзакции
-      // Если сервер упадёт между операциями — откатится всё целиком
-      await prisma.$transaction(async (tx: import("@prisma/client").Prisma.TransactionClient) => {
+      await prisma.$transaction(async (tx) => {
         // TAIL-1: используем REFUND — семантически правильный тип для возврата ставки
         if (creator && battle.bet > 0n) {
           await tx.user.update({
             where: { id: creator.playerId },
-            data: { balance: { increment: battle.bet } }, // refund — не эмиссия, не totalEarned
+            data: { balance: { increment: battle.bet } }, // refund
           });
           await tx.transaction.create({
             data: {
@@ -116,7 +115,7 @@ const cleanStaleBattles = async (cutoff: Date): Promise<void> => {
 
       refunded++;
     } catch (err: unknown) {
-      logger.error(`[Cleanup] Failed to cancel battle ${battle.id}:`, err);
+      logger.error(`[Cleanup] Failed to cancel battle ${battle.id}:`, err instanceof Error ? err.message : String(err));
     }
   }
 
@@ -124,7 +123,7 @@ const cleanStaleBattles = async (cutoff: Date): Promise<void> => {
 };
 
 // ─────────────────────────────────────────
-// Запуск cron — 1-го числа каждого месяца в 03:00 UTC
+// Запуск cron — чистка игроков раз в месяц, чистка батлов — раз в день
 // ─────────────────────────────────────────
 export const startCleanupCron = (): void => {
   // "0 3 1 * *" = 03:00 UTC первого числа каждого месяца
@@ -135,5 +134,13 @@ export const startCleanupCron = (): void => {
     );
   });
 
-  logger.info("[Cleanup] Cron started: monthly cleanup on 1st at 03:00 UTC");
+  // "0 4 * * *" = 04:00 UTC каждый день
+  cron.schedule("0 4 * * *", async () => {
+    logger.info("[Cleanup] Daily cron tick — running stale battles cleanup...");
+    await cleanStaleBattles().catch((err) =>
+      logError("[Cleanup Cron] Error (Battles):", err)
+    );
+  });
+
+  logger.info("[Cleanup] Cron started: monthly dead player cleanup (1st, 03:00) & daily battles cleanup (04:00)");
 };

@@ -10,7 +10,6 @@ import { fmtBalance, fmtTime } from '@/utils/format';
 import { translations } from '@/i18n/translations';
 import type { BattleLobbyItem } from '@/types';
 import { useT } from '@/i18n/useT';
-import { SPACING, RADIUS, COLOR, FONT } from '@/lib/styles';
 
 const showToast = (text: string, type: 'error' | 'info' = 'error') => {
   window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text, type } }));
@@ -37,22 +36,17 @@ export const BattlesPage: React.FC = () => {
   const { user } = useUserStore();
   const [tab, setTab] = useState<Tab>('public');
   const [showCreate, setShowCreate] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
 
+  // Инфо-попап при первом входе
   const info = useInfoPopup('battles', [...t.battles.info] as Parameters<typeof InfoPopup>[0]["slides"]);
 
-  // Live — активные публичные IN_PROGRESS (показываются вверху публичного списка)
-  const liveSessions = sessions.filter((s) => s.status === 'IN_PROGRESS');
+  // Мои активные игры
+  const activeSessions = sessions.filter((s) => s.status === 'IN_PROGRESS');
+  // Мои приватные игры в ожидании
+  const myPrivateWaiting = sessions.filter((s) => s.status === 'WAITING_FOR_OPPONENT' && s.isPrivate);
 
-  // Ожидающие — публичные, отсортированные по ставке (desc)
-  const waitingSessions = [...battles].sort((a, b) => {
-    const betA = BigInt(a.bet || '0');
-    const betB = BigInt(b.bet || '0');
-    return betB > betA ? 1 : betB < betA ? -1 : 0;
-  });
-
-  // Приватные — мои ожидающие вызовы
-  const myPrivateSessions = sessions.filter((s) => s.status === 'WAITING_FOR_OPPONENT');
+  // Публичные батлы (из лобби), сортируем по ставке
+  const publicBattles = [...battles].sort((a, b) => Number(BigInt(b.bet ?? 0) - BigInt(a.bet ?? 0)));
 
   const handleJoin = (battle: BattleLobbyItem) => {
     const socket = getSocket();
@@ -68,142 +62,159 @@ export const BattlesPage: React.FC = () => {
 
   const rightAction = (
     <div style={{ display: 'flex', gap: 8 }}>
-      <button onClick={info.open} style={{ ...tbaStyle, fontSize: 14, fontWeight: 700 }}>?</button>
-      <button onClick={() => navigate('/battles/history')} style={{ ...tbaStyle, fontSize: 16 }} title="History">🕐</button>
+      <button
+        onClick={info.open}
+        style={{ ...tbaStyle, color: 'var(--text-secondary, #8B92A8)', fontSize: 14, fontWeight: 700 }}
+      >?</button>
+      <button onClick={() => setShowCreate(true)} style={tbaStyle}>＋</button>
     </div>
   );
 
   return (
     <PageLayout title={t.battles.title} centered rightAction={rightAction}>
-      {/* InfoPopup при первом входе */}
       {info.show && (
         <InfoPopup infoKey="battles" slides={[...t.battles.info] as Parameters<typeof InfoPopup>[0]["slides"]} onClose={info.close} />
       )}
 
-      {/* Две вкладки: Public / Private */}
-      <div style={segStyle}>
-        <button style={segBtn(tab === 'public')} onClick={() => setTab('public')}>
-          {t.battles.public_ ?? '⚔️ Public'}
-        </button>
-        <button style={segBtn(tab === 'private')} onClick={() => setTab('private')}>
-          {t.battles.private_ ?? '🔒 Private'}
-          {myPrivateSessions.length > 0 && <span style={{ marginLeft: 4, background: '#FF4D6A', color: '#fff', fontSize: 9, fontWeight: 800, padding: '1px 5px', borderRadius: 8, minWidth: 16, textAlign: 'center' as const }}>{myPrivateSessions.length}</span>}
-        </button>
-      </div>
-
-      {/* ════════ PUBLIC ════════ */}
-      {tab === 'public' && (
-        <>
-          {/* LIVE — активные партии вверху */}
-          {liveSessions.length > 0 && (
-            <>
-              <div style={secStyle}>🔴 LIVE</div>
-              {liveSessions.map((s) => {
-                const mySide = s.sides.find((sd) => sd.id === s.mySideId);
-                const opSide = s.sides.find((sd) => sd.id !== s.mySideId);
-                const sourceType = (s as any).sourceType;
-                const sourceIcon = sourceType === 'TOURNAMENT' ? '🏆' : sourceType === 'WAR' ? '⚔️' : '♟';
-                const whitePlayer = s.sides.find((sd) => sd.isWhite);
-                const blackPlayer = s.sides.find((sd) => !sd.isWhite);
-                return (
-                  <div key={s.id} onClick={() => navigate('/game/' + s.id)} style={{ ...bcardStyle, borderColor: 'rgba(255,77,106,0.15)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', padding: '10px 14px', gap: 8 }}>
-                      {/* Белый игрок */}
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, minWidth: 54 }}>
-                        <Avatar user={whitePlayer?.player} size="s" />
-                        <span style={{ fontSize: 10, fontWeight: 600, color: '#F0F2F8', maxWidth: 54, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{whitePlayer?.player?.firstName ?? '?'}</span>
-                        <span style={{ fontSize: 8, color: '#8B92A8', background: 'rgba(255,255,255,0.1)', padding: '1px 4px', borderRadius: 3 }}>♔</span>
-                      </div>
-
-                      {/* Центр: иконка + LIVE + время */}
-                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#FF4D6A', animation: 'pulse 1.5s infinite' }} />
-                          <span style={{ fontSize: 9, fontWeight: 800, color: '#FF4D6A', letterSpacing: '.08em' }}>LIVE</span>
-                          <span style={{ fontSize: 14 }}>{sourceIcon}</span>
-                        </div>
-                    <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 16, fontWeight: 700, color: '#F0F2F8' }}>
-                      ⏱ {fmtTime(mySide?.timeLeft ?? opSide?.timeLeft ?? 300)}
-                    </span>
-                        {s.bet && <span style={{ fontSize: 10, color: '#F5C842', fontWeight: 700 }}>{fmtBalance(s.bet)} ᚙ</span>}
-                      </div>
-
-                      {/* Чёрный игрок */}
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, minWidth: 54 }}>
-                        <Avatar user={blackPlayer?.player} size="s" />
-                        <span style={{ fontSize: 10, fontWeight: 600, color: '#F0F2F8', maxWidth: 54, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{blackPlayer?.player?.firstName ?? '?'}</span>
-                        <span style={{ fontSize: 8, color: '#8B92A8', background: 'rgba(0,0,0,0.3)', padding: '1px 4px', borderRadius: 3 }}>♚</span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </>
-          )}
-
-          {/* Ожидающие — по ставке (desc) */}
-          {waitingSessions.length > 0 && (
-            <>
-              <div style={secStyle}>⚔️ {t.battles.tabWaiting ?? 'CHALLENGES'}</div>
-              {waitingSessions.map((battle, idx) => (
-                <div key={battle.id} style={{ ...wcardStyle, borderColor: idx === 0 ? 'rgba(245,200,66,0.2)' : 'rgba(255,255,255,0.07)' }}>
-                  <Avatar user={battle.creator as import('@/types').UserPublic | null} size="m" />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: '#F0F2F8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{battle.creator?.firstName ?? '?'}</span>
-                      {idx === 0 && <span style={{ fontSize: 8, padding: '1px 5px', background: 'rgba(245,200,66,0.15)', color: '#F5C842', borderRadius: 4, fontWeight: 800 }}>TOP</span>}
-                    </div>
-                    <div style={{ fontSize: 10, color: '#8B92A8', marginTop: 2 }}>{Math.round((battle.duration ?? 300) / 60)} min · ELO {battle.creator?.elo ?? '?'}</div>
-                    <span style={{ ...tagGold, marginTop: 4, display: 'inline-block' }}>{fmtBalance(battle.bet)} ᚙ</span>
-                  </div>
-                  <button onClick={() => handleJoin(battle)} style={acceptBtn}>{t.battles.accept ?? '⚔️'}</button>
-                </div>
-              ))}
-            </>
-          )}
-
-          {liveSessions.length === 0 && waitingSessions.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '48px 20px' }}>
-              <div style={{ fontSize: 48, marginBottom: 12, opacity: 0.6 }}>⚔️</div>
-              <div style={{ fontSize: 14, color: '#8B92A8', fontWeight: 600 }}>{t.battles.noActive ?? 'No battles yet'}</div>
-              <div style={{ fontSize: 12, color: '#4A5270', marginTop: 6 }}>{t.battles.createFirst ?? 'Create the first battle!'}</div>
-            </div>
-          )}
-        </>
-      )}
-
-      {/* ════════ PRIVATE ════════ */}
-      {tab === 'private' && (
-        <>
-          {myPrivateSessions.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '48px 20px' }}>
-              <div style={{ fontSize: 48, marginBottom: 12, opacity: 0.6 }}>🔒</div>
-              <div style={{ fontSize: 14, color: '#8B92A8', fontWeight: 600 }}>{t.battles.noPrivate ?? 'No private battles'}</div>
-              <div style={{ fontSize: 12, color: '#4A5270', marginTop: 6 }}>{t.battles.createPrivate ?? 'Create one and share the link!'}</div>
-            </div>
-          )}
-          {myPrivateSessions.map((s) => {
-            const sourceType = (s as any).sourceType;
-            const sourceIcon = sourceType === 'TOURNAMENT' ? '🏆' : sourceType === 'WAR' ? '⚔️🏴' : '🔒';
-            const sourceName = sourceType === 'TOURNAMENT' ? (t.battles.fromTournament ?? 'Tournament') : sourceType === 'WAR' ? (t.battles.fromWar ?? 'Country War') : (t.battles.privateChallenge ?? 'Private Challenge');
+      {/* Выводим мои активные игры вне вкладок, чтобы их было видно всегда */}
+      {activeSessions.length > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          {activeSessions.map((s, idx) => {
+            const mySide = s.sides.find((sd) => sd.id === s.mySideId);
+            const opSide = s.sides.find((sd) => sd.id !== s.mySideId);
             return (
-              <div key={s.id} style={wcardStyle}>
-                <div style={{ width: 44, height: 44, borderRadius: 14, background: sourceType === 'TOURNAMENT' ? 'rgba(245,200,66,0.1)' : sourceType === 'WAR' ? 'rgba(255,77,106,0.1)' : 'rgba(155,133,255,0.1)', border: `1px solid ${sourceType === 'TOURNAMENT' ? 'rgba(245,200,66,0.2)' : sourceType === 'WAR' ? 'rgba(255,77,106,0.2)' : 'rgba(155,133,255,0.2)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>{sourceIcon}</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#F0F2F8' }}>{sourceName}</div>
-                  <div style={{ fontSize: 11, color: '#8B92A8', marginTop: 2 }}>
-                    {s.bet && BigInt(s.bet) > 0n ? `${fmtBalance(s.bet)} ᚙ · ` : ''}{t.battles.waitingForOpponent ?? 'Waiting...'}
-                  </div>
+              <div key={s.id} onClick={() => navigate('/game/' + s.id)} style={bcardStyle}>
+                <div style={{ padding: '6px 14px', background: 'rgba(123,97,255,0.1)', borderBottom: '1px solid rgba(123,97,255,0.2)', fontSize: 10, fontWeight: 700, color: '#9B85FF', textTransform: 'uppercase', letterSpacing: '.06em', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: '#9B85FF', boxShadow: '0 0 6px #9B85FF' }} />
+                  {t.home.activeGames}
                 </div>
-                <button onClick={() => navigate('/game/' + s.id)} style={acceptBtn}>{t.battles.accept ?? '→'}</button>
+                <div style={{ display: 'flex', alignItems: 'center', padding: 14, gap: 8 }}>
+                  <BPlayer user={mySide?.player} name={mySide?.player.firstName ?? t.common.me} />
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                    <span style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-muted, #4A5270)', letterSpacing: '.1em' }}>VS</span>
+                    <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 20, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>
+                      {fmtTime(mySide?.timeLeft ?? 300)}
+                    </span>
+                    <span style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', fontWeight: 600 }}>
+                      {s.type === 'BOT' ? t.battles.bot : t.battles.battle}
+                    </span>
+                  </div>
+                  <BPlayer user={opSide?.player} name={opSide?.player.firstName ?? '?'} right />
+                  {s.bet && (
+                    <div style={{ textAlign: 'right', minWidth: 64 }}>
+                      <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 16, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>
+                        {fmtBalance(s.bet)}
+                      </div>
+                      <div style={{ fontSize: 10, color: 'var(--text-secondary, #8B92A8)' }}>ᚙ</div>
+                    </div>
+                  )}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 14px', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+                  <span style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)' }}>
+                    {s.isMyTurn ? t.battles.myTurn : t.battles.opponentTurn}
+                  </span>
+                  <button style={watchBtn}>{t.battles.goTo}</button>
+                </div>
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Сегментные вкладки */}
+      <div style={segStyle}>
+        <button style={segBtn(tab === 'public')} onClick={() => setTab('public')}>{t.battles.tabPublic}</button>
+        <button style={segBtn(tab === 'private')} onClick={() => setTab('private')}>{t.battles.tabPrivate}</button>
+      </div>
+
+      {tab === 'public' && (
+        <>
+          <div style={secStyle}>{/* waiting section */}</div>
+          {publicBattles.length === 0 && (
+            <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', fontSize: 13, padding: '32px 0' }}>
+              {t.battles.noWaiting}
+            </div>
+          )}
+          {publicBattles.map((battle, idx) => (
+            <div key={battle.id} style={{ ...wcardStyle, position: 'relative' }}>
+               {idx === 0 && (
+                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, padding: '4px 14px', background: 'linear-gradient(90deg,rgba(245,200,66,0.15),transparent)', borderBottom: '1px solid rgba(245,200,66,0.2)', fontSize: 9, fontWeight: 800, color: 'var(--accent, #F5C842)', borderTopLeftRadius: 18, borderTopRightRadius: 18, zIndex: 1 }}>
+                   🔥 {t.battles.topStake}
+                 </div>
+               )}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', marginTop: idx === 0 ? 18 : 0 }}>
+                <Avatar user={battle.creator as import('@/types').UserPublic | null} size="m" />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>
+                    {battle.creator?.firstName ?? t.battles.creator}
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 3 }}>
+                    {battle.duration / 60} min · ELO {battle.creator?.elo ?? '?'}
+                  </div>
+                  <div style={{ marginTop: 6, display: 'flex', gap: 6, alignItems: 'center' }}>
+                    <span style={tagGold}>{fmtBalance(battle.bet)} ᚙ</span>
+                    {(battle.spectatorCount ?? 0) > 0 && (
+                      <span style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>
+                        👁 {battle.spectatorCount}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {battle.creator && user && battle.creator.elo !== user.elo && (
+                  <button onClick={() => handleJoin(battle)} style={acceptBtn}>
+                    {t.battles.accept}
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
         </>
       )}
 
-      {/* FAB */}
-      <button onClick={() => setShowCreate(true)} style={fabStyle}>＋</button>
+      {tab === 'private' && (
+        <div style={{ padding: '16px 18px' }}>
+          <div style={{ background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 18, padding: 20, textAlign: 'center', marginBottom: 20 }}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>🔒</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)', marginBottom: 8 }}>
+              {t.battles.private_}
+            </div>
+            <div style={{ fontSize: 13, color: 'var(--text-secondary, #8B92A8)', marginBottom: 20, lineHeight: 1.4 }}>
+              {t.battles.info[2].desc}
+            </div>
+            <button onClick={() => setShowCreate(true)} style={{ width: '100%', ...acceptBtn, padding: '14px 20px', fontSize: 14, boxShadow: '0 4px 16px rgba(245,200,66,0.2)' }}>
+              {t.battles.createTitle}
+            </button>
+          </div>
+
+          {/* Показываем мои приватные батлы, которые ждут соперника */}
+          {myPrivateWaiting.length > 0 && (
+            <div>
+              <div style={secStyle}>{t.game.waitingForOpponent}</div>
+              {myPrivateWaiting.map((s) => (
+                <div key={s.id} style={{ ...wcardStyle, flexDirection: 'column', alignItems: 'stretch' }} onClick={() => navigate('/game/' + s.id)}>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                     <div style={{ fontSize: 24 }}>⏳</div>
+                     <div style={{ flex: 1 }}>
+                       <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>
+                         {t.battles.private_}
+                       </div>
+                       <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 3 }}>
+                         {fmtBalance(s.bet ?? '0')} ᚙ
+                       </div>
+                     </div>
+                     <button style={watchBtn}>{t.battles.goTo}</button>
+                   </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* FAB - show only if not in Private tab, as private tab has a big button */}
+      {tab !== 'private' && (
+        <button onClick={() => setShowCreate(true)} style={fabStyle}>＋</button>
+      )}
 
       {showCreate && <CreateBattleModal onClose={() => setShowCreate(false)} />}
     </PageLayout>
@@ -270,14 +281,11 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           const shareText = t.battles.challengeShare(fmtBalance(String(bet)));
           const botUrl = `https://t.me/chessgamecoin_bot?start=battle_${res.session.code}_ref_${myRef}`;
           try {
-            navigator.clipboard?.writeText(botUrl).catch(() => {});
-          } catch {}
-          try {
             window.Telegram?.WebApp?.openTelegramLink?.(
               `https://t.me/share/url?url=${encodeURIComponent(botUrl)}&text=${encodeURIComponent(shareText)}`
             );
           } catch {}
-          showToast(t.battles.privateBattleCreated + ' 📋', 'info');
+          showToast(t.battles.privateBattleCreated, 'info');
         } else {
           showToast(t.battles.battleCreated, 'info');
         }
@@ -378,7 +386,7 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           onClick={handleCreate}
           disabled={loading || !canCreate}
           style={{
-            width: '100%', padding: '14px',
+            width: '100%', padding: '18px 14px',
             background: canCreate ? 'var(--accent, #F5C842)' : '#2A2F48',
             border: 'none', borderRadius: 14,
             color: canCreate ? 'var(--bg, #0B0D11)' : 'var(--text-muted, #4A5270)',
@@ -428,8 +436,7 @@ const wcardStyle: React.CSSProperties = {
   display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer',
 };
 const fabStyle: React.CSSProperties = {
-  position: 'fixed', bottom: 'max(96px, calc(82px + env(safe-area-inset-bottom, 14px)))',
-  right: 16, width: 52, height: 52,
+  position: 'fixed', bottom: 94, right: 18, width: 48, height: 48,
   borderRadius: '50%', background: 'var(--accent, #F5C842)', color: 'var(--bg, #0B0D11)',
   fontSize: 22, fontWeight: 800, display: 'flex', alignItems: 'center',
   justifyContent: 'center', cursor: 'pointer',
@@ -475,9 +482,8 @@ const bmSheetStyle: React.CSSProperties = {
   borderBottom: 'none',
   borderRadius: '24px 24px 0 0',
   padding: '16px 18px',
-  paddingBottom: 'max(32px, env(safe-area-inset-bottom, 32px))',
-  maxHeight: '85vh', overflowY: 'auto',
-  WebkitOverflowScrolling: 'touch' as any,
+  paddingBottom: 'max(24px, env(safe-area-inset-bottom, 24px))',
+  maxHeight: '88vh', overflowY: 'auto',
 };
 const bmHandleStyle: React.CSSProperties = {
   width: 36, height: 4, background: '#2A2F48', borderRadius: 2, margin: '4px auto 0',
@@ -487,7 +493,7 @@ const bmSectionLbl: React.CSSProperties = {
   textTransform: 'uppercase', color: 'var(--text-muted, #4A5270)', marginBottom: 10,
 };
 const bmColorBtn = (active: boolean): React.CSSProperties => ({
-  padding: '12px 8px', borderRadius: 14, cursor: 'pointer', minHeight: 60,
+  padding: '18px 8px', borderRadius: 14, cursor: 'pointer', minHeight: 76,
   background: active ? 'rgba(245,200,66,0.1)' : 'var(--bg-card, #1C2030)',
   border: `2px solid ${active ? 'var(--accent, #F5C842)' : 'var(--border, rgba(255,255,255,0.07))'}`,
   color: active ? 'var(--accent, #F5C842)' : 'var(--text-secondary, #8B92A8)',
@@ -495,7 +501,7 @@ const bmColorBtn = (active: boolean): React.CSSProperties => ({
   transform: active ? 'scale(1.04)' : 'scale(1)',
 });
 const bmTimeBtn = (active: boolean): React.CSSProperties => ({
-  padding: '10px 8px', borderRadius: 12, cursor: 'pointer', minHeight: 52,
+  padding: '14px 8px', borderRadius: 12, cursor: 'pointer', minHeight: 68,
   background: active ? 'rgba(123,97,255,0.15)' : 'var(--bg-card, #1C2030)',
   border: `1px solid ${active ? 'rgba(123,97,255,0.4)' : 'var(--border, rgba(255,255,255,0.07))'}`,
   color: active ? '#9B85FF' : 'var(--text-secondary, #8B92A8)',

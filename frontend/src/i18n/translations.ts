@@ -59,7 +59,7 @@ export const translations = {
       sectionBattles: 'Battles', sectionTournaments: 'Tournaments', sectionWars: 'Wars',
     },
     battles: {
-      title: 'Battles', tabActive: '⚔ Active', tabWaiting: '⏳ Waiting',
+      title: 'Battles', tabPublic: '🌍 Public', tabPrivate: '🔒 Private',
       noActive: 'No active games', noWaiting: 'No waiting battles',
       bot: 'J.A.R.V.I.S', battle: 'BATTLE',
       myTurn: '▶ Your turn', opponentTurn: "⏳ Opponent's turn",
@@ -567,7 +567,7 @@ export const translations = {
       sectionBattles: 'Батлы', sectionTournaments: 'Кубки', sectionWars: 'Войны',
     },
     battles: {
-      title: 'Батлы', tabActive: '⚔ Активные', tabWaiting: '⏳ Ожидают',
+      title: 'Батлы', tabPublic: '🌍 Публичные', tabPrivate: '🔒 Приватные',
       noActive: 'Нет активных партий', noWaiting: 'Нет ожидающих батлов',
       bot: 'J.A.R.V.I.S', battle: 'БАТЛ',
       myTurn: '▶ Ваш ход', opponentTurn: '⏳ Ход соперника',

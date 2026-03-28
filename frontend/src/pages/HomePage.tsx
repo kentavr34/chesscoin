@@ -10,6 +10,7 @@ import { AttemptsModal } from '@/components/ui/AttemptsModal';
 import { ActiveSessionsModal } from '@/components/ui/ActiveSessionsModal';
 import { getSocket } from '@/api/socket';
 import { JarvisModal, JARVIS_LEVELS } from '@/components/ui/JarvisModal';
+import { JarvisInfoModal } from '@/components/ui/JarvisInfoModal';
 import { GameSetupModal } from '@/components/ui/GameSetupModal';
 import type { JarvisLevel } from '@/components/ui/JarvisModal';
 import { tasksApi, warsApi, puzzlesApi } from '@/api';
@@ -127,20 +128,21 @@ export const HomePage: React.FC = () => {
   const t = useT();
   const navigate = useNavigate();
   const { user } = useUserStore();
-  const { sessions, upsertSession } = useGameStore();
+  const { sessions } = useGameStore();
   const [showAttempts, setShowAttempts] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('chesscoin_onboarding_done'));
   const [welcomeStep, setWelcomeStep] = useState<0|1|2>(0);
   const [startingBot, setStartingBot] = useState(false);
+  // J1: showJarvis убран — GameSetupModal открывается напрямую
   const [showSessions, setShowSessions] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState<JarvisLevel | null>(null);
-  const [showJarvisInfo, setShowJarvisInfo] = useState(false);
   const [taskStats, setTaskStats] = useState<{ done: number; total: number; remaining: number } | null>(null);
   const [dailyPuzzle, setDailyPuzzle] = useState<any>(null);
   const [puzzleLoading, setPuzzleLoading] = useState(true);
   const [floatingAmount, setFloatingAmount] = useState<string | null>(null);
   const [myWar, setMyWar] = useState<any>(null);
   const [myCountry, setMyCountry] = useState<any>(null);
+  const [showJarvisInfo, setShowJarvisInfo] = useState(false);
 
   const activeSessions = sessions.filter(s => s.status === 'IN_PROGRESS' || s.status === 'WAITING_FOR_OPPONENT');
   const myTurnSessions = activeSessions.filter(s => s.isMyTurn);
@@ -191,34 +193,29 @@ export const HomePage: React.FC = () => {
   useEffect(() => { loadLiveData(); }, [loadLiveData]);
 
   const jarvisLevel = user?.jarvisLevel ?? 1;
-  const nextBotLevel = Math.min(20, jarvisLevel < 20 ? jarvisLevel + 1 : 20);
-  const jarvisCfg = JARVIS_LEVELS[Math.max(0, Math.min(19, nextBotLevel - 1))];
+  const jarvisCfg = JARVIS_LEVELS[Math.max(0, Math.min(19, jarvisLevel - 1))];
   const militaryRank = user?.militaryRank?.name ?? 'Recruit';
   const militaryEmoji = user?.militaryRank?.emoji ?? '😊';
   const battles = user?.wins ?? 0;
   const rank = user?.rank ?? 1;
 
+  // J1: сразу открываем GameSetupModal с текущим уровнем — JarvisModal убран из основного флоу
   const startBotGame = () => {
     if (!user || user.attempts <= 0) { setShowAttempts(true); return; }
-    const seenKey = 'jarvis_info_seen';
-    if (!localStorage.getItem(seenKey)) {
-      localStorage.setItem(seenKey, '1');
-      setShowJarvisInfo(true);
-      return;
-    }
-    setSelectedLevel(jarvisCfg);
+    setSelectedLevel(jarvisCfg);  // устанавливаем текущий уровень сразу
   };
 
   const handleGameStart = (color: 'white' | 'black', timeMinutes: number) => {
     if (!selectedLevel || startingBot) return;
     setStartingBot(true);
     setSelectedLevel(null);
-    getSocket().emit('game:create:bot', { color, botLevel: selectedLevel.level, timeSeconds: timeMinutes * 60 }, (res: { ok?: boolean; session?: Record<string, unknown>; error?: string }) => {
+    getSocket().emit('game:create:bot', { color, botLevel: selectedLevel.level, timeSeconds: timeMinutes * 60 }, (res: { ok?: boolean; session?: { id: string } | any; error?: string }) => {
       setStartingBot(false);
       if (res?.ok && res?.session) {
-        upsertSession(res.session as import('@/types').GameSession);
-        navigate('/game/' + (res.session as { id: string }).id);
+        useGameStore.getState().upsertSession(res.session); // Prevent race condition in GamePage
+        navigate('/game/' + res.session.id);
       } else if (res?.error) {
+        // N2: показываем понятную ошибку вместо молчаливого выброса
         const errText = res.error || 'Failed to start game. Try again later.';
         import('@/components/ui/Toast').then(({ toast }) => toast.error(errText));
       }
@@ -249,7 +246,15 @@ export const HomePage: React.FC = () => {
           </div>
           {/* JARVIS + Звание блок */}
           <div style={jarvisBlockStyle}>
-            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.08em', color: '#6A7090', textTransform: 'uppercase' as const, marginBottom: 1 }}>{t.home.jarvisLabel}</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 1 }}>
+              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.08em', color: '#6A7090', textTransform: 'uppercase' as const }}>{t.home.jarvisLabel || 'JARVIS'}</div>
+              <button 
+                onClick={() => setShowJarvisInfo(true)}
+                style={{ background: 'transparent', border: 'none', color: '#8B92A8', cursor: 'pointer', padding: 0, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                ❔
+              </button>
+            </div>
             <div style={{ fontSize: 15, fontWeight: 800, color: '#9B85FF' }}>{jarvisCfg.name}</div>
             <div style={{ fontSize: 10, color: '#5A6080', marginBottom: 7 }}>Lv.{jarvisLevel} / 20</div>
             <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.06em', color: '#6A7090', textTransform: 'uppercase' as const, marginBottom: 2 }}>{t.home.rankLabel}</div>
@@ -335,28 +340,15 @@ export const HomePage: React.FC = () => {
       {/* Активные игры */}
       {activeSessions.length > 0 && (
         <>
-          <div style={secStyle}>{t.home.activeGames} ({activeSessions.length})</div>
-          {activeSessions.map((s) => {
-            const opSide = s.sides?.find((sd) => sd.id !== s.mySideId);
-            const isBot = s.type === 'BOT';
-            const opName = isBot ? `🤖 Lv.${s.botLevel ?? '?'}` : (opSide?.player?.firstName ?? '?');
-            const myTurn = s.isMyTurn;
-            return (
-              <div key={s.id} onClick={() => navigate('/game/' + s.id)} style={{ ...stripStyle, borderColor: myTurn ? 'rgba(0,214,143,0.25)' : 'rgba(255,255,255,0.07)', background: myTurn ? 'linear-gradient(135deg,rgba(0,214,143,0.06),transparent)' : undefined }}>
-                <span style={{ fontSize: 18 }}>{isBot ? '🤖' : '⚔️'}</span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: myTurn ? 'var(--green, #00D68F)' : '#F0F2F8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
-                    vs {opName}
-                  </div>
-                  <div style={{ fontSize: 10, color: '#8B92A8', marginTop: 1 }}>
-                    {myTurn ? `● ${t.home.myTurn?.(1) ?? 'Your turn'}` : t.home.opponentTurn ?? 'Waiting...'}
-                    {s.bet && BigInt(s.bet) > 0n ? ` · ${fmtBalance(s.bet)} ᚙ` : ''}
-                  </div>
-                </div>
-                <span style={{ fontSize: 13, fontWeight: 700, color: myTurn ? 'var(--green, #00D68F)' : '#8B92A8' }}>→</span>
-              </div>
-            );
-          })}
+          <div style={secStyle}>{t.home.activeGames}</div>
+          <div onClick={() => activeSessions.length === 1 ? navigate('/game/' + activeSessions[0].id) : setShowSessions(true)} style={{ ...stripStyle, borderColor: 'rgba(0,214,143,0.2)', background: 'linear-gradient(135deg,rgba(0,214,143,0.06),transparent)' }}>
+            <span style={{ fontSize: 20 }}>⚔️</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--green, #00D68F)' }}>{activeSessions.length} {activeSessions.length === 1 ? t.home.activeSingle : t.home.activeMultiple}</div>
+              <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>{myTurnSessions.length > 0 ? t.home.myTurn(myTurnSessions.length) : t.home.opponentTurn}</div>
+            </div>
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--green, #00D68F)' }}>→</span>
+          </div>
         </>
       )}
 
@@ -398,14 +390,13 @@ export const HomePage: React.FC = () => {
       <div style={secStyle}>{t.home.sections.toUpperCase()}</div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '0 16px' }}>
         <div onClick={startBotGame} style={{ ...gameCardStyle, opacity: startingBot ? 0.6 : 1, position: 'relative' }}>
-          <button
+          <button 
             onClick={(e) => { e.stopPropagation(); setShowJarvisInfo(true); }}
-            style={{ position: 'absolute', top: 8, right: 8, width: 22, height: 22, borderRadius: '50%', background: 'rgba(155,133,255,0.2)', border: '1px solid rgba(155,133,255,0.3)', color: '#9B85FF', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}
-          >?</button>
+            style={{ position: 'absolute', top: 12, right: 12, background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', width: 22, height: 22, fontSize: 12, color: '#C8CDDF', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>?</button>
           <div style={cardIcoWrapper}><IcoJarvis /></div>
           <div style={cardTitle}>J.A.R.V.I.S</div>
           <div style={cardSub}>{jarvisCfg.name}</div>
-          <span style={cardTag('#9B85FF', 'rgba(123,97,255,0.15)')}>Lv.{nextBotLevel}</span>
+          <span style={cardTag('#9B85FF', 'rgba(123,97,255,0.15)')}>MAX</span>
         </div>
         <div onClick={() => navigate('/battles')} style={gameCardStyle}>
           <div style={cardIcoWrapper}><IcoBattle /></div>
@@ -461,44 +452,9 @@ export const HomePage: React.FC = () => {
           onClose={() => setShowSessions(false)}
         />
       )}
-      {/* Jarvis info modal */}
-      {showJarvisInfo && (
-        <div onClick={(e) => e.target === e.currentTarget && setShowJarvisInfo(false)} style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ width: '100%', maxWidth: 400, maxHeight: '80vh', overflowY: 'auto', background: '#13161F', border: '1px solid rgba(155,133,255,0.2)', borderRadius: 24, padding: '24px 20px' }}>
-            <div style={{ textAlign: 'center', marginBottom: 16 }}>
-              <div style={{ fontSize: 40, marginBottom: 8 }}>🤖</div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: '#9B85FF' }}>J.A.R.V.I.S</div>
-              <div style={{ fontSize: 13, color: '#8B92A8', marginTop: 4 }}>{t.home.jarvisInfoSubtitle ?? 'AI Chess Opponent — 20 levels'}</div>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16 }}>
-              {[
-                { icon: '🎯', title: t.home.jarvisInfoLevels ?? '20 difficulty levels', desc: t.home.jarvisInfoLevelsDesc ?? 'From Beginner (Elo ~800) to Mystic (full Stockfish power). Each level harder than the last.' },
-                { icon: '🏆', title: t.home.jarvisInfoBadges ?? 'Badges for victories', desc: t.home.jarvisInfoBadgesDesc ?? 'Win each level to earn a badge in your profile. Badges show your chess mastery.' },
-                { icon: '💰', title: t.home.jarvisInfoRewards ?? 'Growing rewards', desc: t.home.jarvisInfoRewardsDesc ?? 'Higher levels = bigger coin rewards. Level 20 (Mystic) = 1,000,000 ᚙ!' },
-                { icon: '📈', title: t.home.jarvisInfoProgress ?? 'Step by step', desc: t.home.jarvisInfoProgressDesc ?? 'Unlock levels one by one. You must beat level N to unlock level N+1.' },
-              ].map((item, i) => (
-                <div key={i} style={{ display: 'flex', gap: 12, padding: '12px 14px', background: 'rgba(155,133,255,0.06)', borderRadius: 14, border: '1px solid rgba(155,133,255,0.1)' }}>
-                  <div style={{ fontSize: 24, flexShrink: 0, lineHeight: 1 }}>{item.icon}</div>
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: '#F0F2F8' }}>{item.title}</div>
-                    <div style={{ fontSize: 11, color: '#8B92A8', marginTop: 2, lineHeight: 1.4 }}>{item.desc}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div style={{ textAlign: 'center', fontSize: 12, color: '#6A7090', marginBottom: 12 }}>
-              {t.home.jarvisInfoCurrent ?? 'Your current level'}: <span style={{ color: '#9B85FF', fontWeight: 700 }}>Lv.{jarvisLevel} {JARVIS_LEVELS[Math.max(0, jarvisLevel - 1)]?.name}</span>
-            </div>
-            <button onClick={() => { setShowJarvisInfo(false); setSelectedLevel(jarvisCfg); }} style={{ width: '100%', padding: '14px', background: '#9B85FF', color: '#fff', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
-              ⚔️ {t.home.jarvisInfoPlay ?? 'Play'} Lv.{nextBotLevel} — {jarvisCfg.name}
-            </button>
-            <button onClick={() => setShowJarvisInfo(false)} style={{ width: '100%', marginTop: 8, padding: '12px', background: 'transparent', color: '#8B92A8', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-              {t.common.close ?? 'Close'}
-            </button>
-          </div>
-        </div>
-      )}
+      {/* J1: JarvisModal убран — GameSetupModal открывается сразу с текущим уровнем */}
       {selectedLevel && <GameSetupModal selectedLevel={selectedLevel} onStart={handleGameStart} onClose={() => setSelectedLevel(null)} />}
+      {showJarvisInfo && <JarvisInfoModal onClose={() => setShowJarvisInfo(false)} />}
       {showOnboarding && <OnboardingTour onDone={handleOnboardingDone} />}
       {welcomeStep === 1 && (
         <div style={toastStyle('var(--accent, #F5C842)')}>

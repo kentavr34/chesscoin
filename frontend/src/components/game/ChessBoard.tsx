@@ -43,6 +43,7 @@ interface ChessBoardProps {
   // S3: скины из сессии (создатель батла — видны обоим)
   sessionBoardSkinUrl?: string | null;
   sessionPieceSkinUrl?: string | null;
+  sessionId?: string;
 }
 
 export const ChessBoard: React.FC<ChessBoardProps> = ({
@@ -55,6 +56,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
   lastMove,
   sessionBoardSkinUrl,
   sessionPieceSkinUrl,
+  sessionId,
 }) => {
   const boardColors  = useEquippedBoardColors();
   const pieceFilter  = useEquippedPieceFilter();
@@ -138,6 +140,41 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
   const [optionSqs, setOptionSqs] = useState<Record<string, React.CSSProperties>>({});
   const [localFen, setLocalFen]   = useState(fen);
   const [pendingPromotion, setPendingPromotion] = useState<{ from: Square; to: Square } | null>(null);
+
+  const [isSaved, setIsSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Проверяем сохранена ли партия при монтировании
+  useEffect(() => {
+    if (!sessionId) return;
+    import('@/api/client').then(({ api }) => {
+      api.get<{ saved: boolean }>(`/games/${sessionId}/saved`)
+        .then(res => setIsSaved(res.saved))
+        .catch(() => {});
+    });
+  }, [sessionId]);
+
+  const toggleSave = useCallback(async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!sessionId || isSaving) return;
+    setIsSaving(true);
+    try {
+      const { api } = await import('@/api/client');
+      if (isSaved) {
+        await api.delete(`/games/${sessionId}/save`);
+        setIsSaved(false);
+        haptic.impact('light');
+      } else {
+        await api.post(`/games/${sessionId}/save`);
+        setIsSaved(true);
+        haptic.impact('heavy');
+      }
+    } catch {
+      // Игнорируем ошибки сети
+    } finally {
+      setIsSaving(false);
+    }
+  }, [sessionId, isSaved, isSaving]);
 
   // Применяем filter фигур через CSS переменную
   useEffect(() => {
@@ -323,7 +360,36 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
         borderRadius: 12,
         overflow: 'hidden',
         boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
+        position: 'relative',
       }}>
+        {sessionId && (
+          <button
+            onClick={toggleSave}
+            disabled={isSaving}
+            style={{
+              position: 'absolute',
+              bottom: 8,
+              right: 8,
+              zIndex: 10,
+              background: 'rgba(28, 32, 48, 0.85)',
+              border: `1px solid ${isSaved ? '#F5C842' : 'rgba(255,255,255,0.1)'}`,
+              borderRadius: '50%',
+              width: 32,
+              height: 32,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: isSaved ? '#F5C842' : '#8B92A8',
+              fontSize: 16,
+              cursor: isSaving ? 'wait' : 'pointer',
+              boxShadow: isSaved ? '0 0 10px rgba(245,200,66,0.3)' : '0 2px 8px rgba(0,0,0,0.5)',
+              transition: 'all 0.2s',
+            }}
+            title="Save Game"
+          >
+            {isSaved ? '★' : '☆'}
+          </button>
+        )}
         <Chessboard
           position={localFen}
           boardOrientation={orientation}

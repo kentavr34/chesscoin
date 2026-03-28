@@ -13,23 +13,25 @@ import type { Transaction, UserPublic } from '@/types';
 import { JARVIS_LEVELS } from '@/components/ui/JarvisModal';
 
 // Local type for Tab
-type Tab = 'info' | 'games' | 'saves' | 'ach';
+type Tab = 'info' | 'saves' | 'ach';
 
-// Game history item — flat format from GET /profile/games
+// Game history item returned by profileApi.getGames() — represents a player's side in a session
 interface GameHistoryItem {
-  sessionId: string;
-  type: string;
-  result: string;
-  isWhite: boolean;
+  id: string;
+  status: string;
   winningAmount?: string | null;
-  bet?: string | null;
-  botLevel?: number | null;
-  pgn?: string | null;
-  duration?: number | null;
-  startedAt?: string | null;
-  finishedAt?: string | null;
-  opponent?: UserPublic | null;
-  hasBot?: boolean;
+  session: {
+    id: string;
+    type: string;
+    pgn?: string | null;
+    bet?: string | null;
+    finishedAt?: string | null;
+    sides: Array<{
+      playerId: string;
+      status?: string;
+      player: UserPublic;
+    }>;
+  };
 }
 
 // Saved game item returned by warsApi.savedGames()
@@ -84,68 +86,9 @@ export const ProfilePage: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [replayGame, setReplayGame] = useState<{ pgn: string; title?: string; sessionId?: string } | null>(null);
   const [selectedBadge, setSelectedBadge] = useState<{ name: string; date?: string } | null>(null);
-  const [avatarLoading, setAvatarLoading] = useState(false);
-  const [cropFile, setCropFile] = useState<File | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const [viewedProfile, setViewedProfile] = useState<Record<string, unknown> | null>(null);
-
-  useEffect(() => {
-    if (isOwnProfile || !viewedUserId) return;
-    profileApi.getUser(viewedUserId).then((data) => setViewedProfile(data as unknown as Record<string, unknown>)).catch(() => navigate('/'));
-  }, [viewedUserId, isOwnProfile]);
-
-  const showToast = (msg: string) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2500);
-  };
-
-  // Открываем AvatarCropModal вместо прямой загрузки
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setCropFile(file);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
-  // После обрезки — загружаем WebP blob
-  const handleCropConfirm = async (blob: Blob) => {
-    setCropFile(null);
-    setAvatarLoading(true);
-    try {
-      const file = new File([blob], 'avatar.webp', { type: 'image/webp' });
-      await profileApi.uploadAvatar(file);
-      const updated = await authApi.me();
-      setUser(updated);
-      showToast(t.profile.avatarUpdated);
-    } catch (err: unknown) {
-      showToast((err instanceof Error ? err.message : String(err)) || t.profile.uploadError);
-    } finally {
-      setAvatarLoading(false);
-    }
-  };
-
-  const handleAvatarDelete = async () => {
-    if (!confirm(t.profile.deleteAvatar)) return;
-    setAvatarLoading(true);
-    try {
-      await profileApi.deleteAvatar();
-      const updated = await authApi.me();
-      setUser(updated);
-      showToast(t.profile.avatarDeleted);
-    } catch (err: unknown) {
-      showToast((err instanceof Error ? err.message : String(err)) || t.common.error);
-    } finally {
-      setAvatarLoading(false);
-    }
-  };
 
   useEffect(() => {
     if (tab === 'info') {
-      profileApi.getGames(10).then((r) => setRecentGames((r.games ?? []) as unknown as GameHistoryItem[])).catch(() => {});
-    }
-    if (tab === 'games') {
       profileApi.getGames().then((r) => setRecentGames((r.games ?? []) as unknown as GameHistoryItem[])).catch(() => {});
       profileApi.getTransactions().then((r) => setTransactions(r.transactions)).catch(() => {});
     }
@@ -155,24 +98,17 @@ export const ProfilePage: React.FC = () => {
   }, [tab]);
 
   if (!user) return null;
-  if (!isOwnProfile && !viewedProfile) return null;
 
-  const displayUser = isOwnProfile ? user : viewedProfile;
-  const displayStats = isOwnProfile
-    ? { totalGames: user.totalGames ?? 0, wins: user.wins ?? 0, losses: user.losses ?? 0, draws: user.draws ?? 0 }
-    : { totalGames: (viewedProfile?.stats as any)?.total ?? 0, wins: (viewedProfile?.stats as any)?.wins ?? 0, losses: (viewedProfile?.stats as any)?.losses ?? 0, draws: (viewedProfile?.stats as any)?.draws ?? 0 };
-
-  const totalGames = displayStats.totalGames;
-  const wins = displayStats.wins;
-  const losses = displayStats.losses;
-  const draws = displayStats.draws;
+  const totalGames = user.totalGames ?? 0;
+  const wins = user.wins ?? 0;
+  const losses = user.losses ?? 0;
+  const draws = user.draws ?? 0;
   const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
   const lossRate = totalGames > 0 ? Math.round((losses / totalGames) * 100) : 0;
   const drawRate = 100 - winRate - lossRate;
 
   const TABS: { id: Tab; label: string }[] = [
     { id: 'info',     label: t.profile.tabs.info },
-    { id: 'games',    label: t.profile.tabs.games },
     { id: 'saves',    label: t.profile.tabs.saves },
     { id: 'ach',      label: t.profile.tabs.achievements },
   ];
@@ -185,20 +121,6 @@ export const ProfilePage: React.FC = () => {
     <>
     {isOwnProfile && profileInfo.show && <InfoPopup infoKey="profile" slides={[{ icon: '🏅', title: 'Your Profile', desc: 'Your stats, badges and game history. ELO shows your level — the higher, the stronger opponents.' }, { icon: '🎖️', title: 'Military Rank', desc: 'Rank grows with referrals. Higher rank — bigger percentage from friends\' wins.' }, { icon: '💰', title: 'Leagues & Rewards', desc: 'Earn coins to climb leagues: Bronze → Silver → Gold → Diamond → Champion.' }]} onClose={profileInfo.close} />}
     <PageLayout backTo="/" rightAction={rightAction} centered>
-      {/* Toast */}
-      {toast && (
-        <div style={{ position: 'fixed', top: 60, left: '50%', transform: 'translateX(-50%)', background: 'var(--bg-input, #232840)', border: '1px solid #F5C842', borderRadius: 12, padding: '10px 20px', fontSize: 13, color: 'var(--accent, #F5C842)', zIndex: 9999, fontWeight: 600, whiteSpace: 'nowrap' }}>
-          {toast}
-        </div>
-      )}
-      {/* Hidden file input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        style={{ display: 'none' }}
-        onChange={handleAvatarUpload}
-      />
       {/* Header */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 18px 0' }}>
         <div style={{ position: 'relative', marginBottom: 12 }}>
@@ -206,26 +128,7 @@ export const ProfilePage: React.FC = () => {
 
           {/* Аватар — кликабельный на чужом профиле */}
           {isOwnProfile ? (
-            <>
-              <Avatar user={user} size="xl" gold />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={avatarLoading}
-                style={{ position: 'absolute', bottom: -2, right: -2, width: 28, height: 28, borderRadius: '50%', background: 'var(--accent, #F5C842)', border: '2px solid #0B0D11', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 13, lineHeight: 1 }}
-                title="Upload avatar"
-              >
-                {avatarLoading ? '…' : '📷'}
-              </button>
-              {user.avatarType === 'UPLOAD' && !avatarLoading && (
-                <button
-                  onClick={handleAvatarDelete}
-                  style={{ position: 'absolute', top: -2, right: -2, width: 22, height: 22, borderRadius: '50%', background: 'var(--red, #FF4D6A)', border: '2px solid #0B0D11', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 10, color: '#fff' }}
-                  title="Delete avatar"
-                >
-                  ✕
-                </button>
-              )}
-            </>
+            <Avatar user={user} size="xl" gold />
           ) : (
             /* Чужой профиль — аватар кликабелен → переход в магазин на конкретный товар */
             <div style={{ position: 'relative', cursor: 'pointer' }} onClick={() => {
@@ -275,12 +178,13 @@ export const ProfilePage: React.FC = () => {
           {user.firstName} {user.lastName ?? ''}
         </div>
         <div style={{ fontSize: 12, color: 'var(--text-secondary, #8B92A8)', marginTop: 3 }}>@{user.username ?? 'unknown'}</div>
+        {/* 2.3 Кнопка "Сразиться" на чужом профиле */}
         {!isOwnProfile && (
           <button
             onClick={() => navigate('/battles', { state: { challengeUserId: viewedUserId } })}
-            style={{ marginTop: 12, padding: '11px 28px', background: 'var(--accent, #F5C842)', border: 'none', borderRadius: 14, color: '#0B0D11', fontSize: 14, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(245,200,66,0.3)', display: 'flex', alignItems: 'center', gap: 6 }}
+            style={{ marginTop: 10, padding: '9px 20px', background: 'rgba(245,200,66,0.12)', border: '1px solid rgba(245,200,66,0.3)', borderRadius: 12, color: 'var(--accent, #F5C842)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
           >
-            ⚔️ {t.profile.challengeBtn ?? 'Challenge to Duel'}
+            ⚔️ {t.profile.challengeBtn ?? 'Challenge'}
           </button>
         )}
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8, justifyContent: 'center' }}>
@@ -294,11 +198,6 @@ export const ProfilePage: React.FC = () => {
           {user?.militaryRank && (
             <span style={{ ...tagGr, background: 'rgba(255,159,67,0.1)', color: '#FF9F43', borderColor: 'rgba(255,159,67,0.2)' }}>
               {user?.militaryRank.emoji} {user?.militaryRank.label}
-              {(user?.referralCount ?? 0) > 0 && (
-                <span style={{ marginLeft: 4, fontSize: 10, opacity: 0.8 }}>
-                  — {(user.referralCount ?? 0).toLocaleString()} {t.profile.fighters ?? '👥'}
-                </span>
-              )}
             </span>
           )}
           <span style={tagRobot}>🤖 {JARVIS_LEVELS[Math.max(0, (user?.jarvisLevel ?? 1) - 1)].name}</span>
@@ -416,8 +315,8 @@ export const ProfilePage: React.FC = () => {
               // Аппроксимируем: +16 победа, -16 поражение, 0 ничья (K=32/2)
               for (const g of games) {
                 eloHistory.push(elo);
-                if (g.result === 'WON') elo = Math.max(100, elo - 16);
-                else if (g.result === 'LOST') elo = elo + 16;
+                if (g.status === 'WON') elo = Math.max(100, elo - 16);
+                else if (g.status === 'LOST') elo = elo + 16;
               }
               eloHistory.push(user.elo); // текущее
               if (eloHistory.length < 2) {
@@ -467,159 +366,128 @@ export const ProfilePage: React.FC = () => {
             <StatCard val={user.winStreak ?? 0} lbl={t.profile.streak} color="var(--accent, #F5C842)" />
           </div>
 
-          <div style={secStyle}>{t.profile.refSection}</div>
-          <div style={{ margin: '0 18px', padding: 14, background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 18, display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>{t.profile.refLink}</div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', fontFamily: "'JetBrains Mono',monospace", marginTop: 5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                t.me/chessgamecoin_bot?start=ref_{user.telegramId}
-              </div>
+          {/* Последние партии */}
+          <div style={{ ...secStyle, marginTop: 12 }}>{t.profile.recentGames}</div>
+          {recentGames.length === 0 ? (
+            <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: '24px 0', fontSize: 13 }}>
+              {t.profile.noGamesPlayed}
             </div>
-            <button style={goldBtn}>{t.profile.invite}</button>
-          </div>
-        </>
-      )}
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '0 14px' }}>
+              {recentGames.slice(0, 15).map((g) => {
+                const myStatus = g.status;
+                const opponentInfo = g.session?.sides?.find((s) => s.playerId !== user?.id);
+                const mySide = g.session?.sides?.find((s) => s.playerId === user?.id);
+                const oppPlayer = opponentInfo?.player;
+                const myPlayer = mySide?.player ?? user;
+                const isWon  = myStatus === 'WON';
+                const isDraw = myStatus === 'DRAW';
+                const statusColor = isWon ? 'var(--green,#00D68F)' : isDraw ? '#9B85FF' : 'var(--red,#FF4D6A)';
+                const statusLabel = isWon ? t.profile.gameWon : isDraw ? t.profile.gameDraw : t.profile.gameLost;
+                const earned = g.winningAmount ? fmtBalance(String(g.winningAmount)) : null;
 
-      {/* Games tab — реальные партии + история транзакций */}
-      {tab === 'games' && (() => {
-        const typeIcon: Record<string, string> = {
-          BOT: '🤖', BATTLE: '⚔️', WAR: '🌍', TOURNAMENT: '🏆',
-        };
-        const typeLabel: Record<string, string> = {
-          BOT: 'vs JARVIS', BATTLE: t.profile.typeBattle, WAR: t.profile.typeWar, TOURNAMENT: t.profile.typeTournament,
-        };
-        return (
-          <>
-            {/* Последние партии */}
-            <div style={secStyle}>{t.profile.recentGames}</div>
-            {recentGames.length === 0 ? (
-              <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: '24px 0', fontSize: 13 }}>
-                {t.profile.noGamesPlayed}
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '0 14px' }}>
-                {recentGames.slice(0, 15).map((g) => {
-                  const myResult = g.result;
-                  const oppPlayer = g.opponent;
-                  const isWon  = myResult === 'WON';
-                  const isDraw = myResult === 'DRAW';
-                  const statusColor = isWon ? 'var(--green,#00D68F)' : isDraw ? '#9B85FF' : 'var(--red,#FF4D6A)';
-                  const statusLabel = isWon ? t.profile.gameWon : isDraw ? t.profile.gameDraw : t.profile.gameLost;
-                  const earned = g.winningAmount ? fmtBalance(String(g.winningAmount)) : null;
-                  return (
-                    <div key={g.sessionId} style={{
-                      display: 'flex', alignItems: 'center', gap: 10,
-                      padding: '10px 12px', background: 'var(--bg-card,#1C2030)',
-                      border: `1px solid ${isWon ? 'rgba(0,214,143,0.12)' : isDraw ? 'rgba(155,133,255,0.12)' : 'rgba(255,77,106,0.10)'}`,
-                      borderRadius: 14,
-                    }}>
-                      {/* Цвет результата */}
-                      <div style={{ width: 4, height: 40, borderRadius: 2, background: statusColor, flexShrink: 0 }} />
+                const typeIcon: Record<string, string> = { BOT: '🤖', BATTLE: '⚔️', WAR: '🌍', TOURNAMENT: '🏆' };
+                const typeLabel: Record<string, string> = { BOT: 'vs JARVIS', BATTLE: t.profile.typeBattle, WAR: t.profile.typeWar, TOURNAMENT: t.profile.typeTournament };
 
-                      {/* Аватар оппонента */}
+                return (
+                  <div key={g.id} style={{
+                    display: 'flex', alignItems: 'stretch', gap: 8,
+                    padding: '8px 10px', background: 'var(--bg-card,#1C2030)',
+                    border: `1px solid ${isWon ? 'rgba(0,214,143,0.12)' : isDraw ? 'rgba(155,133,255,0.12)' : 'rgba(255,77,106,0.10)'}`,
+                    borderRadius: 14,
+                    position: 'relative'
+                  }}>
+                    {/* Цвет результата */}
+                    <div style={{ width: 4, background: statusColor, borderRadius: 2 }} />
+
+                    {/* Аватар оппонента (left) */}
+                    <div 
+                      onClick={() => oppPlayer && oppPlayer.id && navigate(`/profile/${oppPlayer.id}`, { state: { userId: oppPlayer.id } })} 
+                      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: 48, cursor: oppPlayer ? 'pointer' : 'default', zIndex: 2 }}
+                    >
                       {oppPlayer ? (
-                        <Avatar user={oppPlayer} size="s" />
+                        <Avatar user={oppPlayer} size="m" />
                       ) : (
-                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
-                          {typeIcon[g.type ?? ''] ?? '♟'}
+                        <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
+                          {typeIcon[g.session?.type ?? ''] ?? '🤖'}
                         </div>
                       )}
-
-                      {/* Инфо */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary,#F0F2F8)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {oppPlayer ? `${oppPlayer.firstName}${(oppPlayer as any).lastName ? ' ' + (oppPlayer as any).lastName : ''}` : g.hasBot ? `J.A.R.V.I.S Lv.${g.botLevel ?? '?'}` : typeLabel[g.type ?? ''] ?? t.profile.gameLabel}
-                        </div>
-                        <div style={{ fontSize: 10, color: 'var(--text-muted,#4A5270)', marginTop: 2 }}>
-                          {typeLabel[g.type ?? ''] ?? ''} · {g.finishedAt ? fmtDate(g.finishedAt) : ''}
-                          {g.bet && BigInt(g.bet) > 0n ? ` · ${fmtBalance(g.bet)} ᚙ` : ''}
-                        </div>
-                      </div>
-
-                      {/* Результат + кнопка replay */}
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-                        <span style={{ fontSize: 11, fontWeight: 800, color: statusColor }}>{statusLabel}</span>
-                        {earned && isWon && (
-                          <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono',monospace", color: 'var(--accent,#F5C842)' }}>+{earned} ᚙ</span>
-                        )}
-                        {g.pgn && (
-                          <button
-                            onClick={() => setReplayGame({ pgn: g.pgn!, title: oppPlayer ? `vs ${oppPlayer.firstName}` : t.profile.gameLabel, sessionId: g.sessionId })}
-                            style={{ fontSize: 9, padding: '2px 7px', background: 'rgba(245,200,66,0.08)', color: 'var(--accent,#F5C842)', border: '1px solid rgba(245,200,66,0.2)', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}
-                          >♟ Replay</button>
-                        )}
+                      <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-primary,#F0F2F8)', marginTop: 4, width: '100%', textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {oppPlayer ? oppPlayer.firstName : typeLabel[g.session?.type ?? '']}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
 
-            {/* История транзакций — под играми */}
-            <div style={{ ...secStyle, marginTop: 8 }}>💸 {t.profile.txHistory}</div>
-            {transactions.length === 0 ? (
-              <div style={{ textAlign: 'center', color: 'var(--text-muted,#4A5270)', padding: 24, fontSize: 13 }}>{t.profile.noTx}</div>
-            ) : (
-              transactions.map((tx) => {
-                const isPos = BigInt(tx.amount) > 0n;
-                const TX_ICON: Record<string, string> = {
-                  // Игровые
-                  BATTLE_WIN: '🏆', BOT_WIN: '🤖', FRIENDLY_WIN: '🤝', TOURNAMENT_WIN: '🥇',
-                  TASK_REWARD: '🧩', REFERRAL_BONUS: '👥', REFERRAL_INCOME: '💸',
-                  SUB_REFERRAL_INCOME: '💰', WELCOME_BONUS: '🎁',
-                  BATTLE_BET: '🎯', BATTLE_COMMISSION: '💼', BATTLE_DONATION: '🎪',
-                  COUNTRY_WAR_WIN: '🌍', CLAN_CONTRIBUTION: '🏰', TOURNAMENT_ENTRY: '🎟',
-                  ITEM_PURCHASE: '🛍', ATTEMPT_PURCHASE: '🎮',
-                  // TON
-                  TON_DEPOSIT: '💎', WALLET_UNLOCK: '🔐', WITHDRAWAL: '📤',
-                  // Биржа
-                  EXCHANGE_SELL: '💱', EXCHANGE_BUY: '🛒',
-                  EXCHANGE_FREEZE: '🔒', EXCHANGE_UNFREEZE: '🔓',
-                  EXCHANGE_FEE: '💹',
-                  // Airdrop
-                  REFUND: '↩️',
-                };
-                return (
-                  <div key={tx.id} style={stripStyle}>
-                    <span style={{ fontSize: 20 }}>{TX_ICON[tx.type] ?? (isPos ? '📈' : '📉')}</span>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary,#F0F2F8)' }}>
-                        {
-                          tx.type === 'BATTLE_WIN'         ? 'Battle win'         :
-                          tx.type === 'BOT_WIN'            ? 'Bot win'            :
-                          tx.type === 'TOURNAMENT_WIN'     ? 'Tournament win'     :
-                          tx.type === 'COUNTRY_WAR_WIN'    ? 'War win'            :
-                          tx.type === 'TASK_REWARD'        ? 'Task reward'        :
-                          tx.type === 'REFERRAL_BONUS'     ? 'Referral bonus'     :
-                          tx.type === 'REFERRAL_INCOME'    ? 'Referral income'    :
-                          tx.type === 'WELCOME_BONUS'      ? 'Welcome bonus'      :
-                          tx.type === 'BATTLE_BET'         ? 'Battle bet'         :
-                          tx.type === 'TOURNAMENT_ENTRY'   ? 'Tournament entry'   :
-                          tx.type === 'ITEM_PURCHASE'      ? 'Shop purchase'      :
-                          tx.type === 'TON_DEPOSIT'        ? 'TON deposit'        :
-                          tx.type === 'WALLET_UNLOCK'      ? 'Wallet unlock'      :
-                          tx.type === 'WITHDRAWAL'         ? 'TON withdrawal'     :
-                          tx.type === 'EXCHANGE_SELL'      ? 'Exchange sell'       :
-                          tx.type === 'EXCHANGE_BUY'       ? 'Exchange buy'       :
-                          tx.type === 'EXCHANGE_FREEZE'    ? 'Order freeze'       :
-                          tx.type === 'EXCHANGE_UNFREEZE'  ? 'Order cancel'       :
-                          tx.type === 'EXCHANGE_FEE'       ? 'Exchange fee'       :
-                          tx.type === 'REFUND'             ? 'Refund'             :
-                          tx.type
-                        }
+                    {/* Центр — Информация о партии (кликабельно для реплея) */}
+                    <div 
+                      onClick={() => g.session?.pgn && setReplayGame({ pgn: g.session.pgn, title: oppPlayer ? `vs ${oppPlayer.firstName}` : t.profile.gameLabel, sessionId: g.session.id })} 
+                      style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: g.session?.pgn ? 'pointer' : 'default', zIndex: 1, padding: '0 4px', textAlign: 'center' }}
+                    >
+                      <div style={{ fontSize: 10, color: 'var(--text-muted,#4A5270)', marginBottom: 2 }}>
+                         {g.session?.finishedAt ? fmtDate(g.session.finishedAt) : ''}
                       </div>
-                      <div style={{ fontSize: 10, color: 'var(--text-secondary,#8B92A8)', marginTop: 2 }}>{fmtDate(tx.createdAt)}</div>
+                      <span style={{ fontSize: 12, fontWeight: 800, color: statusColor }}>{statusLabel}</span>
+                      {earned && isWon && (
+                        <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono',monospace", color: 'var(--accent,#F5C842)', marginTop: 2 }}>+{earned} ᚙ</div>
+                      )}
+                      {g.session?.bet && BigInt(g.session.bet) > 0n && (
+                        <div style={{ fontSize: 9, color: 'var(--accent,#F5C842)', background: 'rgba(245,200,66,0.1)', padding: '1px 6px', borderRadius: 6, marginTop: 4, fontWeight: 800 }}>BET {fmtBalance(g.session.bet)}</div>
+                      )}
+                      {g.session?.pgn && <div style={{ fontSize: 9, color: 'var(--accent,#F5C842)', marginTop: 4, opacity: 0.9 }}>▶ Tap to watch</div>}
                     </div>
-                    <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 700, color: isPos ? 'var(--green,#00D68F)' : 'var(--red,#FF4D6A)' }}>
-                      {isPos ? '+' : ''}{fmtBalance(tx.amount)} ᚙ
-                    </span>
+
+                    {/* Наш аватар (right) */}
+                    <div 
+                      onClick={() => myPlayer && myPlayer.id !== viewedUserId && navigate(`/profile/${myPlayer.id}`, { state: { userId: myPlayer.id } })} 
+                      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: 48, cursor: 'pointer', zIndex: 2 }}
+                    >
+                      <Avatar user={myPlayer as unknown as UserPublic} size="m" />
+                      <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-primary,#F0F2F8)', marginTop: 4, width: '100%', textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {myPlayer.firstName}
+                      </div>
+                    </div>
                   </div>
                 );
-              })
-            )}
-          </>
-        );
-      })()}
+              })}
+            </div>
+          )}
+
+          {/* История транзакций — под играми */}
+          <div style={{ ...secStyle, marginTop: 8 }}>💸 {t.profile.txHistory}</div>
+          {transactions.length === 0 ? (
+            <div style={{ textAlign: 'center', color: 'var(--text-muted,#4A5270)', padding: 24, fontSize: 13 }}>{t.profile.noTx}</div>
+          ) : (
+            transactions.map((tx) => {
+              const isPos = BigInt(tx.amount) > 0n;
+              const TX_ICON: Record<string, string> = {
+                BATTLE_WIN: '🏆', BOT_WIN: '🤖', FRIENDLY_WIN: '🤝', TOURNAMENT_WIN: '🥇',
+                TASK_REWARD: '🧩', REFERRAL_BONUS: '👥', REFERRAL_INCOME: '💸',
+                SUB_REFERRAL_INCOME: '💰', WELCOME_BONUS: '🎁',
+                BATTLE_BET: '🎯', BATTLE_COMMISSION: '💼', BATTLE_DONATION: '🎪',
+                COUNTRY_WAR_WIN: '🌍', CLAN_CONTRIBUTION: '🏰', TOURNAMENT_ENTRY: '🎟',
+                ITEM_PURCHASE: '🛍', ATTEMPT_PURCHASE: '🎮',
+                TON_DEPOSIT: '💎', WALLET_UNLOCK: '🔐', WITHDRAWAL: '📤',
+                EXCHANGE_SELL: '💱', EXCHANGE_BUY: '🛒',
+                EXCHANGE_FREEZE: '🔒', EXCHANGE_UNFREEZE: '🔓',
+                EXCHANGE_FEE: '💹', REFUND: '↩️',
+              };
+              return (
+                <div key={tx.id} style={stripStyle}>
+                  <span style={{ fontSize: 20 }}>{TX_ICON[tx.type] ?? (isPos ? '📈' : '📉')}</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary,#F0F2F8)' }}>
+                      {tx.type.replace(/_/g, ' ')}
+                    </div>
+                    <div style={{ fontSize: 10, color: 'var(--text-secondary,#8B92A8)', marginTop: 2 }}>{fmtDate(tx.createdAt)}</div>
+                  </div>
+                  <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 700, color: isPos ? 'var(--green,#00D68F)' : 'var(--red,#FF4D6A)' }}>
+                    {isPos ? '+' : ''}{fmtBalance(tx.amount)} ᚙ
+                  </span>
+                </div>
+              );
+            })
+          )}
+        </>
+      )}
 
       {/* Saves tab */}
       {tab === 'saves' && (
