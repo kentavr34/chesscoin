@@ -133,6 +133,7 @@ interface AvatarItemCardProps {
 export const AvatarItemCard: React.FC<AvatarItemCardProps> = ({ item, loading, highlighted, onPurchase, onEquip, onUnequip }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const rarityColor = RARITY_COLOR[item.rarity] ?? 'var(--text-secondary, #8B92A8)';
+  const [imgError, setImgError] = React.useState(false);
 
   useEffect(() => {
     if (highlighted && cardRef.current)

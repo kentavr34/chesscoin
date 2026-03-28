@@ -28,34 +28,34 @@ const log = {
 // ─── Уровни J.A.R.V.I.S (20 уровней) ────────────────────────────────────────
 const JARVIS_LEVELS = [
   // 1-5: Novice (800-1600 Elo)
-  { level: 1,  elo: 800,  movetime: 50,    useSkill: true,  skill: 0  },
-  { level: 2,  elo: 1000, movetime: 100,   useSkill: true,  skill: 1  },
-  { level: 3,  elo: 1200, movetime: 150,   useSkill: true,  skill: 2  },
-  { level: 4,  elo: 1400, movetime: 200,   useSkill: true,  skill: 4  },
-  { level: 5,  elo: 1600, movetime: 300,   useSkill: true,  skill: 6  },
+  { level: 1,  elo: 800,  movetime: 50,    useSkill: true,  skill: 0,  depth: 5  },
+  { level: 2,  elo: 1000, movetime: 100,   useSkill: true,  skill: 1,  depth: 5  },
+  { level: 3,  elo: 1200, movetime: 150,   useSkill: true,  skill: 2,  depth: 5  },
+  { level: 4,  elo: 1400, movetime: 200,   useSkill: true,  skill: 4,  depth: 8  },
+  { level: 5,  elo: 1600, movetime: 300,   useSkill: true,  skill: 6,  depth: 8  },
   
   // 6-10: Intermediate (1700-2200 Elo)
-  { level: 6,  elo: 1700, movetime: 400,   useSkill: true,  skill: 8  },
-  { level: 7,  elo: 1800, movetime: 600,   useSkill: true,  skill: 9  },
-  { level: 8,  elo: 1900, movetime: 800,   useSkill: true,  skill: 11 },
-  { level: 9,  elo: 2050, movetime: 1000,  useSkill: true,  skill: 12 },
-  { level: 10, elo: 2200, movetime: 1200,  useSkill: true,  skill: 14 },
+  { level: 6,  elo: 1700, movetime: 400,   useSkill: true,  skill: 8,  depth: 10 },
+  { level: 7,  elo: 1800, movetime: 600,   useSkill: true,  skill: 9,  depth: 10 },
+  { level: 8,  elo: 1900, movetime: 800,   useSkill: true,  skill: 11, depth: 12 },
+  { level: 9,  elo: 2050, movetime: 1000,  useSkill: true,  skill: 12, depth: 12 },
+  { level: 10, elo: 2200, movetime: 1200,  useSkill: true,  skill: 14, depth: 14 },
 
   // 11-15: Advanced (2300-2700 Elo)
-  { level: 11, elo: 2300, movetime: 1500,  useSkill: true,  skill: 15 },
-  { level: 12, elo: 2400, movetime: 1800,  useSkill: true,  skill: 16 },
-  { level: 13, elo: 2500, movetime: 2200,  useSkill: true,  skill: 17 },
-  { level: 14, elo: 2600, movetime: 2800,  useSkill: true,  skill: 18 },
-  { level: 15, elo: 2700, movetime: 3500,  useSkill: true,  skill: 19 },
+  { level: 11, elo: 2300, movetime: 1500,  useSkill: true,  skill: 15, depth: 15 },
+  { level: 12, elo: 2400, movetime: 1800,  useSkill: true,  skill: 16, depth: 16 },
+  { level: 13, elo: 2500, movetime: 2200,  useSkill: true,  skill: 17, depth: 18 },
+  { level: 14, elo: 2600, movetime: 2800,  useSkill: true,  skill: 18, depth: 20 },
+  { level: 15, elo: 2700, movetime: 3500,  useSkill: true,  skill: 19, depth: 22 },
 
   // 16-19: Grandmaster
-  { level: 16, elo: 2800, movetime: 4000,  useSkill: true,  skill: 20 },
-  { level: 17, elo: 2900, movetime: 5000,  useSkill: true,  skill: 20 },
-  { level: 18, elo: 3000, movetime: 6000,  useSkill: false, skill: 20 },
-  { level: 19, elo: 3100, movetime: 8000,  useSkill: false, skill: 20 },
+  { level: 16, elo: 2800, movetime: 4000,  useSkill: true,  skill: 20, depth: 24 },
+  { level: 17, elo: 2900, movetime: 5000,  useSkill: true,  skill: 20, depth: 24 },
+  { level: 18, elo: 3000, movetime: 6000,  useSkill: false, skill: 20, depth: 26 },
+  { level: 19, elo: 3100, movetime: 8000,  useSkill: false, skill: 20, depth: 28 },
   
   // 20: Mystic (Magnus level)
-  { level: 20, elo: 3200, movetime: 10000, useSkill: false, skill: 20 },
+  { level: 20, elo: 3200, movetime: 10000, useSkill: false, skill: 20, depth: 30 },
 ];
 
 // ─── Fallback: случайный ход ──────────────────────────────────────────────────
@@ -150,7 +150,9 @@ parentPort?.on("message", async ({ fen, level, requestId }: {
 
   try {
     const move = await new Promise<{ from: string; to: string } | null>((resolve) => {
+      let isSearching = false;
       let resolved = false;
+
       const saferesolve = (v: { from: string; to: string } | null) => {
         if (!resolved) {
           resolved = true;
@@ -165,7 +167,8 @@ parentPort?.on("message", async ({ fen, level, requestId }: {
       }, timeoutMs);
 
       const listener = (line: string) => {
-        if (line === "readyok") {
+        if (line === "readyok" && !isSearching) {
+          isSearching = true;
           // Engine ready for this request — send options and go
           if (cfg.useSkill) {
             engine!.postMessage("setoption name UCI_LimitStrength value true");
@@ -176,11 +179,11 @@ parentPort?.on("message", async ({ fen, level, requestId }: {
             engine!.postMessage("setoption name Skill Level value 20");
           }
           engine!.postMessage(`position fen ${fen}`);
-          engine!.postMessage(`go movetime ${cfg.movetime}`);
+          engine!.postMessage(`go movetime ${cfg.movetime} depth ${cfg.depth}`);
           return;
         }
 
-        if (line.startsWith("bestmove")) {
+        if (isSearching && line.startsWith("bestmove")) {
           clearTimeout(timer);
           const uciMove = line.split(" ")[1];
           const parsed = parseUciMove(uciMove);

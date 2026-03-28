@@ -24,7 +24,7 @@ interface HistoryGame {
 const PAGE_SIZE = 20;
 
 export const BattleHistoryPage: React.FC = () => {
-  const t = useT();
+  const t: any = useT();
   const navigate = useNavigate();
   const [games, setGames] = useState<HistoryGame[]>([]);
   const [total, setTotal] = useState(0);
@@ -34,8 +34,8 @@ export const BattleHistoryPage: React.FC = () => {
   const loadGames = useCallback(async (off: number) => {
     setLoading(true);
     try {
-      const r = await profileApi.getGames(PAGE_SIZE, off);
-      setGames(r.games as unknown as HistoryGame[]);
+      const r = (await profileApi.getGames(PAGE_SIZE, off)) as any;
+      setGames(r.games as HistoryGame[]);
       setTotal(r.total ?? 0);
       setOffset(off);
     } catch {} finally {

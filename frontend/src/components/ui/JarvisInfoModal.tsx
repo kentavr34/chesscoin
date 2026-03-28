@@ -23,7 +23,7 @@ const closeStyle: React.CSSProperties = {
 };
 
 export const JarvisInfoModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-  const t = useT();
+  const t: any = useT();
 
   return (
     <div style={overlayStyle}>

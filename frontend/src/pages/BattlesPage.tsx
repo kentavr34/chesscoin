@@ -96,7 +96,7 @@ export const BattlesPage: React.FC = () => {
                       {fmtTime(mySide?.timeLeft ?? 300)}
                     </span>
                     <span style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', fontWeight: 600 }}>
-                      {s.type === 'BOT' ? t.battles.bot : t.battles.battle}
+                      {s.type === 'BOT' ? '🤖 ' + t.battles.bot : ((s as any).type === 'WAR' ? '🌍 War' : (Number(s.bet || 0) >= 1000000 ? '🏆 Tournament' : '⚔️ ' + t.battles.battle))}
                     </span>
                   </div>
                   <BPlayer user={opSide?.player} name={opSide?.player.firstName ?? '?'} right />
@@ -145,8 +145,8 @@ export const BattlesPage: React.FC = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', marginTop: idx === 0 ? 18 : 0 }}>
                 <Avatar user={battle.creator as import('@/types').UserPublic | null} size="m" />
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>
-                    {battle.creator?.firstName ?? t.battles.creator}
+                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {Number(battle.bet || 0) >= 1000000 ? '🏆' : '⚔️'} {battle.creator?.firstName ?? t.battles.creator}
                   </div>
                   <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 3 }}>
                     {battle.duration / 60} min · ELO {battle.creator?.elo ?? '?'}
@@ -191,19 +191,29 @@ export const BattlesPage: React.FC = () => {
             <div>
               <div style={secStyle}>{t.game.waitingForOpponent}</div>
               {myPrivateWaiting.map((s) => (
-                <div key={s.id} style={{ ...wcardStyle, flexDirection: 'column', alignItems: 'stretch' }} onClick={() => navigate('/game/' + s.id)}>
-                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                     <div style={{ fontSize: 24 }}>⏳</div>
-                     <div style={{ flex: 1 }}>
-                       <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>
-                         {t.battles.private_}
-                       </div>
-                       <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 3 }}>
-                         {fmtBalance(s.bet ?? '0')} ᚙ
-                       </div>
-                     </div>
-                     <button style={watchBtn}>{t.battles.goTo}</button>
-                   </div>
+                <div key={s.id} style={{ ...wcardStyle, position: 'relative' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%' }}>
+                    <div style={{ position: 'relative' }}>
+                      <Avatar user={user as any} size="m" />
+                      <div style={{ position: 'absolute', bottom: -2, right: -2, background: '#1C2030', borderRadius: '50%', padding: 2 }}>⏳</div>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        {Number(s.bet || 0) >= 1000000 ? '🏆' : '⚔️'} {t.battles.private_}
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 3 }}>
+                        {t.game.waitingForOpponent}
+                      </div>
+                      <div style={{ marginTop: 6, display: 'flex', gap: 6, alignItems: 'center' }}>
+                        <span style={tagGold}>{fmtBalance(s.bet ?? '0')} ᚙ</span>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                       <button onClick={() => navigate('/game/' + s.id)} style={acceptBtn}>
+                         {t.battles.goTo}
+                       </button>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>

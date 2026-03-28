@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { PageLayout, useInfoPopup, InfoPopup } from '@/components/layout/PageLayout';
 import { Avatar } from '@/components/ui/Avatar';
-import { AvatarCropModal } from '@/components/ui/AvatarCropModal';
 import { useUserStore } from '@/store/useUserStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { useT } from '@/i18n/useT';
@@ -97,6 +96,16 @@ export const ProfilePage: React.FC = () => {
     }
   }, [tab]);
 
+  // Handle replay from BattleHistoryPage redirection
+  useEffect(() => {
+    const state = location.state as Record<string, unknown> | null;
+    if (state?.replay && !replayGame) {
+      setReplayGame(state.replay as { pgn: string; title?: string; sessionId?: string });
+      // clear the state so it doesn't re-trigger on refresh
+      navigate(location.pathname, { replace: true, state: { ...state, replay: undefined } });
+    }
+  }, [location.state, navigate, replayGame]);
+
   if (!user) return null;
 
   const totalGames = user.totalGames ?? 0;
@@ -105,7 +114,7 @@ export const ProfilePage: React.FC = () => {
   const draws = user.draws ?? 0;
   const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
   const lossRate = totalGames > 0 ? Math.round((losses / totalGames) * 100) : 0;
-  const drawRate = 100 - winRate - lossRate;
+  const drawRate = totalGames > 0 ? (100 - winRate - lossRate) : 0;
 
   const TABS: { id: Tab; label: string }[] = [
     { id: 'info',     label: t.profile.tabs.info },
@@ -613,7 +622,7 @@ export const ProfilePage: React.FC = () => {
                     {earnedCount}/{ACHS.length}
                   </span>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8, padding: '0 18px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, padding: '0 18px' }}>
                   {ACHS.map(a => {
                     const done = !!earned[a.id];
                     return (
@@ -761,14 +770,7 @@ export const ProfilePage: React.FC = () => {
         />
       )}
 
-      {/* AvatarCropModal — обрезка аватара */}
-      {cropFile && (
-        <AvatarCropModal
-          file={cropFile}
-          onConfirm={handleCropConfirm}
-          onCancel={() => setCropFile(null)}
-        />
-      )}
+      {/* (AvatarCropModal logic was removed) */}
     </PageLayout>
     </>
   );

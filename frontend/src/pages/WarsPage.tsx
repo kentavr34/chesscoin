@@ -518,7 +518,7 @@ const WarDetailModal: React.FC<{ warId: string; onClose: () => void }> = ({ warI
 type Tab = 'countries' | 'active' | 'history';
 
 export const WarsPage: React.FC = () => {
-  const t = useT();
+  const t: any = useT();
   const { user } = useUserStore();
   const [tab, setTab] = useState<Tab>('countries');
   const [sort, setSort] = useState<'wins' | 'alpha'>('wins');
@@ -533,11 +533,12 @@ export const WarsPage: React.FC = () => {
   const [myActiveWar, setMyActiveWar] = useState<any>(null);
 
   // Info popup
-  const warsInfo = useInfoPopup('wars', [
+  const warsInfoSlides = [
     { icon: '🌍', title: t.wars.warIntro?.title ?? 'Country Wars', desc: t.wars.warIntro?.p1 ?? 'Join a country and fight for its honor in chess battles against other nations.' },
     { icon: '⚔️', title: t.wars.warIntro?.commanderTitle ?? 'Commander', desc: t.wars.warIntro?.p2 ?? 'The first member becomes Commander-in-Chief. Accept or reject new fighters.' },
     { icon: '🏆', title: t.wars.warIntro?.prizeTitle ?? 'Prizes', desc: t.wars.warIntro?.p3 ?? 'Win battles for your country. The winning nation shares the prize pool!' },
-  ]);
+  ];
+  const warsInfo = useInfoPopup('wars', warsInfoSlides);
 
   // UI State
   const [loading, setLoading] = useState(true);
@@ -556,7 +557,7 @@ export const WarsPage: React.FC = () => {
   const [inQueue, setInQueue] = useState(false);
 
   useEffect(() => {
-    const sock = getSocket();
+    const sock = getSocket() as any;
     const handleEvents = (data: any) => {
       if (data.type === 'war:match_created' && data.sessionId) {
         setInQueue(false);
@@ -572,7 +573,7 @@ export const WarsPage: React.FC = () => {
 
   const toggleQueue = () => {
     if (!myActiveWar || !myCountry) return;
-    const sock = getSocket();
+    const sock = getSocket() as any;
     if (inQueue) {
       sock.emit('war:queue_leave', { warId: myActiveWar.id, countryId: myCountry.id });
       setInQueue(false);
@@ -679,7 +680,7 @@ export const WarsPage: React.FC = () => {
   return (
     <PageLayout title="">
       {/* Info popup при первом входе */}
-      {warsInfo.show && <InfoPopup infoKey="wars" slides={warsInfo.slides} onClose={warsInfo.close} />}
+      {warsInfo.show && <InfoPopup infoKey="wars" slides={warsInfoSlides} onClose={warsInfo.close} />}
       {/* Заголовок */}
       <div style={{ padding: '10px 18px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
         <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 18, fontWeight: 800, color: '#F5C842', textAlign: 'center' }}>

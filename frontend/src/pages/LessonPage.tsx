@@ -13,6 +13,7 @@ import { haptic } from '@/lib/haptic';
 import { useUserStore } from '@/store/useUserStore';
 import { authApi } from '@/api';
 import { useT } from '@/i18n/useT';
+import { VictoryScreen } from '@/components/game/VictoryScreen';
 
 // UCI ход → human-readable
 function uciToSan(fen: string, uci: string): string {
@@ -51,6 +52,7 @@ export const LessonPage: React.FC = () => {
   const [reward, setReward] = useState<string>('0');
   const [optionSquares, setOptionSquares] = useState<Record<string, React.CSSProperties>>({});
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
+  const [showFanfare, setShowFanfare] = useState(false);
 
   // Загрузка задачи
   useEffect(() => {
@@ -236,12 +238,12 @@ export const LessonPage: React.FC = () => {
     try {
       const r = await puzzlesApi.complete(puzzle.id, playerOnlyMoves, isTestMode);
       if (r.correct) {
-        // В тест-режиме показываем x1.5 бонус визуально
         const displayReward = isTestMode && !r.alreadySolved
           ? String(Math.floor(Number(r.reward) * 1.5))
           : r.reward;
         setReward(displayReward);
         setPhase('solved');
+        setShowFanfare(true);
         haptic.win?.() ?? haptic.impact('heavy');
         const updated = await authApi.me();
         setUser(updated);
@@ -382,6 +384,15 @@ export const LessonPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {showFanfare && (
+        <VictoryScreen 
+          result="win" 
+          earned={reward} 
+          opponentName={t.lesson.title} 
+          onDone={() => setShowFanfare(false)} 
+        />
+      )}
 
       <style>{`
         @keyframes shake {

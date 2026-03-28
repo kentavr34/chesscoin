@@ -231,35 +231,43 @@ export const HomePage: React.FC = () => {
       <div style={heroStyle}>
         <div style={{ position: 'absolute', bottom: -12, right: 10, fontSize: 80, opacity: 0.04, color: '#9B85FF', pointerEvents: 'none', lineHeight: 1 }}>♟</div>
 
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 14, position: 'relative', zIndex: 1 }}>
-          <Avatar user={user} size="l" gold />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)', letterSpacing: '-.02em', display: 'flex', alignItems: 'center', gap: 8 }}>
-              {user.firstName}
-              {myCountry && <span style={{ fontSize: 20 }}>{myCountry.flag}</span>}
+        {/* ID Card: Компактный горизонтальный профиль без диспропорции размеров */}
+        <div style={{ background: 'rgba(30,34,52,0.95)', border: '1px solid rgba(123,97,255,0.22)', borderRadius: 16, padding: '14px 16px', marginBottom: 14, position: 'relative', zIndex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <Avatar user={user} size="m" gold />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)', letterSpacing: '-.01em', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                <span style={{ textOverflow: 'ellipsis', overflow: 'hidden' }}>{user.firstName}</span>
+                {myCountry && <span style={{ fontSize: 16, flexShrink: 0 }}>{myCountry.flag}</span>}
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>@{user.username ?? 'unknown'}</div>
             </div>
-            <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 1 }}>@{user.username ?? 'unknown'}</div>
-            <div style={{ display: 'flex', gap: 5, marginTop: 6, flexWrap: 'wrap' }}>
+            {/* Воинское звание */}
+            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.06em', color: '#6A7090', textTransform: 'uppercase' as const, marginBottom: 2 }}>{t.home.rankLabel}</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4 }}>
+                {militaryEmoji} <span style={{ whiteSpace: 'nowrap' }}>{militaryRank}</span>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ height: 1, background: 'var(--border, rgba(255,255,255,0.07))', margin: '12px 0' }} />
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               <span style={tagStyle('gold')}>{leagueEmoji[user.league] ?? '🥉'} #{rank}</span>
               <span style={tagStyle('vi')}>ELO {user.elo}</span>
             </div>
-          </div>
-          {/* JARVIS + Звание блок */}
-          <div style={jarvisBlockStyle}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 1 }}>
-              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.08em', color: '#6A7090', textTransform: 'uppercase' as const }}>{t.home.jarvisLabel || 'JARVIS'}</div>
-              <button 
-                onClick={() => setShowJarvisInfo(true)}
-                style={{ background: 'transparent', border: 'none', color: '#8B92A8', cursor: 'pointer', padding: 0, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-              >
-                ❔
-              </button>
+            <div style={{ display: 'flex', gap: 16, textAlign: 'right', flexShrink: 0 }}>
+              <div>
+                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.08em', color: '#6A7090', textTransform: 'uppercase' as const, marginBottom: 2 }}>JARVIS</div>
+                <div style={{ fontSize: 11, fontWeight: 800, color: '#9B85FF' }}>{jarvisCfg.name}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.08em', color: '#6A7090', textTransform: 'uppercase' as const, marginBottom: 2 }}>{t.home.battlesLabel || 'BATTLES'}</div>
+                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-primary, #F0F2F8)' }}>{battles} W</div>
+              </div>
             </div>
-            <div style={{ fontSize: 15, fontWeight: 800, color: '#9B85FF' }}>{jarvisCfg.name}</div>
-            <div style={{ fontSize: 10, color: '#5A6080', marginBottom: 7 }}>Lv.{jarvisLevel} / 20</div>
-            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.06em', color: '#6A7090', textTransform: 'uppercase' as const, marginBottom: 2 }}>{t.home.rankLabel}</div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>{militaryEmoji} {militaryRank}</div>
-            <div style={{ fontSize: 10, color: '#5A6080', marginTop: 2 }}>{t.home.battlesLabel}: {battles}</div>
           </div>
         </div>
 
@@ -479,7 +487,6 @@ export const HomePage: React.FC = () => {
 
 // Styles
 const heroStyle: React.CSSProperties = { margin: '6px 16px 0', padding: '16px', background: 'linear-gradient(135deg,#181B2E,#12162A)', border: '1px solid rgba(123,97,255,0.18)', borderRadius: 22, position: 'relative', overflow: 'hidden' };
-const jarvisBlockStyle: React.CSSProperties = { background: 'rgba(30,34,52,0.95)', border: '1px solid rgba(123,97,255,0.22)', borderRadius: 14, padding: '10px 12px', minWidth: 96, flexShrink: 0 };
 const shopInlineBtn: React.CSSProperties = { width: 32, height: 32, borderRadius: 10, background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.13)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, cursor: 'pointer' };
 const attPlusStyle: React.CSSProperties = { width: 24, height: 24, borderRadius: '50%', background: 'var(--accent, #F5C842)', color: 'var(--bg, #0B0D11)', fontSize: 16, fontWeight: 800, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 };
 const stripStyle: React.CSSProperties = { margin: '4px 16px 0', padding: '13px 16px', background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 18, display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' };
