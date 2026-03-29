@@ -16,6 +16,12 @@
 
 import { parentPort } from "worker_threads";
 import { Chess } from "chess.js";
+import * as fs from "fs";
+
+const DEBUG_LOG = "c:\\Users\\SAM\\Desktop\\chesscoin\\backend\\sf_debug.log";
+function dlog(msg: string) {
+  try { fs.appendFileSync(DEBUG_LOG, new Date().toISOString() + " " + msg + "\n"); } catch {}
+}
 
 // Minimal logger for worker thread (pino not available in workers)
 const log = {
@@ -48,14 +54,13 @@ const JARVIS_LEVELS = [
   { level: 14, elo: 2600, movetime: 2800,  useSkill: true,  skill: 18, depth: 20 },
   { level: 15, elo: 2700, movetime: 3500,  useSkill: true,  skill: 19, depth: 22 },
 
-  // 16-19: Grandmaster
-  { level: 16, elo: 2800, movetime: 4000,  useSkill: true,  skill: 20, depth: 24 },
-  { level: 17, elo: 2900, movetime: 5000,  useSkill: true,  skill: 20, depth: 24 },
-  { level: 18, elo: 3000, movetime: 6000,  useSkill: false, skill: 20, depth: 26 },
-  { level: 19, elo: 3100, movetime: 8000,  useSkill: false, skill: 20, depth: 28 },
-  
-  // 20: Mystic (Magnus level)
-  { level: 20, elo: 3200, movetime: 10000, useSkill: false, skill: 20, depth: 30 },
+  // 16-20: Unbeatable (2600-3200+ Elo)
+  { level: 16, elo: 2600, movetime: 5000,  useSkill: false, skill: 20, depth: 16 },
+  { level: 17, elo: 2800, movetime: 6000,  useSkill: false, skill: 20, depth: 17 },
+  { level: 18, elo: 3000, movetime: 7000,  useSkill: false, skill: 20, depth: 18 },
+  { level: 19, elo: 3100, movetime: 8000,  useSkill: false, skill: 20, depth: 19 },
+  // 20: Mystic (Magnus level) — depth reduced to 20 to prevent WASM OOM during 10sec calculation
+  { level: 20, elo: 3200, movetime: 10000, useSkill: false, skill: 20, depth: 20 },
 ];
 
 // ─── Fallback: случайный ход ──────────────────────────────────────────────────
@@ -167,19 +172,25 @@ parentPort?.on("message", async ({ fen, level, requestId }: {
       }, timeoutMs);
 
       const listener = (line: string) => {
+        dlog("[SF OUT] " + line);
         if (line === "readyok" && !isSearching) {
           isSearching = true;
           // Engine ready for this request — send options and go
+          const send = (m: string) => { dlog("[SF IN] " + m); engine!.postMessage(m); };
+
+          // Добавляем память для стабильной работы глубоких уровней
+          send("setoption name Hash value 16");
+
           if (cfg.useSkill) {
-            engine!.postMessage("setoption name UCI_LimitStrength value true");
-            engine!.postMessage(`setoption name UCI_Elo value ${cfg.elo}`);
-            engine!.postMessage(`setoption name Skill Level value ${cfg.skill}`);
+            send("setoption name UCI_LimitStrength value true");
+            send(`setoption name UCI_Elo value ${cfg.elo}`);
+            send(`setoption name Skill Level value ${cfg.skill}`);
           } else {
-            engine!.postMessage("setoption name UCI_LimitStrength value false");
-            engine!.postMessage("setoption name Skill Level value 20");
+            send("setoption name UCI_LimitStrength value false");
+            send("setoption name Skill Level value 20");
           }
-          engine!.postMessage(`position fen ${fen}`);
-          engine!.postMessage(`go movetime ${cfg.movetime} depth ${cfg.depth}`);
+          send(`position fen ${fen}`);
+          send(`go movetime ${cfg.movetime} depth ${cfg.depth}`);
           return;
         }
 
@@ -191,19 +202,23 @@ parentPort?.on("message", async ({ fen, level, requestId }: {
         }
       };
 
+      const send = (m: string) => { dlog("[SF IN] " + m); engine!.postMessage(m); };
       engine!.addMessageListener(listener);
       // Reset engine state and wait for readyok
-      engine!.postMessage("stop");
-      engine!.postMessage("ucinewgame");
-      engine!.postMessage("isready");
+      send("stop");
+      send("ucinewgame");
+      send("isready");
     });
 
+    dlog(`[WORKER] Resolved move: ${JSON.stringify(move)}`);
     parentPort?.postMessage({ move, requestId });
   } catch (err: unknown) {
+    dlog(`[WORKER ERROR] ${err instanceof Error ? err.message : String(err)}`);
     log.error("Unexpected error:", err instanceof Error ? err.message : String(err));
     parentPort?.postMessage({ move: getRandomMove(fen), requestId });
   }
 });
 
+dlog("[WORKER] Booted up, signaling ready");
 // Signal ready to main thread
 parentPort?.postMessage({ ready: true });

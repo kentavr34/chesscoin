@@ -153,26 +153,9 @@ export const startTimerWatcher = () => {
 
       logger.info(`[Timer] Expired for side ${sideId} in session ${session.id}`);
 
-      // Определяем победителя по взятому материалу
-      let winnerSideId: string | undefined;
-      let loserSideId: string | undefined;
-
-      if (otherSide) {
-        const expiredCaptures = calcCapturedScore(session.fen, expiredSide.isWhite);
-        const otherCaptures = calcCapturedScore(session.fen, otherSide.isWhite);
-
-        if (expiredCaptures > otherCaptures) {
-          // У истёкшего игрока больше взятых фигур — он выигрывает
-          winnerSideId = expiredSide.id;
-          loserSideId = otherSide.id;
-        } else {
-          // Оппонент взял больше или равно — оппонент выигрывает (у него было время)
-          winnerSideId = otherSide.id;
-          loserSideId = expiredSide.id;
-        }
-      } else {
-        loserSideId = expiredSide.id;
-      }
+      // Определяем победителя 
+      const chess = new Chess(session.fen);
+      const moves = chess.history();
 
       // Distributed lock: только один инстанс завершает сессию
       const lockKey = `finish:lock:${session.id}`;
@@ -181,6 +164,19 @@ export const startTimerWatcher = () => {
         logger.info(`[Timer] Session ${session.id} already being finished by another instance`);
         return;
       }
+
+      if (moves.length === 0) {
+        // Никто не сделал ходов. Отменяем игру, возвращаем ставки как при ничьей
+        logger.info(`[Timer] No moves made in session ${session.id}, cancelling`);
+        const finished = await finishSession(session.id, SessionStatus.CANCELLED, { isDraw: true });
+        getIo().to(session.id).emit("game", formatSession(finished, null));
+        getIo().to(session.id).emit("game:over", { status: "CANCELLED" });
+        return;
+      }
+
+      // Игрок не сделал следующий ожидаемый шаг (таймаут) — побеждает тот, кто сделал ход (оппонент).
+      const winnerSideId = otherSide?.id;
+      const loserSideId = expiredSide.id;
 
       const finished = await finishSession(
         session.id,

@@ -419,7 +419,7 @@ export const ShopPage: React.FC = () => {
   const initTab = (location.state as Record<string,unknown>)?.tab as Tab ?? 'avatars'; // N6: по умолчанию Аватары
   const highlightItemId: string | null = ((location.state as Record<string,unknown>)?.highlightItemId as string) ?? null;
   const [tab, setTab] = useState<Tab>(initTab);
-  const [visualSubType, setVisualSubType] = useState<'BOARD_SKIN'|'PIECE_SKIN'|'PIECE_SET'|'MOVE_ANIMATION'>('BOARD_SKIN');
+  const [visualSubType, setVisualSubType] = useState<'BOARD_SKIN'|'PIECE_SKIN'|'PIECE_SET'|'MOVE_ANIMATION'|'FONT'>('BOARD_SKIN');
   const [items, setItems] = useState<ShopItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [actionId, setActionId] = useState<string | null>(null);
@@ -598,8 +598,8 @@ export const ShopPage: React.FC = () => {
         >
           <span style={{ fontSize: 24 }}>💎</span>
           <div style={{ textAlign: 'left' as const }}>
-            <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Connect TON Wallet</div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', marginTop: 1 }}>Withdraw coins · Buy with TON / USDT</div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{t.shop.tonTab.connectWallet.replace('💎 ', '')}</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', marginTop: 1 }}>{t.shop.tonTab.benefits[0].text}</div>
           </div>
           <span style={{ marginLeft: 'auto', color: 'rgba(255,255,255,0.7)', fontSize: 18 }}>→</span>
         </button>
@@ -609,12 +609,12 @@ export const ShopPage: React.FC = () => {
       {(() => {
         // S1: Ровно 6 вкладок в 2 ряда по 3
         const SHOP_TABS: { key: Tab; label: string }[] = [
-          { key: 'avatars',   label: '🎭 Avatars'   },
-          { key: 'frames',    label: '🖼 Frames'    },
-          { key: 'visual',    label: '🎲 Visual'    },
-          { key: 'themes',    label: '🎨 Themes'    },
-          { key: 'effects',   label: '🎬 Effects'   },
-          { key: 'exchange',  label: '💱 Exchange'  },
+          { key: 'avatars',   label: t.shop.tabs.avatars   },
+          { key: 'frames',    label: t.shop.tabs.frames    },
+          { key: 'visual',    label: t.shop.tabs.visual    },
+          { key: 'themes',    label: t.shop.tabs.themes    },
+          { key: 'effects',   label: t.shop.tabs.effects   },
+          { key: 'exchange',  label: t.shop.tabs.exchange  },
         ];
         const rows = [SHOP_TABS.slice(0, 3), SHOP_TABS.slice(3, 6)];
         return (
@@ -655,10 +655,11 @@ export const ShopPage: React.FC = () => {
       {tab === 'visual' && (
         <div style={{ margin: '0 18px 10px', display: 'flex', background: 'var(--bg-card, #1C2030)', borderRadius: 10, padding: 3, gap: 2 }}>
           {([
-            ['BOARD_SKIN',   '🏁 Boards'],
-            ['PIECE_SKIN',   '♔ Pieces'],
-            ['PIECE_SET',    '♟ Sets'],
-            ['MOVE_ANIMATION', '✨ Animations'],
+            ['BOARD_SKIN',   t.shop.visualTabs.boards],
+            ['PIECE_SKIN',   t.shop.visualTabs.pieces],
+            ['PIECE_SET',    t.shop.visualTabs.sets],
+            ['MOVE_ANIMATION', t.shop.visualTabs.animations],
+            ['FONT', t.shop.visualTabs.fonts],
           ] as const).map(([type, label]) => (
             <button key={type} onClick={() => setVisualSubType(type)} style={{
               flex: 1, padding: '7px 4px', border: 'none', borderRadius: 8,

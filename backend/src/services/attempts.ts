@@ -8,14 +8,15 @@ import { TransactionType } from "@prisma/client";
 // ─────────────────────────────────────────
 // Использовать попытку (при старте игры)
 // ─────────────────────────────────────────
-export const useAttempt = async (userId: string): Promise<void> => {
-  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
+export const useAttempt = async (userId: string, tx?: import("@prisma/client").Prisma.TransactionClient): Promise<void> => {
+  const db = tx ?? prisma;
+  const user = await db.user.findUniqueOrThrow({ where: { id: userId } });
 
   if (user.attempts <= 0) {
     throw new Error("Not enough attempts. Wait for recovery or buy more.");
   }
 
-  await prisma.user.update({
+  await db.user.update({
     where: { id: userId },
     data: { attempts: { decrement: 1 } },
   });

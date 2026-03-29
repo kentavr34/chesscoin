@@ -19,6 +19,7 @@ export interface UserPublic {
   league: League;
   equippedItems?: Record<string, { id: string; name: string; imageUrl?: string | null }>;
   isMonthlyChampion?: boolean;
+  country?: string | null;
 }
 
 // Совпадает с formatUser() в backend/src/routes/auth.ts
@@ -63,6 +64,7 @@ export interface User extends UserPublic {
     WIN_ANIMATION?:   { id: string; name: string; imageUrl?: string | null }; // V3
     CAPTURE_EFFECT?:  { id: string; name: string; imageUrl?: string | null }; // V3
     SPECIAL_MOVE?:    { id: string; name: string; imageUrl?: string | null }; // V3
+    FONT?:            { id: string; name: string; imageUrl?: string | null }; // D10
   };
   nextRestoreSeconds?: number; // R1: for attempts timer
   jarvisLevel?: number;        // R1: Jarvis level progress
@@ -140,6 +142,7 @@ export interface BattleLobbyItem {
   createdAt: string;
   spectatorCount?: number;  // зрители батла
   creator: {
+    id: string;
     firstName: string;
     avatar?: string | null;
     avatarGradient?: string | null;
@@ -177,7 +180,7 @@ export interface Transaction {
   payload?: Record<string, unknown> | null;
 }
 
-export type ItemType = 'AVATAR_FRAME' | 'BOARD_SKIN' | 'PIECE_SKIN' | 'PIECE_SET' | 'MOVE_ANIMATION' | 'THEME' | 'PREMIUM_AVATAR' | 'WIN_ANIMATION' | 'CAPTURE_EFFECT' | 'SPECIAL_MOVE';
+export type ItemType = 'AVATAR_FRAME' | 'BOARD_SKIN' | 'PIECE_SKIN' | 'PIECE_SET' | 'MOVE_ANIMATION' | 'THEME' | 'PREMIUM_AVATAR' | 'WIN_ANIMATION' | 'CAPTURE_EFFECT' | 'SPECIAL_MOVE' | 'FONT';
 export type ItemRarity = 'COMMON' | 'RARE' | 'EPIC' | 'LEGENDARY';
 
 export interface ShopItem {

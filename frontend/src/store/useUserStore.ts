@@ -8,6 +8,7 @@ interface UserStore {
   setUser: (user: User) => void;
   updateBalance: (balance: string) => void;
   setLoading: (v: boolean) => void;
+  fetchUser: () => Promise<void>;
   logout: () => void;
 }
 
@@ -15,6 +16,16 @@ export const useUserStore = create<UserStore>((set) => ({
   user: null,
   isLoading: true,
   isAuthenticated: false,
+
+  fetchUser: async () => {
+    try {
+      const { authApi } = await import('@/api');
+      const user = await authApi.me();
+      set({ user, isAuthenticated: true, isLoading: false });
+    } catch (e) {
+      console.error('[UserStore] Failed to fetch user', e);
+    }
+  },
 
   setUser: (user) => set({ user, isAuthenticated: true, isLoading: false }),
 

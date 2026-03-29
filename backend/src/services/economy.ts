@@ -43,6 +43,7 @@ export const canEmit = async (): Promise<boolean> => {
 type UpdateBalanceOptions = {
   isEmission?: boolean; // true = новые монеты из резерва платформы
   skipLeagueUpdate?: boolean;
+  tx?: import("@prisma/client").Prisma.TransactionClient;
 };
 
 export const updateBalance = async (
@@ -52,7 +53,7 @@ export const updateBalance = async (
   payload: Record<string, unknown> = {},
   options: UpdateBalanceOptions = {}
 ) => {
-  return prisma.$transaction(async (tx: import("@prisma/client").Prisma.TransactionClient) => {
+  const execute = async (tx: import("@prisma/client").Prisma.TransactionClient) => {
     // 1. Получаем пользователя с блокировкой
     const user = await tx.user.findUniqueOrThrow({
       where: { id: userId },
@@ -107,7 +108,12 @@ export const updateBalance = async (
     }
 
     return updatedUser;
-  });
+  };
+
+  if (options.tx) {
+    return execute(options.tx);
+  }
+  return prisma.$transaction(execute);
 };
 
 // ─────────────────────────────────────────

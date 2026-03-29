@@ -227,71 +227,87 @@ export const createBattleSession = async (
 // Присоединиться к батлу
 // ─────────────────────────────────────────
 export const joinBattleSession = async (userId: string, code: string) => {
-  const session = await prisma.session.findUnique({
-    where: { code },
-    include: { sides: { include: { player: true } } },
-  });
+  const finalSession = await prisma.$transaction(async (tx) => {
+    const session = await tx.session.findUnique({
+      where: { code },
+      include: { sides: { include: { player: true } } },
+    });
 
-  if (!session) throw new Error("SESSION_NOT_FOUND");
-  if (session.status !== SessionStatus.WAITING_FOR_OPPONENT) {
-    throw new Error("SESSION_NOT_WAITING");
-  }
-  if (session.sides[0].playerId === userId) {
-    throw new Error("CANNOT_JOIN_OWN_SESSION");
-  }
+    if (!session) throw new Error("SESSION_NOT_FOUND");
+    if (session.status !== SessionStatus.WAITING_FOR_OPPONENT) {
+      throw new Error("SESSION_NOT_WAITING");
+    }
+    if (session.sides.length > 0 && session.sides[0].playerId === userId) {
+      throw new Error("CANNOT_JOIN_OWN_SESSION");
+    }
 
-  const bet = session.bet!;
-  await validateCanStartSession(userId, SessionType.BATTLE);
+    const bet = session.bet ?? 0n;
+    // We already validate attempts inside useAttempt, but validateCanStartSession checks max active sessions.
+    // It is safe to use read-only queries inside tx.
+    const user = await tx.user.findUniqueOrThrow({
+      where: { id: userId },
+      include: { activeSessions: true },
+    });
+    
+    // Manual validateCanStartSession logic for atomic checks:
+    if (user.attempts <= 0) throw new Error("NO_ATTEMPTS");
+    const battleSessions = user.activeSessions.filter(s => s.type === SessionType.BATTLE);
+    if (battleSessions.length >= config.sessions.maxActive - 1) {
+      throw new Error("Max active battles reached. Finish one of your current games.");
+    }
+    if (user.activeSessions.length >= config.sessions.maxActive) {
+      throw new Error("Active game limit reached. Finish one of your current games.");
+    }
 
-  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
-  if (user.balance < bet) throw new Error("INSUFFICIENT_BALANCE");
+    if (user.balance < bet) throw new Error("INSUFFICIENT_BALANCE");
 
-  // Тратим попытку и ставку
-  await useAttempt(userId);
-  await updateBalance(userId, -(bet as bigint), TransactionType.BATTLE_BET, {
-    reason: "battle_joined",
-    sessionId: session.id,
-  });
+    // Тратим попытку
+    await useAttempt(userId, tx);
+    // Тратим ставку
+    await updateBalance(userId, -(bet as bigint), TransactionType.BATTLE_BET, {
+      reason: "battle_joined",
+      sessionId: session.id,
+    }, { tx });
 
-  // Добавляем второго игрока
-  const opponentColor = session.sides[0].isWhite ? "black" : "white";
+    // Добавляем второго игрока
+    const opponentColor = session.sides[0].isWhite ? "black" : "white";
 
-  const updatedSession = await prisma.session.update({
-    where: { id: session.id },
-    data: {
-      status: SessionStatus.IN_PROGRESS,
-      startedAt: new Date(),
-      // G19: приватные батлы становятся публичными при начале игры (видны в Live)
-      isPrivate: false,
-      sides: {
-        create: {
-          playerId: userId,
-          isWhite: opponentColor === "white",
-          status: SessionSideStatus.IN_PROGRESS,
-          timeLeft: session.duration ?? 300,
+    const updatedSession = await tx.session.update({
+      where: { id: session.id },
+      data: {
+        status: SessionStatus.IN_PROGRESS,
+        startedAt: new Date(),
+        isPrivate: false,
+        sides: {
+          create: {
+            playerId: userId,
+            isWhite: opponentColor === "white",
+            status: SessionSideStatus.IN_PROGRESS,
+            timeLeft: session.duration ?? 300,
+          },
         },
       },
-    },
-    include: { sides: { include: { player: true } } },
-  });
+      include: { sides: { include: { player: true } } },
+    });
 
-  // Устанавливаем первый ход (белые начинают)
-  const whiteSide = updatedSession.sides.find((s: Record<string,unknown>) => s.isWhite);
-  const finalSession = await prisma.session.update({
-    where: { id: session.id },
-    data: { currentSideId: whiteSide?.id },
-    include: { sides: { include: { player: true } } },
-  });
+    const whiteSide = updatedSession.sides.find((s: Record<string,unknown>) => s.isWhite);
+    const fullyUpdatedSession = await tx.session.update({
+      where: { id: session.id },
+      data: { currentSideId: whiteSide?.id },
+      include: { sides: { include: { player: true } } },
+    });
 
-  await prisma.user.update({
-    where: { id: userId },
-    data: { activeSessions: { connect: { id: session.id } } },
-  });
+    await tx.user.update({
+      where: { id: userId },
+      data: { activeSessions: { connect: { id: session.id } } },
+    });
 
-  // Также обновляем статус первого игрока
-  await prisma.sessionSide.updateMany({
-    where: { sessionId: session.id },
-    data: { status: SessionSideStatus.IN_PROGRESS },
+    await tx.sessionSide.updateMany({
+      where: { sessionId: session.id },
+      data: { status: SessionSideStatus.IN_PROGRESS },
+    });
+
+    return fullyUpdatedSession;
   });
 
   await cacheSession(finalSession);

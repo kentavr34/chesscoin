@@ -677,22 +677,19 @@ export const WarsPage: React.FC = () => {
     return null;
   };
 
+  const rightAction = (
+    <button
+      onClick={() => setShowIntro(true)}
+      style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: '#A8B0C8', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+    >
+      ⓘ
+    </button>
+  );
+
   return (
-    <PageLayout title="">
+    <PageLayout title={t.wars.title} centered rightAction={rightAction}>
       {/* Info popup при первом входе */}
       {warsInfo.show && <InfoPopup infoKey="wars" slides={warsInfoSlides} onClose={warsInfo.close} />}
-      {/* Заголовок */}
-      <div style={{ padding: '10px 18px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-        <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 18, fontWeight: 800, color: '#F5C842', textAlign: 'center' }}>
-          {t.wars.title}
-        </div>
-        <button
-          onClick={() => setShowIntro(true)}
-          style={{ position: 'absolute', right: 18, width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: '#A8B0C8', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-        >
-          ⓘ
-        </button>
-      </div>
 
       {/* Моя страна — плашка */}
       {myCountry && (

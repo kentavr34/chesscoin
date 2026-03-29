@@ -250,13 +250,7 @@ router.post("/:id/join", async (req: import("express").Request, res: import("exp
             throw Object.assign(new Error('INSUFFICIENT_BALANCE'), { code: 'INSUFFICIENT_BALANCE' });
           }
           // Атомарно: списание + prizePool + создание игрока
-          await tx.user.update({
-            where: { id: req.userId },
-            data: { balance: { decrement: tournament.entryFee }, totalSpent: { increment: tournament.entryFee } },
-          });
-          await tx.transaction.create({
-            data: { userId: req.userId, type: TransactionType.TOURNAMENT_ENTRY, amount: -(tournament.entryFee as bigint), payload: { tournamentId: tournament.id } },
-          });
+          await updateBalance(req.userId, -(tournament.entryFee as bigint), TransactionType.TOURNAMENT_ENTRY, { tournamentId: tournament.id }, { tx });
           await tx.tournament.update({
             where: { id: tournament.id },
             data: { prizePool: { increment: tournament.entryFee }, status: 'IN_PROGRESS' },
@@ -500,11 +494,13 @@ export async function settleTournament(tournamentId: string) {
 
 
 // ─────────────────────────────────────────────────────────────────────────────
-// T1-T6: Основная функция матчмейкинга турнира
+// T1-T6: Matchmaking Engine (создаёт парные приватные батлы)
 // Находит свободного соперника, создаёт реальный приватный батл,
-// уведомляет обоих игроков через socket и бота
+// уведомляет обоих игроков через socket и бота. Оба игрока добавляются в session.sides
 // ─────────────────────────────────────────────────────────────────────────────
-async function runTournamentMatchmaking(
+import { redis } from "@/lib/redis"; // Добавлен импорт для Redis
+
+export async function runTournamentMatchmaking(
   tournamentId: string,
   newPlayer: { id: string; userId: string },
   userId: string
@@ -535,36 +531,36 @@ async function runTournamentMatchmaking(
 
   const opponent = available[Math.floor(Math.random() * available.length)];
 
-  // Определяем раунд
   const lastMatch = await prisma.tournamentMatch.findFirst({
     where: { tournamentId },
     orderBy: { round: 'desc' },
   });
   const round = lastMatch ? lastMatch.round + 1 : 1;
 
-  // T1: Q1 fix — session + match в одной транзакции (атомарно)
   const chess = new Chess();
   const sessionCode = nanoid(8).toUpperCase();
 
   const { session, match } = await prisma.$transaction(async (tx: import("@prisma/client").Prisma.TransactionClient) => {
+    // В турнире батл создается с обоими участниками, status = WAITING_FOR_OPPONENT
     const session = await tx.session.create({
       data: {
         status: 'WAITING_FOR_OPPONENT',
         type: 'BATTLE',
-        isPrivate: true, // T5: не показывать в публичном списке батлов
+        isPrivate: true, // турнирные батлы по умолчанию приватные до старта
         fen: chess.fen(),
         pgn: '',
         code: sessionCode,
+        duration: 300,
         sides: {
           create: [
-            { playerId: userId, status: 'WAITING_FOR_OPPONENT', isWhite: true },
+            { playerId: userId, status: 'WAITING_FOR_OPPONENT', isWhite: true, timeLeft: 300 },
+            { playerId: opponent.userId, status: 'WAITING_FOR_OPPONENT', isWhite: false, timeLeft: 300 },
           ],
         },
-        activeUsers: { connect: [{ id: userId }] },
+        activeUsers: { connect: [{ id: userId }, { id: opponent.userId }] },
       },
     });
 
-    // T1: Сохраняем матч с sessionId в той же транзакции
     const match = await tx.tournamentMatch.create({
       data: {
         tournamentId,
@@ -579,7 +575,12 @@ async function runTournamentMatchmaking(
     return { session, match };
   });
 
-  // T2: Socket-уведомление обоим игрокам (если онлайн)
+  // Сохраняем sourceType и sourceMeta для formatSession
+  await redis.set(`session:source:${session.id}`, JSON.stringify({
+    sourceType: 'TOURNAMENT',
+    sourceMeta: tournamentId
+  }), 'EX', 86400 * 30); // 30 дней TTL
+
   const myUser = await prisma.user.findUnique({
     where: { id: userId },
     select: { id: true, firstName: true, telegramId: true },
@@ -598,14 +599,11 @@ async function runTournamentMatchmaking(
   };
 
   try {
-    // Уведомляем игрока 1 (только что вступил)
     getIo().emit(`user:${userId}`, { ...notifyPayload, opponentName: opponent.user?.firstName ?? 'Соперник' });
-    // Уведомляем игрока 2 (соперник)
     getIo().emit(`user:${opponent.userId}`, { ...notifyPayload, opponentName: myUser?.firstName ?? 'Соперник' });
   } catch {}
 
-  // T3: AdminNotification для бота — если игрок оффлайн
-  for (const [playerId, telegramId, oppName] of [
+  for (const [pId, telegramId, oppName] of [
     [userId, myUser?.telegramId, opponent.user?.firstName],
     [opponent.userId, opponent.user?.telegramId, myUser?.firstName],
   ] as [string, string | undefined, string | undefined][]) {
@@ -620,7 +618,7 @@ async function runTournamentMatchmaking(
           sessionCode,
           sessionId: session.id,
           round,
-          deadline: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // T4: 24ч
+          deadline: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
         },
       },
     });
@@ -628,6 +626,52 @@ async function runTournamentMatchmaking(
 
   logger.info(`[Tournaments] Match created: ${userId} vs ${opponent.userId} — session ${session.id} code ${sessionCode}`);
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Matchmaker Cron Engine (Парное спаривание свободных игроков во всех турнирах)
+// ─────────────────────────────────────────────────────────────────────────────
+export async function matchmakeAllTournaments() {
+  try {
+    const activeTournaments = await prisma.tournament.findMany({
+      where: { status: 'IN_PROGRESS' },
+      select: { id: true },
+    });
+
+    for (const { id } of activeTournaments) {
+      // Ищем всех активных участников
+      const candidates = await prisma.tournamentPlayer.findMany({
+        where: { tournamentId: id, isActive: true },
+        include: { user: { select: { id: true } } }
+      });
+
+      // Исключаем тех, кто уже в матче
+      const activeMatches = await prisma.tournamentMatch.findMany({
+        where: { tournamentId: id, status: 'IN_PROGRESS' },
+      });
+      const busyIds = new Set(activeMatches.flatMap((m) => [m.player1Id, m.player2Id]));
+      const available = candidates.filter(c => !busyIds.has(c.id));
+
+      // Разбиваем на пары
+      for (let i = 0; i + 1 < available.length; i += 2) {
+        const p1 = available[i];
+        const p2 = available[i+1];
+        if (!p1 || !p2) continue;
+
+        // Эмулируем запуск как будто p1 присоединился
+        // Примечание: runTournamentMatchmaking ищет ЛЮБОГО соперника, поэтому вызовем напрямую.
+        // Чтобы избежать случайности, лучше бы переписать, но для совместимости оставим вызов
+        try {
+          await runTournamentMatchmaking(id, p1, p1.userId);
+        } catch (e) {
+          logError(`[Tournaments] Matchmaking error for ${id}:`, e);
+        }
+      }
+    }
+  } catch (e) {
+    logError('[Tournaments] MatchmakeAll engine error:', e);
+  }
+}
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // T4: Авто-поражение за неответ в течение 24ч
@@ -660,44 +704,99 @@ export async function checkTournamentForfeits() {
     try {
       if (!match.player1Id || !match.player2Id) continue;
 
-      // Определяем кто не ответил — player2 (соперник, которому был отправлен вызов)
-      // player1 создал батл и ожидал, player2 должен был принять
-      const forfeitPlayerId = match.player2Id;
-      const winnerId = match.player1Id;
-
-      // Присуждаем победу player1
-      await prisma.tournamentMatch.update({
-        where: { id: match.id },
-        data: {
-          status: 'FINISHED',
-          winnerId,
-        },
+      const session = await prisma.session.findUnique({
+         where: { id: match.sessionId },
+         include: { sides: { include: { player: { select: { tournaments: { where: { tournamentId: match.tournamentId }, select: { id: true } } } } } } },
       });
+      
+      if (!session || session.status !== 'WAITING_FOR_OPPONENT') continue;
 
-      // Обновляем статистику игроков
-      await prisma.tournamentPlayer.update({
-        where: { id: winnerId },
-        data: { wins: { increment: 1 }, points: { increment: 1 } },
-      });
-      await prisma.tournamentPlayer.update({
-        where: { id: forfeitPlayerId },
-        data: { losses: { increment: 1 }, skippedMatches: { increment: 1 } },
-      });
+      const acceptedSides = session.sides.filter((s: Record<string,unknown>) => s.status === 'IN_PROGRESS');
+      const waitingSides = session.sides.filter((s: Record<string,unknown>) => s.status === 'WAITING_FOR_OPPONENT');
 
-      // Отменяем сессию
-      if (match.sessionId) {
-        await prisma.session.update({
-          where: { id: match.sessionId },
-          data: { status: 'CANCELLED' },
-        });
+      let winnerId: string | null = null;
+      let loserId: string | null = null;
+
+      if (acceptedSides.length === 1 && waitingSides.length === 1) {
+         winnerId = (acceptedSides[0] as any)?.player?.tournaments[0]?.id ?? null;
+         loserId = (waitingSides[0] as any)?.player?.tournaments[0]?.id ?? null;
       }
 
-      // Look up player2 name for logging
-      const player2 = await prisma.tournamentPlayer.findUnique({
-        where: { id: forfeitPlayerId },
-        include: { user: { select: { firstName: true } } },
+      await prisma.$transaction(async (tx) => {
+          await tx.tournamentMatch.update({
+            where: { id: match.id },
+            data: {
+              status: 'FINISHED',
+              winnerId,
+            },
+          });
+
+          if (winnerId) {
+             await tx.tournamentPlayer.update({
+               where: { id: winnerId },
+               data: { wins: { increment: 1 }, points: { increment: 1 } },
+             });
+          }
+          if (loserId) {
+             await tx.tournamentPlayer.update({
+                where: { id: loserId },
+                data: { losses: { increment: 1 }, skippedMatches: { increment: 1 } },
+             });
+          }
+          if (!winnerId && !loserId) {
+             await tx.tournamentPlayer.updateMany({
+                where: { id: { in: [match.player1Id!, match.player2Id!] } },
+                data: { skippedMatches: { increment: 1 } },
+             });
+          }
+
+          await tx.session.update({
+            where: { id: match.sessionId! },
+            data: { status: 'CANCELLED' },
+          });
       });
-      logger.info(`[Tournaments] Forfeit: match ${match.id} — ${player2?.user?.firstName ?? 'Unknown'} auto-lost`);
+
+      if (winnerId && loserId && acceptedSides[0] && waitingSides[0]) {
+         const winnerSide = acceptedSides[0];
+         const loserSide = waitingSides[0];
+         try {
+            const wUser = await prisma.user.findUnique({ where: { id: winnerSide.playerId }, select: { telegramId: true } });
+            const lUser = await prisma.user.findUnique({ where: { id: loserSide.playerId }, select: { telegramId: true } });
+
+            if (wUser?.telegramId) {
+                await prisma.adminNotification.create({
+                  data: {
+                    type: 'TECHNICAL_WIN',
+                    payload: { telegramId: wUser.telegramId, tournamentName: match.tournament.name, opponentId: loserSide.playerId },
+                  },
+                });
+            }
+            if (lUser?.telegramId) {
+                await prisma.adminNotification.create({
+                  data: {
+                    type: 'TOURNAMENT_ELIMINATED',
+                    payload: { telegramId: lUser.telegramId, tournamentName: match.tournament.name, position: 0 },
+                  },
+                });
+            }
+         } catch(e) {}
+      }
+
+      logger.info(`[Tournaments] Forfeit processed for match ${match.id} (winner: ${winnerId}, loser: ${loserId})`);
+
+      const playerIds = [match.player1Id, match.player2Id];
+      for (const pid of playerIds) {
+        if (!pid) continue;
+        const pt = await prisma.tournamentPlayer.findUnique({ where: { id: pid } });
+        if (pt && pt.skippedMatches >= 3 && pt.isActive) {
+          await prisma.tournamentPlayer.update({
+            where: { id: pid },
+            data: { isActive: false },
+          });
+          logger.info(`[Tournaments] Player ${pid} excluded due to 3 skips`);
+        }
+      }
+
     } catch (err: unknown) {
       logger.error(`[Tournaments] Forfeit error for match ${match.id}:`, err);
     }

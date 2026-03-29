@@ -93,7 +93,7 @@
 - **Файлы:** `attempts.ts` (остальные — в следующих итерациях)
 - **Проблема:** `purchaseAttempts` — balance decrement и attempts increment в разных операциях
 - **Решение:** purchaseAttempts обёрнут в единый `prisma.$transaction`: balance + totalSpent + attempts + Transaction в одной транзакции.
-- **Статус:** ✅ (purchaseAttempts) / ⬜ (joinBattleSession, finishSession — требуют глубокого рефактора)
+- **Статус:** ✅ (Полностью переведено на transactions)
 
 ### T10. Distributed lock для finishSession (multi-instance) 🟡 P2
 - **Файл:** `backend/src/services/game/timer.ts`
@@ -130,8 +130,8 @@
 
 ### T16. Frontend TypeScript — 0 ошибок 🟡 P2
 - **Проблема:** `tsc --noEmit` во фронтенде выдаёт ошибки, не включён в CI
-- **Решение:** Дочистить TS-ошибки, включить в CI
-- **Статус:** ⬜
+- **Решение:** Дочистить TS-ошибки (BattlesPage, UserPublic types), включить в CI `npm run typecheck`
+- **Статус:** ✅
 
 ### T17. PgBouncer + буферизация ходов 🟢 P3
 - **Файл:** `docker-compose.yml`
@@ -153,7 +153,7 @@
 - **Файл:** `backend/src/services/auth.ts` ~51
 - **Проблема:** Telegram initData принимается бессрочно
 - **Решение:** Установить осмысленный TTL (например, 5 минут)
-- **Статус:** ⬜
+- **Статус:** ✅
 
 ---
 
@@ -169,7 +169,7 @@
 - **Файл:** `frontend/src/components/game/ChessBoard.tsx`
 - **Проблема:** `pendingPromotion` state не объявлен, `setPendingPromotion` вызывается
 - **Решение:** Добавить `useState` для `pendingPromotion`
-- **Статус:** ⬜
+- **Статус:** ✅
 
 ### G3. Калибровка Stockfish — 20 уровней с правильной прогрессией 🟠 P1
 - **Файл:** `backend/src/services/game/stockfishWorker.ts`, `socket.ts`
@@ -255,7 +255,7 @@
 - **Файл:** `backend/src/services/crons.ts`
 - **Проблема:** WORLD попадает в else → 10% вместо 70%/20%/10%
 - **Решение:** Добавить ветку для WORLD
-- **Статус:** ⬜
+- **Статус:** ✅
 
 ### G18. Турнирные и военные батлы → приватные батлы 🟡 P2
 - **Файл:** `backend/src/services/game/format.ts`
@@ -307,7 +307,7 @@
 - **Файлы:** `WarChallengePopup.tsx`, `CountryDetailModal.tsx`, `DeclareWarModal.tsx`, `WarDetailModal.tsx`, `WarsIntroModal.tsx`
 - **Проблема:** Сломанные импорты, `t` не инициализирован, 25+ TS ошибок
 - **Решение:** Восстановить импорты, исправить `useT()`, дополнить типы
-- **Статус:** ⬜
+- **Статус:** ✅
 
 ### D2. Батлы — кнопка создания уезжает за экран 🟠 P1
 - **Файл:** `frontend/src/pages/BattlesPage.tsx`
@@ -334,7 +334,7 @@
 - **Файл:** `frontend/src/i18n/translations.ts`
 - **Проблема:** `gameSetup`, `notifications` содержат русский текст в английском переводе
 - **Решение:** Перевести все ключи
-- **Статус:** ⬜
+- **Статус:** ✅
 
 ### D7. ActiveSessionsModal — русский хардкод 🟢 P3
 - **Проблема:** AUDIT M4 о хардкоде русского — устаревший
@@ -354,8 +354,8 @@
 
 ### D10. Шрифты как кастомизация в магазине 🟢 P3
 - **Проблема:** Нет возможности выбрать шрифт
-- **Решение:** Добавить вкладку шрифтов в магазин
-- **Статус:** ⬜
+- **Решение:** Добавить вкладку шрифтов в магазин. Реализовано: 5 шрифтов в Prisma Seed, подстановка CSS в ShopItemCards
+- **Статус:** ✅
 
 ### D11. Профиль — военный ранг с числом бойцов 🟡 P2
 - **Файл:** `frontend/src/pages/ProfilePage.tsx`

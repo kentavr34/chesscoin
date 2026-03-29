@@ -48,7 +48,7 @@ export const loginWithTelegram = async (
 
   try {
     validate(initDataString, config.telegram.botToken, {
-      expiresIn: config.server.nodeEnv === "production" ? 86400 : 0, // 24h в проде
+      expiresIn: 300, // T20: 5min TTL in all envs
     });
   } catch (e) {
     const errMsg = e instanceof Error ? e.message : JSON.stringify(e);

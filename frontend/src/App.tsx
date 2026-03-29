@@ -38,6 +38,25 @@ const AppInner: React.FC = () => {
   const navigate = useNavigate();
   const { warChallenge, setWarChallenge } = useWarChallengeStore();
   const { upsertSession } = useGameStore();
+  const { user } = useUserStore();
+
+  React.useEffect(() => {
+    if (user?.equippedItems?.FONT) {
+      const fontName = user.equippedItems.FONT.name;
+      const fontMapping: Record<string, string> = {
+        'Inter': "'Inter', sans-serif",
+        'Roboto': "'Roboto', sans-serif",
+        'Montserrat': "'Montserrat', sans-serif",
+        'Playfair Display': "'Playfair Display', serif",
+        'Comic Sans MS': "'Comic Sans MS', 'Comic Sans', cursive",
+        'JetBrains Mono': "'JetBrains Mono', monospace",
+      };
+      const cssFont = fontMapping[fontName] || "'Inter', sans-serif";
+      document.documentElement.style.setProperty('--font-main', cssFont);
+    } else {
+      document.documentElement.style.setProperty('--font-main', "'Inter', sans-serif");
+    }
+  }, [user?.equippedItems?.FONT?.name]);
 
   const handleAccept = () => {
     if (!warChallenge) return;

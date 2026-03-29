@@ -232,7 +232,7 @@ export const HomePage: React.FC = () => {
         <div style={{ position: 'absolute', bottom: -12, right: 10, fontSize: 80, opacity: 0.04, color: '#9B85FF', pointerEvents: 'none', lineHeight: 1 }}>♟</div>
 
         {/* ID Card: Компактный горизонтальный профиль без диспропорции размеров */}
-        <div style={{ background: 'rgba(30,34,52,0.95)', border: '1px solid rgba(123,97,255,0.22)', borderRadius: 16, padding: '14px 16px', marginBottom: 14, position: 'relative', zIndex: 1 }}>
+        <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 16, padding: '14px 16px', marginBottom: 14, position: 'relative', zIndex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             <Avatar user={user} size="m" gold />
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -277,7 +277,10 @@ export const HomePage: React.FC = () => {
         <div style={{ position: 'relative', zIndex: 1, marginBottom: 10 }}>
           <div style={lblStyle}>{t.home.balance.toUpperCase()}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 26, fontWeight: 800, color: 'var(--accent, #F5C842)', letterSpacing: '-.04em', lineHeight: 1 }}>
+            <span
+              onClick={() => navigate('/profile', { state: { tab: 'info' } })}
+              style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 26, fontWeight: 800, color: 'var(--accent, #F5C842)', letterSpacing: '-.04em', lineHeight: 1, cursor: 'pointer' }}
+            >
               {fmtBalance(user.balance)} <span style={{ fontSize: 13, opacity: 0.5 }}>ᚙ</span>
             </span>
             <button onClick={() => navigate('/shop')} style={shopInlineBtn}>🛍</button>
@@ -345,6 +348,53 @@ export const HomePage: React.FC = () => {
         </div>
       </div>
 
+      {/* J.A.R.V.I.S Prominent Banner */}
+      <div style={{ padding: '0 16px', margin: '4px 0 20px' }}>
+        <div onClick={startBotGame} style={{
+          background: 'linear-gradient(135deg, rgba(82, 60, 203, 0.25) 0%, rgba(123, 97, 255, 0.05) 100%)',
+          border: '1px solid rgba(155, 133, 255, 0.3)',
+          borderRadius: 20,
+          padding: '16px 20px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 16,
+          cursor: 'pointer',
+          position: 'relative',
+          overflow: 'hidden',
+          opacity: startingBot ? 0.6 : 1,
+          transition: 'all 0.2s',
+          boxShadow: '0 8px 32px rgba(82, 60, 203, 0.15)'
+        }}>
+          {/* Dynamic background glow */}
+          <div style={{ position: 'absolute', top: -30, right: -20, width: 120, height: 120, background: 'rgba(155, 133, 255, 0.25)', filter: 'blur(35px)', borderRadius: '50%', pointerEvents: 'none' }} />
+          
+          <div style={{ 
+            width: 54, height: 54, borderRadius: 16, 
+            background: 'linear-gradient(135deg, #9B85FF 0%, #6842FF 100%)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 4px 16px rgba(123, 97, 255, 0.4)',
+            flexShrink: 0, position: 'relative', zIndex: 1
+          }}>
+            <span style={{ fontSize: 26, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }}>🤖</span>
+          </div>
+
+          <div style={{ flex: 1, zIndex: 1 }}>
+            <div style={{ fontSize: 19, fontWeight: 900, color: '#F0F2F8', letterSpacing: '-.02em', marginBottom: 2, fontFamily: "'Unbounded', sans-serif" }}>J.A.R.V.I.S</div>
+            <div style={{ fontSize: 13, color: '#B8A5FF', fontWeight: 600 }}>Level {jarvisLevel} · {jarvisCfg.name}</div>
+          </div>
+
+          <div style={{ zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{
+              background: '#F0F2F8', color: '#1A1636', fontSize: 12, fontWeight: 800,
+              padding: '10px 18px', borderRadius: 14, display: 'flex', alignItems: 'center', gap: 6,
+              boxShadow: '0 4px 12px rgba(240, 242, 248, 0.2)'
+            }}>
+              PLAY <span style={{ fontSize: 14 }}>→</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Активные игры */}
       {activeSessions.length > 0 && (
         <>
@@ -397,26 +447,11 @@ export const HomePage: React.FC = () => {
       {/* Разделы */}
       <div style={secStyle}>{t.home.sections.toUpperCase()}</div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '0 16px' }}>
-        <div onClick={startBotGame} style={{ ...gameCardStyle, opacity: startingBot ? 0.6 : 1, position: 'relative' }}>
-          <button 
-            onClick={(e) => { e.stopPropagation(); setShowJarvisInfo(true); }}
-            style={{ position: 'absolute', top: 12, right: 12, background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', width: 22, height: 22, fontSize: 12, color: '#C8CDDF', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>?</button>
-          <div style={cardIcoWrapper}><IcoJarvis /></div>
-          <div style={cardTitle}>J.A.R.V.I.S</div>
-          <div style={cardSub}>{jarvisCfg.name}</div>
-          <span style={cardTag('#9B85FF', 'rgba(123,97,255,0.15)')}>MAX</span>
-        </div>
         <div onClick={() => navigate('/battles')} style={gameCardStyle}>
           <div style={cardIcoWrapper}><IcoBattle /></div>
           <div style={cardTitle}>{t.home.sectionBattles}</div>
           <div style={cardSub}>{t.home.battlesCard.sub}</div>
           <span style={cardTag('var(--red, #FF4D6A)', 'rgba(255,77,106,0.13)')}>PVP</span>
-        </div>
-        <div onClick={() => navigate('/tournaments')} style={gameCardStyle}>
-          <div style={cardIcoWrapper}><IcoTournament /></div>
-          <div style={cardTitle}>{t.home.sectionTournaments}</div>
-          <div style={cardSub}>{t.home.tournamentsCard.sub}</div>
-          <span style={cardTag('var(--accent, #F5C842)', 'rgba(245,200,66,0.13)')}>SOON</span>
         </div>
         <div onClick={() => navigate('/wars')} style={gameCardStyle}>
           <div style={cardIcoWrapper}><IcoWars /></div>
@@ -425,6 +460,12 @@ export const HomePage: React.FC = () => {
           <span style={cardTag('var(--green, #00D68F)', 'rgba(0,214,143,0.12)')}>
             {myWar ? `${myWar.attackerWins}:${myWar.defenderWins}` : myCountry ? `${myCountry.wins ?? 0}W` : '→'}
           </span>
+        </div>
+        <div onClick={() => navigate('/tournaments')} style={{ ...gameCardStyle, gridColumn: 'span 2' }}>
+          <div style={cardIcoWrapper}><IcoTournament /></div>
+          <div style={cardTitle}>{t.home.sectionTournaments}</div>
+          <div style={cardSub}>{t.home.tournamentsCard.sub}</div>
+          <span style={cardTag('var(--accent, #F5C842)', 'rgba(245,200,66,0.13)')}>SOON</span>
         </div>
       </div>
 
@@ -486,7 +527,7 @@ export const HomePage: React.FC = () => {
 };
 
 // Styles
-const heroStyle: React.CSSProperties = { margin: '6px 16px 0', padding: '16px', background: 'linear-gradient(135deg,#181B2E,#12162A)', border: '1px solid rgba(123,97,255,0.18)', borderRadius: 22, position: 'relative', overflow: 'hidden' };
+const heroStyle: React.CSSProperties = { margin: '6px 16px 0', padding: '16px', background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 22, position: 'relative', overflow: 'hidden' };
 const shopInlineBtn: React.CSSProperties = { width: 32, height: 32, borderRadius: 10, background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.13)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, cursor: 'pointer' };
 const attPlusStyle: React.CSSProperties = { width: 24, height: 24, borderRadius: '50%', background: 'var(--accent, #F5C842)', color: 'var(--bg, #0B0D11)', fontSize: 16, fontWeight: 800, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 };
 const stripStyle: React.CSSProperties = { margin: '4px 16px 0', padding: '13px 16px', background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 18, display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' };

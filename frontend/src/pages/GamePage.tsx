@@ -186,17 +186,24 @@ export const GamePage: React.FC = () => {
   const handleResultClose = () => {
     setShowResult(false);
     removeSession(session?.id ?? '');
+    useUserStore.getState().fetchUser();
     navigate('/');
   };
 
   const handleRematch = useCallback(() => {
     if (!session) return;
-    const botLevel = session.botLevel ?? 1;
     const mySide = session.sides.find((s) => s.id === session.mySideId);
+    const playerWon = mySide?.status === 'WON';
+    
+    // Auto-progress to next level if we won, but don't exceed 20
+    const botLevel = playerWon ? Math.min(20, (session.botLevel ?? 1) + 1) : (session.botLevel ?? 1);
     const color = mySide?.isWhite ? 'white' : 'black';
     const timeSeconds = (session as any).duration ?? 600;
+    
     setShowResult(false);
     removeSession(session.id);
+    useUserStore.getState().fetchUser(); // Refresh user state in background so balance updates
+    
     getSocket().emit('game:create:bot', { color, botLevel, timeSeconds }, (res: Record<string,unknown>) => {
       if (res?.ok && res.session) {
         const sess = res.session as GameSession;
@@ -263,12 +270,12 @@ export const GamePage: React.FC = () => {
           onClick={() => {
             import('@/api').then(({ warsApi }) => {
               warsApi.saveGame(session.id).then(() => {
-                import('@/components/ui/Toast').then(({ toast }) => toast.info('💾 Saved!'));
+                import('@/components/ui/Toast').then(({ toast }) => toast.info('🐌 Saved!'));
               }).catch(() => {});
             });
           }}
-          style={{ background: 'rgba(245,200,66,0.08)', border: '1px solid rgba(245,200,66,0.15)', borderRadius: 8, padding: '3px 10px', color: '#F5C842', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-        >💾 Save</button>
+          style={{ background: 'rgba(245,200,66,0.08)', border: '1px solid rgba(245,200,66,0.15)', borderRadius: 8, padding: '3px 10px', color: '#F5C842', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+        >🐌</button>
       </div>
 
       {/* Доска */}

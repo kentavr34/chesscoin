@@ -142,7 +142,16 @@ async function main() {
     { name: "Emoji Fun",          description: "Fun Unicode chess symbols ♔♕♖♗♘♙",           type: "PIECE_SET" as const, category: "BASIC" as const,   rarity: "COMMON" as const,    priceCoins: BigInt(5_000),     sortOrder: 56 },
   ];
 
-  const allItems = [...avatarFrames, ...boardSkins, ...pieceSkins, ...moveAnimations, ...pieceSets];
+  // ─── Shop Items — Fonts ──────────────────────────────────────────────────
+  const fonts = [
+    { name: "Inter",             description: "Modern, clean, and highly readable font",               type: "FONT" as const, category: "BASIC" as const,   rarity: "COMMON" as const,    priceCoins: BigInt(0),         sortOrder: 60, imageUrl: null, previewUrl: null },
+    { name: "Roboto",            description: "Classic Google font with a mechanical skeleton",        type: "FONT" as const, category: "PREMIUM" as const, rarity: "RARE" as const,      priceCoins: BigInt(5_000),     sortOrder: 61, imageUrl: null, previewUrl: null },
+    { name: "Montserrat",        description: "Geometric sans-serif typography",                       type: "FONT" as const, category: "PREMIUM" as const, rarity: "EPIC" as const,      priceCoins: BigInt(15_000),    sortOrder: 62, imageUrl: null, previewUrl: null },
+    { name: "Playfair Display",  description: "Elegant serif font for a royal experience",             type: "FONT" as const, category: "PREMIUM" as const, rarity: "LEGENDARY" as const, priceCoins: BigInt(25_000),    sortOrder: 63, imageUrl: null, previewUrl: null },
+    { name: "Comic Sans MS",     description: "The ultimate legendary troll font",                     type: "FONT" as const, category: "SEASONAL" as const, rarity: "LEGENDARY" as const, priceCoins: BigInt(100_000),   sortOrder: 64, imageUrl: null, previewUrl: null },
+  ];
+
+  const allItems = [...avatarFrames, ...boardSkins, ...pieceSkins, ...moveAnimations, ...pieceSets, ...fonts];
 
   // Mapping old Russian names → new English names for data migration
   const nameMapping: Record<string, string> = {

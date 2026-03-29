@@ -11,7 +11,7 @@ import { logger, logError } from "@/lib/logger"; // Q2
 import type { TournamentWithPlayers } from "@/types/db"; // R1
 import { updateBalance } from "@/services/economy";
 import { TransactionType } from "@prisma/client";
-import { ensureSystemTournaments, checkTournamentForfeits } from "@/routes/tournaments";
+import { ensureSystemTournaments, checkTournamentForfeits, matchmakeAllTournaments } from "@/routes/tournaments";
 import { settleClanBattle } from "@/routes/nations";
 import { verifyTonTransaction } from "@/lib/tonverify";
 
@@ -574,9 +574,16 @@ export function startGameCrons() {
   }, 30000);
 
   // T4: Авто-поражение за неответ — каждый час
-  cron.schedule("0 3 * * *", async () => { // Opt: раз в сутки в 03:00 UTC
+  cron.schedule("0 * * * *", async () => { 
     await checkTournamentForfeits().catch((err) =>
       logError("[Crons/TournamentForfeit] Error:", err)
+    );
+  });
+
+  // T1: Matchmaking Engine — каждые 15 минут
+  cron.schedule("*/15 * * * *", async () => {
+    await matchmakeAllTournaments().catch(err => 
+      logError("[Crons/TournamentMatchmaker] Error:", err)
     );
   });
 
@@ -717,8 +724,7 @@ export async function cancelStaleExchangeOrders(): Promise<void> {
     for (const order of stale) {
       await prisma.$transaction(async (tx) => {
         await tx.p2POrder.update({ where: { id: order.id }, data: { status: 'CANCELLED', cancelledAt: new Date() } });
-        await tx.user.update({ where: { id: order.sellerId }, data: { balance: { increment: order.amountCoins } } });
-        await tx.transaction.create({ data: { userId: order.sellerId, type: TransactionType.EXCHANGE_UNFREEZE, amount: order.amountCoins, payload: { orderId: order.id, reason: 'stale_auto_cancel' } } });
+        await updateBalance(order.sellerId, order.amountCoins, TransactionType.EXCHANGE_UNFREEZE, { orderId: order.id, reason: 'stale_auto_cancel' }, { tx });
       });
     }
     logger.info(`[Cron/Exchange] Cancelled ${stale.length} stale orders older than 30 days`);
@@ -746,10 +752,7 @@ async function cleanupStaleBattles() {
     await prisma.$transaction(async (tx) => {
       await tx.session.update({ where: { id: session.id }, data: { status: 'CANCELLED' } });
       if (session.bet && session.bet > 0n) {
-        await tx.user.update({ where: { id: creatorId }, data: { balance: { increment: session.bet } } });
-        await tx.transaction.create({
-          data: { userId: creatorId, type: TransactionType.REFUND, amount: session.bet, payload: { sessionId: session.id, reason: 'stale_30d' } },
-        });
+        await updateBalance(creatorId, session.bet, TransactionType.REFUND, { sessionId: session.id, reason: 'stale_30d' }, { tx });
       }
       await tx.user.update({ where: { id: creatorId }, data: { activeSessions: { disconnect: { id: session.id } } } });
     });

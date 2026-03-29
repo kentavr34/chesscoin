@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: chesscoin_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: chesscoin
+      POSTGRES_USER: chesscoin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devpass123}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M # Ограничение памяти для Postgres для снижения 76% нагрузки
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chesscoin"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: chesscoin_redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD:-devredis123} --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 300M # Ограничение памяти для Redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  redis_data:

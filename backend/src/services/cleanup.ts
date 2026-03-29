@@ -2,6 +2,7 @@ import cron from "node-cron";
 import { logger, logError } from "@/lib/logger"; // Q2
 import { prisma } from "@/lib/prisma";
 import { TransactionType } from "@prisma/client";
+import { updateBalance } from "./economy";
 
 // ═══════════════════════════════════════════════════════════════
 // CRON: Чистка мёртвых игроков + зависших батлов
@@ -91,18 +92,13 @@ export const cleanStaleBattles = async (): Promise<void> => {
       await prisma.$transaction(async (tx) => {
         // TAIL-1: используем REFUND — семантически правильный тип для возврата ставки
         if (creator && battle.bet > 0n) {
-          await tx.user.update({
-            where: { id: creator.playerId },
-            data: { balance: { increment: battle.bet } }, // refund
-          });
-          await tx.transaction.create({
-            data: {
-              userId: creator.playerId,
-              amount: battle.bet,
-              type: TransactionType.REFUND,
-              payload: { sessionId: battle.id, description: "stale_battle_refund" },
-            },
-          });
+          await updateBalance(
+            creator.playerId,
+            battle.bet,
+            TransactionType.REFUND,
+            { sessionId: battle.id, description: "stale_battle_refund" },
+            { tx }
+          );
         }
         await tx.session.update({
           where: { id: battle.id },

@@ -10,10 +10,18 @@ applyThemeToCss(THEMES[getActiveTheme()]);
 // Глобальные стили
 const style = document.createElement('style');
 style.textContent = `
-  @import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&family=Roboto:wght@400;500;700&family=Montserrat:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html, body, #root { width: 100%; height: 100%; overflow: hidden; }
-  body { background: #0B0D11; font-family: 'Inter', sans-serif; font-size: 15px; color: #F0F2F8; }
+  body { background: #0B0D11; font-family: var(--font-main, 'Inter', sans-serif); font-size: 15px; color: #F0F2F8; }
+  
+  /* Принудительно применяем экипированный шрифт ко всем базовым текстовым элементам, переопределяя встроенные inline-стили */
+  div, span, button, input { font-family: var(--font-main, 'Inter', sans-serif); }
+  
+  /* Исключения: моноширинные элементы и стилизованные заголовки */
+  .mono { font-family: 'JetBrains Mono', monospace !important; }
+  .title-brand { font-family: 'Unbounded', sans-serif !important; }
+
   ::-webkit-scrollbar { display: none; }
   @keyframes ring-pulse { 0%,100%{opacity:.4;transform:scale(1)} 50%{opacity:.7;transform:scale(1.03)} }
   @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }

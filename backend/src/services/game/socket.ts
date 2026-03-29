@@ -1,7 +1,7 @@
 import { Server, Socket } from "socket.io";
 import { logger, logError } from "@/lib/logger";
 import { Chess } from "chess.js";
-import { SessionStatus, SessionType, TransactionType } from "@prisma/client";
+import { SessionStatus, SessionType, TransactionType, SessionSideStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { redis } from "@/lib/redis";
 import { verifyAccessToken } from "@/services/auth";
@@ -142,7 +142,19 @@ export const setupSocketHandlers = (io: Server) => {
           },
         });
 
-        const sessions = (currentUser?.activeSessions ?? []).map((s: Record<string,unknown>) =>
+        const sessionsRaw = currentUser?.activeSessions ?? [];
+        for (const s of sessionsRaw) {
+          try {
+            const sourceData = await redis.get(`session:source:${s.id}`);
+            if (sourceData) {
+              const parsed = JSON.parse(sourceData);
+              (s as any).sourceType = parsed.sourceType;
+              (s as any).sourceMeta = parsed.sourceMeta;
+            }
+          } catch (e) {}
+        }
+
+        const sessions = sessionsRaw.map((s: Record<string,unknown>) =>
           formatSession(s as unknown as import("@/types/db").SessionWithSides, userId)
         );
 
@@ -230,6 +242,95 @@ export const setupSocketHandlers = (io: Server) => {
 
           // T18: diff — убираем батл из лобби (он начался)
           io.to("lobby").emit("battles:removed", session.id);
+        } catch (err: unknown) {
+          if (callback) callback({ ok: false, error: (err as Error).message });
+        }
+      }
+    );
+
+    // ── Принять приватный батл (Турнир / Война) ───────────────────────────
+    socket.on(
+      "game:accept_private",
+      async (data: { sessionId: string }, callback?: Function) => {
+        try {
+          const session = await prisma.session.findUnique({
+             where: { id: data.sessionId },
+             include: { sides: { include: { player: { select: { id: true, firstName: true, lastName: true, username: true, elo: true, avatar: true, avatarType: true, avatarGradient: true, league: true } } } } }
+          });
+          
+          if (!session || session.status !== SessionStatus.WAITING_FOR_OPPONENT) throw new Error("SESSION_NOT_WAITING");
+          
+          const mySide = session.sides.find((s: Record<string,unknown>) => s.playerId === userId);
+          if (!mySide) throw new Error("NOT_YOUR_GAME");
+
+          let updatedSession = session;
+
+          // Обновляем статус моей стороны (если еще не Accepted)
+          if (mySide.status !== "IN_PROGRESS") {
+             await prisma.sessionSide.update({ where: { id: mySide.id }, data: { status: SessionSideStatus.IN_PROGRESS } });
+             
+             // Проверяем, приняли ли ОБА игрока
+             const updatedSides = await prisma.sessionSide.findMany({ where: { sessionId: data.sessionId } });
+             const bothAccepted = updatedSides.every(s => s.status === SessionSideStatus.IN_PROGRESS) && updatedSides.length === 2;
+
+             if (bothAccepted) {
+                // Прямо сейчас "вылупляется" партия и становится публичной
+                updatedSession = await prisma.session.update({
+                  where: { id: data.sessionId },
+                  data: {
+                     status: SessionStatus.IN_PROGRESS,
+                     startedAt: new Date(),
+                     isPrivate: false, // ТЕПЕРЬ ОНО ПУБЛИЧНОЕ!
+                  },
+                  include: { sides: { include: { player: { select: { id: true, firstName: true, lastName: true, username: true, elo: true, avatar: true, avatarType: true, avatarGradient: true, league: true } } } } }
+                });
+                
+                const whiteSide = updatedSession.sides.find((s: Record<string,unknown>) => s.isWhite);
+                updatedSession = await prisma.session.update({ 
+                  where: { id: data.sessionId }, 
+                  data: { currentSideId: whiteSide?.id },
+                  include: { sides: { include: { player: { select: { id: true, firstName: true, lastName: true, username: true, elo: true, avatar: true, avatarType: true, avatarGradient: true, league: true } } } } }
+                });
+                
+                await setTimer(data.sessionId);
+                
+                io.to(data.sessionId).emit("game:started", { sessionId: data.sessionId });
+                
+                // Добавляем в лобби
+                try {
+                   const sourceData = await redis.get(`session:source:${data.sessionId}`);
+                   if (sourceData) {
+                     const parsed = JSON.parse(sourceData);
+                     (updatedSession as any).sourceType = parsed.sourceType;
+                     (updatedSession as any).sourceMeta = parsed.sourceMeta;
+                   }
+                } catch (e) {}
+
+                const newBattle = formatBattlesList([updatedSession as any], buildSpectatorCounts([updatedSession]))[0];
+                io.to("lobby").emit("battles:added", newBattle);
+             } else {
+                updatedSession = await prisma.session.findUniqueOrThrow({
+                   where: { id: data.sessionId },
+                   include: { sides: { include: { player: { select: { id: true, firstName: true, lastName: true, username: true, elo: true, avatar: true, avatarType: true, avatarGradient: true, league: true } } } } }
+                });
+             }
+          }
+
+          try {
+             const sourceData = await redis.get(`session:source:${data.sessionId}`);
+             if (sourceData) {
+               const parsed = JSON.parse(sourceData);
+               (updatedSession as any).sourceType = parsed.sourceType;
+               (updatedSession as any).sourceMeta = parsed.sourceMeta;
+             }
+          } catch (e) {}
+
+          socket.join(data.sessionId);
+          const formatted = formatSession(updatedSession as any, userId);
+          
+          if (callback) callback({ ok: true, session: formatted });
+          io.to(data.sessionId).emit("game", formatted);
+          
         } catch (err: unknown) {
           if (callback) callback({ ok: false, error: (err as Error).message });
         }
@@ -770,7 +871,7 @@ import { v4 as uuidv4 } from "uuid";
 // Путь к скомпилированному воркеру (tsc собирает в dist/)
 const WORKER_PATH = path.join(__dirname, "stockfishWorker.js");
 
-const getStockfishMove = (
+export const getStockfishMove = (
   fen: string,
   level: number
 ): Promise<{ from: string; to: string } | null> => {
@@ -818,27 +919,36 @@ const getStockfishMove = (
       resolve(getRandomMove(fen));
     }, hardTimeout);
 
-    worker.on("message", (msg: { bestmove?: string; type?: string; [key: string]: unknown }) => {
-      // Первое сообщение от воркера — { ready: true }, игнорируем
+    const messageHandler = (msg: { bestmove?: string; type?: string; [key: string]: unknown }) => {
       if (msg.ready) return;
       if (msg.requestId !== requestId) return;
-      clearTimeout(killTimer);
-      stockfishPool.release(worker); // OPT-6: возвращаем в пул (НЕ terminate!)
+      cleanup();
       resolve((msg.move ?? getRandomMove(fen)) as { from: string; to: string } | null);
-    });
+    };
 
-    worker.on("error", (err) => {
+    const errorHandler = (err: Error) => {
       logger.warn("[JARVIS] Worker error:", err.message, "→ random fallback");
-      clearTimeout(killTimer);
-      stockfishPool.release(worker); // OPT-6: возвращаем в пул при ошибке
+      cleanup();
       resolve(getRandomMove(fen));
-    });
+    };
 
-    worker.on("exit", (code) => {
+    const exitHandler = (code: number) => {
       if (code !== 0) {
         logger.warn("[JARVIS] Worker exited with code", code);
       }
-    });
+    };
+
+    const cleanup = () => {
+      clearTimeout(killTimer);
+      worker.off("message", messageHandler);
+      worker.off("error", errorHandler);
+      worker.off("exit", exitHandler);
+      stockfishPool.release(worker); // OPT-6: возвращаем в пул
+    };
+
+    worker.on("message", messageHandler);
+    worker.on("error", errorHandler);
+    worker.on("exit", exitHandler);
 
     // Отправляем задание воркеру
     worker.postMessage({ fen, level, requestId });

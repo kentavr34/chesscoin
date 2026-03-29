@@ -54,10 +54,10 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
         return c - 1;
       });
     }, 1000);
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       onStart(resolvedColor, time);
     }, 3000);
-    return () => { clearInterval(iv); clearTimeout(t); };
+    return () => { clearInterval(iv); clearTimeout(timer); };
   }, [launching]);
 
   const handleStart = () => {
@@ -165,16 +165,16 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
         {/* Time selection — 6 опций в сетке 3×2 */}
         <div style={sectionLbl}>{t.gameSetup.duration}</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 24 }}>
-          {TIME_OPTIONS.map((t) => (
+          {TIME_OPTIONS.map((opt) => (
             <button
-              key={t}
-              onClick={() => setTime(t)}
-              style={timeBtnStyle(time === t)}
+              key={opt}
+              onClick={() => setTime(opt)}
+              style={timeBtnStyle(time === opt)}
             >
               <span style={{ fontSize: 16, display: 'block', marginBottom: 2 }}>
-                {t === 1 ? '⚡' : t === 3 ? '🔥' : t === 5 ? '♟' : t === 15 ? '🎯' : t === 30 ? '🏆' : '👑'}
+                {opt === 1 ? '⚡' : opt === 3 ? '🔥' : opt === 5 ? '♟' : opt === 15 ? '🎯' : opt === 30 ? '🏆' : '👑'}
               </span>
-              {t < 60 ? `${t} min` : '1 hr'}
+              {opt < 60 ? `${opt} min` : '1 hr'}
             </button>
           ))}
         </div>

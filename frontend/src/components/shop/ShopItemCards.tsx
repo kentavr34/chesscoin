@@ -96,6 +96,18 @@ export const ItemCard: React.FC<ItemCardProps> = ({ item, loading, highlighted, 
     if (item.type === 'CAPTURE_EFFECT') return <span style={{ fontSize: 36, opacity: 0.6 }}>💥</span>;
     if (item.type === 'SPECIAL_MOVE') return <span style={{ fontSize: 36, opacity: 0.6 }}>⚡</span>;
     if (item.type === 'THEME') return <span style={{ fontSize: 36, opacity: 0.6 }}>🎨</span>;
+    if (item.type === 'FONT') {
+      const fontMapping: Record<string, string> = {
+        'Inter': "'Inter', sans-serif",
+        'Roboto': "'Roboto', sans-serif",
+        'Montserrat': "'Montserrat', sans-serif",
+        'Playfair Display': "'Playfair Display', serif",
+        'Comic Sans MS': "'Comic Sans MS', 'Comic Sans', cursive",
+        'JetBrains Mono': "'JetBrains Mono', monospace",
+      };
+      const cssFont = fontMapping[item.name] || "'Inter', sans-serif";
+      return <span style={{ fontSize: 40, fontFamily: cssFont }}>Aa</span>;
+    }
     return <span style={{ fontSize: 32, opacity: 0.4 }}>🎮</span>;
   };
 

@@ -15,6 +15,7 @@ import { logger } from '@/lib/logger';
 import { redis } from '@/lib/redis';
 import { verifyTonTransaction } from '@/lib/tonverify';
 import { getIo } from '@/lib/io';
+import { updateBalance } from '@/services/economy';
 export const exchangeRouter = Router();
 
 const PLATFORM_FEE_PERCENT = 0.005;
@@ -129,8 +130,7 @@ exchangeRouter.post('/orders', authMiddleware, async (req: Request, res: Respons
     const feeTon   = totalTon * PLATFORM_FEE_PERCENT;
 
     const order = await prisma.$transaction(async (tx) => {
-      await tx.user.update({ where: { id: userId }, data: { balance: { decrement: amount } } });
-      await tx.transaction.create({ data: { userId, type: TransactionType.EXCHANGE_FREEZE, amount: -amount, payload: { action: 'freeze_order' } } });
+      await updateBalance(userId, -amount, TransactionType.EXCHANGE_FREEZE, { action: 'freeze_order' }, { tx });
       return tx.p2POrder.create({ data: { sellerId: userId, amountCoins: amount, priceTon: price, totalTon, feeTon, sellerWallet: user.tonWalletAddress!, status: 'OPEN' } });
     });
 
@@ -154,8 +154,7 @@ exchangeRouter.delete('/orders/:id', authMiddleware, async (req: Request, res: R
 
     await prisma.$transaction(async (tx) => {
       await tx.p2POrder.update({ where: { id: orderId }, data: { status: 'CANCELLED', cancelledAt: new Date() } });
-      await tx.user.update({ where: { id: userId }, data: { balance: { increment: order.amountCoins } } });
-      await tx.transaction.create({ data: { userId, type: TransactionType.EXCHANGE_UNFREEZE, amount: order.amountCoins, payload: { orderId } } });
+      await updateBalance(userId, order.amountCoins, TransactionType.EXCHANGE_UNFREEZE, { orderId }, { tx });
     });
 
     logger.info(`[exchange] Cancelled order ${orderId} by ${userId}`);
@@ -238,15 +237,11 @@ exchangeRouter.post('/orders/:id/execute', authMiddleware, async (req: Request, 
           data: { sellerId: order.sellerId, amountCoins: remainCoins, priceTon: order.priceTon, totalTon: remainTon, feeTon: remainTon * PLATFORM_FEE_PERCENT, sellerWallet: order.sellerWallet, status: 'OPEN' },
         });
 
-        await tx.user.update({ where: { id: buyerId }, data: { balance: { increment: actualCoins } } });
+        await updateBalance(buyerId, actualCoins, TransactionType.EXCHANGE_BUY, { orderId, txHash, partial: true, totalTon: actualTonAmt }, { tx });
         // Возвращаем разницу продавцу (он заморозил весь ордер, остаток возвращаем)
-        await tx.user.update({ where: { id: order.sellerId }, data: { balance: { increment: remainCoins } } });
-        await tx.transaction.createMany({
-          data: [
-            { userId: order.sellerId, type: TransactionType.EXCHANGE_SELL,     amount: -actualCoins,  payload: { orderId, txHash, partial: true, totalTon: actualTonAmt } },
-            { userId: order.sellerId, type: TransactionType.EXCHANGE_UNFREEZE, amount:  remainCoins,  payload: { orderId, reason: 'partial_remain' } },
-            { userId: buyerId,        type: TransactionType.EXCHANGE_BUY,      amount:  actualCoins,  payload: { orderId, txHash, partial: true, totalTon: actualTonAmt } },
-          ],
+        await updateBalance(order.sellerId, remainCoins, TransactionType.EXCHANGE_UNFREEZE, { orderId, reason: 'partial_remain' }, { tx });
+        await tx.transaction.create({
+          data: { userId: order.sellerId, type: TransactionType.EXCHANGE_SELL, amount: -actualCoins, payload: { orderId, txHash, partial: true, totalTon: actualTonAmt } }
         });
         return result;
       } else {
@@ -256,12 +251,9 @@ exchangeRouter.post('/orders/:id/execute', authMiddleware, async (req: Request, 
           data:  { status: 'EXECUTED', buyerId, buyerWallet: buyer.tonWalletAddress!, txHash, txBoc: boc ?? null, executedAt: new Date(), verifyStatus },
         });
         if (result.count === 0) throw new Error('ORDER_ALREADY_TAKEN');
-        await tx.user.update({ where: { id: buyerId }, data: { balance: { increment: order.amountCoins } } });
-        await tx.transaction.createMany({
-          data: [
-            { userId: order.sellerId, type: TransactionType.EXCHANGE_SELL, amount: -order.amountCoins, payload: { orderId, txHash, totalTon: order.totalTon, feeTon: order.feeTon } },
-            { userId: buyerId,        type: TransactionType.EXCHANGE_BUY,  amount:  order.amountCoins, payload: { orderId, txHash, totalTon: order.totalTon } },
-          ],
+        await updateBalance(buyerId, order.amountCoins, TransactionType.EXCHANGE_BUY, { orderId, txHash, totalTon: order.totalTon }, { tx });
+        await tx.transaction.create({
+          data: { userId: order.sellerId, type: TransactionType.EXCHANGE_SELL, amount: -order.amountCoins, payload: { orderId, txHash, totalTon: order.totalTon, feeTon: order.feeTon } }
         });
         return result;
       }
@@ -512,15 +504,8 @@ exchangeRouter.post('/buy-orders/:id/fill', authMiddleware, async (req: Request,
       if (result.count === 0) throw new Error('ORDER_ALREADY_TAKEN');
 
       // ᚙ от продавца → покупателю ᚙ (создателю BUY-ордера)
-      await tx.user.update({ where: { id: sellerId },       data: { balance: { decrement: order.amountCoins } } });
-      await tx.user.update({ where: { id: order.sellerId }, data: { balance: { increment: order.amountCoins } } });
-
-      await tx.transaction.createMany({
-        data: [
-          { userId: sellerId,       type: TransactionType.EXCHANGE_SELL, amount: -order.amountCoins, payload: { orderId, txHash, orderType: 'BUY_FILL', totalTon: order.totalTon } },
-          { userId: order.sellerId, type: TransactionType.EXCHANGE_BUY,  amount:  order.amountCoins, payload: { orderId, txHash, orderType: 'BUY_FILL', totalTon: order.totalTon } },
-        ],
-      });
+      await updateBalance(sellerId, -order.amountCoins, TransactionType.EXCHANGE_SELL, { orderId, txHash, orderType: 'BUY_FILL', totalTon: order.totalTon }, { tx });
+      await updateBalance(order.sellerId, order.amountCoins, TransactionType.EXCHANGE_BUY, { orderId, txHash, orderType: 'BUY_FILL', totalTon: order.totalTon }, { tx });
     });
 
     // Уведомления (fire-and-forget)

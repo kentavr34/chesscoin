@@ -746,16 +746,13 @@ warsRouter.post("/countries/:id/donate", authMiddleware, async (req: Request, re
     if (BigInt(user.balance) < amount) return res.status(400).json({ error: "Insufficient balance" });
 
     // Списать с баланса и пополнить казну — атомарно
-    const [, updated] = await prisma.$transaction([
-      prisma.user.update({
-        where: { id: userId },
-        data: { balance: { decrement: amount }, totalSpent: { increment: amount } },
-      }),
-      prisma.country.update({
+    const updated = await prisma.$transaction(async (tx) => {
+      await updateBalance(userId, -amount, TransactionType.CLAN_CONTRIBUTION, { countryId }, { tx });
+      return tx.country.update({
         where: { id: countryId },
         data: { treasury: { increment: amount } },
-      }),
-    ]);
+      });
+    });
 
     res.json({ success: true, treasury: updated.treasury.toString() });
   } catch (e: unknown) {

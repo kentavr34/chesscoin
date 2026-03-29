@@ -937,6 +937,7 @@ enum ItemType {
   WIN_ANIMATION      // V3: анимация победы/мата
   CAPTURE_EFFECT     // V3: эффект взятия фигуры
   SPECIAL_MOVE       // V3: анимация спецхода/дебюта
+  FONT               // кастомизируемый шрифт (D10)
 }
 
 enum ItemCategory {
