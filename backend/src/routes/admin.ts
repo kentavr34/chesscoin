@@ -429,3 +429,70 @@ adminRouter.post("/tournaments", authMiddleware, adminOnly, validate(TournamentC
     res.json({ ok: true, tournament });
   } catch (err: unknown) { res.status(500).json({ error: (err instanceof Error ? err.message : String(err)) }); }
 });
+
+// ── GET /admin/exchange/orders — Получить все ордера на бирже ────────────────
+adminRouter.get("/exchange/orders", authMiddleware, adminOnly, async (_req: Request, res: Response) => {
+  try {
+    const orders = await prisma.p2POrder.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 100,
+      include: { seller: { select: { firstName: true, telegramId: true } }, buyer: { select: { firstName: true } } },
+    });
+    res.json({ orders: orders.map(o => ({
+      ...o,
+      amountCoins: o.amountCoins.toString(),
+    })) });
+  } catch (err: unknown) { res.status(500).json({ error: (err instanceof Error ? err.message : String(err)) }); }
+});
+
+// ── POST /admin/exchange/orders — Создать ордер от лица системы/админа ──────
+adminRouter.post("/exchange/orders", authMiddleware, adminOnly, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const { orderType, amountCoins, priceTon } = req.body;
+    
+    const amount = BigInt(amountCoins);
+    const price = Number(priceTon);
+    const totalTon = (Number(amount) / 1_000_000) * price;
+    const feeTon = totalTon * 0.005;
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user?.tonWalletAddress) return res.status(403).json({ error: 'Привяжите TON-кошелек к аккаунту админа сначала' });
+
+    // Админ может создавать системные ордера без заморозки баланса или лимитов (создает монеты из воздуха при продаже)
+    const order = await prisma.p2POrder.create({
+      data: {
+        sellerId: userId,
+        orderType: orderType ?? "SELL",
+        amountCoins: amount,
+        priceTon: price,
+        totalTon,
+        feeTon,
+        sellerWallet: user.tonWalletAddress,
+        status: "OPEN"
+      }
+    });
+
+    res.json({ ok: true, order: { ...order, amountCoins: order.amountCoins.toString() } });
+  } catch (err: unknown) { res.status(500).json({ error: (err instanceof Error ? err.message : String(err)) }); }
+});
+
+// ── DELETE /admin/exchange/orders/:id — Отменить любой ордер (модерация) ─────
+adminRouter.delete("/exchange/orders/:id", authMiddleware, adminOnly, async (req: Request, res: Response) => {
+  try {
+    const orderId = req.params.id;
+    const order = await prisma.p2POrder.findUnique({ where: { id: orderId } });
+    if (!order) return res.status(404).json({ error: "Order not found" });
+    if (order.status !== 'OPEN') return res.status(400).json({ error: "Order already closed" });
+
+    await prisma.$transaction(async (tx) => {
+      await tx.p2POrder.update({ where: { id: orderId }, data: { status: 'CANCELLED', cancelledAt: new Date() } });
+      // Возвращаем замороженные монеты создателю, ЕСЛИ это был обычный SELL-ордер 
+      if (order.orderType === "SELL") {
+        await updateBalance(order.sellerId, order.amountCoins, TransactionType.EXCHANGE_UNFREEZE, { reason: 'admin_cancel', orderId }, { tx });
+      }
+    });
+
+    res.json({ ok: true, deleted: true });
+  } catch (err: unknown) { res.status(500).json({ error: (err instanceof Error ? err.message : String(err)) }); }
+});

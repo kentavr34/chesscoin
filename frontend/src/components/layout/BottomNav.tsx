@@ -16,13 +16,13 @@ export const BottomNav: React.FC = () => {
   ];
 
   return (
-    <nav style={{
-      position: 'fixed', bottom: 0, left: 0, right: 0, height: 82,
-      background: 'var(--bg, rgba(11,13,17,0.97))',
-      backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
-      borderTop: '1px solid var(--border, rgba(255,255,255,0.07))',
+    <nav className="ui-card-glass" style={{
+      position: 'fixed', bottom: 0, left: 0, right: 0, height: '82px',
+      borderRadius: '24px 24px 0 0', // Rounded top borders like native mobile
+      border: '1px solid var(--border)',
+      borderBottom: 'none',
       display: 'flex', alignItems: 'flex-start',
-      padding: '10px 4px 0', zIndex: 50,
+      padding: '12px 6px 0', zIndex: 'var(--z-nav)',
     }}>
       {TABS.map((tab) => {
         const active = tab.path === '/' ? pathname === '/' : pathname.startsWith(tab.path);
@@ -38,11 +38,12 @@ export const BottomNav: React.FC = () => {
           >
             {active && (
               <span style={{
-                position: 'absolute', top: 0, left: '50%',
+                position: 'absolute', top: '-13px', left: '50%',
                 transform: 'translateX(-50%)',
-                width: 24, height: 2,
-                background: 'var(--accent, #F5C842)',
-                borderRadius: '0 0 2px 2px',
+                width: 32, height: 3,
+                background: 'var(--accent)',
+                borderRadius: '0 0 4px 4px',
+                boxShadow: '0 2px 8px rgba(245, 200, 66, 0.5)',
               }} />
             )}
             <span style={{
@@ -53,10 +54,10 @@ export const BottomNav: React.FC = () => {
             }}>
               {tab.icon}
             </span>
-            <span style={{
-              fontSize: 9, fontWeight: 600,
-              color: active ? 'var(--accent, #F5C842)' : 'var(--text-muted, #7A8299)',
-              letterSpacing: '.03em', textTransform: 'uppercase',
+            <span className="font-mono" style={{
+              fontSize: 10, fontWeight: 700,
+              color: active ? 'var(--accent)' : 'var(--text-muted)',
+              letterSpacing: '.05em', marginTop: 4,
               transition: 'color .2s',
             }}>
               {tab.label}

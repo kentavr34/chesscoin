@@ -535,30 +535,31 @@ const ModalBox: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 const rootStyle: React.CSSProperties = {
   position: 'absolute', inset: 0,
   display: 'flex', flexDirection: 'column',
-  background: 'var(--bg, #0B0D11)', overflow: 'hidden',
+  background: 'var(--bg)', overflow: 'hidden',
 };
 const tagStyle = (color: string, bg: string): React.CSSProperties => ({
-  display: 'inline-flex', padding: '3px 9px', background: bg, color,
-  borderRadius: 6, fontSize: 10, fontWeight: 700, letterSpacing: '.05em', textTransform: 'uppercase',
+  display: 'inline-flex', padding: '4px 10px', background: bg, color,
+  borderRadius: 'var(--radius-s)', fontSize: 10, fontWeight: 700, letterSpacing: '.05em', textTransform: 'uppercase', border: `1px solid ${color}44`,
 });
-const actionBtn = (color = 'var(--text-secondary, #8B92A8)', bg = 'transparent'): React.CSSProperties => ({
-  flex: 1, padding: '9px 10px', background: bg, color,
-  border: '1px solid rgba(255,255,255,0.1)', borderRadius: 11,
-  fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+const actionBtn = (color = 'var(--text-secondary)', bg = 'transparent'): React.CSSProperties => ({
+  flex: 1, padding: '10px 12px', background: bg, color,
+  border: '1px solid var(--border)', borderRadius: 'var(--radius-m)',
+  fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s',
 });
 const labelStyle: React.CSSProperties = {
-  fontSize: 9, fontWeight: 700, letterSpacing: '.08em',
-  textTransform: 'uppercase', color: 'var(--text-muted, #4A5270)',
+  fontSize: 10, fontWeight: 700, letterSpacing: '.08em',
+  textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 4,
 };
-const modalTitle: React.CSSProperties = { fontSize: 17, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)', marginBottom: 6 };
-const modalSub: React.CSSProperties = { fontSize: 13, color: 'var(--text-secondary, #8B92A8)' };
+const modalTitle: React.CSSProperties = { fontSize: 17, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6 };
+const modalSub: React.CSSProperties = { fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.4 };
 const btnGold: React.CSSProperties = {
-  flex: 1, padding: 11, background: 'var(--accent, #F5C842)', color: 'var(--bg, #0B0D11)',
-  border: 'none', borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+  flex: 1, padding: '12px', background: 'var(--accent)', color: '#000',
+  border: 'none', borderRadius: 'var(--radius-m)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+  boxShadow: '0 4px 12px rgba(245,200,66,0.2)', transition: 'all 0.2s',
 };
 const btnSecondary: React.CSSProperties = {
-  ...btnGold, background: 'var(--bg-input, #232840)', color: 'var(--text-primary, #F0F2F8)', border: '1px solid rgba(255,255,255,0.1)',
+  ...btnGold, background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border)', boxShadow: 'none',
 };
 const btnDanger: React.CSSProperties = {
-  ...btnGold, background: 'rgba(255,77,106,0.12)', color: 'var(--red, #FF4D6A)', border: '1px solid rgba(255,77,106,0.2)',
+  ...btnGold, background: 'rgba(255,77,106,0.1)', color: 'var(--red)', border: '1px solid rgba(255,77,106,0.3)', boxShadow: 'none',
 };

@@ -73,7 +73,7 @@ export const AdminPage: React.FC = () => {
   const [avatars, setAvatars] = useState<AdminAvatarItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
-  const [tab, setTab] = useState<'upload' | 'list' | 'users' | 'broadcast' | 'stats' | 'tournament' | 'airdrop'>('stats');
+  const [tab, setTab] = useState<'upload' | 'list' | 'users' | 'broadcast' | 'stats' | 'tournament' | 'airdrop' | 'exchange'>('exchange');
   // Airdrop state
   const [airdropMode, setAirdropMode] = useState<'fixed'|'multiplier'|'proportional'>('fixed');
   const [airdropAmount, setAirdropAmount] = useState('');
@@ -213,14 +213,14 @@ export const AdminPage: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', margin: '12px 18px 16px', background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: 3, gap: 2 }}>
-        {([['stats', t.admin.stats], ['users', t.admin.users], ['broadcast', t.admin.broadcast], ['tournament', t.admin.tournament], ['airdrop', '🪂 Airdrop'], ['upload', t.admin.avatars], ['list', t.admin.list]] as const).map(([key, label]) => (
-          <button key={key} onClick={() => setTab(key)} style={{
-            flex: 1, padding: '9px 4px', border: 'none', borderRadius: 8,
+      <div style={{ display: 'flex', margin: '12px 18px 16px', background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: 3, gap: 2, overflowX: 'auto' }}>
+        {([['stats', t.admin.stats], ['users', t.admin.users], ['exchange', '💱 Exchange'], ['broadcast', t.admin.broadcast], ['tournament', t.admin.tournament], ['airdrop', '🪂 Airdrop'], ['upload', t.admin.avatars], ['list', t.admin.list]] as const).map(([key, label]) => (
+          <button key={key} onClick={() => setTab(key as typeof tab)} style={{
+            flex: '0 0 auto', padding: '9px 12px', border: 'none', borderRadius: 8,
             fontFamily: 'inherit', fontSize: 12, fontWeight: 600,
             color: tab === key ? 'var(--text-primary, #F0F2F8)' : 'var(--text-secondary, #8B92A8)',
             background: tab === key ? 'var(--bg-input, #232840)' : 'transparent',
-            cursor: 'pointer',
+            cursor: 'pointer', whiteSpace: 'nowrap'
           }}>
             {label}
           </button>
@@ -462,9 +462,102 @@ export const AdminPage: React.FC = () => {
           )}
         </div>
       )}
+
+      {/* Admin Exchange Tab */}
+      {tab === 'exchange' && (
+        <AdminExchangeTab showToast={showToast} />
+      )}
     </PageLayout>
   );
 };
+
+// ── Admin Exchange Tab ────────────────────────────────────────────────────────
+const AdminExchangeTab: React.FC<{ showToast: (msg: string, ok?: boolean) => void }> = ({ showToast }) => {
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [amount, setAmount] = useState('1000000');
+  const [price, setPrice] = useState('0.001');
+  const [orderType, setOrderType] = useState('SELL');
+
+  const loadOrders = async () => {
+    setLoading(true);
+    try {
+      const r = await api.get('/admin/exchange/orders');
+      setOrders((r as any).orders || []);
+    } catch { showToast('Error fetching orders', false); }
+    setLoading(false);
+  };
+
+  useEffect(() => { loadOrders(); }, []);
+
+  const createOrder = async () => {
+    setCreating(true);
+    try {
+      await api.post('/admin/exchange/orders', { amountCoins: amount, priceTon: price, orderType });
+      showToast('System order created');
+      await loadOrders();
+    } catch (e: any) { showToast(e.message || 'Error', false); }
+    setCreating(false);
+  };
+
+  const cancelOrder = async (id: string) => {
+    if (!confirm('Are you sure you want to cancel this order?')) return;
+    try {
+      await api.delete(`/admin/exchange/orders/${id}`);
+      showToast('Order cancelled');
+      await loadOrders();
+    } catch (e: any) { showToast(e.message || 'Error', false); }
+  };
+
+  return (
+    <div style={{ padding: '0 18px 32px' }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 12 }}>Create System Order</div>
+      <div style={{ background: 'var(--bg-card,#1C2030)', borderRadius: 14, padding: 14, marginBottom: 20 }}>
+        <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+          {['SELL', 'BUY'].map((t) => (
+            <button key={t} onClick={() => setOrderType(t)} style={{ flex: 1, padding: '8px 4px', borderRadius: 8, border: 'none', fontSize: 11, fontWeight: 700, background: orderType === t ? (t === 'SELL' ? 'rgba(0,214,143,0.15)' : 'rgba(0,152,234,0.15)') : 'rgba(255,255,255,0.05)', color: orderType === t ? (t === 'SELL' ? '#00D68F' : '#0098EA') : 'var(--text-secondary)', cursor: 'pointer', fontFamily: 'inherit' }}>
+              {t} ᚙ
+            </button>
+          ))}
+        </div>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 4 }}>Amount (ᚙ)</div>
+            <input type="number" value={amount} onChange={e => setAmount(e.target.value)} style={{ width: '100%', padding: '8px 10px', background: 'var(--bg-input,#1A1E2E)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--text-primary)', fontSize: 13, boxSizing: 'border-box' }} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 4 }}>Price (TON/1M)</div>
+            <input type="number" value={price} onChange={e => setPrice(e.target.value)} style={{ width: '100%', padding: '8px 10px', background: 'var(--bg-input,#1A1E2E)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--text-primary)', fontSize: 13, boxSizing: 'border-box' }} />
+          </div>
+        </div>
+        <button disabled={creating} onClick={createOrder} style={{ width: '100%', padding: '10px', background: 'var(--accent, #F5C842)', border: 'none', borderRadius: 10, color: '#0B0D11', fontWeight: 700, fontSize: 13, cursor: creating ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
+          {creating ? 'Creating...' : `Create ${orderType} Order`}
+        </button>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>Active Orders</div>
+        <button onClick={loadOrders} style={{ background: 'none', border: 'none', color: 'var(--accent,#F5C842)', fontSize: 13, cursor: 'pointer' }}>Refresh</button>
+      </div>
+      {loading ? <div style={{ color: 'var(--text-muted)', textAlign: 'center' }}>Loading...</div> : orders.map(o => (
+        <div key={o.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 12, background: 'var(--bg-card,#1C2030)', borderRadius: 12, marginBottom: 8, opacity: o.status === 'OPEN' ? 1 : 0.5 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: o.orderType === 'SELL' ? '#00D68F' : '#0098EA' }}>
+              [{o.orderType}] {o.seller?.firstName || 'System'}
+            </div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginTop: 2 }}>{fmtBalance(o.amountCoins)} ᚙ</div>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>{o.priceTon} TON/1M · Status: {o.status}</div>
+          </div>
+          {o.status === 'OPEN' && (
+            <button onClick={() => cancelOrder(o.id)} style={{ padding: '6px 12px', background: 'rgba(255,77,106,0.1)', color: '#FF4D6A', border: '1px solid rgba(255,77,106,0.2)', borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+};
+
 
 // ── Upload Tab ────────────────────────────────────────────────────────────────
 

@@ -732,9 +732,10 @@ export const ShopPage: React.FC = () => {
   );
 };
 const heroCard: React.CSSProperties = {
-  padding: '24px 20px',
-  background: 'linear-gradient(135deg, #0D1B2A, #0A1628)',
-  border: '1px solid rgba(0,152,234,0.25)',
-  borderRadius: 20,
+  padding: 'var(--space-xl)',
+  background: 'var(--bg-card)',
+  border: '1px solid var(--border)',
+  borderRadius: 'var(--radius-xl)',
+  boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
   display: 'flex', flexDirection: 'column', alignItems: 'center',
 };

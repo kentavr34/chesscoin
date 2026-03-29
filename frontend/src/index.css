@@ -1,0 +1,256 @@
+@import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap');
+
+:root {
+  /* Типографика и отступы (Единый Web3/Lichess Стандарт) */
+  --space-xs: 4px;
+  --space-s: 8px;
+  --space-m: 12px;
+  --space-l: 16px;
+  --space-xl: 24px;
+  
+  --radius-s: 8px;
+  --radius-m: 12px;
+  --radius-l: 16px;
+  --radius-xl: 24px;
+  --radius-round: 9999px;
+
+  /* Строгая сетка Z-index */
+  --z-bg: 0;
+  --z-base: 10;
+  --z-header: 50;
+  --z-nav: 100;
+  --z-overlay: 200;
+  --z-modal: 300;
+  --z-toast: 400;
+}
+
+*, *::before, *::after { 
+  box-sizing: border-box; 
+  margin: 0; 
+  padding: 0; 
+  -webkit-tap-highlight-color: transparent; 
+}
+
+html, body, #root { 
+  width: 100%; 
+  height: 100%; 
+  overflow: hidden; 
+  background: var(--bg, #0B0D11);
+  color: var(--text-primary, #F0F2F8);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Глобальное применение основного шрифта, перебивающее инлайн-хаос */
+div, span, button, input, select, textarea, p { 
+  font-family: inherit; 
+}
+
+/* Шрифтовые классы */
+.font-mono { font-family: 'JetBrains Mono', monospace !important; }
+.font-display { font-family: 'Unbounded', sans-serif !important; }
+
+/* Скрытие скроллбара, но сохранение скроллинга */
+::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* ── UI ПРИМИТИВЫ (ПРЕМИУМ СТАНДАРТ) ────────────────────────────────────── */
+
+/* 1. Карточки (Cards) */
+.ui-card {
+  background: var(--bg-card, #13161E);
+  border: 1px solid var(--border, rgba(255,255,255,0.08));
+  border-radius: var(--radius-l);
+  padding: var(--space-l);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s, border-color 0.2s, background 0.2s;
+}
+.ui-card-glass {
+  background: rgba(19, 22, 30, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border, rgba(255,255,255,0.1));
+  border-radius: var(--radius-xl);
+  padding: var(--space-l);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* 2. Кнопки (Buttons) */
+.ui-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-s);
+  border: none;
+  border-radius: var(--radius-m);
+  padding: 14px 20px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  user-select: none;
+}
+.ui-btn:active { transform: scale(0.96); }
+.ui-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.ui-btn-primary {
+  background: var(--accent, #F5C842);
+  color: #000000;
+  box-shadow: 0 4px 12px rgba(245, 200, 66, 0.2);
+}
+.ui-btn-primary:not(:disabled):hover {
+  filter: brightness(1.1);
+  box-shadow: 0 6px 16px rgba(245, 200, 66, 0.35);
+}
+
+.ui-btn-secondary {
+  background: var(--bg-input, #1C2030);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+.ui-btn-secondary:not(:disabled):hover {
+  background: var(--bg-card);
+  border-color: rgba(255,255,255,0.2);
+}
+
+.ui-btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  padding: 10px 16px;
+}
+.ui-btn-ghost:not(:disabled):hover {
+  background: rgba(255,255,255,0.05);
+  color: var(--text-primary);
+}
+
+.ui-btn-danger {
+  background: rgba(255, 77, 106, 0.15);
+  color: var(--red);
+  border: 1px solid rgba(255, 77, 106, 0.3);
+}
+.ui-btn-danger:not(:disabled):hover {
+  background: rgba(255, 77, 106, 0.25);
+}
+
+.ui-btn-glass {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-primary);
+}
+
+/* 3. Инпуты (Inputs) */
+.ui-input {
+  width: 100%;
+  background: var(--bg-input, #1C2030);
+  border: 1px solid var(--border, rgba(255,255,255,0.1));
+  border-radius: var(--radius-m);
+  padding: 14px 16px;
+  color: var(--text-primary);
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.ui-input::placeholder { color: var(--text-muted); }
+.ui-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(245, 200, 66, 0.15);
+}
+
+/* 4. Тексты (Typography) */
+.ui-heading-1 { font-family: 'Unbounded', sans-serif; font-size: 24px; font-weight: 800; line-height: 1.2; letter-spacing: -0.02em; }
+.ui-heading-2 { font-family: 'Inter', sans-serif; font-size: 18px; font-weight: 700; line-height: 1.3; }
+.ui-heading-3 { font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; line-height: 1.4; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
+.ui-text-body { font-size: 15px; color: var(--text-secondary); line-height: 1.5; }
+.ui-text-small { font-size: 13px; color: var(--text-muted); }
+
+/* 5. Беджи (Badges) */
+.ui-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: var(--radius-s);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.ui-badge.green { background: rgba(0, 214, 143, 0.15); color: var(--green); border: 1px solid rgba(0, 214, 143, 0.3); }
+.ui-badge.red   { background: rgba(255, 77, 106, 0.15); color: var(--red); border: 1px solid rgba(255, 77, 106, 0.3); }
+.ui-badge.gold  { background: rgba(245, 200, 66, 0.15); color: var(--gold); border: 1px solid rgba(245, 200, 66, 0.3); }
+.ui-badge.blue  { background: rgba(0, 152, 234, 0.15); color: #0098EA; border: 1px solid rgba(0, 152, 234, 0.3); }
+
+/* Модалки и оверлеи */
+.ui-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xl);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.ui-modal-content {
+  width: 100%;
+  max-width: 400px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-xl);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+  animation: slideUpFade 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* ── Анимации ───────────────────────────────────────────────────────────── */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUpFade { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+@keyframes pulse-glow { 0%,100%{box-shadow:0 0 20px rgba(245,200,66,0.2)} 50%{box-shadow:0 0 40px rgba(245,200,66,0.5)} }
+
+/* Устаревшие шахматные анимации (оставляем для обратной совместимости) */
+@keyframes ring-pulse { 0%,100%{opacity:.4;transform:scale(1)} 50%{opacity:.7;transform:scale(1.03)} }
+@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+@keyframes slide-up { from{transform:translateY(30px);opacity:0} to{transform:translateY(0);opacity:1} }
+@keyframes fade-in { from{opacity:0} to{opacity:1} }
+@keyframes highlightPulse { 0%,100%{box-shadow:0 0 0 0 rgba(0,214,143,0)} 50%{box-shadow:0 0 0 6px rgba(0,214,143,0.3)} }
+@keyframes floatCoin { 0%{transform:translateY(0);opacity:1} 100%{transform:translateY(-70px);opacity:0} }
+@keyframes pieceBounce { 0%,100%{transform:scale(1)} 40%{transform:scale(1.18)} 70%{transform:scale(0.94)} }
+@keyframes pieceTeleport { 0%{transform:scale(1);opacity:1} 35%{transform:scale(0);opacity:0} 65%{transform:scale(1.15);opacity:0.8} 100%{transform:scale(1);opacity:1} }
+.piece-bounce img  { animation: pieceBounce 0.3s ease-out; }
+.piece-teleport img { animation: pieceTeleport 0.4s ease-in-out; }
+.piece-fade img    { transition: opacity 0.15s ease; }
+@keyframes checkPulse { 0%,100%{background:rgba(255,77,106,0.15)} 50%{background:rgba(255,77,106,0.45)} }
+.check-square { animation: checkPulse 0.8s ease-in-out infinite; }
+@keyframes checkFlash { 0%{opacity:1} 100%{opacity:0} }
+@keyframes captureFlash { 0%{opacity:1} 100%{opacity:0} }
+@keyframes mateBannerIn { from{transform:scale(0.5)translateY(20px);opacity:0} to{transform:scale(1)translateY(0);opacity:1} }
+@keyframes fall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 80% { opacity: 1; } 100% { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
+@keyframes starFloat { 0% { transform: scale(0) rotate(0deg); opacity: 0; } 30% { transform: scale(1.3) rotate(180deg); opacity: 1; } 100% { transform: scale(0) rotate(360deg); opacity: 0; } }
+@keyframes ringExpand { 0% { transform: translate(-50%, -50%) scale(0.3); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(3.5); opacity: 0; } }
+@keyframes starBurst { 0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 1; } 50% { transform: translate(-50%, -50%) scale(1.8) rotate(180deg); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(0) rotate(360deg); opacity: 0; } }
+@keyframes victoryPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.85;transform:scale(1.04)} }
+@keyframes neonFlicker { 0%,100%{opacity:1} 20%{opacity:0.7} 40%{opacity:1} 60%{opacity:0.85} 80%{opacity:1} }
+@keyframes fireShake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-3px)} 40%{transform:translateX(3px)} 60%{transform:translateX(-2px)} 80%{transform:translateX(2px)} }
+@keyframes iceFreeze { 0%{transform:scale(1.1);opacity:0} 100%{transform:scale(1);opacity:1} }
+@keyframes goldShine { 0%,100%{filter:brightness(1)} 50%{filter:brightness(1.4)} }
+@keyframes matrixGlitch { 0%,100%{clip-path:none} 30%{clip-path:inset(10% 0 80% 0)} 60%{clip-path:inset(50% 0 30% 0)} }
+@keyframes bloodDrip { 0%{transform:translateY(-10px);opacity:0} 50%{transform:translateY(3px);opacity:1} 100%{transform:translateY(0);opacity:1} }
+@keyframes galaxySpin { 0%{transform:rotate(-5deg) scale(0.9);opacity:0} 100%{transform:rotate(0deg) scale(1);opacity:1} }
+@keyframes rainbowShift { 0%{background-position:0% 50%} 100%{background-position:200% 50%} }
+@keyframes ghostFade { 0%,100%{opacity:1} 30%{opacity:0.3} 60%{opacity:0.8} }
+@keyframes lightningStrike { 0%{transform:scaleX(0.8);opacity:0} 10%{transform:scaleX(1.1);opacity:1} 20%{opacity:0.7} 30%{opacity:1} 100%{opacity:1} }
+@keyframes dragonBurn { 0%{transform:scale(0.5) rotate(-10deg);opacity:0} 60%{transform:scale(1.05) rotate(2deg);opacity:1} 100%{transform:scale(1) rotate(0);opacity:1} }
+@keyframes fadeSlideUp { 0%{transform:translateY(16px);opacity:0} 30%{transform:translateY(-3px);opacity:1} 100%{transform:translateY(0);opacity:1} }

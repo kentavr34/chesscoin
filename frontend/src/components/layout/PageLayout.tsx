@@ -158,20 +158,19 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   const navigate = useNavigate();
 
   return (
-    <div style={{
+    <div className="no-scrollbar" style={{
       position: 'absolute', inset: 0,
       display: 'flex', flexDirection: 'column',
-      background: 'var(--bg, #0B0D11)', overflow: 'hidden',
+      background: 'var(--bg)', overflow: 'hidden',
     }}>
-      {/* Topbar */}
       <div style={{
         display: 'flex', alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '16px 18px 12px',
+        padding: '16px var(--space-l) 12px',
         paddingTop: 'max(16px, env(safe-area-inset-top, 16px))',
         flexShrink: 0,
-        borderBottom: '1px solid var(--border, rgba(255,255,255,0.07))',
-        position: 'relative',
+        borderBottom: '1px solid var(--border)',
+        position: 'relative', zIndex: 'var(--z-header)',
       }}>
         {/* Левая часть */}
         <div style={{ minWidth: 36, display: 'flex', justifyContent: 'flex-start', zIndex: 2 }}>
@@ -187,16 +186,12 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
           ...(centered ? { position: 'absolute', left: 0, right: 0, padding: '0 50px' } : {})
         }}>
           {logo ? (
-            <span style={{
-              fontFamily: "'Unbounded',sans-serif", fontSize: 15, fontWeight: 800,
-              color: 'var(--gold, #F5C842)',
-            }}>
+            <span className="ui-heading-1" style={{ fontSize: 16, color: 'var(--gold)' }}>
               ChessCoin
             </span>
           ) : (
-            <span style={{
-              fontFamily: "'Unbounded',sans-serif", fontSize: 15, fontWeight: 800,
-              color: 'var(--accent, #F5C842)',
+            <span className="ui-heading-1" style={{
+              fontSize: 16, color: 'var(--text-primary)',
               whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', display: 'block'
             }}>
               {title}
@@ -210,13 +205,12 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
         </div>
       </div>
 
-      {/* Content */}
-      <div style={{
+      <div className="no-scrollbar" style={{
         flex: 1,
         overflowY: noScroll ? 'hidden' : 'auto',
         overflowX: 'hidden',
         paddingBottom: noScroll ? 82 : 90,
-        scrollbarWidth: 'none',
+        position: 'relative', zIndex: 'var(--z-base)',
       }}>
         {children}
       </div>
@@ -227,10 +221,10 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
 };
 
 const tbaBtnStyle: React.CSSProperties = {
-  width: 36, height: 36, borderRadius: 11,
-  background: 'var(--bg-input, #1C2030)',
-  border: '1px solid var(--border, rgba(255,255,255,0.13))',
+  width: 36, height: 36, borderRadius: 'var(--radius-m)',
+  background: 'var(--bg-input)',
+  border: '1px solid var(--border)',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
-  fontSize: 18, cursor: 'pointer', color: 'var(--text-secondary, #8B92A8)',
-  transition: 'all .18s', fontFamily: 'inherit',
+  fontSize: 18, cursor: 'pointer', color: 'var(--text-secondary)',
+  transition: 'all .2s', outline: 'none',
 };
