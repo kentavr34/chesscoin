@@ -85,6 +85,7 @@ export const ProfilePage: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [replayGame, setReplayGame] = useState<{ pgn: string; title?: string; sessionId?: string } | null>(null);
   const [selectedBadge, setSelectedBadge] = useState<{ name: string; date?: string } | null>(null);
+  const [selectedAchievement, setSelectedAchievement] = useState<{ icon: string; name: string; desc: string; done: boolean; date?: string } | null>(null);
 
   useEffect(() => {
     if (tab === 'info') {
@@ -196,9 +197,9 @@ export const ProfilePage: React.FC = () => {
             ⚔️ {t.profile.challengeBtn ?? 'Challenge'}
           </button>
         )}
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8, justifyContent: 'center' }}>
-          <span style={tagGold}>{leagueEmoji[user.league]} #1</span>
-          <span style={tagVi}>ELO {user.elo}</span>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8, justifyContent: 'center', cursor: 'pointer' }} onClick={() => navigate('/leaderboard')} title={t.profile.ranking ?? 'Leaderboard'}>
+          <span style={tagGold} className="hover-scale">{leagueEmoji[user.league]} #1</span>
+          <span style={tagVi} className="hover-scale">ELO {user.elo}</span>
           {user?.countryMember?.isCommander && (
             <span style={{ ...tagGr, background: 'linear-gradient(135deg, rgba(245,200,66,0.15), rgba(255,215,0,0.08))', color: '#FFD700', borderColor: 'rgba(255,215,0,0.35)', fontWeight: 800 }}>
               👑 {t.profile.commanderBadge}
@@ -223,10 +224,10 @@ export const ProfilePage: React.FC = () => {
             </div>
           </div>
           <button
-            onClick={() => navigate('/referrals')}
+            onClick={() => navigate('/shop', { state: { tab: 'exchange' } })}
             style={{ width: 44, height: 44, borderRadius: 14, background: 'rgba(245,200,66,0.1)', border: '1px solid rgba(245,200,66,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, cursor: 'pointer', flexShrink: 0 }}
-            title={t.profile.txHistory}
-          >👜</button>
+            title={t.profile.txHistory ?? 'Wallet Treasury'}
+          >💳</button>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           <button onClick={() => navigate('/shop')} style={{ ...secBtn, width: '100%' }}>{t.profile.shop}</button>
@@ -500,68 +501,105 @@ export const ProfilePage: React.FC = () => {
 
       {/* Saves tab */}
       {tab === 'saves' && (
-        <>
+        <div style={{ paddingBottom: 80 }}>
           <div style={secStyle}>{t.profile.savedGames}</div>
           {savedGames.length === 0 ? (
             <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: 32, fontSize: 13 }}>
               {t.profile.noSaves}
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 18px' }}>
+             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '0 14px' }}>
               {savedGames.map((sg) => {
                 const s = sg.session;
                 const sides = s?.sides ?? [];
-                const p1 = sides[0]?.player;
-                const p2 = sides[1]?.player;
-                const winner = sides.find((sd) => sd.status === 'WON');
+                
+                // Identify the players
+                const mySide = sides.find(sd => sd.playerId === user.id) || sides[0];
+                const oppSide = sides.find(sd => sd.playerId !== user.id) || sides[1];
+                
+                const myPlayer = mySide?.player ?? user;
+                const oppPlayer = oppSide?.player;
+
+                const isWon = mySide?.status === 'WON';
+                const isDraw = mySide?.status === 'DRAW';
+                const statusColor = isWon ? 'var(--green,#00D68F)' : isDraw ? '#9B85FF' : 'var(--red,#FF4D6A)';
+                const statusLabel = isWon ? t.profile.gameWon : isDraw ? t.profile.gameDraw : t.profile.gameLost;
+
+                const typeIcon: Record<string, string> = { BOT: '🤖', BATTLE: '⚔️', WAR: '🌍', TOURNAMENT: '🏆' };
+                const typeLabel: Record<string, string> = { BOT: 'vs JARVIS', BATTLE: t.profile.typeBattle, WAR: t.profile.typeWar, TOURNAMENT: t.profile.typeTournament };
+
                 return (
-                  <div key={sg.id} style={{ background: 'var(--bg-card, #13161E)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '12px 14px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <Avatar user={p1} size="s" />
-                        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary, #F0F2F8)' }}>{p1?.firstName ?? '?'}</div>
-                      </div>
-                      <div style={{ textAlign: 'center', fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: 'var(--text-secondary, #8B92A8)' }}>vs</div>
-                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary, #F0F2F8)', textAlign: 'right' }}>{p2?.firstName ?? '?'}</div>
-                        <Avatar user={p2} size="s" />
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: s?.pgn ? 8 : 0 }}>
-                      <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>
-                        {s?.type ?? ''} · {s?.finishedAt ? fmtDate(s.finishedAt) : ''}
-                      </div>
-                      {winner && (
-                        <div style={{ fontSize: 11, color: 'var(--green, #00D68F)', fontWeight: 600 }}>
-                          🏆 {winner.player?.firstName ?? 'Unknown'}
+                  <div key={sg.id} style={{
+                    display: 'flex', alignItems: 'stretch', gap: 8,
+                    padding: '8px 10px', background: 'var(--bg-card,#1C2030)',
+                    border: `1px solid ${isWon ? 'rgba(0,214,143,0.12)' : isDraw ? 'rgba(155,133,255,0.12)' : 'rgba(255,77,106,0.10)'}`,
+                    borderRadius: 14,
+                    position: 'relative'
+                  }}>
+                    {/* Status Color Pillar */}
+                    <div style={{ width: 4, background: statusColor, borderRadius: 2 }} />
+
+                    {/* Opponent Avatar */}
+                    <div 
+                      onClick={() => oppPlayer && oppPlayer.id && navigate(`/profile/${oppPlayer.id}`, { state: { userId: oppPlayer.id } })} 
+                      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: 48, cursor: oppPlayer ? 'pointer' : 'default', zIndex: 2 }}
+                    >
+                      {oppPlayer ? (
+                        <Avatar user={oppPlayer as unknown as UserPublic} size="m" />
+                      ) : (
+                        <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
+                          {typeIcon[s?.type ?? ''] ?? '🤖'}
                         </div>
                       )}
-                      <button
-                        onClick={() => s && warsApi.unsaveGame(s.id).then(() => setSavedGames(g => g.filter(x => x.id !== sg.id)))}
-                        style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: '2px 6px' }}
-                      >
-                        ✕ remove
-                      </button>
+                      <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-primary,#F0F2F8)', marginTop: 4, width: '100%', textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {oppPlayer ? oppPlayer.firstName : typeLabel[s?.type ?? '']}
+                      </div>
                     </div>
-                    {s?.pgn && (
-                      <button
-                        onClick={() => setReplayGame({ pgn: s.pgn!, title: `${p1?.firstName ?? '?'} vs ${p2?.firstName ?? '?'}`, sessionId: s.id })}
-                        style={{ width: '100%', padding: '7px 0', background: 'rgba(245,200,66,0.08)', color: 'var(--accent, #F5C842)', border: '1px solid rgba(245,200,66,0.2)', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-                      >
-                        ♟ Replay game
-                      </button>
-                    )}
+
+                    {/* Center Info - Replay */}
+                    <div 
+                      onClick={() => s?.pgn && setReplayGame({ pgn: s.pgn, title: oppPlayer ? `vs ${oppPlayer.firstName}` : t.profile.gameLabel, sessionId: s.id })} 
+                      style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: s?.pgn ? 'pointer' : 'default', zIndex: 1, padding: '0 4px', textAlign: 'center' }}
+                    >
+                      <div style={{ fontSize: 10, color: 'var(--text-muted,#4A5270)', marginBottom: 2 }}>
+                         {s?.finishedAt ? fmtDate(s.finishedAt) : ''}
+                      </div>
+                      <span style={{ fontSize: 12, fontWeight: 800, color: statusColor }}>{statusLabel}</span>
+                      {s?.bet && BigInt(s.bet) > 0n && (
+                        <div style={{ fontSize: 9, color: 'var(--accent,#F5C842)', background: 'rgba(245,200,66,0.1)', padding: '1px 6px', borderRadius: 6, marginTop: 4, fontWeight: 800 }}>BET {fmtBalance(s.bet)}</div>
+                      )}
+                      {s?.pgn && <div style={{ fontSize: 9, color: 'var(--accent,#F5C842)', marginTop: 4, opacity: 0.9 }}>▶ Tap to watch</div>}
+                    </div>
+
+                    {/* My Avatar & Remove button */}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, zIndex: 2 }}>
+                       <Avatar user={myPlayer as unknown as UserPublic} size="m" />
+                       <button
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           const sid = s?.id;
+                           if (sid) {
+                             import('@/api').then(({ warsApi }) => {
+                               warsApi.unsaveGame(sid).then(() => setSavedGames(g => g.filter(x => x.id !== sg.id)));
+                             });
+                           }
+                         }}
+                         style={{ fontSize: 8, padding: '2px 6px', borderRadius: 4, border: '1px solid rgba(255,77,106,0.3)', background: 'rgba(255,77,106,0.1)', color: 'var(--red, #FF4D6A)', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700 }}
+                       >
+                         REMOVE
+                       </button>
+                    </div>
                   </div>
                 );
               })}
             </div>
           )}
-        </>
+        </div>
       )}
 
       {/* Achievements tab */}
       {tab === 'ach' && (
-        <>
+        <div style={{ paddingBottom: 80 }}>
           {/* Турнирные бейджи */}
           {(user?.tournamentBadges?.length ?? 0) > 0 && (
             <>
@@ -626,12 +664,13 @@ export const ProfilePage: React.FC = () => {
                   {ACHS.map(a => {
                     const done = !!earned[a.id];
                     return (
-                      <div key={a.id} title={a.desc} style={{
+                      <div key={a.id} title={a.desc} onClick={() => setSelectedAchievement({ ...a, done, date: earned[a.id] })} style={{
                         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                        padding: '10px 4px', borderRadius: 12, textAlign: 'center',
+                        padding: '10px 4px', borderRadius: 12, textAlign: 'center', cursor: 'pointer',
                         background: done ? 'rgba(245,200,66,0.07)' : 'var(--bg-card, #1C2030)',
                         border: `1px solid ${done ? 'rgba(245,200,66,0.25)' : 'rgba(255,255,255,0.05)'}`,
                         opacity: done ? 1 : 0.45,
+                        transition: 'opacity 0.2s, background 0.2s',
                       }}>
                         <span style={{ fontSize: 22 }}>{a.icon}</span>
                         <span style={{ fontSize: 8, fontWeight: 700, color: done ? 'var(--accent, #F5C842)' : 'var(--text-muted, #4A5270)', lineHeight: 1.2 }}>
@@ -692,7 +731,7 @@ export const ProfilePage: React.FC = () => {
               })}
             </div>
           )}
-        </>
+        </div>
       )}
 
       {/* SettingsModal — открывается по ⚙ в топбаре */}
@@ -768,6 +807,28 @@ export const ProfilePage: React.FC = () => {
           sessionId={replayGame.sessionId}
           onClose={() => setReplayGame(null)}
         />
+      )}
+
+      {/* Achievement Detail Modal */}
+      {selectedAchievement && (
+        <div onClick={() => setSelectedAchievement(null)} style={{ position: 'fixed', inset: 0, zIndex: 400, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 320, background: 'linear-gradient(160deg,#13161F,#0B0D11)', border: `1px solid ${selectedAchievement.done ? 'rgba(245,200,66,0.4)' : 'rgba(255,255,255,0.1)'}`, borderRadius: 24, padding: '32px 24px 24px', textAlign: 'center', boxShadow: selectedAchievement.done ? `0 0 40px rgba(245,200,66,0.15)` : 'none' }}>
+            <div style={{ fontSize: 56, lineHeight: 1, marginBottom: 16 }}>{selectedAchievement.icon}</div>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: selectedAchievement.done ? 'var(--accent, #F5C842)' : 'var(--text-muted, #4A5270)', marginBottom: 8 }}>
+              {selectedAchievement.done ? '✓ ' + (t.profile.passed || 'Unlocked') : '🔒 ' + (t.jarvis.locked || 'Locked')}
+            </div>
+            <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 22, fontWeight: 800, color: 'var(--text-primary, #F0F2F8)', marginBottom: 12 }}>{selectedAchievement.name}</div>
+            <div style={{ fontSize: 13, color: 'var(--text-secondary, #8B92A8)', marginBottom: 20 }}>
+              {selectedAchievement.desc}
+            </div>
+            {selectedAchievement.done && selectedAchievement.date && (
+               <div style={{ fontSize: 12, color: 'var(--green, #00D68F)', marginBottom: 24 }}>✓ {new Date(selectedAchievement.date).toLocaleDateString()}</div>
+             )}
+            <button onClick={() => setSelectedAchievement(null)} style={{ width: '100%', padding: 12, background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, color: 'var(--text-primary, #F0F2F8)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+              {t.errorBoundary?.reload ? 'Закрыть' : 'Close'}
+            </button>
+          </div>
+        </div>
       )}
 
       {/* (AvatarCropModal logic was removed) */}

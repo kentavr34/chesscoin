@@ -425,11 +425,12 @@ export const ShopPage: React.FC = () => {
   const [actionId, setActionId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [showTon, setShowTon] = useState(false);
-  const shopInfo = useInfoPopup('shop', [
-    { icon: '🎭', title: 'ChessCoin Shop', desc: 'Buy avatars, frames, boards, and themes with coins ᚙ. TON wallet lets you withdraw coins and buy with TON/USDT.' },
-    { icon: '✨', title: 'How to apply an item', desc: 'Buy an item, then click "Apply". It will immediately appear in your profile and be visible to other players.' },
-    { icon: '💎', title: 'TON Wallet', desc: 'Connect a TON wallet to withdraw earned coins. Exchange rate updates automatically.' },
-  ]); // N6: TON modal
+  const shopSlides = [
+    { icon: '🎭', title: t?.shop?.title ?? 'Магазин ChessCoin', desc: 'Покупай аватары, рамки, доски и темы за монеты ᚙ. Подключи TON кошелек для вывода или покупки за TON/USDT.' },
+    { icon: '✨', title: 'Как использовать предметы', desc: 'Купи предмет, затем нажми "Применить". Он мгновенно появится в твоем профиле и будет виден для других игроков.' },
+    { icon: '💎', title: 'TON Wallet', desc: 'Подключи TON кошелек чтобы выводить заработанные монеты. Курс конвертации обновляется автоматически.' },
+  ];
+  const shopInfo = useInfoPopup('shop', shopSlides); // N6: TON modal
   const [confirmPurchase, ConfirmPurchaseDialog] = useConfirm(); // N9
 
   const showToast = (msg: string) => {
@@ -538,11 +539,7 @@ export const ShopPage: React.FC = () => {
 
   return (
     <PageLayout title={t.shop.title} centered>
-      {shopInfo.show && <InfoPopup infoKey="shop" slides={[
-    { icon: '🎭', title: 'ChessCoin Shop', desc: 'Buy avatars, frames, boards, and themes with coins ᚙ. TON wallet lets you withdraw coins and buy with TON/USDT.' },
-    { icon: '✨', title: 'How to apply an item', desc: 'Buy an item, then click "Apply". It will immediately appear in your profile and be visible to other players.' },
-    { icon: '💎', title: 'TON Wallet', desc: 'Connect a TON wallet to withdraw earned coins. Exchange rate updates automatically.' },
-  ]} onClose={shopInfo.close} />}
+      {shopInfo.show && <InfoPopup infoKey="shop" slides={shopSlides} onClose={shopInfo.close} />}
       {/* N9: Кастомный диалог подтверждения покупки */}
       {ConfirmPurchaseDialog}
       {/* Toast */}

@@ -20,6 +20,11 @@ const showActionToast = (text: string, actionLabel: string, onAction: () => void
 export const useSocket = () => {
   const { upsertSession, removeSession, setSessions, setBattles, setDrawOffered } =
     useGameStore();
+  const battlesRef = useRef<import('@/types').BattleLobbyItem[]>([]);
+  
+  useEffect(() => {
+    battlesRef.current = useGameStore.getState().battles;
+  }, [useGameStore.getState().battles]);
   const { setWarChallenge } = useWarChallengeStore();
   const { updateBalance, setUser } = useUserStore();
   const navigate = useNavigate();
@@ -96,6 +101,12 @@ export const useSocket = () => {
     // ── Лобби ──
     socket.on('battles:list', (battles) => {
       setBattles(battles);
+    });
+    socket.on('battles:added', (newBattle) => {
+      setBattles([...battlesRef.current, newBattle]);
+    });
+    socket.on('battles:removed', (sessionId) => {
+      setBattles(battlesRef.current.filter((b) => b.id !== sessionId));
     });
 
     // ── Ничья ──
@@ -183,6 +194,8 @@ export const useSocket = () => {
       socket.off('game:over');
       socket.off('game:started');
       socket.off('battles:list');
+      socket.off('battles:added');
+      socket.off('battles:removed');
       socket.off('game:draw_offered');
       socket.off('game:draw_declined');
       socket.offAny();

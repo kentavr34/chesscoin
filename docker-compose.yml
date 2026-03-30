@@ -34,6 +34,7 @@ services:
       DEFAULT_POOL_SIZE: 20
       MIN_POOL_SIZE: 5
       RESERVE_POOL_SIZE: 5
+      AUTH_TYPE: scram-sha-256
     depends_on:
       postgres:
         condition: service_healthy
@@ -52,7 +53,7 @@ services:
     image: redis:7-alpine
     container_name: chesscoin_redis
     restart: always
-    command: redis-server --requirepass ${REDIS_PASSWORD} --maxmemory 512mb --maxmemory-policy allkeys-lru --notify-keyspace-events Kx --save "" --appendonly no
+    command: redis-server --requirepass ${REDIS_PASSWORD:-devredis123} --maxmemory 512mb --maxmemory-policy allkeys-lru --notify-keyspace-events Kx --save "" --appendonly no
     volumes:
       - redis_data:/data
     networks:

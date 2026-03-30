@@ -144,7 +144,7 @@ export const HomePage: React.FC = () => {
   const [myCountry, setMyCountry] = useState<any>(null);
   const [showJarvisInfo, setShowJarvisInfo] = useState(false);
 
-  const activeSessions = sessions.filter(s => s.status === 'IN_PROGRESS' || s.status === 'WAITING_FOR_OPPONENT');
+  const activeSessions = sessions.filter(s => s.status === 'IN_PROGRESS');
   const myTurnSessions = activeSessions.filter(s => s.isMyTurn);
 
   const handleOnboardingDone = () => {
@@ -232,20 +232,20 @@ export const HomePage: React.FC = () => {
         <div style={{ position: 'absolute', bottom: -12, right: 10, fontSize: 80, opacity: 0.04, color: '#9B85FF', pointerEvents: 'none', lineHeight: 1 }}>♟</div>
 
         {/* ID Card: Компактный горизонтальный профиль без диспропорции размеров */}
-        <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 16, padding: '14px 16px', marginBottom: 14, position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <Avatar user={user} size="m" gold />
+        <div onClick={() => navigate('/profile')} style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 20, padding: '20px 20px', marginBottom: 20, position: 'relative', zIndex: 1, border: '1px solid var(--border)', cursor: 'pointer' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <Avatar user={user} size="l" gold />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)', letterSpacing: '-.01em', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-.01em', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
                 <span style={{ textOverflow: 'ellipsis', overflow: 'hidden' }}>{user.firstName}</span>
-                {myCountry && <span style={{ fontSize: 16, flexShrink: 0 }}>{myCountry.flag}</span>}
+                {myCountry && <span style={{ fontSize: 18, flexShrink: 0 }}>{myCountry.flag}</span>}
               </div>
-              <div style={{ fontSize: 12, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>@{user.username ?? 'unknown'}</div>
+              <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 4 }}>@{user.username ?? 'unknown'}</div>
             </div>
             {/* Воинское звание */}
             <div style={{ textAlign: 'right', flexShrink: 0 }}>
-              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.06em', color: '#6A7090', textTransform: 'uppercase' as const, marginBottom: 2 }}>{t.home.rankLabel}</div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.06em', color: '#6A7090', textTransform: 'uppercase' as const, marginBottom: 4 }}>{t.home.rankLabel}</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
                 {militaryEmoji} <span style={{ whiteSpace: 'nowrap' }}>{militaryRank}</span>
               </div>
             </div>
@@ -274,55 +274,26 @@ export const HomePage: React.FC = () => {
         <div style={{ height: 1, background: 'var(--border, rgba(255,255,255,0.07))', margin: '0 0 12px', position: 'relative', zIndex: 1 }} />
 
         {/* Баланс */}
-        <div style={{ position: 'relative', zIndex: 1, marginBottom: 10 }}>
+        <div style={{ position: 'relative', zIndex: 1, marginBottom: 16 }}>
           <div style={lblStyle}>{t.home.balance.toUpperCase()}</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span
-              onClick={() => navigate('/profile', { state: { tab: 'info' } })}
-              style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 26, fontWeight: 800, color: 'var(--accent, #F5C842)', letterSpacing: '-.04em', lineHeight: 1, cursor: 'pointer' }}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div
+              onClick={() => {
+                import('@/components/ui/Toast').then(({ toast }) => toast.info('History is in Profile > Games'));
+                navigate('/profile');
+              }}
+              style={{ display: 'flex', alignItems: 'baseline', gap: 6, cursor: 'pointer', background: 'var(--bg)', padding: '8px 14px', borderRadius: 'var(--radius-m)', border: '1px solid var(--border)' }}
             >
-              {fmtBalance(user.balance)} <span style={{ fontSize: 13, opacity: 0.5 }}>ᚙ</span>
-            </span>
+              <span style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 19, fontWeight: 800, color: 'var(--accent)', letterSpacing: '-.02em', lineHeight: 1 }}>
+                {fmtBalance(user.balance)}
+              </span>
+              <span style={{ fontSize: 12, opacity: 0.5, color: 'var(--accent)' }}>ᚙ</span>
+            </div>
             <button onClick={() => navigate('/shop')} style={shopInlineBtn}>🛍</button>
           </div>
         </div>
 
-        {/* Стрик — визуальный виджет 7 дней */}
-        {(user?.loginStreak ?? 0) >= 1 && (() => {
-          const streak = user?.loginStreak ?? 0;
-          const days = t.home.dayNames;
-          const today = new Date().getDay(); // 0=вс
-          const todayIdx = today === 0 ? 6 : today - 1;
-          const nextBonus = streak < 3 ? 3 : streak < 7 ? 7 : 30;
-          const bonusAmt = nextBonus === 3 ? '500' : nextBonus === 7 ? '2 000' : '10 000';
-          return (
-            <div style={{ marginBottom: 10, position: 'relative', zIndex: 1 }}>
-              <div style={{ background: 'rgba(255,159,67,0.08)', border: '1px solid rgba(255,159,67,0.2)', borderRadius: 14, padding: '10px 12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: '#FF9F43' }}>🔥 {t.home.daysInRow(streak)}</span>
-                  <span style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>{t.home.toBonus(bonusAmt, nextBonus - (streak % nextBonus || nextBonus))}</span>
-                </div>
-                <div style={{ display: 'flex', gap: 4, justifyContent: 'space-between' }}>
-                  {days.map((day, i) => {
-                    const filled = i <= todayIdx && streak > (todayIdx - i);
-                    const isToday = i === todayIdx;
-                    return (
-                      <div key={day} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-                        <div style={{
-                          width: '100%', height: 6, borderRadius: 3,
-                          background: filled ? '#FF9F43' : 'rgba(255,255,255,0.08)',
-                          boxShadow: isToday ? '0 0 6px rgba(255,159,67,0.6)' : 'none',
-                          animation: isToday ? 'pulse 2s ease-in-out infinite' : 'none',
-                        }} />
-                        <span style={{ fontSize: 8, color: filled ? '#FF9F43' : 'var(--text-muted, #4A5270)', fontWeight: isToday ? 800 : 400 }}>{day}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          );
-        })()}
+
 
         {/* Попытки */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>

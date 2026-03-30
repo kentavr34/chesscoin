@@ -11,6 +11,8 @@ interface ServerToClient {
   'game:draw_offered': (data: { by: string }) => void;
   'game:draw_declined': (data: { by: string }) => void;
   'battles:list': (battles: BattleLobbyItem[]) => void;
+  'battles:added': (battle: BattleLobbyItem) => void;
+  'battles:removed': (sessionId: string) => void;
   'pong': () => void;
 }
 

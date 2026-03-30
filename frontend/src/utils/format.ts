@@ -1,8 +1,8 @@
 // Форматирует bigint-строку в читаемый вид
 export const fmtBalance = (val: string | number | bigint): string => {
   const n = typeof val === 'bigint' ? val : BigInt(val);
-  if (n >= 1_000_000n) return (Number(n) / 1_000_000).toFixed(1).replace('.0', '') + 'M';
-  if (n >= 1_000n) return (Number(n) / 1_000).toFixed(1).replace('.0', '') + 'K';
+  if (n >= 1_000_000n) return (Number(n) / 1_000_000).toFixed(0) + 'M';
+  if (n >= 1_000n) return (Number(n) / 1_000).toFixed(0) + 'K';
   return n.toString();
 };
 

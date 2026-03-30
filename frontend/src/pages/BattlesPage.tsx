@@ -66,7 +66,7 @@ export const BattlesPage: React.FC = () => {
         onClick={info.open}
         style={{ ...tbaStyle, color: 'var(--text-secondary, #8B92A8)', fontSize: 14, fontWeight: 700 }}
       >?</button>
-      <button onClick={() => navigate('/profile')} style={{ ...tbaStyle, fontSize: 18 }} title={t.battles.tabPrivate || "History"}>🕒</button>
+      <button onClick={() => navigate('/battles/history')} style={{ ...tbaStyle, fontSize: 18 }} title={t.battles.tabPrivate || "History"}>🕒</button>
     </div>
   );
 
@@ -171,12 +171,9 @@ export const BattlesPage: React.FC = () => {
             <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)', marginBottom: 8 }}>
               {t.battles.private_}
             </div>
-            <div style={{ fontSize: 13, color: 'var(--text-secondary, #8B92A8)', marginBottom: 20, lineHeight: 1.4 }}>
+            <div style={{ fontSize: 13, color: 'var(--text-secondary, #8B92A8)', lineHeight: 1.4 }}>
               {t.battles.info[2].desc}
             </div>
-            <button onClick={() => setShowCreate(true)} style={{ width: '100%', ...acceptBtn, padding: '14px 20px', fontSize: 14, boxShadow: '0 4px 16px rgba(245,200,66,0.2)' }}>
-              {t.battles.createTitle}
-            </button>
           </div>
 
           {/* Показываем мои приватные батлы, которые ждут соперника */}
@@ -232,10 +229,8 @@ export const BattlesPage: React.FC = () => {
         </div>
       )}
 
-      {/* FAB - show only if not in Private tab, as private tab has a big button */}
-      {tab !== 'private' && (
-        <button onClick={() => setShowCreate(true)} style={fabStyle}>＋</button>
-      )}
+      {/* FAB - universally visible across tabs */}
+      <button onClick={() => setShowCreate(true)} style={fabStyle}>＋</button>
 
       {showCreate && <CreateBattleModal onClose={() => setShowCreate(false)} />}
     </PageLayout>

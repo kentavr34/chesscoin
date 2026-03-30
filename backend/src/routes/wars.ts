@@ -13,7 +13,7 @@ import { TransactionType, CountryWarStatus } from "@prisma/client";
 
 // ── R4: Zod схемы ─────────────────────────────────────────────────────────────
 const DeclareWarSchema = z.object({
-  defenderCountryId: z.string().uuid("Invalid country ID"),
+  defenderCountryId: z.string(),
   duration: z.number().int().positive().optional(),
 });
 

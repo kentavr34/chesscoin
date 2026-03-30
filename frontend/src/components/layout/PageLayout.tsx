@@ -78,9 +78,7 @@ export const InfoPopup: React.FC<InfoPopupProps> = ({ slides, onClose }) => {
         <div style={{
           textAlign: 'center', fontSize: 13, color: '#8B92A8',
           lineHeight: 1.7, marginBottom: 24,
-        }}>
-          {slide.desc}
-        </div>
+        }} dangerouslySetInnerHTML={{ __html: slide.desc }} />
 
         {/* Dots */}
         {slides.length > 1 && (
@@ -183,7 +181,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
         <div style={{
           flex: 1, textAlign: centered ? 'center' : 'left',
           padding: '0 12px', overflow: 'hidden', zIndex: 1,
-          ...(centered ? { position: 'absolute', left: 0, right: 0, padding: '0 50px' } : {})
+          ...(centered ? { position: 'absolute', left: 0, right: 0, top: '50%', transform: 'translateY(-50%)', padding: '0 50px' } : {})
         }}>
           {logo ? (
             <span className="ui-heading-1" style={{ fontSize: 16, color: 'var(--gold)' }}>

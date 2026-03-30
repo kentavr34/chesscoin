@@ -4,7 +4,9 @@ import { Avatar } from '@/components/ui/Avatar';
 import { tournamentsApi } from '@/api';
 import { getSocket } from '@/api/socket';
 import { fmtBalance } from '@/utils/format';
+import { useConfirm } from '@/components/ui/ConfirmModal';
 import type { TournamentFull, ActiveMatch, League } from '@/types'; // R1
+import { useNavigate } from 'react-router-dom';
 
 import { useT } from '@/i18n/useT';
 
@@ -34,6 +36,8 @@ export const TournamentsPage: React.FC = () => {
   const [myMatches, setMyMatches] = useState<ActiveMatch[]>([]); // T6
   const [tournamentFinish, setTournamentFinish] = useState<{ tournamentName?: string; prize?: string; place?: number } | null>(null);
   const tourInfo = useInfoPopup('tournaments', tt.infoSlides as unknown as { icon: string; title: string; desc: string }[]);
+  const [confirm, ConfirmDialog] = useConfirm();
+  const navigate = useNavigate();
 
   const load = async () => {
     try {
@@ -119,7 +123,8 @@ export const TournamentsPage: React.FC = () => {
   };
 
   const handleLeave = async (id: string) => {
-    if (!confirm(tt.leaveConfirm)) return;
+    const ok = await confirm({ title: tt.leave, message: tt.leaveConfirm, danger: true, okLabel: t.common?.confirm ?? 'Yes', cancelLabel: t.common?.cancel ?? 'Cancel' });
+    if (!ok) return;
     try {
       await tournamentsApi.leave(id);
       await load();
@@ -138,6 +143,7 @@ export const TournamentsPage: React.FC = () => {
   return (
     <PageLayout title={tt.title} centered>
 
+      {ConfirmDialog}
       {tourInfo.show && <InfoPopup infoKey="tournaments" slides={tt.infoSlides as unknown as { icon: string; title: string; desc: string }[]} onClose={tourInfo.close} />}
       {/* T7: Tournament finish and prize popup */}
       {tournamentFinish && (
@@ -186,15 +192,15 @@ export const TournamentsPage: React.FC = () => {
                   <button
                     onClick={() => {
                       if (isP1) {
-                        window.dispatchEvent(new CustomEvent('chesscoin:navigate', { detail: `/game/${match.sessionId}` }));
+                        navigate(`/game/${match.sessionId}`);
                       } else {
                         if ((match as any).sessionCode) {
                           getSocket().emit('game:join', { code: (match as any).sessionCode }, (res: any) => {
-                            if (res.ok) window.dispatchEvent(new CustomEvent('chesscoin:navigate', { detail: `/game/${match.sessionId}` }));
+                            if (res.ok) navigate(`/game/${match.sessionId}`);
                             else showToast(res.error || 'Error joining match');
                           });
                         } else {
-                          window.dispatchEvent(new CustomEvent('chesscoin:navigate', { detail: `/game/${match.sessionId}` }));
+                          navigate(`/game/${match.sessionId}`);
                         }
                       }
                     }}
