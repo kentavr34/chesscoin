@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "users" ADD COLUMN "jarvisLevel" INTEGER NOT NULL DEFAULT 1,
+ADD COLUMN "jarvisBadges" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];
