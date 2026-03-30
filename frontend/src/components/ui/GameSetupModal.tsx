@@ -121,8 +121,8 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
         <InfoPopup infoKey="jarvis" slides={JARVIS_INFO_SLIDES} onClose={jarvisInfo.close} />
       )}
       <div style={sheetStyle} onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 22 }}>
+        {/* Header — fixed at top */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 22, flexShrink: 0 }}>
           <button onClick={onClose} style={backBtnStyle}>←</button>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary, #F0F2F8)' }}>
@@ -143,43 +143,46 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
           <button onClick={onClose} style={backBtnStyle}>✕</button>
         </div>
 
-        {/* Color selection */}
-        <div style={sectionLbl}>{t.gameSetup.color}</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 20 }}>
-          {(['random', 'white', 'black'] as ColorChoice[]).map((c) => (
-            <button
-              key={c}
-              onClick={() => setColor(c)}
-              style={colorBtnStyle(color === c, c)}
-            >
-              <span style={{ fontSize: 24, display: 'block', marginBottom: 6 }}>
-                {c === 'random' ? '🎲' : c === 'white' ? '♔' : '♚'}
-              </span>
-              <span style={{ fontSize: 11, fontWeight: 700 }}>
-                {c === 'random' ? t.gameSetup.random.replace('🎲 ','') : c === 'white' ? t.gameSetup.white.replace('☀️ ','') : t.gameSetup.black.replace('🌙 ','')}
-              </span>
-            </button>
-          ))}
+        {/* Scrollable content area */}
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingRight: 4 }}>
+          {/* Color selection */}
+          <div style={sectionLbl}>{t.gameSetup.color}</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 20 }}>
+            {(['random', 'white', 'black'] as ColorChoice[]).map((c) => (
+              <button
+                key={c}
+                onClick={() => setColor(c)}
+                style={colorBtnStyle(color === c, c)}
+              >
+                <span style={{ fontSize: 24, display: 'block', marginBottom: 6 }}>
+                  {c === 'random' ? '🎲' : c === 'white' ? '♔' : '♚'}
+                </span>
+                <span style={{ fontSize: 11, fontWeight: 700 }}>
+                  {c === 'random' ? t.gameSetup.random.replace('🎲 ','') : c === 'white' ? t.gameSetup.white.replace('☀️ ','') : t.gameSetup.black.replace('🌙 ','')}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Time selection — 6 опций в сетке 3×2 */}
+          <div style={sectionLbl}>{t.gameSetup.duration}</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 24 }}>
+            {TIME_OPTIONS.map((opt) => (
+              <button
+                key={opt}
+                onClick={() => setTime(opt)}
+                style={timeBtnStyle(time === opt)}
+              >
+                <span style={{ fontSize: 16, display: 'block', marginBottom: 2 }}>
+                  {opt === 1 ? '⚡' : opt === 3 ? '🔥' : opt === 5 ? '♟' : opt === 15 ? '🎯' : opt === 30 ? '🏆' : '👑'}
+                </span>
+                {opt < 60 ? `${opt} min` : '1 hr'}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Time selection — 6 опций в сетке 3×2 */}
-        <div style={sectionLbl}>{t.gameSetup.duration}</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 24 }}>
-          {TIME_OPTIONS.map((opt) => (
-            <button
-              key={opt}
-              onClick={() => setTime(opt)}
-              style={timeBtnStyle(time === opt)}
-            >
-              <span style={{ fontSize: 16, display: 'block', marginBottom: 2 }}>
-                {opt === 1 ? '⚡' : opt === 3 ? '🔥' : opt === 5 ? '♟' : opt === 15 ? '🎯' : opt === 30 ? '🏆' : '👑'}
-              </span>
-              {opt < 60 ? `${opt} min` : '1 hr'}
-            </button>
-          ))}
-        </div>
-
-        {/* Start button */}
+        {/* Start button — fixed at bottom */}
         <button onClick={handleStart} style={startBtnStyle}>
           ♟ Start game
         </button>
@@ -195,6 +198,8 @@ const overlayStyle: React.CSSProperties = {
   backdropFilter: 'blur(8px)',
   WebkitBackdropFilter: 'blur(8px)',
   display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+  overflowY: 'auto',
+  paddingBottom: 'env(safe-area-inset-bottom, 0px)',
 };
 const sheetStyle: React.CSSProperties = {
   width: '100%', maxWidth: 480,
@@ -203,7 +208,11 @@ const sheetStyle: React.CSSProperties = {
   borderBottom: 'none',
   borderRadius: '24px 24px 0 0',
   padding: '20px 18px',
-  paddingBottom: 'max(20px, env(safe-area-inset-bottom, 20px))',
+  paddingBottom: '20px',
+  maxHeight: 'calc(100vh - 60px)',
+  overflow: 'hidden',
+  display: 'flex',
+  flexDirection: 'column',
 };
 const launchSheetStyle: React.CSSProperties = {
   width: '100%', maxWidth: 360,

@@ -41,7 +41,7 @@ export const loginWithTelegram = async (
   referrerTelegramId?: string
 ) => {
   // 1. Валидация подписи Telegram
-  if (config.server.nodeEnv !== "production" && config.server.debug && initDataString.startsWith("debug:")) {
+  if (config.server.nodeEnv !== "production" && config.server.debug === true && initDataString.startsWith("debug:")) {
     const telegramId = initDataString.replace("debug:", "");
     return loginDebug(parseInt(telegramId));
   }

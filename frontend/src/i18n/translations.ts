@@ -380,6 +380,13 @@ export const translations = {
       bonusNote: '* Bonus is credited only after the referral completes their first game. Amount depends on your military rank.',
       active: '✓ Active', pending: '⏳ Pending',
       shareText: '♟ Play ChessCoin — earn coins by playing chess!',
+      ranks: [
+        { label: 'Emperor' }, { label: 'Marshal' }, { label: 'Colonel General' }, { label: 'Lieutenant General' },
+        { label: 'Major General' }, { label: 'Brigadier' }, { label: 'Colonel' }, { label: 'Lt. Colonel' },
+        { label: 'Major' }, { label: 'Captain' }, { label: 'Sr. Lieutenant' }, { label: 'Lieutenant' },
+        { label: 'Jr. Lieutenant' }, { label: 'Warrant Officer' }, { label: 'Sergeant' }, { label: 'Corporal' },
+        { label: 'Private' }, { label: 'Recruit' },
+      ],
     },
     tasksPage: {
       dailyPuzzle: '📅 Daily Puzzle', dailySolved: 'Daily puzzle solved!', dailySolve: 'Solve daily puzzle',
@@ -401,6 +408,13 @@ export const translations = {
     jarvis: {
       title: 'J.A.R.V.I.S', subtitle: 'Select difficulty level',
       locked: 'Locked', reward: (r) => `+${r} ᚙ`, beatPrev: 'Beat the previous level to unlock',
+      levels: [
+        { name: 'Beginner' }, { name: 'Rookie' }, { name: 'Player' }, { name: 'Challenger' },
+        { name: 'Fighter' }, { name: 'Guardian' }, { name: 'Warrior' }, { name: 'Knight' },
+        { name: 'Expert' }, { name: 'Tactician' }, { name: 'Master' }, { name: 'Grandmaster' },
+        { name: 'Professional' }, { name: 'Champion' }, { name: 'Elite' }, { name: 'Epic' },
+        { name: 'Legendary' }, { name: 'Immortal' }, { name: 'Divine' }, { name: 'Mystic' },
+      ],
     },
     lesson: {
       title: 'Puzzle',
@@ -891,6 +905,13 @@ export const translations = {
       bonusNote: '* Бонус начисляется только после первой игры реферала. Сумма зависит от вашего военного звания.',
       active: '✓ Активен', pending: '⏳ Ожидание',
       shareText: '♟ Играй в ChessCoin — зарабатывай монеты играя в шахматы!',
+      ranks: [
+        { label: 'Император' }, { label: 'Маршал' }, { label: 'Генерал-полковник' }, { label: 'Генерал-лейтенант' },
+        { label: 'Генерал-майор' }, { label: 'Бригадир' }, { label: 'Полковник' }, { label: 'Подполковник' },
+        { label: 'Майор' }, { label: 'Капитан' }, { label: 'Старший лейтенант' }, { label: 'Лейтенант' },
+        { label: 'Младший лейтенант' }, { label: 'Прапорщик' }, { label: 'Сержант' }, { label: 'Младший сержант' },
+        { label: 'Рядовой' }, { label: 'Боец' },
+      ],
     },
     tasksPage: {
       dailyPuzzle: '📅 Ежедневная задача', dailySolved: 'Ежедневная задача решена!', dailySolve: 'Решить ежедневную задачу',
@@ -912,6 +933,13 @@ export const translations = {
     jarvis: {
       title: 'J.A.R.V.I.S', subtitle: 'Выберите уровень сложности',
       locked: 'Заблокировано', reward: (r) => `+${r} ᚙ`, beatPrev: 'Победи предыдущий уровень для разблокировки',
+      levels: [
+        { name: 'Новичок' }, { name: 'Молодой боец' }, { name: 'Игрок' }, { name: 'Претендент' },
+        { name: 'Боец' }, { name: 'Страж' }, { name: 'Воин' }, { name: 'Рыцарь' },
+        { name: 'Эксперт' }, { name: 'Тактик' }, { name: 'Мастер' }, { name: 'Гроссмейстер' },
+        { name: 'Профессионал' }, { name: 'Чемпион' }, { name: 'Элита' }, { name: 'Эпик' },
+        { name: 'Легендарный' }, { name: 'Бессмертный' }, { name: 'Божественный' }, { name: 'Мистик' },
+      ],
     },
     lesson: {
       title: 'Задача',
