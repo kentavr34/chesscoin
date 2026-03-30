@@ -12,6 +12,10 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - app-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M # Лимит для предотвращения чрезмерной нагрузки 76%
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U chesscoin"]
       interval: 10s
@@ -79,7 +83,7 @@ services:
     environment:
       NODE_ENV: production
       SERVER_PORT: 3000
-      DATABASE_URL: postgresql://chesscoin:${POSTGRES_PASSWORD}@postgres:5432/chesscoin?connection_limit=15&pool_timeout=10
+      DATABASE_URL: postgresql://chesscoin:${POSTGRES_PASSWORD}@pgbouncer:5432/chesscoin?connection_limit=10&pool_timeout=10
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD}
