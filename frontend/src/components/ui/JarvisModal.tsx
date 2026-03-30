@@ -11,28 +11,47 @@ export interface JarvisLevel {
 }
 
 // 20 уровней J.A.R.V.I.S — от новичка до мистика
-export const JARVIS_LEVELS: JarvisLevel[] = [
-  { level: 1,  name: 'Beginner',     reward: 1000,  errorRate: 20, depth: 1  },
-  { level: 2,  name: 'Rookie',       reward: 2000,  errorRate: 18, depth: 1  },
-  { level: 3,  name: 'Player',       reward: 3000,  errorRate: 16, depth: 2  },
-  { level: 4,  name: 'Challenger',   reward: 4000,  errorRate: 14, depth: 2  },
-  { level: 5,  name: 'Fighter',      reward: 5000,  errorRate: 12, depth: 2  },
-  { level: 6,  name: 'Guardian',     reward: 7000,  errorRate: 10, depth: 3  },
-  { level: 7,  name: 'Warrior',      reward: 9000,  errorRate: 8,  depth: 3  },
-  { level: 8,  name: 'Knight',       reward: 11000, errorRate: 7,  depth: 4  },
-  { level: 9,  name: 'Expert',       reward: 13000, errorRate: 6,  depth: 4  },
-  { level: 10, name: 'Tactician',    reward: 15000, errorRate: 5,  depth: 5  },
-  { level: 11, name: 'Master',       reward: 18000, errorRate: 4,  depth: 5  },
-  { level: 12, name: 'Grandmaster',  reward: 21000, errorRate: 3,  depth: 6  },
-  { level: 13, name: 'Professional', reward: 25000, errorRate: 2,  depth: 7  },
-  { level: 14, name: 'Champion',     reward: 30000, errorRate: 2,  depth: 7  },
-  { level: 15, name: 'Elite',        reward: 35000, errorRate: 1,  depth: 8  },
-  { level: 16, name: 'Epic',         reward: 40000, errorRate: 1,  depth: 9  },
-  { level: 17, name: 'Legendary',    reward: 45000, errorRate: 0,  depth: 9  },
-  { level: 18, name: 'Immortal',     reward: 50000, errorRate: 0,  depth: 10 },
-  { level: 19, name: 'Divine',       reward: 60000, errorRate: 0,  depth: 10 },
-  { level: 20, name: 'Mystic',       reward: 75000, errorRate: 0,  depth: 10 },
+// ВАЖНО: названия уровней идут из translations, используй getJarvisLevels() для получения локализованных имён
+const JARVIS_BASE = [
+  { level: 1,  reward: 1000,  errorRate: 20, depth: 1  },
+  { level: 2,  reward: 2000,  errorRate: 18, depth: 1  },
+  { level: 3,  reward: 3000,  errorRate: 16, depth: 2  },
+  { level: 4,  reward: 4000,  errorRate: 14, depth: 2  },
+  { level: 5,  reward: 5000,  errorRate: 12, depth: 2  },
+  { level: 6,  reward: 7000,  errorRate: 10, depth: 3  },
+  { level: 7,  reward: 9000,  errorRate: 8,  depth: 3  },
+  { level: 8,  reward: 11000, errorRate: 7,  depth: 4  },
+  { level: 9,  reward: 13000, errorRate: 6,  depth: 4  },
+  { level: 10, reward: 15000, errorRate: 5,  depth: 5  },
+  { level: 11, reward: 18000, errorRate: 4,  depth: 5  },
+  { level: 12, reward: 21000, errorRate: 3,  depth: 6  },
+  { level: 13, reward: 25000, errorRate: 2,  depth: 7  },
+  { level: 14, reward: 30000, errorRate: 2,  depth: 7  },
+  { level: 15, reward: 35000, errorRate: 1,  depth: 8  },
+  { level: 16, reward: 40000, errorRate: 1,  depth: 9  },
+  { level: 17, reward: 45000, errorRate: 0,  depth: 9  },
+  { level: 18, reward: 50000, errorRate: 0,  depth: 10 },
+  { level: 19, reward: 60000, errorRate: 0,  depth: 10 },
+  { level: 20, reward: 75000, errorRate: 0,  depth: 10 },
 ];
+
+// Вспомогательная функция для получения локализованных уровней Jarvis
+function getJarvisLevels(t: ReturnType<typeof useT>): JarvisLevel[] {
+  return JARVIS_BASE.map((base, idx) => ({
+    ...base,
+    name: t.jarvis.levels[idx].name,
+  }));
+}
+
+// Для совместимости — возвращает уровни с fallback именами
+// ВАЖНО: используй getJarvisLevels(t) для получения локализованных имён
+export const JARVIS_LEVELS: JarvisLevel[] = JARVIS_BASE.map((base, idx) => ({
+  ...base,
+  name: `Level ${base.level}`,
+}));
+
+// Экспортируем функцию для использования в компонентах
+export { getJarvisLevels };
 
 interface JarvisModalProps {
   currentJarvisLevel: number; // текущий разблокированный уровень игрока (1-10)
@@ -42,20 +61,22 @@ interface JarvisModalProps {
 
 export const JarvisModal: React.FC<JarvisModalProps> = ({ currentJarvisLevel, onSelect, onClose }) => {
   const t = useT();
+  const localizedLevels = getJarvisLevels(t);
+
   // Авто-скролл к текущему уровню при открытии
   useEffect(() => {
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       const el = document.getElementById(`jarvis-level-${currentJarvisLevel}`);
       el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 300);
-    return () => clearTimeout(t);
+    return () => clearTimeout(timer);
   }, []);
 
   return (
     <div style={overlayStyle} onClick={onClose}>
       <div style={sheetStyle} onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+        {/* Header — fixed at top */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexShrink: 0 }}>
           <div>
             <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary, #F0F2F8)', letterSpacing: '-.02em' }}>
               🤖 J.A.R.V.I.S
@@ -67,9 +88,9 @@ export const JarvisModal: React.FC<JarvisModalProps> = ({ currentJarvisLevel, on
           <button onClick={onClose} style={closeBtnStyle}>✕</button>
         </div>
 
-        {/* Levels */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: '65vh', overflowY: 'auto', paddingBottom: 8 }}>
-          {[...JARVIS_LEVELS].reverse().map((lvl) => {
+        {/* Scrollable levels container */}
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingRight: 4, display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+          {[...localizedLevels].reverse().map((lvl) => {
             const unlocked = lvl.level <= currentJarvisLevel;
             const completed = lvl.level < currentJarvisLevel;
             const isActive = lvl.level === currentJarvisLevel;
@@ -116,8 +137,8 @@ export const JarvisModal: React.FC<JarvisModalProps> = ({ currentJarvisLevel, on
           })}
         </div>
 
-        {/* Footer hint */}
-        <div style={{ marginTop: 16, padding: '16px', background: 'rgba(123,97,255,0.08)', border: '1px solid rgba(123,97,255,0.15)', borderRadius: 14 }}>
+        {/* Footer hint — fixed at bottom */}
+        <div style={{ padding: '16px', background: 'rgba(123,97,255,0.08)', border: '1px solid rgba(123,97,255,0.15)', borderRadius: 14, flexShrink: 0 }}>
           <div style={{ fontSize: 15, color: 'var(--text-secondary, #8B92A8)', lineHeight: 1.6 }}>
             🏆 Beat levels in order. For each completed level you earn a J.A.R.V.I.S badge on your profile.
           </div>
@@ -134,6 +155,8 @@ const overlayStyle: React.CSSProperties = {
   backdropFilter: 'blur(8px)',
   WebkitBackdropFilter: 'blur(8px)',
   display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+  overflowY: 'auto',
+  paddingBottom: 'env(safe-area-inset-bottom, 0px)',
 };
 const sheetStyle: React.CSSProperties = {
   width: '100%', maxWidth: 480,
@@ -142,7 +165,11 @@ const sheetStyle: React.CSSProperties = {
   borderBottom: 'none',
   borderRadius: '24px 24px 0 0',
   padding: '20px 18px',
-  paddingBottom: 'max(20px, env(safe-area-inset-bottom, 20px))',
+  paddingBottom: '20px',
+  maxHeight: 'calc(100vh - 60px)',
+  overflow: 'hidden',
+  display: 'flex',
+  flexDirection: 'column',
 };
 const closeBtnStyle: React.CSSProperties = {
   width: 32, height: 32, borderRadius: '50%',

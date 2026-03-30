@@ -9,7 +9,7 @@ import type { Lang } from '@/i18n/translations';
 import { profileApi, authApi, warsApi } from '@/api';
 import { fmtBalance, fmtDate, leagueEmoji } from '@/utils/format';
 import type { Transaction, UserPublic } from '@/types';
-import { JARVIS_LEVELS } from '@/components/ui/JarvisModal';
+import { useJarvisLevels } from '@/hooks/useJarvisLevels';
 
 // Local type for Tab
 type Tab = 'info' | 'saves' | 'ach';
@@ -73,6 +73,7 @@ export const ProfilePage: React.FC = () => {
   const t = useT();
   const location = useLocation();
   const params = useParams<{ userId?: string }>();
+  const localizedLevels = useJarvisLevels();
   // Поддерживаем оба способа: /profile/:userId и navigate('/profile', {state:{userId}})
   const viewedUserId: string | undefined = params.userId ?? (location.state as Record<string,unknown>)?.userId as string | undefined;
   const isOwnProfile = !viewedUserId || viewedUserId === user?.id;
@@ -210,7 +211,7 @@ export const ProfilePage: React.FC = () => {
               {user?.militaryRank.emoji} {user?.militaryRank.label}
             </span>
           )}
-          <span style={tagRobot}>🤖 {JARVIS_LEVELS[Math.max(0, (user?.jarvisLevel ?? 1) - 1)].name}</span>
+          <span style={tagRobot}>🤖 {localizedLevels[Math.max(0, (user?.jarvisLevel ?? 1) - 1)].name}</span>
         </div>
       </div>
 
@@ -698,7 +699,7 @@ export const ProfilePage: React.FC = () => {
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '0 18px' }}>
               {[...(user?.jarvisBadges ?? [])].reverse().map((badgeName: string, i: number) => {
-                const lvlData = JARVIS_LEVELS.find(l => l.name === badgeName);
+                const lvlData = localizedLevels.find(l => l.name === badgeName);
                 const badgeDates = user?.jarvisBadgeDates as Record<string, string> | null;
                 const dateStr = badgeDates?.[badgeName];
                 const colors: Record<string, string> = {

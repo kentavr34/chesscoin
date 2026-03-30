@@ -7,26 +7,34 @@ import { fmtBalance, fmtDate } from '@/utils/format';
 import { toast } from '@/components/ui/Toast';
 import { useT } from '@/i18n/useT';
 
-const RANK_THRESHOLDS = [
-  { rank: 'EMPEROR',      label: 'Emperor',            emoji: '👑',     minReferrals: 1_000_000, bonus: 40_000,  pct: 15 },
-  { rank: 'MARSHAL',      label: 'Marshal',            emoji: '🦅',     minReferrals: 500_000,   bonus: 35_000,  pct: 14 },
-  { rank: 'COL_GENERAL',  label: 'Colonel General',    emoji: '🌟🌟🌟', minReferrals: 300_000,   bonus: 30_000,  pct: 13 },
-  { rank: 'LT_GENERAL',   label: 'Lieutenant General', emoji: '🌟🌟',  minReferrals: 200_000,   bonus: 25_000,  pct: 12 },
-  { rank: 'MAJ_GENERAL',  label: 'Major General',      emoji: '🌟',     minReferrals: 100_000,   bonus: 20_000,  pct: 11 },
-  { rank: 'BRIGADIER',    label: 'Brigadier',          emoji: '🎖️',    minReferrals: 80_000,    bonus: 15_000,  pct: 10 },
-  { rank: 'COLONEL',      label: 'Colonel',            emoji: '⭐⭐⭐', minReferrals: 60_000,    bonus: 14_000,  pct:  9 },
-  { rank: 'LT_COLONEL',   label: 'Lt. Colonel',        emoji: '⭐⭐',   minReferrals: 40_000,    bonus: 13_000,  pct:  8 },
-  { rank: 'MAJOR',        label: 'Major',              emoji: '⭐',     minReferrals: 20_000,    bonus: 12_000,  pct:  7 },
-  { rank: 'CAPTAIN',      label: 'Captain',            emoji: '🏅',     minReferrals: 10_000,   bonus: 10_000,  pct:  6 },
-  { rank: 'SR_LIEUTENANT',label: 'Sr. Lieutenant',     emoji: '🥇',     minReferrals: 5_000,    bonus:  9_000,  pct:  5 },
-  { rank: 'LIEUTENANT',   label: 'Lieutenant',         emoji: '🥈',     minReferrals: 3_000,    bonus:  8_000,  pct:  5 },
-  { rank: 'JR_LIEUTENANT',label: 'Jr. Lieutenant',     emoji: '🥉',     minReferrals: 1_000,    bonus:  7_000,  pct:  5 },
-  { rank: 'WARRANT',      label: 'Warrant Officer',    emoji: '🛡️',     minReferrals: 500,       bonus:  6_000,  pct:  4 },
-  { rank: 'SERGEANT',     label: 'Sergeant',           emoji: '⚔️',     minReferrals: 100,       bonus:  5_000,  pct:  3 },
-  { rank: 'CORPORAL',     label: 'Corporal',           emoji: '🗡️',     minReferrals: 50,        bonus:  4_000,  pct:  2 },
-  { rank: 'PRIVATE',      label: 'Private',            emoji: '🪖',     minReferrals: 10,        bonus:  3_000,  pct:  1 },
-  { rank: 'RECRUIT',      label: 'Recruit',            emoji: '🎒',     minReferrals: 0,         bonus:      0,  pct:  0 },
+const RANK_THRESHOLDS_BASE = [
+  { rank: 'EMPEROR',      emoji: '👑',     minReferrals: 1_000_000, bonus: 40_000,  pct: 15 },
+  { rank: 'MARSHAL',      emoji: '🏅',     minReferrals: 500_000,   bonus: 35_000,  pct: 14 },
+  { rank: 'COL_GENERAL',  emoji: '🌟🌟🌟', minReferrals: 300_000,   bonus: 30_000,  pct: 13 },
+  { rank: 'LT_GENERAL',   emoji: '🌟🌟',  minReferrals: 200_000,   bonus: 25_000,  pct: 12 },
+  { rank: 'MAJ_GENERAL',  emoji: '🌟',     minReferrals: 100_000,   bonus: 20_000,  pct: 11 },
+  { rank: 'BRIGADIER',    emoji: '🎖️',    minReferrals: 80_000,    bonus: 15_000,  pct: 10 },
+  { rank: 'COLONEL',      emoji: '⭐⭐⭐',  minReferrals: 60_000,    bonus: 14_000,  pct:  9 },
+  { rank: 'LT_COLONEL',   emoji: '⭐⭐',   minReferrals: 40_000,    bonus: 13_000,  pct:  8 },
+  { rank: 'MAJOR',        emoji: '⭐',     minReferrals: 20_000,    bonus: 12_000,  pct:  7 },
+  { rank: 'CAPTAIN',      emoji: '🔵🔵🔵🔵',minReferrals: 10_000,   bonus: 10_000,  pct:  6 },
+  { rank: 'SR_LIEUTENANT',emoji: '🔵🔵🔵', minReferrals: 5_000,    bonus:  9_000,  pct:  5 },
+  { rank: 'LIEUTENANT',   emoji: '🔵🔵',   minReferrals: 3_000,    bonus:  8_000,  pct:  5 },
+  { rank: 'JR_LIEUTENANT',emoji: '🔵',     minReferrals: 1_000,    bonus:  7_000,  pct:  5 },
+  { rank: 'WARRANT',      emoji: '🔶',     minReferrals: 500,       bonus:  6_000,  pct:  4 },
+  { rank: 'SERGEANT',     emoji: '🔷',     minReferrals: 100,       bonus:  5_000,  pct:  3 },
+  { rank: 'CORPORAL',     emoji: '🔹',     minReferrals: 50,        bonus:  4_000,  pct:  2 },
+  { rank: 'PRIVATE',      emoji: '🪖',     minReferrals: 10,        bonus:  3_000,  pct:  1 },
+  { rank: 'RECRUIT',      emoji: '🙂',     minReferrals: 0,         bonus:      0,  pct:  0 },
 ];
+
+// Функция для получения локализованных рангов
+function getRankThresholds(t: ReturnType<typeof useT>) {
+  return RANK_THRESHOLDS_BASE.map((base, idx) => ({
+    ...base,
+    label: t.referrals.ranks[idx].label,
+  }));
+}
 
 interface Referral {
   id: string;
@@ -51,6 +59,7 @@ export const ReferralsPage: React.FC = () => {
   const { user } = useUserStore();
   const [data, setData] = useState<ReferralData | null>(null);
   const [loading, setLoading] = useState(true);
+  const rankThresholds = getRankThresholds(t);
 
   useEffect(() => {
     profileApi.getReferrals()
@@ -124,9 +133,9 @@ export const ReferralsPage: React.FC = () => {
       {/* Military Rank Progress */}
       {(() => {
         const referralCount = user?.referralCount ?? (data?.total ?? 0);
-        const currentRankIdx = RANK_THRESHOLDS.findIndex(rk => referralCount >= rk.minReferrals);
-        const currentRank = RANK_THRESHOLDS[Math.max(0, currentRankIdx)];
-        const nextRank = currentRankIdx > 0 ? RANK_THRESHOLDS[currentRankIdx - 1] : null;
+        const currentRankIdx = rankThresholds.findIndex(rk => referralCount >= rk.minReferrals);
+        const currentRank = rankThresholds[Math.max(0, currentRankIdx)];
+        const nextRank = currentRankIdx > 0 ? rankThresholds[currentRankIdx - 1] : null;
         const progress = nextRank
           ? Math.min(100, ((referralCount - currentRank.minReferrals) / (nextRank.minReferrals - currentRank.minReferrals)) * 100)
           : 100;
@@ -137,9 +146,7 @@ export const ReferralsPage: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
               <div style={{ fontSize: 28 }}>{currentRank.emoji}</div>
               <div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--accent, #F5C842)' }}>
-                  {r.ranks?.[currentRank.rank as keyof typeof r.ranks] ?? currentRank.label}
-                </div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--accent, #F5C842)' }}>{currentRank.label}</div>
                 <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>{referralCount} {r.referralsCount.toLowerCase()}</div>
                 {currentRank.bonus > 0 && (
                   <div style={{ fontSize: 10, color: '#7B61FF', marginTop: 2 }}>
@@ -150,7 +157,7 @@ export const ReferralsPage: React.FC = () => {
               {nextRank && (
                 <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
                   <div style={{ fontSize: 9, color: 'var(--text-muted, #4A5270)', marginBottom: 2 }}>{r.nextRank}</div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#7B61FF' }}>{nextRank.emoji} {r.ranks?.[nextRank.rank as keyof typeof r.ranks] ?? nextRank.label}</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#7B61FF' }}>{nextRank.emoji} {nextRank.label}</div>
                   <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>{nextRank.minReferrals.toLocaleString()} {r.ref}</div>
                 </div>
               )}
@@ -167,7 +174,7 @@ export const ReferralsPage: React.FC = () => {
             )}
             {/* Rank ladder — highest on top, current marked 📍 */}
             <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 4 }}>
-              {RANK_THRESHOLDS.map(rk => {
+              {rankThresholds.map(rk => {
                 const unlocked = referralCount >= rk.minReferrals;
                 const isCurrent = rk.rank === currentRank.rank;
                 return (
@@ -176,12 +183,11 @@ export const ReferralsPage: React.FC = () => {
                     padding: '9px 12px', borderRadius: 12, position: 'relative',
                     background: isCurrent
                       ? 'linear-gradient(135deg,rgba(245,200,66,0.14),rgba(123,97,255,0.07))'
-                      : unlocked ? 'rgba(245,200,66,0.04)' : 'transparent',
+                      : unlocked ? 'rgba(245,200,66,0.04)' : 'rgba(255,255,255,0.02)',
                     border: `${isCurrent ? '2px' : '1px'} solid ${
                       isCurrent ? 'rgba(245,200,66,0.5)' : unlocked ? 'rgba(245,200,66,0.14)' : 'rgba(255,255,255,0.04)'
                     }`,
-                    opacity: unlocked ? 1 : 0.6,
-                    filter: unlocked ? 'none' : 'grayscale(100%) brightness(0.9)',
+                    opacity: unlocked ? 1 : 0.42,
                     transition: 'all .15s',
                   }}>
                     {isCurrent && (
@@ -194,9 +200,7 @@ export const ReferralsPage: React.FC = () => {
                     )}
                     <span style={{ fontSize: 20, width: 28, textAlign: 'center', flexShrink: 0 }}>{rk.emoji}</span>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 12, fontWeight: isCurrent ? 800 : 700, color: isCurrent ? 'var(--accent, #F5C842)' : unlocked ? 'var(--text-primary, #F0F2F8)' : 'var(--text-secondary, #8B92A8)' }}>
-                        {r.ranks?.[rk.rank as keyof typeof r.ranks] ?? rk.label}
-                      </div>
+                      <div style={{ fontSize: 12, fontWeight: isCurrent ? 800 : 700, color: isCurrent ? 'var(--accent, #F5C842)' : unlocked ? 'var(--text-primary, #F0F2F8)' : 'var(--text-secondary, #8B92A8)' }}>{rk.label}</div>
                       <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', marginTop: 1 }}>{rk.minReferrals.toLocaleString()} {r.ref}</div>
                     </div>
                     {rk.bonus > 0 && (
@@ -219,8 +223,8 @@ export const ReferralsPage: React.FC = () => {
       {/* Program rules */}
       {(() => {
         const referralCount = user?.referralCount ?? (data?.total ?? 0);
-        const currentRankIdx = RANK_THRESHOLDS.findIndex(rk => referralCount >= rk.minReferrals);
-        const currentRank = RANK_THRESHOLDS[Math.max(0, currentRankIdx)];
+        const currentRankIdx = rankThresholds.findIndex(rk => referralCount >= rk.minReferrals);
+        const currentRank = rankThresholds[Math.max(0, currentRankIdx)];
         const FIRST_GAME_BONUS = 3_000;
         const firstGameBonus = user?.militaryRank?.activationBonus
           ? Math.max(FIRST_GAME_BONUS, Number(user.militaryRank.activationBonus))
@@ -235,7 +239,7 @@ export const ReferralsPage: React.FC = () => {
           },
           {
             ico: '⚔️',
-            title: `${l1Percent > 0 ? l1Percent : '1-15'}% ${r.ofWinnings}`,
+            title: l1Percent > 0 ? `${l1Percent}% ${r.ofWinnings}` : `50% ${r.ofWinnings}`,
             sub: r.ruleLevel1,
           },
           {

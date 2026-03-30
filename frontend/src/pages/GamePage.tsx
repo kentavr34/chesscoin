@@ -18,7 +18,7 @@ import { useGameStore } from '@/store/useGameStore';
 import { useUserStore } from '@/store/useUserStore';
 import { getSocket } from '@/api/socket';
 import { fmtTime, fmtBalance } from '@/utils/format';
-import { JARVIS_LEVELS } from '@/components/ui/JarvisModal';
+import { useJarvisLevels } from '@/hooks/useJarvisLevels';
 import type { GameSession } from '@/types';
 import { useT } from '@/i18n/useT';
 
@@ -30,6 +30,7 @@ export const GamePage: React.FC = () => {
   const isSpectator = searchParams.get('spectate') === '1';
   const { sessions, upsertSession, removeSession, drawOfferedBy, setDrawOffered } = useGameStore();
   const { user } = useUserStore();
+  const localizedLevels = useJarvisLevels();
 
   const [confirmSurrender, setConfirmSurrender] = useState(false);
   const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(null);
@@ -412,7 +413,7 @@ export const GamePage: React.FC = () => {
           earned={resultData.earned}
           commission={resultData.commission}
           pieceCoins={resultData.pieceCoins}
-          botLevelName={isBotGame && session?.botLevel ? JARVIS_LEVELS[Math.max(0, Math.min(JARVIS_LEVELS.length - 1, (session.botLevel ?? 1) - 1))]?.name : undefined}
+          botLevelName={isBotGame && session?.botLevel ? localizedLevels[Math.max(0, Math.min(localizedLevels.length - 1, (session.botLevel ?? 1) - 1))]?.name : undefined}
           userTelegramId={(user as import("@/types").User & { telegramId: string })?.telegramId}
           sessionId={session?.id}
           onClose={handleResultClose}

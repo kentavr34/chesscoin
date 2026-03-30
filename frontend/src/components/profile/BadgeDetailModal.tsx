@@ -1,6 +1,6 @@
 import React from 'react';
 import { useT } from '@/i18n/useT';
-import { JARVIS_LEVELS } from '@/components/ui/JarvisModal';
+import { useJarvisLevels } from '@/hooks/useJarvisLevels';
 
 export const BadgeDetailModal: React.FC<{
   badgeName: string;
@@ -8,7 +8,8 @@ export const BadgeDetailModal: React.FC<{
   onClose: () => void;
 }> = ({ badgeName, date, onClose }) => {
   const t = useT();
-  const lvlData = JARVIS_LEVELS.find(l => l.name === badgeName);
+  const localizedLevels = useJarvisLevels();
+  const lvlData = localizedLevels.find(l => l.name === badgeName);
   const colors: Record<string, string> = {
     Beginner: 'var(--text-secondary, #8B92A8)', Player: '#00B4D8', Fighter: 'var(--green, #00D68F)',
     Warrior: '#4CAF50', Expert: '#9B85FF', Master: 'var(--accent, #F5C842)',
