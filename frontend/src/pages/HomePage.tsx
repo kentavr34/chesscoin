@@ -9,13 +9,14 @@ import { fmtBalance, fmtCountdown, leagueEmoji } from '@/utils/format';
 import { AttemptsModal } from '@/components/ui/AttemptsModal';
 import { ActiveSessionsModal } from '@/components/ui/ActiveSessionsModal';
 import { getSocket } from '@/api/socket';
-import { JarvisModal, JARVIS_LEVELS } from '@/components/ui/JarvisModal';
+import { JarvisModal } from '@/components/ui/JarvisModal';
 import { JarvisInfoModal } from '@/components/ui/JarvisInfoModal';
 import { GameSetupModal } from '@/components/ui/GameSetupModal';
 import type { JarvisLevel } from '@/components/ui/JarvisModal';
 import { tasksApi, warsApi, puzzlesApi } from '@/api';
 import type { Task } from '@/types';
 import { useT } from '@/i18n/useT';
+import { useJarvisLevels } from '@/hooks/useJarvisLevels';
 
 // SVG иконки для карточек разделов
 const IcoJarvis = () => (
@@ -129,6 +130,7 @@ export const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useUserStore();
   const { sessions } = useGameStore();
+  const localizedLevels = useJarvisLevels();
   const [showAttempts, setShowAttempts] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('chesscoin_onboarding_done'));
   const [welcomeStep, setWelcomeStep] = useState<0|1|2>(0);
@@ -193,7 +195,7 @@ export const HomePage: React.FC = () => {
   useEffect(() => { loadLiveData(); }, [loadLiveData]);
 
   const jarvisLevel = user?.jarvisLevel ?? 1;
-  const jarvisCfg = JARVIS_LEVELS[Math.max(0, Math.min(19, jarvisLevel - 1))];
+  const jarvisCfg = localizedLevels[Math.max(0, Math.min(19, jarvisLevel - 1))];
   const militaryRank = user?.militaryRank?.name ?? 'Recruit';
   const militaryEmoji = user?.militaryRank?.emoji ?? '😊';
   const battles = user?.wins ?? 0;
