@@ -45,11 +45,11 @@ export const PromptModal: React.FC<PromptModalProps> = ({
         onClick={e => e.stopPropagation()}
         style={{
           width: '100%', maxWidth: 320,
-          background: 'linear-gradient(160deg,#12101a 0%,#0B0D11 60%)',
-          border: '1px solid rgba(123,97,255,0.25)',
+          background: 'linear-gradient(160deg, var(--color-bg-light, #12101a) 0%, var(--color-bg-dark, #0B0D11) 60%)',
+          border: '1px solid rgba(var(--color-purple), 0.25)',
           borderRadius: 24,
           padding: '28px 24px 22px',
-          boxShadow: '0 0 60px rgba(123,97,255,0.2), 0 20px 60px rgba(0,0,0,0.5)',
+          boxShadow: '0 0 60px rgba(155, 133, 255, 0.2), 0 20px 60px rgba(0,0,0,0.5)',
           transform: visible ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.96)',
           opacity: visible ? 1 : 0,
           transition: 'transform .25s cubic-bezier(.34,1.56,.64,1), opacity .22s',
@@ -63,7 +63,7 @@ export const PromptModal: React.FC<PromptModalProps> = ({
             width: 28, height: 28, borderRadius: '50%',
             background: 'rgba(255,255,255,0.07)',
             border: '1px solid rgba(255,255,255,0.1)',
-            color: '#A8B0C8', fontSize: 14, cursor: 'pointer',
+            color: 'var(--color-text-secondary, #A8B0C8)', fontSize: 14, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontFamily: 'inherit',
           }}
@@ -75,14 +75,14 @@ export const PromptModal: React.FC<PromptModalProps> = ({
           textAlign: 'center',
           fontFamily: "'Unbounded',sans-serif",
           fontSize: 20, fontWeight: 800,
-          color: '#9B85FF',
+          color: 'var(--color-purple, #9B85FF)',
           letterSpacing: '-.02em',
           marginBottom: message ? 10 : 18,
-          textShadow: '0 0 20px rgba(123,97,255,0.3)',
+          textShadow: '0 0 20px rgba(155, 133, 255, 0.3)',
         }}>{title}</div>
 
         {message && (
-          <div style={{ textAlign: 'center', fontSize: 13, color: '#C0C5D8', lineHeight: 1.5, marginBottom: 18 }}>{message}</div>
+          <div style={{ textAlign: 'center', fontSize: 13, color: 'var(--color-text-secondary, #C0C5D8)', lineHeight: 1.5, marginBottom: 18 }}>{message}</div>
         )}
 
         <input
@@ -95,8 +95,8 @@ export const PromptModal: React.FC<PromptModalProps> = ({
           style={{
             width: '100%', padding: '12px 14px',
             background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(123,97,255,0.3)',
-            borderRadius: 12, color: '#F0F2F8',
+            border: '1px solid rgba(155, 133, 255, 0.3)',
+            borderRadius: 12, color: 'var(--color-text-primary, #F0F2F8)',
             fontSize: 15, fontFamily: "'JetBrains Mono',monospace",
             outline: 'none', boxSizing: 'border-box',
             marginBottom: 14,
@@ -108,9 +108,9 @@ export const PromptModal: React.FC<PromptModalProps> = ({
           disabled={!value || Number(value) <= 0}
           style={{
             width: '100%', padding: '13px',
-            background: (!value || Number(value) <= 0) ? 'rgba(123,97,255,0.05)' : 'rgba(123,97,255,0.15)',
-            border: '1px solid rgba(123,97,255,0.35)',
-            borderRadius: 14, color: (!value || Number(value) <= 0) ? '#6B7494' : '#9B85FF',
+            background: (!value || Number(value) <= 0) ? 'rgba(155, 133, 255, 0.05)' : 'rgba(155, 133, 255, 0.15)',
+            border: '1px solid rgba(155, 133, 255, 0.35)',
+            borderRadius: 14, color: (!value || Number(value) <= 0) ? 'var(--color-text-muted, #6B7494)' : 'var(--color-purple, #9B85FF)',
             fontSize: 14, fontWeight: 700,
             cursor: (!value || Number(value) <= 0) ? 'not-allowed' : 'pointer',
             fontFamily: 'inherit', marginBottom: 8,
@@ -122,9 +122,9 @@ export const PromptModal: React.FC<PromptModalProps> = ({
           onClick={() => close(onCancel)}
           style={{
             width: '100%', padding: '13px',
-            background: '#1C2030',
+            background: 'var(--color-bg-card, #1C2030)',
             border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: 14, color: '#C0C5D8',
+            borderRadius: 14, color: 'var(--color-text-secondary, #C0C5D8)',
             fontSize: 14, fontWeight: 600,
             cursor: 'pointer', fontFamily: 'inherit',
           }}

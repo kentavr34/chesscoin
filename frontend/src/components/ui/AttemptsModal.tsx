@@ -37,7 +37,7 @@ export const AttemptsModal: React.FC<Props> = ({ user, onClose }) => {
       <div style={modalStyle}>
         <div style={handleStyle} />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <div style={{ fontFamily: 'Inter,sans-serif', fontSize: 17, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>
+          <div style={{ fontFamily: 'Inter,sans-serif', fontSize: 17, fontWeight: 700, color: 'var(--color-text-primary, #F0F2F8)' }}>
             {t.attempts.title}
           </div>
           <button onClick={onClose} style={closeBtnStyle}>✕</button>
@@ -46,25 +46,25 @@ export const AttemptsModal: React.FC<Props> = ({ user, onClose }) => {
           {Array.from({ length: user.maxAttempts }).map((_, i) => (
             <span key={i} style={{
               fontSize: 32,
-              color: i < user.attempts ? 'var(--accent, #F5C842)' : '#2A2F48',
+              color: i < user.attempts ? 'var(--color-accent, #F5C842)' : 'var(--color-text-muted, #4A5270)',
               filter: i < user.attempts ? 'drop-shadow(0 0 8px rgba(245,200,66,0.8))' : undefined,
             }}>★</span>
           ))}
         </div>
-        <p style={{ textAlign: 'center', fontSize: 13, color: 'var(--text-secondary, #8B92A8)', marginBottom: 4 }}>
+        <p style={{ textAlign: 'center', fontSize: 13, color: 'var(--color-text-secondary, #8B92A8)', marginBottom: 4 }}>
           {t.attempts.current(user.attempts, user.maxAttempts)}
         </p>
-        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted, #4A5270)', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 8 }}>
+        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-muted, #4A5270)', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 8 }}>
           {t.attempts.qty}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, margin: '12px 0' }}>
-          <button onClick={() => setCount(Math.max(1, count - 1))} style={stepBtn('var(--bg-input, #232840)', 'var(--text-secondary, #8B92A8)')}>−</button>
-          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)', minWidth: 32, textAlign: 'center' }}>{count}</span>
-          <button onClick={() => setCount(Math.min(3 - user.attempts, count + 1))} style={stepBtn('var(--accent, #F5C842)', 'var(--bg, #0B0D11)')}>+</button>
+          <button onClick={() => setCount(Math.max(1, count - 1))} style={stepBtn('var(--color-bg-input, #232840)', 'var(--color-text-secondary, #8B92A8)')}>−</button>
+          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 700, color: 'var(--color-text-primary, #F0F2F8)', minWidth: 32, textAlign: 'center' }}>{count}</span>
+          <button onClick={() => setCount(Math.min(3 - user.attempts, count + 1))} style={stepBtn('var(--color-accent, #F5C842)', 'var(--color-bg-dark, #0B0D11)')}>+</button>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderTop: '1px solid rgba(255,255,255,0.07)', borderBottom: '1px solid rgba(255,255,255,0.07)', marginBottom: 16 }}>
-          <span style={{ fontSize: 13, color: 'var(--text-secondary, #8B92A8)' }}>{t.attempts.cost}</span>
-          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14, fontWeight: 700, color: 'var(--accent, #F5C842)' }}>
+          <span style={{ fontSize: 13, color: 'var(--color-text-secondary, #8B92A8)' }}>{t.attempts.cost}</span>
+          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14, fontWeight: 700, color: 'var(--color-accent, #F5C842)' }}>
             {(count * COST_PER).toLocaleString()} ᚙ
           </span>
         </div>
@@ -86,12 +86,12 @@ const overlayStyle: React.CSSProperties = {
   display: 'flex', alignItems: 'flex-end',
 };
 const modalStyle: React.CSSProperties = {
-  width: '100%', background: 'var(--bg-card, #161927)',
+  width: '100%', background: 'var(--color-bg-card, #161927)',
   borderRadius: '24px 24px 0 0', padding: 20,
   borderTop: '1px solid rgba(255,255,255,0.13)',
 };
 const handleStyle: React.CSSProperties = {
-  width: 36, height: 4, background: '#2A2F48',
+  width: 36, height: 4, background: 'var(--color-text-muted, #4A5270)',
   borderRadius: 2, margin: '0 auto 16px',
 };
 const stepBtn = (bg: string, color: string): React.CSSProperties => ({
@@ -100,15 +100,15 @@ const stepBtn = (bg: string, color: string): React.CSSProperties => ({
   cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
 });
 const buyBtn: React.CSSProperties = {
-  width: '100%', padding: '12px 18px', background: 'var(--accent, #F5C842)', color: 'var(--bg, #0B0D11)',
+  width: '100%', padding: '12px 18px', background: 'var(--color-accent, #F5C842)', color: 'var(--color-bg-dark, #0B0D11)',
   border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 600,
   cursor: 'pointer', fontFamily: 'inherit',
 };
 const closeBtnStyle: React.CSSProperties = {
   width: 32, height: 32, borderRadius: '50%',
-  background: 'var(--border, rgba(255,255,255,0.07))',
+  background: 'var(--color-border, rgba(255,255,255,0.07))',
   border: '1px solid rgba(255,255,255,0.1)',
-  color: 'var(--text-secondary, #8B92A8)', fontSize: 14, cursor: 'pointer',
+  color: 'var(--color-text-secondary, #8B92A8)', fontSize: 14, cursor: 'pointer',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   fontFamily: 'inherit', flexShrink: 0,
 };

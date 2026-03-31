@@ -28,8 +28,8 @@ export const ActiveSessionsModal: React.FC<ActiveSessionsModalProps> = ({
   };
 
   const STATUS_LABEL: Record<string, { text: string; color: string }> = {
-    IN_PROGRESS:          { text: t.activeSessions.statusInProgress, color: 'var(--green, #00D68F)' },
-    WAITING_FOR_OPPONENT: { text: t.activeSessions.statusWaiting,    color: 'var(--accent, #F5C842)' },
+    IN_PROGRESS:          { text: t.activeSessions.statusInProgress, color: 'var(--color-green, #00D68F)' },
+    WAITING_FOR_OPPONENT: { text: t.activeSessions.statusWaiting,    color: 'var(--color-accent, #F5C842)' },
   };
 
   const handleSelect = (session: GameSession) => {
@@ -50,7 +50,7 @@ export const ActiveSessionsModal: React.FC<ActiveSessionsModalProps> = ({
     >
       <div style={{
         width: '100%', maxWidth: 480,
-        background: 'var(--bg-card, #13161F)',
+        background: 'var(--color-bg-card, #13161F)',
         border: '1px solid rgba(255,255,255,0.1)',
         borderBottom: 'none',
         borderRadius: '24px 24px 0 0',
@@ -58,14 +58,14 @@ export const ActiveSessionsModal: React.FC<ActiveSessionsModalProps> = ({
         paddingBottom: 'max(24px, env(safe-area-inset-bottom, 24px))',
       }}>
         {/* Ручка */}
-        <div style={{ width: 36, height: 4, background: '#2A2F48', borderRadius: 2, margin: '0 auto 20px' }} />
+        <div style={{ width: 36, height: 4, background: 'var(--color-text-muted, #4A5270)', borderRadius: 2, margin: '0 auto 20px' }} />
 
         {/* Заголовок */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text-primary, #F0F2F8)' }}>
+          <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--color-text-primary, #F0F2F8)' }}>
             ⚔️ {t.activeSessions.title}
           </div>
-          <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)' }}>
+          <div style={{ fontSize: 11, color: 'var(--color-text-secondary, #8B92A8)' }}>
             {sessions.length} / 3
           </div>
         </div>
@@ -87,7 +87,7 @@ export const ActiveSessionsModal: React.FC<ActiveSessionsModalProps> = ({
                   padding: '14px 16px',
                   background: myTurn
                     ? 'linear-gradient(135deg, rgba(0,214,143,0.08), rgba(0,214,143,0.03))'
-                    : 'var(--bg-card, #1C2030)',
+                    : 'var(--color-bg-card, #1C2030)',
                   border: `1px solid ${myTurn ? 'rgba(0,214,143,0.25)' : 'rgba(255,255,255,0.07)'}`,
                   borderRadius: 16,
                   cursor: 'pointer',
@@ -109,15 +109,15 @@ export const ActiveSessionsModal: React.FC<ActiveSessionsModalProps> = ({
 
                 {/* Информация о партии */}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)', marginBottom: 3 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text-primary, #F0F2F8)', marginBottom: 3 }}>
                     {TYPE_LABEL[session.type] ?? session.type}
                     {session.type === 'BOT' && session.botLevel && (
-                      <span style={{ fontSize: 11, color: '#9B85FF', marginLeft: 6 }}>
+                      <span style={{ fontSize: 11, color: 'var(--color-purple, #9B85FF)', marginLeft: 6 }}>
                         Lv.{session.botLevel}
                       </span>
                     )}
                     {session.type === 'BATTLE' && opponent?.player && (
-                      <span style={{ fontSize: 12, color: 'var(--text-secondary, #8B92A8)', marginLeft: 6, fontWeight: 400 }}>
+                      <span style={{ fontSize: 12, color: 'var(--color-text-secondary, #8B92A8)', marginLeft: 6, fontWeight: 400 }}>
                         vs {opponent.player.firstName}
                       </span>
                     )}
@@ -129,7 +129,7 @@ export const ActiveSessionsModal: React.FC<ActiveSessionsModalProps> = ({
                     </div>
                     {/* MINOR-04 fix: явная проверка != null перед BigInt */}
                     {session.type === 'BATTLE' && session.bet != null && BigInt(session.bet) > 0n && (
-                      <div style={{ fontSize: 10, color: 'var(--accent, #F5C842)', fontFamily: 'JetBrains Mono, monospace' }}>
+                      <div style={{ fontSize: 10, color: 'var(--color-accent, #F5C842)', fontFamily: 'JetBrains Mono, monospace' }}>
                         {fmtBalance(session.bet)} ᚙ
                       </div>
                     )}
@@ -138,7 +138,7 @@ export const ActiveSessionsModal: React.FC<ActiveSessionsModalProps> = ({
 
                 {/* Стрелка */}
                 <div style={{
-                  fontSize: 18, color: myTurn ? 'var(--green, #00D68F)' : 'var(--text-secondary, #8B92A8)',
+                  fontSize: 18, color: myTurn ? 'var(--color-green, #00D68F)' : 'var(--color-text-secondary, #8B92A8)',
                   flexShrink: 0,
                 }}>→</div>
               </div>
@@ -151,9 +151,9 @@ export const ActiveSessionsModal: React.FC<ActiveSessionsModalProps> = ({
           onClick={onClose}
           style={{
             width: '100%', marginTop: 16, padding: '13px',
-            background: 'var(--bg-card, #1C2030)',
+            background: 'var(--color-bg-card, #1C2030)',
             border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: 14, color: 'var(--text-secondary, #8B92A8)',
+            borderRadius: 14, color: 'var(--color-text-secondary, #8B92A8)',
             fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
           }}
         >

@@ -31,18 +31,18 @@ export const PgnReplayModal: React.FC<{ pgn: string; title?: string; sessionId?:
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: "var(--z-modal, 300)", display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
       onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div style={{ background: 'var(--bg-card, #13161E)', borderRadius: 24, padding: 20, width: '100%', maxWidth: 420, border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div style={{ background: 'var(--color-bg-card, #13161E)', borderRadius: 24, padding: 20, width: '100%', maxWidth: 420, border: 'var(--color-border-light, 1px solid rgba(255,255,255,0.08))' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--accent, #F5C842)' }}>♟ {title ?? 'Game replay'}</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-secondary, #8B92A8)', fontSize: 16, cursor: 'pointer', padding: 0 }}>✕</button>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-accent, #F5C842)' }}>♟ {title ?? 'Game replay'}</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary, #8B92A8)', fontSize: 16, cursor: 'pointer', padding: 0 }}>✕</button>
         </div>
 
         <Chessboard position={currentFen} arePiecesDraggable={false} boardWidth={Math.min(380, window.innerWidth - 72)} />
 
         {/* Move counter */}
-        <div style={{ textAlign: 'center', marginTop: 10, fontSize: 12, color: 'var(--text-secondary, #8B92A8)' }}>
+        <div style={{ textAlign: 'center', marginTop: 10, fontSize: 12, color: 'var(--color-text-secondary, #8B92A8)' }}>
           Move {step} / {fens.length - 1}
-          {step > 0 && moves[step - 1] && <span style={{ color: 'var(--accent, #F5C842)', marginLeft: 6 }}>{moves[step - 1]}</span>}
+          {step > 0 && moves[step - 1] && <span style={{ color: 'var(--color-accent, #F5C842)', marginLeft: 6 }}>{moves[step - 1]}</span>}
         </div>
 
         {/* Controls */}
@@ -68,7 +68,7 @@ export const PgnReplayModal: React.FC<{ pgn: string; title?: string; sessionId?:
                 setSaved(true);
               } catch {}
             }}
-            style={{ width: '100%', marginTop: 8, padding: '9px', background: saved ? 'rgba(0,214,143,0.1)' : 'rgba(123,97,255,0.1)', border: `1px solid ${saved ? 'rgba(0,214,143,0.2)' : 'rgba(123,97,255,0.2)'}`, borderRadius: 10, color: saved ? 'var(--green, #00D68F)' : '#9B85FF', fontSize: 12, fontWeight: 600, cursor: saved ? 'default' : 'pointer', fontFamily: 'inherit' }}
+            style={{ width: '100%', marginTop: 8, padding: '9px', background: saved ? 'rgba(0,214,143,0.1)' : 'rgba(155,133,255,0.1)', border: `1px solid ${saved ? 'rgba(0,214,143,0.2)' : 'rgba(155,133,255,0.2)'}`, borderRadius: 10, color: saved ? 'var(--color-green, #00D68F)' : 'var(--color-purple, #9B85FF)', fontSize: 12, fontWeight: 600, cursor: saved ? 'default' : 'pointer', fontFamily: 'inherit' }}
           >
             {saved ? '✓ Saved' : '💾 Save game'}
           </button>
@@ -79,8 +79,8 @@ export const PgnReplayModal: React.FC<{ pgn: string; title?: string; sessionId?:
           {moves.map((m, i) => (
             <button key={i} onClick={() => setStep(i + 1)} style={{
               padding: '3px 7px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', fontFamily: 'inherit',
-              background: step === i + 1 ? 'var(--accent, #F5C842)' : 'var(--bg-card, #1C2030)',
-              color: step === i + 1 ? 'var(--bg, #0B0D11)' : 'var(--text-secondary, #8B92A8)',
+              background: step === i + 1 ? 'var(--color-accent, #F5C842)' : 'var(--color-bg-card, #1C2030)',
+              color: step === i + 1 ? 'var(--color-bg-dark, #0B0D11)' : 'var(--color-text-secondary, #8B92A8)',
             }}>
               {i % 2 === 0 ? `${Math.floor(i / 2) + 1}.` : ''}{m}
             </button>

@@ -166,8 +166,8 @@ const particlesContainer: React.CSSProperties = {
 };
 
 const modal: React.CSSProperties = {
-  background: 'var(--bg-card, #1C2030)',
-  border: '2px solid var(--accent, #F5C842)',
+  background: 'var(--color-bg-card, #1C2030)',
+  border: '2px solid var(--color-accent, #F5C842)',
   borderRadius: 28,
   padding: '24px 20px 20px',
   display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16,
@@ -190,13 +190,13 @@ const titleCol: React.CSSProperties = {
 
 const titleStyle: React.CSSProperties = {
   fontSize: 20, fontWeight: 800,
-  color: 'var(--accent, #F5C842)',
+  color: 'var(--color-accent, #F5C842)',
   letterSpacing: '0.04em', fontFamily: 'inherit',
   textShadow: '0 0 16px rgba(245,200,66,0.6)',
 };
 
 const subtitleStyle: React.CSSProperties = {
-  fontSize: 12, color: 'var(--text-secondary, #8B92A8)',
+  fontSize: 12, color: 'var(--color-text-secondary, #8B92A8)',
   fontFamily: 'inherit',
 };
 
@@ -207,7 +207,7 @@ const grid: React.CSSProperties = {
 const btn: React.CSSProperties = {
   display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
   padding: '12px 8px',
-  background: 'var(--bg-input, #232840)',
+  background: 'var(--color-bg-input, #232840)',
   border: '1px solid rgba(255,255,255,0.1)',
   borderRadius: 16, cursor: 'pointer',
   transition: 'transform 0.15s, background 0.15s, border-color 0.15s',
@@ -216,26 +216,26 @@ const btn: React.CSSProperties = {
 
 const chosenBtn: React.CSSProperties = {
   background: 'rgba(245,200,66,0.15)',
-  border: '2px solid var(--accent, #F5C842)',
+  border: '2px solid var(--color-accent, #F5C842)',
   boxShadow: '0 0 20px rgba(245,200,66,0.4)',
 };
 
 const labelStyle: React.CSSProperties = {
-  fontSize: 10, color: 'var(--text-secondary, #8B92A8)',
+  fontSize: 10, color: 'var(--color-text-secondary, #8B92A8)',
   fontWeight: 700, letterSpacing: '0.05em',
   textTransform: 'uppercase',
 };
 
 const checkMark: React.CSSProperties = {
   position: 'absolute', top: -8, right: -8,
-  background: 'var(--accent, #F5C842)', color: '#0B0D11',
+  background: 'var(--color-accent, #F5C842)', color: 'var(--color-bg-dark, #0B0D11)',
   borderRadius: '50%', width: 20, height: 20,
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   fontSize: 11, fontWeight: 900,
 };
 
 const confirmMsg: React.CSSProperties = {
-  fontSize: 14, color: 'var(--accent, #F5C842)',
+  fontSize: 14, color: 'var(--color-accent, #F5C842)',
   fontWeight: 700, animation: 'fade-in 0.3s ease',
   fontFamily: 'inherit',
 };

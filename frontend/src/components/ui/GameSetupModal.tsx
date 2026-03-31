@@ -80,10 +80,10 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
             </div>
           </div>
 
-          <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 22, fontWeight: 800, color: 'var(--accent, #F5C842)', textAlign: 'center', marginBottom: 6 }}>
+          <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 22, fontWeight: 800, color: 'var(--color-accent, #F5C842)', textAlign: 'center', marginBottom: 6 }}>
             Launching battle!
           </div>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary, #8B92A8)', textAlign: 'center', marginBottom: 28 }}>
+          <div style={{ fontSize: 13, color: 'var(--color-text-secondary, #8B92A8)', textAlign: 'center', marginBottom: 28 }}>
             J.A.R.V.I.S {selectedLevel.name} · {time < 60 ? `${time} min` : '1 hr'}
           </div>
 
@@ -92,7 +92,7 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
             <div style={playerChipStyle}>
               {resolvedColor === 'white' ? '♔' : '♚'} You
             </div>
-            <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-muted, #4A5270)' }}>VS</span>
+            <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-text-muted, #4A5270)' }}>VS</span>
             <div style={{ ...playerChipStyle, background: 'rgba(155,133,255,0.12)', borderColor: 'rgba(155,133,255,0.3)', color: '#9B85FF' }}>
               {resolvedColor === 'white' ? '♚' : '♔'} JARVIS
             </div>
@@ -101,11 +101,11 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
           {/* Countdown */}
           <div style={{ textAlign: 'center' }}>
             <div style={countdownCircleStyle}>
-              <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 32, fontWeight: 800, color: 'var(--accent, #F5C842)' }}>
+              <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 32, fontWeight: 800, color: 'var(--color-accent, #F5C842)' }}>
                 {countdown}
               </span>
             </div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted, #4A5270)', marginTop: 10, letterSpacing: '.06em' }}>
+            <div style={{ fontSize: 11, color: 'var(--color-text-muted, #4A5270)', marginTop: 10, letterSpacing: '.06em' }}>
               SECONDS TO START
             </div>
           </div>
@@ -125,17 +125,17 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 22, flexShrink: 0 }}>
           <button onClick={onClose} style={backBtnStyle}>←</button>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary, #F0F2F8)' }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--color-text-primary, #F0F2F8)' }}>
               🤖 {selectedLevel.name}
             </div>
-            <div style={{ fontSize: 11, color: 'var(--accent, #F5C842)', marginTop: 2 }}>
+            <div style={{ fontSize: 11, color: 'var(--color-accent, #F5C842)', marginTop: 2 }}>
               Level {selectedLevel.level} / 20 · +{selectedLevel.reward.toLocaleString()} ᚙ per win
             </div>
           </div>
           {/* J4: кнопка открыть инфо вручную */}
           <button
             onClick={jarvisInfo.open}
-            style={{ ...backBtnStyle, fontSize: 16, color: 'var(--text-secondary, #8B92A8)' }}
+            style={{ ...backBtnStyle, fontSize: 16, color: 'var(--color-text-secondary, #8B92A8)' }}
             title="About J.A.R.V.I.S"
           >
             ℹ️
@@ -203,7 +203,7 @@ const overlayStyle: React.CSSProperties = {
 };
 const sheetStyle: React.CSSProperties = {
   width: '100%', maxWidth: 480,
-  background: 'var(--bg-card, #13161F)',
+  background: 'var(--color-bg-card, #13161F)',
   border: '1px solid rgba(255,255,255,0.1)',
   borderBottom: 'none',
   borderRadius: '24px 24px 0 0',
@@ -216,7 +216,7 @@ const sheetStyle: React.CSSProperties = {
 };
 const launchSheetStyle: React.CSSProperties = {
   width: '100%', maxWidth: 360,
-  background: 'var(--bg-card, #13161F)',
+  background: 'var(--color-bg-card, #13161F)',
   border: '1px solid rgba(245,200,66,0.2)',
   borderRadius: 28,
   padding: '40px 28px 36px',
@@ -235,7 +235,7 @@ const glowRingStyle: React.CSSProperties = {
 const innerCircleStyle: React.CSSProperties = {
   position: 'absolute', inset: 4,
   borderRadius: '50%',
-  background: 'var(--bg-card, #13161F)',
+  background: 'var(--color-bg-card, #13161F)',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
 };
 const playerChipStyle: React.CSSProperties = {
@@ -244,7 +244,7 @@ const playerChipStyle: React.CSSProperties = {
   border: '1px solid rgba(245,200,66,0.25)',
   borderRadius: 12,
   fontSize: 14, fontWeight: 700,
-  color: 'var(--accent, #F5C842)',
+  color: 'var(--color-accent, #F5C842)',
 };
 const countdownCircleStyle: React.CSSProperties = {
   width: 80, height: 80,
@@ -257,41 +257,41 @@ const countdownCircleStyle: React.CSSProperties = {
 };
 const backBtnStyle: React.CSSProperties = {
   width: 36, height: 36, borderRadius: '50%',
-  background: 'var(--border, rgba(255,255,255,0.07))',
+  background: 'var(--color-border, rgba(255,255,255,0.07))',
   border: '1px solid rgba(255,255,255,0.1)',
-  color: 'var(--text-primary, #F0F2F8)', fontSize: 16, cursor: 'pointer',
+  color: 'var(--color-text-primary, #F0F2F8)', fontSize: 16, cursor: 'pointer',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   fontFamily: 'inherit', flexShrink: 0,
 };
 const sectionLbl: React.CSSProperties = {
   fontSize: 10, fontWeight: 700, letterSpacing: '.09em',
-  textTransform: 'uppercase', color: 'var(--text-muted, #4A5270)',
+  textTransform: 'uppercase', color: 'var(--color-text-muted, #4A5270)',
   marginBottom: 10,
 };
 const colorBtnStyle = (active: boolean, c: ColorChoice): React.CSSProperties => ({
   padding: '20px 8px', borderRadius: 14, cursor: 'pointer',
   minHeight: 80,
-  background: active ? 'rgba(245,200,66,0.1)' : 'var(--bg-card, #1C2030)',
-  border: `2px solid ${active ? 'var(--accent, #F5C842)' : 'var(--border, rgba(255,255,255,0.07))'}`,
-  color: active ? 'var(--accent, #F5C842)' : 'var(--text-secondary, #8B92A8)',
+  background: active ? 'rgba(245,200,66,0.1)' : 'var(--color-bg-card, #1C2030)',
+  border: `2px solid ${active ? 'var(--color-accent, #F5C842)' : 'var(--color-border, rgba(255,255,255,0.07))'}`,
+  color: active ? 'var(--color-accent, #F5C842)' : 'var(--color-text-secondary, #8B92A8)',
   textAlign: 'center', transition: 'all .15s', fontFamily: 'inherit',
   transform: active ? 'scale(1.05)' : 'scale(1)',
 });
 const timeBtnStyle = (active: boolean): React.CSSProperties => ({
   padding: '14px 8px', borderRadius: 12, cursor: 'pointer',
   minHeight: 68,
-  background: active ? 'rgba(123,97,255,0.15)' : 'var(--bg-card, #1C2030)',
-  border: `1px solid ${active ? 'rgba(123,97,255,0.4)' : 'var(--border, rgba(255,255,255,0.07))'}`,
-  color: active ? '#9B85FF' : 'var(--text-secondary, #8B92A8)',
+  background: active ? 'rgba(123,97,255,0.15)' : 'var(--color-bg-card, #1C2030)',
+  border: `1px solid ${active ? 'rgba(123,97,255,0.4)' : 'var(--color-border, rgba(255,255,255,0.07))'}`,
+  color: active ? '#9B85FF' : 'var(--color-text-secondary, #8B92A8)',
   fontSize: 13, fontWeight: 700, transition: 'all .15s', fontFamily: 'inherit',
   textAlign: 'center' as const,
 });
 const startBtnStyle: React.CSSProperties = {
   width: '100%', padding: '19px 14px',
   minHeight: 56,
-  background: 'var(--accent, #F5C842)',
+  background: 'var(--color-accent, #F5C842)',
   border: 'none', borderRadius: 14,
-  color: 'var(--bg, #0B0D11)', fontSize: 17, fontWeight: 800,
+  color: 'var(--color-bg-dark, #0B0D11)', fontSize: 17, fontWeight: 800,
   cursor: 'pointer', fontFamily: 'inherit',
   boxShadow: '0 4px 20px rgba(245,200,66,0.3)',
 };
