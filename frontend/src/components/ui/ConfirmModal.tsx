@@ -43,6 +43,9 @@ export const useConfirm = (): [
 
   const dialog = opts ? (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="confirm-title"
       style={{
         position: 'fixed', inset: 0, zIndex: "var(--z-modal, 300)",
         background: 'rgba(0,0,0,0.75)',
@@ -61,7 +64,7 @@ export const useConfirm = (): [
         padding: '28px 24px 22px',
         boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
       }}>
-        <div style={{
+        <div id="confirm-title" style={{
           fontSize: 18, fontWeight: 800,
           color: 'var(--text-primary, #F0F2F8)',
           fontFamily: "'Unbounded',sans-serif",
@@ -83,6 +86,7 @@ export const useConfirm = (): [
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <button
+            aria-label={opts.cancelLabel ?? 'Cancel'}
             onClick={() => handle(false)}
             style={{
               padding: '13px', borderRadius: 14,
@@ -96,6 +100,7 @@ export const useConfirm = (): [
             {opts.cancelLabel ?? 'Cancel'}
           </button>
           <button
+            aria-label={opts.okLabel ?? 'Confirm'}
             onClick={() => handle(true)}
             style={{
               padding: '13px', borderRadius: 14,
