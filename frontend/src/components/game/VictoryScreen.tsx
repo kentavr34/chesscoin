@@ -18,7 +18,8 @@ interface VictoryScreenProps {
 }
 
 interface Spark { id: number; x: number; y: number; color: string; size: number; dur: number; delay: number }
-const COLORS = ['#F5C842','#FF4D6A','#9B85FF','#00D68F','#FFD700','#FF9F43','#64C8FF','#E040FB','#00FF9D'];
+// Victory spark colors (kept as hex for array literals - matches CSS variable values)
+const COLORS = ['var(--color-accent, #F5C842)','var(--color-red, #FF4D6A)','var(--color-purple, #9B85FF)','var(--color-green, #00D68F)','var(--color-gold, #FFD700)','var(--color-orange, #FF9F43)','var(--color-blue-light, #64C8FF)','var(--color-pink, #E040FB)','#00FF9D'];
 
 function makeSparks(n: number): Spark[] {
   return Array.from({ length: n }, (_, i) => ({
@@ -130,7 +131,7 @@ const CountdownDots: React.FC<{ duration: number }> = ({ duration }) => {
       {[3,2,1].map(n => (
         <div key={n} style={{
           width: 8, height: 8, borderRadius: '50%',
-          background: active >= n ? 'var(--accent, #F5C842)' : 'rgba(255,255,255,0.2)',
+          background: active >= n ? 'var(--color-accent, #F5C842)' : 'rgba(255,255,255,0.2)',
           transition: 'background 0.3s',
         }} />
       ))}
@@ -158,15 +159,15 @@ const centerContent: React.CSSProperties = {
 const bigEmoji: React.CSSProperties = {
   fontSize: 80, lineHeight: 1,
   animation: 'pulse 1.2s ease-in-out infinite',
-  filter: 'drop-shadow(0 0 30px rgba(245,200,66,0.6))',
+  filter: 'drop-shadow(0 0 30px var(--color-accent-glow, rgba(245,200,66,0.6)))',
 };
 
 const victoryTitle: React.CSSProperties = {
   fontSize: 48, fontWeight: 900,
-  color: '#F5C842',
+  color: 'var(--color-accent, #F5C842)',
   letterSpacing: '0.1em',
   fontFamily: 'inherit',
-  textShadow: '0 0 40px rgba(245,200,66,0.8), 0 0 80px rgba(245,200,66,0.4)',
+  textShadow: '0 0 40px var(--color-accent-text-shadow, rgba(245,200,66,0.8)), 0 0 80px var(--color-accent-shadow, rgba(245,200,66,0.4))',
   animation: 'victoryPulse 1.5s ease-in-out infinite',
 };
 
@@ -177,8 +178,8 @@ const opponentText: React.CSSProperties = {
 
 const earnedText: React.CSSProperties = {
   fontSize: 28, fontWeight: 800,
-  color: '#00D68F',
-  textShadow: '0 0 20px rgba(0,214,143,0.7)',
+  color: 'var(--color-green, #00D68F)',
+  textShadow: '0 0 20px var(--color-green-glow, rgba(0,214,143,0.7))',
   fontFamily: 'inherit',
 };
 
