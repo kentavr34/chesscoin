@@ -86,7 +86,7 @@
 | **Z-index fixes** | ✅ 100% | - |
 | **ARIA labels** | ✅ 100% | - |
 | **Modal unification** | ✅ M1 done | 🟠 M2 started (1/12) |
-| **Color variables** | - | 🟠 **50-55%** (80+/157) — modals ✅, core UI components 🟠 |
+| **Color variables** | - | 🟠 **~60%** (95+/157) — modals ✅, shop components ✅, core UI 🟠 |
 | **Responsive design** | - | ⏳ 0% |
 | **Satisfaction level** | **97%** | **→ targeting 99%** |
 
@@ -112,10 +112,17 @@
 - PageLayout: 7+ info popup colors standardized
 - MiniProfileSheet: Stats + button colors standardized
 
-⏳ **Remaining (~75 colors):**
-- WarChallengePopup (5+ colors)
-- ShopItemCards (10+ colors, old naming conventions)
-- Several other utility components
+✅ **Shop & Game Components (Batch 2):**
+- ShopItemCards: RARITY_COLOR, ItemCard, AvatarItemCard — 20+ colors fixed
+  - Fixed old naming conventions (var(--accent) → var(--color-accent))
+  - All rarity colors, button colors, and borders standardized
+- WarChallengePopup: War challenge colors standardized
+  - Already well-implemented with CSS variables
+  - Minor fix for boxShadow reference
+
+⏳ **Remaining (~60 colors):**
+- Various utility components and edge cases
+- Estimated to reach 90%+ with minor final sweep
 
 ### Modal Unification (M1 + M2)
 ✅ **Done:**
@@ -176,8 +183,9 @@
 
 ---
 
-## 📝 COMMITS THIS SESSION (Extended L1 Migration)
+## 📝 COMMITS THIS SESSION (Extended L1 Migration - Part 2)
 
+**Part 1 (Earlier):**
 ```
 a0757c8 - refactor(design): standardize color variables in MiniProfileSheet and PageLayout
 719938b - refactor(design): standardize color variables in PageLayout
@@ -185,14 +193,22 @@ c83168a - refactor(design): standardize color variables in utility UI components
 9187aeb - refactor(design): standardize color variables in visual effect components
 2eb25d0 - refactor(design): standardize color variables in utility components
 b5ba65b - refactor(design): standardize color variables in final 2 modal components
+ae1cdd6 - docs: update progress - L1 color variables now 50% complete
+```
+
+**Part 2 (Continued - This Round):**
+```
+29b3290 - refactor(design): fix color variable reference in WarChallengePopup
+ef72e75 - refactor(design): standardize color variables in ShopItemCards
 ```
 
 **Health Check:** ✅ `curl -s -I https://chesscoin.app/health` → **HTTP/1.1 200 OK** (verified)
 
 ---
 
-**Last Updated:** 2026-04-01 (Extended Session)
-**Total Color Variables Standardized:** 80+ references (~50% of 157 total)
-**Code Commits:** 6 new + previous commits = 12+ total
-**Next Priority:** Complete remaining 75 colors (ShopItemCards, WarChallengePopup, etc.)
-**Next Review:** Remaining L1 completion + L2 responsive design
+**Last Updated:** 2026-04-01 (Ongoing Extended Session)
+**Total Color Variables Standardized:** 95+ references (~60% of 157 total)
+**Code Commits:** 9 new commits focused on L1 migration
+**Completion Rate:** 30% → 50% → **60%** ✨
+**Next Priority:** Final 60 colors (remaining utility components)
+**Timeline to 99%:** L1 finish (1-2h) → L2 responsive (2-3h) → L3 theme UI (1h) = 4-6h total
