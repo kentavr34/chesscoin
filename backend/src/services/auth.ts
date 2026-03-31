@@ -41,11 +41,8 @@ export const loginWithTelegram = async (
   referrerTelegramId?: string
 ) => {
   // 1. Валидация подписи Telegram
-  if (config.server.nodeEnv !== "production" && config.server.debug === true && initDataString.startsWith("debug:")) {
-    const telegramId = initDataString.replace("debug:", "");
-    return loginDebug(parseInt(telegramId));
-  }
-
+  // DEBUG LOGIN REMOVED: Security risk in production.
+  // All logins must go through proper Telegram signature validation.
   try {
     validate(initDataString, config.telegram.botToken, {
       expiresIn: 300, // T20: 5min TTL in all envs
