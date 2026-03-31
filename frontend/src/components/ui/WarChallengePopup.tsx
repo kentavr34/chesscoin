@@ -49,11 +49,11 @@ export const WarChallengePopup: React.FC<Props> = ({ data, onAccept, onDecline }
     }}>
       <div style={{
         width: '100%', maxWidth: 340,
-        background: 'linear-gradient(135deg, #161927, #1A1D2E)',
-        border: '1px solid rgba(255,77,106,0.3)',
+        background: 'linear-gradient(135deg, var(--color-bg-modal, #161927), var(--color-bg-card, #1C2030))',
+        border: '1px solid rgba(255, 77, 106, 0.3)',
         borderRadius: 28,
         padding: '32px 24px 24px',
-        boxShadow: '0 0 60px rgba(255,77,106,0.15), 0 20px 60px rgba(0,0,0,0.5)',
+        boxShadow: '0 0 60px rgba(255, 77, 106, 0.15), 0 20px 60px rgba(0,0,0,0.5)',
         textAlign: 'center',
       }}>
         {/* Иконка вызова */}
@@ -73,22 +73,22 @@ export const WarChallengePopup: React.FC<Props> = ({ data, onAccept, onDecline }
         <div style={{
           fontFamily: "'Unbounded',sans-serif",
           fontSize: 16, fontWeight: 800,
-          color: 'var(--red, #FF4D6A)',
+          color: 'var(--color-red, #FF4D6A)',
           marginBottom: 8, lineHeight: 1.3,
         }}>
           {t.warChallenge.title}
         </div>
 
         {/* Имя и страна */}
-        <div style={{ fontSize: 13, color: 'var(--text-secondary, #8B92A8)', marginBottom: 6 }}>
+        <div style={{ fontSize: 13, color: 'var(--color-text-secondary, #8B92A8)', marginBottom: 6 }}>
           {data.challengerName ?? 'Enemy fighter'}
           {data.challengerCountry && (
-            <span style={{ color: 'var(--text-muted, #4A5270)' }}> · {data.challengerCountry}</span>
+            <span style={{ color: 'var(--color-text-muted, #4A5270)' }}> · {data.challengerCountry}</span>
           )}
         </div>
 
         <div style={{
-          fontSize: 12, color: 'var(--text-muted, #4A5270)',
+          fontSize: 12, color: 'var(--color-text-muted, #4A5270)',
           marginBottom: 28,
         }}>
           {t.warChallenge.subtitle} · {t.warChallenge.autoDecline} 30 {t.warChallenge.seconds}
@@ -102,7 +102,7 @@ export const WarChallengePopup: React.FC<Props> = ({ data, onAccept, onDecline }
               padding: '13px', borderRadius: 14,
               background: 'rgba(255,255,255,0.05)',
               border: '1px solid rgba(255,255,255,0.1)',
-              color: 'var(--text-secondary, #8B92A8)',
+              color: 'var(--color-text-secondary, #8B92A8)',
               fontSize: 14, fontWeight: 600,
               cursor: 'pointer', fontFamily: 'inherit',
             }}
@@ -113,12 +113,12 @@ export const WarChallengePopup: React.FC<Props> = ({ data, onAccept, onDecline }
             onClick={onAccept}
             style={{
               padding: '13px', borderRadius: 14,
-              background: 'linear-gradient(135deg, #FF4D6A, #E0334A)',
+              background: `linear-gradient(135deg, var(--color-red, #FF4D6A), var(--color-red-dark, #E0334A))`,
               border: 'none',
               color: '#fff',
               fontSize: 14, fontWeight: 700,
               cursor: 'pointer', fontFamily: 'inherit',
-              boxShadow: '0 4px 20px rgba(255,77,106,0.4)',
+              boxShadow: '0 4px 20px rgba(var(--color-red-rgb, 255, 77, 106), 0.4)',
             }}
           >
             {t.warChallenge.accept}

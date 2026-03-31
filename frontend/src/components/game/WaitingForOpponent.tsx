@@ -73,12 +73,12 @@ export const WaitingForOpponent: React.FC<Props> = ({ session }) => {
             <div style={pulseDot} />
             <span style={{ fontSize: 32 }}>⏳</span>
           </div>
-          <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 18, fontWeight: 800, color: 'var(--text-primary, #F0F2F8)', marginTop: 12 }}>
+          <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 18, fontWeight: 800, color: 'var(--color-text-primary, #F0F2F8)', marginTop: 12 }}>
             {t.game.waitingForOpponent}
           </div>
-          <div style={{ fontSize: 12, color: 'var(--text-secondary, #8B92A8)', marginTop: 6 }}>
+          <div style={{ fontSize: 12, color: 'var(--color-text-secondary, #8B92A8)', marginTop: 6 }}>
             {t.game.bet}:{' '}
-            <span style={{ color: 'var(--accent, #F5C842)', fontWeight: 700 }}>
+            <span style={{ color: 'var(--color-accent, #F5C842)', fontWeight: 700 }}>
               {fmtBalance(session.bet ?? '0')} ᚙ
             </span>
           </div>
@@ -86,37 +86,37 @@ export const WaitingForOpponent: React.FC<Props> = ({ session }) => {
 
         {/* Код партии */}
         <div style={codeBlock}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-muted, #4A5270)', letterSpacing: '.09em', textTransform: 'uppercase', marginBottom: 6 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-text-muted, #4A5270)', letterSpacing: '.09em', textTransform: 'uppercase', marginBottom: 6 }}>
             {t.game.waitingCode}
           </div>
-          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 800, color: 'var(--accent, #F5C842)', letterSpacing: '.12em' }}>
+          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 800, color: 'var(--color-accent, #F5C842)', letterSpacing: '.12em' }}>
             {session.code}
           </div>
         </div>
 
         {/* Ссылка */}
         <div style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-muted, #4A5270)', letterSpacing: '.09em', textTransform: 'uppercase', marginBottom: 8 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-text-muted, #4A5270)', letterSpacing: '.09em', textTransform: 'uppercase', marginBottom: 8 }}>
             {t.game.inviteLink}
           </div>
           <div style={linkBox}>
             <div style={{ flex: 1, overflow: 'hidden' }}>
-              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, color: '#9B85FF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, color: 'var(--color-purple, #9B85FF)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {inviteLink}
               </div>
             </div>
-            <button onClick={handleCopy} style={iconBtn(copied ? 'var(--green, #00D68F)' : 'var(--accent, #F5C842)')}>
+            <button onClick={handleCopy} style={iconBtn(copied ? 'var(--color-green, #00D68F)' : 'var(--color-accent, #F5C842)')}>
               {copied ? '✓' : '⎘'}
             </button>
           </div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted, #4A5270)', marginTop: 6, textAlign: 'center' }}>
+          <div style={{ fontSize: 11, color: 'var(--color-text-muted, #4A5270)', marginTop: 6, textAlign: 'center' }}>
             {t.game.friendAutoJoin}
           </div>
         </div>
 
         {/* Кнопки шаринга */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-          <button onClick={handleShare} style={shareBtn('#7B61FF', 'rgba(123,97,255,0.12)')}>
+          <button onClick={handleShare} style={shareBtn('var(--color-purple-dark, #7B61FF)', 'rgba(123,97,255,0.12)')}>
             ✈ Telegram
           </button>
           <button onClick={handleShareWhatsApp} style={shareBtn('#25D366', 'rgba(37,211,102,0.1)')}>
@@ -142,13 +142,13 @@ export const WaitingForOpponent: React.FC<Props> = ({ session }) => {
 
 // Styles
 const rootStyle: React.CSSProperties = {
-  position: 'absolute', inset: 0, background: 'var(--bg, #0B0D11)',
+  position: 'absolute', inset: 0, background: 'var(--color-bg-dark, #0B0D11)',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   padding: '24px 20px',
 };
 const cardStyle: React.CSSProperties = {
   width: '100%', maxWidth: 340,
-  background: 'var(--bg-card, #161927)',
+  background: 'var(--color-bg-card, #161927)',
   border: '1px solid rgba(255,255,255,0.1)',
   borderRadius: 24, padding: 24,
 };
@@ -159,19 +159,19 @@ const pulseWrap: React.CSSProperties = {
 };
 const pulseDot: React.CSSProperties = {
   position: 'absolute', inset: 0, borderRadius: '50%',
-  border: '2px solid rgba(123,97,255,0.5)',
+  border: '2px solid rgba(var(--color-purple), 0.5)',
   animation: 'pulse-ring 1.4s ease-out infinite',
 };
 const codeBlock: React.CSSProperties = {
-  background: 'rgba(245,200,66,0.06)',
-  border: '1px solid rgba(245,200,66,0.15)',
+  background: 'rgba(var(--color-accent), 0.06)',
+  border: '1px solid rgba(var(--color-accent), 0.15)',
   borderRadius: 16, padding: '14px 16px',
   textAlign: 'center', marginBottom: 14,
 };
 const linkBox: React.CSSProperties = {
   display: 'flex', alignItems: 'center', gap: 8,
-  background: 'rgba(123,97,255,0.08)',
-  border: '1px solid rgba(123,97,255,0.15)',
+  background: 'rgba(155, 133, 255, 0.08)',
+  border: '1px solid rgba(155, 133, 255, 0.15)',
   borderRadius: 12, padding: '10px 12px',
 };
 const iconBtn = (color: string): React.CSSProperties => ({
@@ -194,14 +194,14 @@ const cancelBtn: React.CSSProperties = {
   width: '100%', padding: 11,
   background: 'transparent',
   border: '1px solid rgba(255,77,106,0.2)',
-  borderRadius: 12, color: 'var(--red, #FF4D6A)',
+  borderRadius: 12, color: 'var(--color-red, #FF4D6A)',
   fontSize: 13, fontWeight: 600,
   cursor: 'pointer', fontFamily: 'inherit',
 };
 const backBtnStyle: React.CSSProperties = {
   display: 'flex', alignItems: 'center', gap: 6,
   background: 'transparent', border: 'none',
-  color: 'var(--text-secondary, #8B92A8)', fontSize: 13, fontWeight: 500,
+  color: 'var(--color-text-secondary, #8B92A8)', fontSize: 13, fontWeight: 500,
   cursor: 'pointer', fontFamily: 'inherit',
   padding: '0 0 16px 0',
   transition: 'color .15s',

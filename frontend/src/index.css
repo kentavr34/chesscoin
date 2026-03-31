@@ -7,7 +7,7 @@
   --space-m: 12px;
   --space-l: 16px;
   --space-xl: 24px;
-  
+
   --radius-s: 8px;
   --radius-m: 12px;
   --radius-l: 16px;
@@ -22,6 +22,45 @@
   --z-overlay: 200;
   --z-modal: 300;
   --z-toast: 400;
+
+  /* Цветовая палитра (Основная) */
+  --color-accent: #F5C842;
+  --color-accent-light: #F5E6A0;
+  --color-accent-dark: #E8B61E;
+
+  --color-text-primary: #F0F2F8;
+  --color-text-secondary: #8B92A8;
+  --color-text-muted: #4A5270;
+
+  --color-bg-dark: #0B0D11;
+  --color-bg-card: #1C2030;
+  --color-bg-modal: #161927;
+  --color-bg-input: #232840;
+  --color-bg-light: #13161F;
+
+  --color-green: #00D68F;
+  --color-green-dark: #00A066;
+
+  --color-red: #FF4D6A;
+  --color-red-light: #FF6B82;
+
+  --color-blue: #0098EA;
+  --color-blue-light: #64C8FF;
+
+  --color-purple: #9B85FF;
+  --color-purple-dark: #7B61FF;
+
+  --color-gold: #FFD700;
+  --color-pink: #E040FB;
+  --color-orange: #FF9F43;
+
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-border-light: rgba(255, 255, 255, 0.05);
+
+  /* Тени */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --shadow-md: 0 4px 24px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
 *, *::before, *::after { 
