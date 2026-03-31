@@ -56,9 +56,9 @@ export const useConfirm = (): [
             flex: 1,
             padding: '13px',
             borderRadius: 14,
-            background: 'var(--bg-card, #1C2030)',
+            background: 'var(--color-bg-card, #1C2030)',
             border: '1px solid rgba(255,255,255,0.1)',
-            color: 'var(--text-secondary, #8B92A8)',
+            color: 'var(--color-text-secondary, #8B92A8)',
             fontSize: 14,
             fontWeight: 600,
             cursor: 'pointer',
@@ -76,13 +76,13 @@ export const useConfirm = (): [
             borderRadius: 14,
             background: opts?.danger
               ? 'rgba(255,77,106,0.15)'
-              : 'var(--accent, #F5C842)',
+              : 'var(--color-accent, #F5C842)',
             border: opts?.danger
               ? '1px solid rgba(255,77,106,0.4)'
               : 'none',
             color: opts?.danger
-              ? 'var(--red, #FF4D6A)'
-              : 'var(--bg, #0B0D11)',
+              ? 'var(--color-red, #FF4D6A)'
+              : 'var(--color-bg-dark, #0B0D11)',
             fontSize: 14,
             fontWeight: 700,
             cursor: 'pointer',

@@ -20,9 +20,9 @@ interface GameResultModalProps {
 }
 
 const RESULT_META = {
-  win:  { emoji: '🏆', titleColor: 'var(--accent, #F5C842)', glow: 'rgba(245,200,66,0.25)', bg: 'linear-gradient(160deg,#1a1c0f 0%,#0B0D11 60%)', border: 'rgba(245,200,66,0.3)' },
-  lose: { emoji: '💔', titleColor: 'var(--red, #FF4D6A)', glow: 'rgba(255,77,106,0.2)',  bg: 'linear-gradient(160deg,#1a0b0d 0%,#0B0D11 60%)', border: 'rgba(255,77,106,0.25)' },
-  draw: { emoji: '🤝', titleColor: 'var(--text-secondary, #8B92A8)', glow: 'rgba(139,146,168,0.15)', bg: 'linear-gradient(160deg,#12141c 0%,#0B0D11 60%)', border: 'rgba(255,255,255,0.12)' },
+  win:  { emoji: '🏆', titleColor: 'var(--color-accent, #F5C842)', glow: 'rgba(245,200,66,0.25)', bg: 'linear-gradient(160deg,#1a1c0f 0%,#0B0D11 60%)', border: 'rgba(245,200,66,0.3)' },
+  lose: { emoji: '💔', titleColor: 'var(--color-red, #FF4D6A)', glow: 'rgba(255,77,106,0.2)',  bg: 'linear-gradient(160deg,#1a0b0d 0%,#0B0D11 60%)', border: 'rgba(255,77,106,0.25)' },
+  draw: { emoji: '🤝', titleColor: 'var(--color-text-secondary, #8B92A8)', glow: 'rgba(139,146,168,0.15)', bg: 'linear-gradient(160deg,#12141c 0%,#0B0D11 60%)', border: 'rgba(255,255,255,0.12)' },
 };
 
 export const GameResultModal: React.FC<GameResultModalProps> = ({
@@ -101,9 +101,9 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
           style={{
             position: 'absolute', top: 14, right: 14,
             width: 28, height: 28, borderRadius: '50%',
-            background: 'var(--border, rgba(255,255,255,0.07))',
+            background: 'var(--color-border, rgba(255,255,255,0.07))',
             border: '1px solid rgba(255,255,255,0.1)',
-            color: 'var(--text-secondary, #8B92A8)', fontSize: 14, cursor: 'pointer',
+            color: 'var(--color-text-secondary, #8B92A8)', fontSize: 14, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontFamily: 'inherit',
           }}
@@ -138,10 +138,10 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
             {/* Бот-игра: бонус за победу */}
             {isBotGame && earnedBig > 0n && (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 12, color: 'var(--text-secondary, #8B92A8)' }}>{t.gameResult.forWin}</span>
+                <span style={{ fontSize: 12, color: 'var(--color-text-secondary, #8B92A8)' }}>{t.gameResult.forWin}</span>
                 <span style={{
                   fontFamily: "'JetBrains Mono',monospace",
-                  fontSize: 14, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)',
+                  fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary, #F0F2F8)',
                 }}>
                   +{fmtBalance(earnedBig.toString())} ᚙ
                 </span>
@@ -151,10 +151,10 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
             {/* Бот-игра: монеты за фигуры */}
             {isBotGame && pieceBig > 0n && (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 12, color: 'var(--text-secondary, #8B92A8)' }}>{t.gameResult.forPieces}</span>
+                <span style={{ fontSize: 12, color: 'var(--color-text-secondary, #8B92A8)' }}>{t.gameResult.forPieces}</span>
                 <span style={{
                   fontFamily: "'JetBrains Mono',monospace",
-                  fontSize: 14, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)',
+                  fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary, #F0F2F8)',
                 }}>
                   +{fmtBalance(pieceBig.toString())} ᚙ
                 </span>
@@ -164,10 +164,10 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
             {/* Батл-игра: заработано */}
             {!isBotGame && earnedBig > 0n && (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 12, color: 'var(--text-secondary, #8B92A8)' }}>{t.gameResult.earned}</span>
+                <span style={{ fontSize: 12, color: 'var(--color-text-secondary, #8B92A8)' }}>{t.gameResult.earned}</span>
                 <span style={{
                   fontFamily: "'JetBrains Mono',monospace",
-                  fontSize: 14, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)',
+                  fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary, #F0F2F8)',
                 }}>
                   +{fmtBalance(earnedBig.toString())} ᚙ
                 </span>
@@ -177,10 +177,10 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
             {/* Комиссия (только батл) */}
             {commBig > 0n && (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 12, color: 'var(--text-secondary, #8B92A8)' }}>{t.gameResult.commission}</span>
+                <span style={{ fontSize: 12, color: 'var(--color-text-secondary, #8B92A8)' }}>{t.gameResult.commission}</span>
                 <span style={{
                   fontFamily: "'JetBrains Mono',monospace",
-                  fontSize: 14, fontWeight: 700, color: 'var(--red, #FF4D6A)',
+                  fontSize: 14, fontWeight: 700, color: 'var(--color-red, #FF4D6A)',
                 }}>
                   −{fmtBalance(commBig.toString())} ᚙ
                 </span>
@@ -194,11 +194,11 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
 
             {/* Итого */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>{t.gameResult.total}</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text-primary, #F0F2F8)' }}>{t.gameResult.total}</span>
               <span style={{
                 fontFamily: "'JetBrains Mono',monospace",
                 fontSize: 18, fontWeight: 800,
-                color: 'var(--accent, #F5C842)',
+                color: 'var(--color-accent, #F5C842)',
                 textShadow: '0 0 12px rgba(245,200,66,0.5)',
               }}>
                 +{fmtBalance(netBig.toString())} ᚙ
@@ -210,7 +210,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
         {/* Draw — нет начислений */}
         {result === 'draw' && (
           <div style={{
-            textAlign: 'center', fontSize: 13, color: 'var(--text-secondary, #8B92A8)',
+            textAlign: 'center', fontSize: 13, color: 'var(--color-text-secondary, #8B92A8)',
             padding: '8px 0',
           }}>
             {t.gameResult.drawMsg}
@@ -234,7 +234,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
               width: '100%', marginTop: 14,
               padding: '11px', background: 'rgba(123,97,255,0.12)',
               border: '1px solid rgba(123,97,255,0.25)',
-              borderRadius: 14, color: '#9B85FF',
+              borderRadius: 14, color: 'var(--color-purple, #9B85FF)',
               fontSize: 13, fontWeight: 600,
               cursor: 'pointer', fontFamily: 'inherit',
             }}
@@ -251,7 +251,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
               width: '100%', marginTop: 10,
               padding: '12px', background: 'transparent',
               border: '1px solid rgba(245,200,66,0.4)',
-              borderRadius: 14, color: 'var(--accent, #F5C842)',
+              borderRadius: 14, color: 'var(--color-accent, #F5C842)',
               fontSize: 13, fontWeight: 700,
               cursor: 'pointer', fontFamily: 'inherit',
               transition: 'background .15s',
@@ -277,7 +277,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
               padding: '11px', borderRadius: 14,
               background: gameSaved ? 'rgba(0,214,143,0.1)' : 'rgba(123,97,255,0.1)',
               border: `1px solid ${gameSaved ? 'rgba(0,214,143,0.25)' : 'rgba(123,97,255,0.25)'}`,
-              color: gameSaved ? 'var(--green, #00D68F)' : '#9B85FF',
+              color: gameSaved ? 'var(--color-green, #00D68F)' : 'var(--color-purple, #9B85FF)',
               fontSize: 13, fontWeight: 600,
               cursor: gameSaved ? 'default' : 'pointer',
               fontFamily: 'inherit',
@@ -292,9 +292,9 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
           onClick={handleClose}
           style={{
             width: '100%', marginTop: 10,
-            padding: '12px', background: 'var(--bg-card, #1C2030)',
-            border: '1px solid var(--border, rgba(255,255,255,0.1))',
-            borderRadius: 14, color: 'var(--text-primary, #F0F2F8)',
+            padding: '12px', background: 'var(--color-bg-card, #1C2030)',
+            border: '1px solid var(--color-border, rgba(255,255,255,0.1))',
+            borderRadius: 14, color: 'var(--color-text-primary, #F0F2F8)',
             fontSize: 13, fontWeight: 600,
             cursor: 'pointer', fontFamily: 'inherit',
             transition: 'background .15s',
