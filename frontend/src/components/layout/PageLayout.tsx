@@ -40,7 +40,7 @@ export const InfoPopup: React.FC<InfoPopupProps> = ({ slides, onClose }) => {
     >
       <div style={{
         width: '100%', maxWidth: 360,
-        background: '#161927',
+        background: 'var(--color-bg-modal, #161927)',
         border: '1px solid rgba(255,255,255,0.1)',
         borderRadius: 24, padding: '28px 24px 22px',
         boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
@@ -53,7 +53,7 @@ export const InfoPopup: React.FC<InfoPopupProps> = ({ slides, onClose }) => {
             width: 28, height: 28, borderRadius: '50%',
             background: 'rgba(255,255,255,0.07)',
             border: '1px solid rgba(255,255,255,0.1)',
-            color: '#8B92A8', fontSize: 14, cursor: 'pointer',
+            color: 'var(--color-text-secondary, #8B92A8)', fontSize: 14, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontFamily: 'inherit',
           }}
@@ -68,7 +68,7 @@ export const InfoPopup: React.FC<InfoPopupProps> = ({ slides, onClose }) => {
         <div style={{
           textAlign: 'center',
           fontFamily: "'Unbounded',sans-serif",
-          fontSize: 17, fontWeight: 800, color: '#F5C842',
+          fontSize: 17, fontWeight: 800, color: 'var(--color-accent, #F5C842)',
           letterSpacing: '-.02em', marginBottom: 12,
         }}>
           {slide.title}
@@ -76,7 +76,7 @@ export const InfoPopup: React.FC<InfoPopupProps> = ({ slides, onClose }) => {
 
         {/* Desc */}
         <div style={{
-          textAlign: 'center', fontSize: 13, color: '#8B92A8',
+          textAlign: 'center', fontSize: 13, color: 'var(--color-text-secondary, #8B92A8)',
           lineHeight: 1.7, marginBottom: 24,
         }} dangerouslySetInnerHTML={{ __html: slide.desc }} />
 
@@ -89,7 +89,7 @@ export const InfoPopup: React.FC<InfoPopupProps> = ({ slides, onClose }) => {
                 onClick={() => setIdx(i)}
                 style={{
                   width: i === idx ? 18 : 6, height: 6, borderRadius: 3,
-                  background: i === idx ? '#F5C842' : 'rgba(255,255,255,0.15)',
+                  background: i === idx ? 'var(--color-accent, #F5C842)' : 'rgba(255,255,255,0.15)',
                   transition: 'all .2s', cursor: 'pointer',
                 }}
               />
@@ -102,8 +102,8 @@ export const InfoPopup: React.FC<InfoPopupProps> = ({ slides, onClose }) => {
           onClick={() => isLast ? onClose() : setIdx(idx + 1)}
           style={{
             width: '100%', padding: '13px',
-            background: '#F5C842', borderRadius: 14,
-            border: 'none', color: '#0B0D11',
+            background: 'var(--color-accent, #F5C842)', borderRadius: 14,
+            border: 'none', color: 'var(--color-bg-dark, #0B0D11)',
             fontSize: 14, fontWeight: 700,
             cursor: 'pointer', fontFamily: 'inherit',
             transition: 'opacity .15s',
