@@ -82,7 +82,7 @@ export const AttemptsModal: React.FC<Props> = ({ user, onClose }) => {
 
 const overlayStyle: React.CSSProperties = {
   position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)',
-  backdropFilter: 'blur(6px)', zIndex: 200,
+  backdropFilter: 'blur(6px)', zIndex: "var(--z-overlay, 200)",
   display: 'flex', alignItems: 'flex-end',
 };
 const modalStyle: React.CSSProperties = {

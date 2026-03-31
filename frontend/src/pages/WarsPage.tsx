@@ -1069,7 +1069,7 @@ const StatBox: React.FC<{ label: string; value: string; color: string }> = ({ la
 // ─── Styles ──────────────────────────────────────────────────────────────────
 const overlayStyle: React.CSSProperties = {
   position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)',
-  zIndex: 300, display: 'flex', alignItems: 'flex-end',
+  zIndex: "var(--z-modal, 300)", display: 'flex', alignItems: 'flex-end',
 };
 const modalStyle: React.CSSProperties = {
   width: '100%', background: '#161927', borderRadius: '24px 24px 0 0',

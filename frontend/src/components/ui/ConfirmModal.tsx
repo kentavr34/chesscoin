@@ -44,7 +44,7 @@ export const useConfirm = (): [
   const dialog = opts ? (
     <div
       style={{
-        position: 'fixed', inset: 0, zIndex: 1000,
+        position: 'fixed', inset: 0, zIndex: "var(--z-modal, 300)",
         background: 'rgba(0,0,0,0.75)',
         backdropFilter: 'blur(10px)',
         WebkitBackdropFilter: 'blur(10px)',

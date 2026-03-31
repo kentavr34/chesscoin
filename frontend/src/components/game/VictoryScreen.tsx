@@ -140,7 +140,7 @@ const CountdownDots: React.FC<{ duration: number }> = ({ duration }) => {
 
 // ── Стили ─────────────────────────────────────────────────────────────────────
 const overlay: React.CSSProperties = {
-  position: 'fixed', inset: 0, zIndex: 180,
+  position: 'fixed', inset: 0, zIndex: "var(--z-overlay, 200)",
   background: 'rgba(0,0,0,0.88)',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
 };

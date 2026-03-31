@@ -134,7 +134,7 @@ const container: React.CSSProperties = {
   inset: 0,
   pointerEvents: 'none',
   overflow: 'hidden',
-  zIndex: 100,
+  zIndex: "var(--z-nav, 100)",
   borderRadius: 'inherit',
 };
 

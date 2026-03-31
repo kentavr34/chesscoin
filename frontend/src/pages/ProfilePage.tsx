@@ -739,7 +739,7 @@ export const ProfilePage: React.FC = () => {
       {showSettings && (
         <div
           onClick={(e) => e.target === e.currentTarget && setShowSettings(false)}
-          style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+          style={{ position: 'fixed', inset: 0, zIndex: "var(--z-modal, 300)", background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
         >
           <div style={{ width: '100%', maxWidth: 480, background: 'var(--bg-card, #13161F)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px 24px 0 0', padding: '20px 18px', paddingBottom: 'max(20px, env(safe-area-inset-bottom, 20px))' }}>
             <div style={{ width: 36, height: 4, background: '#2A2F48', borderRadius: 2, margin: '0 auto 18px' }} />
@@ -812,7 +812,7 @@ export const ProfilePage: React.FC = () => {
 
       {/* Achievement Detail Modal */}
       {selectedAchievement && (
-        <div onClick={() => setSelectedAchievement(null)} style={{ position: 'fixed', inset: 0, zIndex: 400, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+        <div onClick={() => setSelectedAchievement(null)} style={{ position: 'fixed', inset: 0, zIndex: "var(--z-modal, 300)", background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 320, background: 'linear-gradient(160deg,#13161F,#0B0D11)', border: `1px solid ${selectedAchievement.done ? 'rgba(245,200,66,0.4)' : 'rgba(255,255,255,0.1)'}`, borderRadius: 24, padding: '32px 24px 24px', textAlign: 'center', boxShadow: selectedAchievement.done ? `0 0 40px rgba(245,200,66,0.15)` : 'none' }}>
             <div style={{ fontSize: 56, lineHeight: 1, marginBottom: 16 }}>{selectedAchievement.icon}</div>
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: selectedAchievement.done ? 'var(--accent, #F5C842)' : 'var(--text-muted, #4A5270)', marginBottom: 8 }}>

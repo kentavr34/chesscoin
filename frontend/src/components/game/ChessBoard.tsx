@@ -370,7 +370,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
               position: 'absolute',
               bottom: 8,
               right: 8,
-              zIndex: 10,
+              zIndex: "var(--z-base, 10)",
               background: 'rgba(28, 32, 48, 0.85)',
               border: `1px solid ${isSaved ? '#F5C842' : 'rgba(255,255,255,0.1)'}`,
               borderRadius: '50%',

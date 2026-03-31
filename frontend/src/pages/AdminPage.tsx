@@ -195,7 +195,7 @@ export const AdminPage: React.FC = () => {
           border: `1px solid ${toast.ok ? '#00D68F' : '#FF4D6A'}`,
           borderRadius: 12, padding: '10px 20px', fontSize: 13,
           color: toast.ok ? '#00D68F' : '#FF4D6A',
-          zIndex: 9999, fontWeight: 600, whiteSpace: 'nowrap',
+          zIndex: "var(--z-toast, 400)", fontWeight: 600, whiteSpace: 'nowrap',
         }}>
           {toast.msg}
         </div>

@@ -520,7 +520,7 @@ const PlayerRow: React.FC<{
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const Overlay: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div style={{
-    position: 'absolute', inset: 0, zIndex: 100,
+    position: 'absolute', inset: 0, zIndex: "var(--z-nav, 100)",
     background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)',
     WebkitBackdropFilter: 'blur(6px)',
     display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,

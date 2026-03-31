@@ -41,7 +41,7 @@ export const ActiveSessionsModal: React.FC<ActiveSessionsModalProps> = ({
     <div
       onClick={(e) => e.target === e.currentTarget && onClose()}
       style={{
-        position: 'fixed', inset: 0, zIndex: 300,
+        position: 'fixed', inset: 0, zIndex: "var(--z-modal, 300)",
         background: 'rgba(0,0,0,0.75)',
         backdropFilter: 'blur(10px)',
         WebkitBackdropFilter: 'blur(10px)',

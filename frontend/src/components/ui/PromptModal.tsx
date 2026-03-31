@@ -33,7 +33,7 @@ export const PromptModal: React.FC<PromptModalProps> = ({
     <div
       onClick={() => close(onCancel)}
       style={{
-        position: 'fixed', inset: 0, zIndex: 300,
+        position: 'fixed', inset: 0, zIndex: "var(--z-modal, 300)",
         background: 'rgba(0,0,0,0.72)',
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',

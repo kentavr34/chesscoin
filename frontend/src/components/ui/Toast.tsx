@@ -37,7 +37,7 @@ export const ToastContainer: React.FC = () => {
   };
 
   return (
-    <div style={{ position: 'fixed', top: 56, left: 16, right: 16, zIndex: 9999, display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ position: 'fixed', top: 56, left: 16, right: 16, zIndex: "var(--z-toast, 400)", display: 'flex', flexDirection: 'column', gap: 8 }}>
       {toasts.map((t) => {
         const c = colors[t.type];
         return (

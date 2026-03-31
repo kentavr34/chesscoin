@@ -40,7 +40,7 @@ export const WarChallengePopup: React.FC<Props> = ({ data, onAccept, onDecline }
 
   return (
     <div style={{
-      position: 'fixed', inset: 0, zIndex: 500,
+      position: 'fixed', inset: 0, zIndex: "var(--z-modal, 300)",
       background: 'rgba(0,0,0,0.80)',
       backdropFilter: 'blur(12px)',
       WebkitBackdropFilter: 'blur(12px)',

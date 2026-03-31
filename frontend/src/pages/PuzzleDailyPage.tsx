@@ -164,7 +164,7 @@ export const PuzzleDailyPage: React.FC = () => {
         {wrong && (
           <div style={{
             position: 'absolute', inset: 0, borderRadius: 16, border: '3px solid #FF4466',
-            zIndex: 10, pointerEvents: 'none', margin: '0 16px',
+            zIndex: "var(--z-base, 10)", pointerEvents: 'none', margin: '0 16px',
           }} />
         )}
         <Chessboard

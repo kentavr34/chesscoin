@@ -146,7 +146,7 @@ export const AvatarCropModal: React.FC<Props> = ({ file, onConfirm, onCancel }) 
 
   return (
     <div style={{
-      position: 'fixed', inset: 0, zIndex: 500,
+      position: 'fixed', inset: 0, zIndex: "var(--z-modal, 300)",
       background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(12px)',
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       padding: 20,

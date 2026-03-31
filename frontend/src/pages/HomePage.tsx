@@ -75,7 +75,7 @@ const OnboardingTour: React.FC<{ onDone: () => void }> = ({ onDone }) => {
   const s = STEPS[step];
   const isLast = step === STEPS.length - 1;
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(10px)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(10px)', zIndex: "var(--z-modal, 300)", display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ background: 'linear-gradient(135deg,#181B2E,#12162A)', border: '1px solid rgba(123,97,255,0.25)', borderRadius: 28, padding: 28, maxWidth: 360, width: '100%', textAlign: 'center' }}>
         <div style={{ fontSize: 56, marginBottom: 16 }}>{s.icon}</div>
         <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--accent, #F5C842)', fontFamily: "'Unbounded',sans-serif", marginBottom: 12, lineHeight: 1.3 }}>{s.title}</div>

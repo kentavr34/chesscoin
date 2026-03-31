@@ -101,7 +101,7 @@ const container: React.CSSProperties = {
   alignItems: 'center',
   justifyContent: 'center',
   pointerEvents: 'none',
-  zIndex: 50,
+  zIndex: "var(--z-header, 50)",
 };
 
 const textWrapper: React.CSSProperties = {

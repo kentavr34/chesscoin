@@ -55,7 +55,7 @@ export const CoinPopupLayer: React.FC<CoinPopupLayerProps> = ({ triggerRef }) =>
             top: `${p.y}%`,
             transform: 'translateX(-50%)',
             pointerEvents: 'none',
-            zIndex: 50,
+            zIndex: "var(--z-header, 50)",
             animation: 'coinFloat 1.1s ease-out forwards',
             fontFamily: "'JetBrains Mono',monospace",
             fontSize: 13,

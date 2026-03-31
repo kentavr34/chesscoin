@@ -150,7 +150,7 @@ export const JarvisModal: React.FC<JarvisModalProps> = ({ currentJarvisLevel, on
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 const overlayStyle: React.CSSProperties = {
-  position: 'fixed', inset: 0, zIndex: 300,
+  position: 'fixed', inset: 0, zIndex: "var(--z-modal, 300)",
   background: 'rgba(0,0,0,0.7)',
   backdropFilter: 'blur(8px)',
   WebkitBackdropFilter: 'blur(8px)',

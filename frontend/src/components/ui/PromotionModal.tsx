@@ -156,7 +156,7 @@ const overlay: React.CSSProperties = {
   position: 'fixed', inset: 0,
   background: 'rgba(0,0,0,0.8)',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
-  zIndex: 9999,
+  zIndex: "var(--z-toast, 400)",
   backdropFilter: 'blur(8px)',
 };
 
@@ -173,7 +173,7 @@ const modal: React.CSSProperties = {
   display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16,
   boxShadow: '0 0 60px rgba(245,200,66,0.35), 0 12px 40px rgba(0,0,0,0.7)',
   animation: 'promotionIn 0.3s cubic-bezier(.34,1.56,.64,1)',
-  minWidth: 290, position: 'relative', zIndex: 9999,
+  minWidth: 290, position: 'relative', zIndex: "var(--z-toast, 400)",
 };
 
 const crownRow: React.CSSProperties = {

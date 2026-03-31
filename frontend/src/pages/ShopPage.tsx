@@ -548,7 +548,7 @@ export const ShopPage: React.FC = () => {
           position: 'fixed', top: 60, left: '50%', transform: 'translateX(-50%)',
           background: 'var(--bg-input, #232840)', border: '1px solid #F5C842', borderRadius: 12,
           padding: '10px 20px', fontSize: 13, color: 'var(--accent, #F5C842)',
-          zIndex: 9999, fontWeight: 600, whiteSpace: 'nowrap',
+          zIndex: "var(--z-toast, 400)", fontWeight: 600, whiteSpace: 'nowrap',
         }}>
           {toast}
         </div>
@@ -558,7 +558,7 @@ export const ShopPage: React.FC = () => {
       {showTon && (
         <div
           onClick={(e) => e.target === e.currentTarget && setShowTon(false)}
-          style={{ position: 'fixed', inset: 0, zIndex: 400, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'flex-end' }}
+          style={{ position: 'fixed', inset: 0, zIndex: "var(--z-modal, 300)", background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'flex-end' }}
         >
           <div style={{ width: '100%', maxWidth: 480, background: 'var(--bg-card, #13161F)', borderRadius: '24px 24px 0 0', border: '1px solid rgba(0,152,234,0.3)', borderBottom: 'none', paddingBottom: 'max(20px, env(safe-area-inset-bottom))' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 18px 12px' }}>

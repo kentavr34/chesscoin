@@ -494,7 +494,7 @@ const tbaStyle: React.CSSProperties = {
 };
 // ── Стили модала создания батла (соответствует GameSetupModal) ──
 const bmOverlayStyle: React.CSSProperties = {
-  position: 'fixed', inset: 0, zIndex: 200,
+  position: 'fixed', inset: 0, zIndex: "var(--z-overlay, 200)",
   background: 'rgba(0,0,0,0.70)',
   backdropFilter: 'blur(8px)',
   WebkitBackdropFilter: 'blur(8px)',

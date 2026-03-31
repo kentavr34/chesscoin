@@ -46,7 +46,7 @@ export const MiniProfileSheet: React.FC<Props> = ({ userId, onClose }) => {
       {/* Backdrop */}
       <div
         onClick={onClose}
-        style={{ position: 'fixed', inset: 0, zIndex: 400, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
+        style={{ position: 'fixed', inset: 0, zIndex: "var(--z-modal, 300)", background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
       />
 
       {/* Sheet */}

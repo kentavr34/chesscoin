@@ -95,7 +95,7 @@ export const LeaderboardPage: React.FC = () => {
 
       {/* Закреплённая строка "Вы" */}
       {user && (
-        <div style={{ position: 'sticky', top: 0, zIndex: 10, background: 'rgba(11,13,17,0.97)', backdropFilter: 'blur(10px)' }}>
+        <div style={{ position: 'sticky', top: 0, zIndex: "var(--z-base, 10)", background: 'rgba(11,13,17,0.97)', backdropFilter: 'blur(10px)' }}>
           <LbRow rank={0} user={user as import("@/types").User} balance={user.balance} isMe />
         </div>
       )}

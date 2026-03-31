@@ -803,7 +803,7 @@ const approveBtn: React.CSSProperties = {
 const rejectBtn: React.CSSProperties = { ...kickBtn };
 const overlayStyle: React.CSSProperties = {
   position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)',
-  backdropFilter: 'blur(8px)', zIndex: 300, display: 'flex', alignItems: 'flex-end',
+  backdropFilter: 'blur(8px)', zIndex: "var(--z-modal, 300)", display: 'flex', alignItems: 'flex-end',
 };
 const modalStyle: React.CSSProperties = {
   width: '100%', background: 'var(--bg-card, #161927)', borderRadius: '24px 24px 0 0',
