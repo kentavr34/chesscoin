@@ -7,7 +7,7 @@
     ],
     "outDir": "./dist",
     "rootDir": "./src",
-    "strict": false,
+    "strict": true,
     "noEmitOnError": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -21,13 +21,8 @@
         "src/*"
       ]
     },
-    "noImplicitAny": false,
-    "strictNullChecks": false,
     "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "strictFunctionTypes": false,
-    "strictBindCallApply": false,
-    "noImplicitReturns": false
+    "noUnusedParameters": false
   },
   "include": [
     "src/**/*"
