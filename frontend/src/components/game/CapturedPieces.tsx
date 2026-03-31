@@ -31,7 +31,7 @@ export const CapturedPieces: React.FC<CapturedPiecesProps> = ({
       flexWrap: 'wrap',
     }}>
       {label && (
-        <span style={{ fontSize: 9, color: '#4A5270', fontWeight: 700,
+        <span style={{ fontSize: 9, color: 'var(--color-text-muted, #4A5270)', fontWeight: 700,
           letterSpacing: '.06em', textTransform: 'uppercase', marginRight: 2 }}>
           {label}
         </span>
@@ -46,7 +46,7 @@ export const CapturedPieces: React.FC<CapturedPiecesProps> = ({
       {showCoins && total > 0 && (
         <span style={{
           fontFamily: "'JetBrains Mono',monospace",
-          fontSize: 10, fontWeight: 700, color: '#F5C842',
+          fontSize: 10, fontWeight: 700, color: 'var(--color-accent, #F5C842)',
           letterSpacing: '-.01em',
         }}>
           +{total >= 1000 ? (total / 1000).toFixed(0) + 'K' : total} ᚙ

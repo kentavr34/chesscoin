@@ -60,8 +60,8 @@ export const CoinPopupLayer: React.FC<CoinPopupLayerProps> = ({ triggerRef }) =>
             fontFamily: "'JetBrains Mono',monospace",
             fontSize: 13,
             fontWeight: 800,
-            color: '#F5C842',
-            textShadow: '0 0 8px rgba(245,200,66,0.7), 0 1px 3px rgba(0,0,0,0.8)',
+            color: 'var(--color-accent, #F5C842)',
+            textShadow: '0 0 8px var(--color-accent-shadow, rgba(245,200,66,0.7)), 0 1px 3px rgba(0,0,0,0.8)',
             whiteSpace: 'nowrap',
           }}
         >

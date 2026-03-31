@@ -41,9 +41,9 @@ interface BattleCardProps {
 }
 
 const STATUS_CONFIG = {
-  IN_PROGRESS: { textKey: 'inProgress', color: 'var(--accent, #F5C842)' },
-  WAITING:     { textKey: 'waiting', color: 'var(--text-muted, #4A5270)' },
-  FINISHED:    { textKey: 'finished', color: 'var(--text-secondary, #8B92A8)' },
+  IN_PROGRESS: { textKey: 'inProgress', color: 'var(--color-accent, #F5C842)' },
+  WAITING:     { textKey: 'waiting', color: 'var(--color-text-muted, #4A5270)' },
+  FINISHED:    { textKey: 'finished', color: 'var(--color-text-secondary, #8B92A8)' },
 };
 
 export const BattleCard: React.FC<BattleCardProps> = React.memo(({
@@ -58,15 +58,15 @@ export const BattleCard: React.FC<BattleCardProps> = React.memo(({
   };
 
   const cfg = STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]
-    ?? { text: status, color: '#8B92A8' };
+    ?? { text: status, color: 'var(--color-text-secondary, #8B92A8)' };
 
   // Определяем цвет имён по результату
-  const p1Color = winner === 'player1' ? 'var(--green, #00D68F)'
-    : winner === 'player2' ? 'var(--red, #FF4D6A)'
-    : 'var(--text-primary, #F0F2F8)';
-  const p2Color = winner === 'player2' ? 'var(--green, #00D68F)'
-    : winner === 'player1' ? 'var(--red, #FF4D6A)'
-    : 'var(--text-primary, #F0F2F8)';
+  const p1Color = winner === 'player1' ? 'var(--color-green, #00D68F)'
+    : winner === 'player2' ? 'var(--color-red, #FF4D6A)'
+    : 'var(--color-text-primary, #F0F2F8)';
+  const p2Color = winner === 'player2' ? 'var(--color-green, #00D68F)'
+    : winner === 'player1' ? 'var(--color-red, #FF4D6A)'
+    : 'var(--color-text-primary, #F0F2F8)';
 
   return (
     <div style={{
@@ -74,7 +74,7 @@ export const BattleCard: React.FC<BattleCardProps> = React.memo(({
       borderBottom: '1px solid rgba(255,255,255,0.05)',
     }}>
       {label && (
-        <div style={{ fontSize: 9, color: 'var(--text-muted, #4A5270)', letterSpacing: '.06em', textTransform: 'uppercase' as const, marginBottom: 6 }}>
+        <div style={{ fontSize: 9, color: 'var(--color-text-muted, #4A5270)', letterSpacing: '.06em', textTransform: 'uppercase' as const, marginBottom: 6 }}>
           {label}
         </div>
       )}

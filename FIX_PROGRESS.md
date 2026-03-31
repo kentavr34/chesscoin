@@ -1,8 +1,8 @@
 # ChessCoin v7.2.0 — Phase 1 Complete, Phase 2 In Progress
 
-**Date:** 2026-03-31
+**Date:** 2026-04-01
 **Current Status:** 🟢 **PHASE 1 COMPLETE** (97% satisfaction) → **PHASE 2 IN PROGRESS** (targeting 99%)
-**Deployments This Session:** 4 waves
+**Deployments This Session:** 4 waves + color variable migration (3 commits)
 
 ---
 
@@ -16,7 +16,9 @@
 
 ### Phase 2: Design System (IN PROGRESS 🟠)
 - 🟠 **L1**: Hardcoded colors → CSS variables (STARTED)
-- ⏳ **M2**: Migrate 12 modals to base Modal component
+  - ✅ All 12 modal components standardized to --color-* convention
+  - 🟠 Remaining: ~130 colors in 30+ non-modal component files
+- ⏳ **M2**: Migrate 12 modals to base Modal component (11/12 remaining)
 - ⏳ **L2**: Add responsive design (@media breakpoints)
 - **Target:** **97% → 99%**
 
@@ -84,7 +86,7 @@
 | **Z-index fixes** | ✅ 100% | - |
 | **ARIA labels** | ✅ 100% | - |
 | **Modal unification** | ✅ M1 done | 🟠 M2 started (1/12) |
-| **Color variables** | - | 🟠 18% (30+/157) |
+| **Color variables** | - | 🟠 30% (50+/157) — modals ✅, non-modals 🟠 |
 | **Responsive design** | - | ⏳ 0% |
 | **Satisfaction level** | **97%** | **→ targeting 99%** |
 
