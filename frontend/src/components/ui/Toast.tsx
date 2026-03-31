@@ -31,9 +31,9 @@ export const ToastContainer: React.FC = () => {
   if (!toasts.length) return null;
 
   const colors: Record<string, { bg: string; border: string; color: string }> = {
-    error:   { bg: 'rgba(255,77,106,0.12)',  border: 'rgba(255,77,106,0.3)',   color: '#FF4D6A' },
-    success: { bg: 'rgba(0,214,143,0.12)',   border: 'rgba(0,214,143,0.3)',    color: '#00D68F' },
-    info:    { bg: 'rgba(123,97,255,0.12)',  border: 'rgba(123,97,255,0.3)',   color: '#9B85FF' },
+    error:   { bg: 'var(--color-red-bg, rgba(255,77,106,0.12))',  border: 'var(--color-red-border, rgba(255,77,106,0.3))',   color: 'var(--color-red, #FF4D6A)' },
+    success: { bg: 'var(--color-green-bg, rgba(0,214,143,0.12))',   border: 'var(--color-green-border, rgba(0,214,143,0.3))',    color: 'var(--color-green, #00D68F)' },
+    info:    { bg: 'var(--color-purple-bg, rgba(123,97,255,0.12))',  border: 'var(--color-purple-border, rgba(123,97,255,0.3))',   color: 'var(--color-purple, #9B85FF)' },
   };
 
   return (
@@ -60,7 +60,7 @@ export const ToastContainer: React.FC = () => {
                 style={{
                   padding: '5px 10px',
                   background: c.color,
-                  color: '#0B0D11',
+                  color: 'var(--color-bg-dark, #0B0D11)',
                   border: 'none',
                   borderRadius: 8,
                   fontSize: 11,

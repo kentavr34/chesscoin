@@ -33,8 +33,8 @@ export const FloatingCoins: React.FC<Props> = ({ amount, onDone }) => {
       display: 'flex',
       alignItems: 'center',
       gap: 6,
-      background: 'rgba(245,200,66,0.15)',
-      border: '1px solid rgba(245,200,66,0.4)',
+      background: 'var(--color-accent-bg, rgba(245,200,66,0.15))',
+      border: '1px solid var(--color-accent-border, rgba(245,200,66,0.4))',
       borderRadius: 20,
       padding: '8px 16px',
       backdropFilter: 'blur(8px)',
@@ -44,7 +44,7 @@ export const FloatingCoins: React.FC<Props> = ({ amount, onDone }) => {
         fontFamily: "'Unbounded',sans-serif",
         fontSize: 18,
         fontWeight: 800,
-        color: '#F5C842',
+        color: 'var(--color-accent, #F5C842)',
         whiteSpace: 'nowrap',
       }}>
         +{fmtBalance(amount)} ᚙ
