@@ -151,10 +151,10 @@ export const AvatarCropModal: React.FC<Props> = ({ file, onConfirm, onCancel }) 
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       padding: 20,
     }}>
-      <div style={{ color: 'var(--text-primary, #F0F2F8)', fontSize: 15, fontWeight: 700, marginBottom: 8 }}>
+      <div style={{ color: 'var(--color-text-primary, #F0F2F8)', fontSize: 15, fontWeight: 700, marginBottom: 8 }}>
         Customize avatar
       </div>
-      <div style={{ fontSize: 12, color: 'var(--text-secondary, #8B92A8)', marginBottom: 20 }}>
+      <div style={{ fontSize: 12, color: 'var(--color-text-secondary, #8B92A8)', marginBottom: 20 }}>
         Drag and pinch to zoom
       </div>
 
@@ -175,7 +175,7 @@ export const AvatarCropModal: React.FC<Props> = ({ file, onConfirm, onCancel }) 
           ref={canvasRef}
           width={SIZE}
           height={SIZE}
-          style={{ borderRadius: '50%', display: 'block', border: '3px solid var(--accent, #F5C842)' }}
+          style={{ borderRadius: '50%', display: 'block', border: '3px solid var(--color-accent, #F5C842)' }}
         />
         {imgSrc && (
           <img
@@ -189,7 +189,7 @@ export const AvatarCropModal: React.FC<Props> = ({ file, onConfirm, onCancel }) 
 
       {/* Ползунок масштаба */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 16, width: SIZE }}>
-        <span style={{ fontSize: 12, color: 'var(--text-muted, #4A5270)' }}>−</span>
+        <span style={{ fontSize: 12, color: 'var(--color-text-muted, #4A5270)' }}>−</span>
         <input
           type="range"
           min={0.5}
@@ -197,23 +197,23 @@ export const AvatarCropModal: React.FC<Props> = ({ file, onConfirm, onCancel }) 
           step={0.01}
           value={scale}
           onChange={e => setScale(Number(e.target.value))}
-          style={{ flex: 1, accentColor: 'var(--accent, #F5C842)' }}
+          style={{ flex: 1, accentColor: 'var(--color-accent, #F5C842)' }}
         />
-        <span style={{ fontSize: 12, color: 'var(--text-muted, #4A5270)' }}>+</span>
+        <span style={{ fontSize: 12, color: 'var(--color-text-muted, #4A5270)' }}>+</span>
       </div>
 
       {/* Кнопки */}
       <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
         <button
           onClick={onCancel}
-          style={{ padding: '11px 24px', background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 14, color: 'var(--text-secondary, #8B92A8)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+          style={{ padding: '11px 24px', background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 14, color: 'var(--color-text-secondary, #8B92A8)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
         >
           Cancel
         </button>
         <button
           onClick={handleConfirm}
           disabled={loading}
-          style={{ padding: '11px 28px', background: 'var(--accent, #F5C842)', borderRadius: 14, border: 'none', color: '#0B0D11', fontSize: 14, fontWeight: 700, cursor: loading ? 'wait' : 'pointer', fontFamily: 'inherit', opacity: loading ? 0.7 : 1 }}
+          style={{ padding: '11px 28px', background: 'var(--color-accent, #F5C842)', borderRadius: 14, border: 'none', color: 'var(--color-bg-dark, #0B0D11)', fontSize: 14, fontWeight: 700, cursor: loading ? 'wait' : 'pointer', fontFamily: 'inherit', opacity: loading ? 0.7 : 1 }}
         >
           {loading ? '⏳' : '✓ Done'}
         </button>

@@ -18,7 +18,7 @@ const boxStyle: React.CSSProperties = {
 const closeStyle: React.CSSProperties = {
   position: 'absolute', top: 16, right: 16,
   background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '50%',
-  width: 30, height: 30, color: 'var(--text-secondary, #8B92A8)',
+  width: 30, height: 30, color: 'var(--color-text-secondary, #8B92A8)',
   fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
 };
 
@@ -31,16 +31,16 @@ export const JarvisInfoModal: React.FC<{ onClose: () => void }> = ({ onClose }) 
         <button onClick={onClose} style={closeStyle}>✕</button>
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
           <div style={{ fontSize: 48, marginBottom: 8 }}>🧠</div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: '#9B85FF', fontFamily: "'Unbounded', sans-serif" }}>
+          <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--color-purple, #9B85FF)', fontFamily: "'Unbounded', sans-serif" }}>
             J.A.R.V.I.S AI
           </div>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary, #8B92A8)', marginTop: 4, lineHeight: 1.4 }}>
+          <div style={{ fontSize: 13, color: 'var(--color-text-secondary, #8B92A8)', marginTop: 4, lineHeight: 1.4 }}>
             {t.home.jarvisInfo?.subtitle ?? 'Intelligent Chess Engine'}
           </div>
         </div>
 
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 13, color: 'var(--text-primary, #F0F2F8)', lineHeight: 1.6 }}>
+          <div style={{ fontSize: 13, color: 'var(--color-text-primary, #F0F2F8)', lineHeight: 1.6 }}>
             {t.home.jarvisInfo?.desc ?? 'Defeat AI levels to earn coins and unique badges. Each level gets progressively harder, ending with the ultimate Mystic Grandmaster challenge.'}
           </div>
         </div>
@@ -70,23 +70,23 @@ export const JarvisInfoModal: React.FC<{ onClose: () => void }> = ({ onClose }) 
             elo="2800 - 3100" 
             desc={t.home.jarvisInfo?.desc4 ?? "Flawless engine calculation."} 
             color="#FF4D6A" />
-          <div style={{ 
+          <div style={{
             background: 'linear-gradient(90deg, rgba(245,200,66,0.15), rgba(245,200,66,0.05))',
             border: '1px solid rgba(245,200,66,0.3)', borderRadius: 12, padding: 12
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-              <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--accent, #F5C842)' }}>Mystic (Lv. 20)</span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent, #F5C842)', background: 'rgba(245,200,66,0.2)', padding: '2px 6px', borderRadius: 4 }}>ELO 3200+</span>
+              <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-accent, #F5C842)' }}>Mystic (Lv. 20)</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-accent, #F5C842)', background: 'rgba(245,200,66,0.2)', padding: '2px 6px', borderRadius: 4 }}>ELO 3200+</span>
             </div>
-            <div style={{ fontSize: 12, color: 'var(--text-secondary, #8B92A8)' }}>
+            <div style={{ fontSize: 12, color: 'var(--color-text-secondary, #8B92A8)' }}>
               {t.home.jarvisInfo?.desc5 ?? "The ultimate challenge. Unrestricted engine depth. Play against a World Champion."}
             </div>
           </div>
         </div>
 
         <button onClick={onClose} style={{
-          width: '100%', padding: '14px', background: 'var(--accent, #F5C842)',
-          color: 'var(--bg, #0B0D11)', border: 'none', borderRadius: 14,
+          width: '100%', padding: '14px', background: 'var(--color-accent, #F5C842)',
+          color: 'var(--color-bg-dark, #0B0D11)', border: 'none', borderRadius: 14,
           fontSize: 14, fontWeight: 700, marginTop: 24, cursor: 'pointer'
         }}>
           {t.common.ok ?? 'Got it!'}
@@ -99,11 +99,11 @@ export const JarvisInfoModal: React.FC<{ onClose: () => void }> = ({ onClose }) 
 const LevelTier: React.FC<{ range: string; title: string; elo: string; desc: string; color: string }> = ({ range, title, elo, desc, color }) => (
   <div style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, padding: 12 }}>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-      <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>
+      <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text-primary, #F0F2F8)' }}>
         <span style={{ color: color, marginRight: 6 }}>{range}</span> {title}
       </span>
-      <span style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>ELO {elo}</span>
+      <span style={{ fontSize: 10, color: 'var(--color-text-muted, #4A5270)' }}>ELO {elo}</span>
     </div>
-    <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)' }}>{desc}</div>
+    <div style={{ fontSize: 11, color: 'var(--color-text-secondary, #8B92A8)' }}>{desc}</div>
   </div>
 );

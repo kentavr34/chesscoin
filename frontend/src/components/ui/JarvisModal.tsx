@@ -78,10 +78,10 @@ export const JarvisModal: React.FC<JarvisModalProps> = ({ currentJarvisLevel, on
         {/* Header — fixed at top */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexShrink: 0 }}>
           <div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary, #F0F2F8)', letterSpacing: '-.02em' }}>
+            <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--color-text-primary, #F0F2F8)', letterSpacing: '-.02em' }}>
               🤖 J.A.R.V.I.S
             </div>
-            <div style={{ fontSize: 12, color: 'var(--text-secondary, #8B92A8)', marginTop: 3 }}>
+            <div style={{ fontSize: 12, color: 'var(--color-text-secondary, #8B92A8)', marginTop: 3 }}>
               Choose difficulty level
             </div>
           </div>
@@ -108,10 +108,10 @@ export const JarvisModal: React.FC<JarvisModalProps> = ({ currentJarvisLevel, on
                     {completed ? '✓' : lvl.level}
                   </div>
                   <div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: completed ? 'var(--text-muted, #4A5270)' : 'var(--text-primary, #F0F2F8)' }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: completed ? 'var(--color-text-muted, #4A5270)' : 'var(--color-text-primary, #F0F2F8)' }}>
                       {lvl.name}
                     </div>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted, #4A5270)', marginTop: 2 }}>
+                    <div style={{ fontSize: 11, color: 'var(--color-text-muted, #4A5270)', marginTop: 2 }}>
                       {lvl.errorRate === 0 ? 'No errors' : `${lvl.errorRate}%`}
                     </div>
                   </div>
@@ -120,15 +120,15 @@ export const JarvisModal: React.FC<JarvisModalProps> = ({ currentJarvisLevel, on
                 {/* Right — reward or lock */}
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
                   {completed ? (
-                    <span style={{ fontSize: 11, color: 'var(--green, #00D68F)', fontWeight: 700 }}>{t.profile.passed}</span>
+                    <span style={{ fontSize: 11, color: 'var(--color-green, #00D68F)', fontWeight: 700 }}>{t.profile.passed}</span>
                   ) : !unlocked ? (
                     <span style={{ fontSize: 20 }}>{t.jarvis.locked ? '🔒' : ''}</span>
                   ) : (
                     <div>
-                      <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--accent, #F5C842)', fontFamily: "'JetBrains Mono',monospace" }}>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-accent, #F5C842)', fontFamily: "'JetBrains Mono',monospace" }}>
                         +{fmtBalance(lvl.reward.toString())} ᚙ
                       </div>
-                      <div style={{ fontSize: 10, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>{t.jarvis.reward('')}</div>
+                      <div style={{ fontSize: 10, color: 'var(--color-text-secondary, #8B92A8)', marginTop: 2 }}>{t.jarvis.reward('')}</div>
                     </div>
                   )}
                 </div>
@@ -139,7 +139,7 @@ export const JarvisModal: React.FC<JarvisModalProps> = ({ currentJarvisLevel, on
 
         {/* Footer hint — fixed at bottom */}
         <div style={{ padding: '16px', background: 'rgba(123,97,255,0.08)', border: '1px solid rgba(123,97,255,0.15)', borderRadius: 14, flexShrink: 0 }}>
-          <div style={{ fontSize: 15, color: 'var(--text-secondary, #8B92A8)', lineHeight: 1.6 }}>
+          <div style={{ fontSize: 15, color: 'var(--color-text-secondary, #8B92A8)', lineHeight: 1.6 }}>
             🏆 Beat levels in order. For each completed level you earn a J.A.R.V.I.S badge on your profile.
           </div>
         </div>
@@ -160,7 +160,7 @@ const overlayStyle: React.CSSProperties = {
 };
 const sheetStyle: React.CSSProperties = {
   width: '100%', maxWidth: 480,
-  background: 'var(--bg-card, #13161F)',
+  background: 'var(--color-bg-card, #13161F)',
   border: '1px solid rgba(255,255,255,0.1)',
   borderBottom: 'none',
   borderRadius: '24px 24px 0 0',
@@ -173,17 +173,17 @@ const sheetStyle: React.CSSProperties = {
 };
 const closeBtnStyle: React.CSSProperties = {
   width: 32, height: 32, borderRadius: '50%',
-  background: 'var(--border, rgba(255,255,255,0.07))',
+  background: 'var(--color-border, rgba(255,255,255,0.07))',
   border: '1px solid rgba(255,255,255,0.1)',
-  color: 'var(--text-secondary, #8B92A8)', fontSize: 14, cursor: 'pointer',
+  color: 'var(--color-text-secondary, #8B92A8)', fontSize: 14, cursor: 'pointer',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   fontFamily: 'inherit',
 };
 const levelCardStyle = (unlocked: boolean, completed: boolean, isActive: boolean): React.CSSProperties => ({
   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
   padding: '12px 14px',
-  background: isActive ? 'rgba(245,200,66,0.07)' : completed ? 'rgba(0,214,143,0.04)' : 'var(--bg-card, #1C2030)',
-  border: `1px solid ${isActive ? 'rgba(245,200,66,0.3)' : completed ? 'rgba(0,214,143,0.15)' : 'var(--border, rgba(255,255,255,0.07))'}`,
+  background: isActive ? 'rgba(245,200,66,0.07)' : completed ? 'rgba(0,214,143,0.04)' : 'var(--color-bg-card, #1C2030)',
+  border: `1px solid ${isActive ? 'rgba(245,200,66,0.3)' : completed ? 'rgba(0,214,143,0.15)' : 'var(--color-border, rgba(255,255,255,0.07))'}`,
   borderRadius: 14,
   cursor: unlocked && !completed ? 'pointer' : 'default',
   opacity: !unlocked ? 0.5 : 1,
@@ -191,9 +191,9 @@ const levelCardStyle = (unlocked: boolean, completed: boolean, isActive: boolean
 });
 const levelNumStyle = (isActive: boolean, completed: boolean): React.CSSProperties => ({
   width: 36, height: 36, borderRadius: '50%',
-  background: completed ? 'rgba(0,214,143,0.15)' : isActive ? 'rgba(245,200,66,0.15)' : 'var(--bg-input, #232840)',
-  border: `2px solid ${completed ? 'var(--green, #00D68F)' : isActive ? 'var(--accent, #F5C842)' : 'rgba(255,255,255,0.1)'}`,
-  color: completed ? 'var(--green, #00D68F)' : isActive ? 'var(--accent, #F5C842)' : 'var(--text-secondary, #8B92A8)',
+  background: completed ? 'rgba(0,214,143,0.15)' : isActive ? 'rgba(245,200,66,0.15)' : 'var(--color-bg-input, #232840)',
+  border: `2px solid ${completed ? 'var(--color-green, #00D68F)' : isActive ? 'var(--color-accent, #F5C842)' : 'rgba(255,255,255,0.1)'}`,
+  color: completed ? 'var(--color-green, #00D68F)' : isActive ? 'var(--color-accent, #F5C842)' : 'var(--color-text-secondary, #8B92A8)',
   fontSize: completed ? 16 : 14, fontWeight: 800,
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   flexShrink: 0,
