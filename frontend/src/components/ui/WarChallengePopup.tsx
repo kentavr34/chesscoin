@@ -118,7 +118,7 @@ export const WarChallengePopup: React.FC<Props> = ({ data, onAccept, onDecline }
               color: '#fff',
               fontSize: 14, fontWeight: 700,
               cursor: 'pointer', fontFamily: 'inherit',
-              boxShadow: '0 4px 20px rgba(var(--color-red-rgb, 255, 77, 106), 0.4)',
+              boxShadow: '0 4px 20px var(--color-red-glow, rgba(255, 77, 106, 0.4))',
             }}
           >
             {t.warChallenge.accept}
