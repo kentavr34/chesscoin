@@ -65,11 +65,11 @@ export const MiniProfileSheet: React.FC<Props> = ({ userId, onClose }) => {
         }}
       >
         {/* Ручка */}
-        <div style={{ width: 36, height: 4, background: '#2A2F48', borderRadius: 2, margin: '0 auto 16px' }} />
+        <div style={{ width: 36, height: 4, background: 'var(--color-text-muted, #2A2F48)', borderRadius: 2, margin: '0 auto 16px' }} />
 
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: 32 }}>
-            <div style={{ width: 32, height: 32, border: '3px solid rgba(123,97,255,0.3)', borderTopColor: '#7B61FF', borderRadius: '50%', animation: 'spin .7s linear infinite' }} />
+            <div style={{ width: 32, height: 32, border: '3px solid var(--color-purple-border, rgba(123,97,255,0.3))', borderTopColor: 'var(--color-purple-dark, #7B61FF)', borderRadius: '50%', animation: 'spin .7s linear infinite' }} />
           </div>
         ) : !user ? (
           <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: 24, fontSize: 13 }}>
@@ -108,9 +108,9 @@ export const MiniProfileSheet: React.FC<Props> = ({ userId, onClose }) => {
             {/* Статистика */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 16 }}>
               {[
-                { label: 'Wins', val: user.wins ?? 0, color: '#00D68F' },
-                { label: 'Losses', val: user.losses ?? 0, color: '#FF4D6A' },
-                { label: 'Draws', val: user.draws ?? 0, color: '#8B92A8' },
+                { label: 'Wins', val: user.wins ?? 0, color: 'var(--color-green, #00D68F)' },
+                { label: 'Losses', val: user.losses ?? 0, color: 'var(--color-red, #FF4D6A)' },
+                { label: 'Draws', val: user.draws ?? 0, color: 'var(--color-text-secondary, #8B92A8)' },
               ].map(({ label, val, color }) => (
                 <div key={label} style={{ textAlign: 'center', background: 'var(--bg, #0B0D11)', borderRadius: 12, padding: '10px 8px' }}>
                   <div style={{ fontSize: 18, fontWeight: 800, color, fontFamily: "'JetBrains Mono',monospace" }}>{val}</div>
@@ -153,13 +153,13 @@ const tagStyle = (color: string): React.CSSProperties => ({
   border: `1px solid ${color}30`,
 });
 const btnGold: React.CSSProperties = {
-  flex: 1, padding: '12px 0', background: 'var(--accent, #F5C842)',
-  border: 'none', borderRadius: 14, color: '#0B0D11',
+  flex: 1, padding: '12px 0', background: 'var(--color-accent, #F5C842)',
+  border: 'none', borderRadius: 14, color: 'var(--color-bg-dark, #0B0D11)',
   fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
 };
 const btnGhost: React.CSSProperties = {
   flex: 1, padding: '12px 0', background: 'transparent',
   border: '1px solid rgba(255,255,255,0.13)', borderRadius: 14,
-  color: 'var(--text-secondary, #8B92A8)',
+  color: 'var(--color-text-secondary, #8B92A8)',
   fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
 };
