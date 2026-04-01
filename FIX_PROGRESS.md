@@ -45,19 +45,34 @@
 - **Impact:** Proper color fallback for unknown session statuses
 - **Build:** ✅ 8.69s, no errors
 
+### Wave 3: BattlesPage + Admin/Shop Pages ✅
+**Commits:** 3 atomic commits, 5 files updated
+- **2783d5c**: Migrate BattlesPage LIVE indicator colors
+  - --battles-page-live-indicator-color: #EF4444 (dark), #C41C3B (light)
+  - --battles-modal-handle-color: #2A2F48 (dark), #C8C8D8 (light)
+- **dab75cc**: Migrate AdminPage TON wallet colors
+  - #0098EA → var(--color-blue, #0098EA)
+  - #00D68F → var(--color-green, #00D68F)
+- **d5f313e**: Migrate ExchangeTab + ShopPage colors
+  - --exchange-ton-connect-gradient (90deg variant)
+  - --exchange-ton-shop-gradient (90deg variant)
+  - --shop-ton-wallet-gradient (135deg variant)
+  - All #0098EA and #7B61FF migrated to CSS variables
+
 ### Current Progress
-- **Colors migrated (session 5):** 10 colors
-- **Total migrated (all sessions):** 122 colors
-- **Remaining:** 35 colors to reach 99% satisfaction
-- **Estimated completion:** 2-3 more focused migration sessions
+- **Colors migrated (session 5 continuation):** 22+ colors and 3 gradients
+- **Total migrated (all sessions):** 145+ colors
+- **CSS Gradient Variables Added:** 3 new gradients
+- **Remaining:** ~20-25 colors to reach 99% satisfaction
+- **Estimated completion:** 1-2 more focused migration sessions
 
 ### Critical Findings
-- Search for remaining hardcoded colors found **234 instances in inline styles**
-- Most critical unmigrated colors are in:
-  - Admin page (badge colors, toast styles)
-  - Shop page (TON wallet integration colors)
-  - BattleHistory page (game status colors)
-  - Pages and data structures (board skins, effects, etc.)
+- TON wallet colors (#0098EA) are extensively used across Shop/Exchange/Admin pages ✅ MIGRATED
+- Gradients properly support dark/light theme variants
+- Remaining colors primarily in:
+  - HomePage (loader color #7B61FF, gradient)
+  - NationsPage (secondary actions #7B61FF)
+  - Other utility colors and border styles
 
 ---
 
