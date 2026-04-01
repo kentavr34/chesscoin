@@ -249,6 +249,7 @@
   --active-sessions-my-turn-border: rgba(0, 214, 143, 0.25);
   --active-sessions-bot-avatar-bg: rgba(155, 133, 255, 0.15);
   --active-sessions-bot-avatar-border: rgba(155, 133, 255, 0.3);
+  --active-sessions-status-fallback-color: #8B92A8;
 
   /* Attempts Modal (L1) */
   --attempts-overlay-bg: rgba(0, 0, 0, 0.65);
@@ -574,6 +575,7 @@
     --active-sessions-my-turn-border: rgba(0, 163, 102, 0.2);
     --active-sessions-bot-avatar-bg: rgba(109, 40, 217, 0.1);
     --active-sessions-bot-avatar-border: rgba(109, 40, 217, 0.2);
+    --active-sessions-status-fallback-color: #5A5F6E;
 
     /* Attempts Modal Light Mode Adjustments */
     --attempts-overlay-bg: rgba(0, 0, 0, 0.5);
@@ -903,6 +905,7 @@
   --active-sessions-my-turn-border: rgba(0, 163, 102, 0.2);
   --active-sessions-bot-avatar-bg: rgba(109, 40, 217, 0.1);
   --active-sessions-bot-avatar-border: rgba(109, 40, 217, 0.2);
+  --active-sessions-status-fallback-color: #5A5F6E;
 
   /* Attempts Modal Light Mode via data-theme */
   --attempts-overlay-bg: rgba(0, 0, 0, 0.5);

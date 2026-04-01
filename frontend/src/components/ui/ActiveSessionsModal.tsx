@@ -76,7 +76,7 @@ export const ActiveSessionsModal: React.FC<ActiveSessionsModalProps> = ({
             const opponent = session.sides?.find(s => !s.isMe && !s.isBot);
             const botSide = session.sides?.find(s => s.isBot);
             const myTurn = session.isMyTurn;
-            const statusInfo = STATUS_LABEL[session.status] ?? { text: session.status, color: '#8B92A8' };
+            const statusInfo = STATUS_LABEL[session.status] ?? { text: session.status, color: 'var(--active-sessions-status-fallback-color, #8B92A8)' };
 
             return (
               <div
