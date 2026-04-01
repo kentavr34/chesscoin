@@ -53,7 +53,7 @@ export const MoveAnnouncer: React.FC<MoveAnnouncerProps> = ({ announcement, onDo
             color: isRainbow ? 'transparent' : style.color,
             textShadow: style.shadow,
             backgroundImage: isRainbow
-              ? 'linear-gradient(90deg, #FF4D6A, #FF9F43, #F5C842, #00D68F, #64C8FF, #9B85FF, #FF4D6A)'
+              ? 'var(--move-announcer-rainbow-gradient, linear-gradient(90deg, #FF4D6A, #FF9F43, #F5C842, #00D68F, #64C8FF, #9B85FF, #FF4D6A))'
               : undefined,
             WebkitBackgroundClip: isRainbow ? 'text' : undefined,
             backgroundClip: isRainbow ? 'text' : undefined,
@@ -75,15 +75,15 @@ export const MoveAnnouncer: React.FC<MoveAnnouncerProps> = ({ announcement, onDo
         <div style={{
           ...typeTag,
           background: announcement.type === 'opening'
-            ? 'rgba(155,133,255,0.15)'
+            ? 'var(--move-announcer-opening-bg, rgba(155,133,255,0.15))'
             : announcement.type === 'special'
-            ? 'rgba(245,200,66,0.15)'
-            : 'rgba(255,77,106,0.15)',
+            ? 'var(--move-announcer-special-bg, rgba(245,200,66,0.15))'
+            : 'var(--move-announcer-tactics-bg, rgba(255,77,106,0.15))',
           color: announcement.type === 'opening'
-            ? '#9B85FF'
+            ? 'var(--move-announcer-opening-color, #9B85FF)'
             : announcement.type === 'special'
-            ? '#F5C842'
-            : '#FF4D6A',
+            ? 'var(--move-announcer-special-color, #F5C842)'
+            : 'var(--move-announcer-tactics-color, #FF4D6A)',
         }}>
           {announcement.type === 'opening' ? '📖 Opening' : announcement.type === 'special' ? '⭐ Special' : '⚡ Tactics'}
         </div>
@@ -120,17 +120,17 @@ const mainText: React.CSSProperties = {
   fontFamily: 'inherit',
   textAlign: 'center',
   // Без фона — только текст с тенью для читаемости
-  filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.9))',
+  filter: 'var(--move-announcer-main-text-shadow, drop-shadow(0 2px 8px rgba(0,0,0,0.9)))',
   lineHeight: 1.2,
 };
 
 const subText: React.CSSProperties = {
   fontSize: 13,
   fontWeight: 600,
-  color: 'rgba(255,255,255,0.7)',
+  color: 'var(--move-announcer-sub-text-color, rgba(255,255,255,0.7))',
   fontFamily: 'inherit',
   textAlign: 'center',
-  filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.9))',
+  filter: 'var(--move-announcer-sub-text-shadow, drop-shadow(0 1px 4px rgba(0,0,0,0.9)))',
   letterSpacing: '0.04em',
 };
 
