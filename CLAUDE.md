@@ -91,7 +91,8 @@
 
 ## 🚀 ТЕКУЩИЕ ПРИОРИТЕТЫ
 
-### Статус сессии (2026-04-02, часть 2)
+### Статус сессии (2026-04-02, 01:00+)
+
 **Фаза 3.1: Интеграция дизайн-токенов (ЗАВЕРШЕНА ✅)**
 - ✅ Добавлены все переменные типографики и компонентов в index.css
 - ✅ Рефакторена HomePage.tsx
@@ -99,13 +100,18 @@
 - ✅ Проверено в браузере — всё работает правильно
 
 **Фаза 3.2: Рефакторинг базовых модалей (НАЧАТА ✅)**
-- ✅ Modal.tsx (базовый компонент) — все значения на дизайн-токены
-  - Header: padding, fontSize, fontWeight
-  - Body: padding, fontSize, lineHeight
-  - Footer: padding, gap
-  - borderRadius на var(--radius-xl)
+- ✅ Modal.tsx (базовый компонент) — все значения на дизайн-токены (коммит: 0eb5022)
+  - Header: padding, fontSize, fontWeight → design tokens
+  - Body: padding, fontSize, lineHeight → design tokens
+  - Footer: padding, gap → design tokens
+  - borderRadius → var(--radius-xl)
+- 📋 Создан REFACTOR_BATTLECARD.md — подробный план на 20 минут (коммит: 75acc77)
+  - CSS media queries для responsive sizing
+  - Line-by-line замены с примерами
+  - Template для остальных компонентов
 - ⏳ JarvisModal — ТРЕБУЕТ РЕФАКТОРИНГА (много window.innerWidth < 480 checks)
 - ⏳ GameResultModal — ТРЕБУЕТ РЕФАКТОРИНГА (много hardcoded fontSize и padding)
+- ⏳ BattleCard — ТРЕБУЕТ РЕФАКТОРИНГА (см. REFACTOR_BATTLECARD.md)
 
 **Следующие приоритеты (КРИТИЧНЫЕ):**
 1. **Завершить Фаза 3.2** — Рефакторить JarvisModal, GameResultModal (использовать CSS @media вместо window.innerWidth)
