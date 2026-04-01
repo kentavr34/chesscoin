@@ -201,7 +201,7 @@ const mateBanner: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: 12,
-  background: 'rgba(0,0,0,0.85)',
+  background: 'var(--event-mate-banner-bg, rgba(0,0,0,0.85))',
   border: '2px solid var(--color-accent, #F5C842)',
   borderRadius: 20,
   padding: '16px 28px',
