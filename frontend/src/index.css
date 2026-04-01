@@ -104,6 +104,10 @@
   --shop-board-ice-light: #D8EEF8;
   --shop-board-ice-dark: #6090B8;
 
+  /* StatComponents Colors (L1) */
+  --stat-circle-bg-stroke: #2A2F48;
+  --stat-card-border: rgba(255, 255, 255, 0.07);
+
   /* Chess UI Elements (L1) */
   --chess-emoji-text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
   --chess-piece-shadow: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
@@ -551,6 +555,10 @@
     --avatar-border-subtle: rgba(0, 0, 0, 0.08);
     --avatar-border-light: rgba(0, 0, 0, 0.12);
 
+    /* StatComponents Light Mode Adjustments */
+    --stat-circle-bg-stroke: #5A6378;
+    --stat-card-border: rgba(0, 0, 0, 0.08);
+
     /* WarChallengePopup Light Mode Adjustments */
     --war-challenge-overlay-bg: rgba(0, 0, 0, 0.5);
     --war-challenge-modal-border: rgba(211, 47, 47, 0.25);
@@ -795,6 +803,10 @@
   /* Avatar Light Mode via data-theme */
   --avatar-border-subtle: rgba(0, 0, 0, 0.08);
   --avatar-border-light: rgba(0, 0, 0, 0.12);
+
+  /* StatComponents Light Mode via data-theme */
+  --stat-circle-bg-stroke: #5A6378;
+  --stat-card-border: rgba(0, 0, 0, 0.08);
 
   /* WarChallengePopup Light Mode via data-theme */
   --war-challenge-overlay-bg: rgba(0, 0, 0, 0.5);

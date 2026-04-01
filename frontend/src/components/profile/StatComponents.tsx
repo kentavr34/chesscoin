@@ -8,7 +8,7 @@ export const CircStat: React.FC<{ value: number; pct: number; color: string; lab
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
       <svg width={svgSize} height={svgSize} viewBox="0 0 72 72" style={{ transform: 'rotate(-90deg)' }}>
-        <circle cx="36" cy="36" r={r} fill="none" stroke="#2A2F48" strokeWidth="7" />
+        <circle cx="36" cy="36" r={r} fill="none" stroke="var(--stat-circle-bg-stroke, #2A2F48)" strokeWidth="7" />
         <circle cx="36" cy="36" r={r} fill="none" stroke={color} strokeWidth="7"
           strokeDasharray={`${dash} ${circ - dash}`} strokeLinecap="round" />
       </svg>
@@ -25,7 +25,7 @@ export const CircStat: React.FC<{ value: number; pct: number; color: string; lab
 };
 
 export const StatCard: React.FC<{ val: number; lbl: string; color?: string }> = ({ val, lbl, color }) => (
-  <div style={{ background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '14px 10px', textAlign: 'center' }}>
+  <div style={{ background: 'var(--bg-card, #1C2030)', border: '1px solid var(--stat-card-border, rgba(255,255,255,0.07))', borderRadius: 14, padding: '14px 10px', textAlign: 'center' }}>
     <div style={{
       fontFamily: 'Inter,sans-serif',
       fontSize: window.innerWidth < 480 ? 16 : 20,
