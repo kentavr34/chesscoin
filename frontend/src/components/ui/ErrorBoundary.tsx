@@ -62,7 +62,7 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode }
             maxWidth: 340, wordBreak: 'break-all',
             maxHeight: 120, overflow: 'auto',
             textAlign: 'left', lineHeight: 1.4,
-            background: 'rgba(0,0,0,0.3)', padding: 8, borderRadius: 8,
+            background: 'var(--error-boundary-stack-bg, rgba(0,0,0,0.3))', padding: 8, borderRadius: 8,
           }}>
             {this.state.error.stack}
           </div>

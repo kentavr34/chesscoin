@@ -352,6 +352,24 @@
   --badge-color-legendary: #E040FB;
   --badge-btn-border: rgba(255, 255, 255, 0.1);
 
+  /* AvatarCropModal Colors (L1) */
+  --avatar-crop-overlay-bg: rgba(0, 0, 0, 0.88);
+  --avatar-crop-cancel-border: rgba(255, 255, 255, 0.15);
+
+  /* ConfirmModal Colors (L1) */
+  --confirm-cancel-btn-border: rgba(255, 255, 255, 0.1);
+  --confirm-danger-btn-bg: rgba(255, 77, 106, 0.15);
+  --confirm-danger-btn-border: rgba(255, 77, 106, 0.4);
+
+  /* ErrorBoundary Colors (L1) */
+  --error-boundary-stack-bg: rgba(0, 0, 0, 0.3);
+
+  /* BottomNav Colors (L1) */
+  --bottom-nav-active-shadow: 0 2px 8px rgba(245, 200, 66, 0.5);
+
+  /* Toast Colors (L1) */
+  --toast-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+
   /* Responsive Breakpoints (L2) */
   --breakpoint-xs: 320px;
   --breakpoint-sm: 480px;
@@ -596,6 +614,24 @@
     /* Avatar Light Mode Adjustments */
     --avatar-border-subtle: rgba(0, 0, 0, 0.08);
     --avatar-border-light: rgba(0, 0, 0, 0.12);
+
+    /* AvatarCropModal Light Mode Adjustments */
+    --avatar-crop-overlay-bg: rgba(0, 0, 0, 0.5);
+    --avatar-crop-cancel-border: rgba(0, 0, 0, 0.12);
+
+    /* ConfirmModal Light Mode Adjustments */
+    --confirm-cancel-btn-border: rgba(0, 0, 0, 0.08);
+    --confirm-danger-btn-bg: rgba(211, 47, 47, 0.1);
+    --confirm-danger-btn-border: rgba(211, 47, 47, 0.25);
+
+    /* ErrorBoundary Light Mode Adjustments */
+    --error-boundary-stack-bg: rgba(0, 0, 0, 0.08);
+
+    /* BottomNav Light Mode Adjustments */
+    --bottom-nav-active-shadow: 0 2px 8px rgba(212, 168, 32, 0.4);
+
+    /* Toast Light Mode Adjustments */
+    --toast-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 
     /* StatComponents Light Mode Adjustments */
     --stat-circle-bg-stroke: #5A6378;
@@ -893,6 +929,24 @@
   /* Avatar Light Mode via data-theme */
   --avatar-border-subtle: rgba(0, 0, 0, 0.08);
   --avatar-border-light: rgba(0, 0, 0, 0.12);
+
+  /* AvatarCropModal Light Mode via data-theme */
+  --avatar-crop-overlay-bg: rgba(0, 0, 0, 0.5);
+  --avatar-crop-cancel-border: rgba(0, 0, 0, 0.12);
+
+  /* ConfirmModal Light Mode via data-theme */
+  --confirm-cancel-btn-border: rgba(0, 0, 0, 0.08);
+  --confirm-danger-btn-bg: rgba(211, 47, 47, 0.1);
+  --confirm-danger-btn-border: rgba(211, 47, 47, 0.25);
+
+  /* ErrorBoundary Light Mode via data-theme */
+  --error-boundary-stack-bg: rgba(0, 0, 0, 0.08);
+
+  /* BottomNav Light Mode via data-theme */
+  --bottom-nav-active-shadow: 0 2px 8px rgba(212, 168, 32, 0.4);
+
+  /* Toast Light Mode via data-theme */
+  --toast-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 
   /* StatComponents Light Mode via data-theme */
   --stat-circle-bg-stroke: #5A6378;

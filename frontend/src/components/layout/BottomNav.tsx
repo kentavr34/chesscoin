@@ -45,7 +45,7 @@ export const BottomNav: React.FC = () => {
                 width: 32, height: 3,
                 background: 'var(--accent)',
                 borderRadius: '0 0 4px 4px',
-                boxShadow: '0 2px 8px rgba(245, 200, 66, 0.5)',
+                boxShadow: 'var(--bottom-nav-active-shadow, 0 2px 8px rgba(245, 200, 66, 0.5))',
               }} />
             )}
             <span style={{

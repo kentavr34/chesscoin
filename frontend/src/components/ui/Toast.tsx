@@ -49,7 +49,7 @@ export const ToastContainer: React.FC = () => {
             color: c.color,
             fontSize: 13, fontWeight: 600,
             backdropFilter: 'blur(12px)',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+            boxShadow: 'var(--toast-shadow, 0 4px 20px rgba(0,0,0,0.4))',
             animation: 'toastIn .25s ease',
             display: 'flex', alignItems: 'center', gap: 10,
           }}>

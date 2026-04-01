@@ -148,7 +148,7 @@ export const AvatarCropModal: React.FC<Props> = ({ file, onConfirm, onCancel }) 
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: "var(--z-modal, 300)",
-      background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(12px)',
+      background: 'var(--avatar-crop-overlay-bg, rgba(0,0,0,0.88))', backdropFilter: 'blur(12px)',
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       padding: 20,
     }}>
@@ -207,7 +207,7 @@ export const AvatarCropModal: React.FC<Props> = ({ file, onConfirm, onCancel }) 
       <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
         <button
           onClick={onCancel}
-          style={{ padding: '11px 24px', background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 14, color: 'var(--color-text-secondary, #8B92A8)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+          style={{ padding: '11px 24px', background: 'transparent', border: '1px solid var(--avatar-crop-cancel-border, rgba(255,255,255,0.15))', borderRadius: 14, color: 'var(--color-text-secondary, #8B92A8)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
         >
           Cancel
         </button>
