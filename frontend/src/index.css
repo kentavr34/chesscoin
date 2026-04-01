@@ -1602,6 +1602,21 @@ div, span, button, input, select, textarea, p {
   }
 }
 
+/* ── StatComponents Sizing Tokens ───────────────────────────────────────── */
+:root {
+  --stat-circle-svg-size: 72px;
+  --stat-circle-value-size: 16px;
+  --stat-card-value-size: 20px;
+}
+
+@media (max-width: 479px) {
+  :root {
+    --stat-circle-svg-size: 56px;
+    --stat-circle-value-size: 14px;
+    --stat-card-value-size: 16px;
+  }
+}
+
 /* ── JarvisModal Responsive Sizing Tokens ────────────────────────────────── */
 :root {
   --jarvis-header-margin-bottom: 20px;
