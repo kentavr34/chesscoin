@@ -1589,6 +1589,19 @@ div, span, button, input, select, textarea, p {
   --result-coins-gap: 8px;
 }
 
+/* ── Shop Components Sizing Tokens ──────────────────────────────────────── */
+:root {
+  --shop-board-grid-columns: repeat(4, 1fr);
+  --shop-btn-padding: 7px 10px;
+  --shop-btn-font-size: 11px;
+}
+
+@media (max-width: 479px) {
+  :root {
+    --shop-board-grid-columns: repeat(2, 1fr);
+  }
+}
+
 /* ── JarvisModal Responsive Sizing Tokens ────────────────────────────────── */
 :root {
   --jarvis-header-margin-bottom: 20px;

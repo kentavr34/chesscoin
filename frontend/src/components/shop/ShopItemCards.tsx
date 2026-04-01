@@ -15,8 +15,8 @@ export const RARITY_COLOR: Record<string, string> = {
 };
 
 const btnStyle: React.CSSProperties = {
-  padding: '7px 10px', border: 'none', borderRadius: 10,
-  fontSize: 11, fontWeight: 700, cursor: 'pointer',
+  padding: 'var(--shop-btn-padding)', border: 'none', borderRadius: 10,
+  fontSize: 'var(--shop-btn-font-size)', fontWeight: 700, cursor: 'pointer',
   fontFamily: 'inherit', width: '100%',
 };
 
@@ -40,7 +40,7 @@ function getBoardColorsFromCSS(board: string): [string, string] {
 const BoardPreview: React.FC<{ light: string; dark: string }> = ({ light, dark }) => (
   <div style={{
     display: 'grid',
-    gridTemplateColumns: window.innerWidth < 480 ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
+    gridTemplateColumns: 'var(--shop-board-grid-columns)',
     width: '100%',
     aspectRatio: '1',
     borderRadius: 10,
