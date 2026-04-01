@@ -1,0 +1,409 @@
+/* ========================================================================
+   CHESSCOIN DESIGN SYSTEM — MISSING TOKENS
+
+   This file contains the complete typography and component sizing system
+   that needs to be added to frontend/src/index.css after the color variables.
+
+   Once added, components will have a professional, consistent appearance.
+   ======================================================================== */
+
+/* ── TYPOGRAPHY SCALE (DESKTOP DEFAULT) ──────────────────────────────── */
+
+:root {
+  /* Font Sizes — Semantic Naming */
+  --font-size-xs: 10px;      /* Tiny: badges, captions, microtext */
+  --font-size-sm: 12px;      /* Small: labels, secondary text */
+  --font-size-base: 14px;    /* Base: body text, default */
+  --font-size-md: 16px;      /* Medium: larger body text, subheadings */
+  --font-size-lg: 18px;      /* Large: card titles, emphasis */
+  --font-size-xl: 20px;      /* XL: section headings */
+  --font-size-2xl: 24px;     /* 2XL: page titles, hero text */
+  --font-size-3xl: 28px;     /* 3XL: banner headings */
+
+  /* Font Weights — Semantic Naming */
+  --font-weight-regular: 400;    /* Default body text */
+  --font-weight-medium: 500;     /* Slightly emphasized text */
+  --font-weight-semibold: 600;   /* Emphasized, labels, subheadings */
+  --font-weight-bold: 700;       /* Strong emphasis, headings */
+  --font-weight-extrabold: 800;  /* Very strong, hero text, stats */
+
+  /* Line Heights — For Readability & Accessibility */
+  --line-height-tight: 1.2;      /* Compact: headings, dense content */
+  --line-height-normal: 1.5;     /* Default: body text */
+  --line-height-relaxed: 1.75;   /* Spacious: long-form text */
+  --line-height-loose: 2;        /* Very spacious: accessibility */
+
+  /* Letter Spacing — Micro-adjustments */
+  --letter-spacing-tight: -0.5px;    /* Headings, condensed */
+  --letter-spacing-normal: 0px;      /* Default */
+  --letter-spacing-wide: 0.5px;      /* Emphasis, readability */
+}
+
+/* ── RESPONSIVE TYPOGRAPHY (MOBILE) ──────────────────────────────────── */
+
+@media (max-width: 479px) {
+  :root {
+    /* Mobile: Slightly smaller fonts to save space */
+    --font-size-sm: 11px;      /* Reduced from 12px */
+    --font-size-base: 13px;    /* Reduced from 14px */
+    --font-size-md: 14px;      /* Reduced from 16px */
+    --font-size-lg: 16px;      /* Reduced from 18px */
+    --font-size-xl: 18px;      /* Reduced from 20px */
+    --font-size-2xl: 22px;     /* Reduced from 24px */
+
+    /* Mobile: Slightly tighter line height */
+    --line-height-normal: 1.4;  /* Reduced from 1.5 */
+  }
+}
+
+/* ── RESPONSIVE TYPOGRAPHY (TABLET) ──────────────────────────────────── */
+
+@media (min-width: 480px) and (max-width: 767px) {
+  :root {
+    /* Tablet: Moderate scaling */
+    --font-size-base: 14px;    /* Keep base size */
+    --font-size-md: 15px;      /* Slight reduction */
+    --font-size-lg: 17px;      /* Slight reduction */
+  }
+}
+
+/* ── RESPONSIVE TYPOGRAPHY (DESKTOP) ────────────────────────────────── */
+
+@media (min-width: 768px) {
+  :root {
+    /* Desktop: Full size (default) */
+    --font-size-base: 14px;
+    --font-size-md: 16px;
+    --font-size-lg: 18px;
+    --font-size-xl: 20px;
+
+    /* Desktop: Relaxed line heights for better readability */
+    --line-height-normal: 1.6;
+  }
+}
+
+/* ── BUTTON SIZING SYSTEM ────────────────────────────────────────────── */
+
+:root {
+  /* Button Heights — Touch-friendly minimums */
+  --button-height-sm: 32px;      /* Small: secondary actions */
+  --button-height-md: 44px;      /* Default: primary actions (min touch target) */
+  --button-height-lg: 56px;      /* Large: hero actions */
+
+  /* Button Padding — Horizontal consistency */
+  --button-padding-x-sm: 12px;   /* Small button horizontal padding */
+  --button-padding-x-md: 16px;   /* Medium button horizontal padding */
+  --button-padding-x-lg: 24px;   /* Large button horizontal padding */
+
+  /* Button Text Properties */
+  --button-font-size: var(--font-size-base);
+  --button-font-weight: var(--font-weight-semibold);
+  --button-letter-spacing: var(--letter-spacing-normal);
+}
+
+/* Mobile: Smaller buttons, tighter padding */
+@media (max-width: 479px) {
+  :root {
+    --button-height-sm: 28px;      /* Reduced from 32px */
+    --button-height-md: 40px;      /* Reduced from 44px, still touch-friendly */
+    --button-padding-x-sm: 10px;   /* Slightly tighter */
+    --button-padding-x-md: 14px;   /* Slightly tighter */
+  }
+}
+
+/* ── CARD SIZING SYSTEM ──────────────────────────────────────────────── */
+
+:root {
+  /* Card Padding — Consistent internal spacing */
+  --card-padding-sm: 8px;        /* Minimal padding (compact layouts) */
+  --card-padding-md: 12px;       /* Default padding (standard cards) */
+  --card-padding-lg: 16px;       /* Generous padding (prominent cards) */
+  --card-padding-xl: 24px;       /* Extra generous (hero sections) */
+
+  /* Card Border */
+  --card-border-width: 1px;
+  --card-border-color: var(--color-border);
+
+  /* Card Radius — Consistent corner rounding */
+  --card-border-radius: var(--radius-m);
+}
+
+/* Mobile: Tighter padding on cards */
+@media (max-width: 479px) {
+  :root {
+    --card-padding-sm: 6px;     /* Reduced from 8px */
+    --card-padding-md: 10px;    /* Reduced from 12px */
+    --card-padding-lg: 12px;    /* Reduced from 16px */
+  }
+}
+
+/* ── MODAL SIZING SYSTEM ────────────────────────────────────────────── */
+
+:root {
+  /* Modal Max-Widths — For different sizes */
+  --modal-width-sm: 280px;      /* Small: confirmations, alerts */
+  --modal-width-md: 360px;      /* Medium: standard modals */
+  --modal-width-lg: 480px;      /* Large: game setup, complex modals */
+
+  /* Modal Padding */
+  --modal-padding: var(--space-l);
+  --modal-header-padding: var(--space-l);
+  --modal-footer-padding: var(--space-l);
+
+  /* Modal Header */
+  --modal-header-font-size: var(--font-size-lg);
+  --modal-header-font-weight: var(--font-weight-bold);
+}
+
+/* Mobile: Responsive modal widths */
+@media (max-width: 479px) {
+  :root {
+    --modal-width-sm: clamp(240px, 90vw, 280px);
+    --modal-width-md: clamp(260px, 90vw, 360px);
+    --modal-width-lg: clamp(280px, 90vw, 480px);
+
+    --modal-padding: var(--space-m);        /* Reduced from --space-l */
+  }
+}
+
+/* ── ICON SIZING SYSTEM ──────────────────────────────────────────────── */
+
+:root {
+  /* Icon Sizes — Standardized for consistency */
+  --icon-size-xs: 16px;          /* Tiny: close buttons, badges */
+  --icon-size-sm: 20px;          /* Small: navigation, inline */
+  --icon-size-md: 24px;          /* Default: button icons */
+  --icon-size-lg: 32px;          /* Large: featured icons */
+  --icon-size-xl: 48px;          /* XL: hero icons */
+  --icon-size-2xl: 64px;         /* 2XL: large hero icons */
+
+  /* Icon Colors */
+  --icon-color-default: var(--color-text-primary);
+  --icon-color-secondary: var(--color-text-secondary);
+  --icon-color-accent: var(--color-accent);
+}
+
+/* ── AVATAR SIZING SYSTEM ────────────────────────────────────────────── */
+
+:root {
+  /* Avatar Sizes — Standard dimensions */
+  --avatar-size-xs: 24px;        /* Tiny: lists, comments */
+  --avatar-size-sm: 32px;        /* Small: comment authors */
+  --avatar-size-md: 48px;        /* Default: profile, cards */
+  --avatar-size-lg: 64px;        /* Large: profile headers */
+  --avatar-size-xl: 96px;        /* XL: profile pages */
+
+  /* Avatar Border Radius (circular) */
+  --avatar-border-radius: var(--radius-round);
+
+  /* Avatar Border */
+  --avatar-border-width: 2px;
+  --avatar-border-color: var(--color-border);
+}
+
+/* ── EXPANDED SPACING SCALE ──────────────────────────────────────────── */
+
+:root {
+  /* Consistent gap naming for grids and flexbox */
+  --gap-xs: 4px;     /* Tiny gaps (micro layouts) */
+  --gap-sm: 8px;     /* Small gaps (default) */
+  --gap-md: 12px;    /* Medium gaps (standard) */
+  --gap-lg: 16px;    /* Large gaps (sections) */
+  --gap-xl: 24px;    /* XL gaps (major sections) */
+  --gap-2xl: 32px;   /* 2XL gaps (page sections) */
+  --gap-3xl: 48px;   /* 3XL gaps (hero sections) */
+}
+
+/* Mobile: Tighter gaps to save space */
+@media (max-width: 479px) {
+  :root {
+    --gap-lg: 12px;   /* Reduced from 16px */
+    --gap-xl: 16px;   /* Reduced from 24px */
+    --gap-2xl: 24px;  /* Reduced from 32px */
+  }
+}
+
+/* Desktop: More generous gaps for breathing room */
+@media (min-width: 768px) {
+  :root {
+    --gap-2xl: 40px;  /* Increased from 32px */
+    --gap-3xl: 56px;  /* Increased from 48px */
+  }
+}
+
+/* ── FORM INPUT SIZING ───────────────────────────────────────────────── */
+
+:root {
+  /* Input heights — Touch-friendly */
+  --input-height-sm: 32px;       /* Small input */
+  --input-height-md: 40px;       /* Medium input (default) */
+  --input-height-lg: 48px;       /* Large input */
+
+  /* Input padding */
+  --input-padding-x: 12px;
+  --input-padding-y: 10px;
+
+  /* Input font */
+  --input-font-size: var(--font-size-base);
+  --input-border-radius: var(--radius-m);
+}
+
+/* ── HEADING STYLES (Semantic) ───────────────────────────────────────── */
+
+:root {
+  /* H1 — Page Title */
+  --heading-1-font-size: var(--font-size-2xl);
+  --heading-1-font-weight: var(--font-weight-bold);
+  --heading-1-line-height: var(--line-height-tight);
+  --heading-1-letter-spacing: var(--letter-spacing-tight);
+
+  /* H2 — Section Title */
+  --heading-2-font-size: var(--font-size-xl);
+  --heading-2-font-weight: var(--font-weight-bold);
+  --heading-2-line-height: var(--line-height-tight);
+
+  /* H3 — Subsection Title */
+  --heading-3-font-size: var(--font-size-lg);
+  --heading-3-font-weight: var(--font-weight-semibold);
+  --heading-3-line-height: var(--line-height-normal);
+
+  /* Label — Form Label, Small Heading */
+  --label-font-size: var(--font-size-sm);
+  --label-font-weight: var(--font-weight-semibold);
+  --label-letter-spacing: var(--letter-spacing-wide);
+
+  /* Caption — Small Text, Disabled, Secondary */
+  --caption-font-size: var(--font-size-xs);
+  --caption-font-weight: var(--font-weight-regular);
+  --caption-color: var(--color-text-secondary);
+}
+
+/* ── SHADOW ELEVATION SYSTEM ────────────────────────────────────────── */
+
+:root {
+  /* Additional shadow levels for visual hierarchy */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);      /* Subtle */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);      /* Light (cards) */
+  --shadow-md: 0 4px 24px rgba(0, 0, 0, 0.2);      /* Medium (modals) */
+  --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.5);     /* Heavy (overlays) */
+
+  /* Hover/Focus States */
+  --shadow-focus: 0 0 0 3px rgba(245, 200, 66, 0.25);  /* Accent focus ring */
+}
+
+/* ── TRANSITION TIMING (Consistency) ────────────────────────────────── */
+
+:root {
+  /* Standardized transition durations */
+  --transition-fast: 150ms;      /* Quick transitions (hover states) */
+  --transition-normal: 250ms;    /* Standard transitions (interactions) */
+  --transition-slow: 400ms;      /* Slow transitions (important changes) */
+
+  /* Easing functions */
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);  /* Default easing */
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);        /* Exit transitions */
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);         /* Enter transitions */
+}
+
+/* ── Z-INDEX EXPANSION (If Needed) ───────────────────────────────────– */
+
+/* Current z-index system is good:
+   --z-bg: 0
+   --z-base: 10
+   --z-header: 50
+   --z-nav: 100
+   --z-overlay: 200
+   --z-modal: 300
+   --z-toast: 400
+*/
+
+/* ── FOCUS & ACCESSIBILITY ──────────────────────────────────────────── */
+
+:root {
+  /* Focus ring styling */
+  --focus-outline-width: 2px;
+  --focus-outline-color: var(--color-accent);
+  --focus-outline-offset: 2px;
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   UTILITY CLASSES (Bootstrap-style, optional)
+   These make refactoring easier by providing quick CSS classes
+   ────────────────────────────────────────────────────────────────────── */
+
+/* Headings */
+.h1, h1 {
+  font-size: var(--heading-1-font-size);
+  font-weight: var(--heading-1-font-weight);
+  line-height: var(--heading-1-line-height);
+  letter-spacing: var(--heading-1-letter-spacing);
+}
+
+.h2, h2 {
+  font-size: var(--heading-2-font-size);
+  font-weight: var(--heading-2-font-weight);
+  line-height: var(--heading-2-line-height);
+}
+
+.h3, h3 {
+  font-size: var(--heading-3-font-size);
+  font-weight: var(--heading-3-font-weight);
+  line-height: var(--heading-3-line-height);
+}
+
+/* Body Text */
+.body-base {
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  font-weight: var(--font-weight-regular);
+}
+
+.body-sm {
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+  font-weight: var(--font-weight-regular);
+}
+
+/* Labels & Captions */
+.label {
+  font-size: var(--label-font-size);
+  font-weight: var(--label-font-weight);
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.caption {
+  font-size: var(--caption-font-size);
+  font-weight: var(--caption-font-weight);
+  color: var(--caption-color);
+}
+
+/* Spacing Utilities */
+.gap-sm { gap: var(--gap-sm); }
+.gap-md { gap: var(--gap-md); }
+.gap-lg { gap: var(--gap-lg); }
+.gap-xl { gap: var(--gap-xl); }
+
+.p-sm { padding: var(--card-padding-sm); }
+.p-md { padding: var(--card-padding-md); }
+.p-lg { padding: var(--card-padding-lg); }
+.p-xl { padding: var(--card-padding-xl); }
+
+/* ──────────────────────────────────────────────────────────────────────
+   USAGE GUIDE
+
+   In React components, replace hardcoded values with CSS variables:
+
+   BEFORE (Bad):
+   <div style={{ fontSize: 14, padding: '16px', fontWeight: 700 }}>
+
+   AFTER (Good):
+   <div style={{
+     fontSize: 'var(--font-size-base)',
+     padding: 'var(--card-padding-lg)',
+     fontWeight: 'var(--font-weight-bold)'
+   }}>
+
+   Or use utility classes:
+   <div className="p-lg body-base" style={{ fontWeight: 'var(--font-weight-bold)' }}>
+
+   ────────────────────────────────────────────────────────────────────── */

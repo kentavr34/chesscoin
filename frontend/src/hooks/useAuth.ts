@@ -54,10 +54,33 @@ export const useAuth = () => {
 
     // Telegram WebApp
     if (!tg || !tg.initData) {
-      // Dev режим без Telegram — используем mock
+      // Dev режим без Telegram — используем mock user
       if (import.meta.env.DEV) {
-        console.warn('[Auth] No Telegram WebApp, using dev mock');
-        await loginWithInitData('dev_mock');
+        console.warn('[Auth] No Telegram WebApp, using dev mock user');
+        const mockUser: typeof import('@/types').User = {
+          id: 'dev_user_1',
+          firstName: 'Test',
+          lastName: 'Player',
+          telegramId: '123456',
+          balance: '10000',
+          totalEarned: '10000',
+          totalSpent: '0',
+          attempts: 3,
+          maxAttempts: 3,
+          attemptSlots: [],
+          isBanned: false,
+          activeSessions: [],
+          createdAt: new Date().toISOString(),
+          elo: 1500,
+          league: 'BRONZE',
+          wins: 5,
+          losses: 2,
+          jarvisLevel: 3,
+          activeTheme: 'dark',
+          equippedItems: {},
+        } as any;
+        setUser(mockUser);
+        return;
       } else {
         setLoading(false);
         logout();
