@@ -166,7 +166,7 @@ const sheetStyle: React.CSSProperties = {
   borderRadius: '24px 24px 0 0',
   padding: window.innerWidth < 480 ? '16px 14px' : '20px 18px',
   paddingBottom: window.innerWidth < 480 ? '16px' : '20px',
-  maxHeight: 'calc(100vh - 60px)',
+  maxHeight: 'calc(100vh - 150px)',
   overflow: 'hidden',
   display: 'flex',
   flexDirection: 'column',

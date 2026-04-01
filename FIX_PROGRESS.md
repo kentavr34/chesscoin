@@ -1,11 +1,61 @@
-# ChessCoin v7.2.0 — Phase 1 Complete, Phase 2 Complete, L1 Continuing
+# ChessCoin v7.2.0 — Phase 1 Complete, Phase 2 Complete, Critical Bug Fixes Applied
 
-**Date:** 2026-04-01 (Session 5)
-**Current Status:** 🟢 **PHASE 1 COMPLETE** (97%) → 🟢 **PHASE 2 COMPLETE** (L1+L2+L3) → **L1 EXTENDED** (continuing color migration)
+**Date:** 2026-04-01 (Session 6 — CRITICAL FIXES)
+**Current Status:** 🔴 **CRITICAL BUG FIX** — Modals/Layout Rendering Issues RESOLVED → **System Restored to Working State**
 **Sessions Completed:**
   - Session 3: Phase 1 (Z-index, ARIA, Modal) ✅
   - Session 4: L2 Responsive + L3 Theme Toggle ✅
   - Session 5: L1 Color Variables continuation (in progress)
+  - Session 6: CRITICAL FIX — Modal & Layout Issues 🚨 RESOLVED ✅
+
+---
+
+## 🚨 SESSION 6 — CRITICAL BUG FIXES (2026-04-01)
+
+### Root Cause Analysis
+**Issue**: Modals not opening, game launch buttons falling off-screen, dynamic theme changes not visible
+**Root Cause**: Three-tier CSS variable system (L1+L2+L3) created a mismatch:
+- L1 defined `--color-*` variables (e.g., `--color-bg-dark`, `--color-accent`)
+- JavaScript theme system was setting `--*` variables (e.g., `--bg`, `--accent`)
+- Components had fallback values but used inconsistent variable names
+- Theme initialization happened at module load time, not React effect
+- Modal positioning didn't account for BottomNav height (82px)
+
+### Critical Fixes Applied
+**Commit:** `fix(critical): resolve modal rendering and layout issues (9b2a6b7)`
+
+1. **Fixed CSS Variable Naming** (theme.ts)
+   - Changed `applyThemeToCss()` to use `--color-*` naming convention
+   - Now uses `--color-bg-dark`, `--color-accent`, etc. (matching L1 definitions)
+   - Ensures theme changes are visible immediately
+
+2. **Fixed Modal Bottom Sheet Positioning** (GameSetupModal.tsx)
+   - Changed `paddingBottom` from `env(safe-area-inset-bottom, 0px)`
+   - To: `max(82px, env(safe-area-inset-bottom, 82px))`
+   - Accounts for BottomNav height, prevents button overflow
+
+3. **Fixed PageLayout Content Padding** (PageLayout.tsx)
+   - Changed hardcoded `paddingBottom: noScroll ? 82 : 90`
+   - To: `paddingBottom: max(82px, calc(var(--space-l, 16px) * 6 + env(safe-area-inset-bottom, 0px)))`
+   - Responsive to spacing variables and safe-area insets
+
+4. **Fixed Theme Initialization** (App.tsx + PageLayout.tsx)
+   - Moved theme setup from module-level (PageLayout) to React effect (App)
+   - Ensures theme is applied after React state is ready
+   - Prevents race conditions between initialization and state
+
+5. **Fixed BottomNav Safe-Area Padding** (BottomNav.tsx)
+   - Changed `paddingBottom: 'max(0px, env(safe-area-inset-bottom, 0px))'`
+   - To: `paddingBottom: 'max(12px, env(safe-area-inset-bottom, 0px))'`
+   - Ensures proper spacing on notched devices
+
+### Impact & Verification
+- ✅ Modals now render correctly at all breakpoints
+- ✅ Game launch buttons no longer overflow screen
+- ✅ Theme changes apply dynamically and visibly
+- ✅ Safe-area insets respected on notched devices
+- ✅ Layout responsive to CSS variable changes
+- ✅ Build: 6.33s, no errors
 
 ---
 

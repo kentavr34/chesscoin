@@ -13,10 +13,15 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      "/api/v1": "http://localhost:3000",
+      "/api/v1": {
+        target: "https://chesscoin.app",
+        changeOrigin: true,
+        rewrite: (path) => path,
+      },
       "/socket.io": {
-        target: "http://localhost:3000",
+        target: "https://chesscoin.app",
         ws: true,
+        changeOrigin: true,
       },
     },
   },

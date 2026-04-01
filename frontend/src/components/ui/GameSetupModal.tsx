@@ -121,21 +121,20 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
         <InfoPopup infoKey="jarvis" slides={JARVIS_INFO_SLIDES} onClose={jarvisInfo.close} />
       )}
       <div style={sheetStyle} onClick={(e) => e.stopPropagation()}>
-        {/* Header — fixed at top */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 22, flexShrink: 0 }}>
+        {/* ── HEADER (fixed) ────────────────────────────────────────────────────────── */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, paddingBottom: 8, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
           <button onClick={onClose} style={backBtnStyle}>←</button>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--color-text-primary, #F0F2F8)' }}>
+            <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-text-primary, #F0F2F8)' }}>
               🤖 {selectedLevel.name}
             </div>
             <div style={{ fontSize: 11, color: 'var(--color-accent, #F5C842)', marginTop: 2 }}>
-              Level {selectedLevel.level} / 20 · +{selectedLevel.reward.toLocaleString()} ᚙ per win
+              Level {selectedLevel.level} / 20
             </div>
           </div>
-          {/* J4: кнопка открыть инфо вручную */}
           <button
             onClick={jarvisInfo.open}
-            style={{ ...backBtnStyle, fontSize: 16, color: 'var(--color-text-secondary, #8B92A8)' }}
+            style={{ ...backBtnStyle, fontSize: 14, color: 'var(--color-text-secondary, #8B92A8)' }}
             title="About J.A.R.V.I.S"
           >
             ℹ️
@@ -143,59 +142,68 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
           <button onClick={onClose} style={backBtnStyle}>✕</button>
         </div>
 
-        {/* Scrollable content area */}
-        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingRight: 4 }}>
+        {/* ── CONTENT (scrollable) ───────────────────────────────────────────────────── */}
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingRight: 2, display: 'flex', flexDirection: 'column', gap: 12 }}>
           {/* Color selection */}
-          <div style={sectionLbl}>{t.gameSetup.color}</div>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: window.innerWidth < 480 ? '1fr 1fr' : '1fr 1fr 1fr',
-            gap: 8,
-            marginBottom: 20,
-          }}>
-            {(['random', 'white', 'black'] as ColorChoice[]).map((c) => (
-              <button
-                key={c}
-                onClick={() => setColor(c)}
-                style={colorBtnStyle(color === c, c)}
-              >
-                <span style={{ fontSize: 24, display: 'block', marginBottom: 6 }}>
-                  {c === 'random' ? '🎲' : c === 'white' ? '♔' : '♚'}
-                </span>
-                <span style={{ fontSize: 11, fontWeight: 700 }}>
-                  {c === 'random' ? t.gameSetup.random.replace('🎲 ','') : c === 'white' ? t.gameSetup.white.replace('☀️ ','') : t.gameSetup.black.replace('🌙 ','')}
-                </span>
-              </button>
-            ))}
+          <div>
+            <div style={sectionLbl}>{t.gameSetup.color}</div>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr 1fr',
+              gap: 6,
+            }}>
+              {(['random', 'white', 'black'] as ColorChoice[]).map((c) => (
+                <button
+                  key={c}
+                  onClick={() => setColor(c)}
+                  style={colorBtnStyle(color === c, c)}
+                >
+                  <span style={{ fontSize: 22, display: 'block', marginBottom: 6 }}>
+                    {c === 'random' ? '🎲' : c === 'white' ? '♔' : '♚'}
+                  </span>
+                  <span style={{ fontSize: 11, fontWeight: 700 }}>
+                    {c === 'random' ? t.gameSetup.random.replace('🎲 ','') : c === 'white' ? t.gameSetup.white.replace('☀️ ','') : t.gameSetup.black.replace('🌙 ','')}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* Time selection — 6 опций в сетке 3×2 или 2×3 на мобильных */}
-          <div style={sectionLbl}>{t.gameSetup.duration}</div>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: window.innerWidth < 480 ? '1fr 1fr' : '1fr 1fr 1fr',
-            gap: 8,
-            marginBottom: 24,
-          }}>
-            {TIME_OPTIONS.map((opt) => (
-              <button
-                key={opt}
-                onClick={() => setTime(opt)}
-                style={timeBtnStyle(time === opt)}
-              >
-                <span style={{ fontSize: 16, display: 'block', marginBottom: 2 }}>
-                  {opt === 1 ? '⚡' : opt === 3 ? '🔥' : opt === 5 ? '♟' : opt === 15 ? '🎯' : opt === 30 ? '🏆' : '👑'}
-                </span>
-                {opt < 60 ? `${opt} min` : '1 hr'}
-              </button>
-            ))}
+          {/* Time selection */}
+          <div>
+            <div style={sectionLbl}>{t.gameSetup.duration}</div>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr 1fr',
+              gap: 6,
+            }}>
+              {TIME_OPTIONS.map((opt) => (
+                <button
+                  key={opt}
+                  onClick={() => setTime(opt)}
+                  style={timeBtnStyle(time === opt)}
+                >
+                  <span style={{ fontSize: 14, display: 'block', marginBottom: 2 }}>
+                    {opt === 1 ? '⚡' : opt === 3 ? '🔥' : opt === 5 ? '♟' : opt === 15 ? '🎯' : opt === 30 ? '🏆' : '👑'}
+                  </span>
+                  <span style={{ fontSize: 10 }}>
+                    {opt < 60 ? `${opt} min` : '1 hr'}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Start button — fixed at bottom */}
-        <button onClick={handleStart} style={startBtnStyle}>
-          ♟ Start game
-        </button>
+        {/* ── FOOTER (fixed) ────────────────────────────────────────────────────────── */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0, borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 8 }}>
+          <div style={{ padding: 10, background: 'rgba(123,97,255,0.08)', border: '1px solid rgba(123,97,255,0.15)', borderRadius: 10, fontSize: 12, color: '#8B92A8', lineHeight: 1.5 }}>
+            🏆 Выигрывай уровни по порядку. Каждый выигранный уровень дарует значок на профиль.
+          </div>
+          <button onClick={handleStart} style={startBtnStyle}>
+            ♟ Start game
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -217,12 +225,12 @@ const sheetStyle: React.CSSProperties = {
   border: '1px solid var(--gamesetup-sheet-border, rgba(255,255,255,0.1))',
   borderBottom: 'none',
   borderRadius: '24px 24px 0 0',
-  padding: '20px 18px',
-  paddingBottom: '20px',
-  maxHeight: 'calc(100vh - 60px)',
+  padding: '16px 16px',
+  maxHeight: '80vh',
   overflow: 'hidden',
   display: 'flex',
   flexDirection: 'column',
+  gap: '12px',
 };
 const launchSheetStyle: React.CSSProperties = {
   width: '100%', maxWidth: 'clamp(260px, 90vw, 360px)',
@@ -274,34 +282,63 @@ const backBtnStyle: React.CSSProperties = {
   fontFamily: 'inherit', flexShrink: 0,
 };
 const sectionLbl: React.CSSProperties = {
-  fontSize: 10, fontWeight: 700, letterSpacing: '.09em',
-  textTransform: 'uppercase', color: 'var(--color-text-muted, #4A5270)',
-  marginBottom: 10,
+  fontSize: 9,
+  fontWeight: 700,
+  letterSpacing: '.09em',
+  textTransform: 'uppercase',
+  color: 'var(--color-text-muted, #4A5270)',
+  marginBottom: 6,
 };
 const colorBtnStyle = (active: boolean, c: ColorChoice): React.CSSProperties => ({
-  padding: '20px 8px', borderRadius: 14, cursor: 'pointer',
-  minHeight: 80,
+  padding: '12px 6px', borderRadius: 10, cursor: 'pointer',
+  minHeight: 58,
   background: active ? 'var(--modal-color-active-bg, rgba(245,200,66,0.1))' : 'var(--color-bg-card, #1C2030)',
   border: `2px solid ${active ? 'var(--color-accent, #F5C842)' : 'var(--color-border, rgba(255,255,255,0.07))'}`,
   color: active ? 'var(--color-accent, #F5C842)' : 'var(--color-text-secondary, #8B92A8)',
-  textAlign: 'center', transition: 'all .15s', fontFamily: 'inherit',
-  transform: active ? 'scale(1.05)' : 'scale(1)',
+  textAlign: 'center',
+  transition: 'all 0.15s',
+  fontFamily: 'inherit',
+  fontSize: 11,
+  fontWeight: 600,
+  transform: active ? 'scale(1.03)' : 'scale(1)',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 4,
 });
 const timeBtnStyle = (active: boolean): React.CSSProperties => ({
-  padding: '14px 8px', borderRadius: 12, cursor: 'pointer',
-  minHeight: 68,
+  padding: '10px 6px',
+  borderRadius: 10,
+  cursor: 'pointer',
+  minHeight: 50,
   background: active ? 'var(--modal-time-active-bg, rgba(123,97,255,0.15))' : 'var(--color-bg-card, #1C2030)',
   border: `1px solid ${active ? 'var(--modal-time-active-border, rgba(123,97,255,0.4))' : 'var(--color-border, rgba(255,255,255,0.07))'}`,
   color: active ? 'var(--modal-time-active-color, #9B85FF)' : 'var(--color-text-secondary, #8B92A8)',
-  fontSize: 13, fontWeight: 700, transition: 'all .15s', fontFamily: 'inherit',
+  fontSize: 10,
+  fontWeight: 600,
+  transition: 'all 0.15s',
+  fontFamily: 'inherit',
   textAlign: 'center' as const,
+  transform: active ? 'scale(1.03)' : 'scale(1)',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 2,
 });
 const startBtnStyle: React.CSSProperties = {
-  width: '100%', padding: '19px 14px',
-  minHeight: 56,
+  width: '100%',
+  padding: '14px 12px',
+  minHeight: 48,
   background: 'var(--color-accent, #F5C842)',
-  border: 'none', borderRadius: 14,
-  color: 'var(--color-bg-dark, #0B0D11)', fontSize: 17, fontWeight: 800,
-  cursor: 'pointer', fontFamily: 'inherit',
-  boxShadow: 'var(--modal-start-btn-shadow, 0 4px 20px rgba(245,200,66,0.3))',
+  border: 'none',
+  borderRadius: 12,
+  color: 'var(--color-bg-dark, #0B0D11)',
+  fontSize: 15,
+  fontWeight: 800,
+  cursor: 'pointer',
+  fontFamily: 'inherit',
+  transition: 'all 0.2s',
+  boxShadow: 'var(--modal-start-btn-shadow, 0 4px 20px rgba(245,200,66,0.2))',
 };
