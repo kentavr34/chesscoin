@@ -248,6 +248,20 @@
   --victory-countdown-inactive-dot: rgba(255, 255, 255, 0.2);
   --victory-opponent-text-color: rgba(255, 255, 255, 0.8);
 
+  /* JarvisModal Colors (L1) */
+  --jarvis-modal-overlay-bg: rgba(0, 0, 0, 0.7);
+  --jarvis-modal-sheet-border: rgba(255, 255, 255, 0.1);
+  --jarvis-modal-footer-hint-bg: rgba(123, 97, 255, 0.08);
+  --jarvis-modal-footer-hint-border: rgba(123, 97, 255, 0.15);
+  --jarvis-modal-card-active-bg: rgba(245, 200, 66, 0.07);
+  --jarvis-modal-card-completed-bg: rgba(0, 214, 143, 0.04);
+  --jarvis-modal-card-active-border: rgba(245, 200, 66, 0.3);
+  --jarvis-modal-card-completed-border: rgba(0, 214, 143, 0.15);
+  --jarvis-modal-card-default-border: rgba(255, 255, 255, 0.07);
+  --jarvis-modal-num-completed-bg: rgba(0, 214, 143, 0.15);
+  --jarvis-modal-num-active-bg: rgba(245, 200, 66, 0.15);
+  --jarvis-modal-num-default-border: rgba(255, 255, 255, 0.1);
+
   /* Candle Chart (L1) */
   --chart-text-color: #4A5270;
   --chart-grid-line: rgba(255, 255, 255, 0.03);
@@ -450,6 +464,20 @@
     --victory-countdown-inactive-dot: rgba(0, 0, 0, 0.15);
     --victory-opponent-text-color: rgba(0, 0, 0, 0.7);
 
+    /* JarvisModal Light Mode Adjustments */
+    --jarvis-modal-overlay-bg: rgba(0, 0, 0, 0.5);
+    --jarvis-modal-sheet-border: rgba(0, 0, 0, 0.08);
+    --jarvis-modal-footer-hint-bg: rgba(109, 40, 217, 0.06);
+    --jarvis-modal-footer-hint-border: rgba(109, 40, 217, 0.12);
+    --jarvis-modal-card-active-bg: rgba(212, 168, 32, 0.06);
+    --jarvis-modal-card-completed-bg: rgba(0, 163, 102, 0.03);
+    --jarvis-modal-card-active-border: rgba(212, 168, 32, 0.25);
+    --jarvis-modal-card-completed-border: rgba(0, 163, 102, 0.12);
+    --jarvis-modal-card-default-border: rgba(0, 0, 0, 0.05);
+    --jarvis-modal-num-completed-bg: rgba(0, 163, 102, 0.12);
+    --jarvis-modal-num-active-bg: rgba(212, 168, 32, 0.12);
+    --jarvis-modal-num-default-border: rgba(0, 0, 0, 0.08);
+
     /* Candle Chart Light Mode Adjustments */
     --chart-text-color: #5A5F6E;
     --chart-grid-line: rgba(0, 0, 0, 0.05);
@@ -645,6 +673,20 @@
   --victory-overlay-bg: rgba(0, 0, 0, 0.7);
   --victory-countdown-inactive-dot: rgba(0, 0, 0, 0.15);
   --victory-opponent-text-color: rgba(0, 0, 0, 0.7);
+
+  /* JarvisModal Light Mode via data-theme */
+  --jarvis-modal-overlay-bg: rgba(0, 0, 0, 0.5);
+  --jarvis-modal-sheet-border: rgba(0, 0, 0, 0.08);
+  --jarvis-modal-footer-hint-bg: rgba(109, 40, 217, 0.06);
+  --jarvis-modal-footer-hint-border: rgba(109, 40, 217, 0.12);
+  --jarvis-modal-card-active-bg: rgba(212, 168, 32, 0.06);
+  --jarvis-modal-card-completed-bg: rgba(0, 163, 102, 0.03);
+  --jarvis-modal-card-active-border: rgba(212, 168, 32, 0.25);
+  --jarvis-modal-card-completed-border: rgba(0, 163, 102, 0.12);
+  --jarvis-modal-card-default-border: rgba(0, 0, 0, 0.05);
+  --jarvis-modal-num-completed-bg: rgba(0, 163, 102, 0.12);
+  --jarvis-modal-num-active-bg: rgba(212, 168, 32, 0.12);
+  --jarvis-modal-num-default-border: rgba(0, 0, 0, 0.08);
 
   /* Candle Chart Light Mode via data-theme */
   --chart-text-color: #5A5F6E;
