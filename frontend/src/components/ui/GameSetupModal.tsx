@@ -147,9 +147,7 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
           {/* Color selection */}
           <div>
             <div style={sectionLbl}>{t.gameSetup.color}</div>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr 1fr',
+            <div className="grid-auto-2-3" style={{
               gap: 6,
             }}>
               {(['random', 'white', 'black'] as ColorChoice[]).map((c) => (
@@ -172,9 +170,7 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
           {/* Time selection */}
           <div>
             <div style={sectionLbl}>{t.gameSetup.duration}</div>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr 1fr',
+            <div className="grid-auto-2-3" style={{
               gap: 6,
             }}>
               {TIME_OPTIONS.map((opt) => (
