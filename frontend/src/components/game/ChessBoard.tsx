@@ -25,11 +25,11 @@ function makePieceUrl(setPath: string, fileName: string): string {
   }
 }
 
-// ── Цвета подсветки ───────────────────────────────────────────────────────────
-const SELECTED_BG  = 'rgba(123,97,255,0.45)';
-const MOVE_BG      = 'radial-gradient(circle, rgba(123,97,255,0.55) 22%, transparent 22%)';
-const CAPTURE_BG   = 'radial-gradient(circle, rgba(255,77,106,0.5) 100%, transparent 100%)';
-const LAST_MOVE_BG = 'rgba(245,200,66,0.18)';
+// ── Цвета подсветки (L1: CSS variables) ────────────────────────────────────────
+const SELECTED_BG  = 'var(--chess-selected-bg, rgba(123, 97, 255, 0.45))'; // purple-dark with 45% opacity
+const MOVE_BG      = 'var(--chess-move-bg, radial-gradient(circle, rgba(123, 97, 255, 0.55) 22%, transparent 22%))'; // purple-dark radial
+const CAPTURE_BG   = 'var(--chess-capture-bg, radial-gradient(circle, rgba(255, 77, 106, 0.5) 100%, transparent 100%))'; // red radial
+const LAST_MOVE_BG = 'var(--chess-last-move-bg, rgba(245, 200, 66, 0.18))'; // accent with 18% opacity
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 interface ChessBoardProps {
@@ -65,14 +65,14 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
     if (!sessionBoardSkinUrl) return boardColors;
     // Если URL содержит название скина — матчим по ключевым словам
     const url = sessionBoardSkinUrl.toLowerCase();
-    if (url.includes('classic')   || url.includes('классика')) return { light: '#F0D9B5', dark: '#B58863' };
-    if (url.includes('marble')    || url.includes('мрамор'))   return { light: '#E8E0D8', dark: '#8C7B6B' };
-    if (url.includes('gold')      || url.includes('золото'))   return { light: '#F5E6A0', dark: '#C8960A' };
-    if (url.includes('night')     || url.includes('ночь'))     return { light: '#1C1C2E', dark: '#0D0D1A' };
-    if (url.includes('malachit')  || url.includes('малахит'))  return { light: '#A8D5A2', dark: '#3A7A34' };
-    if (url.includes('neon')      || url.includes('неон'))     return { light: '#0D1F2D', dark: '#071520' };
-    if (url.includes('ice')       || url.includes('лёд'))      return { light: '#D8EEF8', dark: '#6090B8' };
-    if (url.includes('cyber')     || url.includes('кибер'))    return { light: '#0A0A1A', dark: '#050510' };
+    if (url.includes('classic')   || url.includes('классика')) return { light: 'var(--chess-skin-classic-light, #F0D9B5)', dark: 'var(--chess-skin-classic-dark, #B58863)' };
+    if (url.includes('marble')    || url.includes('мрамор'))   return { light: 'var(--chess-skin-marble-light, #E8E0D8)', dark: 'var(--chess-skin-marble-dark, #8C7B6B)' };
+    if (url.includes('gold')      || url.includes('золото'))   return { light: 'var(--chess-skin-gold-light, #F5E6A0)', dark: 'var(--chess-skin-gold-dark, #C8960A)' };
+    if (url.includes('night')     || url.includes('ночь'))     return { light: 'var(--chess-skin-night-light, #1C1C2E)', dark: 'var(--chess-skin-night-dark, #0D0D1A)' };
+    if (url.includes('malachit')  || url.includes('малахит'))  return { light: 'var(--chess-skin-malachite-light, #A8D5A2)', dark: 'var(--chess-skin-malachite-dark, #3A7A34)' };
+    if (url.includes('neon')      || url.includes('неон'))     return { light: 'var(--chess-skin-neon-light, #0D1F2D)', dark: 'var(--chess-skin-neon-dark, #071520)' };
+    if (url.includes('ice')       || url.includes('лёд'))      return { light: 'var(--chess-skin-ice-light, #D8EEF8)', dark: 'var(--chess-skin-ice-dark, #6090B8)' };
+    if (url.includes('cyber')     || url.includes('кибер'))    return { light: 'var(--chess-skin-cyber-light, #0A0A1A)', dark: 'var(--chess-skin-cyber-dark, #050510)' };
     // Fallback: личный скин игрока
     return boardColors;
   })();
@@ -104,7 +104,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
             <span style={{
               fontSize: squareWidth * 0.72,
               lineHeight: 1,
-              textShadow: '0 1px 3px rgba(0,0,0,0.4)',
+              textShadow: 'var(--chess-emoji-text-shadow, 0 1px 3px rgba(0,0,0,0.4))',
               userSelect: 'none',
             }}>{emoji}</span>
           </div>
@@ -124,7 +124,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
               style={{
                 width: '100%', height: '100%',
                 objectFit: 'contain',
-                filter: 'var(--piece-filter, drop-shadow(0 1px 3px rgba(0,0,0,0.3)))',
+                filter: 'var(--piece-filter, var(--chess-piece-shadow, drop-shadow(0 1px 3px rgba(0,0,0,0.3))))',
                 userSelect: 'none',
                 WebkitUserSelect: 'none',
               }}
@@ -359,7 +359,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
         width: '100%',
         borderRadius: 12,
         overflow: 'hidden',
-        boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
+        boxShadow: 'var(--chess-board-shadow, 0 4px 24px rgba(0,0,0,0.4))',
         position: 'relative',
       }}>
         {sessionId && (
@@ -371,18 +371,18 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
               bottom: 8,
               right: 8,
               zIndex: "var(--z-base, 10)",
-              background: 'rgba(28, 32, 48, 0.85)',
-              border: `1px solid ${isSaved ? '#F5C842' : 'rgba(255,255,255,0.1)'}`,
+              background: 'var(--chess-save-btn-bg, rgba(28, 32, 48, 0.85))',
+              border: `1px solid ${isSaved ? 'var(--color-accent, #F5C842)' : 'var(--color-border, rgba(255,255,255,0.1))'}`,
               borderRadius: '50%',
               width: 32,
               height: 32,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: isSaved ? '#F5C842' : '#8B92A8',
+              color: isSaved ? 'var(--color-accent, #F5C842)' : 'var(--color-text-secondary, #8B92A8)',
               fontSize: 16,
               cursor: isSaving ? 'wait' : 'pointer',
-              boxShadow: isSaved ? '0 0 10px rgba(245,200,66,0.3)' : '0 2px 8px rgba(0,0,0,0.5)',
+              boxShadow: isSaved ? 'var(--chess-save-btn-active-shadow, 0 0 10px rgba(245,200,66,0.3))' : 'var(--chess-save-btn-shadow, 0 2px 8px rgba(0,0,0,0.5))',
               transition: 'all 0.2s',
             }}
             title="Save Game"
@@ -400,7 +400,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
           arePiecesDraggable={isMyTurn && !isGameOver}
           arePremovesAllowed={false}
           customPieces={CUSTOM_PIECES}
-          customBoardStyle={{ borderRadius: 12, boxShadow: '0 4px 24px rgba(0,0,0,0.4)' }}
+          customBoardStyle={{ borderRadius: 12, boxShadow: 'var(--chess-board-shadow, 0 4px 24px rgba(0,0,0,0.4))' }}
           showBoardNotation={true}
           customLightSquareStyle={{
             background: effectiveBoardColors.light,
