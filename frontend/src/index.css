@@ -62,6 +62,110 @@
   --shadow-md: 0 4px 24px rgba(0, 0, 0, 0.2);
   --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.5);
 
+  /* ── ТИПОГРАФИЯ: ШКАЛА РАЗМЕРОВ ──────────────────────────────────── */
+  --font-size-xs: 10px;      /* Крошечный: бейджи, подписи */
+  --font-size-sm: 12px;      /* Малый: лейблы, вторичный текст */
+  --font-size-base: 14px;    /* Базовый: основной текст */
+  --font-size-md: 16px;      /* Средний: крупный текст */
+  --font-size-lg: 18px;      /* Большой: заголовки карточек */
+  --font-size-xl: 20px;      /* XL: заголовки секций */
+  --font-size-2xl: 24px;     /* 2XL: заголовки страниц */
+  --font-size-3xl: 28px;     /* 3XL: баннеры */
+
+  /* ── ТИПОГРАФИЯ: ВЕС ШРИФТА ───────────────────────────────────────── */
+  --font-weight-regular: 400;    /* Базовый текст */
+  --font-weight-medium: 500;     /* Немного выделенный */
+  --font-weight-semibold: 600;   /* Выделенный, лейблы */
+  --font-weight-bold: 700;       /* Сильно выделенный, заголовки */
+  --font-weight-extrabold: 800;  /* Очень сильно, герой текст */
+
+  /* ── ТИПОГРАФИЯ: ВЫСОТА СТРОКИ ────────────────────────────────────── */
+  --line-height-tight: 1.2;      /* Плотная: заголовки */
+  --line-height-normal: 1.5;     /* Нормальная: основной текст */
+  --line-height-relaxed: 1.75;   /* Просторная: длинные тексты */
+  --line-height-loose: 2;        /* Очень просторная */
+
+  /* ── ТИПОГРАФИЯ: ИНТЕРВАЛ МЕЖДУ БУКВ ──────────────────────────────── */
+  --letter-spacing-tight: -0.5px;    /* Заголовки */
+  --letter-spacing-normal: 0px;      /* Базовый */
+  --letter-spacing-wide: 0.5px;      /* Выделенный */
+
+  /* ── КНОПКИ: РАЗМЕРЫ ───────────────────────────────────────────────── */
+  --button-height-sm: 32px;      /* Маленькие */
+  --button-height-md: 44px;      /* Средние (основные) */
+  --button-height-lg: 56px;      /* Большие */
+  --button-padding-x-sm: 12px;   /* Маленькое горизонтальное */
+  --button-padding-x-md: 16px;   /* Среднее горизонтальное */
+  --button-padding-x-lg: 24px;   /* Большое горизонтальное */
+
+  /* ── КАРТОЧКИ: РАЗМЕРЫ ─────────────────────────────────────────────── */
+  --card-padding-sm: 8px;        /* Минимальный отступ */
+  --card-padding-md: 12px;       /* Стандартный отступ */
+  --card-padding-lg: 16px;       /* Щедрый отступ */
+  --card-padding-xl: 24px;       /* Очень щедрый отступ */
+
+  /* ── МОДАЛИ: РАЗМЕРЫ ───────────────────────────────────────────────── */
+  --modal-width-sm: 280px;      /* Маленькие модали */
+  --modal-width-md: 360px;      /* Стандартные модали */
+  --modal-width-lg: 480px;      /* Большие модали */
+
+  /* ── ИКОНКИ: РАЗМЕРЫ ───────────────────────────────────────────────── */
+  --icon-size-xs: 16px;          /* Крошечные */
+  --icon-size-sm: 20px;          /* Маленькие */
+  --icon-size-md: 24px;          /* Средние */
+  --icon-size-lg: 32px;          /* Большие */
+  --icon-size-xl: 48px;          /* XL */
+  --icon-size-2xl: 64px;         /* 2XL */
+
+  /* ── АВАТАРЫ: РАЗМЕРЫ ──────────────────────────────────────────────── */
+  --avatar-size-xs: 24px;        /* Крошечные */
+  --avatar-size-sm: 32px;        /* Маленькие */
+  --avatar-size-md: 48px;        /* Средние */
+  --avatar-size-lg: 64px;        /* Большие */
+  --avatar-size-xl: 96px;        /* XL */
+  --avatar-border-radius: var(--radius-round);
+
+  /* ── ОТСТУПЫ/ЗАЗОРЫ: РАСШИРЕННАЯ ШКАЛА ─────────────────────────────── */
+  --gap-xs: 4px;     /* Крошечные */
+  --gap-sm: 8px;     /* Маленькие */
+  --gap-md: 12px;    /* Средние */
+  --gap-lg: 16px;    /* Большие */
+  --gap-xl: 24px;    /* XL */
+  --gap-2xl: 32px;   /* 2XL */
+  --gap-3xl: 48px;   /* 3XL */
+
+  /* ── ВВОДЫ: РАЗМЕРЫ ────────────────────────────────────────────────── */
+  --input-height-sm: 32px;       /* Маленькие */
+  --input-height-md: 40px;       /* Средние */
+  --input-height-lg: 48px;       /* Большие */
+  --input-padding-x: 12px;
+  --input-padding-y: 10px;
+
+  /* ── ЗАГОЛОВКИ: СТИЛИ ──────────────────────────────────────────────── */
+  --heading-1-font-size: var(--font-size-2xl);
+  --heading-1-font-weight: var(--font-weight-bold);
+  --heading-1-line-height: var(--line-height-tight);
+
+  --heading-2-font-size: var(--font-size-xl);
+  --heading-2-font-weight: var(--font-weight-bold);
+
+  --heading-3-font-size: var(--font-size-lg);
+  --heading-3-font-weight: var(--font-weight-semibold);
+
+  /* ── ЛЕЙБЛЫ И ПОДПИСИ ─────────────────────────────────────────────── */
+  --label-font-size: var(--font-size-sm);
+  --label-font-weight: var(--font-weight-semibold);
+
+  --caption-font-size: var(--font-size-xs);
+  --caption-font-weight: var(--font-weight-regular);
+  --caption-color: var(--color-text-secondary);
+
+  /* ── ПЕРЕХОДЫ И ЗАТУХАНИЯ ──────────────────────────────────────────── */
+  --transition-fast: 150ms;
+  --transition-normal: 250ms;
+  --transition-slow: 400ms;
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
   /* Chess Board Colors (L1) */
   --chess-selected-bg: rgba(123, 97, 255, 0.45);
   --chess-move-bg: radial-gradient(circle, rgba(123, 97, 255, 0.55) 22%, transparent 22%);
@@ -411,6 +515,60 @@
   --breakpoint-sm: 480px;
   --breakpoint-md: 768px;
   --breakpoint-lg: 1024px;
+}
+
+/* ── АДАПТИВНАЯ ТИПОГРАФИЯ: МОБИЛЬНЫЙ (до 479px) ────────────────────── */
+@media (max-width: 479px) {
+  :root {
+    /* Чуть меньше шрифты на мобильных */
+    --font-size-sm: 11px;
+    --font-size-base: 13px;
+    --font-size-md: 14px;
+    --font-size-lg: 16px;
+    --font-size-xl: 18px;
+    --font-size-2xl: 22px;
+
+    /* Чуть плотнее строки */
+    --line-height-normal: 1.4;
+
+    /* Компактнее отступы */
+    --space-l: 12px;
+    --space-xl: 16px;
+    --gap-lg: 12px;
+    --gap-xl: 16px;
+    --card-padding-lg: 12px;
+
+    /* Меньше кнопки */
+    --button-height-md: 40px;
+    --button-padding-x-md: 14px;
+  }
+}
+
+/* ── АДАПТИВНАЯ ТИПОГРАФИЯ: ПЛАНШЕТ (480px - 767px) ─────────────────── */
+@media (min-width: 480px) and (max-width: 767px) {
+  :root {
+    --font-size-base: 14px;
+    --font-size-md: 15px;
+    --font-size-lg: 17px;
+  }
+}
+
+/* ── АДАПТИВНАЯ ТИПОГРАФИЯ: ДЕСКТОП (768px+) ────────────────────────── */
+@media (min-width: 768px) {
+  :root {
+    /* Полный размер */
+    --font-size-base: 14px;
+    --font-size-md: 16px;
+    --font-size-lg: 18px;
+    --font-size-xl: 20px;
+
+    /* Более просторные строки */
+    --line-height-normal: 1.6;
+
+    /* Щедрые отступы */
+    --gap-2xl: 40px;
+    --gap-3xl: 56px;
+  }
 }
 
 /* Light Mode Theme (L3) */

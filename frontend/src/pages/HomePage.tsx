@@ -62,33 +62,33 @@ export const HomePage: React.FC = () => {
         />
       )}
 
-      <div style={{ padding: '20px 16px', maxWidth: 500, margin: '0 auto' }}>
+      <div style={{ padding: 'var(--space-l) var(--space-m)', maxWidth: 500, margin: '0 auto' }}>
         <div style={{
-          padding: '16px',
+          padding: 'var(--card-padding-lg)',
           background: 'var(--color-bg-card, #13161F)',
-          border: '1px solid rgba(255,255,255,0.1)',
-          borderRadius: 16,
-          marginBottom: 24,
+          border: '1px solid var(--color-border)',
+          borderRadius: 'var(--radius-l)',
+          marginBottom: 'var(--gap-xl)',
         }}>
-          <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 12 }}>
+          <div style={{ display: 'flex', gap: 'var(--gap-md)', alignItems: 'center', marginBottom: 'var(--gap-md)' }}>
             <div style={{ fontSize: 44 }}>👤</div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 16, fontWeight: 800, color: '#F0F2F8' }}>{user.name || 'Player'}</div>
-              <div style={{ fontSize: 12, color: '#8B92A8', marginTop: 2 }}>
+              <div style={{ fontSize: 'var(--font-size-md)', fontWeight: 'var(--font-weight-extrabold)', color: 'var(--color-text-primary)' }}>{user.name || 'Player'}</div>
+              <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', marginTop: 2 }}>
                 {user.wins || 0} побед · {user.losses || 0} поражений
               </div>
             </div>
             <button
               onClick={() => navigate('/profile')}
               style={{
-                padding: '8px 16px',
+                padding: `var(--input-padding-y) var(--button-padding-x-md)`,
                 background: 'rgba(255,255,255,0.07)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: 8,
-                color: '#F0F2F8',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-m)',
+                color: 'var(--color-text-primary)',
                 cursor: 'pointer',
-                fontSize: 12,
-                fontWeight: 600,
+                fontSize: 'var(--font-size-sm)',
+                fontWeight: 'var(--font-weight-semibold)',
                 fontFamily: 'inherit',
               }}
             >
@@ -97,20 +97,20 @@ export const HomePage: React.FC = () => {
           </div>
 
           <div style={{
-            padding: '10px 12px',
+            padding: 'var(--card-padding-md)',
             background: 'rgba(245,200,66,0.08)',
             border: '1px solid rgba(245,200,66,0.2)',
-            borderRadius: 10,
+            borderRadius: 'var(--radius-m)',
             textAlign: 'center',
           }}>
-            <div style={{ fontSize: 11, color: '#8B92A8', marginBottom: 4 }}>Баланс</div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: '#F5C842', fontFamily: "'JetBrains Mono',monospace" }}>
+            <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', marginBottom: 'var(--gap-xs)' }}>Баланс</div>
+            <div style={{ fontSize: 'var(--font-size-xl)', fontWeight: 'var(--font-weight-extrabold)', color: '#F5C842', fontFamily: "'JetBrains Mono',monospace" }}>
               {(user.balance || 0).toLocaleString()} ᚙ
             </div>
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-md)' }}>
           <NavButton
             icon="🤖"
             title="Игра против Jarvis"
@@ -173,24 +173,24 @@ const NavButton: React.FC<NavButtonProps> = ({ icon, title, subtitle, onClick, c
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        padding: '20px 16px',
+        padding: `var(--card-padding-lg) var(--button-padding-x-md)`,
         background: hovered ? bgHovered : bgColor,
         border: `2px solid ${hovered ? borderHovered : borderColor}`,
-        borderRadius: 16,
+        borderRadius: 'var(--radius-l)',
         cursor: 'pointer',
         fontFamily: 'inherit',
-        transition: 'all 0.2s',
+        transition: `all var(--transition-fast) var(--ease-in-out)`,
         display: 'flex',
         alignItems: 'center',
-        gap: 12,
+        gap: 'var(--gap-md)',
       }}
     >
-      <div style={{ fontSize: 40 }}>{icon}</div>
+      <div style={{ fontSize: 'var(--icon-size-xl)' }}>{icon}</div>
       <div style={{ textAlign: 'left', flex: 1 }}>
-        <div style={{ fontSize: 16, fontWeight: 800, color: '#F0F2F8' }}>{title}</div>
-        <div style={{ fontSize: 12, color: '#8B92A8', marginTop: 2 }}>{subtitle}</div>
+        <div style={{ fontSize: 'var(--font-size-md)', fontWeight: 'var(--font-weight-extrabold)', color: 'var(--color-text-primary)' }}>{title}</div>
+        <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', marginTop: 2 }}>{subtitle}</div>
       </div>
-      <div style={{ fontSize: 20 }}>→</div>
+      <div style={{ fontSize: 'var(--font-size-xl)' }}>→</div>
     </button>
   );
 };
