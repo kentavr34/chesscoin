@@ -39,6 +39,7 @@ const AppInner: React.FC = () => {
   const { warChallenge, setWarChallenge } = useWarChallengeStore();
   const { upsertSession } = useGameStore();
   const { user } = useUserStore();
+  const { theme } = useSettingsStore();
 
   React.useEffect(() => {
     if (user?.equippedItems?.FONT) {
@@ -57,6 +58,10 @@ const AppInner: React.FC = () => {
       document.documentElement.style.setProperty('--font-main', "'Inter', sans-serif");
     }
   }, [user?.equippedItems?.FONT?.name]);
+
+  React.useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
 
   const handleAccept = () => {
     if (!warChallenge) return;

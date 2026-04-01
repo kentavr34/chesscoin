@@ -69,6 +69,83 @@
   --breakpoint-lg: 1024px;
 }
 
+/* Light Mode Theme (L3) */
+@media (prefers-color-scheme: light) {
+  :root {
+    --color-accent: #D4A820;
+    --color-accent-light: #E8C855;
+    --color-accent-dark: #A67E1A;
+
+    --color-text-primary: #1A1C22;
+    --color-text-secondary: #5A5F6E;
+    --color-text-muted: #8B92A8;
+
+    --color-bg-dark: #F5F5F5;
+    --color-bg-card: #FFFFFF;
+    --color-bg-modal: #FAFAFA;
+    --color-bg-input: #F0F0F0;
+    --color-bg-light: #E8E8E8;
+
+    --color-green: #00A366;
+    --color-green-dark: #006644;
+
+    --color-red: #D32F2F;
+    --color-red-light: #E57373;
+
+    --color-blue: #0066CC;
+    --color-blue-light: #42A5F5;
+
+    --color-purple: #6D28D9;
+    --color-purple-dark: #5B21B6;
+
+    --color-border: rgba(0, 0, 0, 0.1);
+    --color-border-light: rgba(0, 0, 0, 0.05);
+
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 24px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* Explicit Light Theme via data-theme attribute */
+[data-theme="light"] {
+  --color-accent: #D4A820;
+  --color-accent-light: #E8C855;
+  --color-accent-dark: #A67E1A;
+
+  --color-text-primary: #1A1C22;
+  --color-text-secondary: #5A5F6E;
+  --color-text-muted: #8B92A8;
+
+  --color-bg-dark: #F5F5F5;
+  --color-bg-card: #FFFFFF;
+  --color-bg-modal: #FAFAFA;
+  --color-bg-input: #F0F0F0;
+  --color-bg-light: #E8E8E8;
+
+  --color-green: #00A366;
+  --color-green-dark: #006644;
+
+  --color-red: #D32F2F;
+  --color-red-light: #E57373;
+
+  --color-blue: #0066CC;
+  --color-blue-light: #42A5F5;
+
+  --color-purple: #6D28D9;
+  --color-purple-dark: #5B21B6;
+
+  --color-border: rgba(0, 0, 0, 0.1);
+  --color-border-light: rgba(0, 0, 0, 0.05);
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 24px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.15);
+
+  background: var(--color-bg-dark);
+  color: var(--color-text-primary);
+}
+
 *, *::before, *::after { 
   box-sizing: border-box; 
   margin: 0; 

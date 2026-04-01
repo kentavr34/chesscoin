@@ -354,7 +354,7 @@ export const translations = {
       achievementStreak7: 'On fire', achievementStreak7Desc: '7 days in a row',
       achievementStreak30: 'Unbreakable', achievementStreak30Desc: '30 days in a row',
       settings: {
-        title: 'Settings', language: 'Language', sound: 'Sound Effects', soundOn: 'On', soundOff: 'Off', theme: 'Theme',
+        title: 'Settings', language: 'Language', sound: 'Sound Effects', soundOn: 'On', soundOff: 'Off', theme: 'Theme', themeDark: 'Dark', themeLight: 'Light',
         langInterface: 'Language & Interface', appLang: 'App language', vibration: 'Vibration',
         account: 'Account', dob: 'Date of birth', dobHint: 'For content personalization',
         email: 'Email', emailHint: 'Link email for recovery', phone: 'Phone', phoneHint: 'Additional security',
@@ -879,7 +879,7 @@ export const translations = {
       achievementStreak7: 'Огонь', achievementStreak7Desc: '7 дней подряд',
       achievementStreak30: 'Несломимый', achievementStreak30Desc: '30 дней подряд',
       settings: {
-        title: 'Настройки', language: 'Язык', sound: 'Звуковые эффекты', soundOn: 'Вкл', soundOff: 'Выкл', theme: 'Тема',
+        title: 'Настройки', language: 'Язык', sound: 'Звуковые эффекты', soundOn: 'Вкл', soundOff: 'Выкл', theme: 'Тема', themeDark: 'Тёмная', themeLight: 'Светлая',
         langInterface: 'Язык и интерфейс', appLang: 'Язык приложения', vibration: 'Вибрация',
         account: 'Аккаунт', dob: 'Дата рождения', dobHint: 'Для персонализации контента',
         email: 'Email', emailHint: 'Привяжите email для восстановления', phone: 'Телефон', phoneHint: 'Дополнительная безопасность',

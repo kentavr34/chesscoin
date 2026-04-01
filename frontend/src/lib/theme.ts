@@ -104,3 +104,15 @@ export function applyThemeToCss(t: ThemeTokens) {
 export function getCurrentTokens(): ThemeTokens {
   return THEMES[getActiveTheme()];
 }
+
+// ─────────────────────────────────────────────────────────────────────
+// Light/Dark Mode Theme Support (L3)
+// ─────────────────────────────────────────────────────────────────────
+
+export function applyColorScheme(scheme: 'dark' | 'light') {
+  document.documentElement.setAttribute('data-theme', scheme);
+}
+
+export function getColorScheme(): 'dark' | 'light' {
+  return (document.documentElement.getAttribute('data-theme') as 'dark' | 'light') || 'dark';
+}

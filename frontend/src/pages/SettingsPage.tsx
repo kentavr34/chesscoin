@@ -8,7 +8,7 @@ export const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const t = useT();
   const s = t.profile.settings;
-  const { lang, setLang } = useSettingsStore();
+  const { lang, setLang, theme, setTheme } = useSettingsStore();
   const [vibration, setVibration] = useState(() => {
     const stored = localStorage.getItem('chesscoin-settings');
     if (stored) { try { return JSON.parse(stored).vibration !== false; } catch {} }
@@ -21,6 +21,12 @@ export const SettingsPage: React.FC = () => {
     const stored = localStorage.getItem('chesscoin-settings');
     const prev = stored ? JSON.parse(stored) : {};
     localStorage.setItem('chesscoin-settings', JSON.stringify({ ...prev, vibration: next }));
+  };
+
+  const toggleTheme = () => {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    document.documentElement.setAttribute('data-theme', next);
   };
 
   const row = (label: string, right: React.ReactNode, border = true) => (
@@ -86,7 +92,22 @@ export const SettingsPage: React.FC = () => {
               ))}
             </div>
           )}
-          {row(s.vibration, toggle(vibration, toggleVibration), false)}
+          {row(s.vibration, toggle(vibration, toggleVibration))}
+          {row(s.theme,
+            <div style={{ display: 'flex', gap: 6 }}>
+              {(['dark', 'light'] as const).map((t) => (
+                <button key={t} onClick={() => toggleTheme()} disabled={theme === t} style={{
+                  padding: '4px 14px', borderRadius: 8, border: 'none', cursor: theme === t ? 'default' : 'pointer',
+                  background: theme === t ? '#7B61FF' : '#1C2030',
+                  color: theme === t ? '#fff' : '#A8B0C8',
+                  fontWeight: 600, fontSize: 13,
+                  opacity: theme === t ? 1 : 0.6,
+                }}>
+                  {t === 'dark' ? '🌙' : '☀️'} {t === 'dark' ? s.themeDark : s.themeLight}
+                </button>
+              ))}
+            </div>
+          , false)}
         </div>
 
         {sectionTitle(s.account)}
