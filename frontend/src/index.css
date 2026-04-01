@@ -401,6 +401,11 @@
   --battles-page-live-indicator-color: #EF4444;
   --battles-modal-handle-color: #2A2F48;
 
+  /* ExchangeTab Colors (L1) */
+  --exchange-ton-connect-gradient: linear-gradient(90deg, #0098EA, #006FB8);
+  --exchange-ton-shop-gradient: linear-gradient(90deg, #0098EA, #007AC2);
+  --shop-ton-wallet-gradient: linear-gradient(135deg, #0098EA, #006BBF);
+
   /* Responsive Breakpoints (L2) */
   --breakpoint-xs: 320px;
   --breakpoint-sm: 480px;
@@ -694,6 +699,11 @@
     /* BattlesPage Light Mode Adjustments */
     --battles-page-live-indicator-color: #C41C3B;
     --battles-modal-handle-color: #C8C8D8;
+
+    /* ExchangeTab Light Mode Adjustments */
+    --exchange-ton-connect-gradient: linear-gradient(90deg, #0066CC, #004BA0);
+    --exchange-ton-shop-gradient: linear-gradient(90deg, #0066CC, #004BA0);
+    --shop-ton-wallet-gradient: linear-gradient(135deg, #0066CC, #004587);
 
     /* StatComponents Light Mode Adjustments */
     --stat-circle-bg-stroke: #5A6378;
@@ -1040,6 +1050,11 @@
   /* BattlesPage Light Mode via data-theme */
   --battles-page-live-indicator-color: #C41C3B;
   --battles-modal-handle-color: #C8C8D8;
+
+  /* ExchangeTab Light Mode via data-theme */
+  --exchange-ton-connect-gradient: linear-gradient(90deg, #0066CC, #004BA0);
+  --exchange-ton-shop-gradient: linear-gradient(90deg, #0066CC, #004BA0);
+  --shop-ton-wallet-gradient: linear-gradient(135deg, #0066CC, #004587);
 
   /* StatComponents Light Mode via data-theme */
   --stat-circle-bg-stroke: #5A6378;

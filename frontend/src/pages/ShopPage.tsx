@@ -185,7 +185,7 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
           <button
             onClick={handleConnectWallet}
             disabled={connectStep !== 'idle'}
-            style={{ width: '100%', padding: '14px', background: 'linear-gradient(90deg,#0098EA,#007AC2)', color: '#fff', border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+            style={{ width: '100%', padding: '14px', background: 'var(--exchange-ton-shop-gradient, linear-gradient(90deg,#0098EA,#007AC2))', color: '#fff', border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
           >
             {connectStep === 'idle' ? '💎 Connect TON Wallet' :
        connectStep === 'connecting' ? '🔗 Opening wallet...' :
@@ -206,7 +206,7 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
       <div style={{ padding: '14px 16px', background: 'linear-gradient(135deg, rgba(0,152,234,0.15), rgba(0,122,194,0.08))', border: '1px solid rgba(0,152,234,0.3)', borderRadius: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
         <div style={{ fontSize: 22 }}>💎</div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 11, color: '#0098EA', fontWeight: 700, marginBottom: 2 }}>TON wallet connected</div>
+          <div style={{ fontSize: 11, color: 'var(--color-blue, #0098EA)', fontWeight: 700, marginBottom: 2 }}>TON wallet connected</div>
           <div style={{ fontSize: 10, color: 'var(--text-secondary, #8B92A8)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{walletAddress}</div>
         </div>
         <div style={{ fontSize: 10, color: 'var(--green, #00D68F)', fontWeight: 700 }}>✓ Active</div>
@@ -220,7 +220,7 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
         </div>
         <div style={{ flex: 1, padding: '12px', background: 'var(--bg-card, #1C2030)', borderRadius: 14, textAlign: 'center' }}>
           <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', marginBottom: 4 }}>RATE</div>
-          <div style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 12, fontWeight: 700, color: '#0098EA' }}>1 TON = {(tonToCoins / 1000).toFixed(0)}K ᚙ</div>
+          <div style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 12, fontWeight: 700, color: 'var(--color-blue, #0098EA)' }}>1 TON = {(tonToCoins / 1000).toFixed(0)}K ᚙ</div>
           <div style={{ fontSize: 9, color: 'var(--text-muted, #4A5270)', marginTop: 2 }}>≈ ${tonUsdt.toFixed(2)}</div>
         </div>
       </div>
@@ -231,7 +231,7 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
           <button key={a} onClick={() => setActiveAction(activeAction === a ? null : a)} style={{
             flex: 1, padding: '10px 4px', border: 'none', borderRadius: 12, fontFamily: 'inherit',
             fontSize: 11, fontWeight: 700, cursor: 'pointer',
-            background: activeAction === a ? (a === 'buy' ? '#0098EA' : a === 'sell' ? '#7B61FF' : 'var(--green, #00D68F)') : 'var(--bg-card, #1C2030)',
+            background: activeAction === a ? (a === 'buy' ? 'var(--color-blue, #0098EA)' : a === 'sell' ? 'var(--color-purple-dark, #7B61FF)' : 'var(--color-green, #00D68F)') : 'var(--bg-card, #1C2030)',
             color: activeAction === a ? '#fff' : 'var(--text-secondary, #8B92A8)',
           }}>
             {a === 'buy' ? '📥 Buy' : a === 'sell' ? '📤 Sell' : '🏦 Withdraw'}
@@ -247,7 +247,7 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
             {[{ label: '0.5 TON', val: '0.5', ton: true }, { label: '1 TON', val: '1', ton: true }, { label: '10 USDT', val: '10', ton: false }].map(opt => {
               const c = calcCoins(opt.val, opt.ton);
               return (
-                <button key={opt.label} onClick={() => setAmount(opt.val)} style={{ flex: 1, padding: '8px 4px', border: `1px solid ${amount === opt.val ? '#0098EA' : 'rgba(255,255,255,0.1)'}`, borderRadius: 10, background: amount === opt.val ? 'rgba(0,152,234,0.12)' : 'var(--bg-card, #1C2030)', color: 'var(--text-primary, #F0F2F8)', fontSize: 10, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                <button key={opt.label} onClick={() => setAmount(opt.val)} style={{ flex: 1, padding: '8px 4px', border: `1px solid ${amount === opt.val ? 'var(--color-blue, #0098EA)' : 'rgba(255,255,255,0.1)'}`, borderRadius: 10, background: amount === opt.val ? 'rgba(0,152,234,0.12)' : 'var(--bg-card, #1C2030)', color: 'var(--text-primary, #F0F2F8)', fontSize: 10, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
                   <div>{opt.label}</div>
                   <div style={{ color: 'var(--accent, #F5C842)', marginTop: 2 }}>+{fmtBalance(String(Math.round(c.net)))} ᚙ</div>
                 </button>
@@ -264,7 +264,7 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
             />
             <button
               disabled={processing || !amount}
-              style={{ padding: '10px 16px', background: processing ? '#555' : '#0098EA', color: '#fff', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: processing ? 'default' : 'pointer', fontFamily: 'inherit' }}
+              style={{ padding: '10px 16px', background: processing ? '#555' : 'var(--color-blue, #0098EA)', color: '#fff', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: processing ? 'default' : 'pointer', fontFamily: 'inherit' }}
               onClick={async () => {
                 if (!amount || parseFloat(amount) < 0.1) { showToast('Minimum 0.1 TON'); return; }
                 setProcessing(true);
@@ -324,7 +324,7 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
           {amount && (
             <div style={{ marginTop: 10, fontSize: 11, color: 'var(--text-secondary, #8B92A8)', lineHeight: 1.8 }}>
               {(() => { const c = calcWithdraw(amount); return <>
-                <div>You receive: <b style={{ color: '#0098EA' }}>{c.net.toFixed(4)} TON</b></div>
+                <div>You receive: <b style={{ color: 'var(--color-blue, #0098EA)' }}>{c.net.toFixed(4)} TON</b></div>
                 <div>Fee {FEE_PERCENT}%: {c.fee.toFixed(4)} TON</div>
               </>; })()}
             </div>
@@ -562,7 +562,7 @@ export const ShopPage: React.FC = () => {
         >
           <div style={{ width: '100%', maxWidth: 480, background: 'var(--bg-card, #13161F)', borderRadius: '24px 24px 0 0', border: '1px solid rgba(0,152,234,0.3)', borderBottom: 'none', paddingBottom: 'max(20px, env(safe-area-inset-bottom))' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 18px 12px' }}>
-              <div style={{ fontSize: 17, fontWeight: 800, color: '#0098EA' }}>💎 TON Wallet</div>
+              <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--color-blue, #0098EA)' }}>💎 TON Wallet</div>
               <button onClick={() => setShowTon(false)} style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: '#8B92A8', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>✕</button>
             </div>
             <TonTab user={user} showToast={showToast} onUserRefresh={refreshUser} />
@@ -586,7 +586,7 @@ export const ShopPage: React.FC = () => {
           onClick={() => setShowTon(true)}
           style={{
             width: '100%', padding: '13px 18px',
-            background: 'linear-gradient(135deg, #0098EA, #006BBF)',
+            background: 'var(--shop-ton-wallet-gradient, linear-gradient(135deg, #0098EA, #006BBF))',
             border: 'none', borderRadius: 14,
             display: 'flex', alignItems: 'center', gap: 12,
             cursor: 'pointer', fontFamily: 'inherit',
