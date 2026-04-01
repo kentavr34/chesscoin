@@ -34,7 +34,7 @@ export const PromptModal: React.FC<PromptModalProps> = ({
       onClick={() => close(onCancel)}
       style={{
         position: 'fixed', inset: 0, zIndex: "var(--z-modal, 300)",
-        background: 'rgba(0,0,0,0.72)',
+        background: 'var(--prompt-overlay-bg, rgba(0,0,0,0.72))',
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -46,10 +46,10 @@ export const PromptModal: React.FC<PromptModalProps> = ({
         style={{
           width: '100%', maxWidth: 320,
           background: 'linear-gradient(160deg, var(--color-bg-light, #12101a) 0%, var(--color-bg-dark, #0B0D11) 60%)',
-          border: '1px solid rgba(var(--color-purple), 0.25)',
+          border: '1px solid var(--prompt-modal-border, rgba(155,133,255,0.25))',
           borderRadius: 24,
           padding: '28px 24px 22px',
-          boxShadow: '0 0 60px rgba(155, 133, 255, 0.2), 0 20px 60px rgba(0,0,0,0.5)',
+          boxShadow: `0 0 60px var(--prompt-modal-glow-shadow, rgba(155,133,255,0.2)), 0 20px 60px var(--prompt-modal-shadow, rgba(0,0,0,0.5))`,
           transform: visible ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.96)',
           opacity: visible ? 1 : 0,
           transition: 'transform .25s cubic-bezier(.34,1.56,.64,1), opacity .22s',
@@ -61,8 +61,8 @@ export const PromptModal: React.FC<PromptModalProps> = ({
           style={{
             position: 'absolute', top: 14, right: 14,
             width: 28, height: 28, borderRadius: '50%',
-            background: 'rgba(255,255,255,0.07)',
-            border: '1px solid rgba(255,255,255,0.1)',
+            background: 'var(--prompt-close-btn-bg, rgba(255,255,255,0.07))',
+            border: '1px solid var(--prompt-close-btn-border, rgba(255,255,255,0.1))',
             color: 'var(--color-text-secondary, #A8B0C8)', fontSize: 14, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontFamily: 'inherit',
@@ -78,7 +78,7 @@ export const PromptModal: React.FC<PromptModalProps> = ({
           color: 'var(--color-purple, #9B85FF)',
           letterSpacing: '-.02em',
           marginBottom: message ? 10 : 18,
-          textShadow: '0 0 20px rgba(155, 133, 255, 0.3)',
+          textShadow: '0 0 20px var(--prompt-title-text-shadow, rgba(155,133,255,0.3))',
         }}>{title}</div>
 
         {message && (
@@ -94,8 +94,8 @@ export const PromptModal: React.FC<PromptModalProps> = ({
           onKeyDown={e => { if (e.key === 'Enter' && Number(value) > 0) close(() => onConfirm(value)); }}
           style={{
             width: '100%', padding: '12px 14px',
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(155, 133, 255, 0.3)',
+            background: 'var(--prompt-input-bg, rgba(255,255,255,0.05))',
+            border: '1px solid var(--prompt-input-border, rgba(155,133,255,0.3))',
             borderRadius: 12, color: 'var(--color-text-primary, #F0F2F8)',
             fontSize: 15, fontFamily: "'JetBrains Mono',monospace",
             outline: 'none', boxSizing: 'border-box',
@@ -108,8 +108,8 @@ export const PromptModal: React.FC<PromptModalProps> = ({
           disabled={!value || Number(value) <= 0}
           style={{
             width: '100%', padding: '13px',
-            background: (!value || Number(value) <= 0) ? 'rgba(155, 133, 255, 0.05)' : 'rgba(155, 133, 255, 0.15)',
-            border: '1px solid rgba(155, 133, 255, 0.35)',
+            background: (!value || Number(value) <= 0) ? 'var(--prompt-btn-disabled-bg, rgba(155,133,255,0.05))' : 'var(--prompt-btn-active-bg, rgba(155,133,255,0.15))',
+            border: '1px solid var(--prompt-btn-border, rgba(155,133,255,0.35))',
             borderRadius: 14, color: (!value || Number(value) <= 0) ? 'var(--color-text-muted, #6B7494)' : 'var(--color-purple, #9B85FF)',
             fontSize: 14, fontWeight: 700,
             cursor: (!value || Number(value) <= 0) ? 'not-allowed' : 'pointer',
@@ -123,7 +123,7 @@ export const PromptModal: React.FC<PromptModalProps> = ({
           style={{
             width: '100%', padding: '13px',
             background: 'var(--color-bg-card, #1C2030)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            border: '1px solid var(--prompt-cancel-btn-border, rgba(255,255,255,0.08))',
             borderRadius: 14, color: 'var(--color-text-secondary, #C0C5D8)',
             fontSize: 14, fontWeight: 600,
             cursor: 'pointer', fontFamily: 'inherit',
