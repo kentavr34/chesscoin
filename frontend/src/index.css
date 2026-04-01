@@ -153,6 +153,18 @@
   --result-save-saved-bg: rgba(0, 214, 143, 0.1);
   --result-save-saved-border: rgba(0, 214, 143, 0.25);
 
+  /* ShopItemCards Colors (L1) */
+  --shop-pieceset-gradient: linear-gradient(135deg, #0D0F1A, #151828);
+  --shop-pieceset-shadow: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
+  --shop-card-bg: #1C2030;
+  --shop-card-preview-bg: #13161E;
+  --shop-board-fallback-light: #E8EDF9;
+  --shop-board-fallback-dark: #8B9DD4;
+  --shop-equipped-badge-bg: rgba(0, 214, 143, 0.08);
+  --shop-equipped-badge-border: rgba(0, 214, 143, 0.2);
+  --shop-unequip-btn-bg: rgba(255, 77, 106, 0.12);
+  --shop-unequip-btn-border: rgba(255, 77, 106, 0.25);
+
   /* Responsive Breakpoints (L2) */
   --breakpoint-xs: 320px;
   --breakpoint-sm: 480px;
@@ -263,6 +275,18 @@
     --result-save-unsaved-border: rgba(109, 40, 217, 0.2);
     --result-save-saved-bg: rgba(0, 163, 102, 0.08);
     --result-save-saved-border: rgba(0, 163, 102, 0.2);
+
+    /* ShopItemCards Light Mode Adjustments */
+    --shop-pieceset-gradient: linear-gradient(135deg, #F5F7FA, #E8EDF9);
+    --shop-pieceset-shadow: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.15));
+    --shop-card-bg: #FFFFFF;
+    --shop-card-preview-bg: #F5F5F5;
+    --shop-board-fallback-light: #F5F8FE;
+    --shop-board-fallback-dark: #A8BCDB;
+    --shop-equipped-badge-bg: rgba(0, 163, 102, 0.06);
+    --shop-equipped-badge-border: rgba(0, 163, 102, 0.15);
+    --shop-unequip-btn-bg: rgba(211, 47, 47, 0.08);
+    --shop-unequip-btn-border: rgba(211, 47, 47, 0.15);
   }
 }
 
@@ -368,6 +392,18 @@
   --result-save-unsaved-border: rgba(109, 40, 217, 0.2);
   --result-save-saved-bg: rgba(0, 163, 102, 0.08);
   --result-save-saved-border: rgba(0, 163, 102, 0.2);
+
+  /* ShopItemCards Light Mode Adjustments */
+  --shop-pieceset-gradient: linear-gradient(135deg, #F5F7FA, #E8EDF9);
+  --shop-pieceset-shadow: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.15));
+  --shop-card-bg: #FFFFFF;
+  --shop-card-preview-bg: #F5F5F5;
+  --shop-board-fallback-light: #F5F8FE;
+  --shop-board-fallback-dark: #A8BCDB;
+  --shop-equipped-badge-bg: rgba(0, 163, 102, 0.06);
+  --shop-equipped-badge-border: rgba(0, 163, 102, 0.15);
+  --shop-unequip-btn-bg: rgba(211, 47, 47, 0.08);
+  --shop-unequip-btn-border: rgba(211, 47, 47, 0.15);
 
   background: var(--color-bg-dark);
   color: var(--color-text-primary);
