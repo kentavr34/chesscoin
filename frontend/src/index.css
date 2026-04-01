@@ -140,6 +140,8 @@
   --modal-jarvis-chip-border: rgba(155, 133, 255, 0.3);
   --modal-jarvis-chip-color: #9B85FF;
   --modal-start-btn-shadow: 0 4px 20px rgba(245, 200, 66, 0.3);
+  --gamesetup-sheet-border: rgba(255, 255, 255, 0.1);
+  --gamesetup-back-btn-border: rgba(255, 255, 255, 0.1);
 
   /* JarvisInfoModal Colors (L1) */
   --jarvis-info-overlay-bg: rgba(0, 0, 0, 0.7);
@@ -388,6 +390,8 @@
     --modal-jarvis-chip-border: rgba(109, 40, 217, 0.25);
     --modal-jarvis-chip-color: #6D28D9;
     --modal-start-btn-shadow: 0 4px 20px rgba(212, 168, 32, 0.2);
+    --gamesetup-sheet-border: rgba(0, 0, 0, 0.08);
+    --gamesetup-back-btn-border: rgba(0, 0, 0, 0.08);
 
     /* JarvisInfoModal Light Mode Adjustments */
     --jarvis-info-overlay-bg: rgba(0, 0, 0, 0.5);
@@ -643,6 +647,8 @@
   --modal-jarvis-chip-border: rgba(109, 40, 217, 0.25);
   --modal-jarvis-chip-color: #6D28D9;
   --modal-start-btn-shadow: 0 4px 20px rgba(212, 168, 32, 0.2);
+  --gamesetup-sheet-border: rgba(0, 0, 0, 0.08);
+  --gamesetup-back-btn-border: rgba(0, 0, 0, 0.08);
 
   /* JarvisInfoModal Light Mode Adjustments */
   --jarvis-info-overlay-bg: rgba(0, 0, 0, 0.5);

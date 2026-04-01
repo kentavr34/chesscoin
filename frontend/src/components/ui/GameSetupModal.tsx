@@ -214,7 +214,7 @@ const overlayStyle: React.CSSProperties = {
 const sheetStyle: React.CSSProperties = {
   width: '100%', maxWidth: 'clamp(280px, 90vw, 480px)',
   background: 'var(--color-bg-card, #13161F)',
-  border: '1px solid rgba(255,255,255,0.1)',
+  border: '1px solid var(--gamesetup-sheet-border, rgba(255,255,255,0.1))',
   borderBottom: 'none',
   borderRadius: '24px 24px 0 0',
   padding: '20px 18px',
@@ -268,7 +268,7 @@ const countdownCircleStyle: React.CSSProperties = {
 const backBtnStyle: React.CSSProperties = {
   width: 36, height: 36, borderRadius: '50%',
   background: 'var(--color-border, rgba(255,255,255,0.07))',
-  border: '1px solid rgba(255,255,255,0.1)',
+  border: '1px solid var(--gamesetup-back-btn-border, rgba(255,255,255,0.1))',
   color: 'var(--color-text-primary, #F0F2F8)', fontSize: 16, cursor: 'pointer',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   fontFamily: 'inherit', flexShrink: 0,
