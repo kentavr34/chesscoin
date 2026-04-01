@@ -59,9 +59,9 @@ const Modal: React.FC<ModalProps> & {
         style={{
           width: '100%',
           maxWidth: typeof maxWidth === 'string' ? maxWidth : `${maxWidth}px`,
-          background: 'var(--bg-modal, #161927)',
+          background: 'var(--color-bg-modal, #161927)',
           border: '1px solid var(--modal-border, rgba(255,255,255,0.1))',
-          borderRadius: 24,
+          borderRadius: 'var(--radius-xl)',
           boxShadow: 'var(--modal-shadow, 0 20px 60px rgba(0,0,0,0.5))',
           overflow: 'hidden',
           display: 'flex',
@@ -78,13 +78,13 @@ const Modal: React.FC<ModalProps> & {
 Modal.Header = ({ children, center = true }: ModalSectionProps) => (
   <div
     style={{
-      padding: '28px 24px 10px',
+      padding: `var(--space-xl) var(--space-l) var(--space-s)`,
       borderBottom: '1px solid var(--modal-divider, rgba(255,255,255,0.05))',
-      fontSize: 18,
-      fontWeight: 800,
-      color: 'var(--text-primary, #F0F2F8)',
+      fontSize: 'var(--font-size-lg)',
+      fontWeight: 'var(--font-weight-extrabold)',
+      color: 'var(--color-text-primary, #F0F2F8)',
       fontFamily: "'Unbounded', sans-serif",
-      lineHeight: 1.3,
+      lineHeight: 'var(--line-height-tight)',
       textAlign: center ? 'center' : 'left',
     }}
   >
@@ -96,11 +96,11 @@ Modal.Body = ({ children, center = false }: ModalSectionProps) => (
   <div
     style={{
       flex: 1,
-      padding: '16px 24px',
+      padding: `var(--space-l) var(--space-l)`,
       overflow: 'auto',
-      fontSize: 13,
-      color: 'var(--text-secondary, #8B92A8)',
-      lineHeight: 1.6,
+      fontSize: 'var(--font-size-sm)',
+      color: 'var(--color-text-secondary, #8B92A8)',
+      lineHeight: 'var(--line-height-normal)',
       textAlign: center ? 'center' : 'left',
     }}
   >
@@ -111,10 +111,10 @@ Modal.Body = ({ children, center = false }: ModalSectionProps) => (
 Modal.Footer = ({ children }: { children: ReactNode }) => (
   <div
     style={{
-      padding: '16px 24px 22px',
+      padding: `var(--space-l) var(--space-l) calc(var(--space-l) + 6px)`,
       borderTop: '1px solid var(--modal-divider, rgba(255,255,255,0.05))',
       display: 'flex',
-      gap: 10,
+      gap: 'var(--gap-sm)',
       justifyContent: 'flex-end',
     }}
   >
