@@ -19,7 +19,7 @@ interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   children: ReactNode;
-  maxWidth?: number; // pixels, default 340
+  maxWidth?: number | string; // pixels (default 340) or CSS value
 }
 
 interface ModalSectionProps {
@@ -31,7 +31,7 @@ const Modal: React.FC<ModalProps> & {
   Header: React.FC<ModalSectionProps>;
   Body: React.FC<ModalSectionProps>;
   Footer: React.FC<{ children: ReactNode }>;
-} = ({ isOpen, onClose, children, maxWidth = 340 }) => {
+} = ({ isOpen, onClose, children, maxWidth = 'clamp(280px, 90vw, 340px)' }) => {
   if (!isOpen) return null;
 
   return (
@@ -50,7 +50,7 @@ const Modal: React.FC<ModalProps> & {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 24,
+        padding: 'clamp(16px, 5vw, 24px)',
       }}
     >
       <div
@@ -58,7 +58,7 @@ const Modal: React.FC<ModalProps> & {
         aria-modal="true"
         style={{
           width: '100%',
-          maxWidth,
+          maxWidth: typeof maxWidth === 'string' ? maxWidth : `${maxWidth}px`,
           background: 'var(--bg-modal, #161927)',
           border: '1px solid rgba(255,255,255,0.1)',
           borderRadius: 24,
