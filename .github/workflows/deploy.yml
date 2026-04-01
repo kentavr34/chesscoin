@@ -79,6 +79,7 @@ DOMAIN=chesscoin.app
 JWT_ACCESS_SECRET=dev_access_secret_change_in_production
 JWT_REFRESH_SECRET=dev_refresh_secret_change_in_production
 S3_ENDPOINT=https://s3.timeweb.cloud
+S3_REGION=ru-1
 S3_BUCKET=chesscoin-dev
 S3_ACCESS_KEY=dev_key
 S3_SECRET_ACCESS_KEY=dev_secret
