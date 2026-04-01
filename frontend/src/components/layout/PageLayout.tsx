@@ -1,14 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BottomNav } from './BottomNav';
-import { applyThemeToCss, getActiveTheme, THEMES } from '@/lib/theme';
 import { useT } from '@/i18n/useT';
-
-// Применяем тему при первом рендере
-if (typeof window !== 'undefined') {
-  const key = getActiveTheme();
-  applyThemeToCss(THEMES[key]);
-}
 
 // ── InfoPopup ─────────────────────────────────────────────────────────────────
 // Показывается при первом входе на страницу (один раз, затем сохраняется флаг)
@@ -207,7 +200,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
         flex: 1,
         overflowY: noScroll ? 'hidden' : 'auto',
         overflowX: 'hidden',
-        paddingBottom: noScroll ? 82 : 90,
+        paddingBottom: `max(82px, calc(var(--space-l, 16px) * 6 + env(safe-area-inset-bottom, 0px)))`,
         position: 'relative', zIndex: 'var(--z-base)',
       }}>
         {children}

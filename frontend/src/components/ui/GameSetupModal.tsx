@@ -209,7 +209,7 @@ const overlayStyle: React.CSSProperties = {
   WebkitBackdropFilter: 'blur(8px)',
   display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
   overflowY: 'auto',
-  paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+  paddingBottom: 'max(82px, env(safe-area-inset-bottom, 82px))',
 };
 const sheetStyle: React.CSSProperties = {
   width: '100%', maxWidth: 'clamp(280px, 90vw, 480px)',

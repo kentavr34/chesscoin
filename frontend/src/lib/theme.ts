@@ -87,18 +87,19 @@ export function setActiveTheme(key: ThemeKey) {
 
 export function applyThemeToCss(t: ThemeTokens) {
   const root = document.documentElement;
-  root.style.setProperty('--bg',            t.bg);
-  root.style.setProperty('--bg-card',       t.bgCard);
-  root.style.setProperty('--bg-input',      t.bgInput);
-  root.style.setProperty('--border',        t.border);
-  root.style.setProperty('--accent',        t.accent);
-  root.style.setProperty('--accent2',       t.accent2);
-  root.style.setProperty('--text-primary',  t.textPrimary);
-  root.style.setProperty('--text-secondary',t.textSecondary);
-  root.style.setProperty('--text-muted',    t.textMuted);
-  root.style.setProperty('--green',         t.green);
-  root.style.setProperty('--red',           t.red);
-  root.style.setProperty('--gold',          t.gold);
+  // Use consistent naming with L1 color variables in index.css
+  root.style.setProperty('--color-bg-dark',    t.bg);
+  root.style.setProperty('--color-bg-card',    t.bgCard);
+  root.style.setProperty('--color-bg-input',   t.bgInput);
+  root.style.setProperty('--color-border',     t.border);
+  root.style.setProperty('--color-accent',     t.accent);
+  root.style.setProperty('--color-accent-dark', t.accent2);
+  root.style.setProperty('--color-text-primary',   t.textPrimary);
+  root.style.setProperty('--color-text-secondary', t.textSecondary);
+  root.style.setProperty('--color-text-muted',    t.textMuted);
+  root.style.setProperty('--color-green',      t.green);
+  root.style.setProperty('--color-red',        t.red);
+  root.style.setProperty('--color-gold',       t.gold);
 }
 
 export function getCurrentTokens(): ThemeTokens {

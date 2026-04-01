@@ -12,6 +12,7 @@ import { WarChallengePopup } from '@/components/ui/WarChallengePopup';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { useT } from '@/i18n/useT';
 import type { Lang } from '@/i18n/translations';
+import { applyThemeToCss, getActiveTheme, THEMES } from '@/lib/theme';
 
 // Q3: lazy loading — каждая страница загружается отдельным чанком
 import { lazy, Suspense } from 'react';
@@ -204,6 +205,12 @@ const AuthErrorScreen: React.FC = () => {
 const App: React.FC = () => {
   useAuth(); // запускаем Telegram auth
   const setLang = useSettingsStore((s) => s.setLang);
+
+  // Initialize theme on mount
+  React.useEffect(() => {
+    const key = getActiveTheme();
+    applyThemeToCss(THEMES[key]);
+  }, []);
 
   // Auto-detect language from Telegram WebApp on first load
   React.useEffect(() => {

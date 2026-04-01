@@ -19,7 +19,7 @@ export const BottomNav: React.FC = () => {
     <nav className="ui-card-glass" style={{
       position: 'fixed', bottom: 0, left: 0, right: 0,
       minHeight: '82px', // Responsive + safe-area
-      paddingBottom: 'max(0px, env(safe-area-inset-bottom, 0px))',
+      paddingBottom: 'max(12px, env(safe-area-inset-bottom, 0px))',
       borderRadius: '24px 24px 0 0', // Rounded top borders like native mobile
       border: '1px solid var(--border)',
       borderBottom: 'none',
