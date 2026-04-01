@@ -250,6 +250,10 @@
   --chart-up-color: #00D68F;
   --chart-down-color: #FF4D6A;
 
+  /* Avatar (L1) */
+  --avatar-border-subtle: rgba(255, 255, 255, 0.12);
+  --avatar-border-light: rgba(255, 255, 255, 0.18);
+
   /* Responsive Breakpoints (L2) */
   --breakpoint-xs: 320px;
   --breakpoint-sm: 480px;
@@ -442,6 +446,10 @@
     --chart-border-subtle: rgba(0, 0, 0, 0.08);
     --chart-up-color: #00A366;
     --chart-down-color: #D32F2F;
+
+    /* Avatar Light Mode Adjustments */
+    --avatar-border-subtle: rgba(0, 0, 0, 0.08);
+    --avatar-border-light: rgba(0, 0, 0, 0.12);
   }
 }
 
@@ -629,6 +637,10 @@
   --chart-border-subtle: rgba(0, 0, 0, 0.08);
   --chart-up-color: #00A366;
   --chart-down-color: #D32F2F;
+
+  /* Avatar Light Mode via data-theme */
+  --avatar-border-subtle: rgba(0, 0, 0, 0.08);
+  --avatar-border-light: rgba(0, 0, 0, 0.12);
 
   background: var(--color-bg-dark);
   color: var(--color-text-primary);

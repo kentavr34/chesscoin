@@ -56,7 +56,7 @@ export const Avatar: React.FC<AvatarProps> = React.memo(({ user, size = 'm', gol
     background: displayAvatar ? undefined : bg,
     border: frameStyle ? frameStyle.border
       : gold ? '2px solid var(--color-accent, #F5C842)'
-      : window.innerWidth < 480 ? '1px solid rgba(255,255,255,0.12)' : '2px solid rgba(255,255,255,0.18)',
+      : window.innerWidth < 480 ? '1px solid var(--avatar-border-subtle, rgba(255,255,255,0.12))' : '2px solid var(--avatar-border-light, rgba(255,255,255,0.18))',
     boxShadow: frameStyle ? frameStyle.boxShadow
       : gold ? `0 0 0 ${window.innerWidth < 480 ? 0.5 : 1}px var(--color-accent-light, rgba(245,200,66,0.3)), 0 0 ${window.innerWidth < 480 ? 8 : 16}px var(--color-accent-shadow, rgba(245,200,66,0.2))`
       : undefined,
