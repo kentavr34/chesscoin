@@ -1548,6 +1548,35 @@ div, span, button, input, select, textarea, p {
   }
 }
 
+/* ── BattleCard Responsive Sizing Tokens ────────────────────────────────── */
+:root {
+  --battle-card-player-width: 52px;
+  --battle-card-player-gap: 4px;
+  --battle-card-center-gap: 8px;
+  --battle-card-emoji-size: 18px;
+  --battle-card-status-size: 10px;
+  --battle-card-button-padding: 4px 8px;
+  --battle-card-button-gap: 4px;
+  --battle-card-name-size: 9px;
+  --battle-card-flag-size: 12px;
+  --battle-card-label-size: 9px;
+}
+
+@media (max-width: 479px) {
+  :root {
+    --battle-card-player-width: 40px;
+    --battle-card-player-gap: 2px;
+    --battle-card-center-gap: 4px;
+    --battle-card-emoji-size: 14px;
+    --battle-card-status-size: 9px;
+    --battle-card-button-padding: 2px 6px;
+    --battle-card-button-gap: 2px;
+    --battle-card-name-size: 8px;
+    --battle-card-flag-size: 10px;
+    --battle-card-label-size: 8px;
+  }
+}
+
 /* ── Анимации ───────────────────────────────────────────────────────────── */
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUpFade { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }

@@ -70,50 +70,50 @@ export const BattleCard: React.FC<BattleCardProps> = React.memo(({
 
   return (
     <div style={{
-      padding: compact ? '8px 0' : '12px 0',
+      padding: compact ? `var(--space-sm) 0` : `var(--card-padding-md) 0`,
       borderBottom: `1px solid var(--battle-card-border, rgba(255,255,255,0.05))`,
     }}>
       {label && (
-        <div style={{ fontSize: 9, color: 'var(--color-text-muted, #4A5270)', letterSpacing: '.06em', textTransform: 'uppercase' as const, marginBottom: 6 }}>
+        <div style={{ fontSize: 'var(--battle-card-label-size)', color: 'var(--color-text-muted, #4A5270)', letterSpacing: '.06em', textTransform: 'uppercase' as const, marginBottom: 'var(--gap-sm)' }}>
           {label}
         </div>
       )}
 
       {/* W4: Два игрока лицом к лицу (L2: Responsive sizing) */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: window.innerWidth < 480 ? 4 : 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--battle-card-center-gap)' }}>
 
         {/* Игрок 1 */}
         <div
           onClick={() => goProfile(player1)}
-          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: player1?.id ? 'pointer' : 'default', width: window.innerWidth < 480 ? 40 : 52, flexShrink: 0 }}
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--gap-xs)', cursor: player1?.id ? 'pointer' : 'default', width: 'var(--battle-card-player-width)', flexShrink: 0 }}
         >
           <Avatar user={player1 as unknown as import('@/types').UserPublic} size="s" />
-          {player1?.countryFlag && <span style={{ fontSize: window.innerWidth < 480 ? 10 : 12 }}>{player1.countryFlag}</span>}
-          <div style={{ fontSize: window.innerWidth < 480 ? 8 : 9, color: p1Color, fontWeight: 700, textAlign: 'center', maxWidth: window.innerWidth < 480 ? 40 : 52, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {player1?.countryFlag && <span style={{ fontSize: 'var(--battle-card-flag-size)' }}>{player1.countryFlag}</span>}
+          <div style={{ fontSize: 'var(--battle-card-name-size)', color: p1Color, fontWeight: 700, textAlign: 'center', maxWidth: 'var(--battle-card-player-width)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {player1?.firstName ?? '?'}
           </div>
         </div>
 
         {/* Центр: статус + VS + кнопки (L2: Responsive) */}
         <div style={{ flex: 1, textAlign: 'center' }}>
-          <div style={{ fontSize: window.innerWidth < 480 ? 14 : 18, marginBottom: 2 }}>⚔️</div>
-          <div style={{ fontSize: window.innerWidth < 480 ? 9 : 10, color: cfg.color, fontWeight: 700 }}>
+          <div style={{ fontSize: 'var(--battle-card-emoji-size)', marginBottom: 'var(--gap-xs)' }}>⚔️</div>
+          <div style={{ fontSize: 'var(--battle-card-status-size)', color: cfg.color, fontWeight: 700 }}>
             {winner === 'draw' ? t.battleCard.draw : t.battleCard[cfg.textKey as keyof typeof t.battleCard] ?? cfg.textKey}
           </div>
 
           {/* W3: Счётчик зрителей */}
           {spectatorCount !== undefined && spectatorCount > 0 && (
-            <div style={{ fontSize: 8, color: 'var(--color-text-muted, #4A5270)', marginTop: 2 }}>
+            <div style={{ fontSize: 'var(--battle-card-label-size)', color: 'var(--color-text-muted, #4A5270)', marginTop: 'var(--gap-xs)' }}>
               👁 {spectatorCount}
             </div>
           )}
 
           {/* Кнопки действий (L2: Stack on mobile if needed) */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: window.innerWidth < 480 ? 2 : 4, marginTop: 6, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 'var(--battle-card-button-gap)', marginTop: 'var(--gap-sm)', flexWrap: 'wrap' }}>
             {status === 'IN_PROGRESS' && onSpectate && sessionId && (
               <button
                 onClick={onSpectate}
-                style={{ padding: window.innerWidth < 480 ? '2px 6px' : '4px 8px', background: 'var(--battle-card-spectate-bg, rgba(245,200,66,0.1))', color: 'var(--color-accent, #F5C842)', border: `1px solid var(--battle-card-spectate-border, rgba(245,200,66,0.25))`, borderRadius: 7, fontSize: window.innerWidth < 480 ? 9 : 10, cursor: 'pointer', fontFamily: 'inherit' }}
+                style={{ padding: 'var(--battle-card-button-padding)', background: 'var(--battle-card-spectate-bg, rgba(245,200,66,0.1))', color: 'var(--color-accent, #F5C842)', border: `1px solid var(--battle-card-spectate-border, rgba(245,200,66,0.25))`, borderRadius: 'var(--radius-sm)', fontSize: 'var(--battle-card-status-size)', cursor: 'pointer', fontFamily: 'inherit' }}
               >
                 👁 {t.game?.watch ?? 'Watch'}
               </button>
@@ -122,7 +122,7 @@ export const BattleCard: React.FC<BattleCardProps> = React.memo(({
               <button
                 onClick={onSave}
                 disabled={saving}
-                style={{ padding: window.innerWidth < 480 ? '2px 6px' : '4px 8px', background: 'var(--battle-card-save-bg, rgba(123,97,255,0.12))', color: 'var(--battle-card-save-color, #9B85FF)', border: `1px solid var(--battle-card-save-border, rgba(123,97,255,0.25))`, borderRadius: 7, fontSize: window.innerWidth < 480 ? 9 : 10, cursor: 'pointer', fontFamily: 'inherit', opacity: saving ? 0.6 : 1 }}
+                style={{ padding: 'var(--battle-card-button-padding)', background: 'var(--battle-card-save-bg, rgba(123,97,255,0.12))', color: 'var(--battle-card-save-color, #9B85FF)', border: `1px solid var(--battle-card-save-border, rgba(123,97,255,0.25))`, borderRadius: 'var(--radius-sm)', fontSize: 'var(--battle-card-status-size)', cursor: 'pointer', fontFamily: 'inherit', opacity: saving ? 0.6 : 1 }}
               >
                 {saving ? '...' : t.battleCard.save}
               </button>
@@ -133,11 +133,11 @@ export const BattleCard: React.FC<BattleCardProps> = React.memo(({
         {/* Игрок 2 */}
         <div
           onClick={() => goProfile(player2)}
-          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: player2?.id ? 'pointer' : 'default', width: window.innerWidth < 480 ? 40 : 52, flexShrink: 0 }}
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--gap-xs)', cursor: player2?.id ? 'pointer' : 'default', width: 'var(--battle-card-player-width)', flexShrink: 0 }}
         >
           <Avatar user={player2 as unknown as import('@/types').UserPublic} size="s" />
-          {player2?.countryFlag && <span style={{ fontSize: window.innerWidth < 480 ? 10 : 12 }}>{player2.countryFlag}</span>}
-          <div style={{ fontSize: window.innerWidth < 480 ? 8 : 9, color: p2Color, fontWeight: 700, textAlign: 'center', maxWidth: window.innerWidth < 480 ? 40 : 52, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {player2?.countryFlag && <span style={{ fontSize: 'var(--battle-card-flag-size)' }}>{player2.countryFlag}</span>}
+          <div style={{ fontSize: 'var(--battle-card-name-size)', color: p2Color, fontWeight: 700, textAlign: 'center', maxWidth: 'var(--battle-card-player-width)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {player2?.firstName ?? '?'}
           </div>
         </div>
