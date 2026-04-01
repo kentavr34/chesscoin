@@ -31,7 +31,7 @@ export const InfoPopup: React.FC<InfoPopupProps> = ({ slides, onClose }) => {
       onClick={(e) => e.target === e.currentTarget && onClose()}
       style={{
         position: 'fixed', inset: 0, zIndex: "var(--z-modal, 300)",
-        background: 'rgba(0,0,0,0.75)',
+        background: 'var(--page-layout-overlay-bg, rgba(0,0,0,0.75))',
         backdropFilter: 'blur(10px)',
         WebkitBackdropFilter: 'blur(10px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -41,9 +41,9 @@ export const InfoPopup: React.FC<InfoPopupProps> = ({ slides, onClose }) => {
       <div style={{
         width: '100%', maxWidth: 360,
         background: 'var(--color-bg-modal, #161927)',
-        border: '1px solid rgba(255,255,255,0.1)',
+        border: '1px solid var(--page-layout-modal-border, rgba(255,255,255,0.1))',
         borderRadius: 24, padding: '28px 24px 22px',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+        boxShadow: 'var(--page-layout-modal-shadow, 0 20px 60px rgba(0,0,0,0.5))',
       }}>
         {/* Close */}
         <button
@@ -51,8 +51,8 @@ export const InfoPopup: React.FC<InfoPopupProps> = ({ slides, onClose }) => {
           style={{
             position: 'absolute', top: 14, right: 14,
             width: 28, height: 28, borderRadius: '50%',
-            background: 'rgba(255,255,255,0.07)',
-            border: '1px solid rgba(255,255,255,0.1)',
+            background: 'var(--page-layout-btn-bg, rgba(255,255,255,0.07))',
+            border: '1px solid var(--page-layout-modal-border, rgba(255,255,255,0.1))',
             color: 'var(--color-text-secondary, #8B92A8)', fontSize: 14, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontFamily: 'inherit',
@@ -89,7 +89,7 @@ export const InfoPopup: React.FC<InfoPopupProps> = ({ slides, onClose }) => {
                 onClick={() => setIdx(i)}
                 style={{
                   width: i === idx ? 18 : 6, height: 6, borderRadius: 3,
-                  background: i === idx ? 'var(--color-accent, #F5C842)' : 'rgba(255,255,255,0.15)',
+                  background: i === idx ? 'var(--color-accent, #F5C842)' : 'var(--page-layout-dot-inactive-bg, rgba(255,255,255,0.15))',
                   transition: 'all .2s', cursor: 'pointer',
                 }}
               />

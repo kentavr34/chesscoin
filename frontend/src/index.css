@@ -227,6 +227,13 @@
   --attempts-close-btn-border: rgba(255, 255, 255, 0.1);
   --attempts-accent-drop-shadow: drop-shadow(0 0 8px rgba(245, 200, 66, 0.8));
 
+  /* PageLayout (L1) */
+  --page-layout-overlay-bg: rgba(0, 0, 0, 0.75);
+  --page-layout-modal-border: rgba(255, 255, 255, 0.1);
+  --page-layout-modal-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  --page-layout-btn-bg: rgba(255, 255, 255, 0.07);
+  --page-layout-dot-inactive-bg: rgba(255, 255, 255, 0.15);
+
   /* Responsive Breakpoints (L2) */
   --breakpoint-xs: 320px;
   --breakpoint-sm: 480px;
@@ -396,6 +403,13 @@
     --attempts-border-light: rgba(0, 0, 0, 0.08);
     --attempts-close-btn-border: rgba(0, 0, 0, 0.08);
     --attempts-accent-drop-shadow: drop-shadow(0 0 8px rgba(212, 168, 32, 0.6));
+
+    /* PageLayout Light Mode Adjustments */
+    --page-layout-overlay-bg: rgba(0, 0, 0, 0.6);
+    --page-layout-modal-border: rgba(0, 0, 0, 0.08);
+    --page-layout-modal-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+    --page-layout-btn-bg: rgba(0, 0, 0, 0.05);
+    --page-layout-dot-inactive-bg: rgba(0, 0, 0, 0.12);
   }
 }
 
@@ -560,6 +574,13 @@
   --attempts-border-light: rgba(0, 0, 0, 0.08);
   --attempts-close-btn-border: rgba(0, 0, 0, 0.08);
   --attempts-accent-drop-shadow: drop-shadow(0 0 8px rgba(212, 168, 32, 0.6));
+
+  /* PageLayout Light Mode via data-theme */
+  --page-layout-overlay-bg: rgba(0, 0, 0, 0.6);
+  --page-layout-modal-border: rgba(0, 0, 0, 0.08);
+  --page-layout-modal-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+  --page-layout-btn-bg: rgba(0, 0, 0, 0.05);
+  --page-layout-dot-inactive-bg: rgba(0, 0, 0, 0.12);
 
   background: var(--color-bg-dark);
   color: var(--color-text-primary);
