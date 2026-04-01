@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game Setup Modal — Final Design</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0B0D11;
+      color: #F0F2F8;
+      padding: 20px;
+    }
+
+    .demo-container {
+      display: flex;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+
+    .demo {
+      flex: 1;
+      min-width: 400px;
+    }
+
+    .demo h2 {
+      font-size: 14px;
+      margin-bottom: 20px;
+      color: #8B92A8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════════ */
+    /* MODAL STRUCTURE - CLEAN FLEX LAYOUT */
+    /* ══════════════════════════════════════════════════════════════════════════════ */
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 300;
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 380px;
+      background: #13161F;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px 20px 0 0;
+      border-bottom: none;
+
+      /* CRITICAL: Fixed height with flex layout */
+      height: 70vh;
+      max-height: 70vh;
+      min-height: 500px;
+
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ──────────────────────────────────────────────────────────────────────────────── */
+    /* HEADER - Fixed, does not scroll */
+    /* ──────────────────────────────────────────────────────────────────────────────── */
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 12px;
+      flex-shrink: 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .modal-header-back {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #F0F2F8;
+      cursor: pointer;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s;
+      padding: 0;
+      font-family: inherit;
+    }
+
+    .modal-header-back:hover {
+      background: rgba(255,255,255,0.12);
+      border-color: rgba(255,255,255,0.15);
+    }
+
+    .modal-header-title {
+      flex: 1;
+      font-size: 16px;
+      font-weight: 800;
+      color: #F0F2F8;
+    }
+
+    .modal-header-subtitle {
+      font-size: 11px;
+      color: #F5C842;
+      margin-top: 2px;
+    }
+
+    .modal-header-info {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #8B92A8;
+      cursor: pointer;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s;
+      padding: 0;
+      font-family: inherit;
+      title: "About J.A.R.V.I.S";
+    }
+
+    .modal-header-info:hover {
+      background: rgba(255,255,255,0.12);
+      border-color: rgba(255,255,255,0.15);
+      color: #F0F2F8;
+    }
+
+    .modal-header-close {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #F0F2F8;
+      cursor: pointer;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s;
+      padding: 0;
+      font-family: inherit;
+    }
+
+    .modal-header-close:hover {
+      background: rgba(255,255,255,0.12);
+      border-color: rgba(255,255,255,0.15);
+    }
+
+    /* ──────────────────────────────────────────────────────────────────────────────── */
+    /* CONTENT - Scrollable middle section */
+    /* ──────────────────────────────────────────────────────────────────────────────── */
+
+    .modal-content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 12px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .content-section-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: #4A5270;
+      margin-top: 4px;
+      margin-bottom: 6px;
+    }
+
+    /* Color selection grid - 1 row, 3 columns */
+    .color-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+    }
+
+    .color-btn {
+      padding: 12px 6px;
+      border-radius: 10px;
+      background: #1C2030;
+      border: 2px solid rgba(255,255,255,0.07);
+      color: #8B92A8;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      min-height: 60px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+
+    .color-btn:hover {
+      border-color: rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.05);
+    }
+
+    .color-btn.active {
+      background: rgba(245,200,66,0.1);
+      border-color: #F5C842;
+      color: #F5C842;
+      transform: scale(1.03);
+    }
+
+    .color-btn-icon {
+      font-size: 20px;
+    }
+
+    /* Time selection grid - 2 rows, 3 columns */
+    .time-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+    }
+
+    .time-btn {
+      padding: 10px 6px;
+      border-radius: 10px;
+      background: #1C2030;
+      border: 1px solid rgba(255,255,255,0.07);
+      color: #8B92A8;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      min-height: 50px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+
+    .time-btn:hover {
+      border-color: rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.05);
+    }
+
+    .time-btn.active {
+      background: rgba(123,97,255,0.15);
+      border-color: rgba(123,97,255,0.4);
+      color: #9B85FF;
+      transform: scale(1.03);
+    }
+
+    .time-btn-icon {
+      font-size: 14px;
+    }
+
+    /* ──────────────────────────────────────────────────────────────────────────────── */
+    /* FOOTER - Fixed at bottom, does not scroll */
+    /* ──────────────────────────────────────────────────────────────────────────────── */
+
+    .modal-footer {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 0 12px 12px;
+      flex-shrink: 0;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      padding-top: 8px;
+    }
+
+    .info-hint {
+      padding: 10px;
+      background: rgba(123,97,255,0.08);
+      border: 1px solid rgba(123,97,255,0.15);
+      border-radius: 10px;
+      font-size: 12px;
+      color: #8B92A8;
+      line-height: 1.5;
+    }
+
+    .btn-start {
+      width: 100%;
+      padding: 14px 12px;
+      min-height: 48px;
+      background: #F5C842;
+      border: none;
+      border-radius: 12px;
+      color: #0B0D11;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .btn-start:hover {
+      background: #FFD966;
+      transform: translateY(-2px);
+    }
+
+    .btn-start:active {
+      transform: translateY(0);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════════ */
+    /* RESPONSIVE - Mobile adjustments */
+    /* ══════════════════════════════════════════════════════════════════════════════ */
+
+    @media (max-width: 479px) {
+      .modal {
+        max-width: 95vw;
+        width: 100%;
+      }
+    }
+
+    /* Scrollbar styling */
+    .modal-content::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .modal-content::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .modal-content::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px;
+    }
+
+    .modal-content::-webkit-scrollbar-thumb:hover {
+      background: rgba(255,255,255,0.15);
+    }
+
+    /* Demo page styles */
+    .demo-page {
+      height: 100vh;
+      background: #0B0D11;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 40px 20px 82px;
+      position: relative;
+    }
+
+    .viewport-info {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      font-size: 12px;
+      color: #4A5270;
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-container">
+    <!-- Demo 1: Desktop/Tablet -->
+    <div class="demo">
+      <h2>📱 Desktop / Tablet (768px+)</h2>
+      <div class="demo-page">
+        <div class="modal" id="modal-desktop">
+          <!-- Header -->
+          <div class="modal-header">
+            <button class="modal-header-back">←</button>
+            <div>
+              <div class="modal-header-title">🤖 Beginner</div>
+              <div class="modal-header-subtitle">Level 1 / 20 · +1000 ᚙ per win</div>
+            </div>
+            <button class="modal-header-info" title="About J.A.R.V.I.S">ℹ️</button>
+            <button class="modal-header-close">✕</button>
+          </div>
+
+          <!-- Content (scrollable) -->
+          <div class="modal-content">
+            <div class="content-section-label">Цвет фигур</div>
+            <div class="color-grid">
+              <button class="color-btn active" onclick="setColor(this)">
+                <span class="color-btn-icon">🎲</span>
+                Случайно
+              </button>
+              <button class="color-btn" onclick="setColor(this)">
+                <span class="color-btn-icon">♔</span>
+                Белые
+              </button>
+              <button class="color-btn" onclick="setColor(this)">
+                <span class="color-btn-icon">♚</span>
+                Чёрные
+              </button>
+            </div>
+
+            <div class="content-section-label">Контроль времени</div>
+            <div class="time-grid">
+              <button class="time-btn" onclick="setTime(this)">
+                <span class="time-btn-icon">⚡</span>
+                1 min
+              </button>
+              <button class="time-btn" onclick="setTime(this)">
+                <span class="time-btn-icon">🔥</span>
+                3 min
+              </button>
+              <button class="time-btn active" onclick="setTime(this)">
+                <span class="time-btn-icon">♟</span>
+                5 min
+              </button>
+              <button class="time-btn" onclick="setTime(this)">
+                <span class="time-btn-icon">🎯</span>
+                15 min
+              </button>
+              <button class="time-btn" onclick="setTime(this)">
+                <span class="time-btn-icon">🏆</span>
+                30 min
+              </button>
+              <button class="time-btn" onclick="setTime(this)">
+                <span class="time-btn-icon">👑</span>
+                1 hr
+              </button>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="modal-footer">
+            <div class="info-hint">
+              🏆 Выигрывай уровни по порядку. Каждый выигранный уровень дарует значок на профиль.
+            </div>
+            <button class="btn-start">♟ Start game</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Demo 2: Mobile -->
+    <div class="demo">
+      <h2>📱 Mobile (360px)</h2>
+      <div style="width: 360px; height: 640px; position: relative; background: #0B0D11; display: flex; align-items: flex-end; justify-content: center; border: 1px solid rgba(255,255,255,0.1);">
+        <div class="modal" style="max-width: none; width: calc(100% - 20px);">
+          <!-- Header -->
+          <div class="modal-header">
+            <button class="modal-header-back">←</button>
+            <div>
+              <div class="modal-header-title" style="font-size: 14px;">🤖 Beginner</div>
+              <div class="modal-header-subtitle">Level 1 / 20</div>
+            </div>
+            <button class="modal-header-info" title="About J.A.R.V.I.S">ℹ️</button>
+            <button class="modal-header-close">✕</button>
+          </div>
+
+          <!-- Content (scrollable) -->
+          <div class="modal-content">
+            <div class="content-section-label">Цвет фигур</div>
+            <div class="color-grid">
+              <button class="color-btn active" onclick="setColor(this)">
+                <span class="color-btn-icon">🎲</span>
+                Случайно
+              </button>
+              <button class="color-btn" onclick="setColor(this)">
+                <span class="color-btn-icon">♔</span>
+                Белые
+              </button>
+              <button class="color-btn" onclick="setColor(this)">
+                <span class="color-btn-icon">♚</span>
+                Чёрные
+              </button>
+            </div>
+
+            <div class="content-section-label">Контроль времени</div>
+            <div class="time-grid">
+              <button class="time-btn" onclick="setTime(this)">
+                <span class="time-btn-icon">⚡</span>
+                1 min
+              </button>
+              <button class="time-btn" onclick="setTime(this)">
+                <span class="time-btn-icon">🔥</span>
+                3 min
+              </button>
+              <button class="time-btn active" onclick="setTime(this)">
+                <span class="time-btn-icon">♟</span>
+                5 min
+              </button>
+              <button class="time-btn" onclick="setTime(this)">
+                <span class="time-btn-icon">🎯</span>
+                15 min
+              </button>
+              <button class="time-btn" onclick="setTime(this)">
+                <span class="time-btn-icon">🏆</span>
+                30 min
+              </button>
+              <button class="time-btn" onclick="setTime(this)">
+                <span class="time-btn-icon">👑</span>
+                1 hr
+              </button>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="modal-footer">
+            <div class="info-hint">
+              🏆 Выигрывай уровни по порядку. Каждый выигранный уровень дарует значок на профиль.
+            </div>
+            <button class="btn-start">♟ Start game</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function setColor(btn) {
+      document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function setTime(btn) {
+      document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+  </script>
+</body>
+</html>

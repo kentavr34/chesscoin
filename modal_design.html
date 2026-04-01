@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Компактный дизайн модали - Jarvis Game Setup</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0B0D11;
+      color: #F0F2F8;
+      padding: 20px;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 300;
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 380px;
+      background: #13161F;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px 20px 0 0;
+      padding: 12px 12px;
+      max-height: 70vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-shrink: 0;
+    }
+
+    .header-title {
+      flex: 1;
+      font-size: 16px;
+      font-weight: 800;
+      color: #F0F2F8;
+    }
+
+    .header-subtitle {
+      font-size: 11px;
+      color: #F5C842;
+      margin-top: 2px;
+    }
+
+    .btn-close {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #F0F2F8;
+      cursor: pointer;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      padding: 0;
+      font-family: inherit;
+    }
+
+    .btn-close:hover {
+      background: rgba(255,255,255,0.12);
+      border-color: rgba(255,255,255,0.15);
+    }
+
+    /* Scrollable content */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-right: 2px;
+    }
+
+    .section-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: #4A5270;
+      margin-bottom: 8px;
+      margin-top: 8px;
+    }
+
+    /* Color buttons grid */
+    .color-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .color-btn {
+      padding: 12px 6px;
+      border-radius: 10px;
+      background: #1C2030;
+      border: 2px solid rgba(255,255,255,0.07);
+      color: #8B92A8;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      min-height: 60px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+
+    .color-btn:hover {
+      border-color: rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.05);
+    }
+
+    .color-btn.active {
+      background: rgba(245,200,66,0.1);
+      border-color: #F5C842;
+      color: #F5C842;
+      transform: scale(1.03);
+    }
+
+    .color-btn-icon {
+      font-size: 20px;
+    }
+
+    /* Time buttons grid */
+    .time-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .time-btn {
+      padding: 10px 6px;
+      border-radius: 10px;
+      background: #1C2030;
+      border: 1px solid rgba(255,255,255,0.07);
+      color: #8B92A8;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      min-height: 50px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: all 0.15s;
+    }
+
+    .time-btn:hover {
+      border-color: rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.05);
+    }
+
+    .time-btn.active {
+      background: rgba(123,97,255,0.15);
+      border-color: rgba(123,97,255,0.4);
+      color: #9B85FF;
+      transform: scale(1.03);
+    }
+
+    .time-btn-icon {
+      font-size: 14px;
+    }
+
+    /* Start button */
+    .btn-start {
+      width: 100%;
+      padding: 14px 12px;
+      min-height: 48px;
+      background: #F5C842;
+      border: none;
+      border-radius: 12px;
+      color: #0B0D11;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      flex-shrink: 0;
+      margin-top: 8px;
+      transition: all 0.2s;
+    }
+
+    .btn-start:hover {
+      background: #FFD966;
+      transform: translateY(-2px);
+    }
+
+    .btn-start:active {
+      transform: translateY(0);
+    }
+
+    /* Demo setup */
+    .demo-page {
+      height: 100vh;
+      background: #0B0D11;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 40px 20px 82px;
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-page">
+    <div class="modal" id="modal">
+      <!-- Header -->
+      <div class="header">
+        <button class="btn-close">←</button>
+        <div style="flex: 1;">
+          <div class="header-title">🤖 Beginner</div>
+          <div class="header-subtitle">Level 1 / 20 · +1000 ᚙ per win</div>
+        </div>
+        <button class="btn-close" title="About J.A.R.V.I.S">ℹ️</button>
+        <button class="btn-close">✕</button>
+      </div>
+
+      <!-- Scrollable Content -->
+      <div class="content">
+        <!-- Color selection -->
+        <div class="section-label">Цвет фигур</div>
+        <div class="color-grid">
+          <button class="color-btn active" onclick="setColor(this)">
+            <span class="color-btn-icon">🎲</span>
+            Случайно
+          </button>
+          <button class="color-btn" onclick="setColor(this)">
+            <span class="color-btn-icon">♔</span>
+            Белые
+          </button>
+          <button class="color-btn" onclick="setColor(this)">
+            <span class="color-btn-icon">♚</span>
+            Чёрные
+          </button>
+        </div>
+
+        <!-- Time control -->
+        <div class="section-label">Контроль времени</div>
+        <div class="time-grid">
+          <button class="time-btn" onclick="setTime(this)">
+            <span class="time-btn-icon">⚡</span>
+            1 min
+          </button>
+          <button class="time-btn" onclick="setTime(this)">
+            <span class="time-btn-icon">🔥</span>
+            3 min
+          </button>
+          <button class="time-btn active" onclick="setTime(this)">
+            <span class="time-btn-icon">♟</span>
+            5 min
+          </button>
+          <button class="time-btn" onclick="setTime(this)">
+            <span class="time-btn-icon">🎯</span>
+            15 min
+          </button>
+          <button class="time-btn" onclick="setTime(this)">
+            <span class="time-btn-icon">🏆</span>
+            30 min
+          </button>
+          <button class="time-btn" onclick="setTime(this)">
+            <span class="time-btn-icon">👑</span>
+            1 hr
+          </button>
+        </div>
+      </div>
+
+      <!-- Info hint — компактный по краям -->
+      <div style="padding: 10px; background: rgba(123,97,255,0.08); border: 1px solid rgba(123,97,255,0.15); border-radius: 10px; margin-bottom: 10px; flex-shrink: 0;">
+        <div style="font-size: 12px; color: #8B92A8; line-height: 1.5;">
+          🏆 Выигрывай уровни по порядку. Каждый выигранный уровень дарует значок на профиль.
+        </div>
+      </div>
+
+      <!-- Start button -->
+      <button class="btn-start">♟ Start game</button>
+    </div>
+  </div>
+
+  <script>
+    function setColor(btn) {
+      document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function setTime(btn) {
+      document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+  </script>
+</body>
+</html>

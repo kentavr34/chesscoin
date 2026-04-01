@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Token Injector</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #0f0; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #2a5a2a; }
+        .info { background: #2a3a5a; }
+        code { background: #0a0a0a; padding: 2px 5px; }
+        button { padding: 10px 20px; margin: 10px 0; background: #0f0; color: #000; border: none; cursor: pointer; font-weight: bold; }
+        button:hover { background: #0c0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 ChessCoin Token Injector</h1>
+
+        <div class="status info">
+            <strong>Статус:</strong> Готово к инжекции
+        </div>
+
+        <button onclick="injectToken()">✅ Вставить токен → http://localhost:5175</button>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsInRlbGVncmFtSWQiOjI1NDQ1MDM1MywiaWF0IjoxNzc1MDQzMzYxLCJleHAiOjE3NzUwNTA1NjF9.t-xK7KFq-0TQ8QmW1-AHrMxWUCjFS9eB-FoQ8W1if84';
+
+        function injectToken() {
+            // Открываем новую вкладку с localhost
+            const newWindow = window.open('http://localhost:5175', 'chesscoin');
+
+            // Даём странице время загрузиться (2 секунды)
+            setTimeout(() => {
+                try {
+                    // Вставляем токен в localStorage
+                    newWindow.localStorage.setItem('accessToken', TOKEN);
+                    newWindow.localStorage.setItem('refreshToken', TOKEN);
+
+                    // Обновляем страницу
+                    newWindow.location.reload();
+
+                    document.getElementById('result').innerHTML = `
+                        <div class="status success">
+                            <strong>✅ УСПЕШНО!</strong><br>
+                            Токен вставлен в http://localhost:5175<br>
+                            Страница обновляется...<br><br>
+                            <em>Когда откроется вкладка - ты увидишь приложение с твоим аккаунтом.</em>
+                        </div>
+                    `;
+                } catch (e) {
+                    document.getElementById('result').innerHTML = `
+                        <div class="status" style="background: #5a2a2a;">
+                            <strong>⚠️ ОШИБКА:</strong> ${e.message}<br>
+                            <small>Возможно, localhost:5175 не запущен. Запусти: <code>npm run dev</code> в папке frontend</small>
+                        </div>
+                    `;
+                }
+            }, 2000);
+        }
+
+        // Если это окно открыто из localhost, сразу вставляем
+        if (window.location.hostname === 'localhost') {
+            document.getElementById('result').innerHTML = `
+                <div class="status success">
+                    <strong>✅ УЖЕ ЗДЕСЬ!</strong><br>
+                    Ты уже на http://localhost:5175<br>
+                    Токен уже в памяти, перезагрузи страницу (F5) чтобы применить.
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
