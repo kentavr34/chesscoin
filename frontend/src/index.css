@@ -243,6 +243,13 @@
   --badge-color-epic: #FF6B6B;
   --badge-color-legendary: #E040FB;
 
+  /* Candle Chart (L1) */
+  --chart-text-color: #4A5270;
+  --chart-grid-line: rgba(255, 255, 255, 0.03);
+  --chart-border-subtle: rgba(255, 255, 255, 0.06);
+  --chart-up-color: #00D68F;
+  --chart-down-color: #FF4D6A;
+
   /* Responsive Breakpoints (L2) */
   --breakpoint-xs: 320px;
   --breakpoint-sm: 480px;
@@ -428,6 +435,13 @@
     --badge-color-professional: #F57C00;
     --badge-color-epic: #E53935;
     --badge-color-legendary: #C2185B;
+
+    /* Candle Chart Light Mode Adjustments */
+    --chart-text-color: #5A5F6E;
+    --chart-grid-line: rgba(0, 0, 0, 0.05);
+    --chart-border-subtle: rgba(0, 0, 0, 0.08);
+    --chart-up-color: #00A366;
+    --chart-down-color: #D32F2F;
   }
 }
 
@@ -608,6 +622,13 @@
   --badge-color-professional: #F57C00;
   --badge-color-epic: #E53935;
   --badge-color-legendary: #C2185B;
+
+  /* Candle Chart Light Mode via data-theme */
+  --chart-text-color: #5A5F6E;
+  --chart-grid-line: rgba(0, 0, 0, 0.05);
+  --chart-border-subtle: rgba(0, 0, 0, 0.08);
+  --chart-up-color: #00A366;
+  --chart-down-color: #D32F2F;
 
   background: var(--color-bg-dark);
   color: var(--color-text-primary);

@@ -32,26 +32,31 @@ export const CandleChart: React.FC<CandleChartProps> = ({
       // Удаляем старый график если он был
       if (chartRef.current) { chartRef.current.remove(); chartRef.current = null; }
 
+      // Извлекаем CSS переменные
+      const styles = getComputedStyle(document.documentElement);
+      const textColor = styles.getPropertyValue('--chart-text-color').trim() || '#4A5270';
+      const gridLine = styles.getPropertyValue('--chart-grid-line').trim() || 'rgba(255,255,255,0.03)';
+      const borderSubtle = styles.getPropertyValue('--chart-border-subtle').trim() || 'rgba(255,255,255,0.06)';
+      const upColor = styles.getPropertyValue('--chart-up-color').trim() || '#00D68F';
+      const downColor = styles.getPropertyValue('--chart-down-color').trim() || '#FF4D6A';
+
       const chart = createChart(containerRef.current, {
         width:  containerRef.current.clientWidth,
         height,
         layout: {
           background:  { type: ColorType.Solid, color: 'transparent' },
-          textColor:   '#4A5270',
+          textColor,
         },
         grid: {
-          vertLines:   { color: 'rgba(255,255,255,0.03)' },
-          horzLines:   { color: 'rgba(255,255,255,0.03)' },
+          vertLines:   { color: gridLine },
+          horzLines:   { color: gridLine },
         },
         crosshair:    { mode: CrosshairMode.Magnet },
-        rightPriceScale: { borderColor: 'rgba(255,255,255,0.06)', textColor: '#4A5270', scaleMargins: { top: 0.1, bottom: 0.1 } },
-        timeScale: { borderColor: 'rgba(255,255,255,0.06)', timeVisible: true, secondsVisible: false },
+        rightPriceScale: { borderColor: borderSubtle, textColor, scaleMargins: { top: 0.1, bottom: 0.1 } },
+        timeScale: { borderColor: borderSubtle, timeVisible: true, secondsVisible: false },
         handleScroll: false,
         handleScale:  false,
       });
-
-      const upColor   = '#00D68F';
-      const downColor = '#FF4D6A';
 
       const series = chart.addCandlestickSeries({
         upColor,
@@ -60,7 +65,7 @@ export const CandleChart: React.FC<CandleChartProps> = ({
         borderDownColor: downColor,
         wickUpColor:     upColor,
         wickDownColor:   downColor,
-      });
+      }) as unknown;
 
       // Форматируем данные для lightweight-charts
       const data = candles
