@@ -300,6 +300,15 @@
   --promotion-btn-border: rgba(255, 255, 255, 0.1);
   --promotion-chosen-btn-bg: rgba(245, 200, 66, 0.15);
   --promotion-chosen-btn-shadow: rgba(245, 200, 66, 0.4);
+  --promotion-spark-1: #F5C842;
+  --promotion-spark-2: #FF4D6A;
+  --promotion-spark-3: #9B85FF;
+  --promotion-spark-4: #00D68F;
+  --promotion-spark-5: #FF9F43;
+  --promotion-spark-6: #64C8FF;
+  --promotion-spark-7: #FFD700;
+  --promotion-spark-8: #E040FB;
+  --promotion-spark-9: #00FF9D;
 
   /* WarChallengePopup Colors (L1) */
   --war-challenge-overlay-bg: rgba(0, 0, 0, 0.8);
@@ -334,6 +343,10 @@
   /* Avatar (L1) */
   --avatar-border-subtle: rgba(255, 255, 255, 0.12);
   --avatar-border-light: rgba(255, 255, 255, 0.18);
+  --avatar-gradient-1: linear-gradient(135deg, #3A2A8A, #5A3ABB);
+  --avatar-gradient-2: linear-gradient(135deg, #1A3A5A, #2A6A9A);
+  --avatar-gradient-3: linear-gradient(135deg, #4A1A2A, #8A2A4A);
+  --avatar-gradient-4: linear-gradient(135deg, #1A4A2A, #2A8A4A);
 
   /* PgnReplayModal Colors (L1) */
   --pgn-replay-overlay-bg: rgba(0, 0, 0, 0.85);
@@ -612,6 +625,15 @@
     --promotion-btn-border: rgba(0, 0, 0, 0.08);
     --promotion-chosen-btn-bg: rgba(212, 168, 32, 0.12);
     --promotion-chosen-btn-shadow: rgba(212, 168, 32, 0.3);
+    --promotion-spark-1: #D4A820;
+    --promotion-spark-2: #D32F2F;
+    --promotion-spark-3: #6D28D9;
+    --promotion-spark-4: #00A366;
+    --promotion-spark-5: #E67E22;
+    --promotion-spark-6: #0066CC;
+    --promotion-spark-7: #C8960A;
+    --promotion-spark-8: #C2185B;
+    --promotion-spark-9: #00996B;
 
     /* Candle Chart Light Mode Adjustments */
     --chart-text-color: #5A5F6E;
@@ -623,6 +645,10 @@
     /* Avatar Light Mode Adjustments */
     --avatar-border-subtle: rgba(0, 0, 0, 0.08);
     --avatar-border-light: rgba(0, 0, 0, 0.12);
+    --avatar-gradient-1: linear-gradient(135deg, #6B4FB5, #8B6FD4);
+    --avatar-gradient-2: linear-gradient(135deg, #4B6B8B, #7B9BBB);
+    --avatar-gradient-3: linear-gradient(135deg, #8B4B5B, #AB7B8B);
+    --avatar-gradient-4: linear-gradient(135deg, #4B7B5B, #7BAB8B);
 
     /* AvatarCropModal Light Mode Adjustments */
     --avatar-crop-overlay-bg: rgba(0, 0, 0, 0.5);
@@ -936,6 +962,15 @@
   --promotion-btn-border: rgba(0, 0, 0, 0.08);
   --promotion-chosen-btn-bg: rgba(212, 168, 32, 0.12);
   --promotion-chosen-btn-shadow: rgba(212, 168, 32, 0.3);
+  --promotion-spark-1: #D4A820;
+  --promotion-spark-2: #D32F2F;
+  --promotion-spark-3: #6D28D9;
+  --promotion-spark-4: #00A366;
+  --promotion-spark-5: #E67E22;
+  --promotion-spark-6: #0066CC;
+  --promotion-spark-7: #C8960A;
+  --promotion-spark-8: #C2185B;
+  --promotion-spark-9: #00996B;
 
   /* Candle Chart Light Mode via data-theme */
   --chart-text-color: #5A5F6E;
@@ -947,6 +982,10 @@
   /* Avatar Light Mode via data-theme */
   --avatar-border-subtle: rgba(0, 0, 0, 0.08);
   --avatar-border-light: rgba(0, 0, 0, 0.12);
+  --avatar-gradient-1: linear-gradient(135deg, #6B4FB5, #8B6FD4);
+  --avatar-gradient-2: linear-gradient(135deg, #4B6B8B, #7B9BBB);
+  --avatar-gradient-3: linear-gradient(135deg, #8B4B5B, #AB7B8B);
+  --avatar-gradient-4: linear-gradient(135deg, #4B7B5B, #7BAB8B);
 
   /* AvatarCropModal Light Mode via data-theme */
   --avatar-crop-overlay-bg: rgba(0, 0, 0, 0.5);

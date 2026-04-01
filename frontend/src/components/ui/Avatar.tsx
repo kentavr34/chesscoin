@@ -19,10 +19,10 @@ const SIZES = {
 };
 
 const GRADIENTS = [
-  'linear-gradient(135deg,#3A2A8A,#5A3ABB)',
-  'linear-gradient(135deg,#1A3A5A,#2A6A9A)',
-  'linear-gradient(135deg,#4A1A2A,#8A2A4A)',
-  'linear-gradient(135deg,#1A4A2A,#2A8A4A)',
+  'var(--avatar-gradient-1, linear-gradient(135deg,#3A2A8A,#5A3ABB))',
+  'var(--avatar-gradient-2, linear-gradient(135deg,#1A3A5A,#2A6A9A))',
+  'var(--avatar-gradient-3, linear-gradient(135deg,#4A1A2A,#8A2A4A))',
+  'var(--avatar-gradient-4, linear-gradient(135deg,#1A4A2A,#2A8A4A))',
 ];
 
 const getGradient = (userId?: string, avatarGradient?: string | null): string => {

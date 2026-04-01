@@ -29,7 +29,17 @@ const PIECE_FILE: Record<string, Record<string, string>> = {
 
 // Генератор частиц фейерверка
 interface Spark { id: number; x: number; y: number; color: string; size: number; duration: number; delay: number }
-const COLORS = ['#F5C842','#FF4D6A','#9B85FF','#00D68F','#FF9F43','#64C8FF','#FFD700','#E040FB','#00FF9D'];
+const COLORS = [
+  'var(--promotion-spark-1, #F5C842)',
+  'var(--promotion-spark-2, #FF4D6A)',
+  'var(--promotion-spark-3, #9B85FF)',
+  'var(--promotion-spark-4, #00D68F)',
+  'var(--promotion-spark-5, #FF9F43)',
+  'var(--promotion-spark-6, #64C8FF)',
+  'var(--promotion-spark-7, #FFD700)',
+  'var(--promotion-spark-8, #E040FB)',
+  'var(--promotion-spark-9, #00FF9D)',
+];
 
 function makeSparks(count = 55): Spark[] {
   return Array.from({ length: count }, (_, i) => ({
