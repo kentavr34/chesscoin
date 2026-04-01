@@ -192,7 +192,7 @@ const CountryDetailModal: React.FC<{
     if (!donateAmt || isNaN(Number(donateAmt))) return;
     setDonating(true);
     try {
-      await warsApi.leave(); // placeholder - should be contribute
+      await warsApi.donate(countryId, Number(donateAmt));
       toast(t.wars.btnDonate, 'success');
       setDonateAmt('');
       warsApi.country(countryId).then(setData);
