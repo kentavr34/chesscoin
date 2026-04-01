@@ -17,12 +17,24 @@ interface CandleChartProps {
 export const CandleChart: React.FC<CandleChartProps> = ({
   candles,
   up,
-  height = window.innerWidth < 480 ? 60 : 80,
+  height: heightProp,
 }) => {
   const t = useT();
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef     = useRef<IChartApi | null>(null);
   const seriesRef    = useRef<ISeriesApi<'Candlestick'> | null>(null);
+
+  // Read height from CSS variable if not provided as prop
+  const height = heightProp ?? (() => {
+    try {
+      const cssValue = getComputedStyle(document.documentElement)
+        .getPropertyValue('--candle-chart-height')
+        .trim();
+      return parseInt(cssValue) || 80;
+    } catch {
+      return 80;
+    }
+  })();
 
   useEffect(() => {
     if (!containerRef.current) return;

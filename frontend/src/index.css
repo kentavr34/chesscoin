@@ -1652,6 +1652,17 @@ div, span, button, input, select, textarea, p {
   }
 }
 
+/* ── CandleChart Responsive Sizing Tokens ───────────────────────────────── */
+:root {
+  --candle-chart-height: 80px;
+}
+
+@media (max-width: 479px) {
+  :root {
+    --candle-chart-height: 60px;
+  }
+}
+
 /* ── JarvisModal Responsive Sizing Tokens ────────────────────────────────── */
 :root {
   --jarvis-header-margin-bottom: 20px;
