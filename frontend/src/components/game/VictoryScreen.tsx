@@ -131,7 +131,7 @@ const CountdownDots: React.FC<{ duration: number }> = ({ duration }) => {
       {[3,2,1].map(n => (
         <div key={n} style={{
           width: 8, height: 8, borderRadius: '50%',
-          background: active >= n ? 'var(--color-accent, #F5C842)' : 'rgba(255,255,255,0.2)',
+          background: active >= n ? 'var(--color-accent, #F5C842)' : 'var(--victory-countdown-inactive-dot, rgba(255,255,255,0.2))',
           transition: 'background 0.3s',
         }} />
       ))}
@@ -142,7 +142,7 @@ const CountdownDots: React.FC<{ duration: number }> = ({ duration }) => {
 // ── Стили ─────────────────────────────────────────────────────────────────────
 const overlay: React.CSSProperties = {
   position: 'fixed', inset: 0, zIndex: "var(--z-overlay, 200)",
-  background: 'rgba(0,0,0,0.88)',
+  background: 'var(--victory-overlay-bg, rgba(0,0,0,0.88))',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
 };
 
@@ -172,7 +172,7 @@ const victoryTitle: React.CSSProperties = {
 };
 
 const opponentText: React.CSSProperties = {
-  fontSize: 16, color: 'rgba(255,255,255,0.8)',
+  fontSize: 16, color: 'var(--victory-opponent-text-color, rgba(255,255,255,0.8))',
   fontFamily: 'inherit', fontWeight: 500,
 };
 

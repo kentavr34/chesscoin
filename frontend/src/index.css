@@ -243,6 +243,11 @@
   --badge-color-epic: #FF6B6B;
   --badge-color-legendary: #E040FB;
 
+  /* Victory Screen (L1) */
+  --victory-overlay-bg: rgba(0, 0, 0, 0.88);
+  --victory-countdown-inactive-dot: rgba(255, 255, 255, 0.2);
+  --victory-opponent-text-color: rgba(255, 255, 255, 0.8);
+
   /* Candle Chart (L1) */
   --chart-text-color: #4A5270;
   --chart-grid-line: rgba(255, 255, 255, 0.03);
@@ -440,6 +445,11 @@
     --badge-color-epic: #E53935;
     --badge-color-legendary: #C2185B;
 
+    /* Victory Screen Light Mode Adjustments */
+    --victory-overlay-bg: rgba(0, 0, 0, 0.7);
+    --victory-countdown-inactive-dot: rgba(0, 0, 0, 0.15);
+    --victory-opponent-text-color: rgba(0, 0, 0, 0.7);
+
     /* Candle Chart Light Mode Adjustments */
     --chart-text-color: #5A5F6E;
     --chart-grid-line: rgba(0, 0, 0, 0.05);
@@ -630,6 +640,11 @@
   --badge-color-professional: #F57C00;
   --badge-color-epic: #E53935;
   --badge-color-legendary: #C2185B;
+
+  /* Victory Screen Light Mode via data-theme */
+  --victory-overlay-bg: rgba(0, 0, 0, 0.7);
+  --victory-countdown-inactive-dot: rgba(0, 0, 0, 0.15);
+  --victory-opponent-text-color: rgba(0, 0, 0, 0.7);
 
   /* Candle Chart Light Mode via data-theme */
   --chart-text-color: #5A5F6E;
