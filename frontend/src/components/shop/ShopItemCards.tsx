@@ -20,6 +20,23 @@ const btnStyle: React.CSSProperties = {
   fontFamily: 'inherit', width: '100%',
 };
 
+// Helper function to extract board colors from CSS variables
+function getBoardColorsFromCSS(board: string): [string, string] {
+  const vars = window.getComputedStyle(document.documentElement);
+  const boardKey = board.toLowerCase()
+    .replace('классика', 'classic')
+    .replace('мрамор', 'marble')
+    .replace('золото', 'gold')
+    .replace('ночь', 'night')
+    .replace('малахит', 'malachite')
+    .replace('неон', 'neon')
+    .replace('лёд', 'ice');
+
+  const light = vars.getPropertyValue(`--shop-board-${boardKey}-light`).trim();
+  const dark = vars.getPropertyValue(`--shop-board-${boardKey}-dark`).trim();
+  return [light || '#E8EDF9', dark || '#8B9DD4'];
+}
+
 const BoardPreview: React.FC<{ light: string; dark: string }> = ({ light, dark }) => (
   <div style={{
     display: 'grid',
@@ -62,14 +79,14 @@ const PieceSetPreview: React.FC<{ name: string }> = ({ name }) => (
 );
 
 export const BOARD_KNOWN: Record<string, [string, string]> = {
-  'Классика': ['#F0D9B5','#B58863'], 'Classic': ['#F0D9B5','#B58863'],
-  'ChessCoin': ['#EDF1FB','#8B9DD4'],
-  'Мрамор': ['#E8E0D8','#8C7B6B'], 'Marble': ['#E8E0D8','#8C7B6B'],
-  'Золото': ['#F5E6A0','#C8960A'], 'Gold': ['#F5E6A0','#C8960A'],
-  'Ночь': ['#1C1C2E','#0D0D1A'], 'Night': ['#1C1C2E','#0D0D1A'],
-  'Малахит': ['#A8D5A2','#3A7A34'], 'Malachite': ['#A8D5A2','#3A7A34'],
-  'Неон': ['#0D1F2D','#071520'], 'Neon': ['#0D1F2D','#071520'],
-  'Лёд': ['#D8EEF8','#6090B8'], 'Ice': ['#D8EEF8','#6090B8'],
+  'Классика': getBoardColorsFromCSS('classic'), 'Classic': getBoardColorsFromCSS('classic'),
+  'ChessCoin': getBoardColorsFromCSS('chesscoin'),
+  'Мрамор': getBoardColorsFromCSS('marble'), 'Marble': getBoardColorsFromCSS('marble'),
+  'Золото': getBoardColorsFromCSS('gold'), 'Gold': getBoardColorsFromCSS('gold'),
+  'Ночь': getBoardColorsFromCSS('night'), 'Night': getBoardColorsFromCSS('night'),
+  'Малахит': getBoardColorsFromCSS('malachite'), 'Malachite': getBoardColorsFromCSS('malachite'),
+  'Неон': getBoardColorsFromCSS('neon'), 'Neon': getBoardColorsFromCSS('neon'),
+  'Лёд': getBoardColorsFromCSS('ice'), 'Ice': getBoardColorsFromCSS('ice'),
 };
 
 // ── ItemCard ──────────────────────────────────────────────────
@@ -93,8 +110,9 @@ export const ItemCard: React.FC<ItemCardProps> = ({ item, loading, highlighted, 
 
   const [imgError, setImgError] = React.useState(false);
   const renderPreview = () => {
+    const fallbackBoardColors = getBoardColorsFromCSS('chesscoin');
     if (item.imageUrl && !imgError) return <img src={item.imageUrl} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" onError={() => setImgError(true)} />;
-    if (item.type === 'BOARD_SKIN') { const c = BOARD_KNOWN[item.name] ?? ['#E8EDF9','#8B9DD4']; return <BoardPreview light={c[0]} dark={c[1]} />; }
+    if (item.type === 'BOARD_SKIN') { const c = BOARD_KNOWN[item.name] ?? fallbackBoardColors; return <BoardPreview light={c[0]} dark={c[1]} />; }
     if (item.type === 'PIECE_SKIN') return <PiecePreview name={item.name} />;
     if (item.type === 'PIECE_SET')  return <PieceSetPreview name={item.name} />;
     if (item.type === 'AVATAR_FRAME') return <span style={{ fontSize: 36, opacity: 0.6 }}>🖼</span>;

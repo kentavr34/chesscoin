@@ -86,6 +86,24 @@
   --chess-skin-cyber-light: #0A0A1A;
   --chess-skin-cyber-dark: #050510;
 
+  /* ShopItemCards Board Skins (L1) */
+  --shop-board-classic-light: #F0D9B5;
+  --shop-board-classic-dark: #B58863;
+  --shop-board-chesscoin-light: #EDF1FB;
+  --shop-board-chesscoin-dark: #8B9DD4;
+  --shop-board-marble-light: #E8E0D8;
+  --shop-board-marble-dark: #8C7B6B;
+  --shop-board-gold-light: #F5E6A0;
+  --shop-board-gold-dark: #C8960A;
+  --shop-board-night-light: #1C1C2E;
+  --shop-board-night-dark: #0D0D1A;
+  --shop-board-malachite-light: #A8D5A2;
+  --shop-board-malachite-dark: #3A7A34;
+  --shop-board-neon-light: #0D1F2D;
+  --shop-board-neon-dark: #071520;
+  --shop-board-ice-light: #D8EEF8;
+  --shop-board-ice-dark: #6090B8;
+
   /* Chess UI Elements (L1) */
   --chess-emoji-text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
   --chess-piece-shadow: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
@@ -413,6 +431,24 @@
     --shop-unequip-btn-bg: rgba(211, 47, 47, 0.08);
     --shop-unequip-btn-border: rgba(211, 47, 47, 0.15);
 
+    /* ShopItemCards Board Skins Light Mode Adjustments */
+    --shop-board-classic-light: #F0D9B5;
+    --shop-board-classic-dark: #B58863;
+    --shop-board-chesscoin-light: #E8EDF9;
+    --shop-board-chesscoin-dark: #A8BCDB;
+    --shop-board-marble-light: #E8E0D8;
+    --shop-board-marble-dark: #8C7B6B;
+    --shop-board-gold-light: #F5E6A0;
+    --shop-board-gold-dark: #D4A820;
+    --shop-board-night-light: #2A2A3C;
+    --shop-board-night-dark: #0D0D1A;
+    --shop-board-malachite-light: #A8D5A2;
+    --shop-board-malachite-dark: #2D6A27;
+    --shop-board-neon-light: #1A3A4A;
+    --shop-board-neon-dark: #0A2535;
+    --shop-board-ice-light: #C5DFF0;
+    --shop-board-ice-dark: #5A8DB3;
+
     /* MoveAnnouncer Light Mode Adjustments */
     --move-announcer-rainbow-gradient: linear-gradient(90deg, #D32F2F, #E67E22, #D4A820, #00A366, #0066CC, #6D28D9, #D32F2F);
     --move-announcer-opening-bg: rgba(109, 40, 217, 0.12);
@@ -639,6 +675,24 @@
   --shop-equipped-badge-border: rgba(0, 163, 102, 0.15);
   --shop-unequip-btn-bg: rgba(211, 47, 47, 0.08);
   --shop-unequip-btn-border: rgba(211, 47, 47, 0.15);
+
+  /* ShopItemCards Board Skins Light Mode via data-theme */
+  --shop-board-classic-light: #F0D9B5;
+  --shop-board-classic-dark: #B58863;
+  --shop-board-chesscoin-light: #E8EDF9;
+  --shop-board-chesscoin-dark: #A8BCDB;
+  --shop-board-marble-light: #E8E0D8;
+  --shop-board-marble-dark: #8C7B6B;
+  --shop-board-gold-light: #F5E6A0;
+  --shop-board-gold-dark: #D4A820;
+  --shop-board-night-light: #2A2A3C;
+  --shop-board-night-dark: #0D0D1A;
+  --shop-board-malachite-light: #A8D5A2;
+  --shop-board-malachite-dark: #2D6A27;
+  --shop-board-neon-light: #1A3A4A;
+  --shop-board-neon-dark: #0A2535;
+  --shop-board-ice-light: #C5DFF0;
+  --shop-board-ice-dark: #5A8DB3;
 
   /* MoveAnnouncer Light Mode via data-theme */
   --move-announcer-rainbow-gradient: linear-gradient(90deg, #D32F2F, #E67E22, #D4A820, #00A366, #0066CC, #6D28D9, #D32F2F);
