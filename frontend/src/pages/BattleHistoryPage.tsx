@@ -52,20 +52,20 @@ export const BattleHistoryPage: React.FC = () => {
     <PageLayout title={t.profile.battleHistory ?? 'Battle History'} onBack={() => navigate(-1)}>
       {loading && (
         <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
-          <div style={{ width: 28, height: 28, border: '3px solid #7B61FF', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.75s linear infinite' }} />
+          <div style={{ width: 28, height: 28, border: '3px solid var(--battle-history-loader-color, #7B61FF)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.75s linear infinite' }} />
         </div>
       )}
 
       {!loading && games.length === 0 && (
         <div style={{ textAlign: 'center', padding: '48px 20px' }}>
           <div style={{ fontSize: 48, marginBottom: 12, opacity: 0.5 }}>📜</div>
-          <div style={{ fontSize: 14, color: '#8B92A8', fontWeight: 600 }}>{t.profile.noGamesPlayed ?? 'No games yet'}</div>
+          <div style={{ fontSize: 14, color: 'var(--color-text-secondary, #8B92A8)', fontWeight: 600 }}>{t.profile.noGamesPlayed ?? 'No games yet'}</div>
         </div>
       )}
 
       {!loading && games.length > 0 && (
         <>
-          <div style={{ padding: '8px 18px 4px', fontSize: 11, color: '#6A7090' }}>
+          <div style={{ padding: '8px 18px 4px', fontSize: 11, color: 'var(--battle-history-page-info-color, #6A7090)' }}>
             {total} {t.profile.totalGamesLabel ?? 'games'} · page {currentPage}/{totalPages}
           </div>
 
@@ -73,14 +73,14 @@ export const BattleHistoryPage: React.FC = () => {
             {games.map((g) => {
               const isWon = g.result === 'WON';
               const isDraw = g.result === 'DRAW';
-              const statusColor = isWon ? '#00D68F' : isDraw ? '#9B85FF' : '#FF4D6A';
+              const statusColor = isWon ? 'var(--color-green, #00D68F)' : isDraw ? 'var(--color-purple, #9B85FF)' : 'var(--color-red, #FF4D6A)';
               const statusLabel = isWon ? '✓ Win' : isDraw ? '= Draw' : '✕ Loss';
               const typeIcon = g.hasBot ? '🤖' : g.type === 'FRIENDLY' ? '🤝' : '⚔️';
 
               return (
                 <div key={g.sessionId} style={{
                   display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '10px 12px', background: '#1C2030',
+                  padding: '10px 12px', background: 'var(--color-bg-card, #1C2030)',
                   border: `1px solid ${isWon ? 'rgba(0,214,143,0.12)' : isDraw ? 'rgba(155,133,255,0.12)' : 'rgba(255,77,106,0.10)'}`,
                   borderRadius: 14, cursor: g.pgn ? 'pointer' : 'default',
                 }} onClick={() => g.pgn && navigate(`/profile`, { state: { replay: { pgn: g.pgn, title: g.opponent?.firstName ? `vs ${g.opponent.firstName}` : 'Game', sessionId: g.sessionId } } })}>
@@ -95,10 +95,10 @@ export const BattleHistoryPage: React.FC = () => {
                   )}
 
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: '#F0F2F8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text-primary, #F0F2F8)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {g.opponent?.firstName ?? (g.hasBot ? `J.A.R.V.I.S Lv.${g.botLevel ?? '?'}` : 'Unknown')}
                     </div>
-                    <div style={{ fontSize: 10, color: '#4A5270', marginTop: 2 }}>
+                    <div style={{ fontSize: 10, color: 'var(--color-text-muted, #4A5270)', marginTop: 2 }}>
                       {g.finishedAt ? fmtDate(g.finishedAt) : ''}
                       {g.bet && BigInt(g.bet) > 0n ? ` · ${fmtBalance(g.bet)} ᚙ` : ''}
                     </div>
@@ -107,9 +107,9 @@ export const BattleHistoryPage: React.FC = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
                     <span style={{ fontSize: 11, fontWeight: 800, color: statusColor }}>{statusLabel}</span>
                     {g.winningAmount && isWon && (
-                      <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono',monospace", color: '#F5C842' }}>+{fmtBalance(g.winningAmount)} ᚙ</span>
+                      <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono',monospace", color: 'var(--color-accent, #F5C842)' }}>+{fmtBalance(g.winningAmount)} ᚙ</span>
                     )}
-                    {g.pgn && <span style={{ fontSize: 9, color: '#6A7090' }}>▶ replay</span>}
+                    {g.pgn && <span style={{ fontSize: 9, color: 'var(--battle-history-page-info-color, #6A7090)' }}>▶ replay</span>}
                   </div>
                 </div>
               );
@@ -124,7 +124,7 @@ export const BattleHistoryPage: React.FC = () => {
                 onClick={() => loadGames(Math.max(0, offset - PAGE_SIZE))}
                 style={{ ...pgBtn, opacity: offset === 0 ? 0.3 : 1 }}
               >← Prev</button>
-              <span style={{ fontSize: 12, color: '#8B92A8', display: 'flex', alignItems: 'center' }}>
+              <span style={{ fontSize: 12, color: 'var(--color-text-secondary, #8B92A8)', display: 'flex', alignItems: 'center' }}>
                 {currentPage} / {totalPages}
               </span>
               <button
@@ -143,6 +143,6 @@ export const BattleHistoryPage: React.FC = () => {
 };
 
 const pgBtn: React.CSSProperties = {
-  padding: '8px 16px', background: '#1C2030', border: '1px solid rgba(255,255,255,0.1)',
-  borderRadius: 10, color: '#8B92A8', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+  padding: '8px 16px', background: 'var(--color-bg-card, #1C2030)', border: '1px solid var(--color-border, rgba(255,255,255,0.1))',
+  borderRadius: 10, color: 'var(--color-text-secondary, #8B92A8)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
 };

@@ -393,6 +393,10 @@
   --whatsapp-color: #25D366;
   --whatsapp-bg: rgba(37, 211, 102, 0.1);
 
+  /* BattleHistoryPage Colors (L1) */
+  --battle-history-page-info-color: #6A7090;
+  --battle-history-loader-color: #7B61FF;
+
   /* Responsive Breakpoints (L2) */
   --breakpoint-xs: 320px;
   --breakpoint-sm: 480px;
@@ -678,6 +682,10 @@
     /* WaitingForOpponent Light Mode Adjustments */
     --whatsapp-color: #1F7F40;
     --whatsapp-bg: rgba(31, 127, 64, 0.1);
+
+    /* BattleHistoryPage Light Mode Adjustments */
+    --battle-history-page-info-color: #7A8295;
+    --battle-history-loader-color: #5B21B6;
 
     /* StatComponents Light Mode Adjustments */
     --stat-circle-bg-stroke: #5A6378;
@@ -1016,6 +1024,10 @@
   /* WaitingForOpponent Light Mode via data-theme */
   --whatsapp-color: #1F7F40;
   --whatsapp-bg: rgba(31, 127, 64, 0.1);
+
+  /* BattleHistoryPage Light Mode via data-theme */
+  --battle-history-page-info-color: #7A8295;
+  --battle-history-loader-color: #5B21B6;
 
   /* StatComponents Light Mode via data-theme */
   --stat-circle-bg-stroke: #5A6378;
