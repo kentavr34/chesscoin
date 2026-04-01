@@ -1,0 +1,47 @@
+name: 🔧 Diagnostic Check
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    name: Run Diagnostics
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH Diagnostic Commands
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          timeout: 300s
+          script: |
+            set -e
+            echo "=== Docker Compose Config (environment section) ==="
+            cd /opt/chesscoin
+            docker compose config 2>&1 | grep -A 50 "environment:" | head -80
+
+            echo ""
+            echo "=== .env file exists? ==="
+            ls -la /opt/chesscoin/.env 2>&1 || echo "❌ .env NOT FOUND"
+
+            echo ""
+            echo "=== .env content (first 5 lines) ==="
+            head -5 /opt/chesscoin/.env 2>&1 || echo "❌ Cannot read .env"
+
+            echo ""
+            echo "=== Container status ==="
+            docker compose ps
+
+            echo ""
+            echo "=== Backend logs (last 30 lines) ==="
+            docker compose logs backend --tail=30 2>&1 || echo "❌ No backend logs"
+
+            echo ""
+            echo "=== pgbouncer credentials check ==="
+            docker compose exec -T pgbouncer cat /etc/pgbouncer/userlist.txt 2>&1 || echo "❌ Cannot read pgbouncer userlist"
+
+            echo ""
+            echo "=== Postgres user check ==="
+            docker compose exec -T postgres psql -U postgres -c "\du" 2>&1 || echo "❌ Cannot query postgres users"
