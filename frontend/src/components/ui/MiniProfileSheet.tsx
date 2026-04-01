@@ -106,7 +106,12 @@ export const MiniProfileSheet: React.FC<Props> = ({ userId, onClose }) => {
             </div>
 
             {/* Статистика */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 16 }}>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: window.innerWidth < 480 ? '1fr 1fr' : '1fr 1fr 1fr',
+              gap: 8,
+              marginBottom: 16,
+            }}>
               {[
                 { label: 'Wins', val: user.wins ?? 0, color: 'var(--color-green, #00D68F)' },
                 { label: 'Losses', val: user.losses ?? 0, color: 'var(--color-red, #FF4D6A)' },

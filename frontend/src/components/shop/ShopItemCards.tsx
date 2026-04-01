@@ -21,7 +21,14 @@ const btnStyle: React.CSSProperties = {
 };
 
 const BoardPreview: React.FC<{ light: string; dark: string }> = ({ light, dark }) => (
-  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', width: '100%', aspectRatio: '1', borderRadius: 10, overflow: 'hidden' }}>
+  <div style={{
+    display: 'grid',
+    gridTemplateColumns: window.innerWidth < 480 ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
+    width: '100%',
+    aspectRatio: '1',
+    borderRadius: 10,
+    overflow: 'hidden',
+  }}>
     {Array.from({ length: 16 }, (_, i) => {
       const isLight = (Math.floor(i / 4) + (i % 4)) % 2 === 0;
       return <div key={i} style={{ background: isLight ? light : dark }} />;
