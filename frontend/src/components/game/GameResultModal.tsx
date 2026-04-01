@@ -87,8 +87,8 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
           maxWidth: 'clamp(280px, 90vw, 320px)',
           background: cfg.bg,
           border: `1px solid ${cfg.border}`,
-          borderRadius: 24,
-          padding: 'clamp(20px, 5vw, 28px) clamp(16px, 4vw, 24px) clamp(16px, 4vw, 22px)',
+          borderRadius: 'var(--radius-xl)',
+          padding: `var(--space-l) var(--space-l)`,
           boxShadow: `0 0 60px ${cfg.glow}, var(--result-shadow, 0 20px 60px rgba(0,0,0,0.5))`,
           transform: visible ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.96)',
           opacity: visible ? 1 : 0,
@@ -100,18 +100,18 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
         <button
           onClick={handleClose}
           style={{
-            position: 'absolute', top: 14, right: 14,
-            width: 28, height: 28, borderRadius: '50%',
+            position: 'absolute', top: 'var(--space-m)', right: 'var(--space-m)',
+            width: 'var(--button-height-sm)', height: 'var(--button-height-sm)', borderRadius: '50%',
             background: 'var(--color-border, rgba(255,255,255,0.07))',
             border: '1px solid var(--color-border, rgba(255,255,255,0.1))',
-            color: 'var(--color-text-secondary, #8B92A8)', fontSize: 14, cursor: 'pointer',
+            color: 'var(--color-text-secondary, #8B92A8)', fontSize: 'var(--font-size-sm)', cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontFamily: 'inherit',
           }}
         >✕</button>
 
         {/* Эмодзи */}
-        <div style={{ textAlign: 'center', fontSize: 56, lineHeight: 1, marginBottom: 12 }}>
+        <div style={{ textAlign: 'center', fontSize: 'var(--result-emoji-size)', lineHeight: 1, marginBottom: 'var(--gap-md)' }}>
           {cfg.emoji}
         </div>
 
@@ -119,10 +119,10 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
         <div style={{
           textAlign: 'center',
           fontFamily: "'Unbounded',sans-serif",
-          fontSize: 24, fontWeight: 800,
+          fontSize: 'var(--result-title-size)', fontWeight: 'var(--font-weight-extrabold)',
           color: cfg.titleColor,
           letterSpacing: '-.02em',
-          marginBottom: 20,
+          marginBottom: 'var(--gap-xl)',
           textShadow: `0 0 24px ${cfg.glow}`,
         }}>
           {titles[result]}
@@ -133,16 +133,16 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
           <div style={{
             background: 'var(--result-coins-bg, rgba(255,255,255,0.04))',
             border: '1px solid var(--result-coins-border, rgba(255,255,255,0.07))',
-            borderRadius: 16, padding: '14px 16px',
-            display: 'flex', flexDirection: 'column', gap: 8,
+            borderRadius: 'var(--radius-m)', padding: 'var(--result-coins-padding)',
+            display: 'flex', flexDirection: 'column', gap: 'var(--result-coins-gap)',
           }}>
             {/* Бот-игра: бонус за победу */}
             {isBotGame && earnedBig > 0n && (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 12, color: 'var(--color-text-secondary, #8B92A8)' }}>{t.gameResult.forWin}</span>
+                <span style={{ fontSize: 'var(--result-label-size)', color: 'var(--color-text-secondary, #8B92A8)' }}>{t.gameResult.forWin}</span>
                 <span style={{
                   fontFamily: "'JetBrains Mono',monospace",
-                  fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary, #F0F2F8)',
+                  fontSize: 'var(--result-value-size)', fontWeight: 'var(--font-weight-bold)', color: 'var(--color-text-primary, #F0F2F8)',
                 }}>
                   +{fmtBalance(earnedBig.toString())} ᚙ
                 </span>
@@ -152,10 +152,10 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
             {/* Бот-игра: монеты за фигуры */}
             {isBotGame && pieceBig > 0n && (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 12, color: 'var(--color-text-secondary, #8B92A8)' }}>{t.gameResult.forPieces}</span>
+                <span style={{ fontSize: 'var(--result-label-size)', color: 'var(--color-text-secondary, #8B92A8)' }}>{t.gameResult.forPieces}</span>
                 <span style={{
                   fontFamily: "'JetBrains Mono',monospace",
-                  fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary, #F0F2F8)',
+                  fontSize: 'var(--result-value-size)', fontWeight: 'var(--font-weight-bold)', color: 'var(--color-text-primary, #F0F2F8)',
                 }}>
                   +{fmtBalance(pieceBig.toString())} ᚙ
                 </span>
@@ -165,10 +165,10 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
             {/* Батл-игра: заработано */}
             {!isBotGame && earnedBig > 0n && (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 12, color: 'var(--color-text-secondary, #8B92A8)' }}>{t.gameResult.earned}</span>
+                <span style={{ fontSize: 'var(--result-label-size)', color: 'var(--color-text-secondary, #8B92A8)' }}>{t.gameResult.earned}</span>
                 <span style={{
                   fontFamily: "'JetBrains Mono',monospace",
-                  fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary, #F0F2F8)',
+                  fontSize: 'var(--result-value-size)', fontWeight: 'var(--font-weight-bold)', color: 'var(--color-text-primary, #F0F2F8)',
                 }}>
                   +{fmtBalance(earnedBig.toString())} ᚙ
                 </span>
@@ -178,7 +178,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
             {/* Комиссия (только батл) */}
             {commBig > 0n && (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 12, color: 'var(--color-text-secondary, #8B92A8)' }}>{t.gameResult.commission}</span>
+                <span style={{ fontSize: 'var(--result-label-size)', color: 'var(--color-text-secondary, #8B92A8)' }}>{t.gameResult.commission}</span>
                 <span style={{
                   fontFamily: "'JetBrains Mono',monospace",
                   fontSize: 14, fontWeight: 700, color: 'var(--color-red, #FF4D6A)',
@@ -195,10 +195,10 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
 
             {/* Итого */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text-primary, #F0F2F8)' }}>{t.gameResult.total}</span>
+              <span style={{ fontSize: 'var(--result-button-size)', fontWeight: 'var(--font-weight-bold)', color: 'var(--color-text-primary, #F0F2F8)' }}>{t.gameResult.total}</span>
               <span style={{
                 fontFamily: "'JetBrains Mono',monospace",
-                fontSize: 18, fontWeight: 800,
+                fontSize: 'var(--result-total-size)', fontWeight: 'var(--font-weight-extrabold)',
                 color: 'var(--color-accent, #F5C842)',
                 textShadow: 'var(--result-total-shadow, 0 0 12px rgba(245,200,66,0.5))',
               }}>
@@ -232,11 +232,11 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
               } catch {}
             }}
             style={{
-              width: '100%', marginTop: 14,
-              padding: '11px', background: 'var(--result-share-btn-bg, rgba(123,97,255,0.12))',
+              width: '100%', marginTop: 'var(--gap-xl)',
+              padding: 'var(--card-padding-md)', background: 'var(--result-share-btn-bg, rgba(123,97,255,0.12))',
               border: '1px solid var(--result-share-btn-border, rgba(123,97,255,0.25))',
-              borderRadius: 14, color: 'var(--color-purple, #9B85FF)',
-              fontSize: 13, fontWeight: 600,
+              borderRadius: 'var(--radius-m)', color: 'var(--color-purple, #9B85FF)',
+              fontSize: 'var(--result-button-size)', fontWeight: 600,
               cursor: 'pointer', fontFamily: 'inherit',
             }}
           >
@@ -249,11 +249,11 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
           <button
             onClick={onRematch}
             style={{
-              width: '100%', marginTop: 10,
-              padding: '12px', background: 'transparent',
+              width: '100%', marginTop: 'var(--gap-m)',
+              padding: 'var(--card-padding-md)', background: 'transparent',
               border: '1px solid var(--result-rematch-btn-border, rgba(245,200,66,0.4))',
-              borderRadius: 14, color: 'var(--color-accent, #F5C842)',
-              fontSize: 13, fontWeight: 700,
+              borderRadius: 'var(--radius-m)', color: 'var(--color-accent, #F5C842)',
+              fontSize: 'var(--result-button-size)', fontWeight: 700,
               cursor: 'pointer', fontFamily: 'inherit',
               transition: 'background .15s',
             }}
@@ -274,12 +274,12 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
               } catch {}
             }}
             style={{
-              width: '100%', marginTop: 10,
-              padding: '11px', borderRadius: 14,
+              width: '100%', marginTop: 'var(--gap-m)',
+              padding: 'var(--card-padding-md)', borderRadius: 'var(--radius-m)',
               background: gameSaved ? 'var(--result-save-saved-bg, rgba(0,214,143,0.1))' : 'var(--result-save-unsaved-bg, rgba(123,97,255,0.1))',
               border: `1px solid ${gameSaved ? 'var(--result-save-saved-border, rgba(0,214,143,0.25))' : 'var(--result-save-unsaved-border, rgba(123,97,255,0.25))'}`,
               color: gameSaved ? 'var(--color-green, #00D68F)' : 'var(--color-purple, #9B85FF)',
-              fontSize: 13, fontWeight: 600,
+              fontSize: 'var(--result-button-size)', fontWeight: 600,
               cursor: gameSaved ? 'default' : 'pointer',
               fontFamily: 'inherit',
             }}
@@ -292,11 +292,11 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
         <button
           onClick={handleClose}
           style={{
-            width: '100%', marginTop: 10,
-            padding: '12px', background: 'var(--color-bg-card, #1C2030)',
+            width: '100%', marginTop: 'var(--gap-m)',
+            padding: 'var(--card-padding-md)', background: 'var(--color-bg-card, #1C2030)',
             border: '1px solid var(--color-border, rgba(255,255,255,0.1))',
-            borderRadius: 14, color: 'var(--color-text-primary, #F0F2F8)',
-            fontSize: 13, fontWeight: 600,
+            borderRadius: 'var(--radius-m)', color: 'var(--color-text-primary, #F0F2F8)',
+            fontSize: 'var(--result-button-size)', fontWeight: 600,
             cursor: 'pointer', fontFamily: 'inherit',
             transition: 'background .15s',
           }}
