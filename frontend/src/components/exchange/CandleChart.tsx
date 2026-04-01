@@ -14,7 +14,11 @@ interface CandleChartProps {
   height?: number;
 }
 
-export const CandleChart: React.FC<CandleChartProps> = ({ candles, up, height = 80 }) => {
+export const CandleChart: React.FC<CandleChartProps> = ({
+  candles,
+  up,
+  height = window.innerWidth < 480 ? 60 : 80,
+}) => {
   const t = useT();
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef     = useRef<IChartApi | null>(null);

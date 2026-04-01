@@ -24,7 +24,8 @@ export const AvatarCropModal: React.FC<Props> = ({ file, onConfirm, onCancel }) 
   const [imgSize, setImgSize] = useState({ w: 0, h: 0 });
   const [loading, setLoading] = useState(false);
 
-  const SIZE = 280; // размер превью и финального аватара
+  // Responsive SIZE: smaller on mobile, 280px on desktop
+  const SIZE = Math.min(280, Math.max(200, window.innerWidth - 40));
 
   // Загружаем файл
   useEffect(() => {
