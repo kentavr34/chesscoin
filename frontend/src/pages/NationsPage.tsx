@@ -791,14 +791,14 @@ const joinBtn: React.CSSProperties = {
   border: 'none', borderRadius: 8, fontSize: 10, fontWeight: 700, cursor: 'pointer',
 };
 const kickBtn: React.CSSProperties = {
-  width: 28, height: 28, borderRadius: '50%', background: 'rgba(255,77,106,0.1)',
+  width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,77,106,0.1)',
   border: '1px solid rgba(255,77,106,0.2)', color: 'var(--red, #FF4D6A)',
-  fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
+  fontSize: 16, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
 };
 const approveBtn: React.CSSProperties = {
-  width: 28, height: 28, borderRadius: '50%', background: 'rgba(0,214,143,0.1)',
+  width: 44, height: 44, borderRadius: '50%', background: 'rgba(0,214,143,0.1)',
   border: '1px solid rgba(0,214,143,0.2)', color: 'var(--green, #00D68F)',
-  fontSize: 14, cursor: 'pointer', fontFamily: 'inherit',
+  fontSize: 16, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
 };
 const rejectBtn: React.CSSProperties = { ...kickBtn };
 const overlayStyle: React.CSSProperties = {
@@ -840,7 +840,7 @@ const nationSelectBtnActive: React.CSSProperties = {
   background: 'rgba(245,200,66,0.08)', borderColor: 'rgba(245,200,66,0.3)', color: 'var(--accent, #F5C842)',
 };
 const closeBtnStyle: React.CSSProperties = {
-  width: 32, height: 32, borderRadius: '50%', background: 'var(--border, rgba(255,255,255,0.07))',
-  border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-secondary, #8B92A8)', fontSize: 14,
-  cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center',
+  width: 44, height: 44, borderRadius: '50%', background: 'var(--border, rgba(255,255,255,0.07))',
+  border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-secondary, #8B92A8)', fontSize: 16,
+  cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
 };
