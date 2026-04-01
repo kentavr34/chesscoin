@@ -164,7 +164,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
       <div style={{
         display: 'flex', alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '16px var(--space-l) 12px',
+        padding: 'clamp(12px, 3vw, 16px) var(--space-l) clamp(10px, 2vw, 12px)',
         paddingTop: 'max(16px, env(safe-area-inset-top, 16px))',
         flexShrink: 0,
         borderBottom: '1px solid var(--border)',

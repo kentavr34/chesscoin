@@ -48,11 +48,12 @@ export const WarChallengePopup: React.FC<Props> = ({ data, onAccept, onDecline }
       padding: 24,
     }}>
       <div style={{
-        width: '100%', maxWidth: 340,
+        width: '100%',
+        maxWidth: 'clamp(260px, 90vw, 340px)',
         background: 'linear-gradient(135deg, var(--color-bg-modal, #161927), var(--color-bg-card, #1C2030))',
         border: '1px solid rgba(255, 77, 106, 0.3)',
         borderRadius: 28,
-        padding: '32px 24px 24px',
+        padding: 'clamp(20px, 5vw, 32px) clamp(16px, 4vw, 24px)',
         boxShadow: '0 0 60px rgba(255, 77, 106, 0.15), 0 20px 60px rgba(0,0,0,0.5)',
         textAlign: 'center',
       }}>
@@ -95,7 +96,11 @@ export const WarChallengePopup: React.FC<Props> = ({ data, onAccept, onDecline }
         </div>
 
         {/* Кнопки */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: window.innerWidth < 360 ? '1fr' : '1fr 1fr',
+          gap: 10,
+        }}>
           <button
             onClick={onDecline}
             style={{

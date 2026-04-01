@@ -147,7 +147,12 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
         <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingRight: 4 }}>
           {/* Color selection */}
           <div style={sectionLbl}>{t.gameSetup.color}</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 20 }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: window.innerWidth < 480 ? '1fr 1fr' : '1fr 1fr 1fr',
+            gap: 8,
+            marginBottom: 20,
+          }}>
             {(['random', 'white', 'black'] as ColorChoice[]).map((c) => (
               <button
                 key={c}
@@ -164,9 +169,14 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
             ))}
           </div>
 
-          {/* Time selection — 6 опций в сетке 3×2 */}
+          {/* Time selection — 6 опций в сетке 3×2 или 2×3 на мобильных */}
           <div style={sectionLbl}>{t.gameSetup.duration}</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 24 }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: window.innerWidth < 480 ? '1fr 1fr' : '1fr 1fr 1fr',
+            gap: 8,
+            marginBottom: 24,
+          }}>
             {TIME_OPTIONS.map((opt) => (
               <button
                 key={opt}
@@ -202,7 +212,7 @@ const overlayStyle: React.CSSProperties = {
   paddingBottom: 'env(safe-area-inset-bottom, 0px)',
 };
 const sheetStyle: React.CSSProperties = {
-  width: '100%', maxWidth: 480,
+  width: '100%', maxWidth: 'clamp(280px, 90vw, 480px)',
   background: 'var(--color-bg-card, #13161F)',
   border: '1px solid rgba(255,255,255,0.1)',
   borderBottom: 'none',
@@ -215,7 +225,7 @@ const sheetStyle: React.CSSProperties = {
   flexDirection: 'column',
 };
 const launchSheetStyle: React.CSSProperties = {
-  width: '100%', maxWidth: 360,
+  width: '100%', maxWidth: 'clamp(260px, 90vw, 360px)',
   background: 'var(--color-bg-card, #13161F)',
   border: '1px solid rgba(245,200,66,0.2)',
   borderRadius: 28,

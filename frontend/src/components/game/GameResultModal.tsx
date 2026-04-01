@@ -83,11 +83,12 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          width: '100%', maxWidth: 320,
+          width: '100%',
+          maxWidth: 'clamp(280px, 90vw, 320px)',
           background: cfg.bg,
           border: `1px solid ${cfg.border}`,
           borderRadius: 24,
-          padding: '28px 24px 22px',
+          padding: 'clamp(20px, 5vw, 28px) clamp(16px, 4vw, 24px) clamp(16px, 4vw, 22px)',
           boxShadow: `0 0 60px ${cfg.glow}, 0 20px 60px rgba(0,0,0,0.5)`,
           transform: visible ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.96)',
           opacity: visible ? 1 : 0,
