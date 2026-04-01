@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "tsx --tsconfig tsconfig.json -r tsconfig-paths/register watch src/index.ts",
-    "build": "(tsc || true) && tsc-alias",
+    "build": "node -e \"const {execSync} = require('child_process'); try { execSync('tsc', {stdio: 'inherit'}); } catch(e) { /* ignore TS errors */ } execSync('tsc-alias', {stdio: 'inherit'})\"",
     "start": "node dist/index.js",
     "migrate": "prisma migrate deploy",
     "migrate:dev": "prisma migrate dev",
