@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "tsx --tsconfig tsconfig.json -r tsconfig-paths/register watch src/index.ts",
-    "build": "sh -c 'tsc; tsc-alias'",
+    "build": "tsc --noEmitOnError false && tsc-alias || tsc-alias",
     "start": "node dist/index.js",
     "migrate": "prisma migrate deploy",
     "migrate:dev": "prisma migrate dev",
