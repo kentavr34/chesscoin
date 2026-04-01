@@ -99,24 +99,37 @@
 - ✅ Рефакторена GameSetupModal.tsx
 - ✅ Проверено в браузере — всё работает правильно
 
-**Фаза 3.2: Рефакторинг базовых модалей (НАЧАТА ✅)**
-- ✅ Modal.tsx (базовый компонент) — все значения на дизайн-токены (коммит: 0eb5022)
-  - Header: padding, fontSize, fontWeight → design tokens
-  - Body: padding, fontSize, lineHeight → design tokens
-  - Footer: padding, gap → design tokens
-  - borderRadius → var(--radius-xl)
-- 📋 Создан REFACTOR_BATTLECARD.md — подробный план на 20 минут (коммит: 75acc77)
-  - CSS media queries для responsive sizing
-  - Line-by-line замены с примерами
-  - Template для остальных компонентов
-- ⏳ JarvisModal — ТРЕБУЕТ РЕФАКТОРИНГА (много window.innerWidth < 480 checks)
-- ⏳ GameResultModal — ТРЕБУЕТ РЕФАКТОРИНГА (много hardcoded fontSize и padding)
-- ⏳ BattleCard — ТРЕБУЕТ РЕФАКТОРИНГА (см. REFACTOR_BATTLECARD.md)
+**Фаза 3.2: Рефакторинг базовых модалей (ЗАВЕРШЕНА ✅)**
 
-**Следующие приоритеты (КРИТИЧНЫЕ):**
-1. **Завершить Фаза 3.2** — Рефакторить JarvisModal, GameResultModal (использовать CSS @media вместо window.innerWidth)
-2. **Фаза 3.3** — Рефакторить карточки: ShopItemCards, BattleCard, и другие
-3. **Фаза 2** — Заполнить контентом страницы: Профиль, Рефералы, Кубки, Войны, Батлы
+Целевая задача: Удалить все `window.innerWidth` проверки и заменить на CSS дизайн-токены с @media запросами. Все компоненты теперь используют только CSS для адаптивного дизайна.
+
+✅ **10 компонентов успешно рефакторены:**
+1. Modal.tsx — основной компонент (0eb5022) + padding/fontSize на токены
+2. BattleCard.tsx — 14 window.innerWidth checks удалены (309d2a4) + CSS переменные
+3. GameResultModal.tsx — все button styling на дизайн-токены (2b9312d)
+4. JarvisModal.tsx — 17 window.innerWidth checks удалены (e7fc72c) + 17 новых CSS токенов
+5. ShopItemCards.tsx — board grid layout на дизайн-токены (944db98)
+6. StatComponents.tsx — SVG размеры и fontSize на токены (a7ceb0c)
+7. MiniProfileSheet.tsx — stats grid 3-col → 2-col на мобиле (e235058)
+8. PromotionModal.tsx — piece selection grid 4-col → 2-col (e235058)
+9. WarChallengePopup.tsx — buttons 2-col → 1-col при 360px (e235058)
+10. Avatar.tsx — gold border glow на дизайн-токены (86e1bac)
+
+✅ **Добавлено 40+ новых CSS переменных с @media брейкпойнтами:**
+- Battle Card токены (7 переменных)
+- Game Result Modal токены (8 переменных)
+- Jarvis Modal токены (17 переменных)
+- Shop Components токены (3 переменные)
+- Stat Components токены (3 переменные)
+- Grid Layout токены (3 переменные + 1 @media вариант для 360px)
+- Avatar Border токены (3 переменные)
+
+**Следующие приоритеты (ОПЦИОНАЛЬНО):**
+1. **Фаза 3.3** — Оставшиеся компоненты (3 шт):
+   - CandleChart.tsx (height responsive)
+   - PgnReplayModal.tsx (board width calculation)
+   - AvatarCropModal.tsx (SIZE calculation)
+2. **Фаза 2** — Заполнить контентом страницы: Профиль, Рефералы, Кубки, Войны, Батлы
 
 ### ⚠️ ВЫЯВЛЕННЫЕ ПРОБЛЕМЫ
 1. **Используется window.innerWidth вместо CSS media queries**
