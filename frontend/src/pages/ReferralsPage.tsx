@@ -198,7 +198,7 @@ export const ReferralsPage: React.FC = () => {
                         padding: '2px 6px', borderRadius: '0 0 6px 6px',
                       }}>{r.you}</div>
                     )}
-                    <span style={{ fontSize: 20, width: 28, textAlign: 'center', flexShrink: 0 }}>{rk.emoji}</span>
+                    <span style={{ fontSize: 20, minWidth: 55, textAlign: 'center', flexShrink: 0, display: 'inline-block' }}>{rk.emoji}</span>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 12, fontWeight: isCurrent ? 800 : 700, color: isCurrent ? 'var(--accent, #F5C842)' : unlocked ? 'var(--text-primary, #F0F2F8)' : 'var(--text-secondary, #8B92A8)' }}>{rk.label}</div>
                       <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', marginTop: 1 }}>{rk.minReferrals.toLocaleString()} {r.ref}</div>
