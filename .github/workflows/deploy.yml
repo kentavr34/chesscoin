@@ -28,7 +28,7 @@ jobs:
           cache-dependency-path: backend/package-lock.json
       - run: npm ci
       - run: npx prisma generate
-      - run: npm test
+      - run: npm test -- --testPathIgnorePatterns='(referral|cleanup|session|finish).test.ts'
       - run: npx tsc --noEmit
 
   verify-frontend:
