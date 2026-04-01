@@ -1577,6 +1577,65 @@ div, span, button, input, select, textarea, p {
   }
 }
 
+/* ── GameResultModal Sizing Tokens ──────────────────────────────────────── */
+:root {
+  --result-emoji-size: 56px;
+  --result-title-size: 24px;
+  --result-label-size: 12px;
+  --result-value-size: 14px;
+  --result-total-size: 18px;
+  --result-button-size: 13px;
+  --result-coins-padding: 14px 16px;
+  --result-coins-gap: 8px;
+}
+
+/* ── JarvisModal Responsive Sizing Tokens ────────────────────────────────── */
+:root {
+  --jarvis-header-margin-bottom: 20px;
+  --jarvis-title-size: 20px;
+  --jarvis-subtitle-size: 12px;
+  --jarvis-card-gap: 12px;
+  --jarvis-card-num-width: 36px;
+  --jarvis-card-num-height: 36px;
+  --jarvis-card-name-size: 14px;
+  --jarvis-card-info-size: 11px;
+  --jarvis-badge-size: 11px;
+  --jarvis-lock-size: 20px;
+  --jarvis-reward-size: 13px;
+  --jarvis-reward-label-size: 10px;
+  --jarvis-footer-padding: 16px;
+  --jarvis-footer-size: 15px;
+  --jarvis-sheet-max-width: 480px;
+  --jarvis-sheet-padding: 20px 18px;
+  --jarvis-sheet-padding-bottom: 20px;
+  --jarvis-sheet-margin: 0;
+  --jarvis-card-padding: 12px 14px;
+}
+
+@media (max-width: 479px) {
+  :root {
+    --jarvis-header-margin-bottom: 14px;
+    --jarvis-title-size: 16px;
+    --jarvis-subtitle-size: 11px;
+    --jarvis-card-gap: 8px;
+    --jarvis-card-num-width: 32px;
+    --jarvis-card-num-height: 32px;
+    --jarvis-card-name-size: 12px;
+    --jarvis-card-info-size: 10px;
+    --jarvis-badge-size: 10px;
+    --jarvis-lock-size: 16px;
+    --jarvis-reward-size: 11px;
+    --jarvis-reward-label-size: 9px;
+    --jarvis-footer-padding: 12px;
+    --jarvis-footer-size: 13px;
+    --jarvis-sheet-max-width: calc(100% - 20px);
+    --jarvis-sheet-padding: 16px 14px;
+    --jarvis-sheet-padding-bottom: 16px;
+    --jarvis-sheet-margin: 0 10px;
+    --jarvis-card-padding: 10px 10px;
+  }
+}
+
 /* ── Анимации ───────────────────────────────────────────────────────────── */
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUpFade { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
