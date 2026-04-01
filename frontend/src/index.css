@@ -129,6 +129,30 @@
   --jarvis-tier3-color: #e67e22;
   --jarvis-tier4-color: #FF4D6A;
 
+  /* GameResultModal Colors (L1) */
+  --result-win-glow: rgba(245, 200, 66, 0.25);
+  --result-win-bg: linear-gradient(160deg, #1a1c0f 0%, #0B0D11 60%);
+  --result-win-border: rgba(245, 200, 66, 0.3);
+  --result-lose-glow: rgba(255, 77, 106, 0.2);
+  --result-lose-bg: linear-gradient(160deg, #1a0b0d 0%, #0B0D11 60%);
+  --result-lose-border: rgba(255, 77, 106, 0.25);
+  --result-draw-glow: rgba(139, 146, 168, 0.15);
+  --result-draw-bg: linear-gradient(160deg, #12141c 0%, #0B0D11 60%);
+  --result-draw-border: rgba(255, 255, 255, 0.12);
+  --result-overlay-bg: rgba(0, 0, 0, 0.7);
+  --result-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  --result-coins-bg: rgba(255, 255, 255, 0.04);
+  --result-coins-border: rgba(255, 255, 255, 0.07);
+  --result-divider-border: rgba(255, 255, 255, 0.07);
+  --result-total-shadow: 0 0 12px rgba(245, 200, 66, 0.5);
+  --result-share-btn-bg: rgba(123, 97, 255, 0.12);
+  --result-share-btn-border: rgba(123, 97, 255, 0.25);
+  --result-rematch-btn-border: rgba(245, 200, 66, 0.4);
+  --result-save-unsaved-bg: rgba(123, 97, 255, 0.1);
+  --result-save-unsaved-border: rgba(123, 97, 255, 0.25);
+  --result-save-saved-bg: rgba(0, 214, 143, 0.1);
+  --result-save-saved-border: rgba(0, 214, 143, 0.25);
+
   /* Responsive Breakpoints (L2) */
   --breakpoint-xs: 320px;
   --breakpoint-sm: 480px;
@@ -215,6 +239,30 @@
     --jarvis-tier2-color: #0066CC;
     --jarvis-tier3-color: #D97706;
     --jarvis-tier4-color: #D32F2F;
+
+    /* GameResultModal Light Mode Adjustments */
+    --result-win-glow: rgba(212, 168, 32, 0.2);
+    --result-win-bg: linear-gradient(160deg, #FFF8E7 0%, #F5F5F5 60%);
+    --result-win-border: rgba(212, 168, 32, 0.25);
+    --result-lose-glow: rgba(211, 47, 47, 0.15);
+    --result-lose-bg: linear-gradient(160deg, #FFEBEE 0%, #F5F5F5 60%);
+    --result-lose-border: rgba(211, 47, 47, 0.2);
+    --result-draw-glow: rgba(90, 95, 110, 0.12);
+    --result-draw-bg: linear-gradient(160deg, #F0F2F8 0%, #F5F5F5 60%);
+    --result-draw-border: rgba(0, 0, 0, 0.12);
+    --result-overlay-bg: rgba(0, 0, 0, 0.5);
+    --result-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    --result-coins-bg: rgba(0, 0, 0, 0.03);
+    --result-coins-border: rgba(0, 0, 0, 0.08);
+    --result-divider-border: rgba(0, 0, 0, 0.08);
+    --result-total-shadow: 0 0 12px rgba(212, 168, 32, 0.3);
+    --result-share-btn-bg: rgba(109, 40, 217, 0.1);
+    --result-share-btn-border: rgba(109, 40, 217, 0.2);
+    --result-rematch-btn-border: rgba(212, 168, 32, 0.3);
+    --result-save-unsaved-bg: rgba(109, 40, 217, 0.08);
+    --result-save-unsaved-border: rgba(109, 40, 217, 0.2);
+    --result-save-saved-bg: rgba(0, 163, 102, 0.08);
+    --result-save-saved-border: rgba(0, 163, 102, 0.2);
   }
 }
 
@@ -296,6 +344,30 @@
   --jarvis-tier2-color: #0066CC;
   --jarvis-tier3-color: #D97706;
   --jarvis-tier4-color: #D32F2F;
+
+  /* GameResultModal Light Mode Adjustments */
+  --result-win-glow: rgba(212, 168, 32, 0.2);
+  --result-win-bg: linear-gradient(160deg, #FFF8E7 0%, #F5F5F5 60%);
+  --result-win-border: rgba(212, 168, 32, 0.25);
+  --result-lose-glow: rgba(211, 47, 47, 0.15);
+  --result-lose-bg: linear-gradient(160deg, #FFEBEE 0%, #F5F5F5 60%);
+  --result-lose-border: rgba(211, 47, 47, 0.2);
+  --result-draw-glow: rgba(90, 95, 110, 0.12);
+  --result-draw-bg: linear-gradient(160deg, #F0F2F8 0%, #F5F5F5 60%);
+  --result-draw-border: rgba(0, 0, 0, 0.12);
+  --result-overlay-bg: rgba(0, 0, 0, 0.5);
+  --result-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  --result-coins-bg: rgba(0, 0, 0, 0.03);
+  --result-coins-border: rgba(0, 0, 0, 0.08);
+  --result-divider-border: rgba(0, 0, 0, 0.08);
+  --result-total-shadow: 0 0 12px rgba(212, 168, 32, 0.3);
+  --result-share-btn-bg: rgba(109, 40, 217, 0.1);
+  --result-share-btn-border: rgba(109, 40, 217, 0.2);
+  --result-rematch-btn-border: rgba(212, 168, 32, 0.3);
+  --result-save-unsaved-bg: rgba(109, 40, 217, 0.08);
+  --result-save-unsaved-border: rgba(109, 40, 217, 0.2);
+  --result-save-saved-bg: rgba(0, 163, 102, 0.08);
+  --result-save-saved-border: rgba(0, 163, 102, 0.2);
 
   background: var(--color-bg-dark);
   color: var(--color-text-primary);

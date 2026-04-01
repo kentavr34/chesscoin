@@ -20,9 +20,9 @@ interface GameResultModalProps {
 }
 
 const RESULT_META = {
-  win:  { emoji: '🏆', titleColor: 'var(--color-accent, #F5C842)', glow: 'rgba(245,200,66,0.25)', bg: 'linear-gradient(160deg,#1a1c0f 0%,#0B0D11 60%)', border: 'rgba(245,200,66,0.3)' },
-  lose: { emoji: '💔', titleColor: 'var(--color-red, #FF4D6A)', glow: 'rgba(255,77,106,0.2)',  bg: 'linear-gradient(160deg,#1a0b0d 0%,#0B0D11 60%)', border: 'rgba(255,77,106,0.25)' },
-  draw: { emoji: '🤝', titleColor: 'var(--color-text-secondary, #8B92A8)', glow: 'rgba(139,146,168,0.15)', bg: 'linear-gradient(160deg,#12141c 0%,#0B0D11 60%)', border: 'rgba(255,255,255,0.12)' },
+  win:  { emoji: '🏆', titleColor: 'var(--color-accent, #F5C842)', glow: 'var(--result-win-glow, rgba(245,200,66,0.25))', bg: 'var(--result-win-bg, linear-gradient(160deg,#1a1c0f 0%,#0B0D11 60%))', border: 'var(--result-win-border, rgba(245,200,66,0.3))' },
+  lose: { emoji: '💔', titleColor: 'var(--color-red, #FF4D6A)', glow: 'var(--result-lose-glow, rgba(255,77,106,0.2))',  bg: 'var(--result-lose-bg, linear-gradient(160deg,#1a0b0d 0%,#0B0D11 60%))', border: 'var(--result-lose-border, rgba(255,77,106,0.25))' },
+  draw: { emoji: '🤝', titleColor: 'var(--color-text-secondary, #8B92A8)', glow: 'var(--result-draw-glow, rgba(139,146,168,0.15))', bg: 'var(--result-draw-bg, linear-gradient(160deg,#12141c 0%,#0B0D11 60%))', border: 'var(--result-draw-border, rgba(255,255,255,0.12))' },
 };
 
 export const GameResultModal: React.FC<GameResultModalProps> = ({
@@ -73,7 +73,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
       onClick={handleClose}
       style={{
         position: 'fixed', inset: 0, zIndex: "var(--z-overlay, 200)",
-        background: 'rgba(0,0,0,0.7)',
+        background: 'var(--result-overlay-bg, rgba(0,0,0,0.7))',
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -89,7 +89,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
           border: `1px solid ${cfg.border}`,
           borderRadius: 24,
           padding: 'clamp(20px, 5vw, 28px) clamp(16px, 4vw, 24px) clamp(16px, 4vw, 22px)',
-          boxShadow: `0 0 60px ${cfg.glow}, 0 20px 60px rgba(0,0,0,0.5)`,
+          boxShadow: `0 0 60px ${cfg.glow}, var(--result-shadow, 0 20px 60px rgba(0,0,0,0.5))`,
           transform: visible ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.96)',
           opacity: visible ? 1 : 0,
           transition: 'transform .25s cubic-bezier(.34,1.56,.64,1), opacity .22s',
@@ -103,7 +103,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
             position: 'absolute', top: 14, right: 14,
             width: 28, height: 28, borderRadius: '50%',
             background: 'var(--color-border, rgba(255,255,255,0.07))',
-            border: '1px solid rgba(255,255,255,0.1)',
+            border: '1px solid var(--color-border, rgba(255,255,255,0.1))',
             color: 'var(--color-text-secondary, #8B92A8)', fontSize: 14, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontFamily: 'inherit',
@@ -131,8 +131,8 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
         {/* Разбивка монет */}
         {showCoins && (
           <div style={{
-            background: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(255,255,255,0.07)',
+            background: 'var(--result-coins-bg, rgba(255,255,255,0.04))',
+            border: '1px solid var(--result-coins-border, rgba(255,255,255,0.07))',
             borderRadius: 16, padding: '14px 16px',
             display: 'flex', flexDirection: 'column', gap: 8,
           }}>
@@ -190,7 +190,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
 
             {/* Разделитель */}
             {(commBig > 0n || (isBotGame && earnedBig > 0n && pieceBig > 0n)) && (
-              <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', margin: '2px 0' }} />
+              <div style={{ borderTop: '1px solid var(--result-divider-border, rgba(255,255,255,0.07))', margin: '2px 0' }} />
             )}
 
             {/* Итого */}
@@ -200,7 +200,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
                 fontFamily: "'JetBrains Mono',monospace",
                 fontSize: 18, fontWeight: 800,
                 color: 'var(--color-accent, #F5C842)',
-                textShadow: '0 0 12px rgba(245,200,66,0.5)',
+                textShadow: 'var(--result-total-shadow, 0 0 12px rgba(245,200,66,0.5))',
               }}>
                 +{fmtBalance(netBig.toString())} ᚙ
               </span>
@@ -233,8 +233,8 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
             }}
             style={{
               width: '100%', marginTop: 14,
-              padding: '11px', background: 'rgba(123,97,255,0.12)',
-              border: '1px solid rgba(123,97,255,0.25)',
+              padding: '11px', background: 'var(--result-share-btn-bg, rgba(123,97,255,0.12))',
+              border: '1px solid var(--result-share-btn-border, rgba(123,97,255,0.25))',
               borderRadius: 14, color: 'var(--color-purple, #9B85FF)',
               fontSize: 13, fontWeight: 600,
               cursor: 'pointer', fontFamily: 'inherit',
@@ -251,7 +251,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
             style={{
               width: '100%', marginTop: 10,
               padding: '12px', background: 'transparent',
-              border: '1px solid rgba(245,200,66,0.4)',
+              border: '1px solid var(--result-rematch-btn-border, rgba(245,200,66,0.4))',
               borderRadius: 14, color: 'var(--color-accent, #F5C842)',
               fontSize: 13, fontWeight: 700,
               cursor: 'pointer', fontFamily: 'inherit',
@@ -276,8 +276,8 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
             style={{
               width: '100%', marginTop: 10,
               padding: '11px', borderRadius: 14,
-              background: gameSaved ? 'rgba(0,214,143,0.1)' : 'rgba(123,97,255,0.1)',
-              border: `1px solid ${gameSaved ? 'rgba(0,214,143,0.25)' : 'rgba(123,97,255,0.25)'}`,
+              background: gameSaved ? 'var(--result-save-saved-bg, rgba(0,214,143,0.1))' : 'var(--result-save-unsaved-bg, rgba(123,97,255,0.1))',
+              border: `1px solid ${gameSaved ? 'var(--result-save-saved-border, rgba(0,214,143,0.25))' : 'var(--result-save-unsaved-border, rgba(123,97,255,0.25))'}`,
               color: gameSaved ? 'var(--color-green, #00D68F)' : 'var(--color-purple, #9B85FF)',
               fontSize: 13, fontWeight: 600,
               cursor: gameSaved ? 'default' : 'pointer',
