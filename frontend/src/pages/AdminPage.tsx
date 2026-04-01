@@ -308,7 +308,7 @@ export const AdminPage: React.FC = () => {
 
           <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary, #8B92A8)', margin: '20px 0 8px', textTransform: 'uppercase' as const, letterSpacing: '.06em' }}>📣 Post to channel</div>
           <textarea value={channelText} onChange={e => setChannelText(e.target.value)} placeholder={t.admin.channelPlaceholder} rows={4} style={{ width: '100%', padding: 12, background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, color: 'var(--text-primary, #F0F2F8)', fontSize: 13, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' as const }} />
-          <button onClick={() => sendBroadcast(true)} disabled={sending || !channelText} style={{ width: '100%', marginTop: 8, padding: '14px', background: sending ? '#2A2F48' : 'rgba(0,152,234,0.15)', border: '1px solid rgba(0,152,234,0.3)', borderRadius: 14, color: sending ? '#8B92A8' : '#0098EA', fontWeight: 700, fontSize: 14, cursor: sending ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
+          <button onClick={() => sendBroadcast(true)} disabled={sending || !channelText} style={{ width: '100%', marginTop: 8, padding: '14px', background: sending ? '#2A2F48' : 'rgba(0,152,234,0.15)', border: '1px solid rgba(0,152,234,0.3)', borderRadius: 14, color: sending ? '#8B92A8' : 'var(--color-blue, #0098EA)', fontWeight: 700, fontSize: 14, cursor: sending ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
             {sending ? t.admin.publishing : t.admin.publish}
           </button>
         </div>
@@ -516,7 +516,7 @@ const AdminExchangeTab: React.FC<{ showToast: (msg: string, ok?: boolean) => voi
       <div style={{ background: 'var(--bg-card,#1C2030)', borderRadius: 14, padding: 14, marginBottom: 20 }}>
         <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
           {['SELL', 'BUY'].map((t) => (
-            <button key={t} onClick={() => setOrderType(t)} style={{ flex: 1, padding: '8px 4px', borderRadius: 8, border: 'none', fontSize: 11, fontWeight: 700, background: orderType === t ? (t === 'SELL' ? 'rgba(0,214,143,0.15)' : 'rgba(0,152,234,0.15)') : 'rgba(255,255,255,0.05)', color: orderType === t ? (t === 'SELL' ? '#00D68F' : '#0098EA') : 'var(--text-secondary)', cursor: 'pointer', fontFamily: 'inherit' }}>
+            <button key={t} onClick={() => setOrderType(t)} style={{ flex: 1, padding: '8px 4px', borderRadius: 8, border: 'none', fontSize: 11, fontWeight: 700, background: orderType === t ? (t === 'SELL' ? 'rgba(0,214,143,0.15)' : 'rgba(0,152,234,0.15)') : 'rgba(255,255,255,0.05)', color: orderType === t ? (t === 'SELL' ? 'var(--color-green, #00D68F)' : 'var(--color-blue, #0098EA)') : 'var(--text-secondary)', cursor: 'pointer', fontFamily: 'inherit' }}>
               {t} ᚙ
             </button>
           ))}
@@ -543,7 +543,7 @@ const AdminExchangeTab: React.FC<{ showToast: (msg: string, ok?: boolean) => voi
       {loading ? <div style={{ color: 'var(--text-muted)', textAlign: 'center' }}>Loading...</div> : orders.map(o => (
         <div key={o.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 12, background: 'var(--bg-card,#1C2030)', borderRadius: 12, marginBottom: 8, opacity: o.status === 'OPEN' ? 1 : 0.5 }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: o.orderType === 'SELL' ? '#00D68F' : '#0098EA' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: o.orderType === 'SELL' ? 'var(--color-green, #00D68F)' : 'var(--color-blue, #0098EA)' }}>
               [{o.orderType}] {o.seller?.firstName || 'System'}
             </div>
             <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginTop: 2 }}>{fmtBalance(o.amountCoins)} ᚙ</div>
