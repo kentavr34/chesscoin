@@ -1637,6 +1637,21 @@ div, span, button, input, select, textarea, p {
   }
 }
 
+/* ── Avatar Gold Border Responsive Tokens ───────────────────────────────── */
+:root {
+  --avatar-gold-border-width: 1px;
+  --avatar-gold-glow-size: 16px;
+  --avatar-gold-glow-blur: 1px;
+}
+
+@media (max-width: 479px) {
+  :root {
+    --avatar-gold-border-width: 0.5px;
+    --avatar-gold-glow-size: 8px;
+    --avatar-gold-glow-blur: 0.5px;
+  }
+}
+
 /* ── JarvisModal Responsive Sizing Tokens ────────────────────────────────── */
 :root {
   --jarvis-header-margin-bottom: 20px;
