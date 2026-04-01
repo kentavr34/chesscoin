@@ -234,6 +234,15 @@
   --page-layout-btn-bg: rgba(255, 255, 255, 0.07);
   --page-layout-dot-inactive-bg: rgba(255, 255, 255, 0.15);
 
+  /* Badge Detail Modal (L1) */
+  --badge-overlay-bg: rgba(0, 0, 0, 0.75);
+  --badge-btn-border: rgba(255, 255, 255, 0.1);
+  --badge-color-player: #00B4D8;
+  --badge-color-warrior: #4CAF50;
+  --badge-color-professional: #FF9F43;
+  --badge-color-epic: #FF6B6B;
+  --badge-color-legendary: #E040FB;
+
   /* Responsive Breakpoints (L2) */
   --breakpoint-xs: 320px;
   --breakpoint-sm: 480px;
@@ -410,6 +419,15 @@
     --page-layout-modal-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
     --page-layout-btn-bg: rgba(0, 0, 0, 0.05);
     --page-layout-dot-inactive-bg: rgba(0, 0, 0, 0.12);
+
+    /* Badge Detail Modal Light Mode Adjustments */
+    --badge-overlay-bg: rgba(0, 0, 0, 0.6);
+    --badge-btn-border: rgba(0, 0, 0, 0.08);
+    --badge-color-player: #0099CC;
+    --badge-color-warrior: #388E3C;
+    --badge-color-professional: #F57C00;
+    --badge-color-epic: #E53935;
+    --badge-color-legendary: #C2185B;
   }
 }
 
@@ -581,6 +599,15 @@
   --page-layout-modal-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
   --page-layout-btn-bg: rgba(0, 0, 0, 0.05);
   --page-layout-dot-inactive-bg: rgba(0, 0, 0, 0.12);
+
+  /* Badge Detail Modal Light Mode via data-theme */
+  --badge-overlay-bg: rgba(0, 0, 0, 0.6);
+  --badge-btn-border: rgba(0, 0, 0, 0.08);
+  --badge-color-player: #0099CC;
+  --badge-color-warrior: #388E3C;
+  --badge-color-professional: #F57C00;
+  --badge-color-epic: #E53935;
+  --badge-color-legendary: #C2185B;
 
   background: var(--color-bg-dark);
   color: var(--color-text-primary);
