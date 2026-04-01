@@ -274,7 +274,7 @@ const countdownCircleStyle: React.CSSProperties = {
   boxShadow: 'var(--modal-countdown-shadow, 0 0 30px rgba(245,200,66,0.2))',
 };
 const backBtnStyle: React.CSSProperties = {
-  width: 36, height: 36, borderRadius: '50%',
+  width: 44, height: 44, borderRadius: '50%',
   background: 'var(--color-border, rgba(255,255,255,0.07))',
   border: '1px solid var(--gamesetup-back-btn-border, rgba(255,255,255,0.1))',
   color: 'var(--color-text-primary, #F0F2F8)', fontSize: 16, cursor: 'pointer',

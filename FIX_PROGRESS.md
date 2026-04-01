@@ -1,12 +1,41 @@
 # ChessCoin v7.2.0 — Phase 1 Complete, Phase 2 Complete, Critical Bug Fixes Applied
 
-**Date:** 2026-04-01 (Session 6 — CRITICAL FIXES)
-**Current Status:** 🔴 **CRITICAL BUG FIX** — Modals/Layout Rendering Issues RESOLVED → **System Restored to Working State**
+**Date:** 2026-04-01 (Session 7 — FUNCTIONAL BUG FIXES)
+**Current Status:** ✅ **FRONTEND BUG FIXES** — ReferralsPage Design + WarsPage Donation Functionality FIXED
 **Sessions Completed:**
   - Session 3: Phase 1 (Z-index, ARIA, Modal) ✅
   - Session 4: L2 Responsive + L3 Theme Toggle ✅
-  - Session 5: L1 Color Variables continuation (in progress)
+  - Session 5: L1 Color Variables continuation ✅
   - Session 6: CRITICAL FIX — Modal & Layout Issues 🚨 RESOLVED ✅
+  - Session 7: FUNCTIONAL FIXES — Design + API Bugs 🔧 RESOLVED ✅
+
+---
+
+## 🔧 SESSION 7 — FUNCTIONAL BUGS & DESIGN FIXES (2026-04-01)
+
+### Bug Fixes Applied
+
+#### 1. ReferralsPage Emoji Badge Overflow (Design Bug) ✅
+**Commit:** `fix(ui): adjust emoji badge width in ReferralsPage rank ladder (0638c91)`
+- **Problem:** Multi-emoji rank badges (🌟🌟🌟, 🔵🔵🔵🔵) were overflowing 28px container width and covering text below
+- **Solution:** Changed emoji span from `width: 28` to `minWidth: 55` with `display: 'inline-block'`
+- **Impact:** All rank badges now display correctly without text overlap
+- **Build:** ✅ 6.39s, no errors
+
+#### 2. WarsPage Donation API Bug (CRITICAL) ✅
+**Commit:** `fix(wars): correct donation function call in CountryDetailModal (0339014)`
+- **Problem:** `handleDonate()` was calling `warsApi.leave()` instead of `warsApi.donate()`
+  - When users clicked "Donate" button, they would accidentally leave their country
+  - Wars donation feature completely broken
+- **Solution:** Changed to `await warsApi.donate(countryId, Number(donateAmt))`
+- **Impact:** Wars donation/contribution feature now functional
+- **Build:** ✅ 6.82s, no errors
+
+### Impact Summary
+- ✅ ReferralsPage now displays without text overlap issues
+- ✅ WarsPage donation feature restored and functional
+- ✅ 2 critical bugs fixed, 2 atomic commits, 2 files updated
+- ✅ System stability maintained, no build errors
 
 ---
 

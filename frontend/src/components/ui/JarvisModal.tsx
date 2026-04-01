@@ -85,7 +85,7 @@ export const JarvisModal: React.FC<JarvisModalProps> = ({ currentJarvisLevel, on
               Choose difficulty level
             </div>
           </div>
-          <button onClick={onClose} style={{ ...closeBtnStyle, width: window.innerWidth < 480 ? 28 : 32, height: window.innerWidth < 480 ? 28 : 32, fontSize: window.innerWidth < 480 ? 12 : 14 }}>✕</button>
+          <button onClick={onClose} style={{ ...closeBtnStyle, width: 44, height: 44, fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
         </div>
 
         {/* Scrollable levels container */}
