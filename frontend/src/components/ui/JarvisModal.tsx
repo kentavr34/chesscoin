@@ -75,17 +75,17 @@ export const JarvisModal: React.FC<JarvisModalProps> = ({ currentJarvisLevel, on
   return (
     <div style={overlayStyle} onClick={onClose}>
       <div style={sheetStyle} onClick={(e) => e.stopPropagation()}>
-        {/* Header — fixed at top */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexShrink: 0 }}>
+        {/* Header — fixed at top (L2: Responsive) */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: window.innerWidth < 480 ? 14 : 20, flexShrink: 0 }}>
           <div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--color-text-primary, #F0F2F8)', letterSpacing: '-.02em' }}>
+            <div style={{ fontSize: window.innerWidth < 480 ? 16 : 20, fontWeight: 800, color: 'var(--color-text-primary, #F0F2F8)', letterSpacing: '-.02em' }}>
               🤖 J.A.R.V.I.S
             </div>
-            <div style={{ fontSize: 12, color: 'var(--color-text-secondary, #8B92A8)', marginTop: 3 }}>
+            <div style={{ fontSize: window.innerWidth < 480 ? 11 : 12, color: 'var(--color-text-secondary, #8B92A8)', marginTop: 3 }}>
               Choose difficulty level
             </div>
           </div>
-          <button onClick={onClose} style={closeBtnStyle}>✕</button>
+          <button onClick={onClose} style={{ ...closeBtnStyle, width: window.innerWidth < 480 ? 28 : 32, height: window.innerWidth < 480 ? 28 : 32, fontSize: window.innerWidth < 480 ? 12 : 14 }}>✕</button>
         </div>
 
         {/* Scrollable levels container */}
@@ -102,33 +102,33 @@ export const JarvisModal: React.FC<JarvisModalProps> = ({ currentJarvisLevel, on
                 onClick={() => unlocked && !completed && onSelect(lvl)}
                 style={levelCardStyle(unlocked, completed, isActive)}
               >
-                {/* Left — number + name */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={levelNumStyle(isActive, completed)}>
+                {/* Left — number + name (L2: Responsive) */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: window.innerWidth < 480 ? 8 : 12 }}>
+                  <div style={{ ...levelNumStyle(isActive, completed), width: window.innerWidth < 480 ? 32 : 36, height: window.innerWidth < 480 ? 32 : 36 }}>
                     {completed ? '✓' : lvl.level}
                   </div>
                   <div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: completed ? 'var(--color-text-muted, #4A5270)' : 'var(--color-text-primary, #F0F2F8)' }}>
+                    <div style={{ fontSize: window.innerWidth < 480 ? 12 : 14, fontWeight: 700, color: completed ? 'var(--color-text-muted, #4A5270)' : 'var(--color-text-primary, #F0F2F8)' }}>
                       {lvl.name}
                     </div>
-                    <div style={{ fontSize: 11, color: 'var(--color-text-muted, #4A5270)', marginTop: 2 }}>
+                    <div style={{ fontSize: window.innerWidth < 480 ? 10 : 11, color: 'var(--color-text-muted, #4A5270)', marginTop: 2 }}>
                       {lvl.errorRate === 0 ? 'No errors' : `${lvl.errorRate}%`}
                     </div>
                   </div>
                 </div>
 
-                {/* Right — reward or lock */}
+                {/* Right — reward or lock (L2: Responsive) */}
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
                   {completed ? (
-                    <span style={{ fontSize: 11, color: 'var(--color-green, #00D68F)', fontWeight: 700 }}>{t.profile.passed}</span>
+                    <span style={{ fontSize: window.innerWidth < 480 ? 10 : 11, color: 'var(--color-green, #00D68F)', fontWeight: 700 }}>{t.profile.passed}</span>
                   ) : !unlocked ? (
-                    <span style={{ fontSize: 20 }}>{t.jarvis.locked ? '🔒' : ''}</span>
+                    <span style={{ fontSize: window.innerWidth < 480 ? 16 : 20 }}>{t.jarvis.locked ? '🔒' : ''}</span>
                   ) : (
                     <div>
-                      <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-accent, #F5C842)', fontFamily: "'JetBrains Mono',monospace" }}>
+                      <div style={{ fontSize: window.innerWidth < 480 ? 11 : 13, fontWeight: 800, color: 'var(--color-accent, #F5C842)', fontFamily: "'JetBrains Mono',monospace" }}>
                         +{fmtBalance(lvl.reward.toString())} ᚙ
                       </div>
-                      <div style={{ fontSize: 10, color: 'var(--color-text-secondary, #8B92A8)', marginTop: 2 }}>{t.jarvis.reward('')}</div>
+                      <div style={{ fontSize: window.innerWidth < 480 ? 9 : 10, color: 'var(--color-text-secondary, #8B92A8)', marginTop: 2 }}>{t.jarvis.reward('')}</div>
                     </div>
                   )}
                 </div>
@@ -137,9 +137,9 @@ export const JarvisModal: React.FC<JarvisModalProps> = ({ currentJarvisLevel, on
           })}
         </div>
 
-        {/* Footer hint — fixed at bottom */}
-        <div style={{ padding: '16px', background: 'rgba(123,97,255,0.08)', border: '1px solid rgba(123,97,255,0.15)', borderRadius: 14, flexShrink: 0 }}>
-          <div style={{ fontSize: 15, color: 'var(--color-text-secondary, #8B92A8)', lineHeight: 1.6 }}>
+        {/* Footer hint — fixed at bottom (L2: Responsive) */}
+        <div style={{ padding: window.innerWidth < 480 ? '12px' : '16px', background: 'rgba(123,97,255,0.08)', border: '1px solid rgba(123,97,255,0.15)', borderRadius: 14, flexShrink: 0 }}>
+          <div style={{ fontSize: window.innerWidth < 480 ? 13 : 15, color: 'var(--color-text-secondary, #8B92A8)', lineHeight: 1.6 }}>
             🏆 Beat levels in order. For each completed level you earn a J.A.R.V.I.S badge on your profile.
           </div>
         </div>
@@ -159,17 +159,18 @@ const overlayStyle: React.CSSProperties = {
   paddingBottom: 'env(safe-area-inset-bottom, 0px)',
 };
 const sheetStyle: React.CSSProperties = {
-  width: '100%', maxWidth: 480,
+  width: '100%', maxWidth: window.innerWidth < 480 ? 'calc(100% - 20px)' : 480,
   background: 'var(--color-bg-card, #13161F)',
   border: '1px solid rgba(255,255,255,0.1)',
   borderBottom: 'none',
   borderRadius: '24px 24px 0 0',
-  padding: '20px 18px',
-  paddingBottom: '20px',
+  padding: window.innerWidth < 480 ? '16px 14px' : '20px 18px',
+  paddingBottom: window.innerWidth < 480 ? '16px' : '20px',
   maxHeight: 'calc(100vh - 60px)',
   overflow: 'hidden',
   display: 'flex',
   flexDirection: 'column',
+  margin: window.innerWidth < 480 ? '0 10px' : '0',
 };
 const closeBtnStyle: React.CSSProperties = {
   width: 32, height: 32, borderRadius: '50%',
@@ -181,7 +182,7 @@ const closeBtnStyle: React.CSSProperties = {
 };
 const levelCardStyle = (unlocked: boolean, completed: boolean, isActive: boolean): React.CSSProperties => ({
   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-  padding: '12px 14px',
+  padding: window.innerWidth < 480 ? '10px 10px' : '12px 14px',
   background: isActive ? 'rgba(245,200,66,0.07)' : completed ? 'rgba(0,214,143,0.04)' : 'var(--color-bg-card, #1C2030)',
   border: `1px solid ${isActive ? 'rgba(245,200,66,0.3)' : completed ? 'rgba(0,214,143,0.15)' : 'var(--color-border, rgba(255,255,255,0.07))'}`,
   borderRadius: 14,
