@@ -121,7 +121,7 @@ export const PromotionModal: React.FC<PromotionModalProps> = ({ color, onSelect 
         {/* Фигуры */}
         <div style={{
           ...grid,
-          gridTemplateColumns: window.innerWidth < 480 ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
+          gridTemplateColumns: 'var(--promotion-modal-grid)',
         }}>
           {PIECES.map(({ code, label, emoji }) => {
             const isChosen = confirmed === code;

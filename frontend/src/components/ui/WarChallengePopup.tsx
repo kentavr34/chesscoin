@@ -98,7 +98,7 @@ export const WarChallengePopup: React.FC<Props> = ({ data, onAccept, onDecline }
         {/* Кнопки */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: window.innerWidth < 360 ? '1fr' : '1fr 1fr',
+          gridTemplateColumns: 'var(--war-challenge-grid)',
           gap: 10,
         }}>
           <button

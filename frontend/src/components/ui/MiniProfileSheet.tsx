@@ -108,7 +108,7 @@ export const MiniProfileSheet: React.FC<Props> = ({ userId, onClose }) => {
             {/* Статистика */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: window.innerWidth < 480 ? '1fr 1fr' : '1fr 1fr 1fr',
+              gridTemplateColumns: 'var(--mini-profile-stats-grid)',
               gap: 8,
               marginBottom: 16,
             }}>

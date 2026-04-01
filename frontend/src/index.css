@@ -1617,6 +1617,26 @@ div, span, button, input, select, textarea, p {
   }
 }
 
+/* ── Grid Layout Responsive Tokens ──────────────────────────────────────── */
+:root {
+  --mini-profile-stats-grid: 1fr 1fr 1fr;
+  --promotion-modal-grid: repeat(4, 1fr);
+  --war-challenge-grid: 1fr 1fr;
+}
+
+@media (max-width: 479px) {
+  :root {
+    --mini-profile-stats-grid: 1fr 1fr;
+    --promotion-modal-grid: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 359px) {
+  :root {
+    --war-challenge-grid: 1fr;
+  }
+}
+
 /* ── JarvisModal Responsive Sizing Tokens ────────────────────────────────── */
 :root {
   --jarvis-header-margin-bottom: 20px;
