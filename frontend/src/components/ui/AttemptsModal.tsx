@@ -47,7 +47,7 @@ export const AttemptsModal: React.FC<Props> = ({ user, onClose }) => {
             <span key={i} style={{
               fontSize: 32,
               color: i < user.attempts ? 'var(--color-accent, #F5C842)' : 'var(--color-text-muted, #4A5270)',
-              filter: i < user.attempts ? 'drop-shadow(0 0 8px rgba(245,200,66,0.8))' : undefined,
+              filter: i < user.attempts ? 'var(--attempts-accent-drop-shadow, drop-shadow(0 0 8px rgba(245,200,66,0.8)))' : undefined,
             }}>★</span>
           ))}
         </div>
@@ -62,7 +62,7 @@ export const AttemptsModal: React.FC<Props> = ({ user, onClose }) => {
           <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 700, color: 'var(--color-text-primary, #F0F2F8)', minWidth: 32, textAlign: 'center' }}>{count}</span>
           <button onClick={() => setCount(Math.min(3 - user.attempts, count + 1))} style={stepBtn('var(--color-accent, #F5C842)', 'var(--color-bg-dark, #0B0D11)')}>+</button>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderTop: '1px solid rgba(255,255,255,0.07)', borderBottom: '1px solid rgba(255,255,255,0.07)', marginBottom: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderTop: '1px solid var(--attempts-border-subtle, rgba(255,255,255,0.07))', borderBottom: '1px solid var(--attempts-border-subtle, rgba(255,255,255,0.07))', marginBottom: 16 }}>
           <span style={{ fontSize: 13, color: 'var(--color-text-secondary, #8B92A8)' }}>{t.attempts.cost}</span>
           <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14, fontWeight: 700, color: 'var(--color-accent, #F5C842)' }}>
             {(count * COST_PER).toLocaleString()} ᚙ
@@ -81,14 +81,14 @@ export const AttemptsModal: React.FC<Props> = ({ user, onClose }) => {
 };
 
 const overlayStyle: React.CSSProperties = {
-  position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)',
+  position: 'fixed', inset: 0, background: 'var(--attempts-overlay-bg, rgba(0,0,0,0.65))',
   backdropFilter: 'blur(6px)', zIndex: "var(--z-overlay, 200)",
   display: 'flex', alignItems: 'flex-end',
 };
 const modalStyle: React.CSSProperties = {
   width: '100%', background: 'var(--color-bg-card, #161927)',
   borderRadius: '24px 24px 0 0', padding: 20,
-  borderTop: '1px solid rgba(255,255,255,0.13)',
+  borderTop: '1px solid var(--attempts-border-light, rgba(255,255,255,0.13))',
 };
 const handleStyle: React.CSSProperties = {
   width: 36, height: 4, background: 'var(--color-text-muted, #4A5270)',
@@ -107,7 +107,7 @@ const buyBtn: React.CSSProperties = {
 const closeBtnStyle: React.CSSProperties = {
   width: 32, height: 32, borderRadius: '50%',
   background: 'var(--color-border, rgba(255,255,255,0.07))',
-  border: '1px solid rgba(255,255,255,0.1)',
+  border: '1px solid var(--attempts-close-btn-border, rgba(255,255,255,0.1))',
   color: 'var(--color-text-secondary, #8B92A8)', fontSize: 14, cursor: 'pointer',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   fontFamily: 'inherit', flexShrink: 0,

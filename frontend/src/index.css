@@ -220,6 +220,13 @@
   --active-sessions-bot-avatar-bg: rgba(155, 133, 255, 0.15);
   --active-sessions-bot-avatar-border: rgba(155, 133, 255, 0.3);
 
+  /* Attempts Modal (L1) */
+  --attempts-overlay-bg: rgba(0, 0, 0, 0.65);
+  --attempts-border-subtle: rgba(255, 255, 255, 0.07);
+  --attempts-border-light: rgba(255, 255, 255, 0.13);
+  --attempts-close-btn-border: rgba(255, 255, 255, 0.1);
+  --attempts-accent-drop-shadow: drop-shadow(0 0 8px rgba(245, 200, 66, 0.8));
+
   /* Responsive Breakpoints (L2) */
   --breakpoint-xs: 320px;
   --breakpoint-sm: 480px;
@@ -382,6 +389,13 @@
     --active-sessions-my-turn-border: rgba(0, 163, 102, 0.2);
     --active-sessions-bot-avatar-bg: rgba(109, 40, 217, 0.1);
     --active-sessions-bot-avatar-border: rgba(109, 40, 217, 0.2);
+
+    /* Attempts Modal Light Mode Adjustments */
+    --attempts-overlay-bg: rgba(0, 0, 0, 0.5);
+    --attempts-border-subtle: rgba(0, 0, 0, 0.05);
+    --attempts-border-light: rgba(0, 0, 0, 0.08);
+    --attempts-close-btn-border: rgba(0, 0, 0, 0.08);
+    --attempts-accent-drop-shadow: drop-shadow(0 0 8px rgba(212, 168, 32, 0.6));
   }
 }
 
@@ -539,6 +553,13 @@
   --active-sessions-my-turn-border: rgba(0, 163, 102, 0.2);
   --active-sessions-bot-avatar-bg: rgba(109, 40, 217, 0.1);
   --active-sessions-bot-avatar-border: rgba(109, 40, 217, 0.2);
+
+  /* Attempts Modal Light Mode via data-theme */
+  --attempts-overlay-bg: rgba(0, 0, 0, 0.5);
+  --attempts-border-subtle: rgba(0, 0, 0, 0.05);
+  --attempts-border-light: rgba(0, 0, 0, 0.08);
+  --attempts-close-btn-border: rgba(0, 0, 0, 0.08);
+  --attempts-accent-drop-shadow: drop-shadow(0 0 8px rgba(212, 168, 32, 0.6));
 
   background: var(--color-bg-dark);
   color: var(--color-text-primary);
