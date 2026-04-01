@@ -563,7 +563,7 @@ export const ShopPage: React.FC = () => {
           <div style={{ width: '100%', maxWidth: 480, background: 'var(--bg-card, #13161F)', borderRadius: '24px 24px 0 0', border: '1px solid rgba(0,152,234,0.3)', borderBottom: 'none', paddingBottom: 'max(20px, env(safe-area-inset-bottom))' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 18px 12px' }}>
               <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--color-blue, #0098EA)' }}>💎 TON Wallet</div>
-              <button onClick={() => setShowTon(false)} style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: '#8B92A8', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>✕</button>
+              <button onClick={() => setShowTon(false)} style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: '#8B92A8', fontSize: 16, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>✕</button>
             </div>
             <TonTab user={user} showToast={showToast} onUserRefresh={refreshUser} />
           </div>

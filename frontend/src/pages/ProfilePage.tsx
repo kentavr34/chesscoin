@@ -211,7 +211,7 @@ export const ProfilePage: React.FC = () => {
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={avatarLoading}
-                style={{ position: 'absolute', bottom: -2, right: -2, width: 28, height: 28, borderRadius: '50%', background: 'var(--accent, #F5C842)', border: '2px solid #0B0D11', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 13, lineHeight: 1 }}
+                style={{ position: 'absolute', bottom: -8, right: -8, width: 44, height: 44, borderRadius: '50%', background: 'var(--accent, #F5C842)', border: '2px solid #0B0D11', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 16, lineHeight: 1, flexShrink: 0 }}
                 title="Upload avatar"
               >
                 {avatarLoading ? '…' : '📷'}
@@ -219,7 +219,7 @@ export const ProfilePage: React.FC = () => {
               {user.avatarType === 'UPLOAD' && !avatarLoading && (
                 <button
                   onClick={handleAvatarDelete}
-                  style={{ position: 'absolute', top: -2, right: -2, width: 22, height: 22, borderRadius: '50%', background: 'var(--red, #FF4D6A)', border: '2px solid #0B0D11', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 10, color: '#fff' }}
+                  style={{ position: 'absolute', top: -8, right: -8, width: 44, height: 44, borderRadius: '50%', background: 'var(--red, #FF4D6A)', border: '2px solid #0B0D11', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 14, color: '#fff', flexShrink: 0 }}
                   title="Delete avatar"
                 >
                   ✕
@@ -829,7 +829,7 @@ export const ProfilePage: React.FC = () => {
             <div style={{ width: 36, height: 4, background: '#2A2F48', borderRadius: 2, margin: '0 auto 18px' }} />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 15, fontWeight: 800, color: 'var(--text-primary, #F0F2F8)' }}>⚙ {t.profile.settings.title}</div>
-              <button onClick={() => setShowSettings(false)} style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--border, rgba(255,255,255,0.07))', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-secondary, #8B92A8)', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+              <button onClick={() => setShowSettings(false)} style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--border, rgba(255,255,255,0.07))', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-secondary, #8B92A8)', fontSize: 16, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>✕</button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {/* Язык */}
@@ -913,7 +913,7 @@ const balCard: React.CSSProperties = { margin: '12px 18px 0', padding: '14px 18p
 const ptabsStyle: React.CSSProperties = { display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.07)', margin: '12px 18px 0', overflowX: 'auto' as React.CSSProperties['overflowX'] };
 const ptab = (active: boolean): React.CSSProperties => ({ flex: '0 0 auto', textAlign: 'center', padding: '10px 12px', fontSize: 11, fontWeight: 600, color: active ? 'var(--accent, #F5C842)' : 'var(--text-secondary, #8B92A8)', cursor: 'pointer', border: 'none', borderBottom: `2px solid ${active ? 'var(--accent, #F5C842)' : 'transparent'}`, outline: 'none', background: 'none', fontFamily: 'inherit', transition: 'all .2s', whiteSpace: 'nowrap' } as React.CSSProperties);
 const stripStyle: React.CSSProperties = { margin: '4px 18px 0', padding: '13px 16px', background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 18, display: 'flex', alignItems: 'center', gap: 12 };
-const tbaStyle: React.CSSProperties = { width: 36, height: 36, borderRadius: 11, background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.13)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, cursor: 'pointer', color: 'var(--text-secondary, #8B92A8)' };
+const tbaStyle: React.CSSProperties = { width: 44, height: 44, borderRadius: 11, background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.13)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, cursor: 'pointer', color: 'var(--text-secondary, #8B92A8)' };
 const secBtn: React.CSSProperties = { padding: '8px 14px', background: 'var(--bg-input, #232840)', color: 'var(--text-primary, #F0F2F8)', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' };
 const ghostBtn: React.CSSProperties = { ...secBtn, background: 'transparent', color: 'var(--text-secondary, #8B92A8)' };
 const goldBtn: React.CSSProperties = { padding: '8px 14px', background: 'var(--accent, #F5C842)', color: 'var(--bg, #0B0D11)', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' };

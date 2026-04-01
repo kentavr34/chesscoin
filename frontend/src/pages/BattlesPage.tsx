@@ -293,7 +293,7 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         {/* Ручка + кнопка закрыть — без заголовка "Создать батл" */}
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
           <div style={bmHandleStyle} />
-          <button onClick={onClose} style={{ marginLeft: 'auto', width: 32, height: 32, borderRadius: '50%', background: 'var(--border, rgba(255,255,255,0.07))', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-secondary, #8B92A8)', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+          <button onClick={onClose} style={{ marginLeft: 'auto', width: 44, height: 44, borderRadius: '50%', background: 'var(--border, rgba(255,255,255,0.07))', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-secondary, #8B92A8)', fontSize: 16, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>✕</button>
         </div>
 
         {/* Ставка */}

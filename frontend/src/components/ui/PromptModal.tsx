@@ -59,11 +59,11 @@ export const PromptModal: React.FC<PromptModalProps> = ({
         <button
           onClick={() => close(onCancel)}
           style={{
-            position: 'absolute', top: 14, right: 14,
-            width: 28, height: 28, borderRadius: '50%',
+            position: 'absolute', top: 8, right: 8,
+            width: 44, height: 44, borderRadius: '50%',
             background: 'var(--prompt-close-btn-bg, rgba(255,255,255,0.07))',
             border: '1px solid var(--prompt-close-btn-border, rgba(255,255,255,0.1))',
-            color: 'var(--color-text-secondary, #A8B0C8)', fontSize: 14, cursor: 'pointer',
+            color: 'var(--color-text-secondary, #A8B0C8)', fontSize: 16, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontFamily: 'inherit',
           }}

@@ -105,10 +105,10 @@ const buyBtn: React.CSSProperties = {
   cursor: 'pointer', fontFamily: 'inherit',
 };
 const closeBtnStyle: React.CSSProperties = {
-  width: 32, height: 32, borderRadius: '50%',
+  width: 44, height: 44, borderRadius: '50%',
   background: 'var(--color-border, rgba(255,255,255,0.07))',
   border: '1px solid var(--attempts-close-btn-border, rgba(255,255,255,0.1))',
-  color: 'var(--color-text-secondary, #8B92A8)', fontSize: 14, cursor: 'pointer',
+  color: 'var(--color-text-secondary, #8B92A8)', fontSize: 16, cursor: 'pointer',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   fontFamily: 'inherit', flexShrink: 0,
 };

@@ -16,9 +16,9 @@ const boxStyle: React.CSSProperties = {
 };
 
 const closeStyle: React.CSSProperties = {
-  position: 'absolute', top: 16, right: 16,
+  position: 'absolute', top: 10, right: 10,
   background: 'var(--jarvis-info-close-bg, rgba(255,255,255,0.05))', border: 'none', borderRadius: '50%',
-  width: 30, height: 30, color: 'var(--color-text-secondary, #8B92A8)',
+  width: 44, height: 44, color: 'var(--color-text-secondary, #8B92A8)',
   fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
 };
 
