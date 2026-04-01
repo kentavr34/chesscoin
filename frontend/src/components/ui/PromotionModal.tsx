@@ -157,7 +157,7 @@ export const PromotionModal: React.FC<PromotionModalProps> = ({ color, onSelect 
 
 const overlay: React.CSSProperties = {
   position: 'fixed', inset: 0,
-  background: 'rgba(0,0,0,0.8)',
+  background: 'var(--promotion-overlay-bg, rgba(0,0,0,0.8))',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   zIndex: "var(--z-toast, 400)",
   backdropFilter: 'blur(8px)',
@@ -174,7 +174,7 @@ const modal: React.CSSProperties = {
   borderRadius: 28,
   padding: '24px 20px 20px',
   display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16,
-  boxShadow: '0 0 60px rgba(245,200,66,0.35), 0 12px 40px rgba(0,0,0,0.7)',
+  boxShadow: `0 0 60px var(--promotion-modal-glow-shadow, rgba(245,200,66,0.35)), 0 12px 40px var(--promotion-modal-shadow, rgba(0,0,0,0.7))`,
   animation: 'promotionIn 0.3s cubic-bezier(.34,1.56,.64,1)',
   minWidth: 290, position: 'relative', zIndex: "var(--z-toast, 400)",
 };
@@ -195,7 +195,7 @@ const titleStyle: React.CSSProperties = {
   fontSize: 20, fontWeight: 800,
   color: 'var(--color-accent, #F5C842)',
   letterSpacing: '0.04em', fontFamily: 'inherit',
-  textShadow: '0 0 16px rgba(245,200,66,0.6)',
+  textShadow: '0 0 16px var(--promotion-title-text-shadow, rgba(245,200,66,0.6))',
 };
 
 const subtitleStyle: React.CSSProperties = {
@@ -211,16 +211,16 @@ const btn: React.CSSProperties = {
   display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
   padding: '12px 8px',
   background: 'var(--color-bg-input, #232840)',
-  border: '1px solid rgba(255,255,255,0.1)',
+  border: '1px solid var(--promotion-btn-border, rgba(255,255,255,0.1))',
   borderRadius: 16, cursor: 'pointer',
   transition: 'transform 0.15s, background 0.15s, border-color 0.15s',
   fontFamily: 'inherit', position: 'relative',
 };
 
 const chosenBtn: React.CSSProperties = {
-  background: 'rgba(245,200,66,0.15)',
+  background: 'var(--promotion-chosen-btn-bg, rgba(245,200,66,0.15))',
   border: '2px solid var(--color-accent, #F5C842)',
-  boxShadow: '0 0 20px rgba(245,200,66,0.4)',
+  boxShadow: '0 0 20px var(--promotion-chosen-btn-shadow, rgba(245,200,66,0.4))',
 };
 
 const labelStyle: React.CSSProperties = {

@@ -262,6 +262,15 @@
   --jarvis-modal-num-active-bg: rgba(245, 200, 66, 0.15);
   --jarvis-modal-num-default-border: rgba(255, 255, 255, 0.1);
 
+  /* PromotionModal Colors (L1) */
+  --promotion-overlay-bg: rgba(0, 0, 0, 0.8);
+  --promotion-modal-glow-shadow: rgba(245, 200, 66, 0.35);
+  --promotion-modal-shadow: rgba(0, 0, 0, 0.7);
+  --promotion-title-text-shadow: rgba(245, 200, 66, 0.6);
+  --promotion-btn-border: rgba(255, 255, 255, 0.1);
+  --promotion-chosen-btn-bg: rgba(245, 200, 66, 0.15);
+  --promotion-chosen-btn-shadow: rgba(245, 200, 66, 0.4);
+
   /* Candle Chart (L1) */
   --chart-text-color: #4A5270;
   --chart-grid-line: rgba(255, 255, 255, 0.03);
@@ -478,6 +487,15 @@
     --jarvis-modal-num-active-bg: rgba(212, 168, 32, 0.12);
     --jarvis-modal-num-default-border: rgba(0, 0, 0, 0.08);
 
+    /* PromotionModal Light Mode Adjustments */
+    --promotion-overlay-bg: rgba(0, 0, 0, 0.6);
+    --promotion-modal-glow-shadow: rgba(212, 168, 32, 0.3);
+    --promotion-modal-shadow: rgba(0, 0, 0, 0.15);
+    --promotion-title-text-shadow: rgba(212, 168, 32, 0.5);
+    --promotion-btn-border: rgba(0, 0, 0, 0.08);
+    --promotion-chosen-btn-bg: rgba(212, 168, 32, 0.12);
+    --promotion-chosen-btn-shadow: rgba(212, 168, 32, 0.3);
+
     /* Candle Chart Light Mode Adjustments */
     --chart-text-color: #5A5F6E;
     --chart-grid-line: rgba(0, 0, 0, 0.05);
@@ -687,6 +705,15 @@
   --jarvis-modal-num-completed-bg: rgba(0, 163, 102, 0.12);
   --jarvis-modal-num-active-bg: rgba(212, 168, 32, 0.12);
   --jarvis-modal-num-default-border: rgba(0, 0, 0, 0.08);
+
+  /* PromotionModal Light Mode via data-theme */
+  --promotion-overlay-bg: rgba(0, 0, 0, 0.6);
+  --promotion-modal-glow-shadow: rgba(212, 168, 32, 0.3);
+  --promotion-modal-shadow: rgba(0, 0, 0, 0.15);
+  --promotion-title-text-shadow: rgba(212, 168, 32, 0.5);
+  --promotion-btn-border: rgba(0, 0, 0, 0.08);
+  --promotion-chosen-btn-bg: rgba(212, 168, 32, 0.12);
+  --promotion-chosen-btn-shadow: rgba(212, 168, 32, 0.3);
 
   /* Candle Chart Light Mode via data-theme */
   --chart-text-color: #5A5F6E;
