@@ -4,7 +4,7 @@
 // Установка: npm install lightweight-charts
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useEffect, useRef } from 'react';
-import type { IChartApi, UTCTimestamp } from 'lightweight-charts';
+import type { IChartApi, ISeriesApi, UTCTimestamp } from 'lightweight-charts';
 import type { PriceCandle } from '@/api';
 import { useT } from '@/i18n/useT';
 
@@ -22,7 +22,7 @@ export const CandleChart: React.FC<CandleChartProps> = ({
   const t = useT();
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef     = useRef<IChartApi | null>(null);
-  const seriesRef    = useRef<unknown>(null);
+  const seriesRef    = useRef<ISeriesApi<'Candlestick'> | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -65,7 +65,7 @@ export const CandleChart: React.FC<CandleChartProps> = ({
         borderDownColor: downColor,
         wickUpColor:     upColor,
         wickDownColor:   downColor,
-      }) as unknown;
+      });
 
       // Форматируем данные для lightweight-charts
       const data = candles

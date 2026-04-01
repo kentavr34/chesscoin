@@ -40,7 +40,7 @@ export const HomePage: React.FC = () => {
     <PageLayout>
       {showJarvisModal && (
         <JarvisModal
-          currentJarvisLevel={user.currentJarvisLevel || 1}
+          currentJarvisLevel={user.jarvisLevel || 1}
           onSelect={handleJarvisSelect}
           onClose={() => setShowJarvisModal(false)}
         />
@@ -74,7 +74,7 @@ export const HomePage: React.FC = () => {
           <div>
             <div style={{ fontSize: 12, color: '#8B92A8', marginBottom: 4 }}>Игрок</div>
             <div style={{ fontSize: 14, fontWeight: 700, color: '#F0F2F8', marginBottom: 8 }}>
-              {user.name || 'Player'}
+              {user.firstName || 'Player'}
             </div>
             <div style={{ fontSize: 11, color: '#4A5270', lineHeight: 1.6 }}>
               <div>W: {user.wins || 0}</div>
