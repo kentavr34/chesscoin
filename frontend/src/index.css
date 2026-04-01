@@ -108,6 +108,12 @@
   --stat-circle-bg-stroke: #2A2F48;
   --stat-card-border: rgba(255, 255, 255, 0.07);
 
+  /* Modal Colors (L1) */
+  --modal-overlay-bg: rgba(0, 0, 0, 0.75);
+  --modal-border: rgba(255, 255, 255, 0.1);
+  --modal-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  --modal-divider: rgba(255, 255, 255, 0.05);
+
   /* Chess UI Elements (L1) */
   --chess-emoji-text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
   --chess-piece-shadow: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
@@ -559,6 +565,12 @@
     --stat-circle-bg-stroke: #5A6378;
     --stat-card-border: rgba(0, 0, 0, 0.08);
 
+    /* Modal Light Mode Adjustments */
+    --modal-overlay-bg: rgba(0, 0, 0, 0.5);
+    --modal-border: rgba(0, 0, 0, 0.12);
+    --modal-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    --modal-divider: rgba(0, 0, 0, 0.08);
+
     /* WarChallengePopup Light Mode Adjustments */
     --war-challenge-overlay-bg: rgba(0, 0, 0, 0.5);
     --war-challenge-modal-border: rgba(211, 47, 47, 0.25);
@@ -807,6 +819,12 @@
   /* StatComponents Light Mode via data-theme */
   --stat-circle-bg-stroke: #5A6378;
   --stat-card-border: rgba(0, 0, 0, 0.08);
+
+  /* Modal Light Mode via data-theme */
+  --modal-overlay-bg: rgba(0, 0, 0, 0.5);
+  --modal-border: rgba(0, 0, 0, 0.12);
+  --modal-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  --modal-divider: rgba(0, 0, 0, 0.08);
 
   /* WarChallengePopup Light Mode via data-theme */
   --war-challenge-overlay-bg: rgba(0, 0, 0, 0.5);

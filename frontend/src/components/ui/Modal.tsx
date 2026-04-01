@@ -44,7 +44,7 @@ const Modal: React.FC<ModalProps> & {
         position: 'fixed',
         inset: 0,
         zIndex: 'var(--z-modal, 300)',
-        background: 'rgba(0,0,0,0.75)',
+        background: 'var(--modal-overlay-bg, rgba(0,0,0,0.75))',
         backdropFilter: 'blur(10px)',
         WebkitBackdropFilter: 'blur(10px)',
         display: 'flex',
@@ -60,9 +60,9 @@ const Modal: React.FC<ModalProps> & {
           width: '100%',
           maxWidth: typeof maxWidth === 'string' ? maxWidth : `${maxWidth}px`,
           background: 'var(--bg-modal, #161927)',
-          border: '1px solid rgba(255,255,255,0.1)',
+          border: '1px solid var(--modal-border, rgba(255,255,255,0.1))',
           borderRadius: 24,
-          boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+          boxShadow: 'var(--modal-shadow, 0 20px 60px rgba(0,0,0,0.5))',
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
@@ -79,7 +79,7 @@ Modal.Header = ({ children, center = true }: ModalSectionProps) => (
   <div
     style={{
       padding: '28px 24px 10px',
-      borderBottom: '1px solid rgba(255,255,255,0.05)',
+      borderBottom: '1px solid var(--modal-divider, rgba(255,255,255,0.05))',
       fontSize: 18,
       fontWeight: 800,
       color: 'var(--text-primary, #F0F2F8)',
@@ -112,7 +112,7 @@ Modal.Footer = ({ children }: { children: ReactNode }) => (
   <div
     style={{
       padding: '16px 24px 22px',
-      borderTop: '1px solid rgba(255,255,255,0.05)',
+      borderTop: '1px solid var(--modal-divider, rgba(255,255,255,0.05))',
       display: 'flex',
       gap: 10,
       justifyContent: 'flex-end',
