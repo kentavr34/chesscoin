@@ -1,8 +1,11 @@
-# ChessCoin v7.2.0 — Phase 1 Complete, Phase 2 In Progress
+# ChessCoin v7.2.0 — Phase 1 Complete, Phase 2 Complete, L1 Continuing
 
-**Date:** 2026-04-01
-**Current Status:** 🟢 **PHASE 1 COMPLETE** (97% satisfaction) → **PHASE 2 IN PROGRESS** (targeting 99%)
-**Deployments This Session:** 4 waves + color variable migration (3 commits)
+**Date:** 2026-04-01 (Session 5)
+**Current Status:** 🟢 **PHASE 1 COMPLETE** (97%) → 🟢 **PHASE 2 COMPLETE** (L1+L2+L3) → **L1 EXTENDED** (continuing color migration)
+**Sessions Completed:**
+  - Session 3: Phase 1 (Z-index, ARIA, Modal) ✅
+  - Session 4: L2 Responsive + L3 Theme Toggle ✅
+  - Session 5: L1 Color Variables continuation (in progress)
 
 ---
 
@@ -21,6 +24,40 @@
 - ⏳ **M2**: Migrate 12 modals to base Modal component (11/12 remaining)
 - ⏳ **L2**: Add responsive design (@media breakpoints)
 - **Target:** **97% → 99%**
+
+---
+
+## 📊 SESSION 5 — L1 COLOR VARIABLES CONTINUATION (2026-04-01)
+
+### Wave 1: PromotionModal Spark Colors ✅
+**Commit:** `refactor(colors): migrate PromotionModal spark colors to CSS variables (L1)`
+- **Changes:** 9 spark colors (--promotion-spark-1 through --promotion-spark-9)
+  - Dark mode: Original hex values (#F5C842, #FF4D6A, #9B85FF, #00D68F, #FF9F43, #64C8FF, #FFD700, #E040FB, #00FF9D)
+  - Light mode: Desaturated/darkened versions for visibility on light backgrounds
+- **Impact:** PromotionModal.tsx component fully migrated
+- **Build:** ✅ 6.47s, no errors
+
+### Wave 2: ActiveSessionsModal Status Color ✅
+**Commit:** `refactor(colors): migrate ActiveSessionsModal fallback status color to CSS variable (L1)`
+- **Changes:** 1 fallback color (--active-sessions-status-fallback-color)
+  - Dark mode: #8B92A8
+  - Light mode: #5A5F6E (darker for contrast)
+- **Impact:** Proper color fallback for unknown session statuses
+- **Build:** ✅ 8.69s, no errors
+
+### Current Progress
+- **Colors migrated (session 5):** 10 colors
+- **Total migrated (all sessions):** 122 colors
+- **Remaining:** 35 colors to reach 99% satisfaction
+- **Estimated completion:** 2-3 more focused migration sessions
+
+### Critical Findings
+- Search for remaining hardcoded colors found **234 instances in inline styles**
+- Most critical unmigrated colors are in:
+  - Admin page (badge colors, toast styles)
+  - Shop page (TON wallet integration colors)
+  - BattleHistory page (game status colors)
+  - Pages and data structures (board skins, effects, etc.)
 
 ---
 
@@ -138,14 +175,15 @@
 
 ## 📈 PROGRESS METRICS
 
-| Item | Phase 1 | Phase 2 |
-|------|---------|---------|
-| **Z-index fixes** | ✅ 100% | - |
-| **ARIA labels** | ✅ 100% | - |
-| **Modal unification** | ✅ M1 done | 🟠 M2 started (1/12) |
-| **Color variables** | - | 🟠 **~60%** (95+/157) — modals ✅, shop components ✅, core UI 🟠 |
-| **Responsive design** | - | ⏳ 0% |
-| **Satisfaction level** | **97%** | **→ targeting 99%** |
+| Item | Phase 1 | Phase 2 | Status |
+|------|---------|---------|--------|
+| **Z-index fixes** | ✅ 100% | - | Complete |
+| **ARIA labels** | ✅ 100% | - | Complete |
+| **Modal unification** | ✅ M1 done | M2 queued | Partial (1/12) |
+| **Color variables (L1)** | - | 🟠 **~78%** (122/157) | In Progress |
+| **Responsive design (L2)** | - | ✅ **100%** (15/15) | Complete |
+| **Theme Toggle (L3)** | - | ✅ **100%** (light/dark) | Complete |
+| **Overall Satisfaction** | **97%** | **→ 99%** | Target |
 
 ---
 
