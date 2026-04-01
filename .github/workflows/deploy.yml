@@ -70,26 +70,27 @@ jobs:
             if [ ! -f .env ]; then
               echo "⚠️  .env not found, creating from defaults..."
               cat > .env << 'ENVFILE'
-            POSTGRES_PASSWORD=devpass123
-            REDIS_PASSWORD=devredis123
-            BOT_TOKEN=8741660434:AAHdXkiX-QTwtoh2COthSCHO7MQUmVDkWQo
-            BOT_API_SECRET=internal_bot_secret_change_me
-            ADMIN_IDS=254450353
-            DOMAIN=chesscoin.app
-            JWT_ACCESS_SECRET=dev_access_secret_change_in_production
-            JWT_REFRESH_SECRET=dev_refresh_secret_change_in_production
-            S3_ENDPOINT=https://s3.timeweb.cloud
-            S3_BUCKET=chesscoin-dev
-            S3_ACCESS_KEY=dev_key
-            S3_SECRET_ACCESS_KEY=dev_secret
-            SCREENSHOT_SECRET=dev_screenshot_secret
-            PLATFORM_TON_WALLET=UQDZNHJrTBJ9asNgL15bf-8Ud4Rleku-oP6TSlbg6EWXfq7y
-            TONCENTER_API_KEY=
-            TON_NETWORK=testnet
-            ENVFILE
+POSTGRES_PASSWORD=devpass123
+REDIS_PASSWORD=devredis123
+BOT_TOKEN=8741660434:AAHdXkiX-QTwtoh2COthSCHO7MQUmVDkWQo
+BOT_API_SECRET=internal_bot_secret_change_me
+ADMIN_IDS=254450353
+DOMAIN=chesscoin.app
+JWT_ACCESS_SECRET=dev_access_secret_change_in_production
+JWT_REFRESH_SECRET=dev_refresh_secret_change_in_production
+S3_ENDPOINT=https://s3.timeweb.cloud
+S3_BUCKET=chesscoin-dev
+S3_ACCESS_KEY=dev_key
+S3_SECRET_ACCESS_KEY=dev_secret
+SCREENSHOT_SECRET=dev_screenshot_secret
+PLATFORM_TON_WALLET=UQDZNHJrTBJ9asNgL15bf-8Ud4Rleku-oP6TSlbg6EWXfq7y
+TONCENTER_API_KEY=
+TON_NETWORK=testnet
+ENVFILE
               chmod 600 .env
+              echo "✅ .env created successfully"
             else
-              echo "✅ .env file exists"
+              echo "✅ .env file already exists"
             fi
 
             git pull origin main
