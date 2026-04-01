@@ -271,6 +271,14 @@
   --promotion-chosen-btn-bg: rgba(245, 200, 66, 0.15);
   --promotion-chosen-btn-shadow: rgba(245, 200, 66, 0.4);
 
+  /* WarChallengePopup Colors (L1) */
+  --war-challenge-overlay-bg: rgba(0, 0, 0, 0.8);
+  --war-challenge-modal-border: rgba(255, 77, 106, 0.3);
+  --war-challenge-modal-glow-shadow: rgba(255, 77, 106, 0.15);
+  --war-challenge-modal-shadow: rgba(0, 0, 0, 0.5);
+  --war-challenge-decline-btn-bg: rgba(255, 255, 255, 0.05);
+  --war-challenge-decline-btn-border: rgba(255, 255, 255, 0.1);
+
   /* Candle Chart (L1) */
   --chart-text-color: #4A5270;
   --chart-grid-line: rgba(255, 255, 255, 0.03);
@@ -506,6 +514,14 @@
     /* Avatar Light Mode Adjustments */
     --avatar-border-subtle: rgba(0, 0, 0, 0.08);
     --avatar-border-light: rgba(0, 0, 0, 0.12);
+
+    /* WarChallengePopup Light Mode Adjustments */
+    --war-challenge-overlay-bg: rgba(0, 0, 0, 0.5);
+    --war-challenge-modal-border: rgba(211, 47, 47, 0.25);
+    --war-challenge-modal-glow-shadow: rgba(211, 47, 47, 0.12);
+    --war-challenge-modal-shadow: rgba(0, 0, 0, 0.15);
+    --war-challenge-decline-btn-bg: rgba(0, 0, 0, 0.05);
+    --war-challenge-decline-btn-border: rgba(0, 0, 0, 0.08);
   }
 }
 
@@ -725,6 +741,14 @@
   /* Avatar Light Mode via data-theme */
   --avatar-border-subtle: rgba(0, 0, 0, 0.08);
   --avatar-border-light: rgba(0, 0, 0, 0.12);
+
+  /* WarChallengePopup Light Mode via data-theme */
+  --war-challenge-overlay-bg: rgba(0, 0, 0, 0.5);
+  --war-challenge-modal-border: rgba(211, 47, 47, 0.25);
+  --war-challenge-modal-glow-shadow: rgba(211, 47, 47, 0.12);
+  --war-challenge-modal-shadow: rgba(0, 0, 0, 0.15);
+  --war-challenge-decline-btn-bg: rgba(0, 0, 0, 0.05);
+  --war-challenge-decline-btn-border: rgba(0, 0, 0, 0.08);
 
   background: var(--color-bg-dark);
   color: var(--color-text-primary);

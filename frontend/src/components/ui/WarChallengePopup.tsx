@@ -41,7 +41,7 @@ export const WarChallengePopup: React.FC<Props> = ({ data, onAccept, onDecline }
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: "var(--z-modal, 300)",
-      background: 'rgba(0,0,0,0.80)',
+      background: 'var(--war-challenge-overlay-bg, rgba(0,0,0,0.80))',
       backdropFilter: 'blur(12px)',
       WebkitBackdropFilter: 'blur(12px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -51,10 +51,10 @@ export const WarChallengePopup: React.FC<Props> = ({ data, onAccept, onDecline }
         width: '100%',
         maxWidth: 'clamp(260px, 90vw, 340px)',
         background: 'linear-gradient(135deg, var(--color-bg-modal, #161927), var(--color-bg-card, #1C2030))',
-        border: '1px solid rgba(255, 77, 106, 0.3)',
+        border: '1px solid var(--war-challenge-modal-border, rgba(255, 77, 106, 0.3))',
         borderRadius: 28,
         padding: 'clamp(20px, 5vw, 32px) clamp(16px, 4vw, 24px)',
-        boxShadow: '0 0 60px rgba(255, 77, 106, 0.15), 0 20px 60px rgba(0,0,0,0.5)',
+        boxShadow: '0 0 60px var(--war-challenge-modal-glow-shadow, rgba(255, 77, 106, 0.15)), 0 20px 60px var(--war-challenge-modal-shadow, rgba(0,0,0,0.5))',
         textAlign: 'center',
       }}>
         {/* Иконка вызова */}
@@ -105,8 +105,8 @@ export const WarChallengePopup: React.FC<Props> = ({ data, onAccept, onDecline }
             onClick={onDecline}
             style={{
               padding: '13px', borderRadius: 14,
-              background: 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(255,255,255,0.1)',
+              background: 'var(--war-challenge-decline-btn-bg, rgba(255,255,255,0.05))',
+              border: '1px solid var(--war-challenge-decline-btn-border, rgba(255,255,255,0.1))',
               color: 'var(--color-text-secondary, #8B92A8)',
               fontSize: 14, fontWeight: 600,
               cursor: 'pointer', fontFamily: 'inherit',
