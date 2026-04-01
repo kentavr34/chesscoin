@@ -1,518 +1,203 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PageLayout } from '@/components/layout/PageLayout';
-import { Avatar } from '@/components/ui/Avatar';
-import { FloatingCoins } from '@/components/ui/FloatingCoins';
 import { useUserStore } from '@/store/useUserStore';
-import { useGameStore } from '@/store/useGameStore';
-import { fmtBalance, fmtCountdown, leagueEmoji } from '@/utils/format';
-import { AttemptsModal } from '@/components/ui/AttemptsModal';
-import { ActiveSessionsModal } from '@/components/ui/ActiveSessionsModal';
-import { getSocket } from '@/api/socket';
-import { JarvisModal } from '@/components/ui/JarvisModal';
-import { JarvisInfoModal } from '@/components/ui/JarvisInfoModal';
-import { GameSetupModal } from '@/components/ui/GameSetupModal';
-import type { JarvisLevel } from '@/components/ui/JarvisModal';
-import { tasksApi, warsApi, puzzlesApi } from '@/api';
-import type { Task } from '@/types';
 import { useT } from '@/i18n/useT';
-import { useJarvisLevels } from '@/hooks/useJarvisLevels';
+import { PageLayout } from '@/components/layout/PageLayout';
+import { JarvisModal } from '@/components/ui/JarvisModal';
+import { GameSetupModal } from '@/components/ui/GameSetupModal';
+import { JARVIS_LEVELS, type JarvisLevel } from '@/components/ui/JarvisModal';
 
-// SVG иконки для карточек разделов
-const IcoJarvis = () => (
-  <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
-    <rect x="6" y="10" width="32" height="24" rx="6" fill="#3A3F58"/>
-    <rect x="6" y="10" width="32" height="24" rx="6" stroke="#5A6080" strokeWidth="1.5"/>
-    <circle cx="15" cy="21" r="3.5" fill="var(--red, #FF4D6A)"/>
-    <circle cx="29" cy="21" r="3.5" fill="var(--red, #FF4D6A)"/>
-    <circle cx="15" cy="21" r="1.5" fill="#FF8099"/>
-    <circle cx="29" cy="21" r="1.5" fill="#FF8099"/>
-    <rect x="14" y="27" width="16" height="3" rx="1.5" fill="#5A6080"/>
-    <rect x="17" y="27" width="1.5" height="3" fill="#3A3F58"/>
-    <rect x="21" y="27" width="1.5" height="3" fill="#3A3F58"/>
-    <rect x="25" y="27" width="1.5" height="3" fill="#3A3F58"/>
-    <rect x="20.5" y="4" width="3" height="7" rx="1.5" fill="#5A6080"/>
-    <circle cx="22" cy="4" r="2" fill="var(--accent, #F5C842)"/>
-    <rect x="2" y="17" width="4" height="8" rx="2" fill="#3A3F58" stroke="#5A6080" strokeWidth="1"/>
-    <rect x="38" y="17" width="4" height="8" rx="2" fill="#3A3F58" stroke="#5A6080" strokeWidth="1"/>
-  </svg>
-);
-
-const IcoBattle = () => (
-  <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
-    <line x1="8" y1="36" x2="36" y2="8" stroke="var(--text-secondary, #8B92A8)" strokeWidth="3.5" strokeLinecap="round"/>
-    <line x1="36" y1="36" x2="8" y2="8" stroke="var(--text-secondary, #8B92A8)" strokeWidth="3.5" strokeLinecap="round"/>
-    <rect x="5" y="33" width="9" height="4" rx="2" transform="rotate(-45 5 33)" fill="#6A7090"/>
-    <rect x="30" y="5" width="9" height="4" rx="2" transform="rotate(-45 30 5)" fill="#6A7090"/>
-    <rect x="33" y="33" width="9" height="4" rx="2" transform="rotate(45 33 33)" fill="#6A7090"/>
-    <rect x="5" y="5" width="9" height="4" rx="2" transform="rotate(45 5 5)" fill="#6A7090"/>
-  </svg>
-);
-
-const IcoTournament = () => (
-  <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
-    <path d="M14 8h16v16a8 8 0 01-16 0V8z" fill="var(--accent, #F5C842)" opacity="0.9"/>
-    <path d="M10 10H14v8a4 4 0 01-4-4v-4z" fill="var(--accent, #F5C842)" opacity="0.5"/>
-    <path d="M34 10H30v8a4 4 0 004-4v-4z" fill="var(--accent, #F5C842)" opacity="0.5"/>
-    <rect x="19" y="24" width="6" height="8" rx="2" fill="#C8A030"/>
-    <rect x="12" y="32" width="20" height="4" rx="2" fill="#C8A030"/>
-  </svg>
-);
-
-const IcoWars = () => (
-  <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
-    <circle cx="22" cy="22" r="16" stroke="var(--text-secondary, #8B92A8)" strokeWidth="1.5" fill="none"/>
-    <path d="M22 6 Q28 14 28 22 Q28 30 22 38 Q16 30 16 22 Q16 14 22 6z" fill="#5A6080"/>
-    <path d="M6 22 Q14 16 22 16 Q30 16 38 22 Q30 28 22 28 Q14 28 6 22z" fill="#4A5070"/>
-    <circle cx="22" cy="22" r="3" fill="var(--accent, #F5C842)"/>
-  </svg>
-);
-
-const OnboardingTour: React.FC<{ onDone: () => void }> = ({ onDone }) => {
-  const t = useT();
-  const [step, setStep] = useState(0);
-  const STEPS = t.home.onboarding;
-  const s = STEPS[step];
-  const isLast = step === STEPS.length - 1;
-  return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(10px)', zIndex: "var(--z-modal, 300)", display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div style={{ background: 'linear-gradient(135deg,#181B2E,#12162A)', border: '1px solid rgba(123,97,255,0.25)', borderRadius: 28, padding: 28, maxWidth: 360, width: '100%', textAlign: 'center' }}>
-        <div style={{ fontSize: 56, marginBottom: 16 }}>{s.icon}</div>
-        <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--accent, #F5C842)', fontFamily: "'Unbounded',sans-serif", marginBottom: 12, lineHeight: 1.3 }}>{s.title}</div>
-        <div style={{ fontSize: 13, color: 'var(--text-primary, #C8CDDF)', lineHeight: 1.7, marginBottom: 24 }}>{s.desc}</div>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 20 }}>
-          {STEPS.map((_: unknown, i: number) => (
-            <div key={i} style={{ width: i === step ? 18 : 7, height: 7, borderRadius: 4, background: i === step ? 'var(--accent, #F5C842)' : '#2A2F48', transition: 'all .25s' }} />
-          ))}
-        </div>
-        <div style={{ display: 'flex', gap: 10 }}>
-          {step > 0 && <button onClick={() => setStep(s => s - 1)} style={{ flex: 1, padding: '12px 0', background: 'var(--bg-card, #1C2030)', color: 'var(--text-secondary, #8B92A8)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>← {t.common.back}</button>}
-          <button onClick={() => isLast ? onDone() : setStep(s => s + 1)} style={{ flex: 1, padding: '12px 0', background: 'linear-gradient(90deg,#7B61FF,#9B85FF)', color: '#fff', border: 'none', borderRadius: 14, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-            {isLast ? t.home.letsGo : t.home.next}
-          </button>
-        </div>
-        <button onClick={onDone} style={{ marginTop: 10, background: 'none', border: 'none', color: 'var(--text-muted, #4A5270)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}>{t.home.skip}</button>
-      </div>
-    </div>
-  );
-};
-
-// ── Isolated timer component — prevents re-rendering the entire HomePage ──
-const AttemptTimer: React.FC<{
-  nextRestoreSeconds: number; attempts: number; maxAttempts: number; onOpen: () => void;
-}> = React.memo(({ nextRestoreSeconds, attempts, maxAttempts, onOpen }) => {
-  const t = useT();
-  const [timer, setTimer] = useState(nextRestoreSeconds);
-  useEffect(() => {
-    if (attempts >= maxAttempts) return;
-    let remaining = nextRestoreSeconds;
-    setTimer(remaining);
-    if (!remaining) return;
-    const iv = setInterval(() => { remaining = Math.max(0, remaining - 1); setTimer(remaining); }, 1000);
-    return () => clearInterval(iv);
-  }, [nextRestoreSeconds, attempts, maxAttempts]);
-
-  if (attempts >= maxAttempts) {
-    return <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: 'var(--text-muted, #4A5270)' }}>⏱ 00:00</div>;
-  }
-  return (
-    <div onClick={onOpen} style={{ cursor: 'pointer' }}>
-      <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginBottom: 2, lineHeight: 1.4 }}>{t.home.nextIn}</div>
-      <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 700, color: 'var(--accent, #F5C842)', display: 'flex', alignItems: 'center', gap: 4 }}>
-        <span>⏱</span>{timer > 0 ? fmtCountdown(timer) : '...'}
-      </div>
-    </div>
-  );
-});
+/**
+ * HomePage.tsx — Главная страница с кнопками навигации
+ * - Игра против Jarvis
+ * - Батлы (PvP дуэли)
+ * - Войны (коалиции)
+ * - Магазин (скины, фигуры)
+ * - Настройки
+ */
 
 export const HomePage: React.FC = () => {
-  const t = useT();
   const navigate = useNavigate();
   const { user } = useUserStore();
-  const { sessions } = useGameStore();
-  const localizedLevels = useJarvisLevels();
-  const [showAttempts, setShowAttempts] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('chesscoin_onboarding_done'));
-  const [welcomeStep, setWelcomeStep] = useState<0|1|2>(0);
-  const [startingBot, setStartingBot] = useState(false);
-  // J1: showJarvis убран — GameSetupModal открывается напрямую
-  const [showSessions, setShowSessions] = useState(false);
-  const [selectedLevel, setSelectedLevel] = useState<JarvisLevel | null>(null);
-  const [taskStats, setTaskStats] = useState<{ done: number; total: number; remaining: number } | null>(null);
-  const [dailyPuzzle, setDailyPuzzle] = useState<any>(null);
-  const [puzzleLoading, setPuzzleLoading] = useState(true);
-  const [floatingAmount, setFloatingAmount] = useState<string | null>(null);
-  const [myWar, setMyWar] = useState<any>(null);
-  const [myCountry, setMyCountry] = useState<any>(null);
-  const [showJarvisInfo, setShowJarvisInfo] = useState(false);
+  const t = useT();
 
-  const activeSessions = sessions.filter(s => s.status === 'IN_PROGRESS');
-  const myTurnSessions = activeSessions.filter(s => s.isMyTurn);
+  const [showJarvisModal, setShowJarvisModal] = useState(false);
+  const [showGameSetup, setShowGameSetup] = useState(false);
+  const [selectedJarvisLevel, setSelectedJarvisLevel] = useState<JarvisLevel | null>(null);
 
-  const handleOnboardingDone = () => {
-    localStorage.setItem('chesscoin_onboarding_done', '1');
-    setShowOnboarding(false);
-    setWelcomeStep(1);
-    setTimeout(() => setWelcomeStep(2), 3500);
-    setTimeout(() => setWelcomeStep(0), 7000);
-  };
-
-  // Слушаем socket: balance:updated → показываем FloatingCoins
-  useEffect(() => {
-    const sock = getSocket();
-    const handler = (data: { delta?: string; earned?: string }) => {
-      const amt = data.delta ?? data.earned;
-      if (amt && BigInt(amt) > 0n) {
-        setFloatingAmount(amt);
-      }
-    };
-    sock.on('balance:updated' as never, handler);
-    return () => { sock.off('balance:updated' as never, handler); };
-  }, []);
-
-  const loadLiveData = useCallback(async () => {
-    try {
-      const r = await tasksApi.list();
-      const tasks = r.tasks ?? [];
-      const done = tasks.filter((t: Task) => t.completed).length;
-      const remaining = tasks.filter((t: Task) => !t.completed).reduce((sum: number, t: Task) => sum + Number(t.reward ?? 0), 0);
-      setTaskStats({ done, total: tasks.length, remaining });
-    } catch {}
-    try {
-      const r = await warsApi.myCountry();
-      setMyCountry(r.country);
-      setMyWar(r.activeWar ?? null);
-    } catch {}
-    // Задача дня
-    try {
-      const r = await puzzlesApi.daily();
-      setDailyPuzzle(r.puzzle);
-    } catch {} finally {
-      setPuzzleLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { loadLiveData(); }, [loadLiveData]);
-
-  const jarvisLevel = user?.jarvisLevel ?? 1;
-  const jarvisCfg = localizedLevels[Math.max(0, Math.min(19, jarvisLevel - 1))];
-  const militaryRank = user?.militaryRank?.name ?? 'Recruit';
-  const militaryEmoji = user?.militaryRank?.emoji ?? '😊';
-  const battles = user?.wins ?? 0;
-  const rank = user?.rank ?? 1;
-
-  // J1: сразу открываем GameSetupModal с текущим уровнем — JarvisModal убран из основного флоу
-  const startBotGame = () => {
-    if (!user || user.attempts <= 0) { setShowAttempts(true); return; }
-    setSelectedLevel(jarvisCfg);  // устанавливаем текущий уровень сразу
+  const handleJarvisSelect = (level: JarvisLevel) => {
+    setSelectedJarvisLevel(level);
+    setShowJarvisModal(false);
+    setShowGameSetup(true);
   };
 
   const handleGameStart = (color: 'white' | 'black', timeMinutes: number) => {
-    if (!selectedLevel || startingBot) return;
-    setStartingBot(true);
-    setSelectedLevel(null);
-    getSocket().emit('game:create:bot', { color, botLevel: selectedLevel.level, timeSeconds: timeMinutes * 60 }, (res: { ok?: boolean; session?: { id: string } | any; error?: string }) => {
-      setStartingBot(false);
-      if (res?.ok && res?.session) {
-        useGameStore.getState().upsertSession(res.session); // Prevent race condition in GamePage
-        navigate('/game/' + res.session.id);
-      } else if (res?.error) {
-        // N2: показываем понятную ошибку вместо молчаливого выброса
-        const errText = res.error || 'Failed to start game. Try again later.';
-        import('@/components/ui/Toast').then(({ toast }) => toast.error(errText));
-      }
+    if (!selectedJarvisLevel) return;
+    navigate(`/game/jarvis/${selectedJarvisLevel.level}`, {
+      state: { color, timeMinutes, difficulty: selectedJarvisLevel },
     });
-    setTimeout(() => setStartingBot(false), 5000);
   };
 
-  if (!user) return null;
+  if (!user) {
+    return <PageLayout>Loading...</PageLayout>;
+  }
 
   return (
     <PageLayout>
-      {/* Hero */}
-      <div style={heroStyle}>
-        <div style={{ position: 'absolute', bottom: -12, right: 10, fontSize: 80, opacity: 0.04, color: '#9B85FF', pointerEvents: 'none', lineHeight: 1 }}>♟</div>
-
-        {/* ID Card: Компактный горизонтальный профиль без диспропорции размеров */}
-        <div onClick={() => navigate('/profile')} style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 20, padding: '20px 20px', marginBottom: 20, position: 'relative', zIndex: 1, border: '1px solid var(--border)', cursor: 'pointer' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <Avatar user={user} size="l" gold />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-.01em', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
-                <span style={{ textOverflow: 'ellipsis', overflow: 'hidden' }}>{user.firstName}</span>
-                {myCountry && <span style={{ fontSize: 18, flexShrink: 0 }}>{myCountry.flag}</span>}
-              </div>
-              <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 4 }}>@{user.username ?? 'unknown'}</div>
-            </div>
-            {/* Воинское звание */}
-            <div style={{ textAlign: 'right', flexShrink: 0 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.06em', color: '#6A7090', textTransform: 'uppercase' as const, marginBottom: 4 }}>{t.home.rankLabel}</div>
-              <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
-                {militaryEmoji} <span style={{ whiteSpace: 'nowrap' }}>{militaryRank}</span>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ height: 1, background: 'var(--border, rgba(255,255,255,0.07))', margin: '12px 0' }} />
-
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              <span style={tagStyle('gold')}>{leagueEmoji[user.league] ?? '🥉'} #{rank}</span>
-              <span style={tagStyle('vi')}>ELO {user.elo}</span>
-            </div>
-            <div style={{ display: 'flex', gap: 16, textAlign: 'right', flexShrink: 0 }}>
-              <div>
-                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.08em', color: '#6A7090', textTransform: 'uppercase' as const, marginBottom: 2 }}>JARVIS</div>
-                <div style={{ fontSize: 11, fontWeight: 800, color: '#9B85FF' }}>{jarvisCfg.name}</div>
-              </div>
-              <div>
-                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.08em', color: '#6A7090', textTransform: 'uppercase' as const, marginBottom: 2 }}>{t.home.battlesLabel || 'BATTLES'}</div>
-                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-primary, #F0F2F8)' }}>{battles} W</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div style={{ height: 1, background: 'var(--border, rgba(255,255,255,0.07))', margin: '0 0 12px', position: 'relative', zIndex: 1 }} />
-
-        {/* Баланс */}
-        <div style={{ position: 'relative', zIndex: 1, marginBottom: 16 }}>
-          <div style={lblStyle}>{t.home.balance.toUpperCase()}</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div
-              onClick={() => {
-                import('@/components/ui/Toast').then(({ toast }) => toast.info('History is in Profile > Games'));
-                navigate('/profile');
-              }}
-              style={{ display: 'flex', alignItems: 'baseline', gap: 6, cursor: 'pointer', background: 'var(--bg)', padding: '8px 14px', borderRadius: 'var(--radius-m)', border: '1px solid var(--border)' }}
-            >
-              <span style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 19, fontWeight: 800, color: 'var(--accent)', letterSpacing: '-.02em', lineHeight: 1 }}>
-                {fmtBalance(user.balance)}
-              </span>
-              <span style={{ fontSize: 12, opacity: 0.5, color: 'var(--accent)' }}>ᚙ</span>
-            </div>
-            <button onClick={() => navigate('/shop')} style={shopInlineBtn}>🛍</button>
-          </div>
-        </div>
-
-
-
-        {/* Попытки */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
-          <div>
-            <div style={lblStyle}>{t.home.attempts.toUpperCase()}</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4 }}>
-              {Array.from({ length: user.maxAttempts }).map((_, i) => (
-                <span key={i} style={{ fontSize: 20, color: i < user.attempts ? 'var(--accent, #F5C842)' : '#2A2F48', filter: i < user.attempts ? 'drop-shadow(0 0 6px rgba(245,200,66,0.7))' : undefined }}>★</span>
-              ))}
-              {user.attempts < user.maxAttempts && (
-                <button onClick={() => setShowAttempts(true)} style={attPlusStyle}>+</button>
-              )}
-            </div>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <AttemptTimer
-              nextRestoreSeconds={user.nextRestoreSeconds ?? 0}
-              attempts={user.attempts}
-              maxAttempts={user.maxAttempts}
-              onOpen={() => setShowAttempts(true)}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* J.A.R.V.I.S Prominent Banner */}
-      <div style={{ padding: '0 16px', margin: '4px 0 20px' }}>
-        <div onClick={startBotGame} style={{
-          background: 'linear-gradient(135deg, rgba(82, 60, 203, 0.25) 0%, rgba(123, 97, 255, 0.05) 100%)',
-          border: '1px solid rgba(155, 133, 255, 0.3)',
-          borderRadius: 20,
-          padding: '16px 20px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 16,
-          cursor: 'pointer',
-          position: 'relative',
-          overflow: 'hidden',
-          opacity: startingBot ? 0.6 : 1,
-          transition: 'all 0.2s',
-          boxShadow: '0 8px 32px rgba(82, 60, 203, 0.15)'
-        }}>
-          {/* Dynamic background glow */}
-          <div style={{ position: 'absolute', top: -30, right: -20, width: 120, height: 120, background: 'rgba(155, 133, 255, 0.25)', filter: 'blur(35px)', borderRadius: '50%', pointerEvents: 'none' }} />
-          
-          <div style={{ 
-            width: 54, height: 54, borderRadius: 16, 
-            background: 'linear-gradient(135deg, #9B85FF 0%, #6842FF 100%)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 4px 16px rgba(123, 97, 255, 0.4)',
-            flexShrink: 0, position: 'relative', zIndex: 1
-          }}>
-            <span style={{ fontSize: 26, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }}>🤖</span>
-          </div>
-
-          <div style={{ flex: 1, zIndex: 1 }}>
-            <div style={{ fontSize: 19, fontWeight: 900, color: '#F0F2F8', letterSpacing: '-.02em', marginBottom: 2, fontFamily: "'Unbounded', sans-serif" }}>J.A.R.V.I.S</div>
-            <div style={{ fontSize: 13, color: '#B8A5FF', fontWeight: 600 }}>Level {jarvisLevel} · {jarvisCfg.name}</div>
-          </div>
-
-          <div style={{ zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{
-              background: '#F0F2F8', color: '#1A1636', fontSize: 12, fontWeight: 800,
-              padding: '10px 18px', borderRadius: 14, display: 'flex', alignItems: 'center', gap: 6,
-              boxShadow: '0 4px 12px rgba(240, 242, 248, 0.2)'
-            }}>
-              PLAY <span style={{ fontSize: 14 }}>→</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Активные игры */}
-      {activeSessions.length > 0 && (
-        <>
-          <div style={secStyle}>{t.home.activeGames}</div>
-          <div onClick={() => activeSessions.length === 1 ? navigate('/game/' + activeSessions[0].id) : setShowSessions(true)} style={{ ...stripStyle, borderColor: 'rgba(0,214,143,0.2)', background: 'linear-gradient(135deg,rgba(0,214,143,0.06),transparent)' }}>
-            <span style={{ fontSize: 20 }}>⚔️</span>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--green, #00D68F)' }}>{activeSessions.length} {activeSessions.length === 1 ? t.home.activeSingle : t.home.activeMultiple}</div>
-              <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>{myTurnSessions.length > 0 ? t.home.myTurn(myTurnSessions.length) : t.home.opponentTurn}</div>
-            </div>
-            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--green, #00D68F)' }}>→</span>
-          </div>
-        </>
-      )}
-
-      {/* Война стран */}
-      <div style={secStyle}>{t.home.countryWars}</div>
-      {myCountry ? (
-        <div onClick={() => navigate('/wars')} style={{ ...stripStyle, borderColor: myWar ? 'rgba(245,200,66,0.18)' : 'var(--border, rgba(255,255,255,0.07))' }}>
-          <span style={{ fontSize: 26 }}>{myCountry.flag}</span>
-          <div style={{ flex: 1 }}>
-            {myWar ? (
-              <>
-                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary, #F0F2F8)' }}>{myWar.attackerCountry?.flag} vs {myWar.defenderCountry?.flag}</div>
-                <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>{t.home.warInProgress}</div>
-              </>
-            ) : (
-              <>
-                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary, #F0F2F8)' }}>{myCountry.nameRu}</div>
-                <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>{myCountry.memberCount ?? 1} {t.home.fighters} · W: {myCountry.wins ?? 0}</div>
-              </>
-            )}
-          </div>
-          {myWar
-            ? <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14, fontWeight: 800, color: 'var(--accent, #F5C842)' }}>{myWar.attackerWins}:{myWar.defenderWins}</span>
-            : <span style={{ fontSize: 16, color: '#5A6080' }}>→</span>
-          }
-        </div>
-      ) : (
-        <div onClick={() => navigate('/wars')} style={stripStyle}>
-          <span style={{ fontSize: 22 }}>🌍</span>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary, #F0F2F8)' }}>{t.home.joinCountry}</div>
-            <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>{t.home.fightForTeam}</div>
-          </div>
-          <span style={{ fontSize: 16, color: '#5A6080' }}>→</span>
-        </div>
-      )}
-
-      {/* Разделы */}
-      <div style={secStyle}>{t.home.sections.toUpperCase()}</div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '0 16px' }}>
-        <div onClick={() => navigate('/battles')} style={gameCardStyle}>
-          <div style={cardIcoWrapper}><IcoBattle /></div>
-          <div style={cardTitle}>{t.home.sectionBattles}</div>
-          <div style={cardSub}>{t.home.battlesCard.sub}</div>
-          <span style={cardTag('var(--red, #FF4D6A)', 'rgba(255,77,106,0.13)')}>PVP</span>
-        </div>
-        <div onClick={() => navigate('/wars')} style={gameCardStyle}>
-          <div style={cardIcoWrapper}><IcoWars /></div>
-          <div style={cardTitle}>{t.home.sectionWars}</div>
-          <div style={cardSub}>{t.home.warsCard.sub(myCountry?.nameRu ?? null)}</div>
-          <span style={cardTag('var(--green, #00D68F)', 'rgba(0,214,143,0.12)')}>
-            {myWar ? `${myWar.attackerWins}:${myWar.defenderWins}` : myCountry ? `${myCountry.wins ?? 0}W` : '→'}
-          </span>
-        </div>
-        <div onClick={() => navigate('/tournaments')} style={{ ...gameCardStyle, gridColumn: 'span 2' }}>
-          <div style={cardIcoWrapper}><IcoTournament /></div>
-          <div style={cardTitle}>{t.home.sectionTournaments}</div>
-          <div style={cardSub}>{t.home.tournamentsCard.sub}</div>
-          <span style={cardTag('var(--accent, #F5C842)', 'rgba(245,200,66,0.13)')}>SOON</span>
-        </div>
-      </div>
-
-      {/* Задания */}
-      <div style={secStyle}>{t.home.tasks}</div>
-      <div onClick={() => navigate('/tasks')} style={{ ...stripStyle, marginBottom: 16 }}>
-        <span style={{ fontSize: 20 }}>📋</span>
-        <div style={{ flex: 1 }}>
-          {taskStats ? (
-            <>
-              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary, #F0F2F8)' }}>
-                {taskStats.done} / {taskStats.total} {t.tasksPage.completed}{taskStats.remaining > 0 && ` · +${fmtBalance(taskStats.remaining)} ᚙ`}
-              </div>
-              <div style={{ fontSize: 11, color: taskStats.done === taskStats.total ? 'var(--green, #00D68F)' : 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>
-                {taskStats.done === taskStats.total ? t.home.tasksAllDone : t.home.tasksClick}
-              </div>
-              <div style={{ height: 3, background: '#181B22', borderRadius: 2, marginTop: 7, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${taskStats.total > 0 ? Math.round((taskStats.done / taskStats.total) * 100) : 0}%`, background: 'linear-gradient(90deg,#F5C842,#FFD966)', borderRadius: 2, transition: 'width .4s' }} />
-              </div>
-            </>
-          ) : (
-            <div style={{ fontSize: 13, color: 'var(--text-secondary, #8B92A8)' }}>{t.common.loading}</div>
-          )}
-        </div>
-      </div>
-
-      {/* Модалы */}
-      {showAttempts && <AttemptsModal user={user} onClose={() => setShowAttempts(false)} />}
-      {/* N1: Модал выбора активной сессии */}
-      {showSessions && (
-        <ActiveSessionsModal
-          sessions={activeSessions}
-          onClose={() => setShowSessions(false)}
+      {showJarvisModal && (
+        <JarvisModal
+          currentJarvisLevel={user.currentJarvisLevel || 1}
+          onSelect={handleJarvisSelect}
+          onClose={() => setShowJarvisModal(false)}
         />
       )}
-      {/* J1: JarvisModal убран — GameSetupModal открывается сразу с текущим уровнем */}
-      {selectedLevel && <GameSetupModal selectedLevel={selectedLevel} onStart={handleGameStart} onClose={() => setSelectedLevel(null)} />}
-      {showJarvisInfo && <JarvisInfoModal onClose={() => setShowJarvisInfo(false)} />}
-      {showOnboarding && <OnboardingTour onDone={handleOnboardingDone} />}
-      {welcomeStep === 1 && (
-        <div style={toastStyle('var(--accent, #F5C842)')}>
-          <div style={{ fontSize: 36 }}>🎁</div>
-          <div><div style={{ fontSize: 14, fontWeight: 800, color: 'var(--accent, #F5C842)', marginBottom: 3 }}>{t.home.welcomeBonus}</div><div style={{ fontSize: 12, color: 'var(--text-primary, #C8CDDF)' }}>{t.home.youReceived} <b style={{ color: 'var(--accent, #F5C842)' }}>5,000 ᚙ</b></div></div>
-        </div>
-      )}
-      {welcomeStep === 2 && (
-        <div style={toastStyle('#7B61FF')}>
-          <div style={{ fontSize: 36 }}>⚡</div>
-          <div><div style={{ fontSize: 14, fontWeight: 800, color: '#7B61FF', marginBottom: 3 }}>{t.home.attemptsPerDay}</div><div style={{ fontSize: 12, color: 'var(--text-primary, #C8CDDF)' }}>{t.home.attemptRestore}</div></div>
-        </div>
+      {showGameSetup && selectedJarvisLevel && (
+        <GameSetupModal
+          selectedLevel={selectedJarvisLevel}
+          onStart={handleGameStart}
+          onClose={() => {
+            setShowGameSetup(false);
+            setSelectedJarvisLevel(null);
+          }}
+        />
       )}
 
-      {/* FloatingCoins — анимация +X ᚙ */}
-      {floatingAmount && (
-        <FloatingCoins amount={floatingAmount} onDone={() => setFloatingAmount(null)} />
-      )}
+      <div style={{ padding: '20px 16px', maxWidth: 500, margin: '0 auto' }}>
+        <div style={{
+          padding: '16px',
+          background: 'var(--color-bg-card, #13161F)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: 16,
+          marginBottom: 24,
+        }}>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 12 }}>
+            <div style={{ fontSize: 44 }}>👤</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 16, fontWeight: 800, color: '#F0F2F8' }}>{user.name || 'Player'}</div>
+              <div style={{ fontSize: 12, color: '#8B92A8', marginTop: 2 }}>
+                {user.wins || 0} побед · {user.losses || 0} поражений
+              </div>
+            </div>
+            <button
+              onClick={() => navigate('/profile')}
+              style={{
+                padding: '8px 16px',
+                background: 'rgba(255,255,255,0.07)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 8,
+                color: '#F0F2F8',
+                cursor: 'pointer',
+                fontSize: 12,
+                fontWeight: 600,
+                fontFamily: 'inherit',
+              }}
+            >
+              Открыть
+            </button>
+          </div>
+
+          <div style={{
+            padding: '10px 12px',
+            background: 'rgba(245,200,66,0.08)',
+            border: '1px solid rgba(245,200,66,0.2)',
+            borderRadius: 10,
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 11, color: '#8B92A8', marginBottom: 4 }}>Баланс</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: '#F5C842', fontFamily: "'JetBrains Mono',monospace" }}>
+              {(user.balance || 0).toLocaleString()} ᚙ
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <NavButton
+            icon="🤖"
+            title="Игра против Jarvis"
+            subtitle="Выбери сложность и начни"
+            onClick={() => setShowJarvisModal(true)}
+            color="#F5C842"
+          />
+          <NavButton
+            icon="⚔️"
+            title="Батлы"
+            subtitle="PvP дуэли с игроками"
+            onClick={() => navigate('/battles')}
+            color="#9B85FF"
+          />
+          <NavButton
+            icon="🏰"
+            title="Войны"
+            subtitle="Коалиции и боевые операции"
+            onClick={() => navigate('/wars')}
+            color="#FF4D6A"
+          />
+          <NavButton
+            icon="🛍️"
+            title="Магазин"
+            subtitle="Скины, фигуры, доски"
+            onClick={() => navigate('/shop')}
+            color="#00D68F"
+          />
+          <NavButton
+            icon="⚙️"
+            title="Настройки"
+            subtitle="Язык, тема, аккаунт"
+            onClick={() => navigate('/settings')}
+            color="transparent"
+          />
+        </div>
+      </div>
     </PageLayout>
   );
 };
 
-// Styles
-const heroStyle: React.CSSProperties = { margin: 'var(--space-s) var(--space-l) 0', padding: 'var(--space-l)', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', position: 'relative', overflow: 'hidden', boxShadow: '0 8px 24px rgba(0,0,0,0.1)' };
-const shopInlineBtn: React.CSSProperties = { width: 32, height: 32, borderRadius: 'var(--radius-s)', background: 'var(--bg-input)', border: '1px solid var(--border)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, cursor: 'pointer', transition: 'all 0.2s', outline: 'none' };
-const attPlusStyle: React.CSSProperties = { width: 24, height: 24, borderRadius: 'var(--radius-round)', background: 'var(--accent)', color: '#000', fontSize: 16, fontWeight: 800, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, boxShadow: '0 2px 8px rgba(245,200,66,0.3)' };
-const stripStyle: React.CSSProperties = { margin: '4px var(--space-l) 0', padding: '14px var(--space-l)', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-l)', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' };
-const gameCardStyle: React.CSSProperties = { background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-l)', padding: 'var(--space-xl) var(--space-l)', cursor: 'pointer', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', transition: 'transform 0.2s', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' };
-const cardIcoWrapper: React.CSSProperties = { width: 60, height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 };
-const cardTitle: React.CSSProperties = { fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 };
-const cardSub: React.CSSProperties = { fontSize: 13, color: 'var(--text-secondary)', marginBottom: 12 };
-const cardTag = (color: string, bg: string): React.CSSProperties => ({ display: 'inline-block', padding: '4px 12px', borderRadius: 'var(--radius-s)', fontSize: 11, fontWeight: 800, letterSpacing: '.06em', color, background: bg, border: `1px solid ${color}44` });
-const secStyle: React.CSSProperties = { fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--text-muted)', padding: 'var(--space-l) var(--space-l) var(--space-s)' };
-const lblStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 4 };
-const toastStyle = (accent: string): React.CSSProperties => ({ position: 'fixed', bottom: 100, left: 16, right: 16, zIndex: 'var(--z-toast)', background: 'var(--bg-card)', border: `1px solid ${accent}66`, borderRadius: 'var(--radius-l)', padding: 'var(--space-l)', boxShadow: '0 12px 32px rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', gap: 14 });
-const tagStyle = (type: 'gold' | 'vi'): React.CSSProperties => {
-  const m = { gold: { background: 'rgba(245,200,66,0.1)', color: 'var(--accent)', borderColor: 'rgba(245,200,66,0.3)' }, vi: { background: 'rgba(123,97,255,0.1)', color: 'var(--accent2)', borderColor: 'rgba(123,97,255,0.3)' } };
-  return { display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 'var(--radius-s)', fontSize: 11, fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', border: '1px solid transparent', ...m[type] };
+interface NavButtonProps {
+  icon: string;
+  title: string;
+  subtitle: string;
+  onClick: () => void;
+  color: string;
+}
+
+const NavButton: React.FC<NavButtonProps> = ({ icon, title, subtitle, onClick, color }) => {
+  const [hovered, setHovered] = useState(false);
+  const bgColor = color === 'transparent' ? 'rgba(255,255,255,0.05)' : `rgba(${hexToRgb(color)}, 0.1)`;
+  const borderColor = color === 'transparent' ? 'rgba(255,255,255,0.1)' : `rgba(${hexToRgb(color)}, 0.3)`;
+  const bgHovered = color === 'transparent' ? 'rgba(255,255,255,0.08)' : `rgba(${hexToRgb(color)}, 0.15)`;
+  const borderHovered = color === 'transparent' ? 'rgba(255,255,255,0.15)' : `rgba(${hexToRgb(color)}, 0.6)`;
+
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        padding: '20px 16px',
+        background: hovered ? bgHovered : bgColor,
+        border: `2px solid ${hovered ? borderHovered : borderColor}`,
+        borderRadius: 16,
+        cursor: 'pointer',
+        fontFamily: 'inherit',
+        transition: 'all 0.2s',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+      }}
+    >
+      <div style={{ fontSize: 40 }}>{icon}</div>
+      <div style={{ textAlign: 'left', flex: 1 }}>
+        <div style={{ fontSize: 16, fontWeight: 800, color: '#F0F2F8' }}>{title}</div>
+        <div style={{ fontSize: 12, color: '#8B92A8', marginTop: 2 }}>{subtitle}</div>
+      </div>
+      <div style={{ fontSize: 20 }}>→</div>
+    </button>
+  );
 };
+
+function hexToRgb(hex: string): string {
+  if (hex === 'transparent') return '255,255,255';
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!result) return '255,255,255';
+  return `${parseInt(result[1], 16)},${parseInt(result[2], 16)},${parseInt(result[3], 16)}`;
+}
