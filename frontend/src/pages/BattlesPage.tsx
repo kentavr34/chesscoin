@@ -86,7 +86,7 @@ export const BattlesPage: React.FC = () => {
               <div key={s.id} onClick={() => navigate('/game/' + s.id)} style={{ ...bcardStyle, padding: 0 }}>
                 <div style={{ padding: '6px 14px', background: 'var(--bg-card, #1C2030)', borderBottom: '1px solid rgba(255,255,255,0.05)', fontSize: 10, fontWeight: 700, color: 'var(--text-secondary, #8B92A8)', textTransform: 'uppercase', letterSpacing: '.06em', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTopLeftRadius: 18, borderTopRightRadius: 18 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: '#EF4444', boxShadow: '0 0 6px #EF4444' }} />
+                    <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: 'var(--battles-page-live-indicator-color, #EF4444)', boxShadow: '0 0 6px var(--battles-page-live-indicator-color, #EF4444)' }} />
                     {t.home.activeGames}
                   </div>
                   <div>
@@ -98,7 +98,7 @@ export const BattlesPage: React.FC = () => {
                      <BPlayer user={mySide?.player} name={mySide?.player.firstName ?? t.common.me} left />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flex: 1 }}>
-                    <div style={{ display: 'inline-block', background: '#EF4444', color: '#FFF', fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 4, letterSpacing: '.05em' }}>LIVE</div>
+                    <div style={{ display: 'inline-block', background: 'var(--battles-page-live-indicator-color, #EF4444)', color: '#FFF', fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 4, letterSpacing: '.05em' }}>LIVE</div>
                     <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 24, fontWeight: 800, color: 'var(--text-primary, #F0F2F8)' }}>
                       {fmtTime(mySide?.timeLeft ?? 300)}
                     </span>
@@ -511,7 +511,7 @@ const bmSheetStyle: React.CSSProperties = {
   maxHeight: '88vh', overflowY: 'auto',
 };
 const bmHandleStyle: React.CSSProperties = {
-  width: 36, height: 4, background: '#2A2F48', borderRadius: 2, margin: '4px auto 0',
+  width: 36, height: 4, background: 'var(--battles-modal-handle-color, #2A2F48)', borderRadius: 2, margin: '4px auto 0',
 };
 const bmSectionLbl: React.CSSProperties = {
   fontSize: 10, fontWeight: 700, letterSpacing: '.09em',

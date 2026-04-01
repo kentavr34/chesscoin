@@ -397,6 +397,10 @@
   --battle-history-page-info-color: #6A7090;
   --battle-history-loader-color: #7B61FF;
 
+  /* BattlesPage Colors (L1) */
+  --battles-page-live-indicator-color: #EF4444;
+  --battles-modal-handle-color: #2A2F48;
+
   /* Responsive Breakpoints (L2) */
   --breakpoint-xs: 320px;
   --breakpoint-sm: 480px;
@@ -686,6 +690,10 @@
     /* BattleHistoryPage Light Mode Adjustments */
     --battle-history-page-info-color: #7A8295;
     --battle-history-loader-color: #5B21B6;
+
+    /* BattlesPage Light Mode Adjustments */
+    --battles-page-live-indicator-color: #C41C3B;
+    --battles-modal-handle-color: #C8C8D8;
 
     /* StatComponents Light Mode Adjustments */
     --stat-circle-bg-stroke: #5A6378;
@@ -1028,6 +1036,10 @@
   /* BattleHistoryPage Light Mode via data-theme */
   --battle-history-page-info-color: #7A8295;
   --battle-history-loader-color: #5B21B6;
+
+  /* BattlesPage Light Mode via data-theme */
+  --battles-page-live-indicator-color: #C41C3B;
+  --battles-modal-handle-color: #C8C8D8;
 
   /* StatComponents Light Mode via data-theme */
   --stat-circle-bg-stroke: #5A6378;
