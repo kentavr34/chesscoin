@@ -370,6 +370,15 @@
   /* Toast Colors (L1) */
   --toast-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 
+  /* MiniProfileSheet Colors (L1) */
+  --mini-profile-overlay-bg: rgba(0, 0, 0, 0.5);
+  --mini-profile-sheet-border: rgba(255, 255, 255, 0.1);
+  --mini-profile-ghost-btn-border: rgba(255, 255, 255, 0.13);
+
+  /* WaitingForOpponent Colors (L1) */
+  --whatsapp-color: #25D366;
+  --whatsapp-bg: rgba(37, 211, 102, 0.1);
+
   /* Responsive Breakpoints (L2) */
   --breakpoint-xs: 320px;
   --breakpoint-sm: 480px;
@@ -632,6 +641,15 @@
 
     /* Toast Light Mode Adjustments */
     --toast-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+
+    /* MiniProfileSheet Light Mode Adjustments */
+    --mini-profile-overlay-bg: rgba(0, 0, 0, 0.4);
+    --mini-profile-sheet-border: rgba(0, 0, 0, 0.1);
+    --mini-profile-ghost-btn-border: rgba(0, 0, 0, 0.12);
+
+    /* WaitingForOpponent Light Mode Adjustments */
+    --whatsapp-color: #1F7F40;
+    --whatsapp-bg: rgba(31, 127, 64, 0.1);
 
     /* StatComponents Light Mode Adjustments */
     --stat-circle-bg-stroke: #5A6378;
@@ -947,6 +965,15 @@
 
   /* Toast Light Mode via data-theme */
   --toast-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+
+  /* MiniProfileSheet Light Mode via data-theme */
+  --mini-profile-overlay-bg: rgba(0, 0, 0, 0.4);
+  --mini-profile-sheet-border: rgba(0, 0, 0, 0.1);
+  --mini-profile-ghost-btn-border: rgba(0, 0, 0, 0.12);
+
+  /* WaitingForOpponent Light Mode via data-theme */
+  --whatsapp-color: #1F7F40;
+  --whatsapp-bg: rgba(31, 127, 64, 0.1);
 
   /* StatComponents Light Mode via data-theme */
   --stat-circle-bg-stroke: #5A6378;

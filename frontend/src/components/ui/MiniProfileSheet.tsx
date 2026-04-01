@@ -46,7 +46,7 @@ export const MiniProfileSheet: React.FC<Props> = ({ userId, onClose }) => {
       {/* Backdrop */}
       <div
         onClick={onClose}
-        style={{ position: 'fixed', inset: 0, zIndex: "var(--z-modal, 300)", background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
+        style={{ position: 'fixed', inset: 0, zIndex: "var(--z-modal, 300)", background: 'var(--mini-profile-overlay-bg, rgba(0,0,0,0.5))', backdropFilter: 'blur(4px)' }}
       />
 
       {/* Sheet */}
@@ -56,7 +56,7 @@ export const MiniProfileSheet: React.FC<Props> = ({ userId, onClose }) => {
         style={{
           position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 401,
           background: 'var(--bg-card, #1C2030)',
-          border: '1px solid rgba(255,255,255,0.1)',
+          border: '1px solid var(--mini-profile-sheet-border, rgba(255,255,255,0.1))',
           borderRadius: '24px 24px 0 0',
           padding: '12px 20px 32px',
           paddingBottom: 'max(32px, env(safe-area-inset-bottom, 32px))',
@@ -164,7 +164,7 @@ const btnGold: React.CSSProperties = {
 };
 const btnGhost: React.CSSProperties = {
   flex: 1, padding: '12px 0', background: 'transparent',
-  border: '1px solid rgba(255,255,255,0.13)', borderRadius: 14,
+  border: '1px solid var(--mini-profile-ghost-btn-border, rgba(255,255,255,0.13))', borderRadius: 14,
   color: 'var(--color-text-secondary, #8B92A8)',
   fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
 };

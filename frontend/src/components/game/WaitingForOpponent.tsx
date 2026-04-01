@@ -119,7 +119,7 @@ export const WaitingForOpponent: React.FC<Props> = ({ session }) => {
           <button onClick={handleShare} style={shareBtn('var(--color-purple-dark, #7B61FF)', 'rgba(123,97,255,0.12)')}>
             ✈ Telegram
           </button>
-          <button onClick={handleShareWhatsApp} style={shareBtn('#25D366', 'rgba(37,211,102,0.1)')}>
+          <button onClick={handleShareWhatsApp} style={shareBtn('var(--whatsapp-color, #25D366)', 'var(--whatsapp-bg, rgba(37,211,102,0.1))')}>
             WhatsApp
           </button>
         </div>
