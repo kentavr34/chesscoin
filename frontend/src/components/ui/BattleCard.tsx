@@ -71,7 +71,7 @@ export const BattleCard: React.FC<BattleCardProps> = React.memo(({
   return (
     <div style={{
       padding: compact ? '8px 0' : '12px 0',
-      borderBottom: '1px solid rgba(255,255,255,0.05)',
+      borderBottom: `1px solid var(--battle-card-border, rgba(255,255,255,0.05))`,
     }}>
       {label && (
         <div style={{ fontSize: 9, color: 'var(--color-text-muted, #4A5270)', letterSpacing: '.06em', textTransform: 'uppercase' as const, marginBottom: 6 }}>
@@ -103,7 +103,7 @@ export const BattleCard: React.FC<BattleCardProps> = React.memo(({
 
           {/* W3: Счётчик зрителей */}
           {spectatorCount !== undefined && spectatorCount > 0 && (
-            <div style={{ fontSize: 8, color: 'var(--text-muted, #4A5270)', marginTop: 2 }}>
+            <div style={{ fontSize: 8, color: 'var(--color-text-muted, #4A5270)', marginTop: 2 }}>
               👁 {spectatorCount}
             </div>
           )}
@@ -113,7 +113,7 @@ export const BattleCard: React.FC<BattleCardProps> = React.memo(({
             {status === 'IN_PROGRESS' && onSpectate && sessionId && (
               <button
                 onClick={onSpectate}
-                style={{ padding: window.innerWidth < 480 ? '2px 6px' : '4px 8px', background: 'rgba(245,200,66,0.1)', color: 'var(--accent, #F5C842)', border: '1px solid rgba(245,200,66,0.25)', borderRadius: 7, fontSize: window.innerWidth < 480 ? 9 : 10, cursor: 'pointer', fontFamily: 'inherit' }}
+                style={{ padding: window.innerWidth < 480 ? '2px 6px' : '4px 8px', background: 'var(--battle-card-spectate-bg, rgba(245,200,66,0.1))', color: 'var(--color-accent, #F5C842)', border: `1px solid var(--battle-card-spectate-border, rgba(245,200,66,0.25))`, borderRadius: 7, fontSize: window.innerWidth < 480 ? 9 : 10, cursor: 'pointer', fontFamily: 'inherit' }}
               >
                 👁 {t.game?.watch ?? 'Watch'}
               </button>
@@ -122,7 +122,7 @@ export const BattleCard: React.FC<BattleCardProps> = React.memo(({
               <button
                 onClick={onSave}
                 disabled={saving}
-                style={{ padding: window.innerWidth < 480 ? '2px 6px' : '4px 8px', background: 'rgba(123,97,255,0.12)', color: '#9B85FF', border: '1px solid rgba(123,97,255,0.25)', borderRadius: 7, fontSize: window.innerWidth < 480 ? 9 : 10, cursor: 'pointer', fontFamily: 'inherit', opacity: saving ? 0.6 : 1 }}
+                style={{ padding: window.innerWidth < 480 ? '2px 6px' : '4px 8px', background: 'var(--battle-card-save-bg, rgba(123,97,255,0.12))', color: 'var(--battle-card-save-color, #9B85FF)', border: `1px solid var(--battle-card-save-border, rgba(123,97,255,0.25))`, borderRadius: 7, fontSize: window.innerWidth < 480 ? 9 : 10, cursor: 'pointer', fontFamily: 'inherit', opacity: saving ? 0.6 : 1 }}
               >
                 {saving ? '...' : t.battleCard.save}
               </button>

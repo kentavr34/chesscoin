@@ -177,6 +177,14 @@
   --move-announcer-sub-text-color: rgba(255, 255, 255, 0.7);
   --move-announcer-sub-text-shadow: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.9));
 
+  /* BattleCard Colors (L1) */
+  --battle-card-border: rgba(255, 255, 255, 0.05);
+  --battle-card-spectate-bg: rgba(245, 200, 66, 0.1);
+  --battle-card-spectate-border: rgba(245, 200, 66, 0.25);
+  --battle-card-save-bg: rgba(123, 97, 255, 0.12);
+  --battle-card-save-color: #9B85FF;
+  --battle-card-save-border: rgba(123, 97, 255, 0.25);
+
   /* Responsive Breakpoints (L2) */
   --breakpoint-xs: 320px;
   --breakpoint-sm: 480px;
@@ -311,6 +319,14 @@
     --move-announcer-main-text-shadow: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
     --move-announcer-sub-text-color: rgba(26, 28, 34, 0.8);
     --move-announcer-sub-text-shadow: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.2));
+
+    /* BattleCard Light Mode Adjustments */
+    --battle-card-border: rgba(0, 0, 0, 0.08);
+    --battle-card-spectate-bg: rgba(212, 168, 32, 0.08);
+    --battle-card-spectate-border: rgba(212, 168, 32, 0.2);
+    --battle-card-save-bg: rgba(109, 40, 217, 0.1);
+    --battle-card-save-color: #5B21B6;
+    --battle-card-save-border: rgba(109, 40, 217, 0.2);
   }
 }
 
@@ -440,6 +456,14 @@
   --move-announcer-main-text-shadow: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
   --move-announcer-sub-text-color: rgba(26, 28, 34, 0.8);
   --move-announcer-sub-text-shadow: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.2));
+
+  /* BattleCard Light Mode via data-theme */
+  --battle-card-border: rgba(0, 0, 0, 0.08);
+  --battle-card-spectate-bg: rgba(212, 168, 32, 0.08);
+  --battle-card-spectate-border: rgba(212, 168, 32, 0.2);
+  --battle-card-save-bg: rgba(109, 40, 217, 0.1);
+  --battle-card-save-color: #5B21B6;
+  --battle-card-save-border: rgba(109, 40, 217, 0.2);
 
   background: var(--color-bg-dark);
   color: var(--color-text-primary);
