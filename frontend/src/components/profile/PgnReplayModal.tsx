@@ -29,9 +29,9 @@ export const PgnReplayModal: React.FC<{ pgn: string; title?: string; sessionId?:
   const currentFen = fens[step] ?? 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: "var(--z-modal, 300)", display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+    <div style={{ position: 'fixed', inset: 0, background: 'var(--pgn-replay-overlay-bg, rgba(0,0,0,0.85))', backdropFilter: 'blur(8px)', zIndex: "var(--z-modal, 300)", display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
       onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div style={{ background: 'var(--color-bg-card, #13161E)', borderRadius: 24, padding: 20, width: '100%', maxWidth: 420, border: 'var(--color-border-light, 1px solid rgba(255,255,255,0.08))' }}>
+      <div style={{ background: 'var(--color-bg-card, #13161E)', borderRadius: 24, padding: 20, width: '100%', maxWidth: 420, border: '1px solid var(--pgn-replay-modal-border, rgba(255,255,255,0.1))' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
           <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-accent, #F5C842)' }}>♟ {title ?? 'Game replay'}</div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary, #8B92A8)', fontSize: 16, cursor: 'pointer', padding: 0 }}>✕</button>
@@ -53,7 +53,7 @@ export const PgnReplayModal: React.FC<{ pgn: string; title?: string; sessionId?:
             { label: '▶', action: () => setStep(s => Math.min(fens.length - 1, s + 1)) },
             { label: '⏭', action: () => setStep(fens.length - 1) },
           ].map(({ label, action }) => (
-            <button key={label} onClick={action} style={{ flex: 1, padding: '10px 0', background: 'var(--bg-input, #232840)', border: 'none', borderRadius: 10, color: 'var(--text-primary, #F0F2F8)', fontSize: 16, cursor: 'pointer', fontFamily: 'inherit' }}>
+            <button key={label} onClick={action} style={{ flex: 1, padding: '10px 0', background: 'var(--color-bg-input, #232840)', border: 'none', borderRadius: 10, color: 'var(--color-text-primary, #F0F2F8)', fontSize: 16, cursor: 'pointer', fontFamily: 'inherit' }}>
               {label}
             </button>
           ))}
@@ -68,7 +68,7 @@ export const PgnReplayModal: React.FC<{ pgn: string; title?: string; sessionId?:
                 setSaved(true);
               } catch {}
             }}
-            style={{ width: '100%', marginTop: 8, padding: '9px', background: saved ? 'rgba(0,214,143,0.1)' : 'rgba(155,133,255,0.1)', border: `1px solid ${saved ? 'rgba(0,214,143,0.2)' : 'rgba(155,133,255,0.2)'}`, borderRadius: 10, color: saved ? 'var(--color-green, #00D68F)' : 'var(--color-purple, #9B85FF)', fontSize: 12, fontWeight: 600, cursor: saved ? 'default' : 'pointer', fontFamily: 'inherit' }}
+            style={{ width: '100%', marginTop: 8, padding: '9px', background: saved ? 'var(--pgn-replay-save-saved-bg, rgba(0,214,143,0.1))' : 'var(--pgn-replay-save-unsaved-bg, rgba(155,133,255,0.1))', border: `1px solid ${saved ? 'var(--pgn-replay-save-saved-border, rgba(0,214,143,0.2))' : 'var(--pgn-replay-save-unsaved-border, rgba(155,133,255,0.2))'}`, borderRadius: 10, color: saved ? 'var(--color-green, #00D68F)' : 'var(--color-purple, #9B85FF)', fontSize: 12, fontWeight: 600, cursor: saved ? 'default' : 'pointer', fontFamily: 'inherit' }}
           >
             {saved ? '✓ Saved' : '💾 Save game'}
           </button>

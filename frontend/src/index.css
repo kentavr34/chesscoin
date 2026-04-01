@@ -335,6 +335,23 @@
   --avatar-border-subtle: rgba(255, 255, 255, 0.12);
   --avatar-border-light: rgba(255, 255, 255, 0.18);
 
+  /* PgnReplayModal Colors (L1) */
+  --pgn-replay-overlay-bg: rgba(0, 0, 0, 0.85);
+  --pgn-replay-modal-border: rgba(255, 255, 255, 0.1);
+  --pgn-replay-save-unsaved-bg: rgba(155, 133, 255, 0.1);
+  --pgn-replay-save-unsaved-border: rgba(155, 133, 255, 0.2);
+  --pgn-replay-save-saved-bg: rgba(0, 214, 143, 0.1);
+  --pgn-replay-save-saved-border: rgba(0, 214, 143, 0.2);
+
+  /* BadgeDetailModal Colors (L1) */
+  --badge-overlay-bg: rgba(0, 0, 0, 0.75);
+  --badge-color-player: #00B4D8;
+  --badge-color-warrior: #4CAF50;
+  --badge-color-professional: #FF9F43;
+  --badge-color-epic: #FF6B6B;
+  --badge-color-legendary: #E040FB;
+  --badge-btn-border: rgba(255, 255, 255, 0.1);
+
   /* Responsive Breakpoints (L2) */
   --breakpoint-xs: 320px;
   --breakpoint-sm: 480px;
@@ -612,6 +629,23 @@
     --prompt-btn-active-bg: rgba(109, 40, 217, 0.12);
     --prompt-btn-border: rgba(109, 40, 217, 0.25);
     --prompt-cancel-btn-border: rgba(0, 0, 0, 0.08);
+
+    /* PgnReplayModal Light Mode Adjustments */
+    --pgn-replay-overlay-bg: rgba(0, 0, 0, 0.5);
+    --pgn-replay-modal-border: rgba(0, 0, 0, 0.12);
+    --pgn-replay-save-unsaved-bg: rgba(109, 40, 217, 0.08);
+    --pgn-replay-save-unsaved-border: rgba(109, 40, 217, 0.15);
+    --pgn-replay-save-saved-bg: rgba(0, 163, 102, 0.08);
+    --pgn-replay-save-saved-border: rgba(0, 163, 102, 0.15);
+
+    /* BadgeDetailModal Light Mode Adjustments */
+    --badge-overlay-bg: rgba(0, 0, 0, 0.5);
+    --badge-color-player: #0097CC;
+    --badge-color-warrior: #388E3C;
+    --badge-color-professional: #E67E22;
+    --badge-color-epic: #E53935;
+    --badge-color-legendary: #C41C3B;
+    --badge-btn-border: rgba(0, 0, 0, 0.1);
   }
 }
 
@@ -796,6 +830,14 @@
   --attempts-border-light: rgba(0, 0, 0, 0.08);
   --attempts-close-btn-border: rgba(0, 0, 0, 0.08);
   --attempts-accent-drop-shadow: drop-shadow(0 0 8px rgba(212, 168, 32, 0.6));
+
+  /* PgnReplayModal Light Mode via data-theme */
+  --pgn-replay-overlay-bg: rgba(0, 0, 0, 0.5);
+  --pgn-replay-modal-border: rgba(0, 0, 0, 0.12);
+  --pgn-replay-save-unsaved-bg: rgba(109, 40, 217, 0.08);
+  --pgn-replay-save-unsaved-border: rgba(109, 40, 217, 0.15);
+  --pgn-replay-save-saved-bg: rgba(0, 163, 102, 0.08);
+  --pgn-replay-save-saved-border: rgba(0, 163, 102, 0.15);
 
   /* PageLayout Light Mode via data-theme */
   --page-layout-overlay-bg: rgba(0, 0, 0, 0.6);
