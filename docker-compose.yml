@@ -109,14 +109,14 @@ services:
       DOMAIN: ${DOMAIN}
       # OPT-10: Worker pool size (уменьшено до 2 для экономии ресурса на 2GB VPS)
       STOCKFISH_POOL_SIZE: ${STOCKFISH_POOL_SIZE:-2}
-      # OPT-10: Node.js heap limit (предотвращает OOM)
-      NODE_OPTIONS: "--max-old-space-size=512"
+      # OPT-10: Node.js heap limit (предотвращает OOM) — уменьшено для 2GB VPS
+      NODE_OPTIONS: "--max-old-space-size=384"
     # OPT-10: Resource limits
     deploy:
       resources:
         limits:
           cpus: '0.8'
-          memory: 768M
+          memory: 512M
         reservations:
           cpus: '0.2'
           memory: 256M
@@ -149,7 +149,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 150M
+          memory: 128M
 
   # ─── Telegram Bot ────────────────────────
   bot:
@@ -183,7 +183,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 250M
+          memory: 200M
 
   # ─── Nginx ───────────────────────────────
   nginx:
