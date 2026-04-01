@@ -73,22 +73,22 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
       <div style={overlayStyle}>
         <div style={launchSheetStyle}>
           {/* Glow ring */}
-          <div style={{ position: 'relative', width: 100, height: 100, margin: '0 auto 24px' }}>
+          <div style={{ position: 'relative', width: 100, height: 100, margin: `0 auto var(--gap-xl)` }}>
             <div style={glowRingStyle} />
             <div style={innerCircleStyle}>
-              <span style={{ fontSize: 42 }}>🤖</span>
+              <span style={{ fontSize: 'var(--icon-size-2xl)' }}>🤖</span>
             </div>
           </div>
 
-          <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 22, fontWeight: 800, color: 'var(--color-accent, #F5C842)', textAlign: 'center', marginBottom: 6 }}>
+          <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 'var(--font-size-xl)', fontWeight: 'var(--font-weight-extrabold)', color: 'var(--color-accent, #F5C842)', textAlign: 'center', marginBottom: 'var(--gap-xs)' }}>
             Launching battle!
           </div>
-          <div style={{ fontSize: 13, color: 'var(--color-text-secondary, #8B92A8)', textAlign: 'center', marginBottom: 28 }}>
+          <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary, #8B92A8)', textAlign: 'center', marginBottom: 'var(--gap-2xl)' }}>
             J.A.R.V.I.S {selectedLevel.name} · {time < 60 ? `${time} min` : '1 hr'}
           </div>
 
           {/* VS banner */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginBottom: 28 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--gap-lg)', marginBottom: 'var(--gap-2xl)' }}>
             <div style={playerChipStyle}>
               {resolvedColor === 'white' ? '♔' : '♚'} You
             </div>
@@ -101,11 +101,11 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
           {/* Countdown */}
           <div style={{ textAlign: 'center' }}>
             <div style={countdownCircleStyle}>
-              <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 32, fontWeight: 800, color: 'var(--color-accent, #F5C842)' }}>
+              <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 'var(--font-size-2xl)', fontWeight: 'var(--font-weight-extrabold)', color: 'var(--color-accent, #F5C842)' }}>
                 {countdown}
               </span>
             </div>
-            <div style={{ fontSize: 11, color: 'var(--color-text-muted, #4A5270)', marginTop: 10, letterSpacing: '.06em' }}>
+            <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted, #4A5270)', marginTop: 'var(--gap-sm)', letterSpacing: '.06em' }}>
               SECONDS TO START
             </div>
           </div>
@@ -122,19 +122,19 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
       )}
       <div style={sheetStyle} onClick={(e) => e.stopPropagation()}>
         {/* ── HEADER (fixed) ────────────────────────────────────────────────────────── */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, paddingBottom: 8, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--gap-md)', flexShrink: 0, paddingBottom: 'var(--gap-xs)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
           <button onClick={onClose} style={backBtnStyle}>←</button>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-text-primary, #F0F2F8)' }}>
+            <div style={{ fontSize: 'var(--font-size-md)', fontWeight: 'var(--font-weight-extrabold)', color: 'var(--color-text-primary, #F0F2F8)' }}>
               🤖 {selectedLevel.name}
             </div>
-            <div style={{ fontSize: 11, color: 'var(--color-accent, #F5C842)', marginTop: 2 }}>
+            <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-accent, #F5C842)', marginTop: 2 }}>
               Level {selectedLevel.level} / 20
             </div>
           </div>
           <button
             onClick={jarvisInfo.open}
-            style={{ ...backBtnStyle, fontSize: 14, color: 'var(--color-text-secondary, #8B92A8)' }}
+            style={{ ...backBtnStyle, fontSize: 'var(--font-size-base)', color: 'var(--color-text-secondary, #8B92A8)' }}
             title="About J.A.R.V.I.S"
           >
             ℹ️
@@ -143,12 +143,12 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
         </div>
 
         {/* ── CONTENT (scrollable) ───────────────────────────────────────────────────── */}
-        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingRight: 2, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingRight: 2, display: 'flex', flexDirection: 'column', gap: 'var(--gap-md)' }}>
           {/* Color selection */}
           <div>
             <div style={sectionLbl}>{t.gameSetup.color}</div>
             <div className="grid-auto-2-3" style={{
-              gap: 6,
+              gap: 'var(--gap-xs)',
             }}>
               {(['random', 'white', 'black'] as ColorChoice[]).map((c) => (
                 <button
@@ -156,10 +156,10 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
                   onClick={() => setColor(c)}
                   style={colorBtnStyle(color === c, c)}
                 >
-                  <span style={{ fontSize: 22, display: 'block', marginBottom: 6 }}>
+                  <span style={{ fontSize: 'var(--font-size-xl)', display: 'block', marginBottom: 'var(--gap-xs)' }}>
                     {c === 'random' ? '🎲' : c === 'white' ? '♔' : '♚'}
                   </span>
-                  <span style={{ fontSize: 11, fontWeight: 700 }}>
+                  <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 'var(--font-weight-bold)' }}>
                     {c === 'random' ? t.gameSetup.random.replace('🎲 ','') : c === 'white' ? t.gameSetup.white.replace('☀️ ','') : t.gameSetup.black.replace('🌙 ','')}
                   </span>
                 </button>
@@ -171,7 +171,7 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
           <div>
             <div style={sectionLbl}>{t.gameSetup.duration}</div>
             <div className="grid-auto-2-3" style={{
-              gap: 6,
+              gap: 'var(--gap-xs)',
             }}>
               {TIME_OPTIONS.map((opt) => (
                 <button
@@ -179,10 +179,10 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
                   onClick={() => setTime(opt)}
                   style={timeBtnStyle(time === opt)}
                 >
-                  <span style={{ fontSize: 14, display: 'block', marginBottom: 2 }}>
+                  <span style={{ fontSize: 'var(--font-size-base)', display: 'block', marginBottom: 'var(--gap-xs)' }}>
                     {opt === 1 ? '⚡' : opt === 3 ? '🔥' : opt === 5 ? '♟' : opt === 15 ? '🎯' : opt === 30 ? '🏆' : '👑'}
                   </span>
-                  <span style={{ fontSize: 10 }}>
+                  <span style={{ fontSize: 'var(--font-size-xs)' }}>
                     {opt < 60 ? `${opt} min` : '1 hr'}
                   </span>
                 </button>
@@ -192,8 +192,8 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
         </div>
 
         {/* ── FOOTER (fixed) ────────────────────────────────────────────────────────── */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0, borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 8 }}>
-          <div style={{ padding: 10, background: 'rgba(123,97,255,0.08)', border: '1px solid rgba(123,97,255,0.15)', borderRadius: 10, fontSize: 12, color: '#8B92A8', lineHeight: 1.5 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-sm)', flexShrink: 0, borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 'var(--gap-sm)' }}>
+          <div style={{ padding: 'var(--card-padding-md)', background: 'rgba(123,97,255,0.08)', border: '1px solid rgba(123,97,255,0.15)', borderRadius: 'var(--radius-m)', fontSize: 'var(--font-size-sm)', color: '#8B92A8', lineHeight: 'var(--line-height-normal)' }}>
             🏆 Выигрывай уровни по порядку. Каждый выигранный уровень дарует значок на профиль.
           </div>
           <button onClick={handleStart} style={startBtnStyle}>
@@ -216,24 +216,24 @@ const overlayStyle: React.CSSProperties = {
   paddingBottom: 'max(82px, env(safe-area-inset-bottom, 82px))',
 };
 const sheetStyle: React.CSSProperties = {
-  width: '100%', maxWidth: 'clamp(280px, 90vw, 480px)',
+  width: '100%', maxWidth: 'clamp(280px, 90vw, var(--modal-width-lg))',
   background: 'var(--color-bg-card, #13161F)',
   border: '1px solid var(--gamesetup-sheet-border, rgba(255,255,255,0.1))',
   borderBottom: 'none',
-  borderRadius: '24px 24px 0 0',
-  padding: '16px 16px',
+  borderRadius: 'var(--radius-xl)',
+  padding: 'var(--card-padding-lg)',
   maxHeight: '80vh',
   overflow: 'hidden',
   display: 'flex',
   flexDirection: 'column',
-  gap: '12px',
+  gap: 'var(--gap-md)',
 };
 const launchSheetStyle: React.CSSProperties = {
-  width: '100%', maxWidth: 'clamp(260px, 90vw, 360px)',
+  width: '100%', maxWidth: 'clamp(260px, 90vw, var(--modal-width-md))',
   background: 'var(--color-bg-card, #13161F)',
   border: 'var(--modal-launch-border, 1px solid rgba(245,200,66,0.2))',
-  borderRadius: 28,
-  padding: '40px 28px 36px',
+  borderRadius: 'calc(var(--radius-xl) + 4px)',
+  padding: 'var(--card-padding-xl) var(--card-padding-lg)',
   margin: 'auto',
   boxShadow: 'var(--modal-launch-shadow, 0 0 80px rgba(245,200,66,0.12), 0 30px 60px rgba(0,0,0,0.5))',
   position: 'relative',
@@ -253,11 +253,11 @@ const innerCircleStyle: React.CSSProperties = {
   display: 'flex', alignItems: 'center', justifyContent: 'center',
 };
 const playerChipStyle: React.CSSProperties = {
-  padding: '8px 16px',
+  padding: `var(--input-padding-y) var(--button-padding-x-md)`,
   background: 'var(--modal-player-chip-bg, rgba(245,200,66,0.1))',
   border: '1px solid var(--modal-player-chip-border, rgba(245,200,66,0.25))',
-  borderRadius: 12,
-  fontSize: 14, fontWeight: 700,
+  borderRadius: 'var(--radius-m)',
+  fontSize: 'var(--font-size-base)', fontWeight: 'var(--font-weight-bold)',
   color: 'var(--color-accent, #F5C842)',
 };
 const countdownCircleStyle: React.CSSProperties = {
@@ -268,52 +268,53 @@ const countdownCircleStyle: React.CSSProperties = {
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   margin: '0 auto',
   boxShadow: 'var(--modal-countdown-shadow, 0 0 30px rgba(245,200,66,0.2))',
+  fontSize: 'var(--font-size-2xl)',
 };
 const backBtnStyle: React.CSSProperties = {
   width: 44, height: 44, borderRadius: '50%',
   background: 'var(--color-border, rgba(255,255,255,0.07))',
   border: '1px solid var(--gamesetup-back-btn-border, rgba(255,255,255,0.1))',
-  color: 'var(--color-text-primary, #F0F2F8)', fontSize: 16, cursor: 'pointer',
+  color: 'var(--color-text-primary, #F0F2F8)', fontSize: 'var(--font-size-base)', cursor: 'pointer',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   fontFamily: 'inherit', flexShrink: 0,
 };
 const sectionLbl: React.CSSProperties = {
-  fontSize: 9,
-  fontWeight: 700,
+  fontSize: 'var(--font-size-xs)',
+  fontWeight: 'var(--font-weight-bold)',
   letterSpacing: '.09em',
   textTransform: 'uppercase',
   color: 'var(--color-text-muted, #4A5270)',
-  marginBottom: 6,
+  marginBottom: 'var(--gap-xs)',
 };
 const colorBtnStyle = (active: boolean, c: ColorChoice): React.CSSProperties => ({
-  padding: '12px 6px', borderRadius: 10, cursor: 'pointer',
+  padding: `var(--card-padding-md) var(--gap-xs)`, borderRadius: 'var(--radius-m)', cursor: 'pointer',
   minHeight: 58,
   background: active ? 'var(--modal-color-active-bg, rgba(245,200,66,0.1))' : 'var(--color-bg-card, #1C2030)',
   border: `2px solid ${active ? 'var(--color-accent, #F5C842)' : 'var(--color-border, rgba(255,255,255,0.07))'}`,
   color: active ? 'var(--color-accent, #F5C842)' : 'var(--color-text-secondary, #8B92A8)',
   textAlign: 'center',
-  transition: 'all 0.15s',
+  transition: `all var(--transition-fast)`,
   fontFamily: 'inherit',
-  fontSize: 11,
-  fontWeight: 600,
+  fontSize: 'var(--font-size-xs)',
+  fontWeight: 'var(--font-weight-semibold)',
   transform: active ? 'scale(1.03)' : 'scale(1)',
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
-  gap: 4,
+  gap: 'var(--gap-xs)',
 });
 const timeBtnStyle = (active: boolean): React.CSSProperties => ({
-  padding: '10px 6px',
-  borderRadius: 10,
+  padding: `var(--card-padding-md) var(--gap-xs)`,
+  borderRadius: 'var(--radius-m)',
   cursor: 'pointer',
   minHeight: 50,
   background: active ? 'var(--modal-time-active-bg, rgba(123,97,255,0.15))' : 'var(--color-bg-card, #1C2030)',
   border: `1px solid ${active ? 'var(--modal-time-active-border, rgba(123,97,255,0.4))' : 'var(--color-border, rgba(255,255,255,0.07))'}`,
   color: active ? 'var(--modal-time-active-color, #9B85FF)' : 'var(--color-text-secondary, #8B92A8)',
-  fontSize: 10,
-  fontWeight: 600,
-  transition: 'all 0.15s',
+  fontSize: 'var(--font-size-xs)',
+  fontWeight: 'var(--font-weight-semibold)',
+  transition: `all var(--transition-fast)`,
   fontFamily: 'inherit',
   textAlign: 'center' as const,
   transform: active ? 'scale(1.03)' : 'scale(1)',
@@ -321,20 +322,20 @@ const timeBtnStyle = (active: boolean): React.CSSProperties => ({
   flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
-  gap: 2,
+  gap: 'var(--gap-xs)',
 });
 const startBtnStyle: React.CSSProperties = {
   width: '100%',
-  padding: '14px 12px',
-  minHeight: 48,
+  padding: `var(--input-padding-y) var(--button-padding-x-md)`,
+  minHeight: 'var(--button-height-md)',
   background: 'var(--color-accent, #F5C842)',
   border: 'none',
-  borderRadius: 12,
+  borderRadius: 'var(--radius-m)',
   color: 'var(--color-bg-dark, #0B0D11)',
-  fontSize: 15,
-  fontWeight: 800,
+  fontSize: 'var(--font-size-base)',
+  fontWeight: 'var(--font-weight-extrabold)',
   cursor: 'pointer',
   fontFamily: 'inherit',
-  transition: 'all 0.2s',
+  transition: `all var(--transition-normal)`,
   boxShadow: 'var(--modal-start-btn-shadow, 0 4px 20px rgba(245,200,66,0.2))',
 };
