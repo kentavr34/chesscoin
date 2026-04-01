@@ -149,7 +149,7 @@ const rootStyle: React.CSSProperties = {
 const cardStyle: React.CSSProperties = {
   width: '100%', maxWidth: 340,
   background: 'var(--color-bg-card, #161927)',
-  border: '1px solid rgba(255,255,255,0.1)',
+  border: '1px solid var(--waiting-card-border, rgba(255,255,255,0.1))',
   borderRadius: 24, padding: 24,
 };
 const pulseWrap: React.CSSProperties = {
@@ -159,29 +159,33 @@ const pulseWrap: React.CSSProperties = {
 };
 const pulseDot: React.CSSProperties = {
   position: 'absolute', inset: 0, borderRadius: '50%',
-  border: '2px solid rgba(var(--color-purple), 0.5)',
+  border: '2px solid var(--waiting-pulse-dot-border, rgba(155, 133, 255, 0.5))',
   animation: 'pulse-ring 1.4s ease-out infinite',
 };
 const codeBlock: React.CSSProperties = {
-  background: 'rgba(var(--color-accent), 0.06)',
-  border: '1px solid rgba(var(--color-accent), 0.15)',
+  background: 'var(--waiting-code-block-bg, rgba(245, 200, 66, 0.06))',
+  border: '1px solid var(--waiting-code-block-border, rgba(245, 200, 66, 0.15))',
   borderRadius: 16, padding: '14px 16px',
   textAlign: 'center', marginBottom: 14,
 };
 const linkBox: React.CSSProperties = {
   display: 'flex', alignItems: 'center', gap: 8,
-  background: 'rgba(155, 133, 255, 0.08)',
-  border: '1px solid rgba(155, 133, 255, 0.15)',
+  background: 'var(--waiting-link-box-bg, rgba(155, 133, 255, 0.08))',
+  border: '1px solid var(--waiting-link-box-border, rgba(155, 133, 255, 0.15))',
   borderRadius: 12, padding: '10px 12px',
 };
-const iconBtn = (color: string): React.CSSProperties => ({
-  flexShrink: 0, width: 32, height: 32, borderRadius: 8,
-  background: `rgba(${color === 'var(--green, #00D68F)' ? '0,214,143' : '245,200,66'},0.12)`,
-  border: `1px solid ${color}30`,
-  color, fontSize: 16, cursor: 'pointer', fontFamily: 'inherit',
-  display: 'flex', alignItems: 'center', justifyContent: 'center',
-  transition: 'all .2s',
-});
+const iconBtn = (color: string): React.CSSProperties => {
+  const isGreen = color.includes('00D68F') || color.includes('green');
+  const bg = isGreen ? 'var(--waiting-icon-btn-green-bg, rgba(0, 214, 143, 0.12))' : 'var(--waiting-icon-btn-accent-bg, rgba(245, 200, 66, 0.12))';
+  return {
+    flexShrink: 0, width: 32, height: 32, borderRadius: 8,
+    background: bg,
+    border: `1px solid ${color}30`,
+    color, fontSize: 16, cursor: 'pointer', fontFamily: 'inherit',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    transition: 'all .2s',
+  };
+};
 const shareBtn = (color: string, bg: string): React.CSSProperties => ({
   flex: 1, padding: '11px 8px',
   background: bg, color,
@@ -193,7 +197,7 @@ const shareBtn = (color: string, bg: string): React.CSSProperties => ({
 const cancelBtn: React.CSSProperties = {
   width: '100%', padding: 11,
   background: 'transparent',
-  border: '1px solid rgba(255,77,106,0.2)',
+  border: '1px solid var(--waiting-cancel-btn-border, rgba(255,77,106,0.2))',
   borderRadius: 12, color: 'var(--color-red, #FF4D6A)',
   fontSize: 13, fontWeight: 600,
   cursor: 'pointer', fontFamily: 'inherit',

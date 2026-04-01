@@ -185,6 +185,17 @@
   --battle-card-save-color: #9B85FF;
   --battle-card-save-border: rgba(123, 97, 255, 0.25);
 
+  /* WaitingForOpponent Colors (L1) */
+  --waiting-card-border: rgba(255, 255, 255, 0.1);
+  --waiting-pulse-dot-border: rgba(155, 133, 255, 0.5);
+  --waiting-code-block-bg: rgba(245, 200, 66, 0.06);
+  --waiting-code-block-border: rgba(245, 200, 66, 0.15);
+  --waiting-link-box-bg: rgba(155, 133, 255, 0.08);
+  --waiting-link-box-border: rgba(155, 133, 255, 0.15);
+  --waiting-icon-btn-accent-bg: rgba(245, 200, 66, 0.12);
+  --waiting-icon-btn-green-bg: rgba(0, 214, 143, 0.12);
+  --waiting-cancel-btn-border: rgba(255, 77, 106, 0.2);
+
   /* Responsive Breakpoints (L2) */
   --breakpoint-xs: 320px;
   --breakpoint-sm: 480px;
@@ -327,6 +338,17 @@
     --battle-card-save-bg: rgba(109, 40, 217, 0.1);
     --battle-card-save-color: #5B21B6;
     --battle-card-save-border: rgba(109, 40, 217, 0.2);
+
+    /* WaitingForOpponent Light Mode Adjustments */
+    --waiting-card-border: rgba(0, 0, 0, 0.08);
+    --waiting-pulse-dot-border: rgba(109, 40, 217, 0.4);
+    --waiting-code-block-bg: rgba(212, 168, 32, 0.05);
+    --waiting-code-block-border: rgba(212, 168, 32, 0.12);
+    --waiting-link-box-bg: rgba(109, 40, 217, 0.06);
+    --waiting-link-box-border: rgba(109, 40, 217, 0.12);
+    --waiting-icon-btn-accent-bg: rgba(212, 168, 32, 0.1);
+    --waiting-icon-btn-green-bg: rgba(0, 163, 102, 0.1);
+    --waiting-cancel-btn-border: rgba(211, 47, 47, 0.15);
   }
 }
 
@@ -464,6 +486,17 @@
   --battle-card-save-bg: rgba(109, 40, 217, 0.1);
   --battle-card-save-color: #5B21B6;
   --battle-card-save-border: rgba(109, 40, 217, 0.2);
+
+  /* WaitingForOpponent Light Mode via data-theme */
+  --waiting-card-border: rgba(0, 0, 0, 0.08);
+  --waiting-pulse-dot-border: rgba(109, 40, 217, 0.4);
+  --waiting-code-block-bg: rgba(212, 168, 32, 0.05);
+  --waiting-code-block-border: rgba(212, 168, 32, 0.12);
+  --waiting-link-box-bg: rgba(109, 40, 217, 0.06);
+  --waiting-link-box-border: rgba(109, 40, 217, 0.12);
+  --waiting-icon-btn-accent-bg: rgba(212, 168, 32, 0.1);
+  --waiting-icon-btn-green-bg: rgba(0, 163, 102, 0.1);
+  --waiting-cancel-btn-border: rgba(211, 47, 47, 0.15);
 
   background: var(--color-bg-dark);
   color: var(--color-text-primary);
