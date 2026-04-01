@@ -94,6 +94,25 @@
   --chess-save-btn-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
   --chess-save-btn-active-shadow: 0 0 10px rgba(245, 200, 66, 0.3);
 
+  /* GameSetupModal Colors (L1) */
+  --modal-overlay-bg: rgba(0, 0, 0, 0.7);
+  --modal-launch-border: rgba(245, 200, 66, 0.2);
+  --modal-launch-shadow: 0 0 80px rgba(245, 200, 66, 0.12), 0 30px 60px rgba(0, 0, 0, 0.5);
+  --modal-glow-gradient: conic-gradient(from 0deg, #F5C842, #9B85FF, #F5C842);
+  --modal-player-chip-bg: rgba(245, 200, 66, 0.1);
+  --modal-player-chip-border: rgba(245, 200, 66, 0.25);
+  --modal-countdown-bg: rgba(245, 200, 66, 0.08);
+  --modal-countdown-border: rgba(245, 200, 66, 0.4);
+  --modal-countdown-shadow: 0 0 30px rgba(245, 200, 66, 0.2);
+  --modal-color-active-bg: rgba(245, 200, 66, 0.1);
+  --modal-time-active-bg: rgba(123, 97, 255, 0.15);
+  --modal-time-active-border: rgba(123, 97, 255, 0.4);
+  --modal-time-active-color: #9B85FF;
+  --modal-jarvis-chip-bg: rgba(155, 133, 255, 0.12);
+  --modal-jarvis-chip-border: rgba(155, 133, 255, 0.3);
+  --modal-jarvis-chip-color: #9B85FF;
+  --modal-start-btn-shadow: 0 4px 20px rgba(245, 200, 66, 0.3);
+
   /* Responsive Breakpoints (L2) */
   --breakpoint-xs: 320px;
   --breakpoint-sm: 480px;
@@ -145,6 +164,25 @@
     --chess-save-btn-bg: rgba(245, 245, 245, 0.9);
     --chess-save-btn-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
     --chess-save-btn-active-shadow: 0 0 10px rgba(212, 168, 32, 0.25);
+
+    /* GameSetupModal Light Mode Adjustments */
+    --modal-overlay-bg: rgba(0, 0, 0, 0.5);
+    --modal-launch-border: rgba(212, 168, 32, 0.25);
+    --modal-launch-shadow: 0 0 60px rgba(212, 168, 32, 0.1), 0 20px 40px rgba(0, 0, 0, 0.15);
+    --modal-glow-gradient: conic-gradient(from 0deg, #D4A820, #6D28D9, #D4A820);
+    --modal-player-chip-bg: rgba(212, 168, 32, 0.08);
+    --modal-player-chip-border: rgba(212, 168, 32, 0.2);
+    --modal-countdown-bg: rgba(212, 168, 32, 0.06);
+    --modal-countdown-border: rgba(212, 168, 32, 0.3);
+    --modal-countdown-shadow: 0 0 20px rgba(212, 168, 32, 0.15);
+    --modal-color-active-bg: rgba(212, 168, 32, 0.08);
+    --modal-time-active-bg: rgba(109, 40, 217, 0.12);
+    --modal-time-active-border: rgba(109, 40, 217, 0.3);
+    --modal-time-active-color: #6D28D9;
+    --modal-jarvis-chip-bg: rgba(109, 40, 217, 0.1);
+    --modal-jarvis-chip-border: rgba(109, 40, 217, 0.25);
+    --modal-jarvis-chip-color: #6D28D9;
+    --modal-start-btn-shadow: 0 4px 20px rgba(212, 168, 32, 0.2);
   }
 }
 
@@ -191,6 +229,25 @@
   --chess-save-btn-bg: rgba(245, 245, 245, 0.9);
   --chess-save-btn-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
   --chess-save-btn-active-shadow: 0 0 10px rgba(212, 168, 32, 0.25);
+
+  /* GameSetupModal Light Mode Adjustments */
+  --modal-overlay-bg: rgba(0, 0, 0, 0.5);
+  --modal-launch-border: rgba(212, 168, 32, 0.25);
+  --modal-launch-shadow: 0 0 60px rgba(212, 168, 32, 0.1), 0 20px 40px rgba(0, 0, 0, 0.15);
+  --modal-glow-gradient: conic-gradient(from 0deg, #D4A820, #6D28D9, #D4A820);
+  --modal-player-chip-bg: rgba(212, 168, 32, 0.08);
+  --modal-player-chip-border: rgba(212, 168, 32, 0.2);
+  --modal-countdown-bg: rgba(212, 168, 32, 0.06);
+  --modal-countdown-border: rgba(212, 168, 32, 0.3);
+  --modal-countdown-shadow: 0 0 20px rgba(212, 168, 32, 0.15);
+  --modal-color-active-bg: rgba(212, 168, 32, 0.08);
+  --modal-time-active-bg: rgba(109, 40, 217, 0.12);
+  --modal-time-active-border: rgba(109, 40, 217, 0.3);
+  --modal-time-active-color: #6D28D9;
+  --modal-jarvis-chip-bg: rgba(109, 40, 217, 0.1);
+  --modal-jarvis-chip-border: rgba(109, 40, 217, 0.25);
+  --modal-jarvis-chip-color: #6D28D9;
+  --modal-start-btn-shadow: 0 4px 20px rgba(212, 168, 32, 0.2);
 
   background: var(--color-bg-dark);
   color: var(--color-text-primary);

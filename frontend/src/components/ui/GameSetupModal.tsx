@@ -93,7 +93,7 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
               {resolvedColor === 'white' ? '♔' : '♚'} You
             </div>
             <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-text-muted, #4A5270)' }}>VS</span>
-            <div style={{ ...playerChipStyle, background: 'rgba(155,133,255,0.12)', borderColor: 'rgba(155,133,255,0.3)', color: '#9B85FF' }}>
+            <div style={{ ...playerChipStyle, background: 'var(--modal-jarvis-chip-bg, rgba(155,133,255,0.12))', borderColor: 'var(--modal-jarvis-chip-border, rgba(155,133,255,0.3))', color: 'var(--modal-jarvis-chip-color, #9B85FF)' }}>
               {resolvedColor === 'white' ? '♚' : '♔'} JARVIS
             </div>
           </div>
@@ -204,7 +204,7 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
 // ── Styles ────────────────────────────────────────────────────────────────────
 const overlayStyle: React.CSSProperties = {
   position: 'fixed', inset: 0, zIndex: "var(--z-modal, 300)",
-  background: 'rgba(0,0,0,0.7)',
+  background: 'var(--modal-overlay-bg, rgba(0,0,0,0.7))',
   backdropFilter: 'blur(8px)',
   WebkitBackdropFilter: 'blur(8px)',
   display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
@@ -227,18 +227,18 @@ const sheetStyle: React.CSSProperties = {
 const launchSheetStyle: React.CSSProperties = {
   width: '100%', maxWidth: 'clamp(260px, 90vw, 360px)',
   background: 'var(--color-bg-card, #13161F)',
-  border: '1px solid rgba(245,200,66,0.2)',
+  border: 'var(--modal-launch-border, 1px solid rgba(245,200,66,0.2))',
   borderRadius: 28,
   padding: '40px 28px 36px',
   margin: 'auto',
-  boxShadow: '0 0 80px rgba(245,200,66,0.12), 0 30px 60px rgba(0,0,0,0.5)',
+  boxShadow: 'var(--modal-launch-shadow, 0 0 80px rgba(245,200,66,0.12), 0 30px 60px rgba(0,0,0,0.5))',
   position: 'relative',
   alignSelf: 'center',
 };
 const glowRingStyle: React.CSSProperties = {
   position: 'absolute', inset: -6,
   borderRadius: '50%',
-  background: 'conic-gradient(from 0deg, #F5C842, #9B85FF, #F5C842)',
+  background: 'var(--modal-glow-gradient, conic-gradient(from 0deg, #F5C842, #9B85FF, #F5C842))',
   animation: 'spin 2s linear infinite',
   opacity: 0.6,
 };
@@ -250,8 +250,8 @@ const innerCircleStyle: React.CSSProperties = {
 };
 const playerChipStyle: React.CSSProperties = {
   padding: '8px 16px',
-  background: 'rgba(245,200,66,0.1)',
-  border: '1px solid rgba(245,200,66,0.25)',
+  background: 'var(--modal-player-chip-bg, rgba(245,200,66,0.1))',
+  border: '1px solid var(--modal-player-chip-border, rgba(245,200,66,0.25))',
   borderRadius: 12,
   fontSize: 14, fontWeight: 700,
   color: 'var(--color-accent, #F5C842)',
@@ -259,11 +259,11 @@ const playerChipStyle: React.CSSProperties = {
 const countdownCircleStyle: React.CSSProperties = {
   width: 80, height: 80,
   borderRadius: '50%',
-  background: 'rgba(245,200,66,0.08)',
-  border: '3px solid rgba(245,200,66,0.4)',
+  background: 'var(--modal-countdown-bg, rgba(245,200,66,0.08))',
+  border: '3px solid var(--modal-countdown-border, rgba(245,200,66,0.4))',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   margin: '0 auto',
-  boxShadow: '0 0 30px rgba(245,200,66,0.2)',
+  boxShadow: 'var(--modal-countdown-shadow, 0 0 30px rgba(245,200,66,0.2))',
 };
 const backBtnStyle: React.CSSProperties = {
   width: 36, height: 36, borderRadius: '50%',
@@ -281,7 +281,7 @@ const sectionLbl: React.CSSProperties = {
 const colorBtnStyle = (active: boolean, c: ColorChoice): React.CSSProperties => ({
   padding: '20px 8px', borderRadius: 14, cursor: 'pointer',
   minHeight: 80,
-  background: active ? 'rgba(245,200,66,0.1)' : 'var(--color-bg-card, #1C2030)',
+  background: active ? 'var(--modal-color-active-bg, rgba(245,200,66,0.1))' : 'var(--color-bg-card, #1C2030)',
   border: `2px solid ${active ? 'var(--color-accent, #F5C842)' : 'var(--color-border, rgba(255,255,255,0.07))'}`,
   color: active ? 'var(--color-accent, #F5C842)' : 'var(--color-text-secondary, #8B92A8)',
   textAlign: 'center', transition: 'all .15s', fontFamily: 'inherit',
@@ -290,9 +290,9 @@ const colorBtnStyle = (active: boolean, c: ColorChoice): React.CSSProperties => 
 const timeBtnStyle = (active: boolean): React.CSSProperties => ({
   padding: '14px 8px', borderRadius: 12, cursor: 'pointer',
   minHeight: 68,
-  background: active ? 'rgba(123,97,255,0.15)' : 'var(--color-bg-card, #1C2030)',
-  border: `1px solid ${active ? 'rgba(123,97,255,0.4)' : 'var(--color-border, rgba(255,255,255,0.07))'}`,
-  color: active ? '#9B85FF' : 'var(--color-text-secondary, #8B92A8)',
+  background: active ? 'var(--modal-time-active-bg, rgba(123,97,255,0.15))' : 'var(--color-bg-card, #1C2030)',
+  border: `1px solid ${active ? 'var(--modal-time-active-border, rgba(123,97,255,0.4))' : 'var(--color-border, rgba(255,255,255,0.07))'}`,
+  color: active ? 'var(--modal-time-active-color, #9B85FF)' : 'var(--color-text-secondary, #8B92A8)',
   fontSize: 13, fontWeight: 700, transition: 'all .15s', fontFamily: 'inherit',
   textAlign: 'center' as const,
 });
@@ -303,5 +303,5 @@ const startBtnStyle: React.CSSProperties = {
   border: 'none', borderRadius: 14,
   color: 'var(--color-bg-dark, #0B0D11)', fontSize: 17, fontWeight: 800,
   cursor: 'pointer', fontFamily: 'inherit',
-  boxShadow: '0 4px 20px rgba(245,200,66,0.3)',
+  boxShadow: 'var(--modal-start-btn-shadow, 0 4px 20px rgba(245,200,66,0.3))',
 };
