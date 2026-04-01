@@ -91,17 +91,42 @@
 
 ## 🚀 ТЕКУЩИЕ ПРИОРИТЕТЫ
 
-### Статус сессии (2026-04-02)
+### Статус сессии (2026-04-02, часть 2)
 **Фаза 3.1: Интеграция дизайн-токенов (ЗАВЕРШЕНА ✅)**
 - ✅ Добавлены все переменные типографики и компонентов в index.css
 - ✅ Рефакторена HomePage.tsx
 - ✅ Рефакторена GameSetupModal.tsx
 - ✅ Проверено в браузере — всё работает правильно
 
-**Следующие приоритеты:**
-1. **Фаза 3.2** — Рефакторить оставшиеся модали (JarvisModal, GameResultModal, и другие)
-2. **Фаза 3.3** — Рефакторить карточки и компоненты списков
+**Фаза 3.2: Рефакторинг базовых модалей (НАЧАТА ✅)**
+- ✅ Modal.tsx (базовый компонент) — все значения на дизайн-токены
+  - Header: padding, fontSize, fontWeight
+  - Body: padding, fontSize, lineHeight
+  - Footer: padding, gap
+  - borderRadius на var(--radius-xl)
+- ⏳ JarvisModal — ТРЕБУЕТ РЕФАКТОРИНГА (много window.innerWidth < 480 checks)
+- ⏳ GameResultModal — ТРЕБУЕТ РЕФАКТОРИНГА (много hardcoded fontSize и padding)
+
+**Следующие приоритеты (КРИТИЧНЫЕ):**
+1. **Завершить Фаза 3.2** — Рефакторить JarvisModal, GameResultModal (использовать CSS @media вместо window.innerWidth)
+2. **Фаза 3.3** — Рефакторить карточки: ShopItemCards, BattleCard, и другие
 3. **Фаза 2** — Заполнить контентом страницы: Профиль, Рефералы, Кубки, Войны, Батлы
+
+### ⚠️ ВЫЯВЛЕННЫЕ ПРОБЛЕМЫ
+1. **Используется window.innerWidth вместо CSS media queries**
+   - JarvisModal, BattleCard, и другие используют JS для responsive логики
+   - Неэффективно и трудно поддерживать
+   - РЕШЕНИЕ: Заменить на `@media (max-width: 479px)` и CSS классы
+
+2. **Много hardcoded значений во многих компонентах**
+   - GameResultModal: fontSize 14, 12, 24, padding 14px 16px, etc.
+   - Нужно заменить на design token переменные
+   - Затрагивает 15+ компонентов
+
+3. **Responsive классы существуют но не используются**
+   - В index.css есть `.grid-auto-2-3`, `.grid-auto-2-4`, `.hidden-mobile`
+   - Компоненты их не применяют
+   - Нужно применить где используются grid layouts
 
 ### Фаза 1: Базовая функциональность (ЗАВЕРШЕНА ✅)
 - [x] **HomePage работает и выглядит профессионально**
@@ -188,15 +213,85 @@
 
 ---
 
-## 📝 ПОСЛЕДНЯЯ ОБНОВЛЕНИЯ
+## 📝 ПОСЛЕДНИЕ ОБНОВЛЕНИЯ
 
-**2026-04-02 (Текущая сессия)**
+**2026-04-02 (Текущая сессия - часть 2, 01:00+)**
+- ✅ Рефакторена Modal.tsx — все design tokens вместо hardcoded (коммит: 0eb5022)
+- 🔍 Выявлены 3 критические проблемы (см. выше)
+- 📋 Обновлена эта документация с полной карточкой что делать дальше
+
+**2026-04-02 (Часть 1)**
 - Создана эта Конституция
 - Восстановлена HomePage (e96d859)
 - Создан DESIGN_SYSTEM_AUDIT.md, DESIGN_TOKENS.css, MIGRATION_GUIDE.md
 - Создан archive/ для истории
 
-**Следующее что нужно:**
-- Проверить визуально что HomePage выглядит правильно
-- Исправить GameSetupModal layout
-- Запустить game и убедиться что всё работает
+---
+
+## 🎯 ПАТТЕРН РЕФАКТОРИНГА ДЛЯ КОМПОНЕНТОВ
+
+### Шаг 1: Заменить hardcoded padding на design tokens
+```typescript
+// ДО:
+padding: '16px 24px'
+// ПОСЛЕ:
+padding: `var(--space-l) var(--space-l)` // или другие токены
+
+// ДО:
+padding: '12px 14px'
+// ПОСЛЕ:
+padding: `var(--card-padding-md) var(--card-padding-md)`
+```
+
+### Шаг 2: Заменить hardcoded fontSize на tokens
+```typescript
+// ДО:
+fontSize: 14, fontWeight: 800
+// ПОСЛЕ:
+fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-extrabold)'
+```
+
+### Шаг 3: Заменить window.innerWidth на CSS media queries
+```typescript
+// ДО (плохо — в JS):
+fontSize: window.innerWidth < 480 ? 16 : 20
+
+// ПОСЛЕ (хорошо — в CSS):
+// index.css:
+// @media (max-width: 479px) {
+//   .my-component-title {
+//     font-size: 16px;
+//   }
+// }
+// @media (min-width: 480px) {
+//   .my-component-title {
+//     font-size: 20px;
+//   }
+// }
+```
+
+---
+
+## 📌 СЛЕДУЮЩИЕ ЗАДАЧИ (READY TO COPY-PASTE)
+
+### Фаза 3.2A: Рефакторить JarvisModal
+**Файл:** `frontend/src/components/ui/JarvisModal.tsx`
+**Что делать:**
+1. Заменить все `window.innerWidth < 480 ? X : Y` на CSS media queries
+2. Все hardcoded padding/fontSize/gap на design tokens
+3. Применить `clamp()` для responsive значений где нужно
+
+### Фаза 3.2B: Рефакторить GameResultModal
+**Файл:** `frontend/src/components/game/GameResultModal.tsx`
+**Что делать:**
+1. fontSize: 14, 12, 24, 13, 18 → на design tokens
+2. padding: '14px 16px' → `var(--card-padding-md)`
+3. marginBottom, margin значения → на gap/space tokens
+
+### Фаза 3.3: Остальные компоненты (15+ файлов)
+- `ShopItemCards.tsx` — grid layout нужна CSS media query
+- `BattleCard.tsx` — window.innerWidth checks
+- `StatComponents.tsx` — много hardcoded sizes
+- И остальные...
+
+**Всегда использовать MIGRATION_GUIDE.md как шаблон refactoring.**
