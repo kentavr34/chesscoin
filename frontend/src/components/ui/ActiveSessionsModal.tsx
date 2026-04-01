@@ -42,7 +42,7 @@ export const ActiveSessionsModal: React.FC<ActiveSessionsModalProps> = ({
       onClick={(e) => e.target === e.currentTarget && onClose()}
       style={{
         position: 'fixed', inset: 0, zIndex: "var(--z-modal, 300)",
-        background: 'rgba(0,0,0,0.75)',
+        background: 'var(--active-sessions-backdrop, rgba(0,0,0,0.75))',
         backdropFilter: 'blur(10px)',
         WebkitBackdropFilter: 'blur(10px)',
         display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
@@ -51,7 +51,7 @@ export const ActiveSessionsModal: React.FC<ActiveSessionsModalProps> = ({
       <div style={{
         width: '100%', maxWidth: 480,
         background: 'var(--color-bg-card, #13161F)',
-        border: '1px solid rgba(255,255,255,0.1)',
+        border: '1px solid var(--active-sessions-border-light, rgba(255,255,255,0.1))',
         borderBottom: 'none',
         borderRadius: '24px 24px 0 0',
         padding: '20px 18px',
@@ -86,9 +86,9 @@ export const ActiveSessionsModal: React.FC<ActiveSessionsModalProps> = ({
                   display: 'flex', alignItems: 'center', gap: 12,
                   padding: '14px 16px',
                   background: myTurn
-                    ? 'linear-gradient(135deg, rgba(0,214,143,0.08), rgba(0,214,143,0.03))'
+                    ? 'var(--active-sessions-my-turn-gradient, linear-gradient(135deg, rgba(0,214,143,0.08), rgba(0,214,143,0.03)))'
                     : 'var(--color-bg-card, #1C2030)',
-                  border: `1px solid ${myTurn ? 'rgba(0,214,143,0.25)' : 'rgba(255,255,255,0.07)'}`,
+                  border: `1px solid ${myTurn ? 'var(--active-sessions-my-turn-border, rgba(0,214,143,0.25))' : 'var(--active-sessions-border-subtle, rgba(255,255,255,0.07))'}`,
                   borderRadius: 16,
                   cursor: 'pointer',
                   transition: 'all .15s',
@@ -98,8 +98,8 @@ export const ActiveSessionsModal: React.FC<ActiveSessionsModalProps> = ({
                 {session.type === 'BOT' ? (
                   <div style={{
                     width: 44, height: 44, borderRadius: '50%',
-                    background: 'rgba(155,133,255,0.15)',
-                    border: '2px solid rgba(155,133,255,0.3)',
+                    background: 'var(--active-sessions-bot-avatar-bg, rgba(155,133,255,0.15))',
+                    border: '2px solid var(--active-sessions-bot-avatar-border, rgba(155,133,255,0.3))',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 22, flexShrink: 0,
                   }}>🤖</div>
@@ -152,7 +152,7 @@ export const ActiveSessionsModal: React.FC<ActiveSessionsModalProps> = ({
           style={{
             width: '100%', marginTop: 16, padding: '13px',
             background: 'var(--color-bg-card, #1C2030)',
-            border: '1px solid rgba(255,255,255,0.1)',
+            border: '1px solid var(--active-sessions-border-light, rgba(255,255,255,0.1))',
             borderRadius: 14, color: 'var(--color-text-secondary, #8B92A8)',
             fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
           }}

@@ -211,6 +211,15 @@
   --event-star-light: #FFFACD;
   --event-mate-banner-bg: rgba(0, 0, 0, 0.85);
 
+  /* Active Sessions Modal (L1) */
+  --active-sessions-backdrop: rgba(0, 0, 0, 0.75);
+  --active-sessions-border-light: rgba(255, 255, 255, 0.1);
+  --active-sessions-border-subtle: rgba(255, 255, 255, 0.07);
+  --active-sessions-my-turn-gradient: linear-gradient(135deg, rgba(0, 214, 143, 0.08), rgba(0, 214, 143, 0.03));
+  --active-sessions-my-turn-border: rgba(0, 214, 143, 0.25);
+  --active-sessions-bot-avatar-bg: rgba(155, 133, 255, 0.15);
+  --active-sessions-bot-avatar-border: rgba(155, 133, 255, 0.3);
+
   /* Responsive Breakpoints (L2) */
   --breakpoint-xs: 320px;
   --breakpoint-sm: 480px;
@@ -364,6 +373,15 @@
     --waiting-icon-btn-accent-bg: rgba(212, 168, 32, 0.1);
     --waiting-icon-btn-green-bg: rgba(0, 163, 102, 0.1);
     --waiting-cancel-btn-border: rgba(211, 47, 47, 0.15);
+
+    /* Active Sessions Modal Light Mode Adjustments */
+    --active-sessions-backdrop: rgba(0, 0, 0, 0.6);
+    --active-sessions-border-light: rgba(0, 0, 0, 0.08);
+    --active-sessions-border-subtle: rgba(0, 0, 0, 0.05);
+    --active-sessions-my-turn-gradient: linear-gradient(135deg, rgba(0, 163, 102, 0.08), rgba(0, 163, 102, 0.03));
+    --active-sessions-my-turn-border: rgba(0, 163, 102, 0.2);
+    --active-sessions-bot-avatar-bg: rgba(109, 40, 217, 0.1);
+    --active-sessions-bot-avatar-border: rgba(109, 40, 217, 0.2);
   }
 }
 
@@ -512,6 +530,15 @@
   --waiting-icon-btn-accent-bg: rgba(212, 168, 32, 0.1);
   --waiting-icon-btn-green-bg: rgba(0, 163, 102, 0.1);
   --waiting-cancel-btn-border: rgba(211, 47, 47, 0.15);
+
+  /* Active Sessions Modal Light Mode via data-theme */
+  --active-sessions-backdrop: rgba(0, 0, 0, 0.6);
+  --active-sessions-border-light: rgba(0, 0, 0, 0.08);
+  --active-sessions-border-subtle: rgba(0, 0, 0, 0.05);
+  --active-sessions-my-turn-gradient: linear-gradient(135deg, rgba(0, 163, 102, 0.08), rgba(0, 163, 102, 0.03));
+  --active-sessions-my-turn-border: rgba(0, 163, 102, 0.2);
+  --active-sessions-bot-avatar-bg: rgba(109, 40, 217, 0.1);
+  --active-sessions-bot-avatar-border: rgba(109, 40, 217, 0.2);
 
   background: var(--color-bg-dark);
   color: var(--color-text-primary);
