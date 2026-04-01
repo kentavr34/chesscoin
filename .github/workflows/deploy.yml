@@ -95,7 +95,7 @@ ENVFILE
             fi
 
             git pull origin main
-            docker compose up -d --build --remove-orphans
+            docker compose up -d --build --force-recreate --remove-orphans
             sleep 15
             docker compose exec -T backend npx prisma migrate deploy
             for i in {1..10}; do
