@@ -170,7 +170,7 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
           {/* Time selection */}
           <div>
             <div style={sectionLbl}>{t.gameSetup.duration}</div>
-            <div className="grid-auto-2-3" style={{
+            <div className="grid-auto-3-6" style={{
               gap: 'var(--gap-xs)',
             }}>
               {TIME_OPTIONS.map((opt) => (

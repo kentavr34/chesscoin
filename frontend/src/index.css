@@ -1520,6 +1520,17 @@ div, span, button, input, select, textarea, p {
   }
 }
 
+.grid-auto-3-6 {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+}
+
+@media (max-width: 479px) {
+  .grid-auto-3-6 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 /* Promotion grid - 4 items responsive */
 .promotion-grid {
   display: grid;

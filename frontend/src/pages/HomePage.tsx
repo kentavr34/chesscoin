@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserStore } from '@/store/useUserStore';
+import { useGameStore } from '@/store/useGameStore';
 import { useT } from '@/i18n/useT';
+import { getSocket } from '@/api/socket';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { JarvisModal } from '@/components/ui/JarvisModal';
 import { GameSetupModal } from '@/components/ui/GameSetupModal';
@@ -31,11 +33,25 @@ export const HomePage: React.FC = () => {
     setShowGameSetup(true);
   };
 
+  const { upsertSession } = useGameStore();
+
   const handleGameStart = (color: 'white' | 'black', timeMinutes: number) => {
     if (!selectedJarvisLevel) return;
-    navigate(`/game/jarvis/${selectedJarvisLevel.level}`, {
-      state: { color, timeMinutes, difficulty: selectedJarvisLevel },
-    });
+
+    // Создаём session на бэкэнде
+    const socket = getSocket();
+    socket.emit('game:create:bot',
+      { color, botLevel: selectedJarvisLevel.level, timeSeconds: timeMinutes * 60 },
+      (res: Record<string, unknown>) => {
+        if (res?.ok && res?.session) {
+          const session = res.session as import('@/types').GameSession;
+          upsertSession(session);
+          navigate(`/game/${session.id}`);
+        } else {
+          console.error('Failed to create game session');
+        }
+      }
+    );
   };
 
   if (!user) {
