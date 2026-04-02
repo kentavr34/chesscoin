@@ -2,6 +2,9 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { PageLayout, useInfoPopup, InfoPopup } from '@/components/layout/PageLayout';
 import { useConfirm } from '@/components/ui/ConfirmModal';
+import { Button } from '@/components/ui/Button';
+import { Text } from '@/components/ui/Text';
+import { Card } from '@/components/ui/Card';
 import { shopApi, authApi, tonApi, profileApi } from '@/api';
 import { connectWallet, sendVerificationPayment, getWalletAddress } from '@/lib/tonconnect';
 import { useUserStore } from '@/store/useUserStore';
@@ -572,34 +575,33 @@ export const ShopPage: React.FC = () => {
 
       {/* Balance */}
       {user && (
-        <div style={{ margin: '4px 18px 8px', padding: '10px 14px', background: 'var(--bg-card, #1C2030)', borderRadius: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: 12, color: 'var(--text-secondary, #8B92A8)' }}>Balance</span>
-          <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--accent, #F5C842)', fontFamily: 'JetBrains Mono, monospace' }}>
+        <Card padding="md" style={{ margin: '4px 18px 8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Text variant="body" color="secondary">Balance</Text>
+          <Text variant="body" weight="bold" color="accent" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
             {fmtBalance(user.balance)} ᚙ
-          </span>
-        </div>
+          </Text>
+        </Card>
       )}
 
       {/* N6: TON — синяя кнопка сверху, отдельно от вкладок покупок */}
       <div style={{ margin: '0 18px 14px' }}>
-        <button
+        <Button
           onClick={() => setShowTon(true)}
+          fullWidth
           style={{
-            width: '100%', padding: '13px 18px',
-            background: 'var(--shop-ton-wallet-gradient, linear-gradient(135deg, #0098EA, #006BBF))',
-            border: 'none', borderRadius: 14,
+            background: 'linear-gradient(135deg, #0098EA, #006BBF)',
             display: 'flex', alignItems: 'center', gap: 12,
-            cursor: 'pointer', fontFamily: 'inherit',
             boxShadow: '0 4px 20px rgba(0,152,234,0.3)',
+            color: '#fff',
           }}
         >
           <span style={{ fontSize: 24 }}>💎</span>
-          <div style={{ textAlign: 'left' as const }}>
+          <div style={{ textAlign: 'left', flex: 1 }}>
             <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{t.shop.tonTab.connectWallet.replace('💎 ', '')}</div>
             <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', marginTop: 1 }}>{t.shop.tonTab.benefits[0].text}</div>
           </div>
           <span style={{ marginLeft: 'auto', color: 'rgba(255,255,255,0.7)', fontSize: 18 }}>→</span>
-        </button>
+        </Button>
       </div>
 
       {/* N6: 6 вкладок покупок в 2 ряда по 3 */}
@@ -619,20 +621,14 @@ export const ShopPage: React.FC = () => {
             {rows.map((row, ri) => (
               <div key={ri} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
                 {row.map(({ key, label }) => (
-                  <button
+                  <Button
                     key={key}
                     onClick={() => setTab(key)}
-                    style={{
-                      padding: '10px 6px', borderRadius: 12,
-                      fontFamily: 'inherit', fontSize: 11, fontWeight: 700,
-                      cursor: 'pointer', transition: 'all .15s',
-                      background: tab === key ? 'rgba(245,200,66,0.15)' : 'var(--bg-card, #1C2030)',
-                      color: tab === key ? 'var(--accent, #F5C842)' : 'var(--text-secondary, #8B92A8)',
-                      border: `1px solid ${tab === key ? 'rgba(245,200,66,0.35)' : 'rgba(255,255,255,0.07)'}`,
-                    }}
+                    variant={tab === key ? 'primary' : 'secondary'}
+                    size="sm"
                   >
                     {label}
-                  </button>
+                  </Button>
                 ))}
               </div>
             ))}
@@ -642,10 +638,10 @@ export const ShopPage: React.FC = () => {
 
       {/* Заголовок вкладки эффектов */}
       {tab === 'effects' && (
-        <div style={{ margin: '0 18px 8px', padding: '10px 14px', background: 'rgba(155,133,255,0.08)', borderRadius: 12, border: '1px solid rgba(155,133,255,0.2)' }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#9B85FF', marginBottom: 3 }}>🎬 Game Effects</div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted, #4A5270)' }}>Win animations · Capture effects · Opening styles</div>
-        </div>
+        <Card padding="md" style={{ margin: '0 18px 8px', background: 'rgba(155,133,255,0.08)', border: '1px solid rgba(155,133,255,0.2)' }}>
+          <Text variant="body" weight="bold" color="accent" style={{ marginBottom: 3 }}>🎬 Game Effects</Text>
+          <Text variant="caption" color="muted">Win animations · Capture effects · Opening styles</Text>
+        </Card>
       )}
 
       {/* S1: Визуал — сабтабы Доски / Фигуры */}
