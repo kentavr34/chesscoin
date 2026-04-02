@@ -2,6 +2,11 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Avatar } from '@/components/ui/Avatar';
+import { Button } from '@/components/ui/Button';
+import { Text } from '@/components/ui/Text';
+import { Heading } from '@/components/ui/Heading';
+import { Card } from '@/components/ui/Card';
+import { StatBox } from '@/components/ui/StatBox';
 import { warsApi } from '@/api';
 import { useUserStore } from '@/store/useUserStore';
 import { fmtBalance } from '@/utils/format';
@@ -238,9 +243,9 @@ const CountryDetailModal: React.FC<{
 
         {c && (
           <div style={{ display: 'flex', gap: 12, marginBottom: 14 }}>
-            <StatBox label={t.wars.treasury} value={`${fmtBalance(c.treasury)} ᚙ`} color="#F5C842" />
-            <StatBox label={t.wars.wins} value={String(c.wins)} color="#00D68F" />
-            <StatBox label={t.wars.fightersLabel} value={`${c.memberCount} / ${c.maxMembers}`} color="#7B61FF" />
+            <StatBox label={t.wars.treasury} value={`${fmtBalance(c.treasury)} ᚙ`} color="gold" />
+            <StatBox label={t.wars.wins} value={String(c.wins)} color="green" />
+            <StatBox label={t.wars.fightersLabel} value={`${c.memberCount} / ${c.maxMembers}`} color="cyan" />
           </div>
         )}
 
@@ -637,15 +642,17 @@ export const WarsPage: React.FC = () => {
     <PageLayout title="">
       {/* Заголовок */}
       <div style={{ padding: '10px 18px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-        <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 18, fontWeight: 800, color: '#F5C842', textAlign: 'center' }}>
+        <Heading level="h1" color="accent" style={{ textAlign: 'center' }}>
           {t.wars.title}
-        </div>
-        <button
+        </Heading>
+        <Button
+          variant="tertiary"
+          size="sm"
           onClick={() => setShowIntro(true)}
-          style={{ position: 'absolute', right: 8, width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: '#A8B0C8', fontSize: 16, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+          style={{ position: 'absolute', right: 8 }}
         >
           ⓘ
-        </button>
+        </Button>
       </div>
 
       {/* Моя страна — плашка */}
@@ -662,36 +669,29 @@ export const WarsPage: React.FC = () => {
           </div>
           {/* Статистика страны */}
           <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-            <div style={{ flex: 1, background: 'rgba(245,200,66,0.08)', border: '1px solid rgba(245,200,66,0.15)', borderRadius: 10, padding: '6px 8px', textAlign: 'center' }}>
-              <div style={{ fontSize: 9, color: '#9BA3BC', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 2 }}>{t.wars.treasury}</div>
-              <div style={{ fontSize: 12, fontWeight: 800, color: '#F5C842' }}>{fmtBalance(myCountry.treasury ?? '0')}</div>
-            </div>
-            <div style={{ flex: 1, background: 'rgba(123,97,255,0.08)', border: '1px solid rgba(123,97,255,0.15)', borderRadius: 10, padding: '6px 8px', textAlign: 'center' }}>
-              <div style={{ fontSize: 9, color: '#9BA3BC', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 2 }}>{t.wars.fightersLabel}</div>
-              <div style={{ fontSize: 12, fontWeight: 800, color: '#9B85FF' }}>{myCountry.memberCount}</div>
-            </div>
-            <div style={{ flex: 1, background: 'rgba(0,214,143,0.08)', border: '1px solid rgba(0,214,143,0.15)', borderRadius: 10, padding: '6px 8px', textAlign: 'center' }}>
-              <div style={{ fontSize: 9, color: '#9BA3BC', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 2 }}>{t.wars.wins}</div>
-              <div style={{ fontSize: 12, fontWeight: 800, color: '#00D68F' }}>{myCountry.wins}</div>
-            </div>
+            <StatBox label={t.wars.treasury} value={fmtBalance(myCountry.treasury ?? '0')} color="gold" size="sm" />
+            <StatBox label={t.wars.fightersLabel} value={String(myCountry.memberCount)} color="cyan" size="sm" />
+            <StatBox label={t.wars.wins} value={String(myCountry.wins)} color="green" size="sm" />
           </div>
           {/* Кнопки действий */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-            <button onClick={() => setShowDonate(true)} style={{ padding: '8px 4px', background: 'rgba(245,200,66,0.10)', color: '#F5C842', border: '1px solid rgba(245,200,66,0.25)', borderRadius: 10, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+            <Button variant="secondary" size="sm" onClick={() => setShowDonate(true)}>
               {t.wars.btnDonate}
-            </button>
-            <button onClick={() => setSelectedCountryId(myCountry.id)} style={{ padding: '8px 4px', background: 'rgba(123,97,255,0.12)', color: '#9B85FF', border: '1px solid rgba(123,97,255,0.25)', borderRadius: 10, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+            </Button>
+            <Button variant="secondary" size="sm" onClick={() => setSelectedCountryId(myCountry.id)}>
               {t.wars.btnFighters}
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
               onClick={() => myActiveWar ? setSelectedWarId(myActiveWar.id) : (isCommander ? setShowDeclareWar(true) : undefined)}
-              style={{ padding: '8px 4px', background: 'rgba(255,77,106,0.12)', color: '#FF4D6A', border: '1px solid rgba(255,77,106,0.25)', borderRadius: 10, fontSize: 11, fontWeight: 600, cursor: isCommander || myActiveWar ? 'pointer' : 'default', fontFamily: 'inherit', opacity: (!isCommander && !myActiveWar) ? 0.4 : 1 }}
+              disabled={!isCommander && !myActiveWar}
             >
               {t.wars.btnBattles}
-            </button>
-            <button onClick={() => setShowLeaveConfirm(true)} style={{ padding: '8px 4px', background: 'rgba(255,77,106,0.07)', color: '#FF7090', border: '1px solid rgba(255,77,106,0.18)', borderRadius: 10, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+            </Button>
+            <Button variant="danger" size="sm" onClick={() => setShowLeaveConfirm(true)}>
               {t.wars.btnLeave}
-            </button>
+            </Button>
           </div>
           {myActiveWar && (
             <div
@@ -753,38 +753,38 @@ export const WarsPage: React.FC = () => {
           {filteredCountries.map((c, i) => {
             const isMyCountry = myCountry?.id === c.id;
             return (
-              <div
+              <Card
                 key={c.id}
+                padding="md"
                 onClick={() => setSelectedCountryId(c.id)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 12,
-                  margin: '0 18px 6px', padding: '12px 14px',
-                  background: isMyCountry ? 'rgba(245,200,66,0.06)' : '#13161E',
-                  border: `1px solid ${isMyCountry ? 'rgba(245,200,66,0.3)' : 'rgba(255,255,255,0.06)'}`,
-                  borderRadius: 16, cursor: 'pointer',
-                  transition: 'background .15s',
+                  margin: '0 18px 6px',
+                  cursor: 'pointer',
+                  background: isMyCountry ? 'rgba(245,200,66,0.06)' : undefined,
+                  border: isMyCountry ? '1px solid rgba(245,200,66,0.3)' : undefined,
                 }}
               >
-                <div style={{ fontSize: 11, color: '#6B7494', width: 20, textAlign: 'center', fontFamily: "'JetBrains Mono',monospace" }}>
+                <Text variant="caption" weight="bold" style={{ width: 20, textAlign: 'center' }} color="muted">
                   {i + 1}
-                </div>
+                </Text>
                 <span style={{ fontSize: 26 }}>{c.flag}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: isMyCountry ? '#F5C842' : '#F0F2F8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <Text variant="body" weight="bold" color={isMyCountry ? 'accent' : 'primary'}>
                     {c.nameRu}
-                    {isMyCountry && <span style={{ fontSize: 9, marginLeft: 6, color: '#F5C842', fontWeight: 600 }}>{t.wars.myCountryTag}</span>}
-                  </div>
-                  <div style={{ fontSize: 10, color: '#A8B0C8', marginTop: 2 }}>
+                    {isMyCountry && <span style={{ fontSize: 9, marginLeft: 6 }}>{t.wars.myCountryTag}</span>}
+                  </Text>
+                  <Text variant="caption" color="secondary" style={{ marginTop: 2 }}>
                     {t.wars.fightersCount}: {c.memberCount} / {c.maxMembers}
-                  </div>
+                  </Text>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14, fontWeight: 700, color: '#00D68F' }}>
+                  <Text variant="body" weight="bold" color="success">
                     {c.wins}W
-                  </div>
-                  <div style={{ fontSize: 10, color: '#6B7494' }}>{t.wars.winsCount}</div>
+                  </Text>
+                  <Text variant="caption" color="muted">{t.wars.winsCount}</Text>
                 </div>
-              </div>
+              </Card>
             );
           })}
 
@@ -980,13 +980,6 @@ function formatTime(seconds: number): string {
   if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   return `${m}:${String(s).padStart(2, '0')}`;
 }
-
-const StatBox: React.FC<{ label: string; value: string; color: string }> = ({ label, value, color }) => (
-  <div style={{ flex: 1, padding: '8px 10px', background: '#1C2030', borderRadius: 12, textAlign: 'center' }}>
-    <div style={{ fontSize: 10, color: '#9BA3BC', marginBottom: 3 }}>{label}</div>
-    <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 700, color }}>{value}</div>
-  </div>
-);
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 const overlayStyle: React.CSSProperties = {
