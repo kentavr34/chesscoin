@@ -262,10 +262,26 @@ interface NavButtonProps {
 
 const NavButton: React.FC<NavButtonProps> = ({ icon, title, subtitle, onClick, color }) => {
   const [hovered, setHovered] = useState(false);
-  const bgColor = color === 'transparent' ? 'rgba(255,255,255,0.05)' : `rgba(${hexToRgb(color)}, 0.1)`;
-  const borderColor = color === 'transparent' ? 'rgba(255,255,255,0.1)' : `rgba(${hexToRgb(color)}, 0.3)`;
-  const bgHovered = color === 'transparent' ? 'rgba(255,255,255,0.08)' : `rgba(${hexToRgb(color)}, 0.15)`;
-  const borderHovered = color === 'transparent' ? 'rgba(255,255,255,0.15)' : `rgba(${hexToRgb(color)}, 0.6)`;
+
+  // Dark glassmorphism градиенты с rgba (приглушённые)
+  const getGradient = (baseColor: string, opacity: number) => {
+    if (color === 'transparent') {
+      return `linear-gradient(135deg, rgba(255,255,255,${opacity * 0.05}) 0%, rgba(255,255,255,${opacity * 0.02}) 100%)`;
+    }
+    const rgb = hexToRgb(baseColor);
+    return `linear-gradient(135deg, rgba(${rgb},${opacity}) 0%, rgba(${rgb},${opacity * 0.5}) 100%)`;
+  };
+
+  const bgColor = getGradient(color, 0.12);
+  const bgHovered = getGradient(color, 0.20);
+
+  const borderColor = color === 'transparent' ? 'rgba(255,255,255,0.1)' : `rgba(${hexToRgb(color)}, 0.25)`;
+  const borderHovered = color === 'transparent' ? 'rgba(255,255,255,0.2)' : `rgba(${hexToRgb(color)}, 0.5)`;
+
+  const shadowNormal = '0 8px 32px 0 rgba(0, 0, 0, 0.36), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+  const shadowHover = color === 'transparent'
+    ? '0 8px 32px 0 rgba(0, 0, 0, 0.4), 0 20px 60px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.15)'
+    : `0 8px 32px 0 rgba(0, 0, 0, 0.4), 0 20px 60px rgba(${hexToRgb(color)}, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15)`;
 
   return (
     <button
@@ -273,24 +289,35 @@ const NavButton: React.FC<NavButtonProps> = ({ icon, title, subtitle, onClick, c
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        padding: `var(--card-padding-lg) var(--button-padding-x-md)`,
+        padding: '18px 20px',
+        minHeight: '72px',
+        // DARK GLASSMORPHISM: градиент с прозрачностью
         background: hovered ? bgHovered : bgColor,
-        border: `2px solid ${hovered ? borderHovered : borderColor}`,
+        // Glassmorphism blur
+        backdropFilter: 'blur(12px)',
+        // Light-catching border
+        border: `1px solid ${hovered ? borderHovered : borderColor}`,
         borderRadius: 'var(--radius-l)',
         cursor: 'pointer',
         fontFamily: 'inherit',
-        transition: `all var(--transition-fast) var(--ease-in-out)`,
+        // Гладкий переход
+        transition: `all var(--transition-normal) var(--ease-in-out)`,
+        // Flex layout
         display: 'flex',
         alignItems: 'center',
         gap: 'var(--gap-md)',
+        // Deep shadows для depth
+        boxShadow: hovered ? shadowHover : shadowNormal,
+        // Transform на hover
+        transform: hovered ? 'translateY(-4px) scale(1.01)' : 'translateY(0)',
       }}
     >
-      <div style={{ fontSize: 'var(--icon-size-xl)' }}>{icon}</div>
+      <div style={{ fontSize: 'var(--icon-size-xl)', flexShrink: 0 }}>{icon}</div>
       <div style={{ textAlign: 'left', flex: 1 }}>
-        <Heading level="h4" style={{ margin: 0 }}>{title}</Heading>
+        <Heading level="h4" style={{ margin: 0, fontSize: 'var(--font-size-md)' }}>{title}</Heading>
         <Text size="sm" color="secondary" style={{ marginTop: 'var(--gap-xs)' }}>{subtitle}</Text>
       </div>
-      <div style={{ fontSize: 'var(--font-size-xl)' }}>→</div>
+      <div style={{ fontSize: 'var(--font-size-xl)', opacity: hovered ? 1 : 0.6, transition: 'opacity var(--transition-fast) var(--ease-in-out)' }}>→</div>
     </button>
   );
 };

@@ -23,9 +23,15 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
   ({ padding = 'lg', interactive = false, className = '', style, children, ...props }, ref) => {
     const baseStyle: CSSProperties = {
       padding: paddingMap[padding],
-      background: 'var(--color-bg-card)',
-      border: '1px solid var(--color-border)',
+      // DARK GLASSMORPHISM: gradient background с прозрачностью
+      background: 'linear-gradient(135deg, rgba(28, 32, 48, 0.95) 0%, rgba(22, 25, 39, 0.95) 100%)',
+      // Glassmorphism blur эффект
+      backdropFilter: 'blur(16px)',
+      // Light-catching border
+      border: '1px solid rgba(255, 255, 255, 0.1)',
       borderRadius: 'var(--radius-l)',
+      // Deep shadows для depth
+      boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.36), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
       transition: 'all var(--transition-normal) var(--ease-in-out)',
       cursor: interactive ? 'pointer' : undefined,
       ...style,
@@ -34,9 +40,10 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
     const onMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
       if (interactive) {
         Object.assign(e.currentTarget.style, {
-          borderColor: 'var(--color-border-light)',
-          transform: 'translateY(-2px)',
-          boxShadow: 'var(--shadow-md)',
+          borderColor: 'rgba(255, 255, 255, 0.2)',
+          background: 'linear-gradient(135deg, rgba(31, 36, 56, 0.97) 0%, rgba(25, 23, 47, 0.97) 100%)',
+          transform: 'translateY(-4px)',
+          boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.4), 0 20px 60px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15)',
         });
       }
       props.onMouseEnter?.(e);
@@ -45,9 +52,10 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
     const onMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
       if (interactive) {
         Object.assign(e.currentTarget.style, {
-          borderColor: 'var(--color-border)',
+          borderColor: 'rgba(255, 255, 255, 0.1)',
+          background: 'linear-gradient(135deg, rgba(28, 32, 48, 0.95) 0%, rgba(22, 25, 39, 0.95) 100%)',
           transform: 'translateY(0)',
-          boxShadow: 'none',
+          boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.36), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
         });
       }
       props.onMouseLeave?.(e);

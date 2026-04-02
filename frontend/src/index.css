@@ -57,10 +57,41 @@
   --color-border: rgba(255, 255, 255, 0.1);
   --color-border-light: rgba(255, 255, 255, 0.05);
 
-  /* Тени */
+  /* Тени (обновлены для glassmorphism) */
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);
   --shadow-md: 0 4px 24px rgba(0, 0, 0, 0.2);
   --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.5);
+
+  /* ── DARK GLASSMORPHISM: ГЛУБОКИЕ ТЕНИ ────────────────────────────── */
+  --shadow-glass-sm: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-glass-md: 0 8px 32px rgba(0, 0, 0, 0.36);
+  --shadow-glass-lg: 0 20px 60px rgba(0, 0, 0, 0.3);
+  --shadow-glass-xl: 0 40px 120px rgba(0, 0, 0, 0.36);
+  --shadow-glass-inset: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  --shadow-glass-inset-hover: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+
+  /* ── GLASSMORPHISM: ФИЛЬТРЫ И ЭФФЕКТЫ ──────────────────────────────── */
+  --backdrop-blur-sm: blur(8px);
+  --backdrop-blur-md: blur(12px);
+  --backdrop-blur-lg: blur(16px);
+  --backdrop-blur-xl: blur(20px);
+
+  /* ── GLASSMORPHISM: ЦВЕТОВЫЕ СЛОИ ──────────────────────────────────── */
+  --glass-overlay-subtle: rgba(255, 255, 255, 0.05);
+  --glass-overlay-light: rgba(255, 255, 255, 0.1);
+
+  /* ── GLASSMORPHISM: БОРДЕРЫ (light-catching) ───────────────────────── */
+  --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+  --glass-border-hover: 1px solid rgba(255, 255, 255, 0.15);
+  --glass-border-accent: 1px solid rgba(255, 255, 255, 0.2);
+
+  /* ── ПЕРЕХОДЫ И АНИМАЦИИ ────────────────────────────────────────── */
+  --transition-fast: 150ms;
+  --transition-normal: 250ms;
+  --transition-slow: 400ms;
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
 
   /* ── ТИПОГРАФИЯ: ШКАЛА РАЗМЕРОВ ──────────────────────────────────── */
   --font-size-xs: 10px;      /* Крошечный: бейджи, подписи */
