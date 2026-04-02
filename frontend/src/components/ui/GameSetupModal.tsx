@@ -13,21 +13,21 @@ interface GameSetupModalProps {
 }
 
 // J4: слайды информационного попапа о Джарвисе
-const JARVIS_INFO_SLIDES = [
+const getJarvisInfoSlides = (t: any) => [
   {
     icon: '🤖',
-    title: 'J.A.R.V.I.S — AI Opponent',
-    desc: 'Play against artificial intelligence. Win to unlock the next level and earn coins. Each level is harder than the last.',
+    title: 'J.A.R.V.I.S — Искусственный противник',
+    desc: 'Играй против ИИ. Выигрывай, чтобы открыть следующий уровень и заработать ᚙ. Каждый уровень сложнее предыдущего.',
   },
   {
     icon: '🏅',
-    title: '20 Mastery Levels',
-    desc: 'From Beginner to Mystic. Winning each level grants a unique badge for your profile — other players will see your rank.',
+    title: '20 уровней мастерства',
+    desc: 'От новичка до мистика. Каждый уровень дарует уникальный значок на профиль — так другие видят твой ранг.',
   },
   {
     icon: '💰',
-    title: 'Coins for Victory',
-    desc: 'The higher the level, the bigger the reward. At Mystic level you earn up to 75,000 ᚙ per win! Losing does not deduct coins.',
+    title: 'ᚙ за победу',
+    desc: 'Чем выше уровень — тем больше награда. На уровне мистика получаешь до 75 000 ᚙ за победу! Проигрыш ᚙ не тратит.',
   },
 ];
 
@@ -39,8 +39,20 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
   const [countdown, setCountdown] = useState(3);
   const [resolvedColor, setResolvedColor] = useState<'white' | 'black'>('white');
 
+  const getTimeLabel = (minutes: number): string => {
+    const timeMap: Record<number, string> = {
+      1: t.gameSetup.duration1m,
+      3: t.gameSetup.duration3m,
+      5: t.gameSetup.duration5m,
+      15: t.gameSetup.duration15m,
+      30: t.gameSetup.duration30m,
+      60: t.gameSetup.duration60m,
+    };
+    return timeMap[minutes] || `${minutes} мин`;
+  };
+
   // J4: показываем попап один раз при первом открытии
-  const jarvisInfo = useInfoPopup('jarvis', JARVIS_INFO_SLIDES);
+  const jarvisInfo = useInfoPopup('jarvis', getJarvisInfoSlides(t));
 
   useEffect(() => {
     if (!launching) return;
@@ -81,20 +93,20 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
           </div>
 
           <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 'var(--font-size-xl)', fontWeight: 'var(--font-weight-extrabold)', color: 'var(--color-accent, #F5C842)', textAlign: 'center', marginBottom: 'var(--gap-xs)' }}>
-            Launching battle!
+            {t.gameSetup.launching}
           </div>
           <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary, #8B92A8)', textAlign: 'center', marginBottom: 'var(--gap-2xl)' }}>
-            J.A.R.V.I.S {selectedLevel.name} · {time < 60 ? `${time} min` : '1 hr'}
+            J.A.R.V.I.S {selectedLevel.name} · {getTimeLabel(time)}
           </div>
 
           {/* VS banner */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--gap-lg)', marginBottom: 'var(--gap-2xl)' }}>
             <div style={playerChipStyle}>
-              {resolvedColor === 'white' ? '♔' : '♚'} You
+              {resolvedColor === 'white' ? '♔' : '♚'} {t.gameSetup.you}
             </div>
-            <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-text-muted, #4A5270)' }}>VS</span>
+            <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-text-muted, #4A5270)' }}>{t.gameSetup.vs}</span>
             <div style={{ ...playerChipStyle, background: 'var(--modal-jarvis-chip-bg, rgba(155,133,255,0.12))', borderColor: 'var(--modal-jarvis-chip-border, rgba(155,133,255,0.3))', color: 'var(--modal-jarvis-chip-color, #9B85FF)' }}>
-              {resolvedColor === 'white' ? '♚' : '♔'} JARVIS
+              {resolvedColor === 'white' ? '♚' : '♔'} {t.gameSetup.jarvis}
             </div>
           </div>
 
@@ -106,7 +118,7 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
               </span>
             </div>
             <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted, #4A5270)', marginTop: 'var(--gap-sm)', letterSpacing: '.06em' }}>
-              SECONDS TO START
+              {t.gameSetup.countdownLabel}
             </div>
           </div>
         </div>
@@ -183,7 +195,7 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
                     {opt === 1 ? '⚡' : opt === 3 ? '🔥' : opt === 5 ? '♟' : opt === 15 ? '🎯' : opt === 30 ? '🏆' : '👑'}
                   </span>
                   <span style={{ fontSize: 'var(--font-size-xs)' }}>
-                    {opt < 60 ? `${opt} min` : '1 hr'}
+                    {getTimeLabel(opt)}
                   </span>
                 </button>
               ))}
@@ -194,10 +206,10 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
         {/* ── FOOTER (fixed) ────────────────────────────────────────────────────────── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-sm)', flexShrink: 0, borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 'var(--gap-sm)' }}>
           <div style={{ padding: 'var(--card-padding-md)', background: 'rgba(123,97,255,0.08)', border: '1px solid rgba(123,97,255,0.15)', borderRadius: 'var(--radius-m)', fontSize: 'var(--font-size-sm)', color: '#8B92A8', lineHeight: 'var(--line-height-normal)' }}>
-            🏆 Выигрывай уровни по порядку. Каждый выигранный уровень дарует значок на профиль.
+            {t.gameSetup.infoWin}
           </div>
           <button onClick={handleStart} style={startBtnStyle}>
-            ♟ Start game
+            {t.gameSetup.startBtn}
           </button>
         </div>
       </div>

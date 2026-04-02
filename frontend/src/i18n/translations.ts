@@ -411,6 +411,7 @@ export const translations = {
     jarvis: {
       title: 'J.A.R.V.I.S', subtitle: 'Select difficulty level',
       locked: 'Locked', reward: (r) => `+${r} ᚙ`, beatPrev: 'Beat the previous level to unlock',
+      noErrors: 'No errors', description: '🏆 Beat levels in order. For each completed level you earn a J.A.R.V.I.S badge on your profile.',
       levels: [
         { name: 'Beginner' }, { name: 'Rookie' }, { name: 'Player' }, { name: 'Challenger' },
         { name: 'Fighter' }, { name: 'Guardian' }, { name: 'Warrior' }, { name: 'Knight' },
@@ -446,6 +447,15 @@ export const translations = {
     gameSetup: {
       title: 'Game Setup', duration: 'Time Control', color: 'Color',
       white: '☀️ White', black: '🌙 Black', random: '🎲 Random', start: 'Start',
+      duration1m: '1 min', duration3m: '3 min', duration5m: '5 min',
+      duration15m: '15 min', duration30m: '30 min', duration60m: '1 hr',
+      launching: 'Launching battle!', launchingSub: (level: string, time: string) => `J.A.R.V.I.S ${level} · ${time}`,
+      countdownLabel: 'SECONDS TO START',
+      vs: 'VS',
+      you: 'You',
+      jarvis: 'JARVIS',
+      startBtn: '♟ Start game',
+      infoWin: '🏆 Win levels in order. Each won level grants a unique badge for your profile.',
     },
     admin: {
       title: 'Admin Panel',
@@ -939,6 +949,7 @@ export const translations = {
     jarvis: {
       title: 'J.A.R.V.I.S', subtitle: 'Выберите уровень сложности',
       locked: 'Заблокировано', reward: (r) => `+${r} ᚙ`, beatPrev: 'Победи предыдущий уровень для разблокировки',
+      noErrors: 'Без ошибок', description: '🏆 Выигрывай уровни по порядку. Каждый выигранный уровень дарует значок на профиль.',
       levels: [
         { name: 'Новичок' }, { name: 'Молодой боец' }, { name: 'Игрок' }, { name: 'Претендент' },
         { name: 'Боец' }, { name: 'Страж' }, { name: 'Воин' }, { name: 'Рыцарь' },
@@ -974,6 +985,15 @@ export const translations = {
     gameSetup: {
       title: 'Настройка игры', duration: 'Контроль времени', color: 'Цвет',
       white: '☀️ Белые', black: '🌙 Чёрные', random: '🎲 Случайно', start: 'Начать',
+      duration1m: '1 мин', duration3m: '3 мин', duration5m: '5 мин',
+      duration15m: '15 мин', duration30m: '30 мин', duration60m: '1 ч',
+      launching: 'Запускается битва!', launchingSub: (level: string, time: string) => `J.A.R.V.I.S ${level} · ${time}`,
+      countdownLabel: 'СЕКУНД ДО СТАРТА',
+      vs: 'VS',
+      you: 'Ты',
+      jarvis: 'JARVIS',
+      startBtn: '♟ Начать игру',
+      infoWin: '🏆 Выигрывай уровни по порядку. Каждый выигранный уровень дарует значок на профиль.',
     },
     admin: {
       title: 'Панель администратора',

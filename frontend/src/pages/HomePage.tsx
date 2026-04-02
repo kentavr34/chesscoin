@@ -26,6 +26,7 @@ export const HomePage: React.FC = () => {
   const [showJarvisModal, setShowJarvisModal] = useState(false);
   const [showGameSetup, setShowGameSetup] = useState(false);
   const [selectedJarvisLevel, setSelectedJarvisLevel] = useState<JarvisLevel | null>(null);
+  const [showActiveSessions, setShowActiveSessions] = useState(false);
 
   const handleJarvisSelect = (level: JarvisLevel) => {
     setSelectedJarvisLevel(level);
@@ -58,11 +59,37 @@ export const HomePage: React.FC = () => {
     return <PageLayout>Loading...</PageLayout>;
   }
 
+  // Форматирование league в UI текст
+  const getLeagueLabel = (league: string) => {
+    const leagueMap: Record<string, string> = {
+      'BRONZE': '🥉 Бронза',
+      'SILVER': '🥈 Серебро',
+      'GOLD': '🥇 Золото',
+      'DIAMOND': '💎 Алмаз',
+      'CHAMPION': '👑 Чемпион',
+      'STAR': '⭐ Звезда',
+    };
+    return leagueMap[league] || league;
+  };
+
+  // Расчёт времени до следующей попытки
+  const getNextAttemptTime = () => {
+    if (!user.nextAttemptAt) return null;
+    const nextTime = new Date(user.nextAttemptAt);
+    const now = new Date();
+    const diff = nextTime.getTime() - now.getTime();
+    if (diff <= 0) return null;
+
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    return `${hours}ч ${minutes}м`;
+  };
+
   return (
     <PageLayout>
       {showJarvisModal && (
         <JarvisModal
-          currentJarvisLevel={user.currentJarvisLevel || 1}
+          currentJarvisLevel={user.jarvisLevel || 1}
           onSelect={handleJarvisSelect}
           onClose={() => setShowJarvisModal(false)}
         />
@@ -79,6 +106,7 @@ export const HomePage: React.FC = () => {
       )}
 
       <div style={{ padding: 'var(--space-l) var(--space-m)', maxWidth: 500, margin: '0 auto' }}>
+        {/* Профиль пользователя */}
         <div style={{
           padding: 'var(--card-padding-lg)',
           background: 'var(--color-bg-card, #13161F)',
@@ -86,10 +114,13 @@ export const HomePage: React.FC = () => {
           borderRadius: 'var(--radius-l)',
           marginBottom: 'var(--gap-xl)',
         }}>
+          {/* Заголовок профиля */}
           <div style={{ display: 'flex', gap: 'var(--gap-md)', alignItems: 'center', marginBottom: 'var(--gap-md)' }}>
             <div style={{ fontSize: 44 }}>👤</div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 'var(--font-size-md)', fontWeight: 'var(--font-weight-extrabold)', color: 'var(--color-text-primary)' }}>{user.name || 'Player'}</div>
+              <div style={{ fontSize: 'var(--font-size-md)', fontWeight: 'var(--font-weight-extrabold)', color: 'var(--color-text-primary)' }}>
+                {user.firstName || 'Player'}
+              </div>
               <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', marginTop: 2 }}>
                 {user.wins || 0} побед · {user.losses || 0} поражений
               </div>
@@ -112,18 +143,141 @@ export const HomePage: React.FC = () => {
             </button>
           </div>
 
+          {/* ELO и Лига */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--gap-sm)', marginBottom: 'var(--gap-md)' }}>
+            <div style={{
+              padding: 'var(--card-padding-md)',
+              background: 'rgba(255, 107, 107, 0.08)',
+              border: '1px solid rgba(255, 107, 107, 0.2)',
+              borderRadius: 'var(--radius-m)',
+              textAlign: 'center',
+            }}>
+              <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', marginBottom: 2 }}>Рейтинг</div>
+              <div style={{ fontSize: 'var(--font-size-lg)', fontWeight: 'var(--font-weight-extrabold)', color: '#FF6B6B' }}>
+                {user.elo || 0}
+              </div>
+            </div>
+            <div style={{
+              padding: 'var(--card-padding-md)',
+              background: 'rgba(255, 193, 7, 0.08)',
+              border: '1px solid rgba(255, 193, 7, 0.2)',
+              borderRadius: 'var(--radius-m)',
+              textAlign: 'center',
+            }}>
+              <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', marginBottom: 2 }}>Лига</div>
+              <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-bold)', color: '#FFC107' }}>
+                {getLeagueLabel(user.league || 'BRONZE')}
+              </div>
+            </div>
+          </div>
+
+          {/* Баланс */}
           <div style={{
             padding: 'var(--card-padding-md)',
             background: 'rgba(245,200,66,0.08)',
             border: '1px solid rgba(245,200,66,0.2)',
             borderRadius: 'var(--radius-m)',
             textAlign: 'center',
+            marginBottom: 'var(--gap-md)',
           }}>
             <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', marginBottom: 'var(--gap-xs)' }}>Баланс</div>
             <div style={{ fontSize: 'var(--font-size-xl)', fontWeight: 'var(--font-weight-extrabold)', color: '#F5C842', fontFamily: "'JetBrains Mono',monospace" }}>
               {(user.balance || 0).toLocaleString()} ᚙ
             </div>
           </div>
+
+          {/* Попытки и рефералы */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--gap-sm)', marginBottom: 'var(--gap-md)' }}>
+            <div style={{
+              padding: 'var(--card-padding-md)',
+              background: 'rgba(100, 200, 255, 0.08)',
+              border: '1px solid rgba(100, 200, 255, 0.2)',
+              borderRadius: 'var(--radius-m)',
+              textAlign: 'center',
+            }}>
+              <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)' }}>Попытки</div>
+              <div style={{ fontSize: 'var(--font-size-md)', fontWeight: 'var(--font-weight-bold)', color: '#64C8FF' }}>
+                {user.attempts || 0}/{user.maxAttempts || 5}
+              </div>
+              {getNextAttemptTime() && (
+                <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', marginTop: 2 }}>
+                  Через {getNextAttemptTime()}
+                </div>
+              )}
+            </div>
+            <div style={{
+              padding: 'var(--card-padding-md)',
+              background: 'rgba(100, 255, 150, 0.08)',
+              border: '1px solid rgba(100, 255, 150, 0.2)',
+              borderRadius: 'var(--radius-m)',
+              textAlign: 'center',
+            }}>
+              <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)' }}>Рефералы</div>
+              <div style={{ fontSize: 'var(--font-size-md)', fontWeight: 'var(--font-weight-bold)', color: '#64FF96' }}>
+                {user.referralCount || 0}
+              </div>
+              <button
+                onClick={() => navigate('/referrals')}
+                style={{
+                  fontSize: 'var(--font-size-xs)',
+                  color: '#64FF96',
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  marginTop: 2,
+                  textDecoration: 'underline',
+                }}
+              >
+                Пригласить
+              </button>
+            </div>
+          </div>
+
+          {/* Активные сессии */}
+          {user.activeSessions && user.activeSessions.length > 0 && (
+            <button
+              onClick={() => setShowActiveSessions(!showActiveSessions)}
+              style={{
+                width: '100%',
+                padding: 'var(--card-padding-md)',
+                background: 'rgba(150, 150, 255, 0.08)',
+                border: '1px solid rgba(150, 150, 255, 0.2)',
+                borderRadius: 'var(--radius-m)',
+                color: '#9696FF',
+                fontSize: 'var(--font-size-sm)',
+                fontWeight: 'var(--font-weight-semibold)',
+                cursor: 'pointer',
+              }}
+            >
+              📊 {user.activeSessions.length} активных сессий
+            </button>
+          )}
+
+          {showActiveSessions && user.activeSessions && user.activeSessions.length > 0 && (
+            <div style={{ marginTop: 'var(--gap-md)' }}>
+              {user.activeSessions.map((session) => (
+                <div
+                  key={session.id}
+                  onClick={() => navigate(`/game/${session.id}`)}
+                  style={{
+                    padding: 'var(--card-padding-md)',
+                    background: 'rgba(100, 150, 255, 0.1)',
+                    border: '1px solid rgba(100, 150, 255, 0.2)',
+                    borderRadius: 'var(--radius-m)',
+                    marginBottom: 'var(--gap-sm)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)' }}>
+                    {session.type === 'BOT' ? '🤖 Против Jarvis' : session.type === 'BATTLE' ? '⚔️ Батл' : '👥 Дружеская'}
+                  </div>
+                  <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)' }}>
+                    {session.status === 'IN_PROGRESS' ? '▶️ В процессе' : session.status === 'WAITING_FOR_OPPONENT' ? '⏳ Ожидание' : session.status}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-md)' }}>

@@ -82,7 +82,7 @@ export const JarvisModal: React.FC<JarvisModalProps> = ({ currentJarvisLevel, on
               🤖 J.A.R.V.I.S
             </div>
             <div style={{ fontSize: 'var(--jarvis-subtitle-size)', color: 'var(--color-text-secondary, #8B92A8)', marginTop: 3 }}>
-              Choose difficulty level
+              {t.jarvis.subtitle}
             </div>
           </div>
           <button onClick={onClose} style={{ ...closeBtnStyle, width: 44, height: 44, fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
@@ -112,7 +112,7 @@ export const JarvisModal: React.FC<JarvisModalProps> = ({ currentJarvisLevel, on
                       {lvl.name}
                     </div>
                     <div style={{ fontSize: 'var(--jarvis-card-info-size)', color: 'var(--color-text-muted, #4A5270)', marginTop: 2 }}>
-                      {lvl.errorRate === 0 ? 'No errors' : `${lvl.errorRate}%`}
+                      {lvl.errorRate === 0 ? t.jarvis.noErrors : `${lvl.errorRate}%`}
                     </div>
                   </div>
                 </div>
@@ -140,7 +140,7 @@ export const JarvisModal: React.FC<JarvisModalProps> = ({ currentJarvisLevel, on
         {/* Footer hint — fixed at bottom (L2: Responsive) */}
         <div style={{ padding: 'var(--jarvis-footer-padding)', background: 'var(--jarvis-modal-footer-hint-bg, rgba(123,97,255,0.08))', border: '1px solid var(--jarvis-modal-footer-hint-border, rgba(123,97,255,0.15))', borderRadius: 14, flexShrink: 0 }}>
           <div style={{ fontSize: 'var(--jarvis-footer-size)', color: 'var(--color-text-secondary, #8B92A8)', lineHeight: 1.6 }}>
-            🏆 Beat levels in order. For each completed level you earn a J.A.R.V.I.S badge on your profile.
+            {t.jarvis.description}
           </div>
         </div>
       </div>
