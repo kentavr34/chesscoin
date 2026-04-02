@@ -8,6 +8,29 @@
 
 ---
 
+## 🔴 ПЕРЕД НАЧАЛОМ РАЗРАБОТКИ ПРОЧИТАЙ ОБЯЗАТЕЛЬНО
+
+**Это применимо к разработчикам и помощникам AI (Клаудия).**
+
+### Если ты разработчик (SAM):
+1. [CLAUDE.md](./CLAUDE.md) — главная конституция проекта (история, ошибки, правила)
+2. [.claude/STARTUP.md](./.claude/STARTUP.md) — личные инструкции для Клаудии
+3. [.claude/management/README.md](./.claude/management/README.md) — система управления проектом
+
+### Если ты Клаудия (AI помощница):
+**ОБЯЗАТЕЛЬНО в этом порядке:**
+1. [CLAUDE.md](./CLAUDE.md) — конституция проекта
+2. [.claude/STARTUP.md](./.claude/STARTUP.md) — твои личные инструкции ⭐ **ГЛАВНОЕ**
+3. [.claude/INIT.md](./.claude/INIT.md) — алгоритм инициализации
+4. [.claude/projects/.../memory/MEMORY.md](./.claude/projects/) — полная память проекта
+5. [.claude/management/README.md](./.claude/management/README.md) — управляющие файлы
+
+**После прочтения → перейди к [.claude/management/02-TASKS.md](./.claude/management/02-TASKS.md) для текущих приоритетов**
+
+---
+
+---
+
 ## 🏗 Стек
 
 | Компонент | Технологии |
