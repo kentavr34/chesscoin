@@ -3,6 +3,10 @@ import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { PageLayout, useInfoPopup, InfoPopup } from '@/components/layout/PageLayout';
 import { Avatar } from '@/components/ui/Avatar';
 import { AvatarCropModal } from '@/components/ui/AvatarCropModal';
+import { Button } from '@/components/ui/Button';
+import { Text } from '@/components/ui/Text';
+import { Heading } from '@/components/ui/Heading';
+import { Card } from '@/components/ui/Card';
 import { useUserStore } from '@/store/useUserStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { useT } from '@/i18n/useT';
@@ -267,22 +271,19 @@ export const ProfilePage: React.FC = () => {
             </div>
           )}
         </div>
-        <div style={{ fontFamily: 'Inter,sans-serif', fontSize: 18, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)', letterSpacing: '-.02em', textAlign: 'center', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
           {/* 2.1 Флаг страны рядом с именем */}
           {user?.countryMember?.country?.flag && (
             <span style={{ fontSize: 20 }}>{user?.countryMember.country.flag}</span>
           )}
-          {user.firstName} {user.lastName ?? ''}
+          <Heading level="h2">{user.firstName} {user.lastName ?? ''}</Heading>
         </div>
-        <div style={{ fontSize: 12, color: 'var(--text-secondary, #8B92A8)', marginTop: 3 }}>@{user.username ?? 'unknown'}</div>
+        <Text variant="caption" color="secondary" style={{ marginTop: 3, textAlign: 'center' }}>@{user.username ?? 'unknown'}</Text>
         {/* 2.3 Кнопка "Сразиться" на чужом профиле */}
         {!isOwnProfile && (
-          <button
-            onClick={() => navigate('/battles', { state: { challengeUserId: viewedUserId } })}
-            style={{ marginTop: 10, padding: '9px 20px', background: 'rgba(245,200,66,0.12)', border: '1px solid rgba(245,200,66,0.3)', borderRadius: 12, color: 'var(--accent, #F5C842)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
-          >
+          <Button variant="secondary" size="sm" style={{ marginTop: 10 }} onClick={() => navigate('/battles', { state: { challengeUserId: viewedUserId } })}>
             ⚔️ {t.profile.challengeBtn ?? 'Challenge'}
-          </button>
+          </Button>
         )}
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8, justifyContent: 'center' }}>
           <span style={tagGold}>{leagueEmoji[user.league]} #1</span>
@@ -307,46 +308,35 @@ export const ProfilePage: React.FC = () => {
       </div>
 
       {/* Balance — N7 */}
-      <div style={{ ...balCard, flexDirection: 'column', gap: 10 }}>
+      <Card padding="md" style={{ margin: '12px 18px 0', flexDirection: 'column', gap: 10, display: 'flex' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <div style={microLbl}>{t.profile.balance}</div>
+            <Text variant="caption" color="muted" style={{ marginBottom: 3 }}>{t.profile.balance}</Text>
             <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 22, fontWeight: 800, color: 'var(--accent, #F5C842)' }}>
               {fmtBalance(user.balance)} <span style={{ fontSize: 13, opacity: .5 }}>ᚙ</span>
             </div>
           </div>
-          <button
-            onClick={() => navigate('/referrals')}
-            style={{ width: 44, height: 44, borderRadius: 14, background: 'rgba(245,200,66,0.1)', border: '1px solid rgba(245,200,66,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, cursor: 'pointer', flexShrink: 0 }}
-            title={t.profile.txHistory}
-          >👜</button>
+          <Button variant="tertiary" size="sm" onClick={() => navigate('/referrals')} title={t.profile.txHistory} style={{ width: 44, height: 44, padding: 0, minWidth: 'unset' }}>👜</Button>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          <button onClick={() => navigate('/shop')} style={{ ...secBtn, width: '100%' }}>{t.profile.shop}</button>
-          <button onClick={() => navigate('/referrals')} style={{ ...secBtn, width: '100%' }}>{t.profile.referrals} →</button>
+          <Button variant="secondary" size="sm" onClick={() => navigate('/shop')}>{t.profile.shop}</Button>
+          <Button variant="secondary" size="sm" onClick={() => navigate('/referrals')}>{t.profile.referrals} →</Button>
         </div>
-      </div>
+      </Card>
 
       {/* Чемпион месяца */}
       {user?.isMonthlyChampion && (
-        <div style={{
-          margin: '8px 18px 0',
-          padding: '10px 16px',
-          background: 'linear-gradient(135deg, rgba(255,215,0,0.12), rgba(245,200,66,0.06))',
-          border: '1px solid rgba(255,215,0,0.35)',
-          borderRadius: 14,
-          display: 'flex', alignItems: 'center', gap: 10,
-        }}>
+        <Card padding="md" style={{ margin: '8px 18px 0', background: 'linear-gradient(135deg, rgba(255,215,0,0.12), rgba(245,200,66,0.06))', border: '1px solid rgba(255,215,0,0.35)', display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 24, animation: 'pulse 2s ease-in-out infinite' }}>👑</span>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 800, color: '#FFD700', fontFamily: "'Unbounded',sans-serif" }}>
+            <Text variant="body" weight="bold" color="accent" style={{ color: '#FFD700' }}>
               {t.profile.monthlyChampion ?? 'Monthly Champion'}
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>
+            </Text>
+            <Text variant="caption" color="secondary" style={{ marginTop: 2 }}>
               ELO rating {user?.monthlyChampionAt ? `· ${new Date(user?.monthlyChampionAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}` : ''}
-            </div>
+            </Text>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* League progress bar */}
@@ -386,8 +376,10 @@ export const ProfilePage: React.FC = () => {
       {/* Tabs */}
       <div style={ptabsStyle}>
         {TABS.map(({ id, label }) => (
-          <button key={id} onClick={() => setTab(id)} style={ptab(tab === id)}>
-            {label}
+          <button key={id} onClick={() => setTab(id)} style={ptab(tab === id)} title={label}>
+            <Text variant="caption" weight={tab === id ? "bold" : "normal"} color={tab === id ? "accent" : "secondary"} style={{ whiteSpace: 'nowrap' }}>
+              {label}
+            </Text>
           </button>
         ))}
       </div>
@@ -395,7 +387,7 @@ export const ProfilePage: React.FC = () => {
       {/* Info tab */}
       {tab === 'info' && (
         <>
-          <div style={secStyle}>{t.profile.stats}</div>
+          <Text variant="caption" color="muted" weight="bold" style={{ fontSize: 10, letterSpacing: '.09em', textTransform: 'uppercase', padding: '16px 18px 8px' }}>{t.profile.stats}</Text>
           <div style={{ display: 'flex', justifyContent: 'space-around', padding: '12px 18px' }}>
             <CircStat value={wins}   pct={winRate}  color="var(--green, #00D68F)" label={t.profile.wins}   />
             <CircStat value={losses} pct={lossRate} color="var(--red, #FF4D6A)" label={t.profile.losses} />
@@ -468,16 +460,16 @@ export const ProfilePage: React.FC = () => {
             <StatCard val={user.winStreak ?? 0} lbl={t.profile.streak} color="var(--accent, #F5C842)" />
           </div>
 
-          <div style={secStyle}>{t.profile.refSection}</div>
-          <div style={{ margin: '0 18px', padding: 14, background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 18, display: 'flex', alignItems: 'center', gap: 12 }}>
+          <Text variant="caption" color="muted" weight="bold" style={{ fontSize: 10, letterSpacing: '.09em', textTransform: 'uppercase', padding: '16px 18px 8px' }}>{t.profile.refSection}</Text>
+          <Card padding="md" style={{ margin: '0 18px', display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>{t.profile.refLink}</div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', fontFamily: "'JetBrains Mono',monospace", marginTop: 5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <Text variant="body" weight="bold">{t.profile.refLink}</Text>
+              <Text variant="caption" color="muted" style={{ fontFamily: "'JetBrains Mono',monospace", marginTop: 5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
                 t.me/chessgamecoin_bot?start=ref_{user.telegramId}
-              </div>
+              </Text>
             </div>
-            <button style={goldBtn}>{t.profile.invite}</button>
-          </div>
+            <Button variant="primary" size="sm">{t.profile.invite}</Button>
+          </Card>
         </>
       )}
 
@@ -492,7 +484,7 @@ export const ProfilePage: React.FC = () => {
         return (
           <>
             {/* Последние партии */}
-            <div style={secStyle}>{t.profile.recentGames}</div>
+            <Text variant="caption" color="muted" weight="bold" style={{ fontSize: 10, letterSpacing: '.09em', textTransform: 'uppercase', padding: '16px 18px 8px' }}>{t.profile.recentGames}</Text>
             {recentGames.length === 0 ? (
               <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: '24px 0', fontSize: 13 }}>
                 {t.profile.noGamesPlayed}
@@ -557,7 +549,7 @@ export const ProfilePage: React.FC = () => {
             )}
 
             {/* История транзакций — под играми */}
-            <div style={{ ...secStyle, marginTop: 8 }}>💸 {t.profile.txHistory}</div>
+            <Text variant="caption" color="muted" weight="bold" style={{ fontSize: 10, letterSpacing: '.09em', textTransform: 'uppercase', padding: '16px 18px 8px', marginTop: 8 }}>💸 {t.profile.txHistory}</Text>
             {transactions.length === 0 ? (
               <div style={{ textAlign: 'center', color: 'var(--text-muted,#4A5270)', padding: 24, fontSize: 13 }}>{t.profile.noTx}</div>
             ) : (
@@ -581,10 +573,10 @@ export const ProfilePage: React.FC = () => {
                   REFUND: '↩️',
                 };
                 return (
-                  <div key={tx.id} style={stripStyle}>
+                  <Card key={tx.id} padding="md" style={{ margin: '4px 18px 0', display: 'flex', alignItems: 'center', gap: 12 }}>
                     <span style={{ fontSize: 20 }}>{TX_ICON[tx.type] ?? (isPos ? '📈' : '📉')}</span>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary,#F0F2F8)' }}>
+                      <Text variant="body" weight="bold">
                         {
                           tx.type === 'BATTLE_WIN'         ? 'Battle win'         :
                           tx.type === 'BOT_WIN'            ? 'Bot win'            :
@@ -608,13 +600,13 @@ export const ProfilePage: React.FC = () => {
                           tx.type === 'REFUND'             ? 'Refund'             :
                           tx.type
                         }
-                      </div>
-                      <div style={{ fontSize: 10, color: 'var(--text-secondary,#8B92A8)', marginTop: 2 }}>{fmtDate(tx.createdAt)}</div>
+                      </Text>
+                      <Text variant="caption" color="secondary" style={{ marginTop: 2 }}>{fmtDate(tx.createdAt)}</Text>
                     </div>
                     <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 700, color: isPos ? 'var(--green,#00D68F)' : 'var(--red,#FF4D6A)' }}>
                       {isPos ? '+' : ''}{fmtBalance(tx.amount)} ᚙ
                     </span>
-                  </div>
+                  </Card>
                 );
               })
             )}
@@ -625,7 +617,7 @@ export const ProfilePage: React.FC = () => {
       {/* Saves tab */}
       {tab === 'saves' && (
         <>
-          <div style={secStyle}>{t.profile.savedGames}</div>
+          <Text variant="caption" color="muted" weight="bold" style={{ fontSize: 10, letterSpacing: '.09em', textTransform: 'uppercase', padding: '16px 18px 8px' }}>{t.profile.savedGames}</Text>
           {savedGames.length === 0 ? (
             <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: 32, fontSize: 13 }}>
               {t.profile.noSaves}
@@ -639,43 +631,41 @@ export const ProfilePage: React.FC = () => {
                 const p2 = sides[1]?.player;
                 const winner = sides.find((sd) => sd.status === 'WON');
                 return (
-                  <div key={sg.id} style={{ background: 'var(--bg-card, #13161E)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '12px 14px' }}>
+                  <Card key={sg.id} padding="md">
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
                         <Avatar user={p1} size="s" />
-                        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary, #F0F2F8)' }}>{p1?.firstName ?? '?'}</div>
+                        <Text variant="body" weight="bold">{p1?.firstName ?? '?'}</Text>
                       </div>
-                      <div style={{ textAlign: 'center', fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: 'var(--text-secondary, #8B92A8)' }}>vs</div>
+                      <Text variant="body" color="secondary" style={{ fontFamily: "'JetBrains Mono',monospace" }}>vs</Text>
                       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary, #F0F2F8)', textAlign: 'right' }}>{p2?.firstName ?? '?'}</div>
+                        <Text variant="body" weight="bold" style={{ textAlign: 'right' }}>{p2?.firstName ?? '?'}</Text>
                         <Avatar user={p2} size="s" />
                       </div>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: s?.pgn ? 8 : 0 }}>
-                      <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>
+                      <Text variant="caption" color="muted">
                         {s?.type ?? ''} · {s?.finishedAt ? fmtDate(s.finishedAt) : ''}
-                      </div>
+                      </Text>
                       {winner && (
-                        <div style={{ fontSize: 11, color: 'var(--green, #00D68F)', fontWeight: 600 }}>
+                        <Text variant="caption" weight="bold" style={{ color: 'var(--green, #00D68F)' }}>
                           🏆 {winner.player?.firstName ?? 'Unknown'}
-                        </div>
+                        </Text>
                       )}
-                      <button
+                      <Button variant="tertiary" size="sm" style={{ padding: '2px 6px', minWidth: 'unset', height: 'auto' }}
                         onClick={() => s && warsApi.unsaveGame(s.id).then(() => setSavedGames(g => g.filter(x => x.id !== sg.id)))}
-                        style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: '2px 6px' }}
                       >
                         ✕ remove
-                      </button>
+                      </Button>
                     </div>
                     {s?.pgn && (
-                      <button
+                      <Button variant="secondary" size="sm" fullWidth style={{ marginTop: 8 }}
                         onClick={() => setReplayGame({ pgn: s.pgn!, title: `${p1?.firstName ?? '?'} vs ${p2?.firstName ?? '?'}`, sessionId: s.id })}
-                        style={{ width: '100%', padding: '7px 0', background: 'rgba(245,200,66,0.08)', color: 'var(--accent, #F5C842)', border: '1px solid rgba(245,200,66,0.2)', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
                       >
                         ♟ Replay game
-                      </button>
+                      </Button>
                     )}
-                  </div>
+                  </Card>
                 );
               })}
             </div>
@@ -689,32 +679,30 @@ export const ProfilePage: React.FC = () => {
           {/* Турнирные бейджи */}
           {(user?.tournamentBadges?.length ?? 0) > 0 && (
             <>
-              <div style={secStyle}>🏆 Tournament wins</div>
+              <Text variant="caption" color="muted" weight="bold" style={{ fontSize: 10, letterSpacing: '.09em', textTransform: 'uppercase', padding: '16px 18px 8px' }}>🏆 Tournament wins</Text>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 18px' }}>
                 {(user?.tournamentBadges as TournamentBadge[] | undefined)?.slice().reverse().map((badge, i: number) => {
                   const placeEmoji = badge.place === 1 ? '🥇' : badge.place === 2 ? '🥈' : '🥉';
                   const placeColor = badge.place === 1 ? '#FFD700' : badge.place === 2 ? '#C0C0C0' : '#CD7F32';
                   return (
-                    <div key={i} style={{
+                    <Card key={i} padding="md" style={{
                       display: 'flex', alignItems: 'center', gap: 12,
-                      padding: '12px 14px',
                       background: `linear-gradient(135deg, ${placeColor}10, transparent)`,
                       border: `1px solid ${placeColor}30`,
-                      borderRadius: 14,
                     }}>
                       <span style={{ fontSize: 28, flexShrink: 0 }}>{placeEmoji}</span>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>
+                        <Text variant="body" weight="bold">
                           {badge.place} place · {badge.tournamentName ?? badge.name}
-                        </div>
-                        <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>
+                        </Text>
+                        <Text variant="caption" color="secondary" style={{ marginTop: 2 }}>
                           {badge.type} · {badge.date ? new Date(badge.date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : ''}
-                        </div>
+                        </Text>
                       </div>
                       <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, color: placeColor }}>
                         +{badge.prize ? (Number(BigInt(badge.prize)) / 1000).toFixed(0) + 'K' : '—'} ᚙ
                       </div>
-                    </div>
+                    </Card>
                   );
                 })}
               </div>
@@ -740,11 +728,11 @@ export const ProfilePage: React.FC = () => {
             const earnedCount = Object.keys(earned).length;
             return (
               <>
-                <div style={{ ...secStyle, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 10, fontWeight: 700, letterSpacing: '.09em', textTransform: 'uppercase', color: 'var(--text-muted, #4A5270)', padding: '16px 18px 8px' }}>
                   <span>🎖 {t.profile.tabs.achievements}</span>
-                  <span style={{ fontSize: 10, color: 'var(--text-secondary, #8B92A8)', textTransform: 'none', fontWeight: 600 }}>
+                  <Text variant="caption" color="secondary" weight="bold">
                     {earnedCount}/{ACHS.length}
-                  </span>
+                  </Text>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8, padding: '0 18px' }}>
                   {ACHS.map(a => {
@@ -775,7 +763,7 @@ export const ProfilePage: React.FC = () => {
           })()}
 
           {/* JARVIS бейджи */}
-          <div style={secStyle}>{t.profile.jarvisCerts}</div>
+          <Text variant="caption" color="muted" weight="bold" style={{ fontSize: 10, letterSpacing: '.09em', textTransform: 'uppercase', padding: '16px 18px 8px' }}>{t.profile.jarvisCerts}</Text>
           {(user?.jarvisBadges?.length ?? 0) === 0 ? (
             <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: 32, fontSize: 13 }}>
               {t.profile.noJarvis}
@@ -793,25 +781,25 @@ export const ProfilePage: React.FC = () => {
                 };
                 const color = colors[badgeName] ?? '#9B85FF';
                 return (
-                  <div key={i} onClick={() => setSelectedBadge({ name: badgeName, date: dateStr })} style={{ background: 'linear-gradient(135deg,#1C2030,#13161F)', border: `1px solid ${color}40`, borderRadius: 18, padding: '14px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer', textAlign: 'center' }}>
+                  <Card key={i} padding="md" onClick={() => setSelectedBadge({ name: badgeName, date: dateStr })} style={{ background: 'linear-gradient(135deg,#1C2030,#13161F)', border: `1px solid ${color}40`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer', textAlign: 'center' }}>
                     <div style={{ width: 52, height: 52, borderRadius: 14, background: `${color}18`, border: `2px solid ${color}60`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <span style={{ fontSize: 22 }}>🤖</span>
                     </div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color, marginBottom: 3 }}>{t.gameResult.jarvisCert}</div>
-                      <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary, #F0F2F8)' }}>{badgeName}</div>
-                      <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>{t.profile.level} {lvlData?.level ?? '?'} · +{((lvlData?.reward ?? 0) / 1000).toFixed(0)}K ᚙ</div>
+                      <Text variant="caption" weight="bold" style={{ fontSize: 10, letterSpacing: '.1em', textTransform: 'uppercase', color, marginBottom: 3 }}>{t.gameResult.jarvisCert}</Text>
+                      <Text variant="body" weight="bold" style={{ fontSize: 16, marginTop: 0 }}>{badgeName}</Text>
+                      <Text variant="caption" color="secondary" style={{ marginTop: 2 }}>{t.profile.level} {lvlData?.level ?? '?'} · +{((lvlData?.reward ?? 0) / 1000).toFixed(0)}K ᚙ</Text>
                       {dateStr && (
-                        <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', marginTop: 4 }}>
+                        <Text variant="caption" color="muted" style={{ marginTop: 4 }}>
                           📅 {new Date(dateStr).toLocaleDateString()}
-                        </div>
+                        </Text>
                       )}
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
                       <div style={{ fontSize: 18 }}>✓</div>
-                      <div style={{ fontSize: 9, color: 'var(--text-muted, #4A5270)', marginTop: 2 }}>{t.profile.passed}</div>
+                      <Text variant="caption" color="muted" style={{ marginTop: 2 }}>{t.profile.passed}</Text>
                     </div>
-                  </div>
+                  </Card>
                 );
               })}
             </div>
@@ -828,36 +816,36 @@ export const ProfilePage: React.FC = () => {
           <div style={{ width: '100%', maxWidth: 480, background: 'var(--bg-card, #13161F)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px 24px 0 0', padding: '20px 18px', paddingBottom: 'max(20px, env(safe-area-inset-bottom, 20px))' }}>
             <div style={{ width: 36, height: 4, background: '#2A2F48', borderRadius: 2, margin: '0 auto 18px' }} />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 15, fontWeight: 800, color: 'var(--text-primary, #F0F2F8)' }}>⚙ {t.profile.settings.title}</div>
-              <button onClick={() => setShowSettings(false)} style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--border, rgba(255,255,255,0.07))', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-secondary, #8B92A8)', fontSize: 16, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>✕</button>
+              <Heading level="h3">⚙ {t.profile.settings.title}</Heading>
+              <Button variant="tertiary" size="sm" onClick={() => setShowSettings(false)} style={{ width: 44, height: 44, padding: 0, minWidth: 'unset' }}>✕</Button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {/* Язык */}
-              <div style={settingCard}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary, #F0F2F8)' }}>{t.profile.settings.language}</div>
+              <Card padding="md" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Text variant="body" weight="bold">{t.profile.settings.language}</Text>
                 <div style={{ display: 'flex', gap: 8 }}>
                   {(['en', 'ru'] as Lang[]).map((l) => (
-                    <button key={l} onClick={() => setLang(l)} style={{ padding: '7px 14px', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', background: lang === l ? 'var(--accent, #F5C842)' : 'var(--bg-card, #1C2030)', color: lang === l ? 'var(--bg, #0B0D11)' : 'var(--text-secondary, #8B92A8)', border: lang === l ? 'none' : '1px solid rgba(255,255,255,0.1)', transition: 'all .15s' }}>
+                    <Button key={l} variant={lang === l ? 'primary' : 'secondary'} size="sm" onClick={() => setLang(l)}>
                       {l === 'en' ? '🇬🇧 EN' : '🇷🇺 RU'}
-                    </button>
+                    </Button>
                   ))}
                 </div>
-              </div>
+              </Card>
               {/* Звук */}
-              <div style={settingCard}>
+              <Card padding="md" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary, #F0F2F8)' }}>{t.profile.settings.sound}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted, #4A5270)', marginTop: 3 }}>{soundEnabled ? t.profile.settings.soundOn : t.profile.settings.soundOff}</div>
+                  <Text variant="body" weight="bold">{t.profile.settings.sound}</Text>
+                  <Text variant="caption" color="muted" style={{ marginTop: 3 }}>{soundEnabled ? t.profile.settings.soundOn : t.profile.settings.soundOff}</Text>
                 </div>
                 <button onClick={() => setSoundEnabled(!soundEnabled)} style={{ width: 52, height: 28, borderRadius: 14, background: soundEnabled ? 'var(--accent, #F5C842)' : '#2A2F48', border: 'none', cursor: 'pointer', position: 'relative', transition: 'background .2s', flexShrink: 0 }}>
                   <span style={{ position: 'absolute', top: 3, left: soundEnabled ? 26 : 3, width: 22, height: 22, borderRadius: '50%', background: '#fff', transition: 'left .2s', boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }} />
                 </button>
-              </div>
+              </Card>
               {/* Вибрация (хаптик) */}
-              <div style={settingCard}>
+              <Card padding="md" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary, #F0F2F8)' }}>📳 Вибрация</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted, #4A5270)', marginTop: 3 }}>Haptic feedback при ходах</div>
+                  <Text variant="body" weight="bold">📳 Вибрация</Text>
+                  <Text variant="caption" color="muted" style={{ marginTop: 3 }}>Haptic feedback при ходах</Text>
                 </div>
                 <button
                   onClick={() => {
@@ -869,7 +857,7 @@ export const ProfilePage: React.FC = () => {
                 >
                   <span style={{ position: 'absolute', top: 3, left: localStorage.getItem('chesscoin_haptic') !== 'off' ? 26 : 3, width: 22, height: 22, borderRadius: '50%', background: '#fff', transition: 'left .2s', boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }} />
                 </button>
-              </div>
+              </Card>
             </div>
           </div>
         </div>
