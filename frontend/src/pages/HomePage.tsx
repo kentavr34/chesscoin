@@ -8,6 +8,11 @@ import { PageLayout } from '@/components/layout/PageLayout';
 import { JarvisModal } from '@/components/ui/JarvisModal';
 import { GameSetupModal } from '@/components/ui/GameSetupModal';
 import { JARVIS_LEVELS, type JarvisLevel } from '@/components/ui/JarvisModal';
+import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Text } from '@/components/ui/Text';
+import { Heading } from '@/components/ui/Heading';
+import { StatBox } from '@/components/ui/StatBox';
 
 /**
  * HomePage.tsx — Главная страница с кнопками навигации
@@ -107,178 +112,103 @@ export const HomePage: React.FC = () => {
 
       <div style={{ padding: 'var(--space-l) var(--space-m)', maxWidth: 500, margin: '0 auto' }}>
         {/* Профиль пользователя */}
-        <div style={{
-          padding: 'var(--card-padding-lg)',
-          background: 'var(--color-bg-card, #13161F)',
-          border: '1px solid var(--color-border)',
-          borderRadius: 'var(--radius-l)',
-          marginBottom: 'var(--gap-xl)',
-        }}>
+        <Card padding="lg" style={{ marginBottom: 'var(--gap-xl)' }}>
           {/* Заголовок профиля */}
           <div style={{ display: 'flex', gap: 'var(--gap-md)', alignItems: 'center', marginBottom: 'var(--gap-md)' }}>
             <div style={{ fontSize: 44 }}>👤</div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 'var(--font-size-md)', fontWeight: 'var(--font-weight-extrabold)', color: 'var(--color-text-primary)' }}>
+              <Heading level="h3" style={{ margin: 0 }}>
                 {user.firstName || 'Player'}
-              </div>
-              <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', marginTop: 2 }}>
+              </Heading>
+              <Text size="sm" color="secondary" style={{ marginTop: 'var(--gap-xs)' }}>
                 {user.wins || 0} побед · {user.losses || 0} поражений
-              </div>
+              </Text>
             </div>
-            <button
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={() => navigate('/profile')}
-              style={{
-                padding: `var(--input-padding-y) var(--button-padding-x-md)`,
-                background: 'rgba(255,255,255,0.07)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 'var(--radius-m)',
-                color: 'var(--color-text-primary)',
-                cursor: 'pointer',
-                fontSize: 'var(--font-size-sm)',
-                fontWeight: 'var(--font-weight-semibold)',
-                fontFamily: 'inherit',
-              }}
             >
               Открыть
-            </button>
+            </Button>
           </div>
 
           {/* ELO и Лига */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--gap-sm)', marginBottom: 'var(--gap-md)' }}>
-            <div style={{
-              padding: 'var(--card-padding-md)',
-              background: 'rgba(255, 107, 107, 0.08)',
-              border: '1px solid rgba(255, 107, 107, 0.2)',
-              borderRadius: 'var(--radius-m)',
-              textAlign: 'center',
-            }}>
-              <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', marginBottom: 2 }}>Рейтинг</div>
-              <div style={{ fontSize: 'var(--font-size-lg)', fontWeight: 'var(--font-weight-extrabold)', color: '#FF6B6B' }}>
-                {user.elo || 0}
-              </div>
-            </div>
-            <div style={{
-              padding: 'var(--card-padding-md)',
-              background: 'rgba(255, 193, 7, 0.08)',
-              border: '1px solid rgba(255, 193, 7, 0.2)',
-              borderRadius: 'var(--radius-m)',
-              textAlign: 'center',
-            }}>
-              <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', marginBottom: 2 }}>Лига</div>
-              <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-bold)', color: '#FFC107' }}>
-                {getLeagueLabel(user.league || 'BRONZE')}
-              </div>
-            </div>
+            <StatBox label="Рейтинг" value={user.elo || 0} color="red" />
+            <StatBox label="Лига" value={getLeagueLabel(user.league || 'BRONZE')} color="gold" />
           </div>
 
           {/* Баланс */}
-          <div style={{
-            padding: 'var(--card-padding-md)',
-            background: 'rgba(245,200,66,0.08)',
-            border: '1px solid rgba(245,200,66,0.2)',
-            borderRadius: 'var(--radius-m)',
-            textAlign: 'center',
-            marginBottom: 'var(--gap-md)',
-          }}>
-            <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', marginBottom: 'var(--gap-xs)' }}>Баланс</div>
-            <div style={{ fontSize: 'var(--font-size-xl)', fontWeight: 'var(--font-weight-extrabold)', color: '#F5C842', fontFamily: "'JetBrains Mono',monospace" }}>
-              {(user.balance || 0).toLocaleString()} ᚙ
-            </div>
+          <div style={{ marginBottom: 'var(--gap-md)' }}>
+            <StatBox
+              label="Баланс"
+              value={`${(user.balance || 0).toLocaleString()} ᚙ`}
+              color="purple"
+            />
           </div>
 
           {/* Попытки и рефералы */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--gap-sm)', marginBottom: 'var(--gap-md)' }}>
-            <div style={{
-              padding: 'var(--card-padding-md)',
-              background: 'rgba(100, 200, 255, 0.08)',
-              border: '1px solid rgba(100, 200, 255, 0.2)',
-              borderRadius: 'var(--radius-m)',
-              textAlign: 'center',
-            }}>
-              <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)' }}>Попытки</div>
-              <div style={{ fontSize: 'var(--font-size-md)', fontWeight: 'var(--font-weight-bold)', color: '#64C8FF' }}>
-                {user.attempts || 0}/{user.maxAttempts || 5}
-              </div>
+            <StatBox
+              label="Попытки"
+              value={`${user.attempts || 0}/${user.maxAttempts || 5}`}
+              color="blue"
+            >
               {getNextAttemptTime() && (
-                <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', marginTop: 2 }}>
+                <Text size="xs" color="secondary">
                   Через {getNextAttemptTime()}
-                </div>
+                </Text>
               )}
-            </div>
-            <div style={{
-              padding: 'var(--card-padding-md)',
-              background: 'rgba(100, 255, 150, 0.08)',
-              border: '1px solid rgba(100, 255, 150, 0.2)',
-              borderRadius: 'var(--radius-m)',
-              textAlign: 'center',
-            }}>
-              <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)' }}>Рефералы</div>
-              <div style={{ fontSize: 'var(--font-size-md)', fontWeight: 'var(--font-weight-bold)', color: '#64FF96' }}>
-                {user.referralCount || 0}
-              </div>
-              <button
+            </StatBox>
+            <StatBox label="Рефералы" value={user.referralCount || 0} color="green">
+              <Button
+                variant="tertiary"
+                size="sm"
                 onClick={() => navigate('/referrals')}
-                style={{
-                  fontSize: 'var(--font-size-xs)',
-                  color: '#64FF96',
-                  background: 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  marginTop: 2,
-                  textDecoration: 'underline',
-                }}
+                style={{ marginTop: 'var(--gap-xs)', padding: 0, color: 'inherit' }}
               >
-                Пригласить
-              </button>
-            </div>
+                <Text size="xs" style={{ textDecoration: 'underline' }}>
+                  Пригласить
+                </Text>
+              </Button>
+            </StatBox>
           </div>
 
           {/* Активные сессии */}
           {user.activeSessions && user.activeSessions.length > 0 && (
-            <button
-              onClick={() => setShowActiveSessions(!showActiveSessions)}
-              style={{
-                width: '100%',
-                padding: 'var(--card-padding-md)',
-                background: 'rgba(150, 150, 255, 0.08)',
-                border: '1px solid rgba(150, 150, 255, 0.2)',
-                borderRadius: 'var(--radius-m)',
-                color: '#9696FF',
-                fontSize: 'var(--font-size-sm)',
-                fontWeight: 'var(--font-weight-semibold)',
-                cursor: 'pointer',
-              }}
-            >
-              📊 {user.activeSessions.length} активных сессий
-            </button>
-          )}
+            <>
+              <Button
+                variant="secondary"
+                fullWidth
+                onClick={() => setShowActiveSessions(!showActiveSessions)}
+                style={{ marginBottom: showActiveSessions ? 'var(--gap-md)' : 0 }}
+              >
+                📊 {user.activeSessions.length} активных сессий
+              </Button>
 
-          {showActiveSessions && user.activeSessions && user.activeSessions.length > 0 && (
-            <div style={{ marginTop: 'var(--gap-md)' }}>
-              {user.activeSessions.map((session) => (
-                <div
-                  key={session.id}
-                  onClick={() => navigate(`/game/${session.id}`)}
-                  style={{
-                    padding: 'var(--card-padding-md)',
-                    background: 'rgba(100, 150, 255, 0.1)',
-                    border: '1px solid rgba(100, 150, 255, 0.2)',
-                    borderRadius: 'var(--radius-m)',
-                    marginBottom: 'var(--gap-sm)',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)' }}>
-                    {session.type === 'BOT' ? '🤖 Против Jarvis' : session.type === 'BATTLE' ? '⚔️ Батл' : '👥 Дружеская'}
-                  </div>
-                  <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)' }}>
-                    {session.status === 'IN_PROGRESS' ? '▶️ В процессе' : session.status === 'WAITING_FOR_OPPONENT' ? '⏳ Ожидание' : session.status}
-                  </div>
+              {showActiveSessions && (
+                <div style={{ marginTop: 'var(--gap-md)' }}>
+                  {user.activeSessions.map((session) => (
+                    <Card
+                      key={session.id}
+                      interactive
+                      onClick={() => navigate(`/game/${session.id}`)}
+                      style={{ marginBottom: 'var(--gap-sm)' }}
+                    >
+                      <Text size="sm">
+                        {session.type === 'BOT' ? '🤖 Против Jarvis' : session.type === 'BATTLE' ? '⚔️ Батл' : '👥 Дружеская'}
+                      </Text>
+                      <Text size="xs" color="secondary">
+                        {session.status === 'IN_PROGRESS' ? '▶️ В процессе' : session.status === 'WAITING_FOR_OPPONENT' ? '⏳ Ожидание' : session.status}
+                      </Text>
+                    </Card>
+                  ))}
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
-        </div>
+        </Card>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-md)' }}>
           <NavButton
@@ -357,8 +287,8 @@ const NavButton: React.FC<NavButtonProps> = ({ icon, title, subtitle, onClick, c
     >
       <div style={{ fontSize: 'var(--icon-size-xl)' }}>{icon}</div>
       <div style={{ textAlign: 'left', flex: 1 }}>
-        <div style={{ fontSize: 'var(--font-size-md)', fontWeight: 'var(--font-weight-extrabold)', color: 'var(--color-text-primary)' }}>{title}</div>
-        <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', marginTop: 2 }}>{subtitle}</div>
+        <Heading level="h4" style={{ margin: 0 }}>{title}</Heading>
+        <Text size="sm" color="secondary" style={{ marginTop: 'var(--gap-xs)' }}>{subtitle}</Text>
       </div>
       <div style={{ fontSize: 'var(--font-size-xl)' }}>→</div>
     </button>
