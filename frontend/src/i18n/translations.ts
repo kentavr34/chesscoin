@@ -304,7 +304,7 @@ export const translations = {
       tabs: { avatars: '🎭 Avatars', frames: '🖼 Frames', visual: '🎲 Visual', themes: '🎨 Themes', effects: '🎬 Effects', exchange: '💱 Exchange' },
       visualTabs: { boards: '🏁 Boards', pieces: '♔ Pieces', sets: '♟ Sets', animations: '💫 Animations', fonts: 'Aa Fonts' },
       rarity: { COMMON: 'Common', RARE: 'Rare', EPIC: 'Epic', LEGENDARY: 'Legendary' },
-      equip: 'Equip', equipped: 'Equipped', buy: 'Buy', buying: '...', owned: 'Owned',
+      equip: 'Equip', equipped: 'Equipped', unequip: 'Unequip', buy: 'Buy', buying: '...', owned: 'Owned',
       tonTab: {
         connectWallet: '💎 Connect TON Wallet', connecting: 'Connecting...',
         benefits: [
@@ -534,6 +534,8 @@ export const translations = {
       minPrice: (min: number) => `Minimum price ${min} TON/1M`,
       sellTitle: 'Sell ᚙ',
       buyTitle: 'Buy ᚙ (BUY)',
+      executed: 'Executed',
+      cancelled: 'Cancelled',
     },
     errorBoundary: {
       title: 'Something went wrong',
@@ -843,7 +845,7 @@ export const translations = {
       tabs: { avatars: '🎭 Аватары', frames: '🖼 Рамки', visual: '🎲 Визуал', themes: '🎨 Темы', effects: '🎬 Эффекты', exchange: '💱 Биржа' },
       visualTabs: { boards: '🏁 Доски', pieces: '♔ Фигуры', sets: '♟ Наборы', animations: '💫 Анимации', fonts: 'Aa Шрифты' },
       rarity: { COMMON: 'Обычный', RARE: 'Редкий', EPIC: 'Эпический', LEGENDARY: 'Легендарный' },
-      equip: 'Надеть', equipped: 'Надето', buy: 'Купить', buying: '...', owned: 'Куплено',
+      equip: 'Надеть', equipped: 'Надето', unequip: 'Снять', buy: 'Купить', buying: '...', owned: 'Куплено',
       tonTab: {
         connectWallet: '💎 Подключить TON кошелёк', connecting: 'Подключение...',
         benefits: [
@@ -1075,6 +1077,8 @@ export const translations = {
       minPrice: (min: number) => `Минимальная цена ${min} TON/1M`,
       sellTitle: '📤 Продать ᚙ',
       buyTitle: '🛒 Купить ᚙ (BUY)',
+      executed: 'Исполнен',
+      cancelled: 'Отменён',
     },
     errorBoundary: {
       title: 'Что-то пошло не так',

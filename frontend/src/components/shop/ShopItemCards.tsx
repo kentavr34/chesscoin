@@ -168,6 +168,7 @@ interface AvatarItemCardProps {
 }
 
 export const AvatarItemCard: React.FC<AvatarItemCardProps> = ({ item, loading, highlighted, onPurchase, onEquip, onUnequip }) => {
+  const t = useT();
   const cardRef = useRef<HTMLDivElement>(null);
   const rarityColor = RARITY_COLOR[item.rarity] ?? 'var(--color-text-secondary, #8B92A8)';
   const [imgError, setImgError] = React.useState(false);
@@ -192,16 +193,16 @@ export const AvatarItemCard: React.FC<AvatarItemCardProps> = ({ item, loading, h
       <div>
         <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-primary, #F0F2F8)', lineHeight: 1.3 }}>{item.name}</div>
         <div style={{ fontSize: 10, color: rarityColor, marginTop: 2, fontWeight: 600 }}>
-          {item.rarity === 'COMMON' ? 'Common' : item.rarity === 'RARE' ? 'Rare' : item.rarity === 'EPIC' ? 'Epic' : 'Legendary'}
+          {(t.shop.rarity as Record<string,string>)[item.rarity] ?? item.rarity}
         </div>
       </div>
       {item.equipped ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <div style={{ fontSize: 11, color: 'var(--color-green, #00D68F)', fontWeight: 700, textAlign: 'center', padding: '3px 0' }}>✓ Equipped</div>
-          <button onClick={onUnequip} disabled={loading} style={{ ...btnStyle, background: 'var(--shop-unequip-btn-bg, rgba(255,77,106,0.12))', color: 'var(--color-red, #FF4D6A)', border: '1px solid var(--shop-unequip-btn-border, rgba(255,77,106,0.25))' }}>{loading ? '...' : 'Unequip'}</button>
+          <div style={{ fontSize: 11, color: 'var(--color-green, #00D68F)', fontWeight: 700, textAlign: 'center', padding: '3px 0' }}>✓ {t.shop.equipped ?? 'Equipped'}</div>
+          <button onClick={onUnequip} disabled={loading} style={{ ...btnStyle, background: 'var(--shop-unequip-btn-bg, rgba(255,77,106,0.12))', color: 'var(--color-red, #FF4D6A)', border: '1px solid var(--shop-unequip-btn-border, rgba(255,77,106,0.25))' }}>{loading ? '...' : t.shop.unequip}</button>
         </div>
       ) : item.owned ? (
-        <button onClick={onEquip} disabled={loading} style={{ ...btnStyle, background: 'linear-gradient(135deg,var(--color-purple-dark, #7B61FF),var(--color-purple, #9B85FF))', color: '#fff' }}>{loading ? '...' : '✨ Equip'}</button>
+        <button onClick={onEquip} disabled={loading} style={{ ...btnStyle, background: 'linear-gradient(135deg,var(--color-purple-dark, #7B61FF),var(--color-purple, #9B85FF))', color: '#fff' }}>{loading ? '...' : `✨ ${t.shop.equip}`}</button>
       ) : (
         <button onClick={onPurchase} disabled={loading} style={{ ...btnStyle, background: 'var(--color-accent, #F5C842)', color: 'var(--color-bg-dark, #0B0D11)' }}>{loading ? '...' : `${fmtBalance(item.priceCoins)} ᚙ`}</button>
       )}

@@ -756,7 +756,7 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
               <div style={{ fontSize: 24 }}>{order.status === 'EXECUTED' ? '✅' : '❌'}</div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>{fmtBalance(order.amountCoins)} ᚙ</div>
-                <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>{order.status === 'EXECUTED' ? 'Executed' : 'Cancelled'} · {order.priceTon.toFixed(5)} TON/1M</div>
+                <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>{order.status === 'EXECUTED' ? t.exchange.executed : t.exchange.cancelled} · {order.priceTon.toFixed(5)} TON/1M</div>
               </div>
               <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, color: order.status === 'EXECUTED' ? '#00D68F' : 'var(--text-muted)' }}>
                 {order.totalTon.toFixed(4)} TON
