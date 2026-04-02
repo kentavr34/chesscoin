@@ -6,6 +6,10 @@ import { profileApi } from '@/api';
 import { fmtBalance, fmtDate } from '@/utils/format';
 import { toast } from '@/components/ui/Toast';
 import { useT } from '@/i18n/useT';
+import { Button } from '@/components/ui/Button';
+import { Text } from '@/components/ui/Text';
+import { Heading } from '@/components/ui/Heading';
+import { Card } from '@/components/ui/Card';
 
 const RANK_THRESHOLDS_BASE = [
   { rank: 'EMPEROR',      emoji: '👑',     minReferrals: 1_000_000, bonus: 40_000,  pct: 15 },
@@ -94,41 +98,49 @@ export const ReferralsPage: React.FC = () => {
   return (
     <PageLayout title={t.profile.refSection} backTo="/profile" centered>
       {/* Header */}
-      <div style={heroCard}>
+      <Card style={{ margin: '8px 18px', background: 'linear-gradient(135deg, #1A1D2E, #13162A)', border: '1px solid rgba(123,97,255,0.2)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
         <div style={{ fontSize: 36, marginBottom: 8 }}>👥</div>
-        <div style={{ fontFamily: "Inter,sans-serif", fontSize: 16, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>
-          {r.title}
-        </div>
-        <div style={{ fontSize: 12, color: 'var(--text-secondary, #8B92A8)', marginTop: 6, lineHeight: 1.6 }}>
+        <Heading level={2}>{r.title}</Heading>
+        <Text variant="caption" color="--color-text-secondary" style={{ marginTop: 6, lineHeight: 1.6, display: 'block' }}>
           {r.subtitle}
-        </div>
+        </Text>
 
-        <div style={incomeBadge}>
-          <div>
-            <div style={microLbl}>{r.totalEarned}</div>
-            <div style={incomeNum}>{fmtBalance(data?.totalIncome ?? '0')} ᚙ</div>
-          </div>
-          <div style={{ width: 1, background: 'var(--border, rgba(255,255,255,0.08))', alignSelf: 'stretch' }} />
-          <div style={{ textAlign: 'right' }}>
-            <div style={microLbl}>{r.referralsCount}</div>
-            <div style={{ ...incomeNum, color: 'var(--text-primary, #F0F2F8)' }}>
-              {data?.active ?? 0} <span style={{ fontSize: 12, opacity: .5 }}>/ {data?.total ?? 0}</span>
+        <Card padding="md" style={{ width: '100%', marginTop: 16, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+          <div style={{ display: 'flex', gap: 16, justifyContent: 'space-between' }}>
+            <div>
+              <Text variant="caption" color="--color-text-muted" weight="bold" style={{ letterSpacing: '.09em', textTransform: 'uppercase', marginBottom: 4, display: 'block' }}>
+                {r.totalEarned}
+              </Text>
+              <Text variant="body" weight="bold" color="--color-accent-gold" style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 18 }}>
+                {fmtBalance(data?.totalIncome ?? '0')} ᚙ
+              </Text>
+            </div>
+            <div style={{ width: 1, background: 'var(--border, rgba(255,255,255,0.08))', alignSelf: 'stretch' }} />
+            <div style={{ textAlign: 'right' }}>
+              <Text variant="caption" color="--color-text-muted" weight="bold" style={{ letterSpacing: '.09em', textTransform: 'uppercase', marginBottom: 4, display: 'block' }}>
+                {r.referralsCount}
+              </Text>
+              <Text variant="body" weight="bold" style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 18 }}>
+                {data?.active ?? 0} <span style={{ fontSize: 12, opacity: .5 }}>/ {data?.total ?? 0}</span>
+              </Text>
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* Link */}
-        <div style={linkBox}>
-          <div style={{ fontSize: 11, color: 'var(--text-muted, #4A5270)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <Card padding="md" style={{ width: '100%', marginTop: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Text variant="caption" color="--color-text-muted" style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {refLink}
-          </div>
-          <button onClick={handleCopy} style={copyBtn}>{r.copy}</button>
-        </div>
+          </Text>
+          <Button variant="secondary" size="sm" onClick={handleCopy} style={{ background: 'rgba(245,200,66,0.12)', color: 'var(--accent, #F5C842)', border: '1px solid rgba(245,200,66,0.25)', flexShrink: 0 }}>
+            {r.copy}
+          </Button>
+        </Card>
 
-        <button onClick={handleShare} style={shareBtn}>
+        <Button variant="tertiary" size="md" fullWidth onClick={handleShare} style={{ marginTop: 10, background: '#7B61FF', color: '#fff', border: 'none' }}>
           {r.shareOnTelegram}
-        </button>
-      </div>
+        </Button>
+      </Card>
 
       {/* Military Rank Progress */}
       {(() => {
@@ -141,24 +153,36 @@ export const ReferralsPage: React.FC = () => {
           : 100;
 
         return (
-          <div style={{ margin: '12px 18px 0', padding: '16px', background: 'var(--bg-card, #13161E)', border: '1px solid rgba(123,97,255,0.25)', borderRadius: 18 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.09em', textTransform: 'uppercase', color: 'var(--text-muted, #4A5270)', marginBottom: 10 }}>{r.militaryRank}</div>
+          <Card style={{ margin: '12px 18px 0', background: 'var(--bg-card, #13161E)', border: '1px solid rgba(123,97,255,0.25)' }}>
+            <Text variant="caption" color="--color-text-muted" weight="bold" style={{ letterSpacing: '.09em', textTransform: 'uppercase', marginBottom: 10, display: 'block' }}>
+              {r.militaryRank}
+            </Text>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
               <div style={{ fontSize: 28 }}>{currentRank.emoji}</div>
               <div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--accent, #F5C842)' }}>{currentRank.label}</div>
-                <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>{referralCount} {r.referralsCount.toLowerCase()}</div>
+                <Heading level={3} color="--color-accent-gold" style={{ fontSize: 15 }}>
+                  {currentRank.label}
+                </Heading>
+                <Text variant="caption" color="--color-text-secondary" style={{ marginTop: 2 }}>
+                  {referralCount} {r.referralsCount.toLowerCase()}
+                </Text>
                 {currentRank.bonus > 0 && (
-                  <div style={{ fontSize: 10, color: '#7B61FF', marginTop: 2 }}>
+                  <Text variant="caption" style={{ color: '#7B61FF', marginTop: 2, display: 'block' }}>
                     +{currentRank.bonus.toLocaleString()} ᚙ {r.perReferral} · {currentRank.pct}% {r.ofWinnings}
-                  </div>
+                  </Text>
                 )}
               </div>
               {nextRank && (
                 <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-                  <div style={{ fontSize: 9, color: 'var(--text-muted, #4A5270)', marginBottom: 2 }}>{r.nextRank}</div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#7B61FF' }}>{nextRank.emoji} {nextRank.label}</div>
-                  <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>{nextRank.minReferrals.toLocaleString()} {r.ref}</div>
+                  <Text variant="caption" color="--color-text-muted" style={{ marginBottom: 2, display: 'block' }}>
+                    {r.nextRank}
+                  </Text>
+                  <Text variant="body" weight="bold" style={{ color: '#7B61FF' }}>
+                    {nextRank.emoji} {nextRank.label}
+                  </Text>
+                  <Text variant="caption" color="--color-text-muted">
+                    {nextRank.minReferrals.toLocaleString()} {r.ref}
+                  </Text>
                 </div>
               )}
             </div>
@@ -167,9 +191,9 @@ export const ReferralsPage: React.FC = () => {
                 <div style={{ height: 6, background: 'var(--border, rgba(255,255,255,0.07))', borderRadius: 999, overflow: 'hidden' }}>
                   <div style={{ height: '100%', width: `${progress}%`, background: 'linear-gradient(90deg,#7B61FF,#F5C842)', borderRadius: 999, transition: 'width .5s' }} />
                 </div>
-                <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', marginTop: 6, textAlign: 'right' }}>
+                <Text variant="caption" color="--color-text-muted" style={{ marginTop: 6, textAlign: 'right', display: 'block' }}>
                   {nextRank.minReferrals - referralCount} {r.untilNextRank}
-                </div>
+                </Text>
               </>
             )}
             {/* Rank ladder — highest on top, current marked 📍 */}
@@ -178,18 +202,21 @@ export const ReferralsPage: React.FC = () => {
                 const unlocked = referralCount >= rk.minReferrals;
                 const isCurrent = rk.rank === currentRank.rank;
                 return (
-                  <div key={rk.rank} style={{
-                    display: 'flex', alignItems: 'center', gap: 10,
-                    padding: '9px 12px', borderRadius: 12, position: 'relative',
-                    background: isCurrent
-                      ? 'linear-gradient(135deg,rgba(245,200,66,0.14),rgba(123,97,255,0.07))'
-                      : unlocked ? 'rgba(245,200,66,0.04)' : 'rgba(255,255,255,0.02)',
-                    border: `${isCurrent ? '2px' : '1px'} solid ${
-                      isCurrent ? 'rgba(245,200,66,0.5)' : unlocked ? 'rgba(245,200,66,0.14)' : 'rgba(255,255,255,0.04)'
-                    }`,
-                    opacity: unlocked ? 1 : 0.42,
-                    transition: 'all .15s',
-                  }}>
+                  <Card
+                    key={rk.rank}
+                    padding="sm"
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 10, position: 'relative',
+                      background: isCurrent
+                        ? 'linear-gradient(135deg,rgba(245,200,66,0.14),rgba(123,97,255,0.07))'
+                        : unlocked ? 'rgba(245,200,66,0.04)' : 'rgba(255,255,255,0.02)',
+                      border: `${isCurrent ? '2px' : '1px'} solid ${
+                        isCurrent ? 'rgba(245,200,66,0.5)' : unlocked ? 'rgba(245,200,66,0.14)' : 'rgba(255,255,255,0.04)'
+                      }`,
+                      opacity: unlocked ? 1 : 0.42,
+                      transition: 'all .15s',
+                    }}
+                  >
                     {isCurrent && (
                       <div style={{
                         position: 'absolute', top: 0, right: 10,
@@ -200,23 +227,39 @@ export const ReferralsPage: React.FC = () => {
                     )}
                     <span style={{ fontSize: 20, minWidth: 55, textAlign: 'center', flexShrink: 0, display: 'inline-block' }}>{rk.emoji}</span>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 12, fontWeight: isCurrent ? 800 : 700, color: isCurrent ? 'var(--accent, #F5C842)' : unlocked ? 'var(--text-primary, #F0F2F8)' : 'var(--text-secondary, #8B92A8)' }}>{rk.label}</div>
-                      <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', marginTop: 1 }}>{rk.minReferrals.toLocaleString()} {r.ref}</div>
+                      <Text
+                        variant="body"
+                        weight={isCurrent ? 'bold' : 'bold'}
+                        style={{
+                          fontSize: 12,
+                          color: isCurrent ? 'var(--accent, #F5C842)' : unlocked ? 'var(--text-primary, #F0F2F8)' : 'var(--text-secondary, #8B92A8)',
+                          display: 'block',
+                        }}
+                      >
+                        {rk.label}
+                      </Text>
+                      <Text variant="caption" color="--color-text-muted" style={{ marginTop: 1 }}>
+                        {rk.minReferrals.toLocaleString()} {r.ref}
+                      </Text>
                     </div>
                     {rk.bonus > 0 && (
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <div style={{ fontSize: 10, color: isCurrent ? 'var(--accent, #F5C842)' : unlocked ? '#9B85FF' : 'var(--text-muted, #4A5270)', fontWeight: 600 }}>+{rk.bonus.toLocaleString()} ᚙ</div>
-                        <div style={{ fontSize: 9, color: 'var(--text-muted, #4A5270)' }}>{rk.pct}%</div>
+                        <Text variant="caption" weight="bold" style={{ color: isCurrent ? 'var(--accent, #F5C842)' : unlocked ? '#9B85FF' : 'var(--text-muted, #4A5270)' }}>
+                          +{rk.bonus.toLocaleString()} ᚙ
+                        </Text>
+                        <Text variant="caption" color="--color-text-muted" style={{ fontSize: 9 }}>
+                          {rk.pct}%
+                        </Text>
                       </div>
                     )}
                     {isCurrent ? <span style={{ fontSize: 16, flexShrink: 0 }}>📍</span>
                       : unlocked ? <span style={{ color: 'var(--green, #00D68F)', fontSize: 14, flexShrink: 0 }}>✓</span>
                       : null}
-                  </div>
+                  </Card>
                 );
               })}
             </div>
-          </div>
+          </Card>
         );
       })()}
 
@@ -251,20 +294,26 @@ export const ReferralsPage: React.FC = () => {
 
         return (
           <>
-            <div style={secLbl}>{r.howItWorks}</div>
+            <Text variant="caption" color="--color-text-muted" weight="bold" style={{ fontSize: 10, letterSpacing: '.09em', textTransform: 'uppercase', padding: '18px 18px 8px', display: 'block' }}>
+              {r.howItWorks}
+            </Text>
             <div style={{ margin: '0 18px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
               {rules.map((rule) => (
-                <div key={rule.ico} style={ruleRow}>
+                <Card key={rule.ico} padding="md" style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                   <div style={{ fontSize: 22, width: 36, textAlign: 'center', flexShrink: 0 }}>{rule.ico}</div>
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--accent, #F5C842)' }}>{rule.title}</div>
-                    <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>{rule.sub}</div>
+                    <Text variant="body" weight="bold" color="--color-accent-gold">
+                      {rule.title}
+                    </Text>
+                    <Text variant="caption" color="--color-text-secondary" style={{ marginTop: 2 }}>
+                      {rule.sub}
+                    </Text>
                   </div>
-                </div>
+                </Card>
               ))}
-              <div style={{ fontSize: 11, color: 'var(--text-muted, #4A5270)', padding: '6px 0', lineHeight: 1.5 }}>
+              <Text variant="caption" color="--color-text-muted" style={{ padding: '6px 0', lineHeight: 1.5 }}>
                 {r.bonusNote}
-              </div>
+              </Text>
             </div>
           </>
         );
@@ -273,109 +322,50 @@ export const ReferralsPage: React.FC = () => {
       {/* Referral list */}
       {!loading && (data?.referrals?.length ?? 0) > 0 && (
         <>
-          <div style={secLbl}>{r.referralsList} ({data!.total})</div>
+          <Text variant="caption" color="--color-text-muted" weight="bold" style={{ fontSize: 10, letterSpacing: '.09em', textTransform: 'uppercase', padding: '18px 18px 8px', display: 'block' }}>
+            {r.referralsList} ({data!.total})
+          </Text>
           {data!.referrals.map((ref) => (
-            <div key={ref.id} style={refRow}>
+            <Card
+              key={ref.id}
+              padding="sm"
+              style={{
+                margin: '0 18px',
+                display: 'flex', alignItems: 'center', gap: 12,
+                borderBottom: '1px solid rgba(255,255,255,0.05)',
+              }}
+            >
               <Avatar user={ref as unknown as import("@/types").UserPublic} size="s" />
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary, #F0F2F8)' }}>
+                <Text variant="body" weight="bold">
                   {ref.firstName}
-                </div>
-                <div style={{ fontSize: 10, color: 'var(--text-secondary, #8B92A8)', marginTop: 1 }}>
+                </Text>
+                <Text variant="caption" color="--color-text-secondary" style={{ marginTop: 1 }}>
                   ELO {ref.elo} · {fmtDate(ref.createdAt)}
-                </div>
+                </Text>
               </div>
               <div>
                 {ref.referralActivated ? (
-                  <span style={tagGreen}>{r.active}</span>
+                  <span style={{ display: 'inline-block', padding: '3px 8px', background: 'rgba(0,214,143,0.1)', color: 'var(--green, #00D68F)', borderRadius: 6, fontSize: 10, fontWeight: 700 }}>
+                    {r.active}
+                  </span>
                 ) : (
-                  <span style={tagGray}>{r.pending}</span>
+                  <span style={{ display: 'inline-block', padding: '3px 8px', background: 'rgba(255,255,255,0.05)', color: 'var(--text-muted, #4A5270)', borderRadius: 6, fontSize: 10, fontWeight: 700 }}>
+                    {r.pending}
+                  </span>
                 )}
               </div>
-            </div>
+            </Card>
           ))}
         </>
       )}
 
       {!loading && (data?.total ?? 0) === 0 && (
-        <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', fontSize: 13, padding: '32px 0', whiteSpace: 'pre-line' }}>
+        <Text variant="body" style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: '32px 0', whiteSpace: 'pre-line' }}>
           {r.noReferrals}
-        </div>
+        </Text>
       )}
     </PageLayout>
   );
 };
 
-// ── Styles ──
-const heroCard: React.CSSProperties = {
-  margin: '8px 18px',
-  padding: '20px',
-  background: 'linear-gradient(135deg, #1A1D2E, #13162A)',
-  border: '1px solid rgba(123,97,255,0.2)',
-  borderRadius: 20,
-  display: 'flex', flexDirection: 'column', alignItems: 'center',
-  textAlign: 'center', gap: 0,
-};
-const incomeBadge: React.CSSProperties = {
-  width: '100%', marginTop: 16,
-  padding: '14px 16px',
-  background: 'rgba(255,255,255,0.04)',
-  border: '1px solid rgba(255,255,255,0.07)',
-  borderRadius: 14,
-  display: 'flex', gap: 16, justifyContent: 'space-between', alignItems: 'center',
-};
-const microLbl: React.CSSProperties = {
-  fontSize: 9, fontWeight: 700, color: 'var(--text-muted, #4A5270)',
-  letterSpacing: '.09em', textTransform: 'uppercase', marginBottom: 4,
-};
-const incomeNum: React.CSSProperties = {
-  fontFamily: "'JetBrains Mono',monospace",
-  fontSize: 18, fontWeight: 800, color: 'var(--accent, #F5C842)',
-};
-const linkBox: React.CSSProperties = {
-  width: '100%', marginTop: 12,
-  padding: '10px 12px',
-  background: 'rgba(255,255,255,0.04)',
-  border: '1px solid rgba(255,255,255,0.09)',
-  borderRadius: 12,
-  display: 'flex', alignItems: 'center', gap: 8,
-};
-const copyBtn: React.CSSProperties = {
-  padding: '6px 12px', background: 'rgba(245,200,66,0.12)',
-  color: 'var(--accent, #F5C842)', border: '1px solid rgba(245,200,66,0.25)',
-  borderRadius: 8, fontSize: 11, fontWeight: 700,
-  cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
-};
-const shareBtn: React.CSSProperties = {
-  width: '100%', marginTop: 10,
-  padding: '11px', background: '#7B61FF', color: '#fff',
-  border: 'none', borderRadius: 14,
-  fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-};
-const secLbl: React.CSSProperties = {
-  fontSize: 10, fontWeight: 700, letterSpacing: '.09em',
-  textTransform: 'uppercase', color: 'var(--text-muted, #4A5270)',
-  padding: '18px 18px 8px',
-};
-const ruleRow: React.CSSProperties = {
-  display: 'flex', alignItems: 'flex-start', gap: 12,
-  padding: '12px 14px',
-  background: 'var(--bg-card, #1C2030)',
-  border: '1px solid rgba(255,255,255,0.07)',
-  borderRadius: 14,
-};
-const refRow: React.CSSProperties = {
-  display: 'flex', alignItems: 'center', gap: 12,
-  padding: '10px 18px',
-  borderBottom: '1px solid rgba(255,255,255,0.05)',
-};
-const tagGreen: React.CSSProperties = {
-  display: 'inline-block', padding: '3px 8px',
-  background: 'rgba(0,214,143,0.1)', color: 'var(--green, #00D68F)',
-  borderRadius: 6, fontSize: 10, fontWeight: 700,
-};
-const tagGray: React.CSSProperties = {
-  display: 'inline-block', padding: '3px 8px',
-  background: 'rgba(255,255,255,0.05)', color: 'var(--text-muted, #4A5270)',
-  borderRadius: 6, fontSize: 10, fontWeight: 700,
-};
