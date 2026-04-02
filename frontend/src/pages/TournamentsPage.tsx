@@ -7,6 +7,10 @@ import { fmtBalance } from '@/utils/format';
 import { useConfirm } from '@/components/ui/ConfirmModal';
 import type { TournamentFull, ActiveMatch, League } from '@/types'; // R1
 import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/Button';
+import { Text } from '@/components/ui/Text';
+import { Heading } from '@/components/ui/Heading';
+import { Card } from '@/components/ui/Card';
 
 import { useT } from '@/i18n/useT';
 
@@ -148,48 +152,50 @@ export const TournamentsPage: React.FC = () => {
       {/* T7: Tournament finish and prize popup */}
       {tournamentFinish && (
         <div style={{ position: 'fixed', inset: 0, zIndex: "var(--z-modal, 300)", background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div style={{ width: '100%', maxWidth: 340, background: 'linear-gradient(135deg,#161927,#1A2040)', border: '1px solid rgba(245,200,66,0.35)', borderRadius: 28, padding: '32px 24px', textAlign: 'center', boxShadow: '0 0 60px rgba(245,200,66,0.15)' }}>
+          <Card padding="lg" style={{ width: '100%', maxWidth: 340, background: 'linear-gradient(135deg,#161927,#1A2040)', border: '1px solid rgba(245,200,66,0.35)', textAlign: 'center', boxShadow: '0 0 60px rgba(245,200,66,0.15)' }}>
             <div style={{ fontSize: 60, marginBottom: 16 }}>🏆</div>
-            <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 16, fontWeight: 800, color: 'var(--accent, #F5C842)', marginBottom: 8 }}>
+            <Heading level={2} color="--color-accent-gold" style={{ marginBottom: 8 }}>
               {tournamentFinish.tournamentName ?? tt.title}
-            </div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: '#00D68F', marginBottom: 6, fontFamily: 'JetBrains Mono, monospace' }}>
+            </Heading>
+            <Text variant="body" weight="bold" style={{ fontSize: 22, color: '#00D68F', marginBottom: 6, fontFamily: 'JetBrains Mono, monospace' }}>
               +{tournamentFinish.prize ? `${Number(tournamentFinish.prize).toLocaleString()} ᚙ` : '—'}
-            </div>
+            </Text>
             {tournamentFinish.place && (
-              <div style={{ fontSize: 13, color: 'var(--text-secondary, #8B92A8)', marginBottom: 24 }}>
+              <Text variant="caption" color="--color-text-secondary" style={{ marginBottom: 24 }}>
                 {tournamentFinish.place === 1 ? '🥇' : tournamentFinish.place === 2 ? '🥈' : '🥉'} {tournamentFinish.place} {t.common.place}
-              </div>
+              </Text>
             )}
-            <button onClick={() => setTournamentFinish(null)} style={{ width: '100%', padding: '14px', background: 'var(--accent, #F5C842)', border: 'none', borderRadius: 14, color: '#0B0D11', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+            <Button variant="primary" size="md" fullWidth onClick={() => setTournamentFinish(null)}>
               {tt.awesome}
-            </button>
-          </div>
+            </Button>
+          </Card>
         </div>
       )}
 
       {/* T6: Active tournament matches */}
       {myMatches.length > 0 && (
         <div style={{ margin: '0 18px 12px' }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent, #F5C842)', letterSpacing: '.08em', textTransform: 'uppercase' as const, marginBottom: 8 }}>
+          <Text variant="caption" color="--color-accent-gold" weight="bold" style={{ letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>
             {tt.yourActiveMatches}
-          </div>
+          </Text>
           {myMatches.map((match: ActiveMatch) => {
             const isP1 = match.player1?.userId === match.myUserId;
             const opponent = isP1 ? match.player2?.user : match.player1?.user;
             return (
-              <div key={match.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: 'rgba(245,200,66,0.06)', border: '1px solid rgba(245,200,66,0.2)', borderRadius: 14, marginBottom: 8 }}>
+              <Card key={match.id} padding="md" style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(245,200,66,0.06)', border: '1px solid rgba(245,200,66,0.2)', marginBottom: 8 }}>
                 <div style={{ fontSize: 20 }}>🏆</div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>
+                  <Text variant="body" weight="bold">
                     {match.tournament?.name} · Round {match.round}
-                  </div>
-                  <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>
+                  </Text>
+                  <Text variant="caption" color="--color-text-secondary" style={{ marginTop: 2 }}>
                     vs {opponent?.firstName ?? t.game.opponent}
-                  </div>
+                  </Text>
                 </div>
                 {match.sessionId && (
-                  <button
+                  <Button
+                    variant="primary"
+                    size="sm"
                     onClick={() => {
                       if (isP1) {
                         navigate(`/game/${match.sessionId}`);
@@ -204,20 +210,23 @@ export const TournamentsPage: React.FC = () => {
                         }
                       }
                     }}
-                    style={{ padding: '7px 12px', background: 'var(--accent, #F5C842)', border: 'none', borderRadius: 10, color: '#0B0D11', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
                   >
                     {tt.play}
-                  </button>
+                  </Button>
                 )}
-              </div>
+              </Card>
             );
           })}
         </div>
       )}
 
-      <div style={segStyle}>
-        <button style={segBtn(filter === 'all')} onClick={() => setFilter('all')}>{tt.tabAll}</button>
-        <button style={segBtn(filter === 'joined')} onClick={() => setFilter('joined')}>{tt.tabJoined}</button>
+      <div style={{ display: 'flex', margin: '4px 18px 10px', gap: 8 }}>
+        <Button variant={filter === 'all' ? 'primary' : 'secondary'} size="sm" fullWidth onClick={() => setFilter('all')}>
+          {tt.tabAll}
+        </Button>
+        <Button variant={filter === 'joined' ? 'primary' : 'secondary'} size="sm" fullWidth onClick={() => setFilter('joined')}>
+          {tt.tabJoined}
+        </Button>
       </div>
 
       {loading && <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: 32 }}>{t.common.loading}</div>}
@@ -233,9 +242,9 @@ export const TournamentsPage: React.FC = () => {
         if (!items?.length) return null;
         return (
           <div key={type}>
-            <div style={{ ...secStyle, color: TYPE_COLORS[type] }}>
+            <Text variant="caption" weight="bold" style={{ fontSize: 10, letterSpacing: '.09em', textTransform: 'uppercase', padding: '16px 18px 8px', color: TYPE_COLORS[type], display: 'block' }}>
               {TYPE_ICONS[type]} {items[0].typeLabel}
-            </div>
+            </Text>
             {items.map(item => (
               <TournamentCard
                 key={item.id}
@@ -276,13 +285,19 @@ const TournamentCard: React.FC<{
   const endDate = tour.endAt ? new Date(tour.endAt).toLocaleDateString('en-US') : null;
 
   return (
-    <div style={{ margin: '0 18px 10px', background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 20, overflow: 'hidden' }}>
+    <Card style={{ margin: '0 18px 10px', overflow: 'hidden' }}>
       <div style={{ padding: '14px 16px 10px', background: `linear-gradient(135deg,${color}12,transparent)`, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 28 }}>{icon}</span>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 14, fontWeight: 800, color }}>{tour.name}</div>
-            {tour.period && <div style={{ fontSize: 10, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>{tt.period}: {tour.period}</div>}
+            <Heading level={3} color={color} style={{ fontSize: 14 }}>
+              {tour.name}
+            </Heading>
+            {tour.period && (
+              <Text variant="caption" color="--color-text-secondary" style={{ marginTop: 2 }}>
+                {tt.period}: {tour.period}
+              </Text>
+            )}
           </div>
           {tour.isJoined && (
             <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--green, #00D68F)', background: 'rgba(0,214,143,0.1)', padding: '3px 8px', borderRadius: 6 }}>
@@ -294,51 +309,65 @@ const TournamentCard: React.FC<{
 
       <div style={{ display: 'flex', padding: '10px 16px', gap: 16 }}>
         <div>
-          <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>{tt.playersLabel}</div>
-          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)', marginTop: 2 }}>
+          <Text variant="caption" color="--color-text-muted">{tt.playersLabel}</Text>
+          <Text variant="body" weight="bold" style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, marginTop: 2 }}>
             {tour.currentPlayers.toLocaleString()}
-          </div>
+          </Text>
         </div>
         <div>
-          <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>{tt.entryFeeLabel}</div>
-          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 700, color: 'var(--accent, #F5C842)', marginTop: 2 }}>
+          <Text variant="caption" color="--color-text-muted">{tt.entryFeeLabel}</Text>
+          <Text variant="body" weight="bold" color="--color-accent-gold" style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, marginTop: 2 }}>
             {fmtBalance(tour.entryFee)} ᚙ
-          </div>
+          </Text>
         </div>
         <div>
-          <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>{tt.prizePool}</div>
-          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 700, color, marginTop: 2 }}>
+          <Text variant="caption" color="--color-text-muted">{tt.prizePool}</Text>
+          <Text variant="body" weight="bold" style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, color, marginTop: 2 }}>
             {fmtBalance(tour.totalPool ?? tour.prizePool)} ᚙ
-          </div>
+          </Text>
         </div>
       </div>
 
       {tour.isJoined && tour.myStats && (
-        <div style={{ margin: '0 14px 10px', padding: '8px 12px', background: 'rgba(0,214,143,0.06)', border: '1px solid rgba(0,214,143,0.15)', borderRadius: 12 }}>
-          <div style={{ fontSize: 10, color: 'var(--green, #00D68F)', fontWeight: 700, marginBottom: 4 }}>{tt.myStats}</div>
+        <Card padding="sm" style={{ margin: '0 14px 10px', background: 'rgba(0,214,143,0.06)', border: '1px solid rgba(0,214,143,0.15)' }}>
+          <Text variant="caption" weight="bold" color="var(--green, #00D68F)" style={{ marginBottom: 4, display: 'block' }}>
+            {tt.myStats}
+          </Text>
           <div style={{ display: 'flex', gap: 14 }}>
-            <span style={{ fontSize: 13, color: 'var(--green, #00D68F)' }}>✓ {tour.myStats.wins}</span>
-            <span style={{ fontSize: 13, color: 'var(--red, #FF4D6A)' }}>✗ {tour.myStats.losses}</span>
-            <span style={{ fontSize: 13, color: 'var(--text-secondary, #8B92A8)' }}>= {tour.myStats.draws}</span>
-            <span style={{ fontSize: 13, color: 'var(--accent, #F5C842)', marginLeft: 'auto' }}>Points: {tour.myStats.points.toFixed(1)}</span>
+            <Text variant="body" weight="bold" style={{ color: 'var(--green, #00D68F)' }}>✓ {tour.myStats.wins}</Text>
+            <Text variant="body" weight="bold" style={{ color: 'var(--red, #FF4D6A)' }}>✗ {tour.myStats.losses}</Text>
+            <Text variant="body" weight="bold" color="--color-text-secondary">= {tour.myStats.draws}</Text>
+            <Text variant="body" weight="bold" color="--color-accent-gold" style={{ marginLeft: 'auto' }}>
+              Points: {tour.myStats.points.toFixed(1)}
+            </Text>
           </div>
-        </div>
+        </Card>
       )}
 
-      {endDate && <div style={{ padding: '0 16px 4px', fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>{tt.ends}: {endDate}</div>}
+      {endDate && (
+        <Text variant="caption" color="--color-text-muted" style={{ padding: '0 16px 4px', display: 'block' }}>
+          {tt.ends}: {endDate}
+        </Text>
+      )}
 
       <div style={{ display: 'flex', gap: 8, padding: '10px 16px 14px' }}>
-        <button onClick={onView} style={viewBtn}>{tt.leaderboard}</button>
-        <button onClick={onDonate} style={donateBtn}>{tt.donateToPrize}</button>
+        <Button variant="secondary" size="sm" onClick={onView}>
+          {tt.leaderboard}
+        </Button>
+        <Button variant="tertiary" size="sm" onClick={onDonate} style={{ background: 'rgba(123,97,255,0.12)', color: '#9B85FF', border: '1px solid rgba(123,97,255,0.25)' }}>
+          {tt.donateToPrize}
+        </Button>
         {!tour.isJoined ? (
-          <button onClick={onJoin} disabled={joining} style={{ ...joinBtnStyle, opacity: joining ? 0.6 : 1 }}>
+          <Button variant="primary" size="sm" fullWidth onClick={onJoin} disabled={joining} style={{ opacity: joining ? 0.6 : 1 }}>
             {joining ? tt.joining : tt.join}
-          </button>
+          </Button>
         ) : (
-          <button onClick={onLeave} style={leaveBtnStyle}>{tt.leave}</button>
+          <Button variant="danger" size="sm" fullWidth onClick={onLeave} style={{ background: 'rgba(255,77,106,0.1)', color: 'var(--red, #FF4D6A)', border: '1px solid rgba(255,77,106,0.2)' }}>
+            {tt.leave}
+          </Button>
         )}
       </div>
-    </div>
+    </Card>
   );
 };
 
@@ -366,27 +395,33 @@ const TournamentDetailModal: React.FC<{ tournamentId: string; onClose: () => voi
     <div style={overlayStyle} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div style={modalStyle}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>🏆 {tt.leaderboard}</div>
-          <button onClick={onClose} style={closeBtn}>✕</button>
+          <Heading level={2}>🏆 {tt.leaderboard}</Heading>
+          <Button variant="tertiary" size="sm" onClick={onClose}>✕</Button>
         </div>
-        {!data && <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: 24 }}>{t.common.loading}</div>}
+        {!data && (
+          <Text variant="body" style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: 24 }}>
+            {t.common.loading}
+          </Text>
+        )}
         {data?.players?.map((p: TournamentPlayer, i: number) => (
           <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: i === 0 ? 'var(--accent, #F5C842)' : i === 1 ? '#C0C0C0' : i === 2 ? '#CD7F32' : 'var(--text-muted, #4A5270)', width: 24, textAlign: 'center' }}>
+            <Text variant="body" weight="bold" style={{ fontSize: 13, color: i === 0 ? 'var(--accent, #F5C842)' : i === 1 ? '#C0C0C0' : i === 2 ? '#CD7F32' : 'var(--text-muted, #4A5270)', width: 24, textAlign: 'center' }}>
               {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
-            </span>
+            </Text>
             <Avatar user={p.user} size="s" />
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary, #F0F2F8)' }}>{p.user?.firstName}</div>
-              <div style={{ fontSize: 10, color: 'var(--text-secondary, #8B92A8)' }}>{p.wins}W {p.losses}L {p.draws}D</div>
+              <Text variant="body" weight="bold">{p.user?.firstName}</Text>
+              <Text variant="caption" color="--color-text-secondary">{p.wins}W {p.losses}L {p.draws}D</Text>
             </div>
-            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14, fontWeight: 700, color: 'var(--accent, #F5C842)' }}>
+            <Text variant="body" weight="bold" color="--color-accent-gold" style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14 }}>
               {p.points?.toFixed(1) ?? '0.0'}
-            </span>
+            </Text>
           </div>
         ))}
         {!data?.players?.length && data && (
-          <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: 16 }}>{tt.noParticipants}</div>
+          <Text variant="body" style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: 16 }}>
+            {tt.noParticipants}
+          </Text>
         )}
       </div>
     </div>
@@ -408,31 +443,37 @@ const DonateModal: React.FC<{ tournamentId: string; onClose: () => void; onSucce
     <div style={overlayStyle} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div style={modalStyle}>
         <div style={handleBar} />
-        <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)', marginBottom: 8 }}>{tt.donateToPrize}</div>
-        <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginBottom: 16 }}>{tt.allCoinsToWinners}</div>
+        <Heading level={2} style={{ marginBottom: 8 }}>{tt.donateToPrize}</Heading>
+        <Text variant="caption" color="--color-text-secondary" style={{ marginBottom: 16, display: 'block' }}>
+          {tt.allCoinsToWinners}
+        </Text>
         <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
           {['10000', '50000', '100000', '500000'].map(v => (
-            <button key={v} onClick={() => setAmount(v)} style={chipBtn(amount === v)}>{fmtBalance(v)}</button>
+            <Button
+              key={v}
+              variant={amount === v ? 'primary' : 'secondary'}
+              size="sm"
+              fullWidth
+              onClick={() => setAmount(v)}
+            >
+              {fmtBalance(v)}
+            </Button>
           ))}
         </div>
-        <button onClick={handleSubmit} disabled={loading} style={goldBtnFull}>
+        <Button
+          variant="primary"
+          size="md"
+          fullWidth
+          onClick={handleSubmit}
+          disabled={loading}
+        >
           {loading ? tt.donateError : `${t.shop.tonTab.buy} ${fmtBalance(amount)} ᚙ`}
-        </button>
+        </Button>
       </div>
     </div>
   );
 };
 
-const segStyle: React.CSSProperties = { display: 'flex', margin: '4px 18px 10px', background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: 3 };
-const segBtn = (active: boolean): React.CSSProperties => ({ flex: 1, padding: 8, border: 'none', borderRadius: 8, fontFamily: 'inherit', fontSize: 12, fontWeight: 600, color: active ? 'var(--text-primary, #F0F2F8)' : 'var(--text-secondary, #8B92A8)', background: active ? 'var(--bg-input, #232840)' : 'transparent', cursor: 'pointer' });
-const secStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, letterSpacing: '.09em', textTransform: 'uppercase', padding: '16px 18px 8px' };
-const viewBtn: React.CSSProperties = { padding: '8px 12px', background: 'var(--bg-input, #232840)', color: 'var(--text-primary, #F0F2F8)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' };
-const donateBtn: React.CSSProperties = { padding: '8px 12px', background: 'rgba(123,97,255,0.12)', color: '#9B85FF', border: '1px solid rgba(123,97,255,0.25)', borderRadius: 10, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' };
-const joinBtnStyle: React.CSSProperties = { flex: 1, padding: '8px 12px', background: 'var(--accent, #F5C842)', color: 'var(--bg, #0B0D11)', border: 'none', borderRadius: 10, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' };
-const leaveBtnStyle: React.CSSProperties = { flex: 1, padding: '8px 12px', background: 'rgba(255,77,106,0.1)', color: 'var(--red, #FF4D6A)', border: '1px solid rgba(255,77,106,0.2)', borderRadius: 10, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' };
 const overlayStyle: React.CSSProperties = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', zIndex: "var(--z-modal, 300)", display: 'flex', alignItems: 'flex-end' };
 const modalStyle: React.CSSProperties = { width: '100%', background: 'var(--bg-card, #161927)', borderRadius: '24px 24px 0 0', padding: 20, borderTop: '1px solid rgba(255,255,255,0.1)', maxHeight: '85vh', overflowY: 'auto' };
 const handleBar: React.CSSProperties = { width: 36, height: 4, background: '#2A2F48', borderRadius: 2, margin: '0 auto 16px' };
-const closeBtn: React.CSSProperties = { width: 44, height: 44, borderRadius: '50%', background: 'var(--border, rgba(255,255,255,0.07))', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-secondary, #8B92A8)', fontSize: 16, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 };
-const chipBtn = (active: boolean): React.CSSProperties => ({ flex: 1, padding: '7px 8px', borderRadius: 10, fontSize: 11, fontWeight: 600, cursor: 'pointer', border: '1px solid', background: active ? 'rgba(245,200,66,0.12)' : 'var(--bg-input, #232840)', color: active ? 'var(--accent, #F5C842)' : 'var(--text-secondary, #8B92A8)', borderColor: active ? 'rgba(245,200,66,0.3)' : 'var(--border, rgba(255,255,255,0.07))', fontFamily: 'inherit' });
-const goldBtnFull: React.CSSProperties = { width: '100%', padding: '13px', background: 'var(--accent, #F5C842)', color: 'var(--bg, #0B0D11)', border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' };

@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout, InfoPopup, useInfoPopup } from '@/components/layout/PageLayout';
 import { Avatar } from '@/components/ui/Avatar';
+import { Button } from '@/components/ui/Button';
+import { Text } from '@/components/ui/Text';
+import { Card } from '@/components/ui/Card';
 import { useGameStore } from '@/store/useGameStore';
 import { useUserStore } from '@/store/useUserStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
@@ -67,8 +70,8 @@ export const BattlesPage: React.FC = () => {
 
   const rightAction = (
     <div style={{ display: 'flex', gap: 8 }}>
-      <button onClick={info.open} style={{ ...tbaStyle, fontSize: 14, fontWeight: 700 }}>?</button>
-      <button onClick={() => navigate('/profile', { state: { tab: 'games' } })} style={{ ...tbaStyle, fontSize: 16 }} title="History">🕐</button>
+      <Button variant="tertiary" size="sm" onClick={info.open} style={{ fontSize: 14, fontWeight: 700 }}>?</Button>
+      <Button variant="tertiary" size="sm" onClick={() => navigate('/profile', { state: { tab: 'games' } })} title="History">🕐</Button>
     </div>
   );
 
@@ -81,13 +84,13 @@ export const BattlesPage: React.FC = () => {
 
       {/* Две вкладки: Public / Private */}
       <div style={segStyle}>
-        <button style={segBtn(tab === 'public')} onClick={() => setTab('public')}>
+        <Button variant={tab === 'public' ? 'primary' : 'secondary'} size="sm" onClick={() => setTab('public')} fullWidth>
           ⚔️ {t.battles.public_ ?? 'Public'}
-        </button>
-        <button style={segBtn(tab === 'private')} onClick={() => setTab('private')}>
+        </Button>
+        <Button variant={tab === 'private' ? 'primary' : 'secondary'} size="sm" onClick={() => setTab('private')} fullWidth>
           🔒 {t.battles.private_ ?? 'Private'}
           {myPrivateSessions.length > 0 && <span style={{ marginLeft: 4, background: '#FF4D6A', color: '#fff', fontSize: 9, fontWeight: 800, padding: '1px 5px', borderRadius: 8, minWidth: 16, textAlign: 'center' as const }}>{myPrivateSessions.length}</span>}
-        </button>
+        </Button>
       </div>
 
       {/* ════════ PUBLIC ════════ */}
@@ -96,7 +99,7 @@ export const BattlesPage: React.FC = () => {
           {/* LIVE — активные партии вверху */}
           {liveSessions.length > 0 && (
             <>
-              <div style={secStyle}>🔴 LIVE</div>
+              <Text variant="caption" color="muted" weight="bold" style={{ fontSize: 10, letterSpacing: '.09em', textTransform: 'uppercase', padding: '16px 18px 8px' }}>🔴 LIVE</Text>
               {liveSessions.map((s) => {
                 const mySide = s.sides.find((sd) => sd.id === s.mySideId);
                 const opSide = s.sides.find((sd) => sd.id !== s.mySideId);
@@ -105,8 +108,7 @@ export const BattlesPage: React.FC = () => {
                 const whitePlayer = s.sides.find((sd) => sd.isWhite);
                 const blackPlayer = s.sides.find((sd) => !sd.isWhite);
                 return (
-                  <div key={s.id} onClick={() => navigate('/game/' + s.id)} style={{ ...bcardStyle, borderColor: 'rgba(255,77,106,0.15)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', padding: '10px 14px', gap: 8 }}>
+                  <Card key={s.id} padding="md" onClick={() => navigate('/game/' + s.id)} style={{ borderColor: 'rgba(255,77,106,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, margin: '4px 18px 0' }}>
                       {/* Белый игрок */}
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, minWidth: 54 }}>
                         <Avatar user={whitePlayer?.player} size="s" />
@@ -133,8 +135,7 @@ export const BattlesPage: React.FC = () => {
                         <span style={{ fontSize: 10, fontWeight: 600, color: '#F0F2F8', maxWidth: 54, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{blackPlayer?.player?.firstName ?? '?'}</span>
                         <span style={{ fontSize: 8, color: '#8B92A8', background: 'rgba(0,0,0,0.3)', padding: '1px 4px', borderRadius: 3 }}>♚</span>
                       </div>
-                    </div>
-                  </div>
+                  </Card>
                 );
               })}
             </>
@@ -143,20 +144,20 @@ export const BattlesPage: React.FC = () => {
           {/* Ожидающие — по ставке (desc) */}
           {waitingSessions.length > 0 && (
             <>
-              <div style={secStyle}>⚔️ {t.battles.tabWaiting ?? 'CHALLENGES'}</div>
+              <Text variant="caption" color="muted" weight="bold" style={{ fontSize: 10, letterSpacing: '.09em', textTransform: 'uppercase', padding: '16px 18px 8px' }}>⚔️ {t.battles.tabWaiting ?? 'CHALLENGES'}</Text>
               {waitingSessions.map((battle, idx) => (
-                <div key={battle.id} style={{ ...wcardStyle, borderColor: idx === 0 ? 'rgba(245,200,66,0.2)' : 'rgba(255,255,255,0.07)' }}>
+                <Card key={battle.id} padding="md" style={{ borderColor: idx === 0 ? 'rgba(245,200,66,0.2)' : 'rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', gap: 12, margin: '4px 18px 0' }}>
                   <Avatar user={battle.creator as import('@/types').UserPublic | null} size="m" />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: '#F0F2F8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{battle.creator?.firstName ?? '?'}</span>
+                      <Text variant="body" weight="bold" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{battle.creator?.firstName ?? '?'}</Text>
                       {idx === 0 && <span style={{ fontSize: 8, padding: '1px 5px', background: 'rgba(245,200,66,0.15)', color: '#F5C842', borderRadius: 4, fontWeight: 800 }}>TOP</span>}
                     </div>
-                    <div style={{ fontSize: 10, color: '#8B92A8', marginTop: 2 }}>{Math.round((battle.duration ?? 300) / 60)} min · ELO {battle.creator?.elo ?? '?'}</div>
-                    <span style={{ ...tagGold, marginTop: 4, display: 'inline-block' }}>{fmtBalance(battle.bet)} ᚙ</span>
+                    <Text variant="caption" color="secondary" style={{ marginTop: 2 }}>{Math.round((battle.duration ?? 300) / 60)} min · ELO {battle.creator?.elo ?? '?'}</Text>
+                    <span style={{ fontSize: 10, padding: '3px 8px', background: 'rgba(245,200,66,0.12)', color: 'var(--accent, #F5C842)', borderRadius: 6, display: 'inline-block', marginTop: 4, fontWeight: 700 }}>{fmtBalance(battle.bet)} ᚙ</span>
                   </div>
-                  <button onClick={() => handleJoin(battle)} style={acceptBtn}>{t.battles.accept ?? '⚔️'}</button>
-                </div>
+                  <Button variant="secondary" size="sm" onClick={() => handleJoin(battle)}>{t.battles.accept ?? '⚔️'}</Button>
+                </Card>
               ))}
             </>
           )}
@@ -186,16 +187,16 @@ export const BattlesPage: React.FC = () => {
             const sourceIcon = sourceType === 'TOURNAMENT' ? '🏆' : sourceType === 'WAR' ? '⚔️🏴' : '🔒';
             const sourceName = sourceType === 'TOURNAMENT' ? (t.battles.fromTournament ?? 'Tournament') : sourceType === 'WAR' ? (t.battles.fromWar ?? 'Country War') : (t.battles.privateChallenge ?? 'Private Challenge');
             return (
-              <div key={s.id} style={wcardStyle}>
+              <Card key={s.id} padding="md" style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '4px 18px 0' }}>
                 <div style={{ width: 44, height: 44, borderRadius: 14, background: sourceType === 'TOURNAMENT' ? 'rgba(245,200,66,0.1)' : sourceType === 'WAR' ? 'rgba(255,77,106,0.1)' : 'rgba(155,133,255,0.1)', border: `1px solid ${sourceType === 'TOURNAMENT' ? 'rgba(245,200,66,0.2)' : sourceType === 'WAR' ? 'rgba(255,77,106,0.2)' : 'rgba(155,133,255,0.2)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>{sourceIcon}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#F0F2F8' }}>{sourceName}</div>
-                  <div style={{ fontSize: 11, color: '#8B92A8', marginTop: 2 }}>
+                  <Text variant="body" weight="bold">{sourceName}</Text>
+                  <Text variant="caption" color="secondary" style={{ marginTop: 2 }}>
                     {s.bet && BigInt(s.bet) > 0n ? `${fmtBalance(s.bet)} ᚙ · ` : ''}{t.battles.waitingForOpponent ?? 'Waiting...'}
-                  </div>
+                  </Text>
                 </div>
-                <button onClick={() => navigate('/game/' + s.id)} style={acceptBtn}>{t.battles.accept ?? '→'}</button>
-              </div>
+                <Button variant="secondary" size="sm" onClick={() => navigate('/game/' + s.id)}>{t.battles.accept ?? '→'}</Button>
+              </Card>
             );
           })}
         </>
