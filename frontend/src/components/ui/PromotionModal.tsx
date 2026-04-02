@@ -7,6 +7,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useEquippedPieceSet, useEquippedPieceFilter } from '@/lib/equippedItems';
+import { useT } from '@/i18n/useT';
 import { sound } from '@/lib/sound';
 import { haptic } from '@/lib/haptic';
 
@@ -54,6 +55,7 @@ function makeSparks(count = 55): Spark[] {
 }
 
 export const PromotionModal: React.FC<PromotionModalProps> = ({ color, onSelect }) => {
+  const t = useT();
   const { path: setPath, isEmoji } = useEquippedPieceSet();
   const pieceFilter = useEquippedPieceFilter();
   const [sparks, setSparks] = useState<Spark[]>([]);
@@ -112,8 +114,8 @@ export const PromotionModal: React.FC<PromotionModalProps> = ({ color, onSelect 
         <div style={crownRow}>
           <span style={crownEmoji}>♟</span>
           <div style={titleCol}>
-            <div style={titleStyle}>Pawn promoted!</div>
-            <div style={subtitleStyle}>Choose a piece</div>
+            <div style={titleStyle}>{t.promotion.title}</div>
+            <div style={subtitleStyle}>{t.promotion.subtitle}</div>
           </div>
           <span style={crownEmoji}>👑</span>
         </div>
@@ -155,7 +157,7 @@ export const PromotionModal: React.FC<PromotionModalProps> = ({ color, onSelect 
 
         {confirmed && (
           <div style={confirmMsg}>
-            🎉 Great choice!
+            {t.promotion.success}
           </div>
         )}
       </div>

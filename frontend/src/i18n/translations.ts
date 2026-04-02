@@ -457,6 +457,9 @@ export const translations = {
       startBtn: '♟ Start game',
       infoWin: '🏆 Win levels in order. Each won level grants a unique badge for your profile.',
     },
+    promotion: {
+      title: 'Pawn promoted!', subtitle: 'Choose a piece', success: '🎉 Great choice!',
+    },
     admin: {
       title: 'Admin Panel',
       stats: 'Stats', users: 'Users', broadcast: 'Broadcast', tournament: 'Tournament',
@@ -994,6 +997,9 @@ export const translations = {
       jarvis: 'JARVIS',
       startBtn: '♟ Начать игру',
       infoWin: '🏆 Выигрывай уровни по порядку. Каждый выигранный уровень дарует значок на профиль.',
+    },
+    promotion: {
+      title: 'Пешка прошла в дамки!', subtitle: 'Выбери фигуру', success: '🎉 Отличный выбор!',
     },
     admin: {
       title: 'Панель администратора',
