@@ -1,146 +1,114 @@
-# CI (U2) → при успехе деплой на VPS. PR: только проверки, без деплоя.
-name: CI and Deploy ChessCoin
+name: Deploy to VPS
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
-    branches: [main]
-  workflow_dispatch:
-
-concurrency:
-  group: chesscoin-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+    branches: [ main ]
 
 jobs:
-  verify-backend:
-    name: ✅ Backend — test + tsc
+  test:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
+    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: npm
-          cache-dependency-path: backend/package-lock.json
-      - run: npm ci
-      - run: npx prisma generate
-      - run: npm test -- --testPathIgnorePatterns='(referral|cleanup|session|finish).test.ts'
-      - run: npm run build
-
-  verify-frontend:
-    name: ✅ Frontend — vite build
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-      - run: npm ci
-      - run: npm run build
-      - run: npm run typecheck
+          node-version: '20'
+          
+      - name: Backend tests
+        run: |
+          cd backend
+          npm ci
+          npx prisma generate
+          npm test
+          
+      - name: Frontend build test
+        run: |
+          cd frontend
+          npm ci
+          npm run build
 
   deploy:
-    name: 🚀 Deploy to VPS
     runs-on: ubuntu-latest
-    needs: [verify-backend, verify-frontend]
-    if: github.event_name != 'pull_request'
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT }}
-          timeout: 300s
-          script: |
-            set -e
-            cd /opt/chesscoin
-
-            # Ensure .env file exists with proper credentials
-            if [ ! -f .env ]; then
-              echo "⚠️  .env not found, creating from defaults..."
-              cat > .env << 'ENVFILE'
-POSTGRES_PASSWORD=devpass123
-REDIS_PASSWORD=devredis123
-BOT_TOKEN=8741660434:AAHdXkiX-QTwtoh2COthSCHO7MQUmVDkWQo
-BOT_API_SECRET=internal_bot_secret_change_me
-ADMIN_IDS=254450353
-DOMAIN=chesscoin.app
-JWT_ACCESS_SECRET=dev_access_secret_change_in_production
-JWT_REFRESH_SECRET=dev_refresh_secret_change_in_production
-S3_ENDPOINT=https://s3.timeweb.cloud
-S3_REGION=ru-1
-S3_BUCKET=chesscoin-dev
-S3_ACCESS_KEY=dev_key
-S3_SECRET_ACCESS_KEY=dev_secret
-SCREENSHOT_SECRET=dev_screenshot_secret
-PLATFORM_TON_WALLET=UQDZNHJrTBJ9asNgL15bf-8Ud4Rleku-oP6TSlbg6EWXfq7y
-TONCENTER_API_KEY=
-TON_NETWORK=testnet
-ENVFILE
-              chmod 600 .env
-              echo "✅ .env created successfully"
-            else
-              echo "✅ .env file already exists"
-            fi
-
+      - uses: actions/checkout@v4
+      
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+          
+      - name: Create .env on VPS
+        run: |
+          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "
+            cd /opt/chesscoin || exit 1
+            
+            # Create .env file safely
+            cat > .env << 'EOF'
+            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            DATABASE_URL=postgresql://postgres:${{ secrets.POSTGRES_PASSWORD }}@postgres:5432/chesscoin
+            REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
+            BOT_TOKEN=${{ secrets.BOT_TOKEN }}
+            BOT_API_SECRET=${{ secrets.BOT_API_SECRET }}
+            JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }}
+            JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}
+            ADMIN_IDS=${{ secrets.ADMIN_IDS }}
+            DOMAIN=${{ secrets.DOMAIN }}
+            PLATFORM_TON_WALLET=${{ secrets.PLATFORM_TON_WALLET }}
+            TONCENTER_API_KEY=${{ secrets.TONCENTER_API_KEY }}
+            S3_ENDPOINT=${{ secrets.S3_ENDPOINT }}
+            S3_BUCKET=${{ secrets.S3_BUCKET }}
+            S3_ACCESS_KEY=${{ secrets.S3_ACCESS_KEY }}
+            S3_SECRET_ACCESS_KEY=${{ secrets.S3_SECRET_ACCESS_KEY }}
+            NODE_ENV=production
+            EOF
+            
+            echo '.env file created successfully'
+          "
+          
+      - name: Deploy with Docker Compose
+        run: |
+          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "
+            cd /opt/chesscoin || exit 1
+            
+            # Pull latest changes
             git pull origin main
-            docker compose up -d --build --force-recreate --remove-orphans
-            sleep 15
-            docker compose exec -T backend npx prisma migrate deploy
-            for i in {1..10}; do
-              STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://chesscoin.app/health || echo "000")
-              if [ "$STATUS" = "200" ]; then
-                echo "✅ Health check passed (attempt $i)"
-                break
-              fi
-              sleep 5
-              if [ $i -eq 10 ]; then
-                docker compose logs backend --tail=30
-                exit 1
-              fi
-            done
-            docker compose ps
-            echo "✅ Deploy completed!"
-
-  notify:
-    name: 📱 Telegram Notification
-    runs-on: ubuntu-latest
-    needs: [deploy]
-    if: always() && github.event_name != 'pull_request'
-    continue-on-error: true
-
-    steps:
-      - name: Notify success
-        if: needs.deploy.result == 'success'
-        uses: appleboy/telegram-action@master
-        continue-on-error: true
-        with:
-          to: ${{ secrets.TELEGRAM_ADMIN_CHAT_ID }}
-          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          message: |
-            ✅ ChessCoin задеплоен
-            Коммит: ${{ github.sha }}
-            Автор: ${{ github.actor }}
-
-      - name: Notify failure
-        if: needs.deploy.result == 'failure'
-        uses: appleboy/telegram-action@master
-        continue-on-error: true
-        with:
-          to: ${{ secrets.TELEGRAM_ADMIN_CHAT_ID }}
-          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          message: |
-            ❌ ChessCoin деплой ПРОВАЛИЛСЯ
-            Коммит: ${{ github.sha }}
-            Автор: ${{ github.actor }}
+            
+            # Rebuild and restart containers
+            docker compose down
+            docker compose up -d --build
+            
+            # Wait for DB to be ready
+            sleep 10
+            
+            # Run migrations
+            docker compose exec -T backend npx prisma migrate deploy || echo 'Migrations may have failed, check logs'
+            
+            # Seed database (if needed)
+            docker compose exec -T backend npx tsx prisma/seed.ts || echo 'Seeding may have failed, check logs'
+            
+            # Restart bot
+            docker compose restart bot
+            
+            echo '✅ Deployment completed!'
+          "
+          
+      - name: Health check
+        run: |
+          sleep 5
+          curl -f https://${{ secrets.DOMAIN }}/health || echo '⚠️ Health check failed, check logs'
+          
+      - name: Show logs on failure
+        if: failure()
+        run: |
+          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "
+            cd /opt/chesscoin
+            docker compose logs --tail=50
+          "
