@@ -13,8 +13,8 @@ WORKDIR /app
 COPY --from=builder /app/node_modules ./node_modules
 COPY server.js .
 
-# Копируем бинарник в /app/stockfish для явного пути
-RUN cp $(which stockfish) /app/stockfish && chmod +x /app/stockfish
+# Копируем бинарник Stockfish в /app/ (на Debian: /usr/games/stockfish)
+RUN cp /usr/games/stockfish /app/stockfish && chmod +x /app/stockfish
 
 EXPOSE 3020
 CMD ["node", "server.js"]
