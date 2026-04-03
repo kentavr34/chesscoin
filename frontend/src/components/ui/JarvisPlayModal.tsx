@@ -445,31 +445,6 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
           </div>
         </div>
 
-        {/* ── Попытки ── */}
-        <div style={{ margin: '0 14px 14px' }}>
-          <div style={{ fontSize: '.52rem', fontWeight: 700, color: '#4A6080', textTransform: 'uppercase', letterSpacing: '.12em', marginBottom: 6 }}>
-            Попытки
-          </div>
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            background: userAttempts > 0 ? 'rgba(212,168,67,.06)' : 'rgba(220,50,47,.06)',
-            border: `.5px solid ${userAttempts > 0 ? 'rgba(212,168,67,.2)' : 'rgba(220,50,47,.22)'}`,
-            borderRadius: 12, padding: '8px 12px',
-          }}>
-            <div style={{ display: 'flex', gap: 6 }}>
-              {Array.from({ length: maxAttempts }, (_, i) => (
-                <IcoStar key={i} filled={i < userAttempts} />
-              ))}
-            </div>
-            <span style={{
-              fontSize: '.72rem', fontWeight: 700,
-              color: userAttempts > 0 ? '#9A8840' : '#EF4444',
-            }}>
-              {userAttempts > 0 ? `${userAttempts}/${maxAttempts}` : 'Нет попыток'}
-            </span>
-          </div>
-        </div>
-
         {/* ── Выбор цвета ── */}
         <div style={{ margin: '0 14px 14px', opacity: canPlay ? 1 : 0.35, pointerEvents: canPlay ? 'auto' : 'none' }}>
           <div style={{ fontSize: '.52rem', fontWeight: 700, color: '#4A6080', textTransform: 'uppercase', letterSpacing: '.12em', marginBottom: 8 }}>Цвет фигур</div>

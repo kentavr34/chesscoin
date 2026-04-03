@@ -17,10 +17,9 @@ const PIECE_VAL:     Record<string, number>  = { p: 1, n: 3, b: 3, r: 5, q: 9 };
 const PIECE_START:   Record<string, number>  = { p: 8, n: 2, b: 2, r: 2, q: 1 };
 const SORT_ORDER:    Record<string, number>  = { q: 0, r: 1, b: 2, n: 3, p: 4 };
 
-// Высоты блоков
-const TOPBAR_H  = 36; // минимальный статус-бар сверху
-const PANEL_H   = 80; // панель игрока (аватар 72px)
-const ACTBAR_H  = 58; // нижняя панель: Назад + Сдаться + Ничья
+const TOPBAR_H = 0;   // убираем отдельный топбар — статус встроен в панели
+const PANEL_H  = 72;  // высота панели игрока
+const ACTBAR_H = 64;  // нижняя панель кнопок
 
 // ── Хелперы ────────────────────────────────────────────────────────────────────
 function capturedFromFen(fen: string): { white: string[]; black: string[] } {
@@ -51,7 +50,7 @@ function fmtTime(secs: number): string {
 }
 
 function calcBoardSize(): number {
-  const reserved = TOPBAR_H + PANEL_H * 2 + ACTBAR_H + 8;
+  const reserved = PANEL_H * 2 + ACTBAR_H + 4;
   return Math.floor(Math.min(window.innerWidth, window.innerHeight - reserved));
 }
 
@@ -65,6 +64,35 @@ function lastMoveFromPgn(pgn: string): { from: string; to: string } | null {
     return last ? { from: last.from, to: last.to } : null;
   } catch { return null; }
 }
+
+// ── ChessCoin иконка монеты (золотой конь) ────────────────────────────────────
+const CoinIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
+    <circle cx="16" cy="16" r="15" fill="url(#coinBg)" stroke="url(#coinBorder)" strokeWidth="1.2"/>
+    {/* Орнаментальное кольцо */}
+    <circle cx="16" cy="16" r="12" fill="none" stroke="rgba(180,130,20,.4)" strokeWidth=".6"/>
+    {/* Конь (шахматный конь) */}
+    <path d="M11 24c0-1 .5-2 1.5-2.5L14 21c-1-1-1.5-2.5-1-4 .3-1 1-2 2-2.5-.5-.8-.5-1.5 0-2 .8-.5 2-.3 2.5.5.5.8.3 2-.5 2.5.5.5 1 1.5.8 2.5l2 1c1 .5 1.7 1.5 1.7 2.5v.5H11z" fill="url(#coinKnight)"/>
+    {/* Грива */}
+    <path d="M16.5 12c.5-1 1.5-2 2-3 .3-.5 0-1-.3-1.2-.5-.3-1 0-1.2.5L16 10l-1-.5c-.3-1.5.5-3 2-3.5 1.5-.5 3 .2 3.5 1.5.3.8 0 1.8-.5 2.5l-1 1.5" fill="url(#coinKnight)" opacity=".9"/>
+    <defs>
+      <radialGradient id="coinBg" cx="38%" cy="30%" r="75%">
+        <stop offset="0%" stopColor="#F0C85A"/>
+        <stop offset="55%" stopColor="#D4A843"/>
+        <stop offset="100%" stopColor="#8A6020"/>
+      </radialGradient>
+      <linearGradient id="coinBorder" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#F0C85A"/>
+        <stop offset="50%" stopColor="#A07830"/>
+        <stop offset="100%" stopColor="#F0C85A"/>
+      </linearGradient>
+      <linearGradient id="coinKnight" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor="#120E04"/>
+        <stop offset="100%" stopColor="#1E1608"/>
+      </linearGradient>
+    </defs>
+  </svg>
+);
 
 // ── J.A.R.V.I.S аватар ────────────────────────────────────────────────────────
 const JarvisAva: React.FC<{ size: number }> = ({ size }) => (
@@ -109,7 +137,7 @@ const Confetti: React.FC = () => {
   );
 };
 
-// ── Панель игрока ──────────────────────────────────────────────────────────────
+// ── Панель игрока (по референсу) ──────────────────────────────────────────────
 interface PanelProps {
   name: string;
   elo?: number;
@@ -118,145 +146,191 @@ interface PanelProps {
   isWhite: boolean;
   captured: string[];
   advantage: number;
+  coins: number;      // монеты за взятые фигуры
   timeDisplay: string;
   timeSecs: number;
   isActive: boolean;
+  isGameOver: boolean;
 }
 
 const PlayerPanel: React.FC<PanelProps> = ({
   name, elo, avatar, isBot, isWhite, captured, advantage: adv,
-  timeDisplay, timeSecs, isActive,
+  coins, timeDisplay, timeSecs, isActive, isGameOver,
 }) => {
   const sorted = useMemo(() => sortCaptured(captured), [captured]);
   const isCritical = isActive && timeSecs > 0 && timeSecs < 15;
-  const AV = 72; // удвоенный аватар
+  const AV = 52;
+
+  // Статус — показывается рядом с именем
+  const statusLabel = isGameOver ? null : isActive ? 'Ваш ход' : null;
+  const statusColor = '#4A9EFF';
 
   return (
     <div style={{
-      display: 'flex', alignItems: 'center', gap: 12,
-      height: PANEL_H, padding: '0 14px', flexShrink: 0,
-      background: isActive ? 'rgba(255,255,255,.04)' : 'transparent',
+      display: 'flex', alignItems: 'center', gap: 10,
+      height: PANEL_H, padding: '0 12px', flexShrink: 0,
+      background: isActive ? 'rgba(74,158,255,.04)' : 'transparent',
       borderLeft: `3px solid ${
         isCritical ? 'rgba(220,50,47,.85)'
-        : isActive  ? '#3DBA7A'
+        : isActive  ? '#4A9EFF'
         : 'transparent'
       }`,
       transition: 'background .3s, border-color .3s',
     }}>
 
-      {/* Аватар — 72px */}
+      {/* Аватар */}
       <div style={{
         width: AV, height: AV, borderRadius: '50%', flexShrink: 0,
         background: isBot ? 'rgba(74,158,255,.1)' : 'rgba(212,168,67,.07)',
         border: `1.5px solid ${
           isActive
-            ? isBot ? 'rgba(74,158,255,.55)' : 'rgba(61,186,122,.45)'
+            ? isBot ? '#4A9EFF' : 'rgba(61,186,122,.5)'
             : isBot ? 'rgba(74,158,255,.15)' : 'rgba(212,168,67,.15)'
         }`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        overflow: 'hidden',
+        overflow: 'hidden', position: 'relative',
         boxShadow: isActive
-          ? `0 0 20px ${isBot ? 'rgba(74,158,255,.28)' : 'rgba(61,186,122,.24)'}`
+          ? `0 0 16px ${isBot ? 'rgba(74,158,255,.35)' : 'rgba(61,186,122,.28)'}`
           : 'none',
         transition: 'box-shadow .3s, border-color .3s',
       }}>
         {avatar
           ? <img src={avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           : isBot
-            ? <JarvisAva size={AV * 0.62} />
-            : <span style={{ fontSize: AV * 0.38, fontWeight: 800, color: '#D4A843' }}>
+            ? <JarvisAva size={AV * 0.65} />
+            : <span style={{ fontSize: AV * 0.4, fontWeight: 800, color: '#D4A843' }}>
                 {name[0]?.toUpperCase() ?? '?'}
               </span>
         }
       </div>
 
-      {/* Имя + взятые фигуры */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        {/* Строка 1: цвет-маркер + имя */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 4 }}>
+      {/* Центр: имя + ELO + статус + взятые фигуры */}
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 2 }}>
+        {/* Строка 1: цвет-маркер + имя + статус */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
           <div style={{
-            width: 9, height: 9, borderRadius: 3, flexShrink: 0,
-            background: isWhite ? '#E8E0C8' : '#28221C',
-            border: '.5px solid rgba(212,168,67,.28)',
+            width: 8, height: 8, borderRadius: 2.5, flexShrink: 0,
+            background: isWhite ? '#E8E0C8' : '#2A2218',
+            border: '.5px solid rgba(212,168,67,.25)',
           }} />
           <span style={{
-            fontSize: '1.5rem', fontWeight: 800,
+            fontSize: '1.02rem', fontWeight: 700,
             color: isActive ? '#EAE2CC' : '#5A5248',
             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-            maxWidth: 130, transition: 'color .3s',
-            lineHeight: 1,
+            maxWidth: 100, transition: 'color .3s',
           }}>
             {name.length > 12 ? name.slice(0, 12) + '…' : name}
           </span>
+          {statusLabel && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0,
+            }}>
+              <div style={{
+                width: 5, height: 5, borderRadius: '50%',
+                background: statusColor,
+                boxShadow: `0 0 5px ${statusColor}`,
+                animation: 'gp-pulse 1.4s infinite',
+              }} />
+              <span style={{ fontSize: '.62rem', fontWeight: 700, color: statusColor }}>
+                {statusLabel}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Строка 2: ELO */}
-        {elo !== undefined && (
-          <div style={{ fontSize: '.8rem', color: '#7A7060', fontWeight: 600, marginBottom: 4 }}>
-            ELO {elo}
-          </div>
-        )}
+        <div style={{ fontSize: '.7rem', color: '#6A6050', fontWeight: 600 }}>
+          {elo !== undefined ? `ELO ${elo}` : (isBot ? 'J.A.R.V.I.S' : '')}
+        </div>
 
-        {/* Строка 3: взятые фигуры + преимущество */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-          {sorted.length > 0 ? (
-            <>
-              <div style={{ display: 'flex' }}>
-                {sorted.slice(0, 9).map((p, i) => (
-                  <span key={i} style={{
-                    fontSize: 13, lineHeight: 1, opacity: .78,
-                    marginLeft: i > 0 ? -1 : 0,
-                  }}>
-                    {PIECE_SYMBOLS[p] ?? ''}
-                  </span>
-                ))}
-                {sorted.length > 9 && (
-                  <span style={{ fontSize: '.52rem', color: '#3A3830', fontWeight: 700, marginLeft: 1 }}>
-                    +{sorted.length - 9}
-                  </span>
-                )}
-              </div>
-              {adv > 0 && (
-                <span style={{ fontSize: '.65rem', fontWeight: 800, color: '#3DBA7A', marginLeft: 3 }}>
-                  +{adv}
+        {/* Строка 3: взятые фигуры + монеты */}
+        {sorted.length > 0 ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <div style={{ display: 'flex' }}>
+              {sorted.slice(0, 8).map((p, i) => (
+                <span key={i} style={{
+                  fontSize: 11, lineHeight: 1, opacity: .75,
+                  marginLeft: i > 0 ? -1 : 0,
+                }}>
+                  {PIECE_SYMBOLS[p] ?? ''}
+                </span>
+              ))}
+              {sorted.length > 8 && (
+                <span style={{ fontSize: '.48rem', color: '#3A3830', fontWeight: 700, marginLeft: 1 }}>
+                  +{sorted.length - 8}
                 </span>
               )}
-            </>
-          ) : (
-            <span style={{ fontSize: '.52rem', color: '#1E1C18' }}>—</span>
-          )}
-        </div>
+            </div>
+            {adv > 0 && (
+              <span style={{ fontSize: '.6rem', fontWeight: 800, color: '#3DBA7A' }}>+{adv}</span>
+            )}
+            {coins > 0 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginLeft: 2 }}>
+                <CoinIcon size={11} />
+                <span style={{ fontSize: '.58rem', fontWeight: 800, color: '#C89A30' }}>
+                  +{coins >= 1000 ? `${(coins/1000).toFixed(1)}K` : coins}
+                </span>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div style={{ fontSize: '.5rem', color: '#1E1A14' }}>—</div>
+        )}
       </div>
 
-      {/* Таймер */}
+      {/* Таймер (правый край) */}
       <div style={{
         background: isCritical
-          ? 'rgba(220,50,47,.2)'
+          ? 'rgba(220,50,47,.22)'
           : isActive
-            ? 'rgba(61,186,122,.13)'
-            : 'rgba(255,255,255,.03)',
+            ? 'rgba(74,158,255,.14)'
+            : 'rgba(255,255,255,.04)',
         border: `.5px solid ${
-          isCritical ? 'rgba(220,50,47,.5)'
-          : isActive  ? 'rgba(61,186,122,.32)'
-          : 'rgba(255,255,255,.05)'
+          isCritical ? 'rgba(220,50,47,.55)'
+          : isActive  ? 'rgba(74,158,255,.38)'
+          : 'rgba(255,255,255,.06)'
         }`,
-        borderRadius: 11, padding: '7px 13px', flexShrink: 0,
-        minWidth: 68, textAlign: 'center',
+        borderRadius: 11, padding: '6px 13px', flexShrink: 0,
+        minWidth: 64, textAlign: 'center',
         transition: 'all .3s',
         animation: isCritical ? 'timer-crit .75s infinite' : 'none',
       }}>
-        <span style={{
-          fontSize: '1rem', fontWeight: 900,
-          color: isCritical ? '#FF6868' : isActive ? '#5DEDA0' : '#282420',
+        <div style={{
+          fontSize: '1.08rem', fontWeight: 900,
+          color: isCritical ? '#FF6868' : isActive ? '#82CFFF' : '#282420',
           fontVariantNumeric: 'tabular-nums', letterSpacing: '-.01em',
           transition: 'color .3s',
         }}>
           {timeDisplay}
-        </span>
+        </div>
       </div>
     </div>
   );
 };
+
+// ── Иконки кнопок панели действий ────────────────────────────────────────────
+const IcoHome = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+    <path d="M3 9.5L12 3l9 6.5V21a1 1 0 01-1 1H15v-6h-6v6H4a1 1 0 01-1-1V9.5z"
+      stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const IcoHandshake = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+    <path d="M7 11l3-3 2 2 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M3 16l4-4 2 2 4-4 2 2 2-2 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity=".5"/>
+    <path d="M6 17c1.5 1.5 4 2 6 1l4-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    <path d="M18 17c-1.5 1.5-4 2-6 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity=".7"/>
+  </svg>
+);
+
+const IcoFlag = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+    <path d="M5 21V4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+    <path d="M5 4h10l-2 5h3l-3 6H5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
 
 // ── Результирующий bottom sheet ────────────────────────────────────────────────
 type ResultType = 'win' | 'lose' | 'draw';
@@ -284,37 +358,24 @@ const ResultSheet: React.FC<SheetProps> = ({ type, winAmount, pieceCoins, onRema
     <>
       {isWin && <Confetti />}
       <div
-        style={{
-          position: 'absolute', inset: 0, zIndex: 200,
-          background: 'rgba(0,0,0,.62)',
-          backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)',
-        }}
+        style={{ position: 'absolute', inset: 0, zIndex: 200, background: 'rgba(0,0,0,.62)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }}
         onClick={onHome}
       />
       <div style={{
         position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 201,
-        background: '#0E1015',
-        borderRadius: '22px 22px 0 0',
-        overflow: 'hidden',
+        background: '#0E1015', borderRadius: '22px 22px 0 0', overflow: 'hidden',
         animation: 'sheet-up .38s cubic-bezier(.2,.85,.3,1.05) both',
         boxShadow: '0 -8px 40px rgba(0,0,0,.6)',
       }}>
-        {/* Pull handle */}
         <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(255,255,255,.12)', margin: '10px auto 0' }} />
 
-        {/* Цветной заголовок */}
-        <div style={{
-          background: cfg.bg, padding: '16px 20px',
-          display: 'flex', alignItems: 'center', gap: 14, marginTop: 8,
-        }}>
+        <div style={{ background: cfg.bg, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 14, marginTop: 8 }}>
           <span style={{ fontSize: 34, lineHeight: 1, flexShrink: 0 }}>{cfg.emoji}</span>
           <div>
-            <div style={{ fontSize: '1.35rem', fontWeight: 900, color: cfg.accent, letterSpacing: '-.01em' }}>
-              {cfg.title}
-            </div>
+            <div style={{ fontSize: '1.35rem', fontWeight: 900, color: cfg.accent, letterSpacing: '-.01em' }}>{cfg.title}</div>
             {coinsDisplay && (
-              <div style={{ fontSize: '.8rem', fontWeight: 700, color: '#F4C430', marginTop: 3, display: 'flex', alignItems: 'center', gap: 4 }}>
-                <span>🪙</span>
+              <div style={{ fontSize: '.8rem', fontWeight: 700, color: '#F4C430', marginTop: 3, display: 'flex', alignItems: 'center', gap: 5 }}>
+                <CoinIcon size={14} />
                 <span>+{coinsDisplay} зачислено на баланс</span>
               </div>
             )}
@@ -324,7 +385,6 @@ const ResultSheet: React.FC<SheetProps> = ({ type, winAmount, pieceCoins, onRema
           </div>
         </div>
 
-        {/* Кнопки */}
         <div style={{ padding: '14px 16px', paddingBottom: 'max(20px, env(safe-area-inset-bottom, 20px))', display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={{ display: 'flex', gap: 10 }}>
             <button onClick={onRematch} style={{
@@ -335,17 +395,14 @@ const ResultSheet: React.FC<SheetProps> = ({ type, winAmount, pieceCoins, onRema
               cursor: 'pointer', fontFamily: 'inherit',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
             }}>🔄 <span>Реванш</span></button>
-
             <button disabled style={{
               flex: 1, padding: '13px 0', borderRadius: 14,
               background: 'rgba(255,255,255,.04)', border: '.5px solid rgba(255,255,255,.07)',
               color: '#404040', fontSize: '.8rem', fontWeight: 800,
               cursor: 'default', fontFamily: 'inherit',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-              opacity: 0.5,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, opacity: 0.5,
             }}>📋 <span>Анализ</span></button>
           </div>
-
           <button onClick={onHome} style={{
             width: '100%', padding: '15px 0', borderRadius: 14,
             background: 'linear-gradient(135deg,#2A1E08,#4A3810)',
@@ -372,7 +429,6 @@ export function GamePage() {
   const [oppTimeDisplay, setOppTimeDisplay] = useState('—');
   const [myTimeSecs,     setMyTimeSecs]     = useState(0);
   const [oppTimeSecs,    setOppTimeSecs]    = useState(0);
-  const [drawPending,    setDrawPending]    = useState(false); // ожидаем ответа на ничью
   const [soundPlayed,    setSoundPlayed]    = useState(false);
 
   const mySecsRef   = useRef(0);
@@ -394,9 +450,7 @@ export function GamePage() {
     setSoundPlayed(true);
     const isWin = session.winnerSideId === session.mySideId;
     const isDraw = !session.winnerSideId || session.status === 'DRAW';
-    if (!isDraw) {
-      setTimeout(() => isWin ? sound.win() : sound.lose(), 200);
-    }
+    if (!isDraw) setTimeout(() => isWin ? sound.win() : sound.lose(), 200);
   }, [gameOver, soundPlayed, session]);
 
   // Синхронизируем таймеры при новом FEN
@@ -474,11 +528,20 @@ export function GamePage() {
   const myAdv  = myColor === 'white' ? Math.max(0, wMat - bMat) : Math.max(0, bMat - wMat);
   const oppAdv = myColor === 'white' ? Math.max(0, bMat - wMat) : Math.max(0, wMat - bMat);
 
+  // Монеты за взятые фигуры
+  const PIECE_COINS: Record<string, number> = { p: 100, n: 300, b: 300, r: 500, q: 900 };
+  const myCoins  = myCaptured.reduce((s, p) => s + (PIECE_COINS[p] ?? 0), 0);
+  const oppCoins = oppCaptured.reduce((s, p) => s + (PIECE_COINS[p] ?? 0), 0);
+
   // Результат
   const resultType: ResultType | null = !gameOver ? null
     : !session?.winnerSideId || session.status === 'DRAW' ? 'draw'
     : session.winnerSideId === session.mySideId ? 'win'
     : 'lose';
+
+  // Ничья от соперника
+  const drawOfferedByOpp = drawOfferedBy && drawOfferedBy !== session?.mySideId;
+  const drawOfferedByMe  = drawOfferedBy === session?.mySideId;
 
   // Ход игрока
   const currentFenRef = useRef(fen);
@@ -487,33 +550,24 @@ export function GamePage() {
   const handleMove = useCallback((from: Square, to: Square, promotion?: string) => {
     const prevFen = currentFenRef.current;
     setLastMove({ from, to });
-    getSocket().emit(
-      'game:move',
-      { sessionId, from, to, promotion: promotion ?? 'q' },
+    getSocket().emit('game:move', { sessionId, from, to, promotion: promotion ?? 'q' },
       (res: Record<string, unknown>) => {
         if (!res?.ok) { setLastMove(null); currentFenRef.current = prevFen; }
       }
     );
   }, [sessionId]);
 
-  // Сдаться
   const handleSurrender = useCallback(() => {
     if (gameOver) return;
     if (!window.confirm('Сдаться и завершить игру?')) return;
     getSocket().emit('game:surrender', { sessionId }, () => {});
   }, [sessionId, gameOver]);
 
-  // Предложить / принять ничью
-  const drawOfferedByMe = drawOfferedBy === session?.mySideId;
-  const drawOfferedByOpp = drawOfferedBy && drawOfferedBy !== session?.mySideId;
-
   const handleDrawOffer = useCallback(() => {
     if (gameOver || drawOfferedByMe) return;
     if (drawOfferedByOpp) {
-      // Принимаем ничью от соперника
       getSocket().emit('game:accept_draw', { sessionId }, () => {});
     } else {
-      // Предлагаем ничью
       getSocket().emit('game:offer_draw', { sessionId });
     }
   }, [sessionId, gameOver, drawOfferedByMe, drawOfferedByOpp]);
@@ -525,36 +579,19 @@ export function GamePage() {
   // ── Загрузка ────────────────────────────────────────────────────────────────
   if (!session) {
     return (
-      <div style={{
-        position: 'fixed', inset: 0, background: '#0B0D11',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontFamily: 'Inter, sans-serif',
-      }}>
+      <div style={{ position: 'fixed', inset: 0, background: '#0B0D11', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, sans-serif' }}>
         <style>{`@keyframes gp-spin { to { transform: rotate(360deg) } }`}</style>
         <div style={{ textAlign: 'center' }}>
-          <div style={{
-            width: 32, height: 32, borderRadius: '50%',
-            border: '2.5px solid rgba(74,158,255,.18)', borderTopColor: '#4A9EFF',
-            animation: 'gp-spin 1s linear infinite', margin: '0 auto 14px',
-          }} />
+          <div style={{ width: 32, height: 32, borderRadius: '50%', border: '2.5px solid rgba(74,158,255,.18)', borderTopColor: '#4A9EFF', animation: 'gp-spin 1s linear infinite', margin: '0 auto 14px' }} />
           <div style={{ fontSize: '.72rem', color: '#3A4050', fontWeight: 700 }}>Загрузка партии...</div>
-          <button onClick={() => navigate('/')} style={{
-            marginTop: 20, padding: '7px 18px', borderRadius: 10,
-            background: 'rgba(255,255,255,.06)', border: '.5px solid rgba(255,255,255,.1)',
-            color: '#4A5060', fontSize: '.7rem', fontWeight: 700,
-            cursor: 'pointer', fontFamily: 'inherit',
-          }}>← Назад</button>
+          <button onClick={() => navigate('/')} style={{ marginTop: 20, padding: '7px 18px', borderRadius: 10, background: 'rgba(255,255,255,.06)', border: '.5px solid rgba(255,255,255,.1)', color: '#4A5060', fontSize: '.7rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>← Назад</button>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{
-      position: 'fixed', inset: 0, background: '#0B0D11',
-      display: 'flex', flexDirection: 'column',
-      fontFamily: 'Inter, sans-serif', overflow: 'hidden',
-    }}>
+    <div style={{ position: 'fixed', inset: 0, background: '#0B0D11', display: 'flex', flexDirection: 'column', fontFamily: 'Inter, sans-serif', overflow: 'hidden' }}>
       <style>{`
         @keyframes gp-spin   { to { transform: rotate(360deg) } }
         @keyframes gp-pulse  { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(.7)} }
@@ -564,88 +601,36 @@ export function GamePage() {
         @keyframes draw-in   { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
       `}</style>
 
-      {/* ── Топ-бар: только статус + ID ──────────────────────────────────── */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        gap: 10,
-        height: TOPBAR_H,
-        paddingTop: 'max(0px, env(safe-area-inset-top, 0px))',
-        borderBottom: '.5px solid rgba(255,255,255,.04)',
-        flexShrink: 0,
-      }}>
-        {/* Статус хода */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 5,
-          background: !gameOver && isMyTurn ? 'rgba(61,186,122,.08)' : 'rgba(255,255,255,.03)',
-          border: `.5px solid ${!gameOver && isMyTurn ? 'rgba(61,186,122,.28)' : 'rgba(255,255,255,.06)'}`,
-          borderRadius: 9, padding: '4px 11px', transition: 'all .3s',
-        }}>
-          {!gameOver && (
-            <div style={{
-              width: 5, height: 5, borderRadius: '50%', flexShrink: 0,
-              background: isMyTurn ? '#3DBA7A' : '#252830',
-              boxShadow: isMyTurn ? '0 0 7px #3DBA7A' : 'none',
-              animation: isMyTurn ? 'gp-pulse 1.5s infinite' : 'none',
-            }} />
-          )}
-          <span style={{
-            fontSize: '.67rem', fontWeight: 800,
-            color: gameOver ? '#D4A843' : isMyTurn ? '#6FEDB0' : '#353840',
-          }}>
-            {gameOver ? 'Конец игры' : isMyTurn ? 'Ваш ход' : 'Ожидание...'}
-          </span>
-        </div>
-
-        <span style={{ fontSize: '.52rem', fontWeight: 700, color: '#1A1E24', fontVariantNumeric: 'tabular-nums' }}>
-          #{sessionId.slice(-4).toUpperCase() || '----'}
-        </span>
-      </div>
-
       {/* ── Предложение ничьи от соперника ─────────────────────────────────── */}
       {drawOfferedByOpp && !gameOver && (
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '8px 14px',
+          padding: '7px 12px',
           background: 'rgba(130,207,255,.08)',
           borderBottom: '.5px solid rgba(130,207,255,.2)',
           animation: 'draw-in .3s ease both',
           flexShrink: 0,
         }}>
-          <span style={{ fontSize: '.72rem', fontWeight: 700, color: '#82CFFF' }}>
-            🤝 Соперник предлагает ничью
-          </span>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={handleDrawOffer} style={{
-              padding: '5px 12px', borderRadius: 8,
-              background: 'rgba(130,207,255,.15)', border: '.5px solid rgba(130,207,255,.4)',
-              color: '#82CFFF', fontSize: '.68rem', fontWeight: 800,
-              cursor: 'pointer', fontFamily: 'inherit',
-            }}>Принять</button>
-            <button onClick={handleDeclineDraw} style={{
-              padding: '5px 12px', borderRadius: 8,
-              background: 'rgba(255,255,255,.06)', border: '.5px solid rgba(255,255,255,.1)',
-              color: '#5A5850', fontSize: '.68rem', fontWeight: 800,
-              cursor: 'pointer', fontFamily: 'inherit',
-            }}>Отказать</button>
+          <span style={{ fontSize: '.7rem', fontWeight: 700, color: '#82CFFF' }}>🤝 Соперник предлагает ничью</span>
+          <div style={{ display: 'flex', gap: 7 }}>
+            <button onClick={handleDrawOffer} style={{ padding: '4px 11px', borderRadius: 8, background: 'rgba(130,207,255,.15)', border: '.5px solid rgba(130,207,255,.4)', color: '#82CFFF', fontSize: '.66rem', fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>Принять</button>
+            <button onClick={handleDeclineDraw} style={{ padding: '4px 11px', borderRadius: 8, background: 'rgba(255,255,255,.06)', border: '.5px solid rgba(255,255,255,.1)', color: '#5A5850', fontSize: '.66rem', fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>Отказать</button>
           </div>
         </div>
       )}
 
       {/* ── Соперник (сверху) ──────────────────────────────────────────────── */}
-      <div style={{ borderBottom: '.5px solid rgba(255,255,255,.04)', flexShrink: 0 }}>
+      <div style={{ borderBottom: '.5px solid rgba(255,255,255,.05)', flexShrink: 0 }}>
         <PlayerPanel
           name={oppName} elo={oppElo} avatar={oppAvatar} isBot={oppIsBot}
-          isWhite={oppIsWhite} captured={oppCaptured} advantage={oppAdv}
+          isWhite={oppIsWhite} captured={oppCaptured} advantage={oppAdv} coins={oppCoins}
           timeDisplay={oppTimeDisplay} timeSecs={oppTimeSecs}
-          isActive={!isMyTurn && !gameOver}
+          isActive={!isMyTurn && !gameOver} isGameOver={gameOver}
         />
       </div>
 
       {/* ── Доска ─────────────────────────────────────────────────────────── */}
-      <div style={{
-        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        overflow: 'hidden',
-      }}>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
         <div style={{ width: boardSize, flexShrink: 0 }}>
           <ChessBoard
             fen={fen}
@@ -660,60 +645,58 @@ export function GamePage() {
       </div>
 
       {/* ── Игрок (снизу) ─────────────────────────────────────────────────── */}
-      <div style={{ borderTop: '.5px solid rgba(255,255,255,.04)', flexShrink: 0 }}>
+      <div style={{ borderTop: '.5px solid rgba(255,255,255,.05)', flexShrink: 0 }}>
         <PlayerPanel
           name={myName} elo={myElo} avatar={myAvatar} isBot={false}
-          isWhite={myColor === 'white'} captured={myCaptured} advantage={myAdv}
+          isWhite={myColor === 'white'} captured={myCaptured} advantage={myAdv} coins={myCoins}
           timeDisplay={myTimeDisplay} timeSecs={myTimeSecs}
-          isActive={isMyTurn && !gameOver}
+          isActive={isMyTurn && !gameOver} isGameOver={gameOver}
         />
       </div>
 
-      {/* ── Нижняя панель: Назад | Ваш ход | Сдаться | Ничья ─────────────── */}
+      {/* ── Панель действий: 3 большие кнопки ─────────────────────────────── */}
       <div style={{
-        display: 'flex', alignItems: 'center', gap: 8,
+        display: 'grid', gridTemplateColumns: '1fr 1fr 1fr',
         height: ACTBAR_H,
-        padding: '0 12px',
         paddingBottom: 'max(0px, env(safe-area-inset-bottom, 0px))',
-        borderTop: '.5px solid rgba(255,255,255,.05)',
-        flexShrink: 0, background: 'rgba(0,0,0,.15)',
+        borderTop: '.5px solid rgba(255,255,255,.06)',
+        flexShrink: 0, background: 'rgba(0,0,0,.2)',
+        gap: 1,
       }}>
-        {/* ← Назад */}
-        <button onClick={() => navigate('/')} style={{
-          padding: '9px 14px', borderRadius: 11, flexShrink: 0,
-          background: 'rgba(255,255,255,.06)', border: '.5px solid rgba(255,255,255,.1)',
-          color: '#5A6070', fontSize: '.7rem', fontWeight: 700,
-          cursor: 'pointer', fontFamily: 'inherit',
-        }}>← Назад</button>
-
-        {/* Flex spacer */}
-        <div style={{ flex: 1 }} />
+        {/* Главная */}
+        <button
+          onClick={() => navigate('/')}
+          style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            gap: 4, background: 'rgba(255,255,255,.04)', border: 'none',
+            color: '#5A6070', cursor: 'pointer', fontFamily: 'inherit',
+            transition: 'background .15s',
+          }}
+        >
+          <IcoHome />
+          <span style={{ fontSize: '.6rem', fontWeight: 700, letterSpacing: '.04em' }}>Главная</span>
+        </button>
 
         {/* Ничья */}
         <button
           onClick={handleDrawOffer}
           disabled={gameOver || drawOfferedByMe}
-          title={drawOfferedByOpp ? 'Принять ничью' : 'Предложить ничью'}
           style={{
-            padding: '9px 14px', borderRadius: 11,
-            background: drawOfferedByOpp
-              ? 'rgba(130,207,255,.14)'
-              : drawOfferedByMe
-                ? 'rgba(255,255,255,.03)'
-                : 'rgba(255,255,255,.06)',
-            border: `.5px solid ${
-              drawOfferedByOpp ? 'rgba(130,207,255,.4)'
-              : drawOfferedByMe ? 'rgba(255,255,255,.05)'
-              : 'rgba(255,255,255,.1)'
-            }`,
-            color: drawOfferedByOpp ? '#82CFFF' : drawOfferedByMe ? '#2A2C34' : '#5A6070',
-            fontSize: '.7rem', fontWeight: 700,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            gap: 4,
+            background: drawOfferedByOpp ? 'rgba(130,207,255,.1)' : 'rgba(255,255,255,.04)',
+            border: 'none',
+            color: drawOfferedByOpp ? '#82CFFF' : drawOfferedByMe ? '#2A2A30' : '#5A6070',
             cursor: gameOver || drawOfferedByMe ? 'default' : 'pointer',
             fontFamily: 'inherit',
-            opacity: drawOfferedByMe ? 0.5 : 1,
+            opacity: drawOfferedByMe ? 0.4 : 1,
+            transition: 'background .15s',
           }}
         >
-          {drawOfferedByOpp ? '🤝 Принять' : drawOfferedByMe ? '⏳ Ждём...' : '= Ничья'}
+          <IcoHandshake />
+          <span style={{ fontSize: '.6rem', fontWeight: 700, letterSpacing: '.04em' }}>
+            {drawOfferedByOpp ? 'Принять =' : drawOfferedByMe ? 'Ждём...' : 'Ничья'}
+          </span>
         </button>
 
         {/* Сдаться */}
@@ -721,16 +704,17 @@ export function GamePage() {
           onClick={handleSurrender}
           disabled={gameOver}
           style={{
-            padding: '9px 14px', borderRadius: 11,
-            background: gameOver ? 'rgba(255,255,255,.03)' : 'rgba(220,50,47,.1)',
-            border: `.5px solid ${gameOver ? 'rgba(255,255,255,.05)' : 'rgba(220,50,47,.3)'}`,
-            color: gameOver ? '#2A2420' : '#FF7070',
-            fontSize: '.7rem', fontWeight: 700,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            gap: 4,
+            background: gameOver ? 'rgba(255,255,255,.03)' : 'rgba(220,50,47,.07)',
+            border: 'none',
+            color: gameOver ? '#2A2420' : '#CC5555',
             cursor: gameOver ? 'default' : 'pointer',
-            fontFamily: 'inherit',
+            fontFamily: 'inherit', transition: 'background .15s',
           }}
         >
-          🏳 Сдаться
+          <IcoFlag />
+          <span style={{ fontSize: '.6rem', fontWeight: 700, letterSpacing: '.04em' }}>Сдаться</span>
         </button>
       </div>
 
