@@ -52,7 +52,7 @@ function fmtTime(secs: number): string {
 
 function calcBoardSize(): number {
   // Панели + статус-полоски + action bar + минимальные spacer-ы (8px сверху/снизу)
-  const reserved = PANEL_H * 2 + STATUS_GAP * 2 + ACTBAR_H + 16;
+  const reserved = PANEL_H * 2 + STATUS_GAP * 2 + ACTBAR_H + 22;
   return Math.floor(Math.min(window.innerWidth, window.innerHeight - reserved));
 }
 
@@ -497,6 +497,85 @@ const ResultSheet: React.FC<SheetProps> = ({ type, winAmount, pieceCoins, onRema
   );
 };
 
+// ── Универсальный диалог (ничья, сдача, подтверждения) ─────────────────────────
+interface DialogProps {
+  iconNode: React.ReactNode;
+  iconBg: string;
+  iconBorder: string;
+  title: string;
+  subtitle?: string;
+  primaryLabel: string;
+  primaryDanger?: boolean;
+  secondaryLabel?: string;
+  onPrimary: () => void;
+  onSecondary?: () => void;
+}
+
+const GameDialog: React.FC<DialogProps> = ({
+  iconNode, iconBg, iconBorder, title, subtitle,
+  primaryLabel, primaryDanger, secondaryLabel,
+  onPrimary, onSecondary,
+}) => (
+  <div style={{
+    position: 'fixed', inset: 0, zIndex: 210,
+    background: 'rgba(0,0,0,.82)',
+    backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    padding: '24px 20px',
+  }}>
+    <div style={{
+      width: '100%', maxWidth: 320,
+      background: 'linear-gradient(160deg,#12151E,#0E111A)',
+      border: '1px solid rgba(255,255,255,.09)',
+      borderRadius: 28,
+      padding: '36px 24px 24px',
+      boxShadow: '0 24px 60px rgba(0,0,0,.75)',
+      animation: 'result-pop .35s cubic-bezier(.2,.9,.3,1.05) both',
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      textAlign: 'center',
+    }}>
+      <div style={{
+        width: 72, height: 72, borderRadius: '50%',
+        background: iconBg, border: `1.5px solid ${iconBorder}`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        marginBottom: 20,
+      }}>
+        {iconNode}
+      </div>
+      <div style={{
+        fontSize: '1.28rem', fontWeight: 900,
+        color: '#EAE2CC', letterSpacing: '-.02em',
+        marginBottom: subtitle ? 8 : 28, lineHeight: 1.15,
+      }}>
+        {title}
+      </div>
+      {subtitle && (
+        <div style={{ fontSize: '.77rem', color: '#484855', lineHeight: 1.5, marginBottom: 28 }}>
+          {subtitle}
+        </div>
+      )}
+      <div style={{ display: 'flex', gap: 10, width: '100%' }}>
+        {secondaryLabel && (
+          <button onClick={onSecondary} style={{
+            flex: 1, padding: '14px 0', borderRadius: 14,
+            background: 'rgba(255,255,255,.05)', border: '.5px solid rgba(255,255,255,.09)',
+            color: '#6A6A78', fontSize: '.82rem', fontWeight: 800,
+            cursor: 'pointer', fontFamily: 'inherit',
+          }}>{secondaryLabel}</button>
+        )}
+        <button onClick={onPrimary} style={{
+          flex: 1, padding: '14px 0', borderRadius: 14,
+          background: primaryDanger ? 'rgba(204,96,96,.14)' : 'rgba(130,207,255,.11)',
+          border: `.5px solid ${primaryDanger ? 'rgba(204,96,96,.38)' : 'rgba(130,207,255,.32)'}`,
+          color: primaryDanger ? '#CC6060' : '#82CFFF',
+          fontSize: '.82rem', fontWeight: 800,
+          cursor: 'pointer', fontFamily: 'inherit',
+        }}>{primaryLabel}</button>
+      </div>
+    </div>
+  </div>
+);
+
 // ── Основной компонент ─────────────────────────────────────────────────────────
 export function GamePage() {
   const navigate = useNavigate();
@@ -511,8 +590,9 @@ export function GamePage() {
   const [myTimeSecs,     setMyTimeSecs]     = useState(0);
   const [oppTimeSecs,    setOppTimeSecs]    = useState(0);
   const [soundPlayed,    setSoundPlayed]    = useState(false);
-  const [isSaved,        setIsSaved]        = useState(false);
-  const [isSaving,       setIsSaving]       = useState(false);
+  const [isSaved,           setIsSaved]           = useState(false);
+  const [isSaving,          setIsSaving]          = useState(false);
+  const [showResignDialog,  setShowResignDialog]  = useState(false);
 
   const mySecsRef   = useRef(0);
   const oppSecsRef  = useRef(0);
@@ -642,9 +722,13 @@ export function GamePage() {
 
   const handleSurrender = useCallback(() => {
     if (gameOver) return;
-    if (!window.confirm('Сдаться и завершить игру?')) return;
+    setShowResignDialog(true);
+  }, [gameOver]);
+
+  const handleResignConfirm = useCallback(() => {
+    setShowResignDialog(false);
     getSocket().emit('game:surrender', { sessionId }, () => {});
-  }, [sessionId, gameOver]);
+  }, [sessionId]);
 
   const handleDrawOffer = useCallback(() => {
     if (gameOver || drawOfferedByMe) return;
@@ -709,21 +793,25 @@ export function GamePage() {
         @keyframes result-pop{ from{opacity:0;transform:scale(.88)} to{opacity:1;transform:scale(1)} }
       `}</style>
 
-      {/* ── Предложение ничьи от соперника ─────────────────────────────────── */}
+      {/* ── Диалог предложения ничьи ──────────────────────────────────────── */}
       {drawOfferedByOpp && !gameOver && (
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '7px 12px', flexShrink: 0,
-          background: 'rgba(130,207,255,.08)',
-          borderBottom: '.5px solid rgba(130,207,255,.2)',
-          animation: 'draw-in .3s ease both',
-        }}>
-          <span style={{ fontSize: '.7rem', fontWeight: 700, color: '#82CFFF' }}>🤝 Соперник предлагает ничью</span>
-          <div style={{ display: 'flex', gap: 7 }}>
-            <button onClick={handleDrawOffer} style={{ padding: '4px 11px', borderRadius: 8, background: 'rgba(130,207,255,.15)', border: '.5px solid rgba(130,207,255,.4)', color: '#82CFFF', fontSize: '.66rem', fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>Принять</button>
-            <button onClick={handleDeclineDraw} style={{ padding: '4px 11px', borderRadius: 8, background: 'rgba(255,255,255,.06)', border: '.5px solid rgba(255,255,255,.1)', color: '#5A5850', fontSize: '.66rem', fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>Отказать</button>
-          </div>
-        </div>
+        <GameDialog
+          iconNode={
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none">
+              <path d="M9 12c0 1.66 1.34 3 3 3s3-1.34 3-3V7H9v5z" stroke="#82CFFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M9 9H6a1.5 1.5 0 000 3h3M15 9h3a1.5 1.5 0 010 3h-3" stroke="#82CFFF" strokeWidth="1.4" strokeLinecap="round"/>
+              <path d="M12 15v3M10 20h4" stroke="#82CFFF" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          }
+          iconBg="rgba(130,207,255,.09)"
+          iconBorder="rgba(130,207,255,.25)"
+          title="Предложение ничьи"
+          subtitle="Соперник предлагает сыграть вничью"
+          primaryLabel="Принять"
+          secondaryLabel="Отклонить"
+          onPrimary={handleDrawOffer}
+          onSecondary={handleDeclineDraw}
+        />
       )}
 
       {/* ── Верхний spacer — пустое пространство выравнивается между краем экрана и блоком ── */}
@@ -785,7 +873,7 @@ export function GamePage() {
       </div>
 
       {/* ── Нижний spacer ────────────────────────────────────────────────── */}
-      <div style={{ flex: 1, minHeight: 6 }} />
+      <div style={{ flex: 1, minHeight: 16 }} />
 
       {/* ── Панель действий: 4 кнопки ─────────────────────────────── */}
       <div style={{
@@ -871,6 +959,27 @@ export function GamePage() {
           <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Сдаться</span>
         </button>
       </div>
+
+      {/* ── Диалог подтверждения сдачи ──────────────────────────────────── */}
+      {showResignDialog && (
+        <GameDialog
+          iconNode={
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none">
+              <path d="M5 21V4" stroke="#CC6060" strokeWidth="1.8" strokeLinecap="round"/>
+              <path d="M5 4h10l-2 5h3l-3 6H5" stroke="#CC6060" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          }
+          iconBg="rgba(204,96,96,.09)"
+          iconBorder="rgba(204,96,96,.28)"
+          title="Сдаться?"
+          subtitle="Партия будет засчитана как поражение"
+          primaryLabel="Сдаться"
+          primaryDanger
+          secondaryLabel="Отмена"
+          onPrimary={handleResignConfirm}
+          onSecondary={() => setShowResignDialog(false)}
+        />
+      )}
 
       {/* ── Bottom sheet результата ────────────────────────────────────────── */}
       {resultType && (
