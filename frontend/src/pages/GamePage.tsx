@@ -1,9 +1,14 @@
 // frontend/src/pages/GamePage.tsx
+// АРХИТЕКТУРА: useSocket.ts (App уровень) слушает 'game' события → store.
+// GamePage читает из store, NOT делает собственные socket-обработчики.
+// Для хода: socket.emit('game:move', ...) с callback.
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Chess } from 'chess.js';
 import type { Square } from 'chess.js';
 import { getSocket } from '@/api/socket';
+import { useGameStore } from '@/store/useGameStore';
 import { ChessBoard } from '@/components/game/ChessBoard';
 
 // ── SVG J.A.R.V.I.S аватар ───────────────────────────────────────────────────
@@ -31,20 +36,20 @@ const PIECE_COINS: Record<string, number> = {
 };
 const PIECE_START: Record<string, number> = { p: 8, n: 2, b: 2, r: 2, q: 1 };
 
-// Вычисляем взятые фигуры из FEN (сравниваем с начальным расположением)
+// Взятые фигуры из FEN (diff от начального расположения)
 function capturedFromFen(fen: string): { white: string[]; black: string[] } {
   const pos = fen.split(' ')[0];
   const cnt: Record<string, number> = {};
   for (const ch of pos) {
     if (/[a-zA-Z]/.test(ch)) cnt[ch] = (cnt[ch] ?? 0) + 1;
   }
-  const white: string[] = []; // фигуры, взятые белыми (чёрные фигуры)
-  const black: string[] = []; // фигуры, взятые чёрными (белые фигуры)
+  const white: string[] = []; // захвачено белыми (чёрные фигуры)
+  const black: string[] = []; // захвачено чёрными (белые фигуры)
   for (const [lc, start] of Object.entries(PIECE_START)) {
-    const capBlack = Math.max(0, start - (cnt[lc] ?? 0));
-    for (let i = 0; i < capBlack; i++) white.push(lc);
-    const capWhite = Math.max(0, start - (cnt[lc.toUpperCase()] ?? 0));
-    for (let i = 0; i < capWhite; i++) black.push(lc);
+    const capB = Math.max(0, start - (cnt[lc] ?? 0));
+    for (let i = 0; i < capB; i++) white.push(lc);
+    const capW = Math.max(0, start - (cnt[lc.toUpperCase()] ?? 0));
+    for (let i = 0; i < capW; i++) black.push(lc);
   }
   return { white, black };
 }
@@ -62,10 +67,25 @@ function calcBoardSize(): number {
   return Math.floor(Math.min(window.innerWidth, window.innerHeight - 218));
 }
 
+// Достаём последний ход из PGN
+function lastMoveFromPgn(pgn: string): { from: string; to: string } | null {
+  if (!pgn) return null;
+  try {
+    const chess = new Chess();
+    chess.loadPgn(pgn);
+    const history = chess.history({ verbose: true });
+    const last = history[history.length - 1];
+    if (!last) return null;
+    return { from: last.from, to: last.to };
+  } catch {
+    return null;
+  }
+}
+
 // ── Панель игрока ──────────────────────────────────────────────────────────────
 interface PanelProps {
   name: string;
-  avatar?: string;
+  avatar?: string | null;
   isBot?: boolean;
   isWhite: boolean;
   captured: string[];
@@ -86,7 +106,6 @@ const PlayerPanel: React.FC<PanelProps> = ({
       background: isActive ? 'rgba(61,186,122,.07)' : 'transparent',
       transition: 'background .4s',
     }}>
-
       {/* Аватар */}
       <div style={{
         width: sz, height: sz, borderRadius: '50%', flexShrink: 0,
@@ -112,7 +131,6 @@ const PlayerPanel: React.FC<PanelProps> = ({
       {/* Имя + взятые фигуры */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 4 }}>
-          {/* Цвет фигур */}
           <div style={{
             width: 8, height: 8, borderRadius: 2, flexShrink: 0,
             background: isWhite ? '#E0D8C0' : '#181410',
@@ -125,9 +143,7 @@ const PlayerPanel: React.FC<PanelProps> = ({
             {name.length > 16 ? name.slice(0, 16) + '…' : name}
           </span>
         </div>
-
-        {/* Взятые фигуры */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexWrap: 'nowrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
           {captured.length > 0 ? (
             <>
               <div style={{ display: 'flex', gap: 1 }}>
@@ -145,7 +161,6 @@ const PlayerPanel: React.FC<PanelProps> = ({
               {coins > 0 && (
                 <span style={{
                   fontSize: '.6rem', fontWeight: 800, color: '#C89030', marginLeft: 3,
-                  letterSpacing: '-.01em',
                 }}>
                   +{coins >= 1000 ? (coins / 1000).toFixed(coins >= 10000 ? 0 : 1) + 'K' : coins}🪙
                 </span>
@@ -183,37 +198,56 @@ export function GamePage() {
   const navigate = useNavigate();
   const { sessionId } = useParams<{ sessionId: string }>();
 
-  const [game, setGame]           = useState(() => new Chess());
-  const [myColor, setMyColor]     = useState<'white' | 'black'>('white');
-  const [isMyTurn, setIsMyTurn]   = useState(false);
-  const [gameOver, setGameOver]   = useState(false);
-  const [result, setResult]       = useState('');
-  const [lastMove, setLastMove]   = useState<{ from: string; to: string } | null>(null);
+  // ── Читаем сессию из Zustand store (обновляется через useSocket.ts → 'game' события) ──
+  const { sessions } = useGameStore();
+  const session = sessions.find(s => s.id === sessionId) ?? null;
 
-  // Информация об игроках
-  const [myName,     setMyName]     = useState('Вы');
-  const [myAvatar,   setMyAvatar]   = useState<string | undefined>();
-  const [oppName,    setOppName]    = useState('...');
-  const [oppAvatar,  setOppAvatar]  = useState<string | undefined>();
-  const [oppIsBot,   setOppIsBot]   = useState(false);
-  const [oppIsWhite, setOppIsWhite] = useState(false);
-
-  // Таймеры (refs для тика без ре-рендера, states для отображения)
-  const mySecsRef  = useRef(300);
-  const oppSecsRef = useRef(300);
-  const isMyTurnRef = useRef(false);
-  const gameOverRef = useRef(false);
-  const readyRef    = useRef(false); // разрешён ли тик (после получения game:state)
+  // ── Локальный игровой стейт ────────────────────────────────────────────────
+  const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(null);
   const [myTimeDisplay,  setMyTimeDisplay]  = useState('—');
   const [oppTimeDisplay, setOppTimeDisplay] = useState('—');
+
+  // Таймерные refs — обновляются при каждом server-ответе (новый fen)
+  const mySecsRef   = useRef(0);
+  const oppSecsRef  = useRef(0);
+  const isMyTurnRef = useRef(false);
+  const gameOverRef = useRef(false);
+
+  // Синхронизация isMyTurn ref
+  const isMyTurn = !!(session?.isMyTurn);
+  const gameOver = !!session && session.status !== 'IN_PROGRESS' && session.status !== 'WAITING_FOR_OPPONENT';
 
   useEffect(() => { isMyTurnRef.current = isMyTurn; }, [isMyTurn]);
   useEffect(() => { gameOverRef.current = gameOver; }, [gameOver]);
 
-  // Единый тикающий интервал (запускается один раз при монтировании)
+  // ── Синхронизируем таймеры из store при каждом изменении FEN ──────────────
+  const prevFenRef = useRef('');
+  useEffect(() => {
+    if (!session) return;
+    if (session.fen === prevFenRef.current) return;
+    prevFenRef.current = session.fen;
+
+    const mySide  = session.sides.find(s => s.id === session.mySideId);
+    const oppSide = session.sides.find(s => s.id !== session.mySideId);
+
+    if (mySide !== undefined) {
+      mySecsRef.current = mySide.timeLeft ?? 0;
+      setMyTimeDisplay(fmtTime(mySecsRef.current));
+    }
+    if (oppSide !== undefined) {
+      oppSecsRef.current = oppSide.timeLeft ?? 0;
+      setOppTimeDisplay(fmtTime(oppSecsRef.current));
+    }
+
+    // Обновляем lastMove из PGN
+    const lm = lastMoveFromPgn(session.pgn ?? '');
+    if (lm) setLastMove(lm);
+  }, [session?.fen]);
+
+  // ── Единый тикающий интервал ───────────────────────────────────────────────
   useEffect(() => {
     const id = setInterval(() => {
-      if (!readyRef.current || gameOverRef.current) return;
+      if (gameOverRef.current) return;
       if (isMyTurnRef.current) {
         mySecsRef.current  = Math.max(0, mySecsRef.current - 1);
         setMyTimeDisplay(fmtTime(mySecsRef.current));
@@ -225,7 +259,7 @@ export function GamePage() {
     return () => clearInterval(id);
   }, []);
 
-  // Размер доски
+  // ── Размер доски ───────────────────────────────────────────────────────────
   const [boardSize, setBoardSize] = useState(calcBoardSize);
   useEffect(() => {
     const onResize = () => setBoardSize(calcBoardSize());
@@ -233,118 +267,42 @@ export function GamePage() {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  // Взятые фигуры из текущего FEN
-  const { white: whiteCap, black: blackCap } = capturedFromFen(game.fen());
+  // ── Данные из сессии ───────────────────────────────────────────────────────
+  const mySide  = session?.sides.find(s => s.id === session?.mySideId);
+  const oppSide = session?.sides.find(s => s.id !== session?.mySideId);
+
+  const myColor: 'white' | 'black' = mySide?.isWhite ? 'white' : 'black';
+  const myName    = mySide?.player?.firstName ?? 'Вы';
+  const myAvatar  = mySide?.player?.avatar;
+
+  const oppIsBot  = !!oppSide?.isBot;
+  const oppName   = oppIsBot ? 'J.A.R.V.I.S' : (oppSide?.player?.firstName ?? '...');
+  const oppAvatar = oppSide?.player?.avatar;
+  const oppIsWhite = !!oppSide?.isWhite;
+
+  // Взятые фигуры из FEN
+  const fen = session?.fen ?? 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+  const { white: whiteCap, black: blackCap } = capturedFromFen(fen);
   const myCaptured  = myColor === 'white' ? whiteCap : blackCap;
   const oppCaptured = myColor === 'white' ? blackCap : whiteCap;
 
-  const initialized = useRef(false);
+  // Результат игры
+  let resultText = '';
+  if (gameOver) {
+    const wId = session?.winnerSideId;
+    const myId = session?.mySideId;
+    if (!wId || session?.status === 'DRAW') resultText = '🤝 Ничья';
+    else if (wId === myId)                   resultText = '🏆 Победа!';
+    else                                      resultText = '❌ Поражение';
+  }
 
-  // ── Socket: инициализация ────────────────────────────────────────────────────
-  useEffect(() => {
-    if (!sessionId || initialized.current) return;
-    initialized.current = true;
-    const socket = getSocket();
+  // ── Ход игрока ─────────────────────────────────────────────────────────────
+  // Нужна мутабельная ссылка на текущий fen для отката при ошибке
+  const currentFenRef = useRef(fen);
+  useEffect(() => { currentFenRef.current = fen; }, [fen]);
 
-    // Запрашиваем текущее состояние партии
-    socket.emit('game:state', { sessionId }, (res: Record<string, unknown>) => {
-      if (!res?.ok || !res?.session) return;
-      const s = res.session as Record<string, unknown>;
-
-      // FEN позиции
-      if (typeof s.fen === 'string') {
-        try { setGame(new Chess(s.fen)); } catch {}
-      }
-
-      // Стороны: определяем мою и соперника
-      const sides = (Array.isArray(s.sides) ? s.sides : []) as Array<Record<string, unknown>>;
-      const botSide = sides.find(sd => sd.isBot);
-      const mySide  = sides.find(sd => sd.isMe) ?? (botSide ? sides.find(sd => !sd.isBot) : sides[0]);
-      const oppSide = sides.find(sd => sd !== mySide);
-
-      if (mySide) {
-        const color = mySide.isWhite ? 'white' : 'black';
-        setMyColor(color as 'white' | 'black');
-        const pl = (mySide.player ?? {}) as Record<string, unknown>;
-        setMyName((pl.firstName as string) || 'Вы');
-        if (pl.avatar) setMyAvatar(pl.avatar as string);
-        const tl = typeof mySide.timeLeft === 'number' ? mySide.timeLeft : 300;
-        mySecsRef.current = tl;
-        setMyTimeDisplay(fmtTime(tl));
-      }
-
-      if (oppSide) {
-        setOppIsBot(!!oppSide.isBot);
-        setOppIsWhite(!!oppSide.isWhite);
-        if (oppSide.isBot) {
-          setOppName('J.A.R.V.I.S');
-        } else {
-          const pl = (oppSide.player ?? {}) as Record<string, unknown>;
-          setOppName((pl.firstName as string) || '???');
-          if (pl.avatar) setOppAvatar(pl.avatar as string);
-        }
-        const tl = typeof oppSide.timeLeft === 'number' ? oppSide.timeLeft : 300;
-        oppSecsRef.current = tl;
-        setOppTimeDisplay(fmtTime(tl));
-      }
-
-      const myTurn = !!(s.isMyTurn);
-      setIsMyTurn(myTurn);
-      isMyTurnRef.current = myTurn;
-
-      if (s.status === 'FINISHED') {
-        setGameOver(true);
-      }
-
-      readyRef.current = true; // разрешаем тик таймера
-    });
-
-    // Ход сделан (бот ответил / соперник сходил)
-    socket.on('game:move', (data: Record<string, unknown>) => {
-      if (data.sessionId !== sessionId) return;
-
-      if (typeof data.fen === 'string') {
-        try { setGame(new Chess(data.fen)); } catch {}
-      }
-      if (data.from && data.to) {
-        setLastMove({ from: data.from as string, to: data.to as string });
-      }
-      // Обновляем таймеры если сервер присылает актуальные значения
-      if (typeof data.myTimeLeft === 'number') {
-        mySecsRef.current = data.myTimeLeft;
-        setMyTimeDisplay(fmtTime(data.myTimeLeft));
-      }
-      if (typeof data.oppTimeLeft === 'number') {
-        oppSecsRef.current = data.oppTimeLeft;
-        setOppTimeDisplay(fmtTime(data.oppTimeLeft));
-      }
-      const myTurn = !!(data.isMyTurn);
-      setIsMyTurn(myTurn);
-      isMyTurnRef.current = myTurn;
-    });
-
-    // Конец игры
-    socket.on('game:end', (data: Record<string, unknown>) => {
-      if (data.sessionId !== sessionId) return;
-      const r = (data.result as string) || '';
-      setResult(r === 'WIN' ? '🏆 Победа!' : r === 'LOSE' ? '❌ Поражение' : '🤝 Ничья');
-      setGameOver(true);
-      gameOverRef.current = true;
-      setIsMyTurn(false);
-      isMyTurnRef.current = false;
-    });
-
-    return () => {
-      socket.off('game:move');
-      socket.off('game:end');
-    };
-  }, [sessionId]);
-
-  // ── Ход игрока (вызывается из ChessBoard) ───────────────────────────────────
   const handleMove = useCallback((from: Square, to: Square, promotion?: string) => {
-    const prevFen = game.fen();
-    setIsMyTurn(false);
-    isMyTurnRef.current = false;
+    const prevFen = currentFenRef.current;
     setLastMove({ from, to });
 
     getSocket().emit(
@@ -352,17 +310,53 @@ export function GamePage() {
       { sessionId, from, to, promotion: promotion ?? 'q' },
       (res: Record<string, unknown>) => {
         if (!res?.ok) {
-          // Откат если сервер не принял
-          try { setGame(new Chess(prevFen)); } catch {}
-          setIsMyTurn(true);
-          isMyTurnRef.current = true;
+          // Откат: принудительно возвращаем store к предыдущей сессии
+          // (уведомляем ChessBoard через изменение fen)
+          // useGameStore не нужно менять — сервер сам отправит правильный 'game' event
+          // Временно: устанавливаем lastMove в null чтобы ChessBoard откатил
           setLastMove(null);
+          currentFenRef.current = prevFen;
         }
       }
     );
-  }, [sessionId, game]);
+  }, [sessionId]);
 
-  // ── Рендер ──────────────────────────────────────────────────────────────────
+  // ── Рендер ─────────────────────────────────────────────────────────────────
+
+  // Загрузка — ждём пока сессия появится в store
+  if (!session) {
+    return (
+      <div style={{
+        position: 'fixed', inset: 0, background: '#0B0D11',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontFamily: 'Inter, sans-serif',
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: '50%',
+            border: '2.5px solid rgba(74,158,255,.2)',
+            borderTopColor: '#4A9EFF',
+            animation: 'gp-spin 1s linear infinite',
+            margin: '0 auto 12px',
+          }} />
+          <style>{`@keyframes gp-spin { to { transform: rotate(360deg) } }`}</style>
+          <div style={{ fontSize: '.72rem', color: '#3A4050', fontWeight: 700 }}>
+            Загрузка партии...
+          </div>
+          <button
+            onClick={() => navigate('/')}
+            style={{
+              marginTop: 20, padding: '7px 18px', borderRadius: 10,
+              background: 'rgba(255,255,255,.06)', border: '.5px solid rgba(255,255,255,.1)',
+              color: '#4A5060', fontSize: '.7rem', fontWeight: 700,
+              cursor: 'pointer', fontFamily: 'inherit',
+            }}
+          >← Назад</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{
       position: 'fixed', inset: 0,
@@ -393,7 +387,7 @@ export function GamePage() {
           }}
         >← Назад</button>
 
-        {/* Статус хода */}
+        {/* Статус */}
         <div style={{
           display: 'flex', alignItems: 'center', gap: 5,
           background: !gameOver && isMyTurn ? 'rgba(61,186,122,.1)' : 'rgba(255,255,255,.03)',
@@ -413,14 +407,13 @@ export function GamePage() {
             color: gameOver ? '#D4A843' : isMyTurn ? '#6FEDB0' : '#3A4050',
           }}>
             {gameOver
-              ? (result || 'Конец игры')
+              ? (resultText || 'Конец')
               : isMyTurn
                 ? 'Ваш ход'
                 : 'Ожидание...'}
           </span>
         </div>
 
-        {/* ID партии */}
         <span style={{
           fontSize: '.58rem', fontWeight: 700, color: '#222428',
           fontVariantNumeric: 'tabular-nums',
@@ -442,14 +435,14 @@ export function GamePage() {
         />
       </div>
 
-      {/* ── Доска (центр) ─────────────────────────────────────────────────────── */}
+      {/* ── Доска ────────────────────────────────────────────────────────────── */}
       <div style={{
         flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
         overflow: 'hidden', padding: '3px 0',
       }}>
         <div style={{ width: boardSize, flexShrink: 0 }}>
           <ChessBoard
-            fen={game.fen()}
+            fen={fen}
             orientation={myColor}
             isMyTurn={isMyTurn && !gameOver}
             isGameOver={gameOver}
@@ -460,7 +453,7 @@ export function GamePage() {
         </div>
       </div>
 
-      {/* ── Я (снизу) ─────────────────────────────────────────────────────────── */}
+      {/* ── Игрок (снизу) ────────────────────────────────────────────────────── */}
       <div style={{ borderTop: '.5px solid rgba(255,255,255,.04)', flexShrink: 0 }}>
         <PlayerPanel
           name={myName}
@@ -476,7 +469,7 @@ export function GamePage() {
       {/* Нижний safe-area */}
       <div style={{ height: 'env(safe-area-inset-bottom, 0px)', flexShrink: 0 }} />
 
-      {/* ── Результат игры (overlay) ──────────────────────────────────────────── */}
+      {/* ── Конец игры (overlay) ──────────────────────────────────────────────── */}
       {gameOver && (
         <div style={{
           position: 'absolute', inset: 0,
@@ -489,16 +482,15 @@ export function GamePage() {
         }}>
           <div style={{
             fontSize: '2.6rem', fontWeight: 900, letterSpacing: '.01em',
-            background: result.includes('Победа')
+            background: resultText.includes('Победа')
               ? 'linear-gradient(135deg,#F0C85A,#D4A843)'
-              : result.includes('Поражение')
+              : resultText.includes('Поражение')
                 ? 'linear-gradient(135deg,#6A7080,#4A5060)'
                 : 'linear-gradient(135deg,#82CFFF,#4A9EFF)',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
           }}>
-            {result || 'Конец игры'}
+            {resultText || 'Конец игры'}
           </div>
-
           <button
             onClick={() => navigate('/')}
             style={{
