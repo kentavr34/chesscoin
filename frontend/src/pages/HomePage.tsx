@@ -8,8 +8,7 @@ import { JarvisPlayModal } from '@/components/ui/JarvisPlayModal';
 import { AttemptsModal } from '@/components/ui/AttemptsModal';
 import { ActiveSessionsModal } from '@/components/ui/ActiveSessionsModal';
 import { type JarvisLevel } from '@/components/ui/JarvisModal';
-
-const JARVIS_NAMES = ['Beginner','Rookie','Player','Challenger','Fighter','Warrior','Expert','Master','Legend','God'];
+import { useT } from '@/i18n/useT';
 
 // ── SVG иконки ────────────────────────────────────────────────────────────────
 
@@ -105,6 +104,7 @@ export const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useUserStore();
   const { upsertSession, sessions } = useGameStore();
+  const t = useT();
 
   const activeSessions = sessions.filter(s =>
     s.status === 'IN_PROGRESS' || s.status === 'WAITING_FOR_OPPONENT'
@@ -182,7 +182,7 @@ export const HomePage: React.FC = () => {
   if (!user) return <PageLayout><div style={{ padding: 24, color: '#fff' }}>Загрузка...</div></PageLayout>;
 
   const jarvisLevel = user.jarvisLevel || 1;
-  const jarvisName = JARVIS_NAMES[Math.min(jarvisLevel - 1, JARVIS_NAMES.length - 1)];
+  const jarvisName = t.jarvis.levels[Math.min(jarvisLevel - 1, 19)].name;
   const rankLabel = user.militaryRank?.label || 'Новобранец';
 
   // 1) Имя — максимум 14 символов
@@ -366,7 +366,7 @@ export const HomePage: React.FC = () => {
               </div>
               {/* Jarvis */}
               <div>
-                <div style={{ fontSize: '.37rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.12em', marginBottom: '.22rem', paddingLeft: 32 }}>Jarvis</div>
+                <div style={{ fontSize: '.37rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.12em', marginBottom: '.22rem', paddingLeft: 32 }}>Уровень</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                   <span style={{ width: 20, height: 20, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <svg width="8" height="13" viewBox="0 0 8 14" fill="none"><path d="M5.5 1L1 8h3.5L3 13 8 6H4.5L5.5 1z" fill="#4A9EFF" opacity=".85"/></svg>

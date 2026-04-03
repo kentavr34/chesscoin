@@ -17,7 +17,7 @@ interface JarvisPlayModalProps {
 }
 
 const TIME_OPTIONS = [1, 3, 5, 15, 30, 60];
-const JARVIS_NAMES = ['Beginner','Rookie','Player','Challenger','Fighter','Warrior','Expert','Master','Legend','God','Prodigy','Tactician','Strategist','Grandmaster','Elite','Champion','Legend II','Titan','Oracle','Mystic'];
+const JARVIS_NAMES = ['Новичок','Молодой боец','Игрок','Претендент','Боец','Страж','Воин','Рыцарь','Эксперт','Тактик','Мастер','Гроссмейстер','Профессионал','Чемпион','Элита','Эпик','Легендарный','Бессмертный','Божественный','Мистик'];
 
 // ── Иконки ────────────────────────────────────────────────────────────────────
 const IcoDice = () => (
@@ -470,8 +470,8 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
                     boxShadow: active ? `0 0 12px ${opt.activeBorder}40` : 'none',
                   }}
                 >
-                  <span style={{ color: opt.color }}><opt.Icon /></span>
-                  <span style={{ fontSize: '1.08rem', fontWeight: 800, color: active ? opt.color : 'rgba(255,255,255,.5)', letterSpacing: '.03em' }}>{opt.label}</span>
+                  <span style={{ color: opt.color, opacity: active ? 1 : 0.35, filter: active ? 'none' : 'grayscale(0.7)', transition: 'opacity .15s, filter .15s' }}><opt.Icon /></span>
+                  <span style={{ fontSize: '0.96rem', fontWeight: 800, color: active ? opt.color : 'rgba(255,255,255,.5)', letterSpacing: '.03em' }}>{opt.label}</span>
                   {active && <div style={{ width: 18, height: 2, borderRadius: 1, background: opt.activeBorder }} />}
                 </button>
               );
@@ -499,10 +499,10 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
                     boxShadow: active ? '0 0 10px rgba(212,168,67,.25)' : 'none',
                   }}
                 >
-                  <div style={{ fontSize: '1.58rem', fontWeight: 900, color: active ? '#F0C85A' : 'rgba(255,255,255,.45)', letterSpacing: '-.01em', lineHeight: 1 }}>
+                  <div style={{ fontSize: '1.44rem', fontWeight: 900, color: active ? '#F0C85A' : 'rgba(255,255,255,.45)', letterSpacing: '-.01em', lineHeight: 1 }}>
                     {t < 60 ? t : '60'}
                   </div>
-                  <div style={{ fontSize: '.87rem', fontWeight: 700, color: active ? 'rgba(240,200,90,.65)' : 'rgba(255,255,255,.22)', letterSpacing: '.06em', marginTop: 4 }}>
+                  <div style={{ fontSize: '.76rem', fontWeight: 700, color: active ? 'rgba(240,200,90,.65)' : 'rgba(255,255,255,.22)', letterSpacing: '.06em', marginTop: 4 }}>
                     МИН
                   </div>
                 </button>
