@@ -141,10 +141,11 @@ interface PageLayoutProps {
   noScroll?: boolean;
   centered?: boolean;  // заголовок по центру
   onBack?: () => void;  // кастомная кнопка назад
+  noHeader?: boolean;  // скрыть шапку полностью
 }
 
 export const PageLayout: React.FC<PageLayoutProps> = ({
-  children, title, logo, backTo, rightAction, noScroll, centered, onBack,
+  children, title, logo, backTo, rightAction, noScroll, centered, onBack, noHeader,
 }) => {
   const navigate = useNavigate();
 
@@ -154,7 +155,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
       display: 'flex', flexDirection: 'column',
       background: 'var(--bg)', overflow: 'hidden',
     }}>
-      <div style={{
+      {!noHeader && <div style={{
         display: 'flex', alignItems: 'center',
         justifyContent: 'space-between',
         padding: 'clamp(12px, 3vw, 16px) var(--space-l) clamp(10px, 2vw, 12px)',

@@ -23,6 +23,13 @@
   --z-modal: 300;
   --z-toast: 400;
 
+  /* Основной фон */
+  --bg: #0B0D11;
+  --border: rgba(255, 255, 255, 0.1);
+  --text-primary: #F0F2F8;
+  --text-secondary: #8B92A8;
+  --bg-input: #232840;
+
   /* Цветовая палитра (Основная) */
   --color-accent: #F5C842;
   --color-accent-light: #F5E6A0;
@@ -540,6 +547,18 @@
   --exchange-ton-connect-gradient: linear-gradient(90deg, #0098EA, #006FB8);
   --exchange-ton-shop-gradient: linear-gradient(90deg, #0098EA, #007AC2);
   --shop-ton-wallet-gradient: linear-gradient(135deg, #0098EA, #006BBF);
+
+  /* ── CHESS TIMER APP: ЦВЕТОВАЯ ПАЛИТРА ────────────────────────────────── */
+  --timer-bg-primary: #000000;
+  --timer-bg-blur: #202BB5;
+  --timer-text-primary: #FFFFFF;
+  --timer-text-secondary: #E2E3E5;
+  --timer-text-muted: #8B92A8;
+  --timer-accent-blue: #407BFF;
+  --timer-highlight: #D2E5F4;
+  --timer-input-border: rgba(255, 255, 255, 0.1);
+  --timer-icon-color: #D2E5F4;
+  --timer-icon-disabled: #374955;
 
   /* Responsive Breakpoints (L2) */
   --breakpoint-xs: 320px;

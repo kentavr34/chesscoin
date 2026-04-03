@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserStore } from '@/store/useUserStore';
 import { useGameStore } from '@/store/useGameStore';
@@ -8,30 +8,45 @@ import { PageLayout } from '@/components/layout/PageLayout';
 import { JarvisModal } from '@/components/ui/JarvisModal';
 import { GameSetupModal } from '@/components/ui/GameSetupModal';
 import { JARVIS_LEVELS, type JarvisLevel } from '@/components/ui/JarvisModal';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Text } from '@/components/ui/Text';
-import { Heading } from '@/components/ui/Heading';
-import { StatBox } from '@/components/ui/StatBox';
 
-/**
- * HomePage.tsx — Главная страница с кнопками навигации
- * - Игра против Jarvis
- * - Батлы (PvP дуэли)
- * - Войны (коалиции)
- * - Магазин (скины, фигуры)
- * - Настройки
- */
+const JARVIS_NAMES = ['Beginner', 'Rookie', 'Player', 'Challenger', 'Fighter', 'Warrior', 'Expert', 'Master', 'Legend', 'God'];
+
+const DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useUserStore();
   const t = useT();
+  const { upsertSession } = useGameStore();
 
   const [showJarvisModal, setShowJarvisModal] = useState(false);
   const [showGameSetup, setShowGameSetup] = useState(false);
   const [selectedJarvisLevel, setSelectedJarvisLevel] = useState<JarvisLevel | null>(null);
-  const [showActiveSessions, setShowActiveSessions] = useState(false);
+  const [timeLeft, setTimeLeft] = useState('');
+
+  // Таймер до следующей попытки
+  useEffect(() => {
+    if (!user?.nextRestoreSeconds && !user?.nextAttemptAt) return;
+
+    const updateTimer = () => {
+      let seconds = 0;
+      if (user.nextRestoreSeconds) {
+        seconds = user.nextRestoreSeconds;
+      } else if (user.nextAttemptAt) {
+        seconds = Math.max(0, Math.floor((new Date(user.nextAttemptAt).getTime() - Date.now()) / 1000));
+      }
+      if (seconds <= 0) { setTimeLeft(''); return; }
+      const h = Math.floor(seconds / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      const s = seconds % 60;
+      if (h > 0) setTimeLeft(`${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`);
+      else setTimeLeft(`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`);
+    };
+
+    updateTimer();
+    const id = setInterval(updateTimer, 1000);
+    return () => clearInterval(id);
+  }, [user?.nextRestoreSeconds, user?.nextAttemptAt]);
 
   const handleJarvisSelect = (level: JarvisLevel) => {
     setSelectedJarvisLevel(level);
@@ -39,12 +54,8 @@ export const HomePage: React.FC = () => {
     setShowGameSetup(true);
   };
 
-  const { upsertSession } = useGameStore();
-
   const handleGameStart = (color: 'white' | 'black', timeMinutes: number) => {
     if (!selectedJarvisLevel) return;
-
-    // Создаём session на бэкэнде
     const socket = getSocket();
     socket.emit('game:create:bot',
       { color, botLevel: selectedJarvisLevel.level, timeSeconds: timeMinutes * 60 },
@@ -60,41 +71,30 @@ export const HomePage: React.FC = () => {
     );
   };
 
-  if (!user) {
-    return <PageLayout>Loading...</PageLayout>;
-  }
+  if (!user) return <PageLayout><div style={{ padding: 24, color: '#fff' }}>Загрузка...</div></PageLayout>;
 
-  // Форматирование league в UI текст
-  const getLeagueLabel = (league: string) => {
-    const leagueMap: Record<string, string> = {
-      'BRONZE': '🥉 Бронза',
-      'SILVER': '🥈 Серебро',
-      'GOLD': '🥇 Золото',
-      'DIAMOND': '💎 Алмаз',
-      'CHAMPION': '👑 Чемпион',
-      'STAR': '⭐ Звезда',
-    };
-    return leagueMap[league] || league;
-  };
+  const jarvisLevel = user.jarvisLevel || 1;
+  const jarvisName = JARVIS_NAMES[Math.min(jarvisLevel - 1, JARVIS_NAMES.length - 1)];
+  const rankEmoji = user.militaryRank?.emoji || '😊';
+  const rankLabel = user.militaryRank?.label || 'Recruit';
+  const balance = parseInt(user.balance || '0');
+  const formattedBalance = balance >= 1000 ? `${(balance / 1000).toFixed(balance % 1000 === 0 ? 0 : 1)}K` : String(balance);
+  const loginStreak = user.loginStreak || 0;
+  const attempts = user.attempts || 0;
+  const maxAttempts = user.maxAttempts || 3;
 
-  // Расчёт времени до следующей попытки
-  const getNextAttemptTime = () => {
-    if (!user.nextAttemptAt) return null;
-    const nextTime = new Date(user.nextAttemptAt);
-    const now = new Date();
-    const diff = nextTime.getTime() - now.getTime();
-    if (diff <= 0) return null;
+  // Начало недели (Пн)
+  const today = new Date();
+  const dayOfWeek = (today.getDay() + 6) % 7; // 0=Пн, 6=Вс
+  const streakDays = Array.from({ length: 7 }, (_, i) => i < loginStreak && i <= dayOfWeek);
 
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    return `${hours}ч ${minutes}м`;
-  };
+  const hasCountry = !!user.countryMember?.country;
 
   return (
     <PageLayout>
       {showJarvisModal && (
         <JarvisModal
-          currentJarvisLevel={user.jarvisLevel || 1}
+          currentJarvisLevel={jarvisLevel}
           onSelect={handleJarvisSelect}
           onClose={() => setShowJarvisModal(false)}
         />
@@ -103,228 +103,288 @@ export const HomePage: React.FC = () => {
         <GameSetupModal
           selectedLevel={selectedJarvisLevel}
           onStart={handleGameStart}
-          onClose={() => {
-            setShowGameSetup(false);
-            setSelectedJarvisLevel(null);
-          }}
+          onClose={() => { setShowGameSetup(false); setSelectedJarvisLevel(null); }}
         />
       )}
 
-      <div style={{ padding: 'var(--space-l) var(--space-m)', maxWidth: 500, margin: '0 auto' }}>
-        {/* Профиль пользователя */}
-        <Card padding="lg" style={{ marginBottom: 'var(--gap-xl)' }}>
-          {/* Заголовок профиля */}
-          <div style={{ display: 'flex', gap: 'var(--gap-md)', alignItems: 'center', marginBottom: 'var(--gap-md)' }}>
-            <div style={{ fontSize: 44 }}>👤</div>
-            <div style={{ flex: 1 }}>
-              <Heading level="h3" style={{ margin: 0 }}>
-                {user.firstName || 'Player'}
-              </Heading>
-              <Text size="sm" color="secondary" style={{ marginTop: 'var(--gap-xs)' }}>
-                {user.wins || 0} побед · {user.losses || 0} поражений
-              </Text>
+      <div style={{ padding: '12px 16px 100px', background: 'var(--bg, #0B0D11)' }}>
+
+        {/* ══ ПРОФИЛЬ ══════════════════════════════════ */}
+        <div style={{
+          background: 'var(--bg-card, #13161E)',
+          border: '1px solid var(--border, rgba(255,255,255,0.08))',
+          borderRadius: 20,
+          padding: '16px',
+          marginBottom: 12,
+        }}>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+            {/* Аватар */}
+            <div style={{
+              width: 52,
+              height: 52,
+              borderRadius: '50%',
+              overflow: 'hidden',
+              flexShrink: 0,
+              background: user.avatarGradient || 'linear-gradient(135deg, #407BFF, #9B85FF)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 22,
+              fontWeight: 700,
+              color: '#fff',
+              border: '2px solid rgba(255,255,255,0.1)',
+            }}>
+              {user.avatar
+                ? <img src={user.avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : (user.firstName?.[0] || 'P')}
             </div>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => navigate('/profile')}
-            >
-              Открыть
-            </Button>
-          </div>
 
-          {/* ELO и Лига */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--gap-sm)', marginBottom: 'var(--gap-md)' }}>
-            <StatBox label="Рейтинг" value={user.elo || 0} color="red" />
-            <StatBox label="Лига" value={getLeagueLabel(user.league || 'BRONZE')} color="gold" />
-          </div>
+            {/* Инфо */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 2 }}>
+                <span style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>{user.firstName}</span>
+                <span style={{
+                  fontSize: 11,
+                  color: 'var(--color-text-secondary, #8B92A8)',
+                  background: 'rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 20,
+                  padding: '3px 8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                }}>
+                  {rankEmoji} {rankLabel}
+                </span>
+              </div>
 
-          {/* Баланс */}
-          <div style={{ marginBottom: 'var(--gap-md)' }}>
-            <StatBox
-              label="Баланс"
-              value={`${(user.balance || 0).toLocaleString()} ᚙ`}
-              color="purple"
-            />
-          </div>
-
-          {/* Попытки и рефералы */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--gap-sm)', marginBottom: 'var(--gap-md)' }}>
-            <StatBox
-              label="Попытки"
-              value={`${user.attempts || 0}/${user.maxAttempts || 5}`}
-              color="blue"
-            >
-              {getNextAttemptTime() && (
-                <Text size="xs" color="secondary">
-                  Через {getNextAttemptTime()}
-                </Text>
-              )}
-            </StatBox>
-            <StatBox label="Рефералы" value={user.referralCount || 0} color="green">
-              <Button
-                variant="tertiary"
-                size="sm"
-                onClick={() => navigate('/referrals')}
-                style={{ marginTop: 'var(--gap-xs)', padding: 0, color: 'inherit' }}
-              >
-                <Text size="xs" style={{ textDecoration: 'underline' }}>
-                  Пригласить
-                </Text>
-              </Button>
-            </StatBox>
-          </div>
-
-          {/* Активные сессии */}
-          {user.activeSessions && user.activeSessions.length > 0 && (
-            <>
-              <Button
-                variant="secondary"
-                fullWidth
-                onClick={() => setShowActiveSessions(!showActiveSessions)}
-                style={{ marginBottom: showActiveSessions ? 'var(--gap-md)' : 0 }}
-              >
-                📊 {user.activeSessions.length} активных сессий
-              </Button>
-
-              {showActiveSessions && (
-                <div style={{ marginTop: 'var(--gap-md)' }}>
-                  {user.activeSessions.map((session) => (
-                    <Card
-                      key={session.id}
-                      interactive
-                      onClick={() => navigate(`/game/${session.id}`)}
-                      style={{ marginBottom: 'var(--gap-sm)' }}
-                    >
-                      <Text size="sm">
-                        {session.type === 'BOT' ? '🤖 Против Jarvis' : session.type === 'BATTLE' ? '⚔️ Батл' : '👥 Дружеская'}
-                      </Text>
-                      <Text size="xs" color="secondary">
-                        {session.status === 'IN_PROGRESS' ? '▶️ В процессе' : session.status === 'WAITING_FOR_OPPONENT' ? '⏳ Ожидание' : session.status}
-                      </Text>
-                    </Card>
-                  ))}
+              {user.username && (
+                <div style={{ fontSize: 12, color: 'var(--color-text-secondary, #8B92A8)', marginBottom: 8 }}>
+                  @{user.username}
                 </div>
               )}
-            </>
-          )}
-        </Card>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-md)' }}>
-          <NavButton
-            icon="🤖"
-            title="Игра против Jarvis"
-            subtitle="Выбери сложность и начни"
-            onClick={() => setShowJarvisModal(true)}
-            color="#F5C842"
-          />
-          <NavButton
-            icon="⚔️"
-            title="Батлы"
-            subtitle="PvP дуэли с игроками"
-            onClick={() => navigate('/battles')}
-            color="#9B85FF"
-          />
-          <NavButton
-            icon="🏰"
-            title="Войны"
-            subtitle="Коалиции и боевые операции"
-            onClick={() => navigate('/wars')}
-            color="#FF4D6A"
-          />
-          <NavButton
-            icon="🛍️"
-            title="Магазин"
-            subtitle="Скины, фигуры, доски"
-            onClick={() => navigate('/shop')}
-            color="#00D68F"
-          />
-          <NavButton
-            icon="⚙️"
-            title="Настройки"
-            subtitle="Язык, тема, аккаунт"
-            onClick={() => navigate('/settings')}
-            color="transparent"
-          />
+              {/* Чипы: ранг + ELO */}
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {user.rank && (
+                  <span style={{
+                    fontSize: 11, fontWeight: 700,
+                    color: '#F5C842',
+                    background: 'rgba(245,200,66,0.12)',
+                    border: '1px solid rgba(245,200,66,0.3)',
+                    borderRadius: 20,
+                    padding: '3px 8px',
+                  }}>🥇 #{user.rank}</span>
+                )}
+                <span style={{
+                  fontSize: 11, fontWeight: 700,
+                  color: '#407BFF',
+                  background: 'rgba(64,123,255,0.12)',
+                  border: '1px solid rgba(64,123,255,0.3)',
+                  borderRadius: 20,
+                  padding: '3px 8px',
+                }}>ELO {user.elo}</span>
+              </div>
+
+              {/* Jarvis + Battles */}
+              <div style={{ display: 'flex', gap: 16, marginTop: 6 }}>
+                <span style={{ fontSize: 11, color: 'var(--color-text-secondary, #8B92A8)' }}>
+                  JARVIS <span style={{ color: '#fff', fontWeight: 600 }}>{jarvisName}</span>
+                </span>
+                <span style={{ fontSize: 11, color: 'var(--color-text-secondary, #8B92A8)' }}>
+                  БАТЛЫ <span style={{ color: '#fff', fontWeight: 600 }}>{user.wins || 0} W</span>
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* ══ БАЛАНС ════════════════════════════════════ */}
+        <div style={{
+          background: 'var(--bg-card, #13161E)',
+          border: '1px solid var(--border, rgba(255,255,255,0.08))',
+          borderRadius: 16,
+          padding: '14px 16px',
+          marginBottom: 12,
+        }}>
+          <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--color-text-secondary, #8B92A8)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: 4 }}>
+            Баланс
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 32, fontWeight: 800, color: '#F5C842', letterSpacing: '-0.5px' }}>{formattedBalance}</span>
+            <span style={{ fontSize: 20 }}>🪙</span>
+            <button
+              onClick={() => navigate('/shop')}
+              style={{
+                marginLeft: 'auto',
+                background: 'rgba(245,200,66,0.1)',
+                border: '1px solid rgba(245,200,66,0.3)',
+                borderRadius: 8,
+                padding: '4px 10px',
+                fontSize: 12,
+                color: '#F5C842',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+              }}
+            >
+              Магазин
+            </button>
+          </div>
+        </div>
+
+        {/* ══ STREAK ════════════════════════════════════ */}
+        {loginStreak > 0 && (
+          <div style={{
+            background: 'var(--bg-card, #13161E)',
+            border: '1px solid var(--border, rgba(255,255,255,0.08))',
+            borderRadius: 16,
+            padding: '14px 16px',
+            marginBottom: 12,
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>
+                🔥 {loginStreak} дн. подряд
+              </span>
+              <span style={{ fontSize: 11, color: 'var(--color-text-secondary, #8B92A8)' }}>
+                до +500 💎 {Math.max(0, 7 - loginStreak)} дн.
+              </span>
+            </div>
+            <div style={{ display: 'flex', gap: 4 }}>
+              {DAYS.map((day, i) => (
+                <div key={day} style={{ flex: 1, textAlign: 'center' }}>
+                  <div style={{
+                    height: 4,
+                    borderRadius: 2,
+                    background: streakDays[i] ? '#F5C842' : 'rgba(255,255,255,0.1)',
+                    marginBottom: 4,
+                  }} />
+                  <span style={{ fontSize: 9, color: streakDays[i] ? '#F5C842' : 'rgba(255,255,255,0.3)' }}>{day}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ══ ПОПЫТКИ ═══════════════════════════════════ */}
+        <div style={{
+          background: 'var(--bg-card, #13161E)',
+          border: '1px solid var(--border, rgba(255,255,255,0.08))',
+          borderRadius: 16,
+          padding: '14px 16px',
+          marginBottom: 12,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}>
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--color-text-secondary, #8B92A8)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: 8 }}>
+              Попытки
+            </div>
+            <div style={{ display: 'flex', gap: 4 }}>
+              {Array.from({ length: maxAttempts }, (_, i) => (
+                <span key={i} style={{ fontSize: 22, opacity: i < attempts ? 1 : 0.2 }}>⭐</span>
+              ))}
+            </div>
+          </div>
+          {timeLeft && (
+            <div style={{
+              fontSize: 16,
+              fontWeight: 700,
+              color: 'var(--color-text-secondary, #8B92A8)',
+              fontVariantNumeric: 'tabular-nums',
+            }}>
+              🕐 {timeLeft}
+            </div>
+          )}
+        </div>
+
+        {/* ══ JARVIS CTA ════════════════════════════════ */}
+        <button
+          onClick={() => setShowJarvisModal(true)}
+          style={{
+            width: '100%',
+            background: 'linear-gradient(135deg, #1E2A5E 0%, #2D1B69 100%)',
+            border: '1px solid rgba(100,120,255,0.3)',
+            borderRadius: 16,
+            padding: '16px',
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 14,
+            marginBottom: 12,
+            boxShadow: '0 4px 24px rgba(64,123,255,0.2)',
+          }}
+        >
+          <div style={{
+            width: 52,
+            height: 52,
+            borderRadius: 14,
+            background: 'rgba(100,120,255,0.2)',
+            border: '1px solid rgba(100,120,255,0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 28,
+            flexShrink: 0,
+          }}>🤖</div>
+
+          <div style={{ flex: 1, textAlign: 'left' }}>
+            <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: '0.5px' }}>
+              J.A.R.V.I.S
+            </div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>
+              Level {jarvisLevel} · {jarvisName}
+            </div>
+          </div>
+
+          <div style={{
+            background: '#fff',
+            color: '#0B0D11',
+            fontSize: 12,
+            fontWeight: 800,
+            borderRadius: 10,
+            padding: '8px 14px',
+            letterSpacing: '0.5px',
+            flexShrink: 0,
+          }}>
+            PLAY →
+          </div>
+        </button>
+
+        {/* ══ ВОЙНЫ СТРАН ═══════════════════════════════ */}
+        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-secondary, #8B92A8)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 8 }}>
+          Войны стран
+        </div>
+        <button
+          onClick={() => navigate('/wars')}
+          style={{
+            width: '100%',
+            background: 'var(--bg-card, #13161E)',
+            border: '1px solid var(--border, rgba(255,255,255,0.08))',
+            borderRadius: 16,
+            padding: '14px 16px',
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+          }}
+        >
+          <span style={{ fontSize: 28 }}>
+            {hasCountry ? (user.countryMember?.country?.flag || '🌍') : '🌍'}
+          </span>
+          <div style={{ flex: 1, textAlign: 'left' }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: '#fff', marginBottom: 2 }}>
+              {hasCountry ? user.countryMember?.country?.nameRu : 'Вступить в страну'}
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--color-text-secondary, #8B92A8)' }}>
+              {hasCountry ? `${user.countryMember?.role || 'Солдат'}` : 'Сражайся за свою команду'}
+            </div>
+          </div>
+          <span style={{ fontSize: 18, color: 'var(--color-text-secondary, #8B92A8)' }}>→</span>
+        </button>
       </div>
     </PageLayout>
   );
 };
-
-interface NavButtonProps {
-  icon: string;
-  title: string;
-  subtitle: string;
-  onClick: () => void;
-  color: string;
-}
-
-const NavButton: React.FC<NavButtonProps> = ({ icon, title, subtitle, onClick, color }) => {
-  const [hovered, setHovered] = useState(false);
-
-  // Dark glassmorphism градиенты с rgba (приглушённые)
-  const getGradient = (baseColor: string, opacity: number) => {
-    if (color === 'transparent') {
-      return `linear-gradient(135deg, rgba(255,255,255,${opacity * 0.05}) 0%, rgba(255,255,255,${opacity * 0.02}) 100%)`;
-    }
-    const rgb = hexToRgb(baseColor);
-    return `linear-gradient(135deg, rgba(${rgb},${opacity}) 0%, rgba(${rgb},${opacity * 0.5}) 100%)`;
-  };
-
-  const bgColor = getGradient(color, 0.12);
-  const bgHovered = getGradient(color, 0.20);
-
-  const borderColor = color === 'transparent' ? 'rgba(255,255,255,0.1)' : `rgba(${hexToRgb(color)}, 0.25)`;
-  const borderHovered = color === 'transparent' ? 'rgba(255,255,255,0.2)' : `rgba(${hexToRgb(color)}, 0.5)`;
-
-  const shadowNormal = '0 8px 32px 0 rgba(0, 0, 0, 0.36), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
-  const shadowHover = color === 'transparent'
-    ? '0 8px 32px 0 rgba(0, 0, 0, 0.4), 0 20px 60px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.15)'
-    : `0 8px 32px 0 rgba(0, 0, 0, 0.4), 0 20px 60px rgba(${hexToRgb(color)}, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15)`;
-
-  return (
-    <button
-      onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        padding: '18px 20px',
-        minHeight: '72px',
-        // DARK GLASSMORPHISM: градиент с прозрачностью
-        background: hovered ? bgHovered : bgColor,
-        // Glassmorphism blur
-        backdropFilter: 'blur(12px)',
-        // Light-catching border
-        border: `1px solid ${hovered ? borderHovered : borderColor}`,
-        borderRadius: 'var(--radius-l)',
-        cursor: 'pointer',
-        fontFamily: 'inherit',
-        // Гладкий переход
-        transition: `all var(--transition-normal) var(--ease-in-out)`,
-        // Flex layout
-        display: 'flex',
-        alignItems: 'center',
-        gap: 'var(--gap-md)',
-        // Deep shadows для depth
-        boxShadow: hovered ? shadowHover : shadowNormal,
-        // Transform на hover
-        transform: hovered ? 'translateY(-4px) scale(1.01)' : 'translateY(0)',
-      }}
-    >
-      <div style={{ fontSize: 'var(--icon-size-xl)', flexShrink: 0 }}>{icon}</div>
-      <div style={{ textAlign: 'left', flex: 1 }}>
-        <Heading level="h4" style={{ margin: 0, fontSize: 'var(--font-size-md)' }}>{title}</Heading>
-        <Text size="sm" color="secondary" style={{ marginTop: 'var(--gap-xs)' }}>{subtitle}</Text>
-      </div>
-      <div style={{ fontSize: 'var(--font-size-xl)', opacity: hovered ? 1 : 0.6, transition: 'opacity var(--transition-fast) var(--ease-in-out)' }}>→</div>
-    </button>
-  );
-};
-
-function hexToRgb(hex: string): string {
-  if (hex === 'transparent') return '255,255,255';
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  if (!result) return '255,255,255';
-  return `${parseInt(result[1], 16)},${parseInt(result[2], 16)},${parseInt(result[3], 16)}`;
-}
