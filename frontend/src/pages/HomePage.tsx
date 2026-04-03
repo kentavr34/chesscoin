@@ -275,7 +275,7 @@ export const HomePage: React.FC = () => {
         <div className="hp-hero" style={{
           position: 'relative', overflow: 'hidden',
           background: 'linear-gradient(175deg,#120E04 0%,#0E0E14 100%)',
-          margin: '.75rem .85rem 0',
+          margin: '1.1rem .85rem 0',
           borderRadius: 20,
           border: '.5px solid rgba(212,168,67,.28)',
           boxShadow: '0 6px 36px rgba(0,0,0,.55),inset 0 0 0 .5px rgba(212,168,67,.06)',
@@ -352,7 +352,7 @@ export const HomePage: React.FC = () => {
               {/* Звание */}
               <div>
                 {/* лейбл: отступ = icon(20px) + gap(4px) + boxPad(8px) = 32px → точно над текстом */}
-                <div style={{ fontSize: '.37rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.12em', marginBottom: '.1rem', paddingLeft: 32 }}>Звание</div>
+                <div style={{ fontSize: '.37rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.12em', marginBottom: '.22rem', paddingLeft: 32 }}>Звание</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                   <span style={{ width: 20, height: 20, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', lineHeight: 1 }}>{user.militaryRank?.emoji || '🙂'}</span>
                   <div style={{ borderRadius: 8, padding: '4px 8px', minWidth: 98, background: 'linear-gradient(135deg,rgba(212,168,67,.14),rgba(212,168,67,.06))', border: '.5px solid rgba(212,168,67,.32)' }}>
@@ -362,7 +362,7 @@ export const HomePage: React.FC = () => {
               </div>
               {/* Jarvis */}
               <div>
-                <div style={{ fontSize: '.37rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.12em', marginBottom: '.1rem', paddingLeft: 32 }}>Jarvis</div>
+                <div style={{ fontSize: '.37rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.12em', marginBottom: '.22rem', paddingLeft: 32 }}>Jarvis</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                   <span style={{ width: 20, height: 20, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <svg width="8" height="13" viewBox="0 0 8 14" fill="none"><path d="M5.5 1L1 8h3.5L3 13 8 6H4.5L5.5 1z" fill="#4A9EFF" opacity=".85"/></svg>
@@ -384,8 +384,8 @@ export const HomePage: React.FC = () => {
           {/* 3 ячейки */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', position: 'relative', zIndex: 2 }}>
             {/* баланс */}
-            <div className="hp-hbal-cell" style={{ padding: '.65rem .4rem .75rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', borderRight: '.5px solid rgba(255,255,255,.05)', position: 'relative' }}>
-              <div style={{ fontSize: '.43rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '.22rem' }}>Баланс</div>
+            <div className="hp-hbal-cell" style={{ padding: '.78rem .4rem .85rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', borderRight: '.5px solid rgba(255,255,255,.05)', position: 'relative' }}>
+              <div style={{ fontSize: '.43rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '.32rem' }}>Баланс</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '.18rem' }}>
                 <span style={{ fontSize: '1.08rem', fontWeight: 900, color: '#D4A843', letterSpacing: '-.01em', lineHeight: 1, textShadow: '0 0 12px rgba(212,168,67,.4)' }}>{formattedBalance}</span>
                 <IcoCoin size={16} />
@@ -394,8 +394,8 @@ export const HomePage: React.FC = () => {
             </div>
 
             {/* попытки */}
-            <div className="hp-hbal-cell" style={{ padding: '.65rem .4rem .75rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', borderRight: '.5px solid rgba(255,255,255,.05)', position: 'relative' }}>
-              <div style={{ fontSize: '.43rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '.22rem' }}>Попытки</div>
+            <div className="hp-hbal-cell" style={{ padding: '.78rem .4rem .85rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', borderRight: '.5px solid rgba(255,255,255,.05)', position: 'relative' }}>
+              <div style={{ fontSize: '.43rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '.32rem' }}>Попытки</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '.22rem' }}>
                 <div style={{ display: 'flex', gap: '.04rem' }}>
                   {Array.from({ length: maxAttempts }, (_, i) => (
@@ -409,8 +409,8 @@ export const HomePage: React.FC = () => {
             </div>
 
             {/* таймер */}
-            <div className="hp-hbal-cell" style={{ padding: '.65rem .4rem .75rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', position: 'relative' }}>
-              <div style={{ fontSize: '.43rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '.22rem' }}>Следующая</div>
+            <div className="hp-hbal-cell" style={{ padding: '.78rem .4rem .85rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', position: 'relative' }}>
+              <div style={{ fontSize: '.43rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '.32rem' }}>Следующая</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '.2rem' }}>
                 <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
                   <circle cx="6" cy="6" r="5" stroke="#5E5A54" strokeWidth="1.2"/>
