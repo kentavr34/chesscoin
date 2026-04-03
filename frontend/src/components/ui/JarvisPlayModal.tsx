@@ -16,7 +16,7 @@ const JARVIS_NAMES = ['Beginner','Rookie','Player','Challenger','Fighter','Warri
 
 // ── Иконки цветов (увеличены до 22px) ────────────────────────────────────────
 const IcoDice = () => (
-  <svg width="22" height="22" viewBox="0 0 18 18" fill="none">
+  <svg width="33" height="33" viewBox="0 0 18 18" fill="none">
     <rect x="1.5" y="1.5" width="15" height="15" rx="3" stroke="currentColor" strokeWidth="1.3"/>
     <circle cx="5.5" cy="5.5" r="1.2" fill="currentColor"/>
     <circle cx="12.5" cy="5.5" r="1.2" fill="currentColor"/>
@@ -27,7 +27,7 @@ const IcoDice = () => (
 );
 
 const IcoKingWhite = () => (
-  <svg width="22" height="22" viewBox="0 0 18 18" fill="none">
+  <svg width="33" height="33" viewBox="0 0 18 18" fill="none">
     <path d="M9 2v3M7.5 3.5h3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
     <rect x="7" y="5" width="4" height="2" rx=".5" fill="currentColor" opacity=".8"/>
     <path d="M5.5 7h7l-1 8H6.5L5.5 7z" fill="currentColor" opacity=".7"/>
@@ -36,7 +36,7 @@ const IcoKingWhite = () => (
 );
 
 const IcoKingBlack = () => (
-  <svg width="22" height="22" viewBox="0 0 18 18" fill="none">
+  <svg width="33" height="33" viewBox="0 0 18 18" fill="none">
     <path d="M9 2v3M7.5 3.5h3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
     <rect x="7" y="5" width="4" height="2" rx=".5" fill="currentColor" opacity=".9"/>
     <path d="M5.5 7h7l-1 8H6.5L5.5 7z" fill="currentColor" opacity=".9"/>
@@ -299,7 +299,7 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
                     background: active ? opt.activeBg : opt.bg,
                     border: `.5px solid ${active ? opt.activeBorder : opt.border}`,
                     borderRadius: 12, padding: '14px 8px',
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
                     cursor: 'pointer', fontFamily: 'inherit',
                     transition: 'all .15s',
                     transform: 'scale(1)',
@@ -307,7 +307,7 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
                   }}
                 >
                   <span style={{ color: opt.color }}><opt.Icon /></span>
-                  <span style={{ fontSize: '.72rem', fontWeight: 800, color: active ? opt.color : 'rgba(255,255,255,.5)', letterSpacing: '.03em' }}>{opt.label}</span>
+                  <span style={{ fontSize: '1.08rem', fontWeight: 800, color: active ? opt.color : 'rgba(255,255,255,.5)', letterSpacing: '.03em' }}>{opt.label}</span>
                   {active && <div style={{ width: 18, height: 2, borderRadius: 1, background: opt.activeBorder }} />}
                 </button>
               );
@@ -329,17 +329,17 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
                   style={{
                     background: active ? 'rgba(212,168,67,.16)' : 'rgba(255,255,255,.05)',
                     border: `.5px solid ${active ? 'rgba(212,168,67,.6)' : 'rgba(255,255,255,.1)'}`,
-                    borderRadius: 10, padding: '16px 6px',
+                    borderRadius: 10, padding: '14px 6px',
                     cursor: 'pointer', fontFamily: 'inherit',
                     transition: 'all .15s',
                     transform: 'scale(1)',
                     boxShadow: active ? '0 0 10px rgba(212,168,67,.25)' : 'none',
                   }}
                 >
-                  <div style={{ fontSize: '1.05rem', fontWeight: 900, color: active ? '#F0C85A' : 'rgba(255,255,255,.45)', letterSpacing: '-.01em' }}>
+                  <div style={{ fontSize: '1.58rem', fontWeight: 900, color: active ? '#F0C85A' : 'rgba(255,255,255,.45)', letterSpacing: '-.01em', lineHeight: 1 }}>
                     {t < 60 ? t : '60'}
                   </div>
-                  <div style={{ fontSize: '.58rem', fontWeight: 700, color: active ? 'rgba(240,200,90,.65)' : 'rgba(255,255,255,.22)', letterSpacing: '.06em', marginTop: 3 }}>
+                  <div style={{ fontSize: '.87rem', fontWeight: 700, color: active ? 'rgba(240,200,90,.65)' : 'rgba(255,255,255,.22)', letterSpacing: '.06em', marginTop: 4 }}>
                     МИН
                   </div>
                 </button>
