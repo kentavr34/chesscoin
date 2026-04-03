@@ -211,7 +211,7 @@ export const HomePage: React.FC = () => {
   const blkScale = (key: string) => pressedBlk === key ? 'scale(.94)' : 'scale(1)';
 
   return (
-    <PageLayout>
+    <PageLayout noHeader>
       <style>{`
         @keyframes cc-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
         @keyframes cc-fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
@@ -265,11 +265,11 @@ export const HomePage: React.FC = () => {
       {showAttemptsModal && (
         <AttemptsModal user={user} onClose={() => setShowAttemptsModal(false)} />
       )}
-      {showSessionsModal && activeSessions.length > 1 && (
+      {showSessionsModal && activeSessions.length > 0 && (
         <ActiveSessionsModal sessions={activeSessions} onClose={() => setShowSessionsModal(false)} />
       )}
 
-      <div className="hp-shell" style={{ padding: '0 0 90px', background: '#0D0D12', minHeight: '100vh' }}>
+      <div className="hp-shell" style={{ background: '#0D0D12', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
 
         {/* ══ ПАСПОРТНАЯ КАРТОЧКА ══ */}
         <div className="hp-hero" style={{
@@ -304,7 +304,7 @@ export const HomePage: React.FC = () => {
           {/* паспорт: аватар | имя+ело | бейджи */}
           <div style={{
             display: 'flex', alignItems: 'center', gap: '.8rem',
-            padding: '.1rem .9rem .65rem', position: 'relative', zIndex: 2,
+            padding: '.9rem .9rem 1.15rem', position: 'relative', zIndex: 2,
           }}>
             {/* аватар с золотым кольцом (+20% → 80px) */}
             <div style={{ flexShrink: 0 }}>
@@ -347,52 +347,55 @@ export const HomePage: React.FC = () => {
               </div>
             </div>
 
-            {/* бейджи — фиксированная ширина 92px, шрифт +3 единицы */}
-            <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '.28rem' }}>
-              <div style={{
-                display: 'flex', flexDirection: 'column',
-                borderRadius: 9, padding: '.22rem .55rem',
-                width: 92, overflow: 'hidden',
-                background: 'linear-gradient(135deg,rgba(212,168,67,.16),rgba(212,168,67,.07))',
-                border: '.5px solid rgba(212,168,67,.35)',
-              }}>
-                <span style={{ fontSize: '.42rem', fontWeight: 700, color: '#9A8840', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '.05rem' }}>Звание</span>
-                <span style={{ fontSize: '.87rem', fontWeight: 700, color: '#D4A843', letterSpacing: '.02em', lineHeight: 1.1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{rankLabel}</span>
+            {/* бейджи: лейбл над строкой icon+box, icon одинаковой ширины → текст выровнен */}
+            <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '.55rem' }}>
+              {/* Звание */}
+              <div>
+                {/* лейбл: отступ = icon(20px) + gap(4px) + boxPad(8px) = 32px → точно над текстом */}
+                <div style={{ fontSize: '.37rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.12em', marginBottom: '.1rem', paddingLeft: 32 }}>Звание</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span style={{ width: 20, height: 20, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', lineHeight: 1 }}>{user.militaryRank?.emoji || '🙂'}</span>
+                  <div style={{ borderRadius: 8, padding: '4px 8px', minWidth: 98, background: 'linear-gradient(135deg,rgba(212,168,67,.14),rgba(212,168,67,.06))', border: '.5px solid rgba(212,168,67,.32)' }}>
+                    <span style={{ fontSize: '.76rem', fontWeight: 700, color: '#D4A843', whiteSpace: 'nowrap' }}>{rankLabel}</span>
+                  </div>
+                </div>
               </div>
-              <div style={{
-                display: 'flex', flexDirection: 'column',
-                borderRadius: 9, padding: '.22rem .55rem',
-                width: 92, overflow: 'hidden',
-                background: 'rgba(74,158,255,.09)',
-                border: '.5px solid rgba(74,158,255,.28)',
-              }}>
-                <span style={{ fontSize: '.42rem', fontWeight: 700, color: '#4A7090', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '.05rem' }}>JARVIS</span>
-                <span style={{ fontSize: '.87rem', fontWeight: 700, color: '#82CFFF', letterSpacing: '.02em', lineHeight: 1.1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{jarvisName}</span>
+              {/* Jarvis */}
+              <div>
+                <div style={{ fontSize: '.37rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.12em', marginBottom: '.1rem', paddingLeft: 32 }}>Jarvis</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span style={{ width: 20, height: 20, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="8" height="13" viewBox="0 0 8 14" fill="none"><path d="M5.5 1L1 8h3.5L3 13 8 6H4.5L5.5 1z" fill="#4A9EFF" opacity=".85"/></svg>
+                  </span>
+                  <div style={{ borderRadius: 8, padding: '4px 8px', minWidth: 98, background: 'rgba(74,158,255,.09)', border: '.5px solid rgba(74,158,255,.25)' }}>
+                    <span style={{ fontSize: '.76rem', fontWeight: 700, color: '#82CFFF', whiteSpace: 'nowrap' }}>{jarvisName}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
           {/* разделитель */}
           <div style={{
-            height: .5, position: 'relative', zIndex: 2,
+            height: .5, position: 'relative', zIndex: 2, margin: '0 .5rem',
             background: 'linear-gradient(90deg,transparent,rgba(212,168,67,.18),rgba(212,168,67,.35),rgba(212,168,67,.18),transparent)',
           }} />
 
           {/* 3 ячейки */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', position: 'relative', zIndex: 2 }}>
             {/* баланс */}
-            <div className="hp-hbal-cell" style={{ padding: '.5rem .4rem .6rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', borderRight: '.5px solid rgba(255,255,255,.05)', position: 'relative' }}>
-              <div style={{ fontSize: '.43rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '.2rem' }}>Баланс</div>
+            <div className="hp-hbal-cell" style={{ padding: '.65rem .4rem .75rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', borderRight: '.5px solid rgba(255,255,255,.05)', position: 'relative' }}>
+              <div style={{ fontSize: '.43rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '.22rem' }}>Баланс</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '.18rem' }}>
                 <span style={{ fontSize: '1.08rem', fontWeight: 900, color: '#D4A843', letterSpacing: '-.01em', lineHeight: 1, textShadow: '0 0 12px rgba(212,168,67,.4)' }}>{formattedBalance}</span>
                 <IcoCoin size={16} />
-                <div className="hp-hbal-plus" style={{ width: 17, height: 17, borderRadius: 5, background: 'rgba(212,168,67,.12)', border: '.5px solid rgba(212,168,67,.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.72rem', fontWeight: 900, color: '#D4A843', cursor: 'pointer', marginLeft: '.08rem' }} onClick={() => navigate('/shop')}>+</div>
+                <div className="hp-hbal-plus" style={{ width: 20, height: 20, borderRadius: 6, background: 'rgba(212,168,67,.18)', border: '.5px solid rgba(212,168,67,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.8rem', fontWeight: 900, color: '#F0C85A', cursor: 'pointer', marginLeft: '.22rem', boxShadow: '0 0 8px rgba(212,168,67,.25)' }} onClick={() => navigate('/shop')}>+</div>
               </div>
             </div>
 
             {/* попытки */}
-            <div className="hp-hbal-cell" style={{ padding: '.5rem .4rem .6rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', borderRight: '.5px solid rgba(255,255,255,.05)', position: 'relative' }}>
-              <div style={{ fontSize: '.43rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '.2rem' }}>Попытки</div>
+            <div className="hp-hbal-cell" style={{ padding: '.65rem .4rem .75rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', borderRight: '.5px solid rgba(255,255,255,.05)', position: 'relative' }}>
+              <div style={{ fontSize: '.43rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '.22rem' }}>Попытки</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '.22rem' }}>
                 <div style={{ display: 'flex', gap: '.04rem' }}>
                   {Array.from({ length: maxAttempts }, (_, i) => (
@@ -401,13 +404,13 @@ export const HomePage: React.FC = () => {
                     </svg>
                   ))}
                 </div>
-                <div className="hp-hbal-plus" onClick={() => setShowAttemptsModal(true)} style={{ width: 17, height: 17, borderRadius: 5, background: 'rgba(212,168,67,.12)', border: '.5px solid rgba(212,168,67,.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.72rem', fontWeight: 900, color: '#D4A843', cursor: 'pointer' }}>+</div>
+                <div className="hp-hbal-plus" onClick={() => setShowAttemptsModal(true)} style={{ width: 20, height: 20, borderRadius: 6, background: 'rgba(212,168,67,.18)', border: '.5px solid rgba(212,168,67,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.8rem', fontWeight: 900, color: '#F0C85A', cursor: 'pointer', marginLeft: '.22rem', boxShadow: '0 0 8px rgba(212,168,67,.25)' }}>+</div>
               </div>
             </div>
 
             {/* таймер */}
-            <div className="hp-hbal-cell" style={{ padding: '.5rem .4rem .6rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', position: 'relative' }}>
-              <div style={{ fontSize: '.43rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '.2rem' }}>Следующая</div>
+            <div className="hp-hbal-cell" style={{ padding: '.65rem .4rem .75rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', position: 'relative' }}>
+              <div style={{ fontSize: '.43rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '.22rem' }}>Следующая</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '.2rem' }}>
                 <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
                   <circle cx="6" cy="6" r="5" stroke="#5E5A54" strokeWidth="1.2"/>
@@ -432,7 +435,7 @@ export const HomePage: React.FC = () => {
               borderRadius: 16, overflow: 'hidden', position: 'relative',
               cursor: 'pointer',
             }}
-              onClick={() => activeSessions.length === 1 ? navigate(`/game/${activeSessions[0].id}`) : setShowSessionsModal(true)}
+              onClick={() => setShowSessionsModal(true)}
             >
               {/* верхняя линия как у квестов */}
               <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1.5, background: 'linear-gradient(90deg,transparent,rgba(212,168,67,.35),rgba(61,186,122,.2),rgba(212,168,67,.35),transparent)' }} />
@@ -481,12 +484,12 @@ export const HomePage: React.FC = () => {
         )}
 
         {/* ── LABEL ── */}
-        <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.75rem .85rem .3rem' }}>
+        <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '1rem .85rem .45rem' }}>
           Режимы игры
         </div>
 
         {/* ══ 4 БЛОКА ══ */}
-        <div className="hp-blocks" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.52rem', margin: '0 .85rem .55rem' }}>
+        <div className="hp-blocks" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.7rem', margin: '0 .85rem .7rem' }}>
 
           {/* JARVIS */}
           <div
@@ -504,16 +507,12 @@ export const HomePage: React.FC = () => {
             onPointerUp={() => { setPressedBlk(null); setShowJarvisModal(true); }}
             onPointerLeave={() => setPressedBlk(null)}
           >
-            <div style={{ position: 'relative', marginBottom: '.48rem' }}>
-              <IcoJarvis size={44} />
+            <div style={{ position: 'relative', marginBottom: '.55rem' }}>
+              <IcoJarvis size={52} />
               <div style={{ position: 'absolute', top: 0, right: 0, width: 7, height: 7, borderRadius: '50%', background: '#4A9EFF', boxShadow: '0 0 6px #4A9EFF', animation: 'cc-pulse 1.5s infinite' }} />
             </div>
             <div style={{ fontSize: '.86rem', fontWeight: 900, letterSpacing: '.01em', marginBottom: '.12rem', color: '#C8E8FF' }}>J.A.R.V.I.S</div>
-            <div style={{ fontSize: '.58rem', lineHeight: 1.35, marginBottom: '.48rem', color: 'rgba(74,158,255,.82)' }}>Уровень {jarvisLevel} · {jarvisName}</div>
-            <div style={{ height: 2.5, borderRadius: 2, marginBottom: '.5rem', width: '100%', background: 'rgba(74,158,255,.1)' }}>
-              <div style={{ height: '100%', borderRadius: 2, width: `${Math.min(jarvisLevel * 5, 100)}%`, background: 'linear-gradient(90deg,#4A9EFF,#82CFFF)' }} />
-            </div>
-            <button className="hp-blk-btn" style={{ padding: '.32rem .7rem', borderRadius: 8, fontSize: '.64rem', fontWeight: 800, letterSpacing: '.05em', whiteSpace: 'nowrap', background: 'rgba(74,158,255,.12)', border: '.5px solid rgba(74,158,255,.3)', color: '#82CFFF', cursor: 'pointer', fontFamily: 'inherit' }}>ИГРАТЬ</button>
+            <div style={{ fontSize: '.58rem', lineHeight: 1.35, color: 'rgba(74,158,255,.82)' }}>Уровень {jarvisLevel} · {jarvisName}</div>
           </div>
 
           {/* БАТЛЫ */}
@@ -532,15 +531,11 @@ export const HomePage: React.FC = () => {
             onPointerUp={() => { setPressedBlk(null); navigate('/battles'); }}
             onPointerLeave={() => setPressedBlk(null)}
           >
-            <div style={{ marginBottom: '.48rem' }}>
-              <IcoBattle size={44} />
+            <div style={{ marginBottom: '.55rem' }}>
+              <IcoBattle size={52} />
             </div>
             <div style={{ fontSize: '.86rem', fontWeight: 900, letterSpacing: '.01em', marginBottom: '.12rem', color: '#F0C85A' }}>Батлы</div>
-            <div style={{ fontSize: '.58rem', lineHeight: 1.35, marginBottom: '.48rem', color: 'rgba(212,168,67,.82)' }}>1 на 1 · до 10 🪙</div>
-            <div style={{ height: 2.5, borderRadius: 2, marginBottom: '.5rem', width: '100%', background: 'rgba(212,168,67,.1)' }}>
-              <div style={{ height: '100%', borderRadius: 2, width: '55%', background: 'linear-gradient(90deg,#D4A843,#F0C85A)' }} />
-            </div>
-            <button className="hp-blk-btn" style={{ padding: '.32rem .7rem', borderRadius: 8, fontSize: '.64rem', fontWeight: 800, letterSpacing: '.05em', whiteSpace: 'nowrap', background: 'rgba(212,168,67,.14)', border: '.5px solid rgba(212,168,67,.3)', color: '#F0C85A', cursor: 'pointer', fontFamily: 'inherit' }}>СРАЗИТЬСЯ</button>
+            <div style={{ fontSize: '.58rem', lineHeight: 1.35, color: 'rgba(212,168,67,.82)' }}>1 на 1 · до 10 🪙</div>
           </div>
 
           {/* КУБКИ */}
@@ -559,15 +554,11 @@ export const HomePage: React.FC = () => {
             onPointerUp={() => { setPressedBlk(null); navigate('/tournaments'); }}
             onPointerLeave={() => setPressedBlk(null)}
           >
-            <div style={{ marginBottom: '.48rem' }}>
-              <IcoTrophy size={44} />
+            <div style={{ marginBottom: '.55rem' }}>
+              <IcoTrophy size={52} />
             </div>
             <div style={{ fontSize: '.86rem', fontWeight: 900, letterSpacing: '.01em', marginBottom: '.12rem', color: '#D4C0FF' }}>Кубки</div>
-            <div style={{ fontSize: '.58rem', lineHeight: 1.35, marginBottom: '.48rem', color: 'rgba(155,109,255,.82)' }}>Турниры · Скоро</div>
-            <div style={{ height: 2.5, borderRadius: 2, marginBottom: '.5rem', width: '100%', background: 'rgba(155,109,255,.1)' }}>
-              <div style={{ height: '100%', borderRadius: 2, width: '0%', background: 'linear-gradient(90deg,#9B6DFF,#C4A8FF)' }} />
-            </div>
-            <button className="hp-blk-btn" style={{ padding: '.32rem .7rem', borderRadius: 8, fontSize: '.64rem', fontWeight: 800, letterSpacing: '.05em', whiteSpace: 'nowrap', background: 'rgba(155,109,255,.12)', border: '.5px solid rgba(155,109,255,.28)', color: '#C4A8FF', cursor: 'pointer', fontFamily: 'inherit' }}>ПОБЕДИТЬ</button>
+            <div style={{ fontSize: '.58rem', lineHeight: 1.35, color: 'rgba(155,109,255,.82)' }}>Турниры · Скоро</div>
           </div>
 
           {/* ВОЙНЫ */}
@@ -586,28 +577,24 @@ export const HomePage: React.FC = () => {
             onPointerUp={() => { setPressedBlk(null); navigate('/wars'); }}
             onPointerLeave={() => setPressedBlk(null)}
           >
-            <div style={{ position: 'relative', marginBottom: '.48rem' }}>
-              <IcoWars size={44} />
+            <div style={{ position: 'relative', marginBottom: '.55rem' }}>
+              <IcoWars size={52} />
               <div style={{ position: 'absolute', top: 0, right: 0, width: 7, height: 7, borderRadius: '50%', background: '#3DBA7A', boxShadow: '0 0 6px #3DBA7A', animation: 'cc-pulse 1.5s infinite' }} />
             </div>
             <div style={{ fontSize: '.86rem', fontWeight: 900, letterSpacing: '.01em', marginBottom: '.12rem', color: '#8FEBB8' }}>Войны</div>
-            <div style={{ fontSize: '.58rem', lineHeight: 1.35, marginBottom: '.48rem', color: 'rgba(61,186,122,.82)' }}>Страны · Сезон</div>
-            <div style={{ height: 2.5, borderRadius: 2, marginBottom: '.5rem', width: '100%', background: 'rgba(61,186,122,.1)' }}>
-              <div style={{ height: '100%', borderRadius: 2, width: '38%', background: 'linear-gradient(90deg,#3DBA7A,#6FEDB0)' }} />
-            </div>
-            <button className="hp-blk-btn" style={{ padding: '.32rem .7rem', borderRadius: 8, fontSize: '.64rem', fontWeight: 800, letterSpacing: '.05em', whiteSpace: 'nowrap', background: 'rgba(61,186,122,.12)', border: '.5px solid rgba(61,186,122,.28)', color: '#6FEDB0', cursor: 'pointer', fontFamily: 'inherit' }}>ЗАВОЕВАТЬ</button>
+            <div style={{ fontSize: '.58rem', lineHeight: 1.35, color: 'rgba(61,186,122,.82)' }}>Страны · Сезон</div>
           </div>
 
         </div>
 
         {/* ── LABEL ── */}
-        <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.75rem .85rem .3rem' }}>
+        <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem' }}>
           Текущие задания
         </div>
 
         {/* ══ КВЕСТЫ ══ */}
         <div className="hp-quests hp-quests-wrap" style={{
-          margin: '0 .85rem .55rem',
+          margin: '0 .85rem 0',
           background: 'linear-gradient(135deg,#141018,#0F0E18)',
           border: '.5px solid rgba(155,109,255,.22)',
           borderRadius: 16, overflow: 'hidden', position: 'relative',
@@ -622,22 +609,22 @@ export const HomePage: React.FC = () => {
               </svg>
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: '.72rem', fontWeight: 800, color: '#C8C0E0', letterSpacing: '.02em', marginBottom: '.18rem' }}>
+              <div style={{ fontSize: '.82rem', fontWeight: 800, color: '#C8C0E0', letterSpacing: '.02em', marginBottom: '.22rem' }}>
                 Ежедневные задания
               </div>
-              <div style={{ display: 'flex', gap: '.55rem' }}>
+              <div style={{ display: 'flex', gap: '.55rem', flexWrap: 'wrap' }}>
                 {[
                   { label: 'Сыграй 3 партии', active: true },
                   { label: 'Победи в батле', active: false },
                   { label: 'Реши задачу', active: false },
                 ].map(q => (
-                  <div key={q.label} style={{ display: 'flex', alignItems: 'center', gap: '.22rem' }}>
+                  <div key={q.label} style={{ display: 'flex', alignItems: 'center', gap: '.28rem' }}>
                     <div style={{
-                      width: 5, height: 5, borderRadius: '50%', flexShrink: 0,
+                      width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
                       background: q.active ? '#9B6DFF' : 'rgba(155,109,255,.5)',
                       boxShadow: q.active ? '0 0 5px #9B6DFF' : 'none',
                     }} />
-                    <span style={{ fontSize: '.58rem', fontWeight: 600, whiteSpace: 'nowrap', color: q.active ? '#A890D0' : '#9A90B8' }}>
+                    <span style={{ fontSize: '.7rem', fontWeight: 600, whiteSpace: 'nowrap', color: q.active ? '#A890D0' : '#9A90B8' }}>
                       {q.label}
                     </span>
                   </div>

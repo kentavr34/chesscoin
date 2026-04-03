@@ -5,9 +5,11 @@ import { useT } from '@/i18n/useT';
 // SVG иконки для нижней навигации
 const NavIcoPlay = ({ active }: { active: boolean }) => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-    <path d="M6 4.5h12v2H6zM4 7.5h16l-1.5 12H5.5L4 7.5z" stroke={active ? '#D4A843' : '#5A6070'} strokeWidth="1.4" strokeLinejoin="round"/>
-    <path d="M9 11.5l2-2 4 4" stroke={active ? '#D4A843' : '#5A6070'} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M12 7.5v4" stroke={active ? '#F0C85A' : '#5A6070'} strokeWidth="1.3" strokeLinecap="round"/>
+    {/* Шахматная доска 2×2 */}
+    <rect x="3" y="3" width="8" height="8" rx="1.5" fill={active ? '#D4A843' : '#5A6070'} opacity={active ? .95 : .75}/>
+    <rect x="13" y="3" width="8" height="8" rx="1.5" stroke={active ? '#D4A843' : '#5A6070'} strokeWidth="1.4" fill="none"/>
+    <rect x="3" y="13" width="8" height="8" rx="1.5" stroke={active ? '#D4A843' : '#5A6070'} strokeWidth="1.4" fill="none"/>
+    <rect x="13" y="13" width="8" height="8" rx="1.5" fill={active ? '#D4A843' : '#5A6070'} opacity={active ? .95 : .75}/>
   </svg>
 );
 

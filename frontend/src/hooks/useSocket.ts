@@ -36,15 +36,10 @@ export const useSocket = () => {
 
     const socket = getSocket();
 
-    // Получаем текущие сессии при подключении
+    // Получаем текущие сессии при подключении (без авто-редиректа — пользователь сам выбирает)
     socket.emit('game:current', (res) => {
       if (res.ok && res.sessions) {
         setSessions(res.sessions);
-        const loc = window.location.pathname;
-        const onLobby = loc === '/' || loc === '/battles';
-        if (res.sessions.length > 0 && onLobby) {
-          navigate('/game/' + res.sessions[0].id, { replace: true });
-        }
       }
     });
 
