@@ -104,9 +104,7 @@ export const StatBox: React.FC<StatBoxProps> = ({
     transition: 'all var(--transition-normal) var(--ease-in-out)',
     cursor: 'default',
     transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
-    onMouseEnter: () => setHovered(true),
-    onMouseLeave: () => setHovered(false),
-  } as CSSProperties & { onMouseEnter: () => void; onMouseLeave: () => void };
+  };
 
   const labelStyle: CSSProperties = {
     fontSize: 'var(--font-size-xs)',
@@ -119,13 +117,11 @@ export const StatBox: React.FC<StatBoxProps> = ({
     color: colors.text,
   };
 
-  const { onMouseEnter, onMouseLeave, ...restStyle } = containerStyle;
-
   return (
     <div
-      style={restStyle as CSSProperties}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
+      style={containerStyle as CSSProperties}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
       <Text as="div" size="xs" color="secondary" style={labelStyle}>
         {label}

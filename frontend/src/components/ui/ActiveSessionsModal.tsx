@@ -171,7 +171,7 @@ const SessionCard: React.FC<{ s: GameSession; onGo: (id: string) => void }> = ({
 
         {/* Левая: я */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, minWidth: 0 }}>
-          <PlayerAvatar name={myName} avatar={myAvatar} size={51} />
+          <PlayerAvatar name={myName} avatar={myAvatar ?? undefined} size={51} />
           <span style={{ fontSize: '.9rem', fontWeight: 700, color: '#C8C0A8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', textAlign: 'center' }}>
             {myName.length > 8 ? myName.slice(0,8) + '…' : myName}
           </span>
@@ -217,7 +217,7 @@ const SessionCard: React.FC<{ s: GameSession; onGo: (id: string) => void }> = ({
 
         {/* Правая: соперник */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, minWidth: 0 }}>
-          <PlayerAvatar name={oppName} avatar={oppAvatar} isBot={oppIsBot} size={51} />
+          <PlayerAvatar name={oppName} avatar={oppAvatar ?? undefined} isBot={oppIsBot} size={51} />
           <span style={{ fontSize: '.9rem', fontWeight: 700, color: '#C8C0A8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', textAlign: 'center' }}>
             {oppName.length > 8 ? oppName.slice(0,8) + '…' : oppName}
           </span>

@@ -33,6 +33,7 @@ const AdminPage        = lazy(() => import('@/pages/AdminPage').then(m => ({ def
 const SettingsPage     = lazy(() => import('@/pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
 const PuzzleDailyPage  = lazy(() => import('@/pages/PuzzleDailyPage').then(m => ({ default: m.PuzzleDailyPage })));
 const PuzzleLessonPage = lazy(() => import('@/pages/PuzzleLessonPage').then(m => ({ default: m.PuzzleLessonPage })));
+const TransactionHistoryPage = lazy(() => import('@/pages/TransactionHistoryPage').then(m => ({ default: m.TransactionHistoryPage })));
 
 const AppInner: React.FC = () => {
   useSocket();
@@ -112,6 +113,7 @@ const AppInner: React.FC = () => {
       <Route path="/settings" element={<SettingsPage />} />
       <Route path="/puzzle/daily" element={<PuzzleDailyPage />} />
       <Route path="/puzzle/:id" element={<PuzzleLessonPage />} />
+      <Route path="/transactions" element={<TransactionHistoryPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
     </Suspense>

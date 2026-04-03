@@ -1,10 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout, InfoPopup, useInfoPopup } from '@/components/layout/PageLayout';
-import { Avatar } from '@/components/ui/Avatar';
-import { Button } from '@/components/ui/Button';
-import { Text } from '@/components/ui/Text';
-import { Card } from '@/components/ui/Card';
 import { useGameStore } from '@/store/useGameStore';
 import { useUserStore } from '@/store/useUserStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
@@ -70,8 +66,29 @@ export const BattlesPage: React.FC = () => {
 
   const rightAction = (
     <div style={{ display: 'flex', gap: 8 }}>
-      <Button variant="tertiary" size="sm" onClick={info.open} style={{ fontSize: 14, fontWeight: 700 }}>?</Button>
-      <Button variant="tertiary" size="sm" onClick={() => navigate('/profile', { state: { tab: 'games' } })} title="History">🕐</Button>
+      <button
+        onClick={info.open}
+        style={{
+          width: 32, height: 32, borderRadius: '50%',
+          background: 'rgba(212,168,67,.12)',
+          border: '.5px solid rgba(212,168,67,.25)',
+          color: '#F0C85A', fontSize: 14, fontWeight: 700,
+          cursor: 'pointer', fontFamily: 'inherit',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}
+      >?</button>
+      <button
+        onClick={() => navigate('/profile', { state: { tab: 'games' } })}
+        title="History"
+        style={{
+          width: 32, height: 32, borderRadius: '50%',
+          background: 'rgba(255,255,255,.06)',
+          border: '.5px solid rgba(255,255,255,.1)',
+          color: '#7A7875', fontSize: 14,
+          cursor: 'pointer', fontFamily: 'inherit',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}
+      >🕐</button>
     </div>
   );
 
@@ -82,24 +99,64 @@ export const BattlesPage: React.FC = () => {
         <InfoPopup infoKey="battles" slides={[...t.battles.info] as Parameters<typeof InfoPopup>[0]["slides"]} onClose={info.close} />
       )}
 
-      {/* Две вкладки: Public / Private */}
-      <div style={segStyle}>
-        <Button variant={tab === 'public' ? 'primary' : 'secondary'} size="sm" onClick={() => setTab('public')} fullWidth>
+      {/* Вкладки Public / Private */}
+      <div style={{ display: 'flex', gap: 8, margin: '4px .85rem 12px', padding: 0 }}>
+        <button
+          onClick={() => setTab('public')}
+          style={{
+            flex: 1, padding: '9px 12px',
+            borderRadius: 12, fontSize: '.75rem', fontWeight: 700,
+            fontFamily: 'inherit', cursor: 'pointer',
+            transition: 'all .15s',
+            background: tab === 'public' ? 'rgba(212,168,67,.15)' : 'rgba(255,255,255,.04)',
+            border: tab === 'public' ? '.5px solid rgba(212,168,67,.35)' : '.5px solid rgba(255,255,255,.08)',
+            color: tab === 'public' ? '#F0C85A' : '#5A5248',
+          }}
+        >
           ⚔️ {t.battles.public_ ?? 'Public'}
-        </Button>
-        <Button variant={tab === 'private' ? 'primary' : 'secondary'} size="sm" onClick={() => setTab('private')} fullWidth>
+        </button>
+        <button
+          onClick={() => setTab('private')}
+          style={{
+            flex: 1, padding: '9px 12px',
+            borderRadius: 12, fontSize: '.75rem', fontWeight: 700,
+            fontFamily: 'inherit', cursor: 'pointer',
+            transition: 'all .15s',
+            background: tab === 'private' ? 'rgba(212,168,67,.15)' : 'rgba(255,255,255,.04)',
+            border: tab === 'private' ? '.5px solid rgba(212,168,67,.35)' : '.5px solid rgba(255,255,255,.08)',
+            color: tab === 'private' ? '#F0C85A' : '#5A5248',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+          }}
+        >
           🔒 {t.battles.private_ ?? 'Private'}
-          {myPrivateSessions.length > 0 && <span style={{ marginLeft: 4, background: '#FF4D6A', color: '#fff', fontSize: 9, fontWeight: 800, padding: '1px 5px', borderRadius: 8, minWidth: 16, textAlign: 'center' as const }}>{myPrivateSessions.length}</span>}
-        </Button>
+          {myPrivateSessions.length > 0 && (
+            <span style={{
+              background: '#D4A843', color: '#0D0D12',
+              fontSize: '.55rem', fontWeight: 800,
+              padding: '1px 5px', borderRadius: 8,
+              minWidth: 16, textAlign: 'center' as const,
+            }}>
+              {myPrivateSessions.length}
+            </span>
+          )}
+        </button>
       </div>
 
       {/* ════════ PUBLIC ════════ */}
       {tab === 'public' && (
         <>
-          {/* LIVE — активные партии вверху */}
+          {/* LIVE — активные партии */}
           {liveSessions.length > 0 && (
             <>
-              <Text variant="caption" color="muted" weight="bold" style={{ fontSize: 10, letterSpacing: '.09em', textTransform: 'uppercase', padding: '16px 18px 8px' }}>🔴 LIVE</Text>
+              <div style={sectionLabel}>
+                <span style={{
+                  display: 'inline-block', width: 7, height: 7,
+                  borderRadius: '50%', background: '#3DBA7A',
+                  marginRight: 6, animation: 'pulse 1.5s infinite',
+                  verticalAlign: 'middle',
+                }} />
+                LIVE
+              </div>
               {liveSessions.map((s) => {
                 const mySide = s.sides.find((sd) => sd.id === s.mySideId);
                 const opSide = s.sides.find((sd) => sd.id !== s.mySideId);
@@ -108,34 +165,89 @@ export const BattlesPage: React.FC = () => {
                 const whitePlayer = s.sides.find((sd) => sd.isWhite);
                 const blackPlayer = s.sides.find((sd) => !sd.isWhite);
                 return (
-                  <Card key={s.id} padding="md" onClick={() => navigate('/game/' + s.id)} style={{ borderColor: 'rgba(255,77,106,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, margin: '4px 18px 0' }}>
-                      {/* Белый игрок */}
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, minWidth: 54 }}>
-                        <Avatar user={whitePlayer?.player} size="s" />
-                        <span style={{ fontSize: 10, fontWeight: 600, color: '#F0F2F8', maxWidth: 54, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{whitePlayer?.player?.firstName ?? '?'}</span>
-                        <span style={{ fontSize: 8, color: '#8B92A8', background: 'rgba(255,255,255,0.1)', padding: '1px 4px', borderRadius: 3 }}>♔</span>
-                      </div>
+                  <div
+                    key={s.id}
+                    onClick={() => navigate('/game/' + s.id)}
+                    style={{
+                      margin: '0 .85rem 8px',
+                      background: 'linear-gradient(135deg,#141018,#0F0E18)',
+                      border: '.5px solid rgba(61,186,122,.30)',
+                      borderRadius: 16, padding: '14px 14px',
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 16px rgba(61,186,122,.08)',
+                    }}
+                  >
+                    {/* Белый игрок */}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, minWidth: 52 }}>
+                      <div style={{
+                        width: 38, height: 38, borderRadius: '50%',
+                        background: 'rgba(255,255,255,.08)',
+                        border: '.5px solid rgba(255,255,255,.15)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 18,
+                      }}>♔</div>
+                      <span style={{
+                        fontSize: '.62rem', fontWeight: 600, color: '#C8C4BE',
+                        maxWidth: 52, overflow: 'hidden',
+                        textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const,
+                        textAlign: 'center' as const,
+                      }}>
+                        {whitePlayer?.player?.firstName ?? '?'}
+                      </span>
+                    </div>
 
-                      {/* Центр: иконка + LIVE + время */}
-                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#FF4D6A', animation: 'pulse 1.5s infinite' }} />
-                          <span style={{ fontSize: 9, fontWeight: 800, color: '#FF4D6A', letterSpacing: '.08em' }}>LIVE</span>
-                          <span style={{ fontSize: 14 }}>{sourceIcon}</span>
-                        </div>
-                        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 16, fontWeight: 700, color: '#F0F2F8' }}>
-                          {fmtTime(mySide?.timeLeft ?? opSide?.timeLeft ?? 300)}
+                    {/* Центр */}
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <span style={{
+                          width: 7, height: 7, borderRadius: '50%',
+                          background: '#3DBA7A', animation: 'pulse 1.5s infinite',
+                          display: 'inline-block',
+                        }} />
+                        <span style={{ fontSize: '.58rem', fontWeight: 800, color: '#3DBA7A', letterSpacing: '.14em', textTransform: 'uppercase' as const }}>LIVE</span>
+                        <span style={{ fontSize: 13 }}>{sourceIcon}</span>
+                      </div>
+                      <span style={{
+                        fontFamily: "'JetBrains Mono',monospace",
+                        fontSize: '1rem', fontWeight: 700, color: '#F0F0E8',
+                      }}>
+                        {fmtTime(mySide?.timeLeft ?? opSide?.timeLeft ?? 300)}
+                      </span>
+                      {s.bet && (
+                        <span style={{
+                          fontSize: '.65rem', fontWeight: 700,
+                          color: '#D4A843',
+                          display: 'flex', alignItems: 'center', gap: 3,
+                        }}>
+                          <svg width="10" height="10" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9" stroke="#D4A843" strokeWidth="1.5"/>
+                            <text x="10" y="14" textAnchor="middle" fill="#D4A843" fontSize="10" fontWeight="800">ᚙ</text>
+                          </svg>
+                          {fmtBalance(s.bet)}
                         </span>
-                        {s.bet && <span style={{ fontSize: 10, color: '#F5C842', fontWeight: 700 }}>{fmtBalance(s.bet)} ᚙ</span>}
-                      </div>
+                      )}
+                    </div>
 
-                      {/* Чёрный игрок */}
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, minWidth: 54 }}>
-                        <Avatar user={blackPlayer?.player} size="s" />
-                        <span style={{ fontSize: 10, fontWeight: 600, color: '#F0F2F8', maxWidth: 54, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{blackPlayer?.player?.firstName ?? '?'}</span>
-                        <span style={{ fontSize: 8, color: '#8B92A8', background: 'rgba(0,0,0,0.3)', padding: '1px 4px', borderRadius: 3 }}>♚</span>
-                      </div>
-                  </Card>
+                    {/* Чёрный игрок */}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, minWidth: 52 }}>
+                      <div style={{
+                        width: 38, height: 38, borderRadius: '50%',
+                        background: 'rgba(0,0,0,.4)',
+                        border: '.5px solid rgba(255,255,255,.12)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 18,
+                      }}>♚</div>
+                      <span style={{
+                        fontSize: '.62rem', fontWeight: 600, color: '#C8C4BE',
+                        maxWidth: 52, overflow: 'hidden',
+                        textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const,
+                        textAlign: 'center' as const,
+                      }}>
+                        {blackPlayer?.player?.firstName ?? '?'}
+                      </span>
+                    </div>
+                  </div>
                 );
               })}
             </>
@@ -144,29 +256,104 @@ export const BattlesPage: React.FC = () => {
           {/* Ожидающие — по ставке (desc) */}
           {waitingSessions.length > 0 && (
             <>
-              <Text variant="caption" color="muted" weight="bold" style={{ fontSize: 10, letterSpacing: '.09em', textTransform: 'uppercase', padding: '16px 18px 8px' }}>⚔️ {t.battles.tabWaiting ?? 'CHALLENGES'}</Text>
+              <div style={sectionLabel}>⚔️ {t.battles.tabWaiting ?? 'CHALLENGES'}</div>
               {waitingSessions.map((battle, idx) => (
-                <Card key={battle.id} padding="md" style={{ borderColor: idx === 0 ? 'rgba(245,200,66,0.2)' : 'rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', gap: 12, margin: '4px 18px 0' }}>
-                  <Avatar user={battle.creator as import('@/types').UserPublic | null} size="m" />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <Text variant="body" weight="bold" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{battle.creator?.firstName ?? '?'}</Text>
-                      {idx === 0 && <span style={{ fontSize: 8, padding: '1px 5px', background: 'rgba(245,200,66,0.15)', color: '#F5C842', borderRadius: 4, fontWeight: 800 }}>TOP</span>}
-                    </div>
-                    <Text variant="caption" color="secondary" style={{ marginTop: 2 }}>{Math.round((battle.duration ?? 300) / 60)} min · ELO {battle.creator?.elo ?? '?'}</Text>
-                    <span style={{ fontSize: 10, padding: '3px 8px', background: 'rgba(245,200,66,0.12)', color: 'var(--accent, #F5C842)', borderRadius: 6, display: 'inline-block', marginTop: 4, fontWeight: 700 }}>{fmtBalance(battle.bet)} ᚙ</span>
+                <div
+                  key={battle.id}
+                  style={{
+                    margin: '0 .85rem 8px',
+                    background: 'linear-gradient(135deg,#141018,#0F0E18)',
+                    border: idx === 0
+                      ? '.5px solid rgba(212,168,67,.38)'
+                      : '.5px solid rgba(212,168,67,.22)',
+                    borderRadius: 16, padding: '14px 14px',
+                    display: 'flex', alignItems: 'center', gap: 12,
+                  }}
+                >
+                  {/* Аватар-плейсхолдер */}
+                  <div style={{
+                    width: 44, height: 44, borderRadius: '50%',
+                    background: 'linear-gradient(135deg,rgba(212,168,67,.18),rgba(212,168,67,.06))',
+                    border: '.5px solid rgba(212,168,67,.3)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 20, flexShrink: 0,
+                    color: '#D4A843',
+                  }}>
+                    {battle.creator?.firstName?.slice(0,1)?.toUpperCase() ?? '?'}
                   </div>
-                  <Button variant="secondary" size="sm" onClick={() => handleJoin(battle)}>{t.battles.accept ?? '⚔️'}</Button>
-                </Card>
+
+                  {/* Инфо */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
+                      <span style={{
+                        fontSize: '.8rem', fontWeight: 700, color: '#E8E4DC',
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const,
+                      }}>
+                        {battle.creator?.firstName ?? '?'}
+                      </span>
+                      {idx === 0 && (
+                        <span style={{
+                          fontSize: '.55rem', padding: '1px 6px',
+                          background: 'rgba(212,168,67,.15)',
+                          color: '#D4A843',
+                          border: '.5px solid rgba(212,168,67,.3)',
+                          borderRadius: 5, fontWeight: 800,
+                          textTransform: 'uppercase' as const, letterSpacing: '.08em',
+                        }}>TOP</span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: '.68rem', color: '#7A7875', marginBottom: 5 }}>
+                      {Math.round((battle.duration ?? 300) / 60)} мин · ELO {battle.creator?.elo ?? '?'}
+                    </div>
+                    <div style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 4,
+                      padding: '3px 9px',
+                      background: 'rgba(212,168,67,.1)',
+                      border: '.5px solid rgba(212,168,67,.22)',
+                      borderRadius: 7,
+                      fontSize: '.68rem', fontWeight: 700, color: '#D4A843',
+                    }}>
+                      <svg width="10" height="10" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="9" stroke="#D4A843" strokeWidth="1.5"/>
+                        <text x="10" y="14" textAnchor="middle" fill="#D4A843" fontSize="10" fontWeight="800">ᚙ</text>
+                      </svg>
+                      {fmtBalance(battle.bet)}
+                    </div>
+                  </div>
+
+                  {/* Кнопка войти */}
+                  <button
+                    onClick={() => handleJoin(battle)}
+                    style={{
+                      padding: '9px 16px',
+                      background: 'linear-gradient(135deg,#D4A843,#F0C85A)',
+                      border: 'none', borderRadius: 11,
+                      color: '#0D0D12', fontSize: '.72rem', fontWeight: 800,
+                      cursor: 'pointer', fontFamily: 'inherit',
+                      boxShadow: '0 2px 12px rgba(212,168,67,.35)',
+                      flexShrink: 0,
+                      whiteSpace: 'nowrap' as const,
+                    }}
+                  >
+                    {t.battles.accept ?? 'Войти'}
+                  </button>
+                </div>
               ))}
             </>
           )}
 
           {liveSessions.length === 0 && waitingSessions.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '48px 20px' }}>
-              <div style={{ fontSize: 48, marginBottom: 12, opacity: 0.6 }}>⚔️</div>
-              <div style={{ fontSize: 14, color: '#8B92A8', fontWeight: 600 }}>{t.battles.noActive ?? 'No battles yet'}</div>
-              <div style={{ fontSize: 12, color: '#4A5270', marginTop: 6 }}>{t.battles.createFirst ?? 'Create the first battle!'}</div>
+            <div style={{
+              textAlign: 'center', padding: '56px 20px',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
+            }}>
+              <div style={{ fontSize: 44, opacity: 0.4 }}>⚔️</div>
+              <div style={{ fontSize: '.85rem', color: '#7A7875', fontWeight: 600 }}>
+                {t.battles.noActive ?? 'Нет активных батлов'}
+              </div>
+              <div style={{ fontSize: '.72rem', color: '#3E3A35' }}>
+                {t.battles.createFirst ?? 'Создай первый батл!'}
+              </div>
             </div>
           )}
         </>
@@ -176,34 +363,105 @@ export const BattlesPage: React.FC = () => {
       {tab === 'private' && (
         <>
           {myPrivateSessions.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '48px 20px' }}>
-              <div style={{ fontSize: 48, marginBottom: 12, opacity: 0.6 }}>🔒</div>
-              <div style={{ fontSize: 14, color: '#8B92A8', fontWeight: 600 }}>{t.battles.noPrivate ?? 'No private battles'}</div>
-              <div style={{ fontSize: 12, color: '#4A5270', marginTop: 6 }}>{t.battles.createPrivate ?? 'Create one and share the link!'}</div>
+            <div style={{
+              textAlign: 'center', padding: '56px 20px',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
+            }}>
+              <div style={{ fontSize: 44, opacity: 0.4 }}>🔒</div>
+              <div style={{ fontSize: '.85rem', color: '#7A7875', fontWeight: 600 }}>
+                {t.battles.noPrivate ?? 'Нет приватных батлов'}
+              </div>
+              <div style={{ fontSize: '.72rem', color: '#3E3A35' }}>
+                {t.battles.createPrivate ?? 'Создай и поделись ссылкой!'}
+              </div>
             </div>
           )}
           {myPrivateSessions.map((s) => {
             const sourceType = (s as any).sourceType;
             const sourceIcon = sourceType === 'TOURNAMENT' ? '🏆' : sourceType === 'WAR' ? '⚔️🏴' : '🔒';
-            const sourceName = sourceType === 'TOURNAMENT' ? (t.battles.fromTournament ?? 'Tournament') : sourceType === 'WAR' ? (t.battles.fromWar ?? 'Country War') : (t.battles.privateChallenge ?? 'Private Challenge');
+            const sourceName = sourceType === 'TOURNAMENT'
+              ? (t.battles.fromTournament ?? 'Tournament')
+              : sourceType === 'WAR'
+              ? (t.battles.fromWar ?? 'Country War')
+              : (t.battles.privateChallenge ?? 'Private Challenge');
+            const iconBg = sourceType === 'TOURNAMENT'
+              ? 'rgba(212,168,67,.1)'
+              : sourceType === 'WAR'
+              ? 'rgba(255,77,106,.1)'
+              : 'rgba(155,133,255,.1)';
+            const iconBorder = sourceType === 'TOURNAMENT'
+              ? 'rgba(212,168,67,.22)'
+              : sourceType === 'WAR'
+              ? 'rgba(255,77,106,.22)'
+              : 'rgba(155,133,255,.22)';
             return (
-              <Card key={s.id} padding="md" style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '4px 18px 0' }}>
-                <div style={{ width: 44, height: 44, borderRadius: 14, background: sourceType === 'TOURNAMENT' ? 'rgba(245,200,66,0.1)' : sourceType === 'WAR' ? 'rgba(255,77,106,0.1)' : 'rgba(155,133,255,0.1)', border: `1px solid ${sourceType === 'TOURNAMENT' ? 'rgba(245,200,66,0.2)' : sourceType === 'WAR' ? 'rgba(255,77,106,0.2)' : 'rgba(155,133,255,0.2)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>{sourceIcon}</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <Text variant="body" weight="bold">{sourceName}</Text>
-                  <Text variant="caption" color="secondary" style={{ marginTop: 2 }}>
-                    {s.bet && BigInt(s.bet) > 0n ? `${fmtBalance(s.bet)} ᚙ · ` : ''}{t.battles.waitingForOpponent ?? 'Waiting...'}
-                  </Text>
+              <div
+                key={s.id}
+                style={{
+                  margin: '0 .85rem 8px',
+                  background: 'linear-gradient(135deg,#141018,#0F0E18)',
+                  border: '.5px solid rgba(212,168,67,.22)',
+                  borderRadius: 16, padding: '14px 14px',
+                  display: 'flex', alignItems: 'center', gap: 12,
+                }}
+              >
+                <div style={{
+                  width: 44, height: 44, borderRadius: 13,
+                  background: iconBg,
+                  border: `.5px solid ${iconBorder}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 20, flexShrink: 0,
+                }}>
+                  {sourceIcon}
                 </div>
-                <Button variant="secondary" size="sm" onClick={() => navigate('/game/' + s.id)}>{t.battles.accept ?? '→'}</Button>
-              </Card>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '.8rem', fontWeight: 700, color: '#E8E4DC', marginBottom: 3 }}>
+                    {sourceName}
+                  </div>
+                  <div style={{ fontSize: '.68rem', color: '#7A7875' }}>
+                    {s.bet && BigInt(s.bet) > 0n
+                      ? `${fmtBalance(s.bet)} ᚙ · `
+                      : ''}
+                    {t.battles.waitingForOpponent ?? 'Ждём соперника...'}
+                  </div>
+                </div>
+                <button
+                  onClick={() => navigate('/game/' + s.id)}
+                  style={{
+                    padding: '9px 16px',
+                    background: 'linear-gradient(135deg,#D4A843,#F0C85A)',
+                    border: 'none', borderRadius: 11,
+                    color: '#0D0D12', fontSize: '.72rem', fontWeight: 800,
+                    cursor: 'pointer', fontFamily: 'inherit',
+                    boxShadow: '0 2px 12px rgba(212,168,67,.35)',
+                    flexShrink: 0,
+                  }}
+                >
+                  {t.battles.accept ?? '→'}
+                </button>
+              </div>
             );
           })}
         </>
       )}
 
-      {/* FAB */}
-      <button onClick={() => setShowCreate(true)} style={fabStyle}>＋</button>
+      {/* FAB — создать батл */}
+      <button
+        onClick={() => setShowCreate(true)}
+        style={{
+          position: 'fixed',
+          bottom: 'max(80px, calc(70px + env(safe-area-inset-bottom, 14px)))',
+          right: 18, width: 50, height: 50,
+          borderRadius: '50%',
+          background: 'linear-gradient(135deg,#D4A843,#F0C85A)',
+          color: '#0D0D12',
+          fontSize: 24, fontWeight: 800,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer', border: 'none', zIndex: 49,
+          boxShadow: '0 4px 24px rgba(212,168,67,.45)',
+          fontFamily: 'inherit',
+        }}
+      >＋</button>
 
       {showCreate && <CreateBattleModal onClose={() => setShowCreate(false)} />}
     </PageLayout>
@@ -211,14 +469,6 @@ export const BattlesPage: React.FC = () => {
 };
 
 // ── Sub components ──
-const BPlayer: React.FC<{ user?: import("@/types").UserPublic; name: string; right?: boolean }> = ({ user, name, right }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, minWidth: 58 }}>
-    <Avatar user={user} size="s" />
-    <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary, #8B92A8)', textAlign: 'center' }}>{name}</span>
-    {user?.elo && <span style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>ELO {user.elo}</span>}
-  </div>
-);
-
 const MIN_BET = 10000;
 
 const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
@@ -289,17 +539,56 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   };
 
   return (
-    <div onClick={(e) => e.target === e.currentTarget && onClose()} style={bmOverlayStyle}>
-      <div style={bmSheetStyle}>
-        {/* Ручка + кнопка закрыть — без заголовка "Создать батл" */}
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
-          <div style={bmHandleStyle} />
-          <button onClick={onClose} style={{ marginLeft: 'auto', width: 44, height: 44, borderRadius: '50%', background: 'var(--border, rgba(255,255,255,0.07))', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-secondary, #8B92A8)', fontSize: 16, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>✕</button>
+    <div
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 200,
+        background: 'rgba(0,0,0,.72)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+        display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+      }}
+    >
+      <div style={{
+        width: '100%', maxWidth: 480,
+        background: 'linear-gradient(180deg,#141018 0%,#0F0E18 100%)',
+        border: '.5px solid rgba(212,168,67,.18)',
+        borderBottom: 'none',
+        borderRadius: '24px 24px 0 0',
+        padding: '16px .85rem',
+        paddingBottom: 'max(24px, env(safe-area-inset-bottom, 24px))',
+        maxHeight: '88vh', overflowY: 'auto',
+      }}>
+        {/* Ручка + кнопка закрыть */}
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 18 }}>
+          <div style={{
+            width: 36, height: 4,
+            background: 'rgba(212,168,67,.25)',
+            borderRadius: 2, margin: '4px auto 0',
+          }} />
+          <button
+            onClick={onClose}
+            style={{
+              marginLeft: 'auto', width: 44, height: 44,
+              borderRadius: '50%',
+              background: 'rgba(255,255,255,.06)',
+              border: '.5px solid rgba(255,255,255,.1)',
+              color: '#7A7875', fontSize: 16,
+              cursor: 'pointer', fontFamily: 'inherit',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >✕</button>
         </div>
 
         {/* Ставка */}
         <div style={bmSectionLbl}>{t.battles.betLabel}</div>
-        <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 30, fontWeight: 800, color: 'var(--accent, #F5C842)', textAlign: 'center', marginBottom: 12 }}>
+        <div style={{
+          fontFamily: "'JetBrains Mono',monospace",
+          fontSize: '1.85rem', fontWeight: 800,
+          color: '#D4A843', textAlign: 'center',
+          marginBottom: 12,
+        }}>
           {fmtBalance(bet)} ᚙ
         </div>
 
@@ -308,9 +597,9 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             <input
               type="range" min={MIN_BET} max={maxBet} step={1000} value={bet}
               onChange={(e) => setBet(Number(e.target.value))}
-              style={{ width: '100%', marginBottom: 12, accentColor: 'var(--accent, #F5C842)' }}
+              style={{ width: '100%', marginBottom: 12, accentColor: '#D4A843' }}
             />
-            {/* Быстрый выбор — 4 кнопки в один ряд */}
+            {/* Быстрый выбор — 4 кнопки */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 6, marginBottom: 20 }}>
               {QUICK_BETS.map((v) => {
                 const capped = Math.min(v, maxBet);
@@ -321,11 +610,12 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                     key={v}
                     onClick={() => setBet(capped)}
                     style={{
-                      padding: '8px 4px', borderRadius: 10, fontSize: 11, fontWeight: 700,
-                      cursor: 'pointer', border: '1px solid',
-                      background: active ? 'rgba(245,200,66,0.12)' : 'var(--bg-card, #1C2030)',
-                      color: unavailable ? '#3A3F58' : active ? 'var(--accent, #F5C842)' : 'var(--text-secondary, #8B92A8)',
-                      borderColor: active ? 'rgba(245,200,66,0.3)' : 'var(--border, rgba(255,255,255,0.07))',
+                      padding: '8px 4px', borderRadius: 10,
+                      fontSize: '.68rem', fontWeight: 700,
+                      cursor: 'pointer',
+                      background: active ? 'rgba(212,168,67,.15)' : 'rgba(255,255,255,.04)',
+                      color: unavailable ? '#3A3025' : active ? '#F0C85A' : '#7A7875',
+                      border: active ? '.5px solid rgba(212,168,67,.35)' : '.5px solid rgba(255,255,255,.08)',
                       fontFamily: 'inherit', textAlign: 'center' as const,
                     }}
                   >
@@ -336,31 +626,60 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             </div>
           </>
         ) : (
-          <div style={{ textAlign: 'center', color: 'var(--red, #FF4D6A)', fontSize: 13, padding: '8px 0 20px', marginBottom: 4 }}>
+          <div style={{
+            textAlign: 'center', color: '#FF4D6A',
+            fontSize: '.8rem', padding: '8px 0 20px', marginBottom: 4,
+          }}>
             {t.battles.needMin(fmtBalance(MIN_BET))}
           </div>
         )}
 
-        {/* Цвет — 3 колонки как в GameSetupModal */}
+        {/* Цвет — 3 колонки */}
         <div style={bmSectionLbl}>{t.battles.colorChoice}</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 20 }}>
           {(['random', 'white', 'black'] as const).map((c) => (
-            <button key={c} onClick={() => setColor(c)} style={bmColorBtn(color === c)}>
+            <button
+              key={c}
+              onClick={() => setColor(c)}
+              style={{
+                padding: '18px 8px', borderRadius: 14,
+                cursor: 'pointer', minHeight: 76,
+                background: color === c ? 'rgba(212,168,67,.12)' : 'rgba(255,255,255,.03)',
+                border: color === c ? '.5px solid rgba(212,168,67,.5)' : '.5px solid rgba(255,255,255,.08)',
+                color: color === c ? '#F0C85A' : '#7A7875',
+                textAlign: 'center' as const,
+                transition: 'all .15s', fontFamily: 'inherit',
+                transform: color === c ? 'scale(1.04)' : 'scale(1)',
+              }}
+            >
               <span style={{ fontSize: 22, display: 'block', marginBottom: 5 }}>
                 {c === 'random' ? '🎲' : c === 'white' ? '♔' : '♚'}
               </span>
-              <span style={{ fontSize: 11, fontWeight: 700 }}>
+              <span style={{ fontSize: '.68rem', fontWeight: 700 }}>
                 {c === 'random' ? t.battles.colorRandom : c === 'white' ? t.battles.colorWhite : t.battles.colorBlack}
               </span>
             </button>
           ))}
         </div>
 
-        {/* Время — 3×2 сетка как в GameSetupModal */}
+        {/* Время — 3×2 сетка */}
         <div style={bmSectionLbl}>{t.battles.timeControl}</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 20 }}>
           {DURATIONS.map((d) => (
-            <button key={d.value} onClick={() => setDuration(d.value)} style={bmTimeBtn(duration === d.value)}>
+            <button
+              key={d.value}
+              onClick={() => setDuration(d.value)}
+              style={{
+                padding: '14px 8px', borderRadius: 12,
+                cursor: 'pointer', minHeight: 68,
+                background: duration === d.value ? 'rgba(123,97,255,.15)' : 'rgba(255,255,255,.03)',
+                border: duration === d.value ? '.5px solid rgba(123,97,255,.4)' : '.5px solid rgba(255,255,255,.08)',
+                color: duration === d.value ? '#9B85FF' : '#7A7875',
+                fontSize: '.78rem', fontWeight: 700,
+                transition: 'all .15s', fontFamily: 'inherit',
+                textAlign: 'center' as const,
+              }}
+            >
               <span style={{ fontSize: 16, display: 'block', marginBottom: 2 }}>{d.icon}</span>
               {d.label}
             </button>
@@ -368,9 +687,33 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         </div>
 
         {/* Публичный / Приватный */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 20 }}>
-          <button onClick={() => setIsPublic(true)} style={bmTypeBtn(isPublic)}>{t.battles.public_}</button>
-          <button onClick={() => setIsPublic(false)} style={bmTypeBtn(!isPublic)}>{t.battles.private_}</button>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 22 }}>
+          <button
+            onClick={() => setIsPublic(true)}
+            style={{
+              padding: 12, borderRadius: 12, cursor: 'pointer',
+              background: isPublic ? 'rgba(212,168,67,.15)' : 'rgba(255,255,255,.03)',
+              border: isPublic ? '.5px solid rgba(212,168,67,.35)' : '.5px solid rgba(255,255,255,.08)',
+              color: isPublic ? '#F0C85A' : '#7A7875',
+              fontSize: '.75rem', fontWeight: 700,
+              fontFamily: 'inherit', textAlign: 'center' as const,
+            }}
+          >
+            {t.battles.public_}
+          </button>
+          <button
+            onClick={() => setIsPublic(false)}
+            style={{
+              padding: 12, borderRadius: 12, cursor: 'pointer',
+              background: !isPublic ? 'rgba(212,168,67,.15)' : 'rgba(255,255,255,.03)',
+              border: !isPublic ? '.5px solid rgba(212,168,67,.35)' : '.5px solid rgba(255,255,255,.08)',
+              color: !isPublic ? '#F0C85A' : '#7A7875',
+              fontSize: '.75rem', fontWeight: 700,
+              fontFamily: 'inherit', textAlign: 'center' as const,
+            }}
+          >
+            {t.battles.private_}
+          </button>
         </div>
 
         {/* Кнопка создания */}
@@ -379,14 +722,18 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           disabled={loading || !canCreate}
           style={{
             width: '100%', padding: '18px 14px',
-            background: canCreate ? 'var(--accent, #F5C842)' : '#2A2F48',
-            border: 'none', borderRadius: 14,
-            color: canCreate ? 'var(--bg, #0B0D11)' : 'var(--text-muted, #4A5270)',
-            fontSize: 16, fontWeight: 800,
+            background: canCreate
+              ? 'linear-gradient(135deg,#D4A843,#F0C85A)'
+              : 'rgba(255,255,255,.06)',
+            border: canCreate ? 'none' : '.5px solid rgba(255,255,255,.08)',
+            borderRadius: 14,
+            color: canCreate ? '#0D0D12' : '#3A3025',
+            fontSize: '1rem', fontWeight: 800,
             cursor: canCreate && !loading ? 'pointer' : 'not-allowed',
             fontFamily: 'inherit',
             opacity: loading ? 0.7 : 1,
-            boxShadow: canCreate ? '0 4px 20px rgba(245,200,66,0.25)' : 'none',
+            boxShadow: canCreate ? '0 4px 20px rgba(212,168,67,.30)' : 'none',
+            transition: 'all .15s',
           }}
         >
           {loading ? t.battles.creating : t.battles.createBtn}
@@ -396,115 +743,23 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   );
 };
 
-// ── Styles ──
-const segStyle: React.CSSProperties = {
-  display: 'flex', margin: '4px 18px 10px',
-  background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.07)',
-  borderRadius: 10, padding: 3,
+// ── Общие стили ──
+const sectionLabel: React.CSSProperties = {
+  fontSize: '.58rem',
+  fontWeight: 700,
+  color: '#7A7875',
+  textTransform: 'uppercase',
+  letterSpacing: '.14em',
+  padding: '14px .85rem 8px',
+  display: 'flex',
+  alignItems: 'center',
 };
-const segBtn = (active: boolean): React.CSSProperties => ({
-  flex: 1, padding: 8, border: 'none', borderRadius: 8,
-  fontFamily: 'inherit', fontSize: 12, fontWeight: 600,
-  color: active ? 'var(--text-primary, #F0F2F8)' : 'var(--text-secondary, #8B92A8)',
-  background: active ? 'var(--bg-input, #232840)' : 'transparent',
-  cursor: 'pointer', transition: 'all .2s',
-});
-const bcardStyle: React.CSSProperties = {
-  margin: '0 18px 10px', background: 'var(--bg-card, #1C2030)',
-  border: '1px solid rgba(255,255,255,0.07)',
-  borderRadius: 18, overflow: 'hidden', cursor: 'pointer',
-};
-const bhotStyle: React.CSSProperties = {
-  display: 'flex', alignItems: 'center', gap: 6,
-  padding: '6px 14px',
-  background: 'linear-gradient(90deg,rgba(245,200,66,0.1),transparent)',
-  borderBottom: '1px solid rgba(245,200,66,0.1)',
-  fontSize: 10, fontWeight: 700, color: 'var(--accent, #F5C842)', letterSpacing: '.06em', textTransform: 'uppercase',
-};
-const wcardStyle: React.CSSProperties = {
-  margin: '0 18px 8px', background: 'var(--bg-card, #1C2030)',
-  border: '1px solid rgba(255,255,255,0.07)',
-  borderRadius: 18, padding: 14,
-  display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer',
-};
-const fabStyle: React.CSSProperties = {
-  position: 'fixed', bottom: 'max(80px, calc(70px + env(safe-area-inset-bottom, 14px)))',
-  right: 18, width: 48, height: 48,
-  borderRadius: '50%', background: 'var(--accent, #F5C842)', color: 'var(--bg, #0B0D11)',
-  fontSize: 22, fontWeight: 800, display: 'flex', alignItems: 'center',
-  justifyContent: 'center', cursor: 'pointer',
-  boxShadow: '0 4px 20px rgba(245,200,66,0.4)', border: 'none', zIndex: 49,
-};
-const secStyle: React.CSSProperties = {
-  fontSize: 10, fontWeight: 700, letterSpacing: '.09em',
-  textTransform: 'uppercase', color: 'var(--text-muted, #4A5270)', padding: '16px 18px 8px',
-};
-const watchBtn: React.CSSProperties = {
-  padding: '6px 12px', background: 'var(--bg-input, #232840)', color: 'var(--text-primary, #F0F2F8)',
-  border: '1px solid rgba(255,255,255,0.13)', borderRadius: 10,
-  fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-};
-const acceptBtn: React.CSSProperties = {
-  padding: '8px 14px', background: 'var(--accent, #F5C842)', color: 'var(--bg, #0B0D11)',
-  border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600,
-  cursor: 'pointer', fontFamily: 'inherit',
-};
-const tagGold: React.CSSProperties = {
-  display: 'inline-flex', padding: '3px 8px',
-  background: 'rgba(245,200,66,0.12)', color: 'var(--accent, #F5C842)',
-  borderRadius: 6, fontSize: 10, fontWeight: 700,
-};
-const tbaStyle: React.CSSProperties = {
-  width: 36, height: 36, borderRadius: 11, background: 'var(--bg-card, #1C2030)',
-  border: '1px solid rgba(255,255,255,0.13)', display: 'flex',
-  alignItems: 'center', justifyContent: 'center', fontSize: 16,
-  cursor: 'pointer', color: 'var(--text-secondary, #8B92A8)',
-};
-// ── Стили модала создания батла (соответствует GameSetupModal) ──
-const bmOverlayStyle: React.CSSProperties = {
-  position: 'fixed', inset: 0, zIndex: 200,
-  background: 'rgba(0,0,0,0.70)',
-  backdropFilter: 'blur(8px)',
-  WebkitBackdropFilter: 'blur(8px)',
-  display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-};
-const bmSheetStyle: React.CSSProperties = {
-  width: '100%', maxWidth: 480,
-  background: 'var(--bg-card, #13161F)',
-  border: '1px solid rgba(255,255,255,0.1)',
-  borderBottom: 'none',
-  borderRadius: '24px 24px 0 0',
-  padding: '16px 18px',
-  paddingBottom: 'max(24px, env(safe-area-inset-bottom, 24px))',
-  maxHeight: '88vh', overflowY: 'auto',
-};
-const bmHandleStyle: React.CSSProperties = {
-  width: 36, height: 4, background: '#2A2F48', borderRadius: 2, margin: '4px auto 0',
-};
+
 const bmSectionLbl: React.CSSProperties = {
-  fontSize: 10, fontWeight: 700, letterSpacing: '.09em',
-  textTransform: 'uppercase', color: 'var(--text-muted, #4A5270)', marginBottom: 10,
+  fontSize: '.58rem',
+  fontWeight: 700,
+  letterSpacing: '.14em',
+  textTransform: 'uppercase',
+  color: '#7A7875',
+  marginBottom: 10,
 };
-const bmColorBtn = (active: boolean): React.CSSProperties => ({
-  padding: '18px 8px', borderRadius: 14, cursor: 'pointer', minHeight: 76,
-  background: active ? 'rgba(245,200,66,0.1)' : 'var(--bg-card, #1C2030)',
-  border: `2px solid ${active ? 'var(--accent, #F5C842)' : 'var(--border, rgba(255,255,255,0.07))'}`,
-  color: active ? 'var(--accent, #F5C842)' : 'var(--text-secondary, #8B92A8)',
-  textAlign: 'center', transition: 'all .15s', fontFamily: 'inherit',
-  transform: active ? 'scale(1.04)' : 'scale(1)',
-});
-const bmTimeBtn = (active: boolean): React.CSSProperties => ({
-  padding: '14px 8px', borderRadius: 12, cursor: 'pointer', minHeight: 68,
-  background: active ? 'rgba(123,97,255,0.15)' : 'var(--bg-card, #1C2030)',
-  border: `1px solid ${active ? 'rgba(123,97,255,0.4)' : 'var(--border, rgba(255,255,255,0.07))'}`,
-  color: active ? '#9B85FF' : 'var(--text-secondary, #8B92A8)',
-  fontSize: 13, fontWeight: 700, transition: 'all .15s', fontFamily: 'inherit',
-  textAlign: 'center' as const,
-});
-const bmTypeBtn = (active: boolean): React.CSSProperties => ({
-  padding: 12, borderRadius: 12, cursor: 'pointer',
-  background: active ? 'rgba(245,200,66,0.1)' : 'var(--bg-card, #1C2030)',
-  border: `1px solid ${active ? 'rgba(245,200,66,0.3)' : 'var(--border, rgba(255,255,255,0.07))'}`,
-  color: active ? 'var(--accent, #F5C842)' : 'var(--text-secondary, #8B92A8)',
-  fontSize: 12, fontWeight: 600, fontFamily: 'inherit', textAlign: 'center' as const,
-});

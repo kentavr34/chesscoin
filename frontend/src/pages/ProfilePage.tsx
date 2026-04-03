@@ -3,10 +3,6 @@ import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { PageLayout, useInfoPopup, InfoPopup } from '@/components/layout/PageLayout';
 import { Avatar } from '@/components/ui/Avatar';
 import { AvatarCropModal } from '@/components/ui/AvatarCropModal';
-import { Button } from '@/components/ui/Button';
-import { Text } from '@/components/ui/Text';
-import { Heading } from '@/components/ui/Heading';
-import { Card } from '@/components/ui/Card';
 import { useUserStore } from '@/store/useUserStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { useT } from '@/i18n/useT';
@@ -276,18 +272,18 @@ export const ProfilePage: React.FC = () => {
           {user?.countryMember?.country?.flag && (
             <span style={{ fontSize: 20 }}>{user?.countryMember.country.flag}</span>
           )}
-          <Heading level="h2">{user.firstName} {user.lastName ?? ''}</Heading>
+          <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#EAE2CC' }}>{user.firstName} {user.lastName ?? ''}</span>
         </div>
-        <Text variant="caption" color="secondary" style={{ marginTop: 3, textAlign: 'center' }}>@{user.username ?? 'unknown'}</Text>
+        <div style={{ marginTop: 3, textAlign: 'center', fontSize: '.72rem', color: '#5A5248' }}>@{user.username ?? 'unknown'}</div>
         {/* 2.3 Кнопка "Сразиться" на чужом профиле */}
         {!isOwnProfile && (
-          <Button variant="secondary" size="sm" style={{ marginTop: 10 }} onClick={() => navigate('/battles', { state: { challengeUserId: viewedUserId } })}>
+          <button onClick={() => navigate('/battles', { state: { challengeUserId: viewedUserId } })} style={{ marginTop: 10, padding: '10px 20px', background: 'linear-gradient(135deg,#2A1E08,#4A3810)', border: '.5px solid rgba(212,168,67,.42)', borderRadius: 12, color: '#F0C85A', fontSize: '.85rem', fontWeight: 900, cursor: 'pointer', fontFamily: 'inherit' }}>
             ⚔️ {t.profile.challengeBtn ?? 'Challenge'}
-          </Button>
+          </button>
         )}
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8, justifyContent: 'center' }}>
           <span style={tagGold}>{leagueEmoji[user.league]} #1</span>
-          <span style={tagVi}>ELO {user.elo}</span>
+          <span style={{ display: 'inline-flex', padding: '3px 8px', background: 'rgba(74,158,255,.12)', color: '#82CFFF', borderRadius: 6, fontSize: 10, fontWeight: 700, border: '.5px solid rgba(74,158,255,.3)' }}>ELO {user.elo}</span>
           {user?.countryMember?.isCommander && (
             <span style={{ ...tagGr, background: 'linear-gradient(135deg, rgba(245,200,66,0.15), rgba(255,215,0,0.08))', color: '#FFD700', borderColor: 'rgba(255,215,0,0.35)', fontWeight: 800 }}>
               👑 {t.profile.commanderBadge}
@@ -308,35 +304,43 @@ export const ProfilePage: React.FC = () => {
       </div>
 
       {/* Balance — N7 */}
-      <Card padding="md" style={{ margin: '12px 18px 0', flexDirection: 'column', gap: 10, display: 'flex' }}>
+      <div style={{ margin: '12px 18px 0', padding: '14px 16px', background: 'linear-gradient(135deg,#141018,#0F0E18)', border: '.5px solid rgba(74,158,255,.18)', borderRadius: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <Text variant="caption" color="muted" style={{ marginBottom: 3 }}>{t.profile.balance}</Text>
-            <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 22, fontWeight: 800, color: 'var(--accent, #F5C842)' }}>
-              {fmtBalance(user.balance)} <span style={{ fontSize: 13, opacity: .5 }}>ᚙ</span>
+            <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase' as const, letterSpacing: '.14em', marginBottom: 4 }}>{t.profile.balance}</div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+              <span style={{ fontFamily: "'Unbounded',sans-serif", fontSize: '1.4rem', fontWeight: 900, color: '#D4A843' }}>
+                {fmtBalance(user.balance)}
+              </span>
+              <span style={{ fontSize: 13, color: '#D4A843', opacity: .6 }}>ᚙ</span>
             </div>
           </div>
-          <Button variant="tertiary" size="sm" onClick={() => navigate('/referrals')} title={t.profile.txHistory} style={{ width: 44, height: 44, padding: 0, minWidth: 'unset' }}>👜</Button>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+            <div onClick={() => navigate('/transactions')} style={{ fontSize: '.65rem', color: '#4A9EFF', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
+              История <span>›</span>
+            </div>
+            <button onClick={() => navigate('/referrals')} title={t.profile.txHistory} style={{ width: 36, height: 36, padding: 0, background: 'rgba(74,158,255,.08)', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, fontSize: 16, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>👜</button>
+          </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          <Button variant="secondary" size="sm" onClick={() => navigate('/shop')}>{t.profile.shop}</Button>
-          <Button variant="secondary" size="sm" onClick={() => navigate('/referrals')}>{t.profile.referrals} →</Button>
+          <button onClick={() => navigate('/shop')} style={{ padding: '8px 10px', background: 'rgba(74,158,255,.08)', color: '#82CFFF', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.profile.shop}</button>
+          <button onClick={() => navigate('/referrals')} style={{ padding: '8px 10px', background: 'rgba(74,158,255,.08)', color: '#82CFFF', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.profile.referrals} →</button>
         </div>
-      </Card>
+      </div>
 
       {/* Чемпион месяца */}
       {user?.isMonthlyChampion && (
-        <Card padding="md" style={{ margin: '8px 18px 0', background: 'linear-gradient(135deg, rgba(255,215,0,0.12), rgba(245,200,66,0.06))', border: '1px solid rgba(255,215,0,0.35)', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ margin: '8px 18px 0', padding: '12px 14px', background: 'linear-gradient(135deg, rgba(255,215,0,0.1), rgba(74,158,255,0.06))', border: '.5px solid rgba(255,215,0,0.3)', borderRadius: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 24, animation: 'pulse 2s ease-in-out infinite' }}>👑</span>
           <div style={{ flex: 1 }}>
-            <Text variant="body" weight="bold" color="accent" style={{ color: '#FFD700' }}>
+            <div style={{ fontSize: '.8rem', fontWeight: 800, color: '#FFD700' }}>
               {t.profile.monthlyChampion ?? 'Monthly Champion'}
-            </Text>
-            <Text variant="caption" color="secondary" style={{ marginTop: 2 }}>
+            </div>
+            <div style={{ fontSize: '.65rem', color: '#7A7875', marginTop: 2 }}>
               ELO rating {user?.monthlyChampionAt ? `· ${new Date(user?.monthlyChampionAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}` : ''}
-            </Text>
+            </div>
           </div>
-        </Card>
+        </div>
       )}
 
       {/* League progress bar */}
@@ -356,7 +360,7 @@ export const ProfilePage: React.FC = () => {
         const progress = info.next === null ? 100 : range > 0n ? Math.min(100, Number((bal - info.threshold) * 100n / range)) : 100;
         const remaining = info.next ? info.nextThreshold - bal : 0n;
         return (
-          <div style={{ margin: '0 18px 10px', padding: '12px 16px', background: 'var(--bg-card, #13161E)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16 }}>
+          <div style={{ margin: '0 18px 10px', padding: '12px 16px', background: 'linear-gradient(135deg,#141018,#0F0E18)', border: '.5px solid rgba(74,158,255,.18)', borderRadius: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent, #F5C842)' }}>{leagueEmoji[user.league]} {t.profile.league(user.league)}</div>
               {info.next ? (
@@ -377,9 +381,7 @@ export const ProfilePage: React.FC = () => {
       <div style={ptabsStyle}>
         {TABS.map(({ id, label }) => (
           <button key={id} onClick={() => setTab(id)} style={ptab(tab === id)} title={label}>
-            <Text variant="caption" weight={tab === id ? "bold" : "normal"} color={tab === id ? "accent" : "secondary"} style={{ whiteSpace: 'nowrap' }}>
-              {label}
-            </Text>
+            {label}
           </button>
         ))}
       </div>
@@ -387,14 +389,14 @@ export const ProfilePage: React.FC = () => {
       {/* Info tab */}
       {tab === 'info' && (
         <>
-          <Text variant="caption" color="muted" weight="bold" style={{ fontSize: 10, letterSpacing: '.09em', textTransform: 'uppercase', padding: '16px 18px 8px' }}>{t.profile.stats}</Text>
+          <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem' }}>{t.profile.stats}</div>
           <div style={{ display: 'flex', justifyContent: 'space-around', padding: '12px 18px' }}>
             <CircStat value={wins}   pct={winRate}  color="var(--green, #00D68F)" label={t.profile.wins}   />
             <CircStat value={losses} pct={lossRate} color="var(--red, #FF4D6A)" label={t.profile.losses} />
             <CircStat value={draws}  pct={drawRate} color="#9B85FF" label={t.profile.draws}  />
           </div>
 
-          <div style={{ margin: '0 18px', background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: 12 }}>
+          <div style={{ margin: '0 18px', background: 'linear-gradient(135deg,#141018,#0F0E18)', border: '.5px solid rgba(74,158,255,.18)', borderRadius: 14, padding: 12 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
               <div style={microLbl}>{t.profile.eloChart}</div>
               <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono',monospace", color: '#9B85FF', fontWeight: 700 }}>
@@ -460,16 +462,16 @@ export const ProfilePage: React.FC = () => {
             <StatCard val={user.winStreak ?? 0} lbl={t.profile.streak} color="var(--accent, #F5C842)" />
           </div>
 
-          <Text variant="caption" color="muted" weight="bold" style={{ fontSize: 10, letterSpacing: '.09em', textTransform: 'uppercase', padding: '16px 18px 8px' }}>{t.profile.refSection}</Text>
-          <Card padding="md" style={{ margin: '0 18px', display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ flex: 1 }}>
-              <Text variant="body" weight="bold">{t.profile.refLink}</Text>
-              <Text variant="caption" color="muted" style={{ fontFamily: "'JetBrains Mono',monospace", marginTop: 5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+          <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem' }}>{t.profile.refSection}</div>
+          <div style={{ margin: '0 18px', padding: '12px 14px', background: 'linear-gradient(135deg,#141018,#0F0E18)', border: '.5px solid rgba(74,158,255,.18)', borderRadius: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: '.75rem', fontWeight: 800, color: '#EAE2CC' }}>{t.profile.refLink}</div>
+              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '.62rem', color: '#5A5248', marginTop: 5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 t.me/chessgamecoin_bot?start=ref_{user.telegramId}
-              </Text>
+              </div>
             </div>
-            <Button variant="primary" size="sm">{t.profile.invite}</Button>
-          </Card>
+            <button onClick={() => {}} style={{ padding: '7px 14px', background: 'rgba(74,158,255,.15)', color: '#82CFFF', border: '.5px solid rgba(74,158,255,.35)', borderRadius: 9, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>{t.profile.invite}</button>
+          </div>
         </>
       )}
 
@@ -484,7 +486,7 @@ export const ProfilePage: React.FC = () => {
         return (
           <>
             {/* Последние партии */}
-            <Text variant="caption" color="muted" weight="bold" style={{ fontSize: 10, letterSpacing: '.09em', textTransform: 'uppercase', padding: '16px 18px 8px' }}>{t.profile.recentGames}</Text>
+            <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem' }}>{t.profile.recentGames}</div>
             {recentGames.length === 0 ? (
               <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: '24px 0', fontSize: 13 }}>
                 {t.profile.noGamesPlayed}
@@ -502,8 +504,8 @@ export const ProfilePage: React.FC = () => {
                   return (
                     <div key={g.sessionId} style={{
                       display: 'flex', alignItems: 'center', gap: 10,
-                      padding: '10px 12px', background: 'var(--bg-card,#1C2030)',
-                      border: `1px solid ${isWon ? 'rgba(0,214,143,0.12)' : isDraw ? 'rgba(155,133,255,0.12)' : 'rgba(255,77,106,0.10)'}`,
+                      padding: '10px 12px', background: 'linear-gradient(135deg,#141018,#0F0E18)',
+                      border: `.5px solid ${isWon ? 'rgba(0,214,143,0.18)' : isDraw ? 'rgba(74,158,255,0.18)' : 'rgba(255,77,106,0.16)'}`,
                       borderRadius: 14,
                     }}>
                       {/* Цвет результата */}
@@ -531,7 +533,7 @@ export const ProfilePage: React.FC = () => {
 
                       {/* Результат + кнопка replay */}
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-                        <span style={{ fontSize: 11, fontWeight: 800, color: statusColor }}>{statusLabel}</span>
+                        <span style={{ fontSize: 10, fontWeight: 800, color: isWon ? '#fff' : isDraw ? '#fff' : '#fff', background: isWon ? 'rgba(0,214,143,.18)' : isDraw ? 'rgba(74,158,255,.18)' : 'rgba(255,77,106,.18)', border: `.5px solid ${isWon ? 'rgba(0,214,143,.35)' : isDraw ? 'rgba(74,158,255,.35)' : 'rgba(255,77,106,.35)'}`, borderRadius: 5, padding: '2px 7px' }}>{statusLabel}</span>
                         {earned && isWon && (
                           <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono',monospace", color: 'var(--accent,#F5C842)' }}>+{earned} ᚙ</span>
                         )}
@@ -549,7 +551,7 @@ export const ProfilePage: React.FC = () => {
             )}
 
             {/* История транзакций — под играми */}
-            <Text variant="caption" color="muted" weight="bold" style={{ fontSize: 10, letterSpacing: '.09em', textTransform: 'uppercase', padding: '16px 18px 8px', marginTop: 8 }}>💸 {t.profile.txHistory}</Text>
+            <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem', marginTop: 8 }}>💸 {t.profile.txHistory}</div>
             {transactions.length === 0 ? (
               <div style={{ textAlign: 'center', color: 'var(--text-muted,#4A5270)', padding: 24, fontSize: 13 }}>{t.profile.noTx}</div>
             ) : (
@@ -573,10 +575,10 @@ export const ProfilePage: React.FC = () => {
                   REFUND: '↩️',
                 };
                 return (
-                  <Card key={tx.id} padding="md" style={{ margin: '4px 18px 0', display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div key={tx.id} style={{ margin: '4px 18px 0', padding: '10px 14px', background: 'linear-gradient(135deg,#141018,#0F0E18)', border: '.5px solid rgba(74,158,255,.18)', borderRadius: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
                     <span style={{ fontSize: 20 }}>{TX_ICON[tx.type] ?? (isPos ? '📈' : '📉')}</span>
                     <div style={{ flex: 1 }}>
-                      <Text variant="body" weight="bold">
+                      <div style={{ fontSize: '.8rem', fontWeight: 700, color: '#EAE2CC' }}>
                         {
                           tx.type === 'BATTLE_WIN'         ? 'Battle win'         :
                           tx.type === 'BOT_WIN'            ? 'Bot win'            :
@@ -600,13 +602,13 @@ export const ProfilePage: React.FC = () => {
                           tx.type === 'REFUND'             ? 'Refund'             :
                           tx.type
                         }
-                      </Text>
-                      <Text variant="caption" color="secondary" style={{ marginTop: 2 }}>{fmtDate(tx.createdAt)}</Text>
+                      </div>
+                      <div style={{ fontSize: '.62rem', color: '#7A7875', marginTop: 2 }}>{fmtDate(tx.createdAt)}</div>
                     </div>
-                    <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 700, color: isPos ? 'var(--green,#00D68F)' : 'var(--red,#FF4D6A)' }}>
+                    <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 700, color: isPos ? '#00D68F' : '#FF4D6A' }}>
                       {isPos ? '+' : ''}{fmtBalance(tx.amount)} ᚙ
                     </span>
-                  </Card>
+                  </div>
                 );
               })
             )}
@@ -617,7 +619,7 @@ export const ProfilePage: React.FC = () => {
       {/* Saves tab */}
       {tab === 'saves' && (
         <>
-          <Text variant="caption" color="muted" weight="bold" style={{ fontSize: 10, letterSpacing: '.09em', textTransform: 'uppercase', padding: '16px 18px 8px' }}>{t.profile.savedGames}</Text>
+          <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem' }}>{t.profile.savedGames}</div>
           {savedGames.length === 0 ? (
             <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: 32, fontSize: 13 }}>
               {t.profile.noSaves}
@@ -631,41 +633,41 @@ export const ProfilePage: React.FC = () => {
                 const p2 = sides[1]?.player;
                 const winner = sides.find((sd) => sd.status === 'WON');
                 return (
-                  <Card key={sg.id} padding="md">
+                  <div key={sg.id} style={{ padding: '12px 14px', background: 'linear-gradient(135deg,#141018,#0F0E18)', border: '.5px solid rgba(74,158,255,.18)', borderRadius: 14 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
                         <Avatar user={p1} size="s" />
-                        <Text variant="body" weight="bold">{p1?.firstName ?? '?'}</Text>
+                        <span style={{ fontSize: '.8rem', fontWeight: 800, color: '#EAE2CC' }}>{p1?.firstName ?? '?'}</span>
                       </div>
-                      <Text variant="body" color="secondary" style={{ fontFamily: "'JetBrains Mono',monospace" }}>vs</Text>
+                      <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '.7rem', color: '#5A5248' }}>vs</span>
                       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
-                        <Text variant="body" weight="bold" style={{ textAlign: 'right' }}>{p2?.firstName ?? '?'}</Text>
+                        <span style={{ fontSize: '.8rem', fontWeight: 800, color: '#EAE2CC', textAlign: 'right' }}>{p2?.firstName ?? '?'}</span>
                         <Avatar user={p2} size="s" />
                       </div>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: s?.pgn ? 8 : 0 }}>
-                      <Text variant="caption" color="muted">
+                      <span style={{ fontSize: '.65rem', color: '#5A5248' }}>
                         {s?.type ?? ''} · {s?.finishedAt ? fmtDate(s.finishedAt) : ''}
-                      </Text>
+                      </span>
                       {winner && (
-                        <Text variant="caption" weight="bold" style={{ color: 'var(--green, #00D68F)' }}>
+                        <span style={{ fontSize: '.65rem', fontWeight: 700, color: '#00D68F' }}>
                           🏆 {winner.player?.firstName ?? 'Unknown'}
-                        </Text>
+                        </span>
                       )}
-                      <Button variant="tertiary" size="sm" style={{ padding: '2px 6px', minWidth: 'unset', height: 'auto' }}
+                      <button style={{ fontSize: '.62rem', padding: '2px 7px', background: 'rgba(204,96,96,.1)', color: '#CC6060', border: '.5px solid rgba(204,96,96,.25)', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}
                         onClick={() => s && warsApi.unsaveGame(s.id).then(() => setSavedGames(g => g.filter(x => x.id !== sg.id)))}
                       >
                         ✕ remove
-                      </Button>
+                      </button>
                     </div>
                     {s?.pgn && (
-                      <Button variant="secondary" size="sm" fullWidth style={{ marginTop: 8 }}
+                      <button style={{ width: '100%', marginTop: 8, padding: '8px', background: 'rgba(74,158,255,.08)', color: '#82CFFF', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
                         onClick={() => setReplayGame({ pgn: s.pgn!, title: `${p1?.firstName ?? '?'} vs ${p2?.firstName ?? '?'}`, sessionId: s.id })}
                       >
                         ♟ Replay game
-                      </Button>
+                      </button>
                     )}
-                  </Card>
+                  </div>
                 );
               })}
             </div>
@@ -679,30 +681,31 @@ export const ProfilePage: React.FC = () => {
           {/* Турнирные бейджи */}
           {(user?.tournamentBadges?.length ?? 0) > 0 && (
             <>
-              <Text variant="caption" color="muted" weight="bold" style={{ fontSize: 10, letterSpacing: '.09em', textTransform: 'uppercase', padding: '16px 18px 8px' }}>🏆 Tournament wins</Text>
+              <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem' }}>🏆 Tournament wins</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 18px' }}>
                 {(user?.tournamentBadges as TournamentBadge[] | undefined)?.slice().reverse().map((badge, i: number) => {
                   const placeEmoji = badge.place === 1 ? '🥇' : badge.place === 2 ? '🥈' : '🥉';
                   const placeColor = badge.place === 1 ? '#FFD700' : badge.place === 2 ? '#C0C0C0' : '#CD7F32';
                   return (
-                    <Card key={i} padding="md" style={{
-                      display: 'flex', alignItems: 'center', gap: 12,
-                      background: `linear-gradient(135deg, ${placeColor}10, transparent)`,
-                      border: `1px solid ${placeColor}30`,
+                    <div key={i} style={{
+                      padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12,
+                      background: `linear-gradient(135deg,#141018,#0F0E18)`,
+                      border: `.5px solid ${placeColor}40`,
+                      borderRadius: 14,
                     }}>
                       <span style={{ fontSize: 28, flexShrink: 0 }}>{placeEmoji}</span>
                       <div style={{ flex: 1 }}>
-                        <Text variant="body" weight="bold">
+                        <div style={{ fontSize: '.8rem', fontWeight: 800, color: '#EAE2CC' }}>
                           {badge.place} place · {badge.tournamentName ?? badge.name}
-                        </Text>
-                        <Text variant="caption" color="secondary" style={{ marginTop: 2 }}>
+                        </div>
+                        <div style={{ fontSize: '.62rem', color: '#7A7875', marginTop: 2 }}>
                           {badge.type} · {badge.date ? new Date(badge.date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : ''}
-                        </Text>
+                        </div>
                       </div>
                       <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, color: placeColor }}>
                         +{badge.prize ? (Number(BigInt(badge.prize)) / 1000).toFixed(0) + 'K' : '—'} ᚙ
                       </div>
-                    </Card>
+                    </div>
                   );
                 })}
               </div>
@@ -728,11 +731,11 @@ export const ProfilePage: React.FC = () => {
             const earnedCount = Object.keys(earned).length;
             return (
               <>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 10, fontWeight: 700, letterSpacing: '.09em', textTransform: 'uppercase', color: 'var(--text-muted, #4A5270)', padding: '16px 18px 8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '.58rem', fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: '#7A7875', padding: '.9rem .85rem .45rem' }}>
                   <span>🎖 {t.profile.tabs.achievements}</span>
-                  <Text variant="caption" color="secondary" weight="bold">
+                  <span style={{ color: '#4A9EFF', fontWeight: 700 }}>
                     {earnedCount}/{ACHS.length}
-                  </Text>
+                  </span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8, padding: '0 18px' }}>
                   {ACHS.map(a => {
@@ -741,12 +744,12 @@ export const ProfilePage: React.FC = () => {
                       <div key={a.id} title={a.desc} style={{
                         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
                         padding: '10px 4px', borderRadius: 12, textAlign: 'center',
-                        background: done ? 'rgba(245,200,66,0.07)' : 'var(--bg-card, #1C2030)',
-                        border: `1px solid ${done ? 'rgba(245,200,66,0.25)' : 'rgba(255,255,255,0.05)'}`,
+                        background: done ? 'rgba(74,158,255,0.08)' : 'rgba(255,255,255,.03)',
+                        border: `.5px solid ${done ? 'rgba(74,158,255,0.3)' : 'rgba(255,255,255,0.06)'}`,
                         opacity: done ? 1 : 0.45,
                       }}>
                         <span style={{ fontSize: 22 }}>{a.icon}</span>
-                        <span style={{ fontSize: 8, fontWeight: 700, color: done ? 'var(--accent, #F5C842)' : 'var(--text-muted, #4A5270)', lineHeight: 1.2 }}>
+                        <span style={{ fontSize: 8, fontWeight: 700, color: done ? '#82CFFF' : '#5A5248', lineHeight: 1.2 }}>
                           {a.name}
                         </span>
                         {done && earned[a.id] && (
@@ -763,7 +766,7 @@ export const ProfilePage: React.FC = () => {
           })()}
 
           {/* JARVIS бейджи */}
-          <Text variant="caption" color="muted" weight="bold" style={{ fontSize: 10, letterSpacing: '.09em', textTransform: 'uppercase', padding: '16px 18px 8px' }}>{t.profile.jarvisCerts}</Text>
+          <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem' }}>{t.profile.jarvisCerts}</div>
           {(user?.jarvisBadges?.length ?? 0) === 0 ? (
             <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: 32, fontSize: 13 }}>
               {t.profile.noJarvis}
@@ -781,25 +784,25 @@ export const ProfilePage: React.FC = () => {
                 };
                 const color = colors[badgeName] ?? '#9B85FF';
                 return (
-                  <Card key={i} padding="md" onClick={() => setSelectedBadge({ name: badgeName, date: dateStr })} style={{ background: 'linear-gradient(135deg,#1C2030,#13161F)', border: `1px solid ${color}40`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer', textAlign: 'center' }}>
+                  <div key={i} onClick={() => setSelectedBadge({ name: badgeName, date: dateStr })} style={{ padding: '12px 10px', background: 'linear-gradient(135deg,#141018,#0F0E18)', border: `.5px solid ${color}50`, borderRadius: 14, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer', textAlign: 'center' }}>
                     <div style={{ width: 52, height: 52, borderRadius: 14, background: `${color}18`, border: `2px solid ${color}60`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <span style={{ fontSize: 22 }}>🤖</span>
                     </div>
                     <div style={{ flex: 1 }}>
-                      <Text variant="caption" weight="bold" style={{ fontSize: 10, letterSpacing: '.1em', textTransform: 'uppercase', color, marginBottom: 3 }}>{t.gameResult.jarvisCert}</Text>
-                      <Text variant="body" weight="bold" style={{ fontSize: 16, marginTop: 0 }}>{badgeName}</Text>
-                      <Text variant="caption" color="secondary" style={{ marginTop: 2 }}>{t.profile.level} {lvlData?.level ?? '?'} · +{((lvlData?.reward ?? 0) / 1000).toFixed(0)}K ᚙ</Text>
+                      <div style={{ fontSize: '.55rem', letterSpacing: '.1em', textTransform: 'uppercase', color, marginBottom: 3, fontWeight: 700 }}>{t.gameResult.jarvisCert}</div>
+                      <div style={{ fontSize: '.95rem', fontWeight: 900, color: '#EAE2CC' }}>{badgeName}</div>
+                      <div style={{ fontSize: '.62rem', color: '#7A7875', marginTop: 2 }}>{t.profile.level} {lvlData?.level ?? '?'} · +{((lvlData?.reward ?? 0) / 1000).toFixed(0)}K ᚙ</div>
                       {dateStr && (
-                        <Text variant="caption" color="muted" style={{ marginTop: 4 }}>
+                        <div style={{ fontSize: '.55rem', color: '#5A5248', marginTop: 4 }}>
                           📅 {new Date(dateStr).toLocaleDateString()}
-                        </Text>
+                        </div>
                       )}
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <div style={{ fontSize: 18 }}>✓</div>
-                      <Text variant="caption" color="muted" style={{ marginTop: 2 }}>{t.profile.passed}</Text>
+                      <div style={{ fontSize: 18, color: color }}>✓</div>
+                      <div style={{ fontSize: '.55rem', color: '#5A5248', marginTop: 2 }}>{t.profile.passed}</div>
                     </div>
-                  </Card>
+                  </div>
                 );
               })}
             </div>
@@ -813,39 +816,39 @@ export const ProfilePage: React.FC = () => {
           onClick={(e) => e.target === e.currentTarget && setShowSettings(false)}
           style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
         >
-          <div style={{ width: '100%', maxWidth: 480, background: 'var(--bg-card, #13161F)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px 24px 0 0', padding: '20px 18px', paddingBottom: 'max(20px, env(safe-area-inset-bottom, 20px))' }}>
-            <div style={{ width: 36, height: 4, background: '#2A2F48', borderRadius: 2, margin: '0 auto 18px' }} />
+          <div style={{ width: '100%', maxWidth: 480, background: 'linear-gradient(180deg,#141018,#0F0E18)', border: '.5px solid rgba(74,158,255,.18)', borderRadius: '24px 24px 0 0', padding: '20px 18px', paddingBottom: 'max(20px, env(safe-area-inset-bottom, 20px))' }}>
+            <div style={{ width: 36, height: 4, background: 'rgba(255,255,255,.08)', borderRadius: 2, margin: '0 auto 18px' }} />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <Heading level="h3">⚙ {t.profile.settings.title}</Heading>
-              <Button variant="tertiary" size="sm" onClick={() => setShowSettings(false)} style={{ width: 44, height: 44, padding: 0, minWidth: 'unset' }}>✕</Button>
+              <span style={{ fontSize: '1rem', fontWeight: 900, color: '#EAE2CC' }}>⚙ {t.profile.settings.title}</span>
+              <button onClick={() => setShowSettings(false)} style={{ width: 36, height: 36, borderRadius: 9, background: 'rgba(255,255,255,.05)', border: '.5px solid rgba(255,255,255,.09)', color: '#7A7875', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {/* Язык */}
-              <Card padding="md" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Text variant="body" weight="bold">{t.profile.settings.language}</Text>
-                <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ padding: '12px 14px', background: 'rgba(255,255,255,.03)', border: '.5px solid rgba(255,255,255,.07)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '.8rem', fontWeight: 700, color: '#EAE2CC' }}>{t.profile.settings.language}</span>
+                <div style={{ display: 'flex', gap: 6 }}>
                   {(['en', 'ru'] as Lang[]).map((l) => (
-                    <Button key={l} variant={lang === l ? 'primary' : 'secondary'} size="sm" onClick={() => setLang(l)}>
+                    <button key={l} onClick={() => setLang(l)} style={{ padding: '5px 12px', background: lang === l ? 'rgba(74,158,255,.18)' : 'rgba(255,255,255,.04)', color: lang === l ? '#82CFFF' : '#5A5248', border: lang === l ? '.5px solid rgba(74,158,255,.3)' : '.5px solid rgba(255,255,255,.07)', borderRadius: 7, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
                       {l === 'en' ? '🇬🇧 EN' : '🇷🇺 RU'}
-                    </Button>
+                    </button>
                   ))}
                 </div>
-              </Card>
+              </div>
               {/* Звук */}
-              <Card padding="md" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ padding: '12px 14px', background: 'rgba(255,255,255,.03)', border: '.5px solid rgba(255,255,255,.07)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
-                  <Text variant="body" weight="bold">{t.profile.settings.sound}</Text>
-                  <Text variant="caption" color="muted" style={{ marginTop: 3 }}>{soundEnabled ? t.profile.settings.soundOn : t.profile.settings.soundOff}</Text>
+                  <div style={{ fontSize: '.8rem', fontWeight: 700, color: '#EAE2CC' }}>{t.profile.settings.sound}</div>
+                  <div style={{ fontSize: '.62rem', color: '#7A7875', marginTop: 3 }}>{soundEnabled ? t.profile.settings.soundOn : t.profile.settings.soundOff}</div>
                 </div>
-                <button onClick={() => setSoundEnabled(!soundEnabled)} style={{ width: 52, height: 28, borderRadius: 14, background: soundEnabled ? 'var(--accent, #F5C842)' : '#2A2F48', border: 'none', cursor: 'pointer', position: 'relative', transition: 'background .2s', flexShrink: 0 }}>
+                <button onClick={() => setSoundEnabled(!soundEnabled)} style={{ width: 52, height: 28, borderRadius: 14, background: soundEnabled ? '#4A9EFF' : 'rgba(255,255,255,.08)', border: 'none', cursor: 'pointer', position: 'relative', transition: 'background .2s', flexShrink: 0 }}>
                   <span style={{ position: 'absolute', top: 3, left: soundEnabled ? 26 : 3, width: 22, height: 22, borderRadius: '50%', background: '#fff', transition: 'left .2s', boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }} />
                 </button>
-              </Card>
+              </div>
               {/* Вибрация (хаптик) */}
-              <Card padding="md" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ padding: '12px 14px', background: 'rgba(255,255,255,.03)', border: '.5px solid rgba(255,255,255,.07)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
-                  <Text variant="body" weight="bold">📳 Вибрация</Text>
-                  <Text variant="caption" color="muted" style={{ marginTop: 3 }}>Haptic feedback при ходах</Text>
+                  <div style={{ fontSize: '.8rem', fontWeight: 700, color: '#EAE2CC' }}>📳 Вибрация</div>
+                  <div style={{ fontSize: '.62rem', color: '#7A7875', marginTop: 3 }}>Haptic feedback при ходах</div>
                 </div>
                 <button
                   onClick={() => {
@@ -853,11 +856,11 @@ export const ProfilePage: React.FC = () => {
                     localStorage.setItem('chesscoin_haptic', cur ? 'off' : 'on');
                     window.dispatchEvent(new Event('chesscoin:haptic-change'));
                   }}
-                  style={{ width: 52, height: 28, borderRadius: 14, background: localStorage.getItem('chesscoin_haptic') !== 'off' ? 'var(--accent, #F5C842)' : '#2A2F48', border: 'none', cursor: 'pointer', position: 'relative', transition: 'background .2s', flexShrink: 0 }}
+                  style={{ width: 52, height: 28, borderRadius: 14, background: localStorage.getItem('chesscoin_haptic') !== 'off' ? '#4A9EFF' : 'rgba(255,255,255,.08)', border: 'none', cursor: 'pointer', position: 'relative', transition: 'background .2s', flexShrink: 0 }}
                 >
                   <span style={{ position: 'absolute', top: 3, left: localStorage.getItem('chesscoin_haptic') !== 'off' ? 26 : 3, width: 22, height: 22, borderRadius: '50%', background: '#fff', transition: 'left .2s', boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }} />
                 </button>
-              </Card>
+              </div>
             </div>
           </div>
         </div>
@@ -895,13 +898,13 @@ export const ProfilePage: React.FC = () => {
   );
 };
 
-const secStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, letterSpacing: '.09em', textTransform: 'uppercase', color: 'var(--text-muted, #4A5270)', padding: '16px 18px 8px' };
+const secStyle: React.CSSProperties = { fontSize: '.58rem', fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: '#7A7875', padding: '.9rem .85rem .45rem' };
 const microLbl: React.CSSProperties = { fontSize: 9, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--text-muted, #4A5270)', marginBottom: 3 };
 const balCard: React.CSSProperties = { margin: '12px 18px 0', padding: '14px 18px', background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 18, display: 'flex', alignItems: 'center', justifyContent: 'space-between' };
-const ptabsStyle: React.CSSProperties = { display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.07)', margin: '12px 18px 0', overflowX: 'auto' as React.CSSProperties['overflowX'] };
-const ptab = (active: boolean): React.CSSProperties => ({ flex: '0 0 auto', textAlign: 'center', padding: '10px 12px', fontSize: 11, fontWeight: 600, color: active ? 'var(--accent, #F5C842)' : 'var(--text-secondary, #8B92A8)', cursor: 'pointer', border: 'none', borderBottom: `2px solid ${active ? 'var(--accent, #F5C842)' : 'transparent'}`, outline: 'none', background: 'none', fontFamily: 'inherit', transition: 'all .2s', whiteSpace: 'nowrap' } as React.CSSProperties);
+const ptabsStyle: React.CSSProperties = { display: 'flex', gap: 6, margin: '12px 18px 0', overflowX: 'auto' as React.CSSProperties['overflowX'], paddingBottom: 2 };
+const ptab = (active: boolean): React.CSSProperties => ({ flex: '0 0 auto', textAlign: 'center', padding: '7px 14px', fontSize: 11, fontWeight: 700, color: active ? '#82CFFF' : '#5A5248', cursor: 'pointer', border: active ? '.5px solid rgba(74,158,255,.3)' : '.5px solid rgba(255,255,255,.06)', outline: 'none', background: active ? 'rgba(74,158,255,.12)' : 'rgba(255,255,255,.04)', borderRadius: 8, fontFamily: 'inherit', transition: 'all .2s', whiteSpace: 'nowrap' } as React.CSSProperties);
 const stripStyle: React.CSSProperties = { margin: '4px 18px 0', padding: '13px 16px', background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 18, display: 'flex', alignItems: 'center', gap: 12 };
-const tbaStyle: React.CSSProperties = { width: 44, height: 44, borderRadius: 11, background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.13)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, cursor: 'pointer', color: 'var(--text-secondary, #8B92A8)' };
+const tbaStyle: React.CSSProperties = { width: 36, height: 36, borderRadius: 9, background: 'rgba(255,255,255,.05)', border: '.5px solid rgba(255,255,255,.09)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, cursor: 'pointer', color: '#7A7875' };
 const secBtn: React.CSSProperties = { padding: '8px 14px', background: 'var(--bg-input, #232840)', color: 'var(--text-primary, #F0F2F8)', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' };
 const ghostBtn: React.CSSProperties = { ...secBtn, background: 'transparent', color: 'var(--text-secondary, #8B92A8)' };
 const goldBtn: React.CSSProperties = { padding: '8px 14px', background: 'var(--accent, #F5C842)', color: 'var(--bg, #0B0D11)', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' };

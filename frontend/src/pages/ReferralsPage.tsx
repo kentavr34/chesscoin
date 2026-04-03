@@ -6,10 +6,6 @@ import { profileApi } from '@/api';
 import { fmtBalance, fmtDate } from '@/utils/format';
 import { toast } from '@/components/ui/Toast';
 import { useT } from '@/i18n/useT';
-import { Button } from '@/components/ui/Button';
-import { Text } from '@/components/ui/Text';
-import { Heading } from '@/components/ui/Heading';
-import { Card } from '@/components/ui/Card';
 
 const RANK_THRESHOLDS_BASE = [
   { rank: 'EMPEROR',      emoji: '👑',     minReferrals: 1_000_000, bonus: 40_000,  pct: 15 },
@@ -57,6 +53,19 @@ interface ReferralData {
   referrals: Referral[];
 }
 
+const LABEL_STYLE: React.CSSProperties = {
+  fontSize: '.58rem',
+  fontWeight: 700,
+  color: '#7A7875',
+  textTransform: 'uppercase',
+  letterSpacing: '.14em',
+};
+
+const CARD_BASE: React.CSSProperties = {
+  background: 'linear-gradient(135deg,#141018,#0F0E18)',
+  borderRadius: 16,
+};
+
 export const ReferralsPage: React.FC = () => {
   const t = useT();
   const r = t.referrals;
@@ -97,52 +106,76 @@ export const ReferralsPage: React.FC = () => {
 
   return (
     <PageLayout title={t.profile.refSection} backTo="/profile" centered>
-      {/* Header */}
-      <Card style={{ margin: '8px 18px', background: 'linear-gradient(135deg, #1A1D2E, #13162A)', border: '1px solid rgba(123,97,255,0.2)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
-        <div style={{ fontSize: 36, marginBottom: 8 }}>👥</div>
-        <Heading level={2}>{r.title}</Heading>
-        <Text variant="caption" color="--color-text-secondary" style={{ marginTop: 6, lineHeight: 1.6, display: 'block' }}>
-          {r.subtitle}
-        </Text>
 
-        <Card padding="md" style={{ width: '100%', marginTop: 16, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-          <div style={{ display: 'flex', gap: 16, justifyContent: 'space-between' }}>
-            <div>
-              <Text variant="caption" color="--color-text-muted" weight="bold" style={{ letterSpacing: '.09em', textTransform: 'uppercase', marginBottom: 4, display: 'block' }}>
-                {r.totalEarned}
-              </Text>
-              <Text variant="body" weight="bold" color="--color-accent-gold" style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 18 }}>
-                {fmtBalance(data?.totalIncome ?? '0')} ᚙ
-              </Text>
-            </div>
-            <div style={{ width: 1, background: 'var(--border, rgba(255,255,255,0.08))', alignSelf: 'stretch' }} />
-            <div style={{ textAlign: 'right' }}>
-              <Text variant="caption" color="--color-text-muted" weight="bold" style={{ letterSpacing: '.09em', textTransform: 'uppercase', marginBottom: 4, display: 'block' }}>
-                {r.referralsCount}
-              </Text>
-              <Text variant="body" weight="bold" style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 18 }}>
-                {data?.active ?? 0} <span style={{ fontSize: 12, opacity: .5 }}>/ {data?.total ?? 0}</span>
-              </Text>
-            </div>
-          </div>
-        </Card>
+      {/* Hero card */}
+      <div style={{ ...CARD_BASE, margin: '8px 16px 0', border: '.5px solid rgba(61,186,122,.28)', padding: '20px 18px 18px', textAlign: 'center' }}>
+        <div style={{ fontSize: 38, marginBottom: 8 }}>👥</div>
+        <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#E8E3DB', marginBottom: 6 }}>{r.title}</div>
+        <div style={{ fontSize: '0.78rem', color: '#7A7875', lineHeight: 1.6 }}>{r.subtitle}</div>
 
-        {/* Link */}
-        <Card padding="md" style={{ width: '100%', marginTop: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Text variant="caption" color="--color-text-muted" style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {/* Stats — 3 карточки в ряд */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginTop: 16 }}>
+          {[
+            { label: r.totalEarned, value: `${fmtBalance(data?.totalIncome ?? '0')} ᚙ`, color: '#3DBA7A' },
+            { label: r.referralsCount, value: String(data?.active ?? 0), color: '#3DBA7A' },
+            { label: 'Total', value: String(data?.total ?? 0), color: '#3DBA7A' },
+          ].map((stat) => (
+            <div
+              key={stat.label}
+              style={{
+                background: 'rgba(61,186,122,.06)',
+                border: '.5px solid rgba(61,186,122,.18)',
+                borderRadius: 12,
+                padding: '10px 8px',
+              }}
+            >
+              <div style={{ ...LABEL_STYLE, marginBottom: 4, display: 'block', textAlign: 'center' }}>{stat.label}</div>
+              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '0.9rem', fontWeight: 800, color: stat.color, textAlign: 'center' }}>
+                {stat.value}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Реферальная ссылка */}
+        <div style={{
+          marginTop: 14,
+          background: 'rgba(61,186,122,.05)',
+          border: '.5px solid rgba(61,186,122,.28)',
+          borderRadius: 12,
+          padding: '10px 12px',
+          display: 'flex', alignItems: 'center', gap: 8,
+        }}>
+          <div style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.72rem', color: '#7A7875', textAlign: 'left' }}>
             {refLink}
-          </Text>
-          <Button variant="secondary" size="sm" onClick={handleCopy} style={{ background: 'rgba(245,200,66,0.12)', color: 'var(--accent, #F5C842)', border: '1px solid rgba(245,200,66,0.25)', flexShrink: 0 }}>
+          </div>
+          <button
+            onClick={handleCopy}
+            style={{
+              padding: '7px 13px', borderRadius: 8, cursor: 'pointer', flexShrink: 0,
+              border: '.5px solid rgba(61,186,122,.4)',
+              background: 'rgba(61,186,122,.12)',
+              color: '#3DBA7A', fontSize: '0.72rem', fontWeight: 700,
+            }}
+          >
             {r.copy}
-          </Button>
-        </Card>
+          </button>
+        </div>
 
-        <Button variant="tertiary" size="md" fullWidth onClick={handleShare} style={{ marginTop: 10, background: '#7B61FF', color: '#fff', border: 'none' }}>
+        {/* Кнопка поделиться */}
+        <button
+          onClick={handleShare}
+          style={{
+            marginTop: 10, width: '100%', padding: '13px 0', borderRadius: 12,
+            border: 'none', background: 'linear-gradient(135deg,#3DBA7A,#2A9E63)',
+            color: '#fff', fontSize: '0.88rem', fontWeight: 700, cursor: 'pointer',
+          }}
+        >
           {r.shareOnTelegram}
-        </Button>
-      </Card>
+        </button>
+      </div>
 
-      {/* Military Rank Progress */}
+      {/* Военный ранг */}
       {(() => {
         const referralCount = user?.referralCount ?? (data?.total ?? 0);
         const currentRankIdx = rankThresholds.findIndex(rk => referralCount >= rk.minReferrals);
@@ -153,66 +186,77 @@ export const ReferralsPage: React.FC = () => {
           : 100;
 
         return (
-          <Card style={{ margin: '12px 18px 0', background: 'var(--bg-card, #13161E)', border: '1px solid rgba(123,97,255,0.25)' }}>
-            <Text variant="caption" color="--color-text-muted" weight="bold" style={{ letterSpacing: '.09em', textTransform: 'uppercase', marginBottom: 10, display: 'block' }}>
+          <div style={{ ...CARD_BASE, margin: '12px 16px 0', border: '.5px solid rgba(61,186,122,.25)', padding: '16px 16px 14px' }}>
+            <div style={{ ...LABEL_STYLE, marginBottom: 10, display: 'block' }}>
               {r.militaryRank}
-            </Text>
+            </div>
+
+            {/* Текущий ранг */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-              <div style={{ fontSize: 28 }}>{currentRank.emoji}</div>
-              <div>
-                <Heading level={3} color="--color-accent-gold" style={{ fontSize: 15 }}>
-                  {currentRank.label}
-                </Heading>
-                <Text variant="caption" color="--color-text-secondary" style={{ marginTop: 2 }}>
+              <div style={{
+                width: 50, height: 50, borderRadius: '50%',
+                background: 'rgba(61,186,122,.1)',
+                border: '.5px solid rgba(61,186,122,.3)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 24, flexShrink: 0,
+              }}>
+                {currentRank.emoji}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#3DBA7A' }}>{currentRank.label}</div>
+                <div style={{ fontSize: '0.72rem', color: '#7A7875', marginTop: 2 }}>
                   {referralCount} {r.referralsCount.toLowerCase()}
-                </Text>
+                </div>
                 {currentRank.bonus > 0 && (
-                  <Text variant="caption" style={{ color: '#7B61FF', marginTop: 2, display: 'block' }}>
+                  <div style={{ fontSize: '0.7rem', color: '#3DBA7A', marginTop: 2 }}>
                     +{currentRank.bonus.toLocaleString()} ᚙ {r.perReferral} · {currentRank.pct}% {r.ofWinnings}
-                  </Text>
+                  </div>
                 )}
               </div>
               {nextRank && (
-                <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-                  <Text variant="caption" color="--color-text-muted" style={{ marginBottom: 2, display: 'block' }}>
-                    {r.nextRank}
-                  </Text>
-                  <Text variant="body" weight="bold" style={{ color: '#7B61FF' }}>
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <div style={{ fontSize: '0.62rem', color: '#7A7875', marginBottom: 2 }}>{r.nextRank}</div>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#3DBA7A' }}>
                     {nextRank.emoji} {nextRank.label}
-                  </Text>
-                  <Text variant="caption" color="--color-text-muted">
+                  </div>
+                  <div style={{ fontSize: '0.65rem', color: '#4A5270' }}>
                     {nextRank.minReferrals.toLocaleString()} {r.ref}
-                  </Text>
+                  </div>
                 </div>
               )}
             </div>
+
+            {/* Прогресс-бар */}
             {nextRank && (
               <>
-                <div style={{ height: 6, background: 'var(--border, rgba(255,255,255,0.07))', borderRadius: 999, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${progress}%`, background: 'linear-gradient(90deg,#7B61FF,#F5C842)', borderRadius: 999, transition: 'width .5s' }} />
+                <div style={{ height: 6, background: 'rgba(255,255,255,.07)', borderRadius: 999, overflow: 'hidden', marginBottom: 6 }}>
+                  <div style={{ height: '100%', width: `${progress}%`, background: 'linear-gradient(90deg,#3DBA7A,#7EE8A2)', borderRadius: 999, transition: 'width .5s' }} />
                 </div>
-                <Text variant="caption" color="--color-text-muted" style={{ marginTop: 6, textAlign: 'right', display: 'block' }}>
+                <div style={{ fontSize: '0.68rem', color: '#4A5270', textAlign: 'right' }}>
                   {nextRank.minReferrals - referralCount} {r.untilNextRank}
-                </Text>
+                </div>
               </>
             )}
-            {/* Rank ladder — highest on top, current marked 📍 */}
-            <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 4 }}>
+
+            {/* Лесенка рангов */}
+            <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 5 }}>
               {rankThresholds.map(rk => {
                 const unlocked = referralCount >= rk.minReferrals;
                 const isCurrent = rk.rank === currentRank.rank;
                 return (
-                  <Card
+                  <div
                     key={rk.rank}
-                    padding="sm"
                     style={{
-                      display: 'flex', alignItems: 'center', gap: 10, position: 'relative',
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      position: 'relative',
                       background: isCurrent
-                        ? 'linear-gradient(135deg,rgba(245,200,66,0.14),rgba(123,97,255,0.07))'
-                        : unlocked ? 'rgba(245,200,66,0.04)' : 'rgba(255,255,255,0.02)',
-                      border: `${isCurrent ? '2px' : '1px'} solid ${
-                        isCurrent ? 'rgba(245,200,66,0.5)' : unlocked ? 'rgba(245,200,66,0.14)' : 'rgba(255,255,255,0.04)'
-                      }`,
+                        ? 'linear-gradient(135deg,rgba(61,186,122,.14),rgba(61,186,122,.05))'
+                        : unlocked ? 'rgba(61,186,122,.04)' : 'rgba(255,255,255,.02)',
+                      border: isCurrent
+                        ? '1px solid rgba(61,186,122,.45)'
+                        : unlocked ? '.5px solid rgba(61,186,122,.14)' : '.5px solid rgba(255,255,255,.04)',
+                      borderRadius: 10,
+                      padding: '7px 10px',
                       opacity: unlocked ? 1 : 0.42,
                       transition: 'all .15s',
                     }}
@@ -220,50 +264,44 @@ export const ReferralsPage: React.FC = () => {
                     {isCurrent && (
                       <div style={{
                         position: 'absolute', top: 0, right: 10,
-                        fontSize: 8, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase',
-                        color: '#F5C842', background: 'rgba(245,200,66,0.18)',
+                        fontSize: '0.5rem', fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase',
+                        color: '#3DBA7A', background: 'rgba(61,186,122,.18)',
                         padding: '2px 6px', borderRadius: '0 0 6px 6px',
                       }}>{r.you}</div>
                     )}
-                    <span style={{ fontSize: 20, minWidth: 55, textAlign: 'center', flexShrink: 0, display: 'inline-block' }}>{rk.emoji}</span>
+                    <span style={{ fontSize: 18, minWidth: 50, textAlign: 'center', flexShrink: 0 }}>{rk.emoji}</span>
                     <div style={{ flex: 1 }}>
-                      <Text
-                        variant="body"
-                        weight={isCurrent ? 'bold' : 'bold'}
-                        style={{
-                          fontSize: 12,
-                          color: isCurrent ? 'var(--accent, #F5C842)' : unlocked ? 'var(--text-primary, #F0F2F8)' : 'var(--text-secondary, #8B92A8)',
-                          display: 'block',
-                        }}
-                      >
+                      <div style={{
+                        fontSize: '0.75rem', fontWeight: 700,
+                        color: isCurrent ? '#3DBA7A' : unlocked ? '#E8E3DB' : '#7A7875',
+                      }}>
                         {rk.label}
-                      </Text>
-                      <Text variant="caption" color="--color-text-muted" style={{ marginTop: 1 }}>
+                      </div>
+                      <div style={{ fontSize: '0.65rem', color: '#4A5270', marginTop: 1 }}>
                         {rk.minReferrals.toLocaleString()} {r.ref}
-                      </Text>
+                      </div>
                     </div>
                     {rk.bonus > 0 && (
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <Text variant="caption" weight="bold" style={{ color: isCurrent ? 'var(--accent, #F5C842)' : unlocked ? '#9B85FF' : 'var(--text-muted, #4A5270)' }}>
+                        <div style={{ fontSize: '0.72rem', fontWeight: 700, color: isCurrent ? '#3DBA7A' : unlocked ? '#3DBA7A' : '#4A5270' }}>
                           +{rk.bonus.toLocaleString()} ᚙ
-                        </Text>
-                        <Text variant="caption" color="--color-text-muted" style={{ fontSize: 9 }}>
-                          {rk.pct}%
-                        </Text>
+                        </div>
+                        <div style={{ fontSize: '0.58rem', color: '#4A5270' }}>{rk.pct}%</div>
                       </div>
                     )}
-                    {isCurrent ? <span style={{ fontSize: 16, flexShrink: 0 }}>📍</span>
-                      : unlocked ? <span style={{ color: 'var(--green, #00D68F)', fontSize: 14, flexShrink: 0 }}>✓</span>
+                    {isCurrent
+                      ? <span style={{ fontSize: 14, flexShrink: 0 }}>📍</span>
+                      : unlocked ? <span style={{ color: '#3DBA7A', fontSize: 13, flexShrink: 0 }}>✓</span>
                       : null}
-                  </Card>
+                  </div>
                 );
               })}
             </div>
-          </Card>
+          </div>
         );
       })()}
 
-      {/* Program rules */}
+      {/* Правила программы */}
       {(() => {
         const referralCount = user?.referralCount ?? (data?.total ?? 0);
         const currentRankIdx = rankThresholds.findIndex(rk => referralCount >= rk.minReferrals);
@@ -294,78 +332,114 @@ export const ReferralsPage: React.FC = () => {
 
         return (
           <>
-            <Text variant="caption" color="--color-text-muted" weight="bold" style={{ fontSize: 10, letterSpacing: '.09em', textTransform: 'uppercase', padding: '18px 18px 8px', display: 'block' }}>
+            <div style={{ ...LABEL_STYLE, padding: '18px 18px 10px', display: 'block' }}>
               {r.howItWorks}
-            </Text>
-            <div style={{ margin: '0 18px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            </div>
+            <div style={{ margin: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
               {rules.map((rule) => (
-                <Card key={rule.ico} padding="md" style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                  <div style={{ fontSize: 22, width: 36, textAlign: 'center', flexShrink: 0 }}>{rule.ico}</div>
-                  <div>
-                    <Text variant="body" weight="bold" color="--color-accent-gold">
-                      {rule.title}
-                    </Text>
-                    <Text variant="caption" color="--color-text-secondary" style={{ marginTop: 2 }}>
-                      {rule.sub}
-                    </Text>
+                <div
+                  key={rule.ico}
+                  style={{
+                    ...CARD_BASE,
+                    border: '.5px solid rgba(61,186,122,.18)',
+                    padding: '13px 14px',
+                    display: 'flex', alignItems: 'flex-start', gap: 12,
+                  }}
+                >
+                  <div style={{
+                    width: 38, height: 38, borderRadius: '50%',
+                    background: 'rgba(61,186,122,.1)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 18, flexShrink: 0,
+                  }}>
+                    {rule.ico}
                   </div>
-                </Card>
+                  <div>
+                    <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#3DBA7A', marginBottom: 3 }}>
+                      {rule.title}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#7A7875', lineHeight: 1.5 }}>
+                      {rule.sub}
+                    </div>
+                  </div>
+                </div>
               ))}
-              <Text variant="caption" color="--color-text-muted" style={{ padding: '6px 0', lineHeight: 1.5 }}>
+              <div style={{ fontSize: '0.7rem', color: '#4A5270', lineHeight: 1.6, padding: '4px 0' }}>
                 {r.bonusNote}
-              </Text>
+              </div>
             </div>
           </>
         );
       })()}
 
-      {/* Referral list */}
+      {/* Список рефералов */}
       {!loading && (data?.referrals?.length ?? 0) > 0 && (
         <>
-          <Text variant="caption" color="--color-text-muted" weight="bold" style={{ fontSize: 10, letterSpacing: '.09em', textTransform: 'uppercase', padding: '18px 18px 8px', display: 'block' }}>
+          <div style={{ ...LABEL_STYLE, padding: '4px 18px 10px', display: 'block' }}>
             {r.referralsList} ({data!.total})
-          </Text>
-          {data!.referrals.map((ref) => (
-            <Card
-              key={ref.id}
-              padding="sm"
-              style={{
-                margin: '0 18px',
-                display: 'flex', alignItems: 'center', gap: 12,
-                borderBottom: '1px solid rgba(255,255,255,0.05)',
-              }}
-            >
-              <Avatar user={ref as unknown as import("@/types").UserPublic} size="s" />
-              <div style={{ flex: 1 }}>
-                <Text variant="body" weight="bold">
-                  {ref.firstName}
-                </Text>
-                <Text variant="caption" color="--color-text-secondary" style={{ marginTop: 1 }}>
-                  ELO {ref.elo} · {fmtDate(ref.createdAt)}
-                </Text>
+          </div>
+          <div style={{ margin: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {data!.referrals.map((ref) => (
+              <div
+                key={ref.id}
+                style={{
+                  ...CARD_BASE,
+                  border: '.5px solid rgba(61,186,122,.14)',
+                  padding: '11px 13px',
+                  display: 'flex', alignItems: 'center', gap: 11,
+                }}
+              >
+                {/* Аватар — инициалы в круге */}
+                <div style={{
+                  width: 36, height: 36, borderRadius: '50%',
+                  background: 'rgba(61,186,122,.12)',
+                  border: '.5px solid rgba(61,186,122,.3)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '0.78rem', fontWeight: 800, color: '#3DBA7A',
+                  flexShrink: 0,
+                }}>
+                  {ref.firstName.charAt(0).toUpperCase()}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#E8E3DB' }}>
+                    {ref.firstName}
+                  </div>
+                  <div style={{ fontSize: '0.68rem', color: '#7A7875', marginTop: 2 }}>
+                    ELO {ref.elo} · {fmtDate(ref.createdAt)}
+                  </div>
+                </div>
+                <div>
+                  {ref.referralActivated ? (
+                    <span style={{
+                      display: 'inline-block', padding: '3px 9px',
+                      background: 'rgba(61,186,122,.1)', color: '#3DBA7A',
+                      borderRadius: 6, fontSize: '0.6rem', fontWeight: 700,
+                      border: '.5px solid rgba(61,186,122,.3)',
+                    }}>
+                      {r.active}
+                    </span>
+                  ) : (
+                    <span style={{
+                      display: 'inline-block', padding: '3px 9px',
+                      background: 'rgba(255,255,255,.05)', color: '#4A5270',
+                      borderRadius: 6, fontSize: '0.6rem', fontWeight: 700,
+                      border: '.5px solid rgba(255,255,255,.06)',
+                    }}>
+                      {r.pending}
+                    </span>
+                  )}
+                </div>
               </div>
-              <div>
-                {ref.referralActivated ? (
-                  <span style={{ display: 'inline-block', padding: '3px 8px', background: 'rgba(0,214,143,0.1)', color: 'var(--green, #00D68F)', borderRadius: 6, fontSize: 10, fontWeight: 700 }}>
-                    {r.active}
-                  </span>
-                ) : (
-                  <span style={{ display: 'inline-block', padding: '3px 8px', background: 'rgba(255,255,255,0.05)', color: 'var(--text-muted, #4A5270)', borderRadius: 6, fontSize: 10, fontWeight: 700 }}>
-                    {r.pending}
-                  </span>
-                )}
-              </div>
-            </Card>
-          ))}
+            ))}
+          </div>
         </>
       )}
 
       {!loading && (data?.total ?? 0) === 0 && (
-        <Text variant="body" style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: '32px 0', whiteSpace: 'pre-line' }}>
+        <div style={{ textAlign: 'center', color: '#4A5270', padding: '32px 0', fontSize: '0.82rem', whiteSpace: 'pre-line' }}>
           {r.noReferrals}
-        </Text>
+        </div>
       )}
     </PageLayout>
   );
 };
-
