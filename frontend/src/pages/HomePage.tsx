@@ -201,7 +201,7 @@ export const HomePage: React.FC = () => {
   const blkScale = (key: string) => pressedBlk === key ? 'scale(.94)' : 'scale(1)';
 
   return (
-    <PageLayout>
+    <PageLayout noHeader>
       <style>{`
         @keyframes cc-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
         @keyframes cc-fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
@@ -259,13 +259,13 @@ export const HomePage: React.FC = () => {
         <ActiveSessionsModal sessions={activeSessions} onClose={() => setShowSessionsModal(false)} />
       )}
 
-      <div className="hp-shell" style={{ background: '#0D0D12' }}>
+      <div className="hp-shell" style={{ background: '#0D0D12', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
 
         {/* ══ ПАСПОРТНАЯ КАРТОЧКА ══ */}
         <div className="hp-hero" style={{
           position: 'relative', overflow: 'hidden',
           background: 'linear-gradient(175deg,#120E04 0%,#0E0E14 100%)',
-          margin: '.65rem .85rem 0',
+          margin: '.45rem .85rem 0',
           borderRadius: 20,
           border: '.5px solid rgba(212,168,67,.28)',
           boxShadow: '0 6px 36px rgba(0,0,0,.55),inset 0 0 0 .5px rgba(212,168,67,.06)',
@@ -338,7 +338,7 @@ export const HomePage: React.FC = () => {
             </div>
 
             {/* бейджи: лейбл над строкой icon+box, icon одинаковой ширины → текст выровнен */}
-            <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '.38rem' }}>
+            <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '.55rem' }}>
               {/* Звание */}
               <div>
                 {/* лейбл: отступ = icon(20px) + gap(4px) + boxPad(8px) = 32px → точно над текстом */}
