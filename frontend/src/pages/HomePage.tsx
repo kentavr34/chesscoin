@@ -258,8 +258,12 @@ export const HomePage: React.FC = () => {
       {showJarvisModal && (
         <JarvisPlayModal
           currentJarvisLevel={jarvisLevel}
+          userAttempts={user.attempts ?? 0}
+          maxAttempts={user.maxAttempts ?? 3}
+          nextRestoreSeconds={user.nextRestoreSeconds}
           onStart={handleGameStart}
           onClose={() => setShowJarvisModal(false)}
+          onBuyAttempts={() => setShowAttemptsModal(true)}
         />
       )}
       {showAttemptsModal && (

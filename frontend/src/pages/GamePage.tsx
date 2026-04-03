@@ -1,6 +1,6 @@
 // frontend/src/pages/GamePage.tsx
 // АРХИТЕКТУРА: useSocket.ts (App уровень) слушает 'game' события → store.
-// GamePage читает из store, NOT делает собственные socket-обработчики.
+// GamePage читает из store. Для ходов/сдачи/ничьи: socket.emit(...).
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -9,6 +9,7 @@ import type { Square } from 'chess.js';
 import { getSocket } from '@/api/socket';
 import { useGameStore } from '@/store/useGameStore';
 import { ChessBoard } from '@/components/game/ChessBoard';
+import { sound } from '@/lib/sound';
 
 // ── Константы ──────────────────────────────────────────────────────────────────
 const PIECE_SYMBOLS: Record<string, string> = { p: '♟', n: '♞', b: '♝', r: '♜', q: '♛' };
@@ -16,8 +17,10 @@ const PIECE_VAL:     Record<string, number>  = { p: 1, n: 3, b: 3, r: 5, q: 9 };
 const PIECE_START:   Record<string, number>  = { p: 8, n: 2, b: 2, r: 2, q: 1 };
 const SORT_ORDER:    Record<string, number>  = { q: 0, r: 1, b: 2, n: 3, p: 4 };
 
-const HEADER_H = 46;
-const PANEL_H  = 58;
+// Высоты блоков
+const TOPBAR_H  = 36; // минимальный статус-бар сверху
+const PANEL_H   = 80; // панель игрока (аватар 72px)
+const ACTBAR_H  = 58; // нижняя панель: Назад + Сдаться + Ничья
 
 // ── Хелперы ────────────────────────────────────────────────────────────────────
 function capturedFromFen(fen: string): { white: string[]; black: string[] } {
@@ -48,7 +51,7 @@ function fmtTime(secs: number): string {
 }
 
 function calcBoardSize(): number {
-  const reserved = HEADER_H + PANEL_H * 2 + 8;
+  const reserved = TOPBAR_H + PANEL_H * 2 + ACTBAR_H + 8;
   return Math.floor(Math.min(window.innerWidth, window.innerHeight - reserved));
 }
 
@@ -79,9 +82,8 @@ const JarvisAva: React.FC<{ size: number }> = ({ size }) => (
   </svg>
 );
 
-// ── Конфетти (только победа) ──────────────────────────────────────────────────
+// ── Конфетти (победа) ──────────────────────────────────────────────────────────
 const CONFETTI_COLORS = ['#F4C430', '#4DDA8A', '#82CFFF', '#C084FC', '#FF9F43', '#F472B6'];
-
 const Confetti: React.FC = () => {
   const pieces = useMemo(() =>
     Array.from({ length: 18 }, (_, i) => ({
@@ -127,41 +129,41 @@ const PlayerPanel: React.FC<PanelProps> = ({
 }) => {
   const sorted = useMemo(() => sortCaptured(captured), [captured]);
   const isCritical = isActive && timeSecs > 0 && timeSecs < 15;
-  const AV = 38;
+  const AV = 72; // удвоенный аватар
 
   return (
     <div style={{
-      display: 'flex', alignItems: 'center', gap: 9,
+      display: 'flex', alignItems: 'center', gap: 12,
       height: PANEL_H, padding: '0 14px', flexShrink: 0,
-      background: isActive ? 'rgba(255,255,255,.038)' : 'transparent',
+      background: isActive ? 'rgba(255,255,255,.04)' : 'transparent',
       borderLeft: `3px solid ${
-        isCritical ? 'rgba(220,50,47,.8)'
+        isCritical ? 'rgba(220,50,47,.85)'
         : isActive  ? '#3DBA7A'
         : 'transparent'
       }`,
       transition: 'background .3s, border-color .3s',
     }}>
 
-      {/* Аватар */}
+      {/* Аватар — 72px */}
       <div style={{
         width: AV, height: AV, borderRadius: '50%', flexShrink: 0,
         background: isBot ? 'rgba(74,158,255,.1)' : 'rgba(212,168,67,.07)',
-        border: `.5px solid ${
+        border: `1.5px solid ${
           isActive
-            ? isBot ? 'rgba(74,158,255,.5)' : 'rgba(61,186,122,.42)'
+            ? isBot ? 'rgba(74,158,255,.55)' : 'rgba(61,186,122,.45)'
             : isBot ? 'rgba(74,158,255,.15)' : 'rgba(212,168,67,.15)'
         }`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         overflow: 'hidden',
         boxShadow: isActive
-          ? `0 0 14px ${isBot ? 'rgba(74,158,255,.22)' : 'rgba(61,186,122,.2)'}`
+          ? `0 0 20px ${isBot ? 'rgba(74,158,255,.28)' : 'rgba(61,186,122,.24)'}`
           : 'none',
         transition: 'box-shadow .3s, border-color .3s',
       }}>
         {avatar
           ? <img src={avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           : isBot
-            ? <JarvisAva size={AV * 0.66} />
+            ? <JarvisAva size={AV * 0.62} />
             : <span style={{ fontSize: AV * 0.38, fontWeight: 800, color: '#D4A843' }}>
                 {name[0]?.toUpperCase() ?? '?'}
               </span>
@@ -170,60 +172,63 @@ const PlayerPanel: React.FC<PanelProps> = ({
 
       {/* Имя + взятые фигуры */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        {/* Строка 1: маркер цвета + имя + ELO */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 3 }}>
+        {/* Строка 1: цвет-маркер + имя */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 4 }}>
           <div style={{
-            width: 7, height: 7, borderRadius: 2, flexShrink: 0,
+            width: 9, height: 9, borderRadius: 3, flexShrink: 0,
             background: isWhite ? '#E8E0C8' : '#28221C',
             border: '.5px solid rgba(212,168,67,.28)',
           }} />
           <span style={{
-            fontSize: '.82rem', fontWeight: 700,
-            color: isActive ? '#EAE2CC' : '#6A6458',
+            fontSize: '1.5rem', fontWeight: 800,
+            color: isActive ? '#EAE2CC' : '#5A5248',
             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-            maxWidth: 115, transition: 'color .3s',
+            maxWidth: 130, transition: 'color .3s',
+            lineHeight: 1,
           }}>
-            {name.length > 15 ? name.slice(0, 15) + '…' : name}
+            {name.length > 12 ? name.slice(0, 12) + '…' : name}
           </span>
-          {elo !== undefined && (
-            <span style={{ fontSize: '.58rem', color: '#3A3830', fontWeight: 600, flexShrink: 0 }}>
-              {elo}
-            </span>
-          )}
         </div>
 
-        {/* Строка 2: взятые фигуры + преимущество */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        {/* Строка 2: ELO */}
+        {elo !== undefined && (
+          <div style={{ fontSize: '.8rem', color: '#7A7060', fontWeight: 600, marginBottom: 4 }}>
+            ELO {elo}
+          </div>
+        )}
+
+        {/* Строка 3: взятые фигуры + преимущество */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
           {sorted.length > 0 ? (
             <>
               <div style={{ display: 'flex' }}>
                 {sorted.slice(0, 9).map((p, i) => (
                   <span key={i} style={{
-                    fontSize: 11, lineHeight: 1, opacity: .75,
+                    fontSize: 13, lineHeight: 1, opacity: .78,
                     marginLeft: i > 0 ? -1 : 0,
                   }}>
                     {PIECE_SYMBOLS[p] ?? ''}
                   </span>
                 ))}
                 {sorted.length > 9 && (
-                  <span style={{ fontSize: '.48rem', color: '#3A3830', fontWeight: 700, marginLeft: 1 }}>
+                  <span style={{ fontSize: '.52rem', color: '#3A3830', fontWeight: 700, marginLeft: 1 }}>
                     +{sorted.length - 9}
                   </span>
                 )}
               </div>
               {adv > 0 && (
-                <span style={{ fontSize: '.6rem', fontWeight: 800, color: '#3DBA7A', marginLeft: 3 }}>
+                <span style={{ fontSize: '.65rem', fontWeight: 800, color: '#3DBA7A', marginLeft: 3 }}>
                   +{adv}
                 </span>
               )}
             </>
           ) : (
-            <span style={{ fontSize: '.5rem', color: '#1E1C18' }}>—</span>
+            <span style={{ fontSize: '.52rem', color: '#1E1C18' }}>—</span>
           )}
         </div>
       </div>
 
-      {/* Таймер: 3 состояния */}
+      {/* Таймер */}
       <div style={{
         background: isCritical
           ? 'rgba(220,50,47,.2)'
@@ -235,13 +240,13 @@ const PlayerPanel: React.FC<PanelProps> = ({
           : isActive  ? 'rgba(61,186,122,.32)'
           : 'rgba(255,255,255,.05)'
         }`,
-        borderRadius: 9, padding: '5px 11px', flexShrink: 0,
-        minWidth: 60, textAlign: 'center',
+        borderRadius: 11, padding: '7px 13px', flexShrink: 0,
+        minWidth: 68, textAlign: 'center',
         transition: 'all .3s',
         animation: isCritical ? 'timer-crit .75s infinite' : 'none',
       }}>
         <span style={{
-          fontSize: '.84rem', fontWeight: 900,
+          fontSize: '1rem', fontWeight: 900,
           color: isCritical ? '#FF6868' : isActive ? '#5DEDA0' : '#282420',
           fontVariantNumeric: 'tabular-nums', letterSpacing: '-.01em',
           transition: 'color .3s',
@@ -257,9 +262,9 @@ const PlayerPanel: React.FC<PanelProps> = ({
 type ResultType = 'win' | 'lose' | 'draw';
 
 const RESULT_CFG: Record<ResultType, { bg: string; accent: string; emoji: string; title: string }> = {
-  win:  { bg: 'linear-gradient(150deg,#082B14,#145228)',   accent: '#5DEDA0', emoji: '🏆', title: 'Победа!' },
-  lose: { bg: 'linear-gradient(150deg,#111111,#1C1C1C)',   accent: '#888',    emoji: '💀', title: 'Поражение' },
-  draw: { bg: 'linear-gradient(150deg,#080E2E,#101E46)',   accent: '#82CFFF', emoji: '🤝', title: 'Ничья' },
+  win:  { bg: 'linear-gradient(150deg,#082B14,#145228)',  accent: '#5DEDA0', emoji: '🏆', title: 'Победа!' },
+  lose: { bg: 'linear-gradient(150deg,#111111,#1C1C1C)',  accent: '#888',    emoji: '💀', title: 'Поражение' },
+  draw: { bg: 'linear-gradient(150deg,#080E2E,#101E46)',  accent: '#82CFFF', emoji: '🤝', title: 'Ничья' },
 };
 
 interface SheetProps {
@@ -278,8 +283,6 @@ const ResultSheet: React.FC<SheetProps> = ({ type, winAmount, pieceCoins, onRema
   return (
     <>
       {isWin && <Confetti />}
-
-      {/* Затемнение фона */}
       <div
         style={{
           position: 'absolute', inset: 0, zIndex: 200,
@@ -288,8 +291,6 @@ const ResultSheet: React.FC<SheetProps> = ({ type, winAmount, pieceCoins, onRema
         }}
         onClick={onHome}
       />
-
-      {/* Sheet */}
       <div style={{
         position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 201,
         background: '#0E1015',
@@ -299,87 +300,59 @@ const ResultSheet: React.FC<SheetProps> = ({ type, winAmount, pieceCoins, onRema
         boxShadow: '0 -8px 40px rgba(0,0,0,.6)',
       }}>
         {/* Pull handle */}
-        <div style={{
-          width: 36, height: 4, borderRadius: 2,
-          background: 'rgba(255,255,255,.12)',
-          margin: '10px auto 0',
-        }} />
+        <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(255,255,255,.12)', margin: '10px auto 0' }} />
 
         {/* Цветной заголовок */}
         <div style={{
-          background: cfg.bg,
-          padding: '16px 20px 16px',
-          display: 'flex', alignItems: 'center', gap: 14,
-          marginTop: 8,
+          background: cfg.bg, padding: '16px 20px',
+          display: 'flex', alignItems: 'center', gap: 14, marginTop: 8,
         }}>
           <span style={{ fontSize: 34, lineHeight: 1, flexShrink: 0 }}>{cfg.emoji}</span>
           <div>
-            <div style={{
-              fontSize: '1.35rem', fontWeight: 900, color: cfg.accent,
-              letterSpacing: '-.01em',
-            }}>
+            <div style={{ fontSize: '1.35rem', fontWeight: 900, color: cfg.accent, letterSpacing: '-.01em' }}>
               {cfg.title}
             </div>
             {coinsDisplay && (
-              <div style={{
-                fontSize: '.8rem', fontWeight: 700,
-                color: '#F4C430', marginTop: 3,
-                display: 'flex', alignItems: 'center', gap: 4,
-              }}>
+              <div style={{ fontSize: '.8rem', fontWeight: 700, color: '#F4C430', marginTop: 3, display: 'flex', alignItems: 'center', gap: 4 }}>
                 <span>🪙</span>
                 <span>+{coinsDisplay} зачислено на баланс</span>
               </div>
             )}
             {!coinsDisplay && type === 'lose' && (
-              <div style={{ fontSize: '.72rem', color: '#4A4840', marginTop: 3 }}>
-                Попробуй ещё раз
-              </div>
+              <div style={{ fontSize: '.72rem', color: '#4A4840', marginTop: 3 }}>Попробуй ещё раз</div>
             )}
           </div>
         </div>
 
         {/* Кнопки */}
         <div style={{ padding: '14px 16px', paddingBottom: 'max(20px, env(safe-area-inset-bottom, 20px))', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {/* Реванш + Анализ */}
           <div style={{ display: 'flex', gap: 10 }}>
             <button onClick={onRematch} style={{
               flex: 1, padding: '13px 0', borderRadius: 14,
               background: isWin ? 'rgba(61,186,122,.14)' : 'rgba(255,255,255,.06)',
               border: `.5px solid ${isWin ? 'rgba(61,186,122,.32)' : 'rgba(255,255,255,.1)'}`,
-              color: isWin ? '#5DEDA0' : '#8A8270',
-              fontSize: '.8rem', fontWeight: 800,
+              color: isWin ? '#5DEDA0' : '#8A8270', fontSize: '.8rem', fontWeight: 800,
               cursor: 'pointer', fontFamily: 'inherit',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-            }}>
-              🔄 <span>Реванш</span>
-            </button>
+            }}>🔄 <span>Реванш</span></button>
 
-            <button style={{
+            <button disabled style={{
               flex: 1, padding: '13px 0', borderRadius: 14,
-              background: 'rgba(255,255,255,.04)',
-              border: '.5px solid rgba(255,255,255,.07)',
-              color: '#404040',
-              fontSize: '.8rem', fontWeight: 800,
+              background: 'rgba(255,255,255,.04)', border: '.5px solid rgba(255,255,255,.07)',
+              color: '#404040', fontSize: '.8rem', fontWeight: 800,
               cursor: 'default', fontFamily: 'inherit',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-              opacity: 0.55,
-            }} disabled>
-              📋 <span>Анализ</span>
-            </button>
+              opacity: 0.5,
+            }}>📋 <span>Анализ</span></button>
           </div>
 
-          {/* На главную */}
           <button onClick={onHome} style={{
             width: '100%', padding: '15px 0', borderRadius: 14,
             background: 'linear-gradient(135deg,#2A1E08,#4A3810)',
-            border: '.5px solid rgba(212,168,67,.42)',
-            color: '#F0C85A',
-            fontSize: '.9rem', fontWeight: 900,
-            cursor: 'pointer', fontFamily: 'inherit',
+            border: '.5px solid rgba(212,168,67,.42)', color: '#F0C85A',
+            fontSize: '.9rem', fontWeight: 900, cursor: 'pointer', fontFamily: 'inherit',
             boxShadow: '0 4px 22px rgba(212,168,67,.15)',
-          }}>
-            ← На главную
-          </button>
+          }}>← На главную</button>
         </div>
       </div>
     </>
@@ -391,14 +364,16 @@ export function GamePage() {
   const navigate = useNavigate();
   const { sessionId = '' } = useParams<{ sessionId: string }>();
 
-  const { sessions } = useGameStore();
+  const { sessions, drawOfferedBy } = useGameStore();
   const session = sessions.find(s => s.id === sessionId) ?? null;
 
-  const [lastMove, setLastMove]         = useState<{ from: string; to: string } | null>(null);
+  const [lastMove,       setLastMove]       = useState<{ from: string; to: string } | null>(null);
   const [myTimeDisplay,  setMyTimeDisplay]  = useState('—');
   const [oppTimeDisplay, setOppTimeDisplay] = useState('—');
-  const [myTimeSecs,  setMyTimeSecs]  = useState(0);
-  const [oppTimeSecs, setOppTimeSecs] = useState(0);
+  const [myTimeSecs,     setMyTimeSecs]     = useState(0);
+  const [oppTimeSecs,    setOppTimeSecs]    = useState(0);
+  const [drawPending,    setDrawPending]    = useState(false); // ожидаем ответа на ничью
+  const [soundPlayed,    setSoundPlayed]    = useState(false);
 
   const mySecsRef   = useRef(0);
   const oppSecsRef  = useRef(0);
@@ -410,10 +385,21 @@ export function GamePage() {
     && session.status !== 'IN_PROGRESS'
     && session.status !== 'WAITING_FOR_OPPONENT';
 
-  useEffect(() => { isMyTurnRef.current = isMyTurn; }, [isMyTurn]);
+  useEffect(() => { isMyTurnRef.current = isMyTurn; },  [isMyTurn]);
   useEffect(() => { gameOverRef.current = gameOver; }, [gameOver]);
 
-  // Синхронизируем таймеры при каждом новом FEN (= новый ход с сервера)
+  // Звук конца игры
+  useEffect(() => {
+    if (!gameOver || soundPlayed || !session) return;
+    setSoundPlayed(true);
+    const isWin = session.winnerSideId === session.mySideId;
+    const isDraw = !session.winnerSideId || session.status === 'DRAW';
+    if (!isDraw) {
+      setTimeout(() => isWin ? sound.win() : sound.lose(), 200);
+    }
+  }, [gameOver, soundPlayed, session]);
+
+  // Синхронизируем таймеры при новом FEN
   const prevFenRef = useRef('');
   useEffect(() => {
     if (!session) return;
@@ -438,7 +424,7 @@ export function GamePage() {
     if (lm) setLastMove(lm);
   }, [session?.fen]);
 
-  // Единый тикающий интервал
+  // Тик таймера
   useEffect(() => {
     const id = setInterval(() => {
       if (gameOverRef.current) return;
@@ -463,25 +449,24 @@ export function GamePage() {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  // Данные из сессии
-  const mySide  = session?.sides.find(s => s.id === session?.mySideId);
-  const oppSide = session?.sides.find(s => s.id !== session?.mySideId);
+  // Данные сессии
+  const mySide   = session?.sides.find(s => s.id === session?.mySideId);
+  const oppSide  = session?.sides.find(s => s.id !== session?.mySideId);
 
   const myColor: 'white' | 'black' = mySide?.isWhite ? 'white' : 'black';
   const myName   = mySide?.player?.firstName ?? 'Вы';
   const myAvatar = mySide?.player?.avatar;
   const myElo    = mySide?.player?.elo;
 
-  const oppIsBot  = !!oppSide?.isBot;
-  const oppName   = oppIsBot ? 'J.A.R.V.I.S' : (oppSide?.player?.firstName ?? '...');
-  const oppAvatar = oppSide?.player?.avatar;
+  const oppIsBot   = !!oppSide?.isBot;
+  const oppName    = oppIsBot ? 'J.A.R.V.I.S' : (oppSide?.player?.firstName ?? '...');
+  const oppAvatar  = oppSide?.player?.avatar;
   const oppIsWhite = !!oppSide?.isWhite;
-  const oppElo    = oppSide?.player?.elo;
+  const oppElo     = oppSide?.player?.elo;
 
   const fen = session?.fen ?? 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
   const { white: whiteCap, black: blackCap } = capturedFromFen(fen);
 
-  // Материальный перевес
   const wMat = calcMaterial(whiteCap);
   const bMat = calcMaterial(blackCap);
   const myCaptured  = myColor === 'white' ? whiteCap : blackCap;
@@ -511,6 +496,32 @@ export function GamePage() {
     );
   }, [sessionId]);
 
+  // Сдаться
+  const handleSurrender = useCallback(() => {
+    if (gameOver) return;
+    if (!window.confirm('Сдаться и завершить игру?')) return;
+    getSocket().emit('game:surrender', { sessionId }, () => {});
+  }, [sessionId, gameOver]);
+
+  // Предложить / принять ничью
+  const drawOfferedByMe = drawOfferedBy === session?.mySideId;
+  const drawOfferedByOpp = drawOfferedBy && drawOfferedBy !== session?.mySideId;
+
+  const handleDrawOffer = useCallback(() => {
+    if (gameOver || drawOfferedByMe) return;
+    if (drawOfferedByOpp) {
+      // Принимаем ничью от соперника
+      getSocket().emit('game:accept_draw', { sessionId }, () => {});
+    } else {
+      // Предлагаем ничью
+      getSocket().emit('game:offer_draw', { sessionId });
+    }
+  }, [sessionId, gameOver, drawOfferedByMe, drawOfferedByOpp]);
+
+  const handleDeclineDraw = useCallback(() => {
+    getSocket().emit('game:decline_draw', { sessionId });
+  }, [sessionId]);
+
   // ── Загрузка ────────────────────────────────────────────────────────────────
   if (!session) {
     return (
@@ -526,9 +537,7 @@ export function GamePage() {
             border: '2.5px solid rgba(74,158,255,.18)', borderTopColor: '#4A9EFF',
             animation: 'gp-spin 1s linear infinite', margin: '0 auto 14px',
           }} />
-          <div style={{ fontSize: '.72rem', color: '#3A4050', fontWeight: 700 }}>
-            Загрузка партии...
-          </div>
+          <div style={{ fontSize: '.72rem', color: '#3A4050', fontWeight: 700 }}>Загрузка партии...</div>
           <button onClick={() => navigate('/')} style={{
             marginTop: 20, padding: '7px 18px', borderRadius: 10,
             background: 'rgba(255,255,255,.06)', border: '.5px solid rgba(255,255,255,.1)',
@@ -547,32 +556,26 @@ export function GamePage() {
       fontFamily: 'Inter, sans-serif', overflow: 'hidden',
     }}>
       <style>{`
-        @keyframes gp-spin  { to { transform: rotate(360deg) } }
-        @keyframes gp-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(.7)} }
-        @keyframes timer-crit { 0%,100%{opacity:1} 50%{opacity:.5} }
-        @keyframes sheet-up { from{transform:translateY(100%)} to{transform:translateY(0)} }
-        @keyframes cf-fall  { 0%{transform:translateY(0) rotate(0deg);opacity:1} 80%{opacity:.9} 100%{transform:translateY(320px) rotate(600deg);opacity:0} }
+        @keyframes gp-spin   { to { transform: rotate(360deg) } }
+        @keyframes gp-pulse  { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(.7)} }
+        @keyframes timer-crit{ 0%,100%{opacity:1} 50%{opacity:.5} }
+        @keyframes sheet-up  { from{transform:translateY(100%)} to{transform:translateY(0)} }
+        @keyframes cf-fall   { 0%{transform:translateY(0) rotate(0deg);opacity:1} 80%{opacity:.9} 100%{transform:translateY(320px) rotate(600deg);opacity:0} }
+        @keyframes draw-in   { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
       `}</style>
 
-      {/* ── Заголовок ─────────────────────────────────────────────────────── */}
+      {/* ── Топ-бар: только статус + ID ──────────────────────────────────── */}
       <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '0 14px',
-        paddingTop: 'max(8px, env(safe-area-inset-top, 8px))',
-        height: HEADER_H,
-        borderBottom: '.5px solid rgba(255,255,255,.05)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        gap: 10,
+        height: TOPBAR_H,
+        paddingTop: 'max(0px, env(safe-area-inset-top, 0px))',
+        borderBottom: '.5px solid rgba(255,255,255,.04)',
         flexShrink: 0,
       }}>
-        <button onClick={() => navigate('/')} style={{
-          background: 'rgba(255,255,255,.06)', border: '.5px solid rgba(255,255,255,.09)',
-          borderRadius: 9, padding: '5px 11px',
-          color: '#5A6070', fontSize: '.68rem', fontWeight: 700,
-          cursor: 'pointer', fontFamily: 'inherit',
-        }}>← Назад</button>
-
         {/* Статус хода */}
         <div style={{
-          display: 'flex', alignItems: 'center', gap: 6,
+          display: 'flex', alignItems: 'center', gap: 5,
           background: !gameOver && isMyTurn ? 'rgba(61,186,122,.08)' : 'rgba(255,255,255,.03)',
           border: `.5px solid ${!gameOver && isMyTurn ? 'rgba(61,186,122,.28)' : 'rgba(255,255,255,.06)'}`,
           borderRadius: 9, padding: '4px 11px', transition: 'all .3s',
@@ -593,13 +596,40 @@ export function GamePage() {
           </span>
         </div>
 
-        <span style={{
-          fontSize: '.56rem', fontWeight: 700, color: '#1E2028',
-          fontVariantNumeric: 'tabular-nums',
-        }}>
+        <span style={{ fontSize: '.52rem', fontWeight: 700, color: '#1A1E24', fontVariantNumeric: 'tabular-nums' }}>
           #{sessionId.slice(-4).toUpperCase() || '----'}
         </span>
       </div>
+
+      {/* ── Предложение ничьи от соперника ─────────────────────────────────── */}
+      {drawOfferedByOpp && !gameOver && (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '8px 14px',
+          background: 'rgba(130,207,255,.08)',
+          borderBottom: '.5px solid rgba(130,207,255,.2)',
+          animation: 'draw-in .3s ease both',
+          flexShrink: 0,
+        }}>
+          <span style={{ fontSize: '.72rem', fontWeight: 700, color: '#82CFFF' }}>
+            🤝 Соперник предлагает ничью
+          </span>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={handleDrawOffer} style={{
+              padding: '5px 12px', borderRadius: 8,
+              background: 'rgba(130,207,255,.15)', border: '.5px solid rgba(130,207,255,.4)',
+              color: '#82CFFF', fontSize: '.68rem', fontWeight: 800,
+              cursor: 'pointer', fontFamily: 'inherit',
+            }}>Принять</button>
+            <button onClick={handleDeclineDraw} style={{
+              padding: '5px 12px', borderRadius: 8,
+              background: 'rgba(255,255,255,.06)', border: '.5px solid rgba(255,255,255,.1)',
+              color: '#5A5850', fontSize: '.68rem', fontWeight: 800,
+              cursor: 'pointer', fontFamily: 'inherit',
+            }}>Отказать</button>
+          </div>
+        </div>
+      )}
 
       {/* ── Соперник (сверху) ──────────────────────────────────────────────── */}
       <div style={{ borderBottom: '.5px solid rgba(255,255,255,.04)', flexShrink: 0 }}>
@@ -639,8 +669,70 @@ export function GamePage() {
         />
       </div>
 
-      {/* Нижняя safe-area */}
-      <div style={{ height: 'env(safe-area-inset-bottom, 0px)', flexShrink: 0 }} />
+      {/* ── Нижняя панель: Назад | Ваш ход | Сдаться | Ничья ─────────────── */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 8,
+        height: ACTBAR_H,
+        padding: '0 12px',
+        paddingBottom: 'max(0px, env(safe-area-inset-bottom, 0px))',
+        borderTop: '.5px solid rgba(255,255,255,.05)',
+        flexShrink: 0, background: 'rgba(0,0,0,.15)',
+      }}>
+        {/* ← Назад */}
+        <button onClick={() => navigate('/')} style={{
+          padding: '9px 14px', borderRadius: 11, flexShrink: 0,
+          background: 'rgba(255,255,255,.06)', border: '.5px solid rgba(255,255,255,.1)',
+          color: '#5A6070', fontSize: '.7rem', fontWeight: 700,
+          cursor: 'pointer', fontFamily: 'inherit',
+        }}>← Назад</button>
+
+        {/* Flex spacer */}
+        <div style={{ flex: 1 }} />
+
+        {/* Ничья */}
+        <button
+          onClick={handleDrawOffer}
+          disabled={gameOver || drawOfferedByMe}
+          title={drawOfferedByOpp ? 'Принять ничью' : 'Предложить ничью'}
+          style={{
+            padding: '9px 14px', borderRadius: 11,
+            background: drawOfferedByOpp
+              ? 'rgba(130,207,255,.14)'
+              : drawOfferedByMe
+                ? 'rgba(255,255,255,.03)'
+                : 'rgba(255,255,255,.06)',
+            border: `.5px solid ${
+              drawOfferedByOpp ? 'rgba(130,207,255,.4)'
+              : drawOfferedByMe ? 'rgba(255,255,255,.05)'
+              : 'rgba(255,255,255,.1)'
+            }`,
+            color: drawOfferedByOpp ? '#82CFFF' : drawOfferedByMe ? '#2A2C34' : '#5A6070',
+            fontSize: '.7rem', fontWeight: 700,
+            cursor: gameOver || drawOfferedByMe ? 'default' : 'pointer',
+            fontFamily: 'inherit',
+            opacity: drawOfferedByMe ? 0.5 : 1,
+          }}
+        >
+          {drawOfferedByOpp ? '🤝 Принять' : drawOfferedByMe ? '⏳ Ждём...' : '= Ничья'}
+        </button>
+
+        {/* Сдаться */}
+        <button
+          onClick={handleSurrender}
+          disabled={gameOver}
+          style={{
+            padding: '9px 14px', borderRadius: 11,
+            background: gameOver ? 'rgba(255,255,255,.03)' : 'rgba(220,50,47,.1)',
+            border: `.5px solid ${gameOver ? 'rgba(255,255,255,.05)' : 'rgba(220,50,47,.3)'}`,
+            color: gameOver ? '#2A2420' : '#FF7070',
+            fontSize: '.7rem', fontWeight: 700,
+            cursor: gameOver ? 'default' : 'pointer',
+            fontFamily: 'inherit',
+          }}
+        >
+          🏳 Сдаться
+        </button>
+      </div>
 
       {/* ── Bottom sheet результата ────────────────────────────────────────── */}
       {resultType && (
