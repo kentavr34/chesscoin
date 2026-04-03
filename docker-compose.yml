@@ -64,7 +64,35 @@ services:
       timeout: 5s
       retries: 5
 
-  # ─── Backend (Stockfish встроен через npm) ─
+  # ─── Stockfish Native Microservice ──────────
+  # Нативный бинарник: depth 10 за ~200-500ms (WASM было 8-15 секунд!)
+  # Архитектура идентична v1.0.2 — отдельный контейнер с Express HTTP API
+  stockfish:
+    build:
+      context: ./stockfish
+      dockerfile: Dockerfile
+    container_name: chesscoin_stockfish
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    expose:
+      - "3020"
+    networks:
+      - app-network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3020/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ─── Backend ──────────────────────────────
   backend:
     build:
       context: ./backend
@@ -81,6 +109,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      stockfish:
+        condition: service_healthy
     environment:
       NODE_ENV: production
       SERVER_PORT: 3000
@@ -94,7 +124,8 @@ services:
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       FRONTEND_URL: https://${DOMAIN}
       ADMIN_IDS: ${ADMIN_IDS}
-      # Stockfish встроен в npm пакет — отдельный контейнер не нужен
+      # Stockfish native microservice (заменяет WASM Worker Thread)
+      STOCKFISH_URL: http://stockfish:3020
       MAX_ATTEMPTS: 3
       ATTEMPT_PRICE: 1000
       S3_ENDPOINT: ${S3_ENDPOINT}

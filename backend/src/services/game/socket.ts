@@ -858,101 +858,59 @@ const makeBotMove = async (socket: AuthSocket, io: Server, sessionId: string) =>
 };
 
 // ─────────────────────────────────────────
+// Stockfish через нативный HTTP микросервис
+// Архитектура идентична v1.0.2:
+//   - Отдельный контейнер с нативным бинарником Stockfish
+//   - node-uci общается с ним через stdin/stdout нативного процесса
+//   - depth 10 за ~200-500ms (WASM было 8-15 секунд!)
+//   - Простой HTTP POST /move { fen, level } → { bestmove }
 // ─────────────────────────────────────────
-// Stockfish WASM через Worker Thread
-// Не блокирует основной event loop.
-// Каждый запрос — отдельный Worker, изолированное состояние.
-// ─────────────────────────────────────────
-import { Worker } from "worker_threads";
-import { stockfishPool } from "./stockfishPool"; // OPT-6: Worker Pool
-import path from "path";
-import { v4 as uuidv4 } from "uuid";
+const STOCKFISH_URL = process.env.STOCKFISH_URL ?? "http://stockfish:3020";
 
-// Путь к скомпилированному воркеру (tsc собирает в dist/)
-const WORKER_PATH = path.join(__dirname, "stockfishWorker.js");
+// Таймауты по уровням (с запасом: maxMovetime из server.js + 5 секунд)
+const LEVEL_TIMEOUTS = [
+  5000, 5000, 5000, 5000, 5000,   // 1-5:  50-500ms movetime + запас
+  7000, 7500, 8000, 8500, 8500,   // 6-10: 2000-3500ms movetime + запас
+  9000, 9500, 10000, 10500, 11000,// 11-15: 4000-6000ms + запас
+  9000, 10000, 11000, 12000, 13000,// 16-20: 4000-8000ms + запас
+];
 
-export const getStockfishMove = (
+export const getStockfishMove = async (
   fen: string,
   level: number
 ): Promise<{ from: string; to: string } | null> => {
-  return new Promise(async (resolve) => {
-    const requestId = uuidv4();
-    // movetime на уровень + 5 сек запаса до полного kill
-    // BUG-02 fix: расширено до 20 уровней (было 10)
-    const levelMovetimes = [
-      200,  // 1  Beginner
-      300,  // 2  Rookie
-      400,  // 3  Player
-      500,  // 4  Amateur
-      600,  // 5  Skilled
-      800,  // 6  Advanced
-      1000, // 7  Expert
-      1200, // 8  Master
-      1500, // 9  Grandmaster
-      1800, // 10 Champion
-      2000, // 11 Prodigy
-      2500, // 12 Virtuoso
-      3000, // 13 Titan
-      3500, // 14 Legend
-      4000, // 15 Immortal
-      5000, // 16 Demigod
-      6000, // 17 Overlord
-      7000, // 18 Transcendent
-      8000, // 19 Legendary
-      10000,// 20 Mystic (max 10 sec)
-    ];
-    const movetime = levelMovetimes[Math.max(0, Math.min(19, level - 1))];
-    const hardTimeout = movetime + 6000;
+  const timeoutMs = LEVEL_TIMEOUTS[Math.max(0, Math.min(19, level - 1))];
 
-    let worker: Worker;
-    try {
-      worker = await stockfishPool.acquire(movetime + 2000); // OPT-6: берём из пула
-    } catch (err: unknown) {
-      logger.warn("[JARVIS] Pool exhausted:", (err as Error).message, "→ random fallback");
-      resolve(getRandomMove(fen));
-      return;
-    }
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-    const killTimer = setTimeout(() => {
-      logger.warn("[JARVIS] Hard kill worker after", hardTimeout, "ms");
-      stockfishPool.release(worker); // OPT-6: возвращаем в пул
-      resolve(getRandomMove(fen));
-    }, hardTimeout);
+    const res = await fetch(`${STOCKFISH_URL}/move`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fen, level }),
+      signal: controller.signal,
+    });
 
-    const messageHandler = (msg: { bestmove?: string; type?: string; [key: string]: unknown }) => {
-      if (msg.ready) return;
-      if (msg.requestId !== requestId) return;
-      cleanup();
-      resolve((msg.move ?? getRandomMove(fen)) as { from: string; to: string } | null);
-    };
+    clearTimeout(timer);
 
-    const errorHandler = (err: Error) => {
-      logger.warn("[JARVIS] Worker error:", err.message, "→ random fallback");
-      cleanup();
-      resolve(getRandomMove(fen));
-    };
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-    const exitHandler = (code: number) => {
-      if (code !== 0) {
-        logger.warn("[JARVIS] Worker exited with code", code);
-      }
-    };
+    const data = await res.json() as { bestmove?: string };
+    const bestmove = data.bestmove;
 
-    const cleanup = () => {
-      clearTimeout(killTimer);
-      worker.off("message", messageHandler);
-      worker.off("error", errorHandler);
-      worker.off("exit", exitHandler);
-      stockfishPool.release(worker); // OPT-6: возвращаем в пул
-    };
+    if (!bestmove || bestmove === "(none)") return getRandomMove(fen);
 
-    worker.on("message", messageHandler);
-    worker.on("error", errorHandler);
-    worker.on("exit", exitHandler);
+    const from = bestmove.slice(0, 2);
+    const to   = bestmove.slice(2, 4);
+    if (!/^[a-h][1-8]$/.test(from) || !/^[a-h][1-8]$/.test(to)) return getRandomMove(fen);
 
-    // Отправляем задание воркеру
-    worker.postMessage({ fen, level, requestId });
-  });
+    return { from, to };
+
+  } catch (err: unknown) {
+    logger.warn("[JARVIS] Stockfish HTTP error:", err instanceof Error ? err.message : String(err), "→ random fallback");
+    return getRandomMove(fen);
+  }
 };
 
 const getRandomMove = (fen: string): { from: string; to: string } | null => {

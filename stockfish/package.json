@@ -1,0 +1,11 @@
+{
+  "name": "chesscoin-stockfish",
+  "version": "1.0.0",
+  "description": "Native Stockfish microservice for ChessCoin",
+  "main": "server.js",
+  "dependencies": {
+    "chess.js": "^1.3.0",
+    "express": "^4.18.2",
+    "node-uci": "^1.3.4"
+  }
+}
