@@ -224,7 +224,7 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
             background: 'linear-gradient(135deg,#0B1422,#0F1A30)',
             border: `.5px solid ${levelStatus === 'current' ? 'rgba(74,158,255,.4)' : levelStatus === 'completed' ? 'rgba(61,186,122,.25)' : 'rgba(255,255,255,.08)'}`,
             borderRadius: 14,
-            padding: '10px 14px',
+            padding: '15px 14px',
           }}>
             {/* стрелка влево */}
             <button
@@ -241,25 +241,25 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
             >‹</button>
 
             <div style={{ flex: 1, textAlign: 'center' }}>
-              <div style={{ fontSize: '.56rem', fontWeight: 700, color: '#4A7090', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 2 }}>
+              <div style={{ fontSize: '.84rem', fontWeight: 700, color: '#4A7090', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 3 }}>
                 Уровень {selectedLvl} / {localizedLevels.length}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.35rem', marginBottom: 2 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.35rem', marginBottom: 3 }}>
                 {/* Статус-индикатор */}
                 {levelStatus === 'completed' && (
-                  <span style={{ fontSize: '.75rem', color: '#3DBA7A' }}>✓</span>
+                  <span style={{ fontSize: '1.1rem', color: '#3DBA7A' }}>✓</span>
                 )}
                 {levelStatus === 'locked' && (
-                  <span style={{ fontSize: '.75rem', color: 'rgba(255,255,255,.3)' }}>🔒</span>
+                  <span style={{ fontSize: '1.1rem', color: 'rgba(255,255,255,.3)' }}>🔒</span>
                 )}
                 <div style={{
-                  fontSize: '1rem', fontWeight: 900, letterSpacing: '.02em',
+                  fontSize: '1.08rem', fontWeight: 900, letterSpacing: '.02em',
                   color: levelStatus === 'completed' ? 'rgba(130,207,255,.4)'
                     : levelStatus === 'locked' ? 'rgba(255,255,255,.25)'
                     : '#82CFFF',
                 }}>{levelName}</div>
               </div>
-              <div style={{ fontSize: '.58rem', color: levelStatus === 'current' ? 'rgba(74,158,255,.6)' : 'rgba(74,158,255,.25)', marginTop: 0 }}>
+              <div style={{ fontSize: '.87rem', color: levelStatus === 'current' ? 'rgba(74,158,255,.6)' : 'rgba(74,158,255,.25)', marginTop: 0 }}>
                 {levelStatus === 'completed' ? 'Пройдено' : levelStatus === 'locked' ? 'Закрыто' : `Победа: +${(level?.reward || 0).toLocaleString()} 🪙`}
               </div>
             </div>

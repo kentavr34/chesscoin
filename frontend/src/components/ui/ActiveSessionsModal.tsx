@@ -120,12 +120,12 @@ export const ActiveSessionsModal: React.FC<Props> = ({ sessions, onClose }) => {
         position: 'fixed', inset: 0, zIndex: 350,
         background: 'rgba(4,3,8,.84)',
         backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
-        display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-        paddingBottom: 'calc(82px + env(safe-area-inset-bottom, 0px))',
+        display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 8px)',
       }}
     >
       <style>{`
-        @keyframes asm-slide { from{opacity:0;transform:translateY(28px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes asm-slide { from{opacity:0;transform:translateY(-28px)} to{opacity:1;transform:translateY(0)} }
         .asm-sheet { animation: asm-slide .22s cubic-bezier(.25,.8,.25,1) both; }
         @keyframes asm-blink { 0%,100%{opacity:1} 55%{opacity:.35} }
         @keyframes asm-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.75)} }
@@ -136,8 +136,8 @@ export const ActiveSessionsModal: React.FC<Props> = ({ sessions, onClose }) => {
         width: '100%', maxWidth: 420,
         background: 'linear-gradient(170deg,#0E1008,#0A0C10)',
         border: '.5px solid rgba(212,168,67,.22)',
-        borderRadius: '24px 24px 0 0',
-        boxShadow: '0 -12px 40px rgba(0,0,0,.65), 0 -1px 0 rgba(212,168,67,.1)',
+        borderRadius: '0 0 24px 24px',
+        boxShadow: '0 12px 40px rgba(0,0,0,.65), 0 1px 0 rgba(212,168,67,.1)',
         padding: '0 0 8px',
       }}>
 
@@ -194,16 +194,13 @@ export const ActiveSessionsModal: React.FC<Props> = ({ sessions, onClose }) => {
                 {/* Верхняя декор-линия */}
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1.5, background: isMyTurn ? 'linear-gradient(90deg,transparent,rgba(212,168,67,.55),transparent)' : 'linear-gradient(90deg,transparent,rgba(212,168,67,.14),transparent)' }} />
 
-                {/* Тип партии */}
-                <div style={{ fontSize: '.44rem', fontWeight: 700, color: '#6A6050', textTransform: 'uppercase', letterSpacing: '.1em', textAlign: 'center', marginBottom: 8 }}>{typeLabel}</div>
-
                 {/* ── 3 колонки: Я | Доска | Соперник ── */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
 
                   {/* Левая: я */}
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, minWidth: 0 }}>
-                    <PlayerAvatar name={myName} avatar={myAvatar} size={34} />
-                    <span style={{ fontSize: '.6rem', fontWeight: 700, color: '#C8C0A8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', textAlign: 'center' }}>
+                    <PlayerAvatar name={myName} avatar={myAvatar} size={51} />
+                    <span style={{ fontSize: '.9rem', fontWeight: 700, color: '#C8C0A8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', textAlign: 'center' }}>
                       {myName.length > 8 ? myName.slice(0,8) + '…' : myName}
                     </span>
                     {/* Мой цвет */}
@@ -249,8 +246,8 @@ export const ActiveSessionsModal: React.FC<Props> = ({ sessions, onClose }) => {
 
                   {/* Правая: соперник */}
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, minWidth: 0 }}>
-                    <PlayerAvatar name={oppName} avatar={oppAvatar} isBot={oppIsBot} size={34} />
-                    <span style={{ fontSize: '.6rem', fontWeight: 700, color: '#C8C0A8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', textAlign: 'center' }}>
+                    <PlayerAvatar name={oppName} avatar={oppAvatar} isBot={oppIsBot} size={51} />
+                    <span style={{ fontSize: '.9rem', fontWeight: 700, color: '#C8C0A8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', textAlign: 'center' }}>
                       {oppName.length > 8 ? oppName.slice(0,8) + '…' : oppName}
                     </span>
                     {/* Цвет соперника */}
