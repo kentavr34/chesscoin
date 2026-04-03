@@ -115,14 +115,24 @@ export const HomePage: React.FC = () => {
   const [showAttemptsModal, setShowAttemptsModal] = useState(false);
   const [timeLeft, setTimeLeft] = useState('');
   const [pressedBlk, setPressedBlk] = useState<string | null>(null);
+  const [targetAt, setTargetAt] = useState<number | null>(null);
 
+  // Конвертируем статичное поле сервера в абсолютный timestamp один раз при изменении user
   useEffect(() => {
-    if (!user?.nextRestoreSeconds && !user?.nextAttemptAt) return;
+    if (user?.nextAttemptAt) {
+      setTargetAt(new Date(user.nextAttemptAt).getTime());
+    } else if (user?.nextRestoreSeconds && user.nextRestoreSeconds > 0) {
+      setTargetAt(Date.now() + user.nextRestoreSeconds * 1000);
+    } else {
+      setTargetAt(null);
+    }
+  }, [user?.nextAttemptAt, user?.nextRestoreSeconds]);
+
+  // Тикаем каждую секунду от абсолютного timestamp
+  useEffect(() => {
+    if (!targetAt) { setTimeLeft(''); return; }
     const update = () => {
-      let secs = 0;
-      if (user.nextRestoreSeconds) secs = user.nextRestoreSeconds;
-      else if (user.nextAttemptAt)
-        secs = Math.max(0, Math.floor((new Date(user.nextAttemptAt).getTime() - Date.now()) / 1000));
+      const secs = Math.max(0, Math.floor((targetAt - Date.now()) / 1000));
       if (secs <= 0) { setTimeLeft(''); return; }
       const h = Math.floor(secs / 3600);
       const m = Math.floor((secs % 3600) / 60);
@@ -134,7 +144,7 @@ export const HomePage: React.FC = () => {
     update();
     const id = setInterval(update, 1000);
     return () => clearInterval(id);
-  }, [user?.nextRestoreSeconds, user?.nextAttemptAt]);
+  }, [targetAt]);
 
   const handleGameStart = (color: 'white' | 'black', timeMinutes: number, level: JarvisLevel) => {
     const socket = getSocket();
@@ -265,7 +275,7 @@ export const HomePage: React.FC = () => {
         <div className="hp-hero" style={{
           position: 'relative', overflow: 'hidden',
           background: 'linear-gradient(175deg,#120E04 0%,#0E0E14 100%)',
-          margin: '.65rem .85rem 0',
+          margin: '.75rem .85rem 0',
           borderRadius: 20,
           border: '.5px solid rgba(212,168,67,.28)',
           boxShadow: '0 6px 36px rgba(0,0,0,.55),inset 0 0 0 .5px rgba(212,168,67,.06)',

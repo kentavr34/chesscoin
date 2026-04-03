@@ -195,7 +195,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
         <div style={{ minWidth: 36, display: 'flex', justifyContent: 'flex-end', zIndex: 2 }}>
           {rightAction}
         </div>
-      </div>
+      </div>}
 
       <div className="no-scrollbar" style={{
         flex: 1,
