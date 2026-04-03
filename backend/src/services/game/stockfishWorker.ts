@@ -60,12 +60,14 @@ const JARVIS_LEVELS = [
   { level: 9,  elo: 2100, movetime: 8000,  useSkill: true,  skill: 14, depth: 12, depthOnly: true,  randomPct: 2,  contempt: 0   },
   { level: 10, elo: 2200, movetime: 8000,  useSkill: true,  skill: 15, depth: 13, depthOnly: true,  randomPct: 1,  contempt: 0   },
 
-  // 11-15: Advanced (2300-2700 Elo) — depth-only, серьёзная игра без случайных ходов
-  { level: 11, elo: 2300, movetime: 8000,  useSkill: true,  skill: 16, depth: 14, depthOnly: true,  randomPct: 0,  contempt: 0   },
-  { level: 12, elo: 2400, movetime: 10000, useSkill: true,  skill: 17, depth: 15, depthOnly: true,  randomPct: 0,  contempt: 0   },
-  { level: 13, elo: 2500, movetime: 10000, useSkill: true,  skill: 18, depth: 16, depthOnly: true,  randomPct: 0,  contempt: 0   },
-  { level: 14, elo: 2600, movetime: 12000, useSkill: true,  skill: 19, depth: 18, depthOnly: true,  randomPct: 0,  contempt: 0   },
-  { level: 15, elo: 2700, movetime: 12000, useSkill: false, skill: 20, depth: 20, depthOnly: true,  randomPct: 0,  contempt: 0   },
+  // 11-15: Advanced (2300-2700 Elo) — movetime-based (НЕ depthOnly!)
+  // depthOnly для depth 14-20 вызывал таймаут на медленном VPS → случайный ход
+  // movetime 8-12 секунд гарантирует достижение depth 12-16 + UCI_Elo ограничивает силу
+  { level: 11, elo: 2300, movetime: 8000,  useSkill: true,  skill: 16, depth: 14, depthOnly: false, randomPct: 0,  contempt: 0   },
+  { level: 12, elo: 2400, movetime: 9000,  useSkill: true,  skill: 17, depth: 15, depthOnly: false, randomPct: 0,  contempt: 0   },
+  { level: 13, elo: 2500, movetime: 10000, useSkill: true,  skill: 18, depth: 16, depthOnly: false, randomPct: 0,  contempt: 0   },
+  { level: 14, elo: 2600, movetime: 11000, useSkill: true,  skill: 19, depth: 18, depthOnly: false, randomPct: 0,  contempt: 0   },
+  { level: 15, elo: 2700, movetime: 12000, useSkill: false, skill: 20, depth: 20, depthOnly: false, randomPct: 0,  contempt: 0   },
 
   // 16-20: Unbeatable (2800-3200+ Elo) — полная сила, movetime как страховка от OOM
   { level: 16, elo: 2800, movetime: 5000,  useSkill: false, skill: 20, depth: 16, depthOnly: false, randomPct: 0,  contempt: 0   },
@@ -192,8 +194,22 @@ parentPort?.on("message", async ({ fen, level, requestId }: {
       };
 
       const timer = setTimeout(() => {
-        log.warn("Timeout, using random fallback");
-        saferesolve(getRandomMove(fen));
+        if ((cfg as any).depthOnly && engine && !resolved) {
+          // depthOnly: отправляем stop — движок вернёт bestmove из текущей глубины поиска
+          dlog(`[TIMEOUT] depthOnly level ${level}, sending stop to get partial bestmove`);
+          log.warn(`depthOnly timeout (${timeoutMs}ms) at level ${level}, sending stop`);
+          engine.postMessage("stop");
+          // Жёсткий таймаут 3с если stop не даёт ответа (крайне редко)
+          setTimeout(() => {
+            if (!resolved) {
+              dlog(`[TIMEOUT] Hard timeout after stop, random fallback`);
+              saferesolve(getRandomMove(fen));
+            }
+          }, 3000);
+        } else {
+          log.warn("Timeout, using random fallback");
+          saferesolve(getRandomMove(fen));
+        }
       }, timeoutMs);
 
       const listener = (line: string) => {

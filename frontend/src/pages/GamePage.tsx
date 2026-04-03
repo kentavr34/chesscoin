@@ -17,14 +17,9 @@ const PIECE_VAL:     Record<string, number>  = { p: 1, n: 3, b: 3, r: 5, q: 9 };
 const PIECE_START:   Record<string, number>  = { p: 8, n: 2, b: 2, r: 2, q: 1 };
 const SORT_ORDER:    Record<string, number>  = { q: 0, r: 1, b: 2, n: 3, p: 4 };
 
-const TOPBAR_H      = 0;   // убираем отдельный топбар — статус встроен в панели
-const PANEL_H       = 72;  // высота панели игрока
-const ACTBAR_H      = 64;  // нижняя панель кнопок
-// Отступы: аватар ДОЛЖЕН быть на середине между краем экрана и верхом доски
-// Верх: paddingTop=4 → avatar center = 4+36 = 40px = (4+72)/2 = 38... корректно
-// Низ:  paddingBottom=12 → поднимаем панель выше от кнопок
-const PANEL_GAP_TOP = 4;   // отступ сверху (точное центрирование аватара оппонента)
-const PANEL_GAP_BOT = 12;  // отступ снизу  (поднимает панель игрока выше от кнопок)
+const PANEL_H   = 72;  // высота панели игрока
+const ACTBAR_H  = 64;  // нижняя панель кнопок
+const STATUS_GAP = 22; // полоска между панелью и доской — «Ваш ход» / «Думает...»
 
 // ── Хелперы ────────────────────────────────────────────────────────────────────
 function capturedFromFen(fen: string): { white: string[]; black: string[] } {
@@ -55,7 +50,8 @@ function fmtTime(secs: number): string {
 }
 
 function calcBoardSize(): number {
-  const reserved = PANEL_H * 2 + ACTBAR_H + PANEL_GAP_TOP + PANEL_GAP_BOT + 4;
+  // Панели + статус-полоски + action bar + минимальные spacer-ы (8px сверху/снизу)
+  const reserved = PANEL_H * 2 + STATUS_GAP * 2 + ACTBAR_H + 16;
   return Math.floor(Math.min(window.innerWidth, window.innerHeight - reserved));
 }
 
@@ -159,22 +155,18 @@ interface PanelProps {
 }
 
 const PlayerPanel: React.FC<PanelProps> = ({
-  name, elo, avatar, isBot, isWhite, captured, advantage: adv,
+  name, elo, avatar, isBot, captured, advantage: adv,
   coins, timeDisplay, timeSecs, isActive, isGameOver,
 }) => {
   const sorted = useMemo(() => sortCaptured(captured), [captured]);
   const isCritical = isActive && timeSecs > 0 && timeSecs < 15;
   const AV = 52;
 
-  // Статус — показывается рядом с именем
-  const statusLabel = isGameOver ? null : isActive ? 'Ваш ход' : null;
-  const statusColor = '#4A9EFF';
-
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 10,
-      height: PANEL_H, padding: '0 12px', flexShrink: 0,
-      background: isActive ? 'rgba(74,158,255,.04)' : 'transparent',
+      height: PANEL_H, padding: '0 10px 0 12px', flexShrink: 0,
+      background: isActive ? 'rgba(74,158,255,.03)' : 'transparent',
       borderLeft: `3px solid ${
         isCritical ? 'rgba(220,50,47,.85)'
         : isActive  ? '#4A9EFF'
@@ -183,7 +175,7 @@ const PlayerPanel: React.FC<PanelProps> = ({
       transition: 'background .3s, border-color .3s',
     }}>
 
-      {/* Аватар */}
+      {/* ── Аватар ─────────────────────────────────────────────────────────── */}
       <div style={{
         width: AV, height: AV, borderRadius: '50%', flexShrink: 0,
         background: isBot ? 'rgba(74,158,255,.1)' : 'rgba(212,168,67,.07)',
@@ -193,9 +185,9 @@ const PlayerPanel: React.FC<PanelProps> = ({
             : isBot ? 'rgba(74,158,255,.15)' : 'rgba(212,168,67,.15)'
         }`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        overflow: 'hidden', position: 'relative',
+        overflow: 'hidden',
         boxShadow: isActive
-          ? `0 0 16px ${isBot ? 'rgba(74,158,255,.35)' : 'rgba(61,186,122,.28)'}`
+          ? `0 0 14px ${isBot ? 'rgba(74,158,255,.3)' : 'rgba(61,186,122,.25)'}`
           : 'none',
         transition: 'box-shadow .3s, border-color .3s',
       }}>
@@ -209,99 +201,65 @@ const PlayerPanel: React.FC<PanelProps> = ({
         }
       </div>
 
-      {/* Центр: имя + ELO + взятые фигуры */}
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 3 }}>
-
-        {/* Строка 1: цвет-маркер + имя + статус-точка + [монеты справа] */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-          <div style={{
-            width: 8, height: 8, borderRadius: 2.5, flexShrink: 0,
-            background: isWhite ? '#E8E0C8' : '#2A2218',
-            border: '.5px solid rgba(212,168,67,.25)',
-          }} />
-          <span style={{
-            fontSize: '1.02rem', fontWeight: 700,
-            color: isActive ? '#EAE2CC' : '#5A5248',
-            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-            maxWidth: 90, transition: 'color .3s',
-          }}>
-            {name.length > 11 ? name.slice(0, 11) + '…' : name}
-          </span>
-          {statusLabel && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
-              <div style={{
-                width: 5, height: 5, borderRadius: '50%',
-                background: statusColor, boxShadow: `0 0 5px ${statusColor}`,
-                animation: 'gp-pulse 1.4s infinite',
-              }} />
-              <span style={{ fontSize: '.62rem', fontWeight: 700, color: statusColor }}>
-                {statusLabel}
-              </span>
-            </div>
-          )}
-          {/* Монеты — прижаты вправо, в одной строке с именем */}
-          {coins > 0 && (
-            <div style={{
-              marginLeft: 'auto', flexShrink: 0,
-              display: 'flex', alignItems: 'center', gap: 3,
-              background: 'rgba(200,154,48,.1)', border: '.5px solid rgba(200,154,48,.25)',
-              borderRadius: 8, padding: '2px 6px',
-            }}>
-              <CoinIcon size={12} />
-              <span style={{ fontSize: '.72rem', fontWeight: 800, color: '#D4A843' }}>
-                +{coins >= 1000 ? `${(coins/1000).toFixed(1)}K` : coins}
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Строка 2: ELO */}
-        <div style={{ fontSize: '.68rem', color: '#5A5248', fontWeight: 600 }}>
+      {/* ── Колонка: имя + ELO (без точки, без отступа) ─────────────────── */}
+      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 4, minWidth: 0 }}>
+        <span style={{
+          fontSize: '1rem', fontWeight: 700, lineHeight: 1,
+          color: isActive ? '#EAE2CC' : '#5A5248',
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+          maxWidth: 88, transition: 'color .3s',
+        }}>
+          {name.length > 11 ? name.slice(0, 11) + '…' : name}
+        </span>
+        <span style={{ fontSize: '.68rem', color: '#5A5248', fontWeight: 600, lineHeight: 1 }}>
           {elo !== undefined ? `ELO ${elo}` : (isBot ? 'J.A.R.V.I.S' : '')}
-        </div>
-
-        {/* Строка 3: взятые фигуры + преимущество */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 3, minHeight: 14 }}>
-          {sorted.length > 0 ? (
-            <>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 0 }}>
-                {sorted.slice(0, 10).map((p, i) => (
-                  <span key={i} style={{ fontSize: 12, lineHeight: 1, opacity: .82, marginLeft: i > 0 ? -1 : 0 }}>
-                    {PIECE_SYMBOLS[p] ?? ''}
-                  </span>
-                ))}
-                {sorted.length > 10 && (
-                  <span style={{ fontSize: '.5rem', color: '#6A5A40', fontWeight: 700, marginLeft: 1 }}>
-                    +{sorted.length - 10}
-                  </span>
-                )}
-              </div>
-              {adv > 0 && (
-                <span style={{ fontSize: '.65rem', fontWeight: 800, color: '#3DBA7A', marginLeft: 2 }}>
-                  +{adv}
-                </span>
-              )}
-            </>
-          ) : (
-            <span style={{ fontSize: '.52rem', color: '#242018' }}>—</span>
-          )}
-        </div>
+        </span>
       </div>
 
-      {/* Таймер — крупнее, с отступом от правого края */}
+      {/* ── Центр: монеты (строка 1) + взятые фигуры (строка 2) ─────────── */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5, minWidth: 0 }}>
+        {/* Строка 1: монеты */}
+        {coins > 0 ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <CoinIcon size={13} />
+            <span style={{ fontSize: '.76rem', fontWeight: 800, color: '#D4A843' }}>
+              +{coins >= 1000 ? `${(coins/1000).toFixed(1)}K` : coins}
+            </span>
+          </div>
+        ) : (
+          <div style={{ height: 16 }} />
+        )}
+        {/* Строка 2: взятые фигуры + преимущество */}
+        {sorted.length > 0 ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            {sorted.slice(0, 8).map((p, i) => (
+              <span key={i} style={{ fontSize: 12, lineHeight: 1, opacity: .82 }}>
+                {PIECE_SYMBOLS[p] ?? ''}
+              </span>
+            ))}
+            {sorted.length > 8 && (
+              <span style={{ fontSize: '.5rem', color: '#6A5A40', fontWeight: 700 }}>+{sorted.length - 8}</span>
+            )}
+            {adv > 0 && (
+              <span style={{ fontSize: '.65rem', fontWeight: 800, color: '#3DBA7A', marginLeft: 3 }}>+{adv}</span>
+            )}
+          </div>
+        ) : (
+          <div style={{ height: 14 }} />
+        )}
+      </div>
+
+      {/* ── Таймер ────────────────────────────────────────────────────────── */}
       <div style={{
         background: isCritical
           ? 'rgba(220,50,47,.22)'
-          : isActive
-            ? 'rgba(74,158,255,.14)'
-            : 'rgba(255,255,255,.04)',
+          : isActive ? 'rgba(74,158,255,.14)' : 'rgba(255,255,255,.04)',
         border: `.5px solid ${
           isCritical ? 'rgba(220,50,47,.55)'
-          : isActive  ? 'rgba(74,158,255,.38)'
-          : 'rgba(255,255,255,.06)'
+          : isActive  ? 'rgba(74,158,255,.38)' : 'rgba(255,255,255,.06)'
         }`,
-        borderRadius: 12, padding: '7px 16px', flexShrink: 0,
-        minWidth: 70, textAlign: 'center', marginRight: 4,
+        borderRadius: 12, padding: '7px 15px', flexShrink: 0,
+        minWidth: 68, textAlign: 'center', marginRight: 2,
         transition: 'all .3s',
         animation: isCritical ? 'timer-crit .75s infinite' : 'none',
       }}>
@@ -615,11 +573,10 @@ export function GamePage() {
       {drawOfferedByOpp && !gameOver && (
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '7px 12px',
+          padding: '7px 12px', flexShrink: 0,
           background: 'rgba(130,207,255,.08)',
           borderBottom: '.5px solid rgba(130,207,255,.2)',
           animation: 'draw-in .3s ease both',
-          flexShrink: 0,
         }}>
           <span style={{ fontSize: '.7rem', fontWeight: 700, color: '#82CFFF' }}>🤝 Соперник предлагает ничью</span>
           <div style={{ display: 'flex', gap: 7 }}>
@@ -629,8 +586,11 @@ export function GamePage() {
         </div>
       )}
 
-      {/* ── Соперник (сверху) ──────────────────────────────────────────────── */}
-      <div style={{ borderBottom: '.5px solid rgba(255,255,255,.05)', flexShrink: 0, paddingTop: PANEL_GAP_TOP }}>
+      {/* ── Верхний spacer — пустое пространство выравнивается между краем экрана и блоком ── */}
+      <div style={{ flex: 1, minHeight: 6 }} />
+
+      {/* ── Соперник (сверху, вплотную к доске) ───────────────────────────── */}
+      <div style={{ borderBottom: '.5px solid rgba(255,255,255,.05)', flexShrink: 0 }}>
         <PlayerPanel
           name={oppName} elo={oppElo} avatar={oppAvatar} isBot={oppIsBot}
           isWhite={oppIsWhite} captured={oppCaptured} advantage={oppAdv} coins={oppCoins}
@@ -639,9 +599,19 @@ export function GamePage() {
         />
       </div>
 
-      {/* ── Доска ─────────────────────────────────────────────────────────── */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-        <div style={{ width: boardSize, flexShrink: 0 }}>
+      {/* ── Статус-полоска верх: «Думает...» когда ход бота ──────────────── */}
+      <div style={{ height: STATUS_GAP, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        {!isMyTurn && !gameOver && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4A9EFF', animation: 'gp-pulse 1.4s infinite', boxShadow: '0 0 6px #4A9EFF' }} />
+            <span style={{ fontSize: '.72rem', fontWeight: 800, color: '#4A9EFF', letterSpacing: '.02em' }}>Думает...</span>
+          </div>
+        )}
+      </div>
+
+      {/* ── Доска — точный размер, НЕ flex-центрирование ─────────────────── */}
+      <div style={{ height: boardSize, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'visible' }}>
+        <div style={{ width: boardSize }}>
           <ChessBoard
             fen={fen}
             orientation={myColor}
@@ -654,8 +624,18 @@ export function GamePage() {
         </div>
       </div>
 
-      {/* ── Игрок (снизу) ─────────────────────────────────────────────────── */}
-      <div style={{ borderTop: '.5px solid rgba(255,255,255,.05)', flexShrink: 0, paddingBottom: PANEL_GAP_BOT }}>
+      {/* ── Статус-полоска низ: «Ваш ход» зелёным ───────────────────────── */}
+      <div style={{ height: STATUS_GAP, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        {isMyTurn && !gameOver && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#4DDA8A', animation: 'gp-pulse 1.4s infinite', boxShadow: '0 0 8px #4DDA8A' }} />
+            <span style={{ fontSize: '.78rem', fontWeight: 800, color: '#4DDA8A', letterSpacing: '.03em' }}>Ваш ход</span>
+          </div>
+        )}
+      </div>
+
+      {/* ── Игрок (снизу, вплотную к доске) ──────────────────────────────── */}
+      <div style={{ borderTop: '.5px solid rgba(255,255,255,.05)', flexShrink: 0 }}>
         <PlayerPanel
           name={myName} elo={myElo} avatar={myAvatar} isBot={false}
           isWhite={myColor === 'white'} captured={myCaptured} advantage={myAdv} coins={myCoins}
@@ -663,6 +643,9 @@ export function GamePage() {
           isActive={isMyTurn && !gameOver} isGameOver={gameOver}
         />
       </div>
+
+      {/* ── Нижний spacer ────────────────────────────────────────────────── */}
+      <div style={{ flex: 1, minHeight: 6 }} />
 
       {/* ── Панель действий: 3 большие кнопки ─────────────────────────────── */}
       <div style={{
