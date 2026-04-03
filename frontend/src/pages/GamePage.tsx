@@ -17,9 +17,10 @@ const PIECE_VAL:     Record<string, number>  = { p: 1, n: 3, b: 3, r: 5, q: 9 };
 const PIECE_START:   Record<string, number>  = { p: 8, n: 2, b: 2, r: 2, q: 1 };
 const SORT_ORDER:    Record<string, number>  = { q: 0, r: 1, b: 2, n: 3, p: 4 };
 
-const TOPBAR_H = 0;   // убираем отдельный топбар — статус встроен в панели
-const PANEL_H  = 72;  // высота панели игрока
-const ACTBAR_H = 64;  // нижняя панель кнопок
+const TOPBAR_H  = 0;   // убираем отдельный топбар — статус встроен в панели
+const PANEL_H   = 72;  // высота панели игрока
+const ACTBAR_H  = 64;  // нижняя панель кнопок
+const PANEL_GAP = 8;   // отступ снаружи панелей (от края экрана/action bar)
 
 // ── Хелперы ────────────────────────────────────────────────────────────────────
 function capturedFromFen(fen: string): { white: string[]; black: string[] } {
@@ -50,7 +51,7 @@ function fmtTime(secs: number): string {
 }
 
 function calcBoardSize(): number {
-  const reserved = PANEL_H * 2 + ACTBAR_H + 4;
+  const reserved = PANEL_H * 2 + ACTBAR_H + PANEL_GAP * 2 + 4;
   return Math.floor(Math.min(window.innerWidth, window.innerHeight - reserved));
 }
 
@@ -620,7 +621,7 @@ export function GamePage() {
       )}
 
       {/* ── Соперник (сверху) ──────────────────────────────────────────────── */}
-      <div style={{ borderBottom: '.5px solid rgba(255,255,255,.05)', flexShrink: 0 }}>
+      <div style={{ borderBottom: '.5px solid rgba(255,255,255,.05)', flexShrink: 0, paddingTop: PANEL_GAP }}>
         <PlayerPanel
           name={oppName} elo={oppElo} avatar={oppAvatar} isBot={oppIsBot}
           isWhite={oppIsWhite} captured={oppCaptured} advantage={oppAdv} coins={oppCoins}
@@ -645,7 +646,7 @@ export function GamePage() {
       </div>
 
       {/* ── Игрок (снизу) ─────────────────────────────────────────────────── */}
-      <div style={{ borderTop: '.5px solid rgba(255,255,255,.05)', flexShrink: 0 }}>
+      <div style={{ borderTop: '.5px solid rgba(255,255,255,.05)', flexShrink: 0, paddingBottom: PANEL_GAP }}>
         <PlayerPanel
           name={myName} elo={myElo} avatar={myAvatar} isBot={false}
           isWhite={myColor === 'white'} captured={myCaptured} advantage={myAdv} coins={myCoins}
