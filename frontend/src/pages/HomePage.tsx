@@ -597,12 +597,17 @@ export const HomePage: React.FC = () => {
         </div>
 
         {/* ══ КВЕСТЫ ══ */}
-        <div className="hp-quests hp-quests-wrap" style={{
-          margin: '0 .85rem 0',
-          background: 'linear-gradient(135deg,#141018,#0F0E18)',
-          border: '.5px solid rgba(155,109,255,.22)',
-          borderRadius: 16, overflow: 'hidden', position: 'relative',
-        }}>
+        <div
+          className="hp-quests hp-quests-wrap"
+          onClick={() => navigate('/tasks')}
+          style={{
+            margin: '0 .85rem 0',
+            background: 'linear-gradient(135deg,#141018,#0F0E18)',
+            border: '.5px solid rgba(155,109,255,.22)',
+            borderRadius: 16, overflow: 'hidden', position: 'relative',
+            cursor: 'pointer',
+          }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: '.7rem', padding: '.6rem .85rem .65rem' }}>
             <div style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, background: 'rgba(155,109,255,.12)', border: '.5px solid rgba(155,109,255,.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
@@ -635,7 +640,7 @@ export const HomePage: React.FC = () => {
                 ))}
               </div>
             </div>
-            <div style={{ fontSize: '.8rem', color: 'rgba(155,109,255,.4)', flexShrink: 0 }}>›</div>
+            <div style={{ fontSize: '1.1rem', color: 'rgba(155,109,255,.7)', flexShrink: 0 }}>›</div>
           </div>
         </div>
 

@@ -7,6 +7,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Chess } from 'chess.js';
 import type { Square } from 'chess.js';
 import { getSocket } from '@/api/socket';
+import { api } from '@/api/client';
 import { useGameStore } from '@/store/useGameStore';
 import { ChessBoard } from '@/components/game/ChessBoard';
 import { sound } from '@/lib/sound';
@@ -205,7 +206,7 @@ const PlayerPanel: React.FC<PanelProps> = ({
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 4, minWidth: 0 }}>
         <span style={{
           fontSize: '1rem', fontWeight: 700, lineHeight: 1,
-          color: isActive ? '#EAE2CC' : '#5A5248',
+          color: isActive ? '#EAE2CC' : '#9A9490',
           whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
           maxWidth: 88, transition: 'color .3s',
         }}>
@@ -300,13 +301,23 @@ const IcoFlag = () => (
   </svg>
 );
 
+const IcoStarBtn = ({ filled }: { filled: boolean }) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+      fill={filled ? '#F5C842' : 'none'}
+      stroke={filled ? '#F5C842' : 'currentColor'}
+      strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"
+    />
+  </svg>
+);
+
 // ── Результирующий bottom sheet ────────────────────────────────────────────────
 type ResultType = 'win' | 'lose' | 'draw';
 
-const RESULT_CFG: Record<ResultType, { bg: string; accent: string; emoji: string; title: string }> = {
-  win:  { bg: 'linear-gradient(150deg,#082B14,#145228)',  accent: '#5DEDA0', emoji: '🏆', title: 'Победа!' },
-  lose: { bg: 'linear-gradient(150deg,#111111,#1C1C1C)',  accent: '#888',    emoji: '💀', title: 'Поражение' },
-  draw: { bg: 'linear-gradient(150deg,#080E2E,#101E46)',  accent: '#82CFFF', emoji: '🤝', title: 'Ничья' },
+const RESULT_CFG: Record<ResultType, { accent: string; title: string }> = {
+  win:  { accent: '#5DEDA0', title: 'Победа!' },
+  lose: { accent: '#CC6060', title: 'Поражение' },
+  draw: { accent: '#82CFFF', title: 'Ничья' },
 };
 
 interface SheetProps {
@@ -317,67 +328,169 @@ interface SheetProps {
   onHome: () => void;
 }
 
+const IcoTrophy = () => (
+  <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+    <path d="M14 8h20v16a10 10 0 01-20 0V8z" stroke="#5DEDA0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M14 14H8a4 4 0 004 4h2M34 14h6a4 4 0 01-4 4h-2" stroke="#5DEDA0" strokeWidth="2" strokeLinecap="round"/>
+    <path d="M24 34v6M16 40h16" stroke="#5DEDA0" strokeWidth="2" strokeLinecap="round"/>
+    <path d="M19 40h10" stroke="#3DBA7A" strokeWidth="2.5" strokeLinecap="round"/>
+  </svg>
+);
+
+const IcoSkull = () => (
+  <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+    <path d="M24 8C15.163 8 8 15.163 8 24c0 5.2 2.5 9.8 6.3 12.7V40h19.4v-3.3C37.5 33.8 40 29.2 40 24c0-8.837-7.163-16-16-16z" stroke="#CC6060" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <circle cx="18" cy="23" r="3" fill="#CC6060" opacity=".8"/>
+    <circle cx="30" cy="23" r="3" fill="#CC6060" opacity=".8"/>
+    <path d="M20 34v-4M24 34v-4M28 34v-4" stroke="#CC6060" strokeWidth="1.8" strokeLinecap="round"/>
+  </svg>
+);
+
+const IcoDraw = () => (
+  <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+    <path d="M10 28c3 4 8 6 14 6s11-2 14-6" stroke="#82CFFF" strokeWidth="2" strokeLinecap="round"/>
+    <path d="M10 20c3-4 8-6 14-6s11 2 14 6" stroke="#82CFFF" strokeWidth="2" strokeLinecap="round"/>
+    <circle cx="24" cy="24" r="3" fill="#82CFFF" opacity=".8"/>
+    <path d="M8 24h10M30 24h10" stroke="#82CFFF" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+);
+
 const ResultSheet: React.FC<SheetProps> = ({ type, winAmount, pieceCoins, onRematch, onHome }) => {
   const cfg = RESULT_CFG[type];
-  const isWin = type === 'win';
+  const isWin  = type === 'win';
+  const isDraw = type === 'draw';
   const coinsDisplay = isWin ? (winAmount ?? pieceCoins) : null;
+
+  const overlayBg  = isWin
+    ? 'linear-gradient(160deg,rgba(5,26,12,.97),rgba(8,40,20,.97))'
+    : isDraw
+    ? 'linear-gradient(160deg,rgba(6,12,30,.97),rgba(8,16,42,.97))'
+    : 'linear-gradient(160deg,rgba(14,6,6,.97),rgba(22,8,8,.97))';
+
+  const borderCol  = isWin
+    ? 'rgba(93,237,160,.22)'
+    : isDraw
+    ? 'rgba(130,207,255,.22)'
+    : 'rgba(204,96,96,.18)';
+
+  const glowCol    = isWin
+    ? 'rgba(93,237,160,.18)'
+    : isDraw
+    ? 'rgba(130,207,255,.14)'
+    : 'rgba(204,96,96,.12)';
+
+  const circleBg   = isWin
+    ? 'rgba(93,237,160,.1)'
+    : isDraw
+    ? 'rgba(130,207,255,.1)'
+    : 'rgba(204,96,96,.08)';
 
   return (
     <>
       {isWin && <Confetti />}
-      <div
-        style={{ position: 'absolute', inset: 0, zIndex: 200, background: 'rgba(0,0,0,.62)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }}
-        onClick={onHome}
-      />
       <div style={{
-        position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 201,
-        background: '#0E1015', borderRadius: '22px 22px 0 0', overflow: 'hidden',
-        animation: 'sheet-up .38s cubic-bezier(.2,.85,.3,1.05) both',
-        boxShadow: '0 -8px 40px rgba(0,0,0,.6)',
+        position: 'fixed', inset: 0, zIndex: 200,
+        background: 'rgba(0,0,0,.75)',
+        backdropFilter: 'blur(14px)',
+        WebkitBackdropFilter: 'blur(14px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '24px 20px',
       }}>
-        <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(255,255,255,.12)', margin: '10px auto 0' }} />
-
-        <div style={{ background: cfg.bg, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 14, marginTop: 8 }}>
-          <span style={{ fontSize: 34, lineHeight: 1, flexShrink: 0 }}>{cfg.emoji}</span>
-          <div>
-            <div style={{ fontSize: '1.35rem', fontWeight: 900, color: cfg.accent, letterSpacing: '-.01em' }}>{cfg.title}</div>
-            {coinsDisplay && (
-              <div style={{ fontSize: '.8rem', fontWeight: 700, color: '#F4C430', marginTop: 3, display: 'flex', alignItems: 'center', gap: 5 }}>
-                <CoinIcon size={14} />
-                <span>+{coinsDisplay} зачислено на баланс</span>
-              </div>
-            )}
-            {!coinsDisplay && type === 'lose' && (
-              <div style={{ fontSize: '.72rem', color: '#4A4840', marginTop: 3 }}>Попробуй ещё раз</div>
-            )}
+        <div style={{
+          width: '100%', maxWidth: 340,
+          background: overlayBg,
+          border: `1px solid ${borderCol}`,
+          borderRadius: 28,
+          padding: '40px 24px 28px',
+          boxShadow: `0 0 80px ${glowCol}, 0 24px 60px rgba(0,0,0,.7)`,
+          animation: 'result-pop .42s cubic-bezier(.2,.9,.3,1.05) both',
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          textAlign: 'center',
+        }}>
+          {/* Иконка */}
+          <div style={{
+            width: 96, height: 96, borderRadius: '50%',
+            background: circleBg,
+            border: `1.5px solid ${borderCol}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            marginBottom: 24,
+            boxShadow: `0 0 40px ${glowCol}`,
+          }}>
+            {isWin ? <IcoTrophy /> : isDraw ? <IcoDraw /> : <IcoSkull />}
           </div>
-        </div>
 
-        <div style={{ padding: '14px 16px', paddingBottom: 'max(20px, env(safe-area-inset-bottom, 20px))', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div style={{ display: 'flex', gap: 10 }}>
+          {/* Заголовок */}
+          <div style={{
+            fontSize: '2rem', fontWeight: 900,
+            color: cfg.accent,
+            letterSpacing: '-.02em',
+            marginBottom: 10,
+            lineHeight: 1,
+          }}>
+            {cfg.title}
+          </div>
+
+          {/* Монеты */}
+          {coinsDisplay && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 28 }}>
+              <CoinIcon size={20} />
+              <span style={{ fontSize: '1.2rem', fontWeight: 800, color: '#F4C430' }}>
+                +{coinsDisplay}
+              </span>
+            </div>
+          )}
+          {!coinsDisplay && type === 'lose' && (
+            <div style={{ fontSize: '.78rem', color: '#5A3A3A', marginBottom: 28 }}>
+              Не сдавайся — следующая будет лучше
+            </div>
+          )}
+          {isDraw && (
+            <div style={{ fontSize: '.78rem', color: '#3A5070', marginBottom: 28 }}>
+              Соперники оказались равны
+            </div>
+          )}
+          {isWin && !coinsDisplay && (
+            <div style={{ height: 28 }} />
+          )}
+
+          {/* Кнопки */}
+          <div style={{ display: 'flex', gap: 10, width: '100%', marginBottom: 10 }}>
             <button onClick={onRematch} style={{
-              flex: 1, padding: '13px 0', borderRadius: 14,
-              background: isWin ? 'rgba(61,186,122,.14)' : 'rgba(255,255,255,.06)',
-              border: `.5px solid ${isWin ? 'rgba(61,186,122,.32)' : 'rgba(255,255,255,.1)'}`,
-              color: isWin ? '#5DEDA0' : '#8A8270', fontSize: '.8rem', fontWeight: 800,
+              flex: 1, padding: '14px 0', borderRadius: 14,
+              background: isWin ? 'rgba(93,237,160,.12)' : 'rgba(255,255,255,.05)',
+              border: `.5px solid ${isWin ? 'rgba(93,237,160,.3)' : 'rgba(255,255,255,.1)'}`,
+              color: isWin ? '#5DEDA0' : '#6A7080',
+              fontSize: '.82rem', fontWeight: 800,
               cursor: 'pointer', fontFamily: 'inherit',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-            }}>🔄 <span>Реванш</span></button>
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+            }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M20.5 9A9 9 0 005.3 5.3L1 10M23 14l-4.2 4.7A9 9 0 013.5 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              Реванш
+            </button>
             <button disabled style={{
-              flex: 1, padding: '13px 0', borderRadius: 14,
-              background: 'rgba(255,255,255,.04)', border: '.5px solid rgba(255,255,255,.07)',
-              color: '#404040', fontSize: '.8rem', fontWeight: 800,
+              flex: 1, padding: '14px 0', borderRadius: 14,
+              background: 'rgba(255,255,255,.03)', border: '.5px solid rgba(255,255,255,.06)',
+              color: '#303440', fontSize: '.82rem', fontWeight: 800,
               cursor: 'default', fontFamily: 'inherit',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, opacity: 0.5,
-            }}>📋 <span>Анализ</span></button>
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, opacity: 0.5,
+            }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 11l3 3L22 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              Анализ
+            </button>
           </div>
           <button onClick={onHome} style={{
-            width: '100%', padding: '15px 0', borderRadius: 14,
+            width: '100%', padding: '16px 0', borderRadius: 14,
             background: 'linear-gradient(135deg,#2A1E08,#4A3810)',
-            border: '.5px solid rgba(212,168,67,.42)', color: '#F0C85A',
-            fontSize: '.9rem', fontWeight: 900, cursor: 'pointer', fontFamily: 'inherit',
+            border: '.5px solid rgba(212,168,67,.42)',
+            color: '#F0C85A',
+            fontSize: '.9rem', fontWeight: 900,
+            cursor: 'pointer', fontFamily: 'inherit',
             boxShadow: '0 4px 22px rgba(212,168,67,.15)',
-          }}>← На главную</button>
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 9.5L12 3l9 6.5V21a1 1 0 01-1 1H15v-6h-6v6H4a1 1 0 01-1-1V9.5z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            На главную
+          </button>
         </div>
       </div>
     </>
@@ -398,6 +511,8 @@ export function GamePage() {
   const [myTimeSecs,     setMyTimeSecs]     = useState(0);
   const [oppTimeSecs,    setOppTimeSecs]    = useState(0);
   const [soundPlayed,    setSoundPlayed]    = useState(false);
+  const [isSaved,        setIsSaved]        = useState(false);
+  const [isSaving,       setIsSaving]       = useState(false);
 
   const mySecsRef   = useRef(0);
   const oppSecsRef  = useRef(0);
@@ -544,6 +659,30 @@ export function GamePage() {
     getSocket().emit('game:decline_draw', { sessionId });
   }, [sessionId]);
 
+  // Сохранить / убрать партию
+  useEffect(() => {
+    if (!sessionId) return;
+    api.get<{ saved: boolean }>(`/games/${sessionId}/saved`)
+      .then(res => setIsSaved(res.saved))
+      .catch(() => {});
+  }, [sessionId]);
+
+  const handleToggleSave = useCallback(async () => {
+    if (isSaving) return;
+    setIsSaving(true);
+    try {
+      if (isSaved) {
+        await api.delete(`/games/${sessionId}/save`);
+        setIsSaved(false);
+      } else {
+        await api.post(`/games/${sessionId}/save`, {});
+        setIsSaved(true);
+      }
+    } catch { /* ignore */ } finally {
+      setIsSaving(false);
+    }
+  }, [sessionId, isSaved, isSaving]);
+
   // ── Загрузка ────────────────────────────────────────────────────────────────
   if (!session) {
     return (
@@ -567,6 +706,7 @@ export function GamePage() {
         @keyframes sheet-up  { from{transform:translateY(100%)} to{transform:translateY(0)} }
         @keyframes cf-fall   { 0%{transform:translateY(0) rotate(0deg);opacity:1} 80%{opacity:.9} 100%{transform:translateY(320px) rotate(600deg);opacity:0} }
         @keyframes draw-in   { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes result-pop{ from{opacity:0;transform:scale(.88)} to{opacity:1;transform:scale(1)} }
       `}</style>
 
       {/* ── Предложение ничьи от соперника ─────────────────────────────────── */}
@@ -647,13 +787,13 @@ export function GamePage() {
       {/* ── Нижний spacer ────────────────────────────────────────────────── */}
       <div style={{ flex: 1, minHeight: 6 }} />
 
-      {/* ── Панель действий: 3 большие кнопки ─────────────────────────────── */}
+      {/* ── Панель действий: 4 кнопки ─────────────────────────────── */}
       <div style={{
-        display: 'grid', gridTemplateColumns: '1fr 1fr 1fr',
+        display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr',
         height: ACTBAR_H,
         paddingBottom: 'max(0px, env(safe-area-inset-bottom, 0px))',
-        borderTop: '.5px solid rgba(255,255,255,.06)',
-        flexShrink: 0, background: 'rgba(0,0,0,.2)',
+        borderTop: '.5px solid rgba(255,255,255,.09)',
+        flexShrink: 0, background: 'rgba(10,12,18,.6)',
         gap: 1,
       }}>
         {/* Главная */}
@@ -661,13 +801,34 @@ export function GamePage() {
           onClick={() => navigate('/')}
           style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            gap: 4, background: 'rgba(255,255,255,.04)', border: 'none',
-            color: '#5A6070', cursor: 'pointer', fontFamily: 'inherit',
-            transition: 'background .15s',
+            gap: 5, background: 'rgba(255,255,255,.03)', border: 'none',
+            color: '#7A8898', cursor: 'pointer', fontFamily: 'inherit',
+            transition: 'background .15s, color .15s',
           }}
         >
           <IcoHome />
-          <span style={{ fontSize: '.6rem', fontWeight: 700, letterSpacing: '.04em' }}>Главная</span>
+          <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Главная</span>
+        </button>
+
+        {/* Сохранить */}
+        <button
+          onClick={handleToggleSave}
+          disabled={isSaving}
+          style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            gap: 5,
+            background: isSaved ? 'rgba(245,200,66,.07)' : 'rgba(255,255,255,.03)',
+            border: 'none',
+            color: isSaved ? '#F5C842' : '#7A8898',
+            cursor: isSaving ? 'wait' : 'pointer',
+            fontFamily: 'inherit',
+            transition: 'background .15s, color .15s',
+          }}
+        >
+          <IcoStarBtn filled={isSaved} />
+          <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>
+            {isSaved ? 'Сохранено' : 'Сохранить'}
+          </span>
         </button>
 
         {/* Ничья */}
@@ -676,19 +837,19 @@ export function GamePage() {
           disabled={gameOver || drawOfferedByMe}
           style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            gap: 4,
-            background: drawOfferedByOpp ? 'rgba(130,207,255,.1)' : 'rgba(255,255,255,.04)',
+            gap: 5,
+            background: drawOfferedByOpp ? 'rgba(130,207,255,.1)' : 'rgba(255,255,255,.03)',
             border: 'none',
-            color: drawOfferedByOpp ? '#82CFFF' : drawOfferedByMe ? '#2A2A30' : '#5A6070',
+            color: drawOfferedByOpp ? '#82CFFF' : drawOfferedByMe ? '#2A2A30' : '#7A8898',
             cursor: gameOver || drawOfferedByMe ? 'default' : 'pointer',
             fontFamily: 'inherit',
             opacity: drawOfferedByMe ? 0.4 : 1,
-            transition: 'background .15s',
+            transition: 'background .15s, color .15s',
           }}
         >
           <IcoHandshake />
-          <span style={{ fontSize: '.6rem', fontWeight: 700, letterSpacing: '.04em' }}>
-            {drawOfferedByOpp ? 'Принять =' : drawOfferedByMe ? 'Ждём...' : 'Ничья'}
+          <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>
+            {drawOfferedByOpp ? 'Принять' : drawOfferedByMe ? 'Ждём...' : 'Ничья'}
           </span>
         </button>
 
@@ -698,16 +859,16 @@ export function GamePage() {
           disabled={gameOver}
           style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            gap: 4,
-            background: gameOver ? 'rgba(255,255,255,.03)' : 'rgba(220,50,47,.07)',
+            gap: 5,
+            background: gameOver ? 'rgba(255,255,255,.02)' : 'rgba(220,50,47,.06)',
             border: 'none',
-            color: gameOver ? '#2A2420' : '#CC5555',
+            color: gameOver ? '#2A2420' : '#BB5555',
             cursor: gameOver ? 'default' : 'pointer',
-            fontFamily: 'inherit', transition: 'background .15s',
+            fontFamily: 'inherit', transition: 'background .15s, color .15s',
           }}
         >
           <IcoFlag />
-          <span style={{ fontSize: '.6rem', fontWeight: 700, letterSpacing: '.04em' }}>Сдаться</span>
+          <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Сдаться</span>
         </button>
       </div>
 
