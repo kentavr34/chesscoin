@@ -14,9 +14,9 @@ interface JarvisPlayModalProps {
 const TIME_OPTIONS = [1, 3, 5, 15, 30, 60];
 const JARVIS_NAMES = ['Beginner','Rookie','Player','Challenger','Fighter','Warrior','Expert','Master','Legend','God','Prodigy','Tactician','Strategist','Grandmaster','Elite','Champion','Legend II','Titan','Oracle','Mystic'];
 
-// ── Иконки цветов ─────────────────────────────────────────────────────────────
+// ── Иконки цветов (увеличены до 22px) ────────────────────────────────────────
 const IcoDice = () => (
-  <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
+  <svg width="22" height="22" viewBox="0 0 18 18" fill="none">
     <rect x="1.5" y="1.5" width="15" height="15" rx="3" stroke="currentColor" strokeWidth="1.3"/>
     <circle cx="5.5" cy="5.5" r="1.2" fill="currentColor"/>
     <circle cx="12.5" cy="5.5" r="1.2" fill="currentColor"/>
@@ -27,7 +27,7 @@ const IcoDice = () => (
 );
 
 const IcoKingWhite = () => (
-  <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
+  <svg width="22" height="22" viewBox="0 0 18 18" fill="none">
     <path d="M9 2v3M7.5 3.5h3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
     <rect x="7" y="5" width="4" height="2" rx=".5" fill="currentColor" opacity=".8"/>
     <path d="M5.5 7h7l-1 8H6.5L5.5 7z" fill="currentColor" opacity=".7"/>
@@ -36,7 +36,7 @@ const IcoKingWhite = () => (
 );
 
 const IcoKingBlack = () => (
-  <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
+  <svg width="22" height="22" viewBox="0 0 18 18" fill="none">
     <path d="M9 2v3M7.5 3.5h3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
     <rect x="7" y="5" width="4" height="2" rx=".5" fill="currentColor" opacity=".9"/>
     <path d="M5.5 7h7l-1 8H6.5L5.5 7z" fill="currentColor" opacity=".9"/>
@@ -64,6 +64,12 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
   const level = localizedLevels[selectedLvl - 1];
   const levelName = level?.name || JARVIS_NAMES[selectedLvl - 1] || `Уровень ${selectedLvl}`;
 
+  // Статус уровня
+  const levelStatus = selectedLvl < currentJarvisLevel ? 'completed'
+    : selectedLvl === currentJarvisLevel ? 'current'
+    : 'locked';
+  const canPlay = levelStatus === 'current';
+
   // Countdown логика
   useEffect(() => {
     if (phase !== 'countdown') return;
@@ -76,11 +82,12 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
   }, [phase, count]);
 
   const handlePlay = useCallback(() => {
+    if (!canPlay) return;
     const rc = color === 'random' ? (Math.random() > 0.5 ? 'white' : 'black') : color;
     setResolvedColor(rc);
     setCount(3);
     setPhase('countdown');
-  }, [color]);
+  }, [color, canPlay]);
 
   // Закрытие по Escape
   useEffect(() => {
@@ -160,7 +167,9 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
         backdropFilter: 'blur(10px)',
         WebkitBackdropFilter: 'blur(10px)',
         display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-        padding: '0 0 max(20px, env(safe-area-inset-bottom, 20px))',
+        // Поднимаем над BottomNav (82px) + safe-area
+        paddingBottom: 'calc(82px + env(safe-area-inset-bottom, 0px))',
+        paddingTop: '16px',
       }}
     >
       <style>{`
@@ -175,7 +184,7 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
         background: 'linear-gradient(170deg,#0D0F18,#0A0C14)',
         border: '.5px solid rgba(74,158,255,.2)',
         borderRadius: '24px 24px 0 0',
-        padding: '0 0 8px',
+        padding: '0 0 10px',
         boxShadow: '0 -16px 48px rgba(0,0,0,.6), 0 -1px 0 rgba(74,158,255,.1)',
       }}>
 
@@ -185,7 +194,7 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
         </div>
 
         {/* Заголовок + закрыть */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 18px 14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 18px 12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '.55rem' }}>
             <svg width="20" height="20" viewBox="0 0 28 28" fill="none">
               <circle cx="14" cy="10" r="6.5" stroke="#4A9EFF" strokeWidth="1.4"/>
@@ -208,12 +217,13 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
         </div>
 
         {/* ── Блок уровня ── */}
-        <div style={{ margin: '0 14px 16px', position: 'relative' }}>
+        <div style={{ margin: '0 14px 14px', position: 'relative' }}>
           <div style={{ fontSize: '.52rem', fontWeight: 700, color: '#4A6080', textTransform: 'uppercase', letterSpacing: '.12em', marginBottom: 6 }}>Активный уровень</div>
           <div style={{
             display: 'flex', alignItems: 'center', gap: '.6rem',
             background: 'linear-gradient(135deg,#0B1422,#0F1A30)',
-            border: '.5px solid rgba(74,158,255,.3)', borderRadius: 14,
+            border: `.5px solid ${levelStatus === 'current' ? 'rgba(74,158,255,.4)' : levelStatus === 'completed' ? 'rgba(61,186,122,.25)' : 'rgba(255,255,255,.08)'}`,
+            borderRadius: 14,
             padding: '10px 14px',
           }}>
             {/* стрелка влево */}
@@ -234,9 +244,23 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
               <div style={{ fontSize: '.56rem', fontWeight: 700, color: '#4A7090', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 2 }}>
                 Уровень {selectedLvl} / {localizedLevels.length}
               </div>
-              <div style={{ fontSize: '1rem', fontWeight: 900, color: '#82CFFF', letterSpacing: '.02em' }}>{levelName}</div>
-              <div style={{ fontSize: '.58rem', color: 'rgba(74,158,255,.6)', marginTop: 2 }}>
-                Победа: +{(level?.reward || 0).toLocaleString()} 🪙
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.35rem', marginBottom: 2 }}>
+                {/* Статус-индикатор */}
+                {levelStatus === 'completed' && (
+                  <span style={{ fontSize: '.75rem', color: '#3DBA7A' }}>✓</span>
+                )}
+                {levelStatus === 'locked' && (
+                  <span style={{ fontSize: '.75rem', color: 'rgba(255,255,255,.3)' }}>🔒</span>
+                )}
+                <div style={{
+                  fontSize: '1rem', fontWeight: 900, letterSpacing: '.02em',
+                  color: levelStatus === 'completed' ? 'rgba(130,207,255,.4)'
+                    : levelStatus === 'locked' ? 'rgba(255,255,255,.25)'
+                    : '#82CFFF',
+                }}>{levelName}</div>
+              </div>
+              <div style={{ fontSize: '.58rem', color: levelStatus === 'current' ? 'rgba(74,158,255,.6)' : 'rgba(74,158,255,.25)', marginTop: 0 }}>
+                {levelStatus === 'completed' ? 'Пройдено' : levelStatus === 'locked' ? 'Закрыто' : `Победа: +${(level?.reward || 0).toLocaleString()} 🪙`}
               </div>
             </div>
 
@@ -256,8 +280,8 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
           </div>
         </div>
 
-        {/* ── Выбор цвета ── */}
-        <div style={{ margin: '0 14px 16px' }}>
+        {/* ── Выбор цвета (увеличен) ── */}
+        <div style={{ margin: '0 14px 14px', opacity: canPlay ? 1 : 0.35, pointerEvents: canPlay ? 'auto' : 'none' }}>
           <div style={{ fontSize: '.52rem', fontWeight: 700, color: '#4A6080', textTransform: 'uppercase', letterSpacing: '.12em', marginBottom: 8 }}>Цвет фигур</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
             {([
@@ -274,8 +298,8 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
                   style={{
                     background: active ? opt.activeBg : opt.bg,
                     border: `.5px solid ${active ? opt.activeBorder : opt.border}`,
-                    borderRadius: 12, padding: '10px 6px',
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
+                    borderRadius: 12, padding: '14px 8px',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
                     cursor: 'pointer', fontFamily: 'inherit',
                     transition: 'all .15s',
                     transform: 'scale(1)',
@@ -283,21 +307,20 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
                   }}
                 >
                   <span style={{ color: opt.color }}><opt.Icon /></span>
-                  <span style={{ fontSize: '.62rem', fontWeight: 800, color: active ? opt.color : 'rgba(255,255,255,.5)', letterSpacing: '.03em' }}>{opt.label}</span>
-                  {active && <div style={{ width: 16, height: 2, borderRadius: 1, background: opt.activeBorder }} />}
+                  <span style={{ fontSize: '.72rem', fontWeight: 800, color: active ? opt.color : 'rgba(255,255,255,.5)', letterSpacing: '.03em' }}>{opt.label}</span>
+                  {active && <div style={{ width: 18, height: 2, borderRadius: 1, background: opt.activeBorder }} />}
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* ── Выбор времени ── */}
-        <div style={{ margin: '0 14px 20px' }}>
+        {/* ── Выбор времени (увеличен) ── */}
+        <div style={{ margin: '0 14px 18px', opacity: canPlay ? 1 : 0.35, pointerEvents: canPlay ? 'auto' : 'none' }}>
           <div style={{ fontSize: '.52rem', fontWeight: 700, color: '#4A6080', textTransform: 'uppercase', letterSpacing: '.12em', marginBottom: 8 }}>Время партии</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 7 }}>
             {TIME_OPTIONS.map(t => {
               const active = time === t;
-              const label = t < 60 ? `${t} мин` : '1 час';
               return (
                 <button
                   key={t}
@@ -306,18 +329,18 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
                   style={{
                     background: active ? 'rgba(74,158,255,.16)' : 'rgba(74,158,255,.06)',
                     border: `.5px solid ${active ? '#4A9EFF' : 'rgba(74,158,255,.18)'}`,
-                    borderRadius: 10, padding: '9px 6px',
+                    borderRadius: 10, padding: '12px 6px',
                     cursor: 'pointer', fontFamily: 'inherit',
                     transition: 'all .15s',
                     transform: 'scale(1)',
                     boxShadow: active ? '0 0 10px rgba(74,158,255,.25)' : 'none',
                   }}
                 >
-                  <div style={{ fontSize: '.82rem', fontWeight: 900, color: active ? '#82CFFF' : 'rgba(74,158,255,.6)', letterSpacing: '-.01em' }}>
+                  <div style={{ fontSize: '1rem', fontWeight: 900, color: active ? '#82CFFF' : 'rgba(74,158,255,.6)', letterSpacing: '-.01em' }}>
                     {t < 60 ? t : '60'}
                   </div>
-                  <div style={{ fontSize: '.5rem', fontWeight: 700, color: active ? 'rgba(130,207,255,.7)' : 'rgba(74,158,255,.35)', letterSpacing: '.06em', marginTop: 2 }}>
-                    {t < 60 ? 'МИН' : 'МИН'}
+                  <div style={{ fontSize: '.58rem', fontWeight: 700, color: active ? 'rgba(130,207,255,.7)' : 'rgba(74,158,255,.35)', letterSpacing: '.06em', marginTop: 2 }}>
+                    МИН
                   </div>
                 </button>
               );
@@ -329,26 +352,31 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
         <div style={{ margin: '0 14px' }}>
           <button
             onClick={handlePlay}
+            disabled={!canPlay}
             style={{
               width: '100%', padding: '14px',
-              background: 'linear-gradient(135deg,#1A3A6A,#234B8A)',
-              border: '.5px solid rgba(74,158,255,.45)',
-              borderRadius: 14, cursor: 'pointer',
+              background: canPlay
+                ? 'linear-gradient(135deg,#1A3A6A,#234B8A)'
+                : 'rgba(255,255,255,.04)',
+              border: `.5px solid ${canPlay ? 'rgba(74,158,255,.45)' : 'rgba(255,255,255,.08)'}`,
+              borderRadius: 14, cursor: canPlay ? 'pointer' : 'default',
               fontFamily: 'inherit', fontSize: '.9rem',
               fontWeight: 900, letterSpacing: '.06em',
-              color: '#C8E8FF',
-              boxShadow: '0 4px 20px rgba(74,158,255,.2)',
+              color: canPlay ? '#C8E8FF' : '#3A4052',
+              boxShadow: canPlay ? '0 4px 20px rgba(74,158,255,.2)' : 'none',
               transition: 'all .15s',
               position: 'relative', overflow: 'hidden',
             }}
           >
-            <div style={{
-              position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%',
-              background: 'linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent)',
-              animation: 'jpm-shine 2.5s ease-in-out infinite',
-            }} />
+            {canPlay && (
+              <div style={{
+                position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%',
+                background: 'linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent)',
+                animation: 'jpm-shine 2.5s ease-in-out infinite',
+              }} />
+            )}
             <style>{`@keyframes jpm-shine{0%{left:-100%}100%{left:200%}}`}</style>
-            ИГРАТЬ
+            {levelStatus === 'completed' ? '✓ ПРОЙДЕНО' : levelStatus === 'locked' ? '🔒 ЗАКРЫТ' : 'ИГРАТЬ'}
           </button>
         </div>
 

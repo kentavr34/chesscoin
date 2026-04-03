@@ -12,7 +12,7 @@ interface Props {
 const COST_PER = 1000;
 
 // ── Иконка звезды ──────────────────────────────────────────────────────────────
-const IcoStar = ({ filled, size = 28 }: { filled: boolean; size?: number }) => (
+const IcoStar = ({ filled, size = 30 }: { filled: boolean; size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 28 28" fill="none">
     <path
       d="M14 3l2.6 6.2 6.6.6-5 4.7 1.5 6.5L14 17.8l-5.7 3.2 1.5-6.5-5-4.7 6.6-.6z"
@@ -45,8 +45,12 @@ export const AttemptsModal: React.FC<Props> = ({ user, onClose }) => {
   const { setUser } = useUserStore();
 
   const maxBuy = Math.max(0, (user.maxAttempts ?? 3) - (user.attempts ?? 0));
-  const canAfford = parseInt(user.balance || '0') >= count * COST_PER;
+  const balance = Math.max(parseInt(user.balance || '0'), 0);
   const totalCost = count * COST_PER;
+  const canAfford = balance >= totalCost;
+
+  const decrement = () => setCount(c => Math.max(1, c - 1));
+  const increment = () => setCount(c => Math.min(maxBuy, c + 1));
 
   const handleBuy = async () => {
     if (!canAfford || loading || maxBuy === 0) return;
@@ -66,8 +70,6 @@ export const AttemptsModal: React.FC<Props> = ({ user, onClose }) => {
     }
   };
 
-  const balance = Math.max(parseInt(user.balance || '0'), 0);
-
   return (
     <div
       onClick={(e) => e.target === e.currentTarget && onClose()}
@@ -76,13 +78,14 @@ export const AttemptsModal: React.FC<Props> = ({ user, onClose }) => {
         background: 'rgba(4,3,8,.82)',
         backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
         display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-        padding: '0 0 max(20px, env(safe-area-inset-bottom, 20px))',
+        paddingBottom: 'calc(82px + env(safe-area-inset-bottom, 0px))',
+        paddingTop: '16px',
       }}
     >
       <style>{`
         @keyframes bam-slide { from{opacity:0;transform:translateY(28px)} to{opacity:1;transform:translateY(0)} }
         .bam-sheet { animation: bam-slide .22s cubic-bezier(.25,.8,.25,1) both; }
-        .bam-qty:active { transform: scale(.9) !important; }
+        .bam-stepper:active { transform: scale(.88) !important; }
       `}</style>
 
       <div className="bam-sheet" style={{
@@ -91,7 +94,7 @@ export const AttemptsModal: React.FC<Props> = ({ user, onClose }) => {
         border: '.5px solid rgba(212,168,67,.25)',
         borderRadius: '24px 24px 0 0',
         boxShadow: '0 -12px 40px rgba(0,0,0,.6), 0 -1px 0 rgba(212,168,67,.12)',
-        padding: '0 0 8px',
+        padding: '0 0 10px',
       }}>
 
         {/* Drag handle */}
@@ -112,124 +115,129 @@ export const AttemptsModal: React.FC<Props> = ({ user, onClose }) => {
 
         {/* ── Звёзды + баланс ── */}
         <div style={{
-          margin: '0 14px 16px',
+          margin: '0 14px 20px',
           background: 'linear-gradient(135deg,rgba(212,168,67,.08),rgba(212,168,67,.04))',
           border: '.5px solid rgba(212,168,67,.2)', borderRadius: 14,
-          padding: '12px 16px',
+          padding: '14px 18px',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
-          {/* Звёзды */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <div style={{ fontSize: '.5rem', fontWeight: 700, color: '#7A6830', textTransform: 'uppercase', letterSpacing: '.1em' }}>Попытки</div>
             <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
               {Array.from({ length: user.maxAttempts ?? 3 }, (_, i) => (
-                <IcoStar key={i} filled={i < (user.attempts ?? 0)} size={26} />
+                <IcoStar key={i} filled={i < (user.attempts ?? 0)} size={30} />
               ))}
-              <span style={{ fontSize: '.72rem', fontWeight: 700, color: '#9A8840', marginLeft: 4 }}>
+              <span style={{ fontSize: '.78rem', fontWeight: 700, color: '#9A8840', marginLeft: 4 }}>
                 {user.attempts ?? 0}/{user.maxAttempts ?? 3}
               </span>
             </div>
           </div>
 
-          {/* Баланс */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
             <div style={{ fontSize: '.5rem', fontWeight: 700, color: '#7A6830', textTransform: 'uppercase', letterSpacing: '.1em' }}>Баланс</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <span style={{ fontSize: '1.05rem', fontWeight: 900, color: '#D4A843', letterSpacing: '-.01em' }}>
+              <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#D4A843', letterSpacing: '-.01em' }}>
                 {balance.toLocaleString()}
               </span>
-              <IcoCoin size={16} />
+              <IcoCoin size={17} />
             </div>
           </div>
         </div>
 
-        {/* ── Выбор количества ── */}
         {maxBuy > 0 ? (
-          <div style={{ margin: '0 14px 16px' }}>
-            <div style={{ fontSize: '.52rem', fontWeight: 700, color: '#7A6830', textTransform: 'uppercase', letterSpacing: '.12em', marginBottom: 10 }}>
-              Количество (макс. {maxBuy})
+          <>
+            {/* ── Счётчик − / N / + ── */}
+            <div style={{ margin: '0 14px 20px' }}>
+              <div style={{ fontSize: '.52rem', fontWeight: 700, color: '#7A6830', textTransform: 'uppercase', letterSpacing: '.12em', marginBottom: 14, textAlign: 'center' }}>
+                Количество попыток
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
+
+                {/* Минус */}
+                <button
+                  className="bam-stepper"
+                  onClick={decrement}
+                  disabled={count <= 1}
+                  style={{
+                    width: 52, height: 52, borderRadius: 16,
+                    background: count > 1 ? 'rgba(212,168,67,.12)' : 'rgba(255,255,255,.04)',
+                    border: `.5px solid ${count > 1 ? 'rgba(212,168,67,.4)' : 'rgba(255,255,255,.08)'}`,
+                    color: count > 1 ? '#D4A843' : '#3A3A40',
+                    fontSize: '1.6rem', fontWeight: 900,
+                    cursor: count > 1 ? 'pointer' : 'default',
+                    fontFamily: 'inherit',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    transition: 'all .15s', transform: 'scale(1)',
+                    boxShadow: count > 1 ? '0 0 10px rgba(212,168,67,.12)' : 'none',
+                  }}
+                >−</button>
+
+                {/* Количество + цена */}
+                <div style={{ textAlign: 'center', minWidth: 90 }}>
+                  <div style={{ fontSize: '2.8rem', fontWeight: 900, color: '#F0C85A', lineHeight: 1, letterSpacing: '-.02em' }}>
+                    {count}
+                  </div>
+                  <div style={{
+                    fontSize: '.65rem', fontWeight: 700, marginTop: 5,
+                    color: canAfford ? 'rgba(212,168,67,.65)' : '#EF4444',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                  }}>
+                    {totalCost.toLocaleString()} <IcoCoin size={13} />
+                  </div>
+                </div>
+
+                {/* Плюс */}
+                <button
+                  className="bam-stepper"
+                  onClick={increment}
+                  disabled={count >= maxBuy}
+                  style={{
+                    width: 52, height: 52, borderRadius: 16,
+                    background: count < maxBuy ? 'rgba(212,168,67,.12)' : 'rgba(255,255,255,.04)',
+                    border: `.5px solid ${count < maxBuy ? 'rgba(212,168,67,.4)' : 'rgba(255,255,255,.08)'}`,
+                    color: count < maxBuy ? '#D4A843' : '#3A3A40',
+                    fontSize: '1.6rem', fontWeight: 900,
+                    cursor: count < maxBuy ? 'pointer' : 'default',
+                    fontFamily: 'inherit',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    transition: 'all .15s', transform: 'scale(1)',
+                    boxShadow: count < maxBuy ? '0 0 10px rgba(212,168,67,.12)' : 'none',
+                  }}
+                >+</button>
+              </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(maxBuy, 3)}, 1fr)`, gap: 8 }}>
-              {Array.from({ length: maxBuy }, (_, i) => i + 1).map(n => {
-                const active = count === n;
-                const affordable = balance >= n * COST_PER;
-                return (
-                  <button
-                    key={n}
-                    className="bam-qty"
-                    onClick={() => setCount(n)}
-                    style={{
-                      background: active ? 'rgba(212,168,67,.18)' : 'rgba(212,168,67,.07)',
-                      border: `.5px solid ${active ? '#D4A843' : 'rgba(212,168,67,.2)'}`,
-                      borderRadius: 12, padding: '12px 8px',
-                      cursor: 'pointer', fontFamily: 'inherit',
-                      transition: 'all .15s', transform: 'scale(1)',
-                      boxShadow: active ? '0 0 12px rgba(212,168,67,.25)' : 'none',
-                      opacity: affordable ? 1 : .45,
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 4 }}>
-                      <IcoStar filled size={20} />
-                    </div>
-                    <div style={{ fontSize: '.82rem', fontWeight: 900, color: active ? '#F0C85A' : '#9A8840', marginBottom: 2 }}>×{n}</div>
-                    <div style={{ fontSize: '.55rem', fontWeight: 700, color: active ? 'rgba(240,200,90,.7)' : 'rgba(212,168,67,.4)', letterSpacing: '.04em' }}>
-                      {(n * COST_PER).toLocaleString()} 🪙
-                    </div>
-                  </button>
-                );
-              })}
+
+            {/* ── Кнопка купить ── */}
+            <div style={{ margin: '0 14px' }}>
+              {!canAfford && (
+                <div style={{ fontSize: '.62rem', fontWeight: 700, color: '#EF4444', textAlign: 'center', marginBottom: 8, letterSpacing: '.04em' }}>
+                  Недостаточно монет
+                </div>
+              )}
+              <button
+                onClick={handleBuy}
+                disabled={loading || !canAfford}
+                style={{
+                  width: '100%', padding: '14px',
+                  background: canAfford
+                    ? 'linear-gradient(135deg,#3A2A08,#5A4010)'
+                    : 'rgba(255,255,255,.04)',
+                  border: `.5px solid ${canAfford ? 'rgba(212,168,67,.5)' : 'rgba(255,255,255,.1)'}`,
+                  borderRadius: 14, cursor: canAfford ? 'pointer' : 'default',
+                  fontFamily: 'inherit', fontSize: '.9rem',
+                  fontWeight: 900, letterSpacing: '.04em',
+                  color: canAfford ? '#F0C85A' : '#4A4640',
+                  opacity: loading ? .6 : 1,
+                  transition: 'all .15s',
+                }}
+              >
+                {loading ? 'Покупаем...' : `КУПИТЬ ${count} ${count === 1 ? 'ПОПЫТКУ' : count < 5 ? 'ПОПЫТКИ' : 'ПОПЫТОК'}`}
+              </button>
             </div>
-          </div>
+          </>
         ) : (
-          <div style={{ margin: '0 14px 16px', textAlign: 'center', padding: '16px 0' }}>
+          <div style={{ margin: '0 14px 20px', textAlign: 'center', padding: '16px 0' }}>
             <div style={{ fontSize: '.82rem', color: 'rgba(212,168,67,.5)', fontWeight: 700 }}>У тебя уже максимум попыток</div>
-          </div>
-        )}
-
-        {/* ── Итого + Кнопка ── */}
-        {maxBuy > 0 && (
-          <div style={{ margin: '0 14px' }}>
-            {/* Итого */}
-            <div style={{
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              padding: '8px 0 14px',
-              borderTop: '.5px solid rgba(212,168,67,.1)',
-              marginBottom: 8,
-            }}>
-              <span style={{ fontSize: '.72rem', fontWeight: 700, color: '#7A6830' }}>Итого к оплате</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                <span style={{ fontSize: '.9rem', fontWeight: 900, color: canAfford ? '#F0C85A' : '#EF4444' }}>
-                  {totalCost.toLocaleString()}
-                </span>
-                <IcoCoin size={14} />
-              </div>
-            </div>
-
-            {!canAfford && (
-              <div style={{ fontSize: '.62rem', fontWeight: 700, color: '#EF4444', textAlign: 'center', marginBottom: 8, letterSpacing: '.04em' }}>
-                Недостаточно монет
-              </div>
-            )}
-
-            <button
-              onClick={handleBuy}
-              disabled={loading || !canAfford}
-              style={{
-                width: '100%', padding: '13px',
-                background: canAfford
-                  ? 'linear-gradient(135deg,#3A2A08,#5A4010)'
-                  : 'rgba(255,255,255,.04)',
-                border: `.5px solid ${canAfford ? 'rgba(212,168,67,.5)' : 'rgba(255,255,255,.1)'}`,
-                borderRadius: 14, cursor: canAfford ? 'pointer' : 'default',
-                fontFamily: 'inherit', fontSize: '.9rem',
-                fontWeight: 900, letterSpacing: '.04em',
-                color: canAfford ? '#F0C85A' : '#4A4640',
-                opacity: loading ? .6 : 1,
-                transition: 'all .15s',
-              }}
-            >
-              {loading ? 'Покупаем...' : `КУПИТЬ ${count} ${count === 1 ? 'ПОПЫТКУ' : count < 5 ? 'ПОПЫТКИ' : 'ПОПЫТОК'}`}
-            </button>
           </div>
         )}
 
