@@ -57,7 +57,7 @@ export const useAuth = () => {
       // Dev режим без Telegram — используем mock user
       if (import.meta.env.DEV) {
         console.warn('[Auth] No Telegram WebApp, using dev mock user');
-        const mockUser: typeof import('@/types').User = {
+        const mockUser: import('@/types').User = {
           id: 'dev_user_1',
           firstName: 'Test',
           lastName: 'Player',

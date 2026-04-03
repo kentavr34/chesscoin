@@ -196,7 +196,7 @@ const PlayerPanel: React.FC<PanelProps> = ({
 // ── Основной компонент ─────────────────────────────────────────────────────────
 export function GamePage() {
   const navigate = useNavigate();
-  const { sessionId } = useParams<{ sessionId: string }>();
+  const { sessionId = '' } = useParams<{ sessionId: string }>();
 
   // ── Читаем сессию из Zustand store (обновляется через useSocket.ts → 'game' события) ──
   const { sessions } = useGameStore();
