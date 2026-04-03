@@ -337,35 +337,24 @@ export const HomePage: React.FC = () => {
               </div>
             </div>
 
-            {/* бейджи — фиксированная ширина, оба одинаковые */}
-            <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '.28rem', alignItems: 'flex-end' }}>
-              <div style={{
-                display: 'flex', flexDirection: 'column',
-                borderRadius: 9, padding: '.24rem .55rem',
-                width: 112,
-                background: 'linear-gradient(135deg,rgba(212,168,67,.16),rgba(212,168,67,.07))',
-                border: '.5px solid rgba(212,168,67,.35)',
-              }}>
-                <span style={{ fontSize: '.42rem', fontWeight: 700, color: '#9A8840', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '.06rem' }}>Звание</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '.3rem' }}>
-                  <span style={{ fontSize: '.82rem', lineHeight: 1, flexShrink: 0 }}>{user.militaryRank?.emoji || '🙂'}</span>
-                  <span style={{ fontSize: '.82rem', fontWeight: 700, color: '#D4A843', letterSpacing: '.01em', lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{rankLabel}</span>
+            {/* бейджи — плавающие лейблы сверху, одинаковая ширина */}
+            <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '.42rem', alignItems: 'flex-end' }}>
+              {/* Звание */}
+              <div>
+                <div style={{ fontSize: '.38rem', fontWeight: 800, color: '#D4A843', textTransform: 'uppercase', letterSpacing: '.14em', marginBottom: '.16rem', textAlign: 'right' }}>Звание</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '.28rem', borderRadius: 9, padding: '.22rem .48rem', width: 106, background: 'linear-gradient(135deg,rgba(212,168,67,.14),rgba(212,168,67,.06))', border: '.5px solid rgba(212,168,67,.32)' }}>
+                  <span style={{ fontSize: '.88rem', lineHeight: 1, flexShrink: 0 }}>{user.militaryRank?.emoji || '🙂'}</span>
+                  <span style={{ fontSize: '.76rem', fontWeight: 700, color: '#D4A843', letterSpacing: '.01em', lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{rankLabel}</span>
                 </div>
               </div>
-              <div style={{
-                display: 'flex', flexDirection: 'column',
-                borderRadius: 9, padding: '.24rem .55rem',
-                width: 112,
-                background: 'rgba(74,158,255,.09)',
-                border: '.5px solid rgba(74,158,255,.28)',
-              }}>
-                <span style={{ fontSize: '.42rem', fontWeight: 700, color: '#4A7090', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '.06rem' }}>JARVIS</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '.3rem' }}>
-                  {/* иконка уровня — молния */}
+              {/* Jarvis */}
+              <div>
+                <div style={{ fontSize: '.38rem', fontWeight: 800, color: '#4A9EFF', textTransform: 'uppercase', letterSpacing: '.14em', marginBottom: '.16rem', textAlign: 'right' }}>Jarvis</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '.28rem', borderRadius: 9, padding: '.22rem .48rem', width: 106, background: 'rgba(74,158,255,.09)', border: '.5px solid rgba(74,158,255,.25)' }}>
                   <svg width="7" height="11" viewBox="0 0 8 12" fill="none" style={{ flexShrink: 0 }}>
                     <path d="M5 1L1 7h3l-1 4 4-6H4l1-4z" fill="#4A9EFF" opacity=".9"/>
                   </svg>
-                  <span style={{ fontSize: '.82rem', fontWeight: 700, color: '#82CFFF', letterSpacing: '.01em', lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{jarvisName}</span>
+                  <span style={{ fontSize: '.76rem', fontWeight: 700, color: '#82CFFF', letterSpacing: '.01em', lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{jarvisName}</span>
                 </div>
               </div>
             </div>
@@ -480,12 +469,12 @@ export const HomePage: React.FC = () => {
         )}
 
         {/* ── LABEL ── */}
-        <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.75rem .85rem .3rem' }}>
+        <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '1rem .85rem .45rem' }}>
           Режимы игры
         </div>
 
         {/* ══ 4 БЛОКА ══ */}
-        <div className="hp-blocks" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.52rem', margin: '0 .85rem .55rem' }}>
+        <div className="hp-blocks" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.7rem', margin: '0 .85rem .7rem' }}>
 
           {/* JARVIS */}
           <div
@@ -584,7 +573,7 @@ export const HomePage: React.FC = () => {
         </div>
 
         {/* ── LABEL ── */}
-        <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.75rem .85rem .3rem' }}>
+        <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem' }}>
           Текущие задания
         </div>
 

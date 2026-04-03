@@ -327,19 +327,19 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
                   className="jpm-time"
                   onClick={() => setTime(t)}
                   style={{
-                    background: active ? 'rgba(74,158,255,.16)' : 'rgba(74,158,255,.06)',
-                    border: `.5px solid ${active ? '#4A9EFF' : 'rgba(74,158,255,.18)'}`,
-                    borderRadius: 10, padding: '12px 6px',
+                    background: active ? 'rgba(212,168,67,.16)' : 'rgba(255,255,255,.05)',
+                    border: `.5px solid ${active ? 'rgba(212,168,67,.6)' : 'rgba(255,255,255,.1)'}`,
+                    borderRadius: 10, padding: '16px 6px',
                     cursor: 'pointer', fontFamily: 'inherit',
                     transition: 'all .15s',
                     transform: 'scale(1)',
-                    boxShadow: active ? '0 0 10px rgba(74,158,255,.25)' : 'none',
+                    boxShadow: active ? '0 0 10px rgba(212,168,67,.25)' : 'none',
                   }}
                 >
-                  <div style={{ fontSize: '1rem', fontWeight: 900, color: active ? '#82CFFF' : 'rgba(74,158,255,.6)', letterSpacing: '-.01em' }}>
+                  <div style={{ fontSize: '1.05rem', fontWeight: 900, color: active ? '#F0C85A' : 'rgba(255,255,255,.45)', letterSpacing: '-.01em' }}>
                     {t < 60 ? t : '60'}
                   </div>
-                  <div style={{ fontSize: '.58rem', fontWeight: 700, color: active ? 'rgba(130,207,255,.7)' : 'rgba(74,158,255,.35)', letterSpacing: '.06em', marginTop: 2 }}>
+                  <div style={{ fontSize: '.58rem', fontWeight: 700, color: active ? 'rgba(240,200,90,.65)' : 'rgba(255,255,255,.22)', letterSpacing: '.06em', marginTop: 3 }}>
                     МИН
                   </div>
                 </button>
@@ -356,14 +356,14 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
             style={{
               width: '100%', padding: '14px',
               background: canPlay
-                ? 'linear-gradient(135deg,#1A3A6A,#234B8A)'
+                ? 'linear-gradient(135deg,#3A2A08,#5A4010)'
                 : 'rgba(255,255,255,.04)',
-              border: `.5px solid ${canPlay ? 'rgba(74,158,255,.45)' : 'rgba(255,255,255,.08)'}`,
+              border: `.5px solid ${canPlay ? 'rgba(212,168,67,.5)' : 'rgba(255,255,255,.08)'}`,
               borderRadius: 14, cursor: canPlay ? 'pointer' : 'default',
               fontFamily: 'inherit', fontSize: '.9rem',
               fontWeight: 900, letterSpacing: '.06em',
-              color: canPlay ? '#C8E8FF' : '#3A4052',
-              boxShadow: canPlay ? '0 4px 20px rgba(74,158,255,.2)' : 'none',
+              color: canPlay ? '#F0C85A' : '#3A4052',
+              boxShadow: canPlay ? '0 4px 20px rgba(212,168,67,.18)' : 'none',
               transition: 'all .15s',
               position: 'relative', overflow: 'hidden',
             }}

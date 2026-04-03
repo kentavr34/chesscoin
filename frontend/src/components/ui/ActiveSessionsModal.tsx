@@ -78,10 +78,35 @@ const fmtTime = (secs: number): string => {
   return `${m}:${String(s).padStart(2, '0')}`;
 };
 
+// ── Аватар ────────────────────────────────────────────────────────────────────
+const PlayerAvatar: React.FC<{ name: string; avatar?: string; isBot?: boolean; size?: number }> = ({ name, avatar, isBot, size = 36 }) => (
+  <div style={{
+    width: size, height: size, borderRadius: '50%', flexShrink: 0,
+    background: isBot ? 'rgba(74,158,255,.15)' : 'rgba(212,168,67,.1)',
+    border: `.5px solid ${isBot ? 'rgba(74,158,255,.3)' : 'rgba(212,168,67,.25)'}`,
+    overflow: 'hidden',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    fontSize: size * 0.36, fontWeight: 800,
+    color: isBot ? '#82CFFF' : '#D4A843',
+  }}>
+    {avatar
+      ? <img src={avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      : isBot ? '🤖' : (name[0]?.toUpperCase() ?? '?')
+    }
+  </div>
+);
+
 // ── Компонент ─────────────────────────────────────────────────────────────────
 export const ActiveSessionsModal: React.FC<Props> = ({ sessions, onClose }) => {
   const navigate = useNavigate();
-  const items = sessions.slice(0, 3);
+  // Сортировка: сначала самые старые (первыми начатые — сверху)
+  const items = [...sessions]
+    .sort((a, b) => {
+      const ta = a.startedAt ? new Date(a.startedAt).getTime() : 0;
+      const tb = b.startedAt ? new Date(b.startedAt).getTime() : 0;
+      return ta - tb;
+    })
+    .slice(0, 3);
 
   const handleGo = (id: string) => {
     onClose();
@@ -103,7 +128,8 @@ export const ActiveSessionsModal: React.FC<Props> = ({ sessions, onClose }) => {
         @keyframes asm-slide { from{opacity:0;transform:translateY(28px)} to{opacity:1;transform:translateY(0)} }
         .asm-sheet { animation: asm-slide .22s cubic-bezier(.25,.8,.25,1) both; }
         @keyframes asm-blink { 0%,100%{opacity:1} 55%{opacity:.35} }
-        .asm-card:active { opacity:.85; transform: scale(.985); }
+        @keyframes asm-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.75)} }
+        .asm-card:active { opacity:.88; transform: scale(.988); }
       `}</style>
 
       <div className="asm-sheet" style={{
@@ -121,7 +147,7 @@ export const ActiveSessionsModal: React.FC<Props> = ({ sessions, onClose }) => {
         </div>
 
         {/* Заголовок */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 18px 14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 18px 12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
             <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
               <rect x="2" y="2" width="7" height="7" rx="1" fill="rgba(212,168,67,.15)" stroke="#D4A843" strokeWidth="1.2"/>
@@ -130,35 +156,26 @@ export const ActiveSessionsModal: React.FC<Props> = ({ sessions, onClose }) => {
               <rect x="11" y="11" width="7" height="7" rx="1" fill="rgba(212,168,67,.15)" stroke="#D4A843" strokeWidth="1.2"/>
               <circle cx="10" cy="10" r="2" fill="#D4A843" opacity=".8"/>
             </svg>
-            <span style={{ fontSize: '1rem', fontWeight: 900, color: '#E8D8A0', letterSpacing: '.01em' }}>
-              Активные партии
-            </span>
-            <div style={{
-              background: 'rgba(212,168,67,.15)', border: '.5px solid rgba(212,168,67,.3)',
-              borderRadius: 20, padding: '1px 8px',
-              fontSize: '.6rem', fontWeight: 900, color: '#D4A843',
-            }}>{items.length}</div>
+            <span style={{ fontSize: '1rem', fontWeight: 900, color: '#E8D8A0', letterSpacing: '.01em' }}>Активные партии</span>
+            <div style={{ background: 'rgba(212,168,67,.15)', border: '.5px solid rgba(212,168,67,.3)', borderRadius: 20, padding: '1px 8px', fontSize: '.6rem', fontWeight: 900, color: '#D4A843' }}>{items.length}</div>
           </div>
-          <button onClick={onClose} style={{
-            width: 28, height: 28, borderRadius: 8,
-            background: 'rgba(255,255,255,.06)', border: '.5px solid rgba(255,255,255,.1)',
-            color: '#6A7090', fontSize: '.8rem', cursor: 'pointer', fontFamily: 'inherit',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>✕</button>
+          <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(255,255,255,.06)', border: '.5px solid rgba(255,255,255,.1)', color: '#6A7090', fontSize: '.8rem', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
         </div>
 
         {/* ── Карточки ── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 14px 8px' }}>
           {items.map((s) => {
-            const mySide   = s.sides?.find(sd => sd.isMe);
-            const oppSide  = s.sides?.find(sd => !sd.isMe);
+            const mySide    = s.sides?.find(sd => sd.isMe);
+            const oppSide   = s.sides?.find(sd => !sd.isMe);
             const myIsWhite = mySide?.isWhite ?? true;
             const isMyTurn  = s.isMyTurn;
-            const typeLabel = s.type === 'BOT' ? 'vs J.A.R.V.I.S' : s.type === 'BATTLE' ? 'Батл' : 'Дружеская';
+            const typeLabel = s.type === 'BOT' ? 'J.A.R.V.I.S' : s.type === 'BATTLE' ? 'Батл' : 'Дружеская';
+            const myName    = mySide?.player?.firstName ?? 'Вы';
+            const myAvatar  = mySide?.player?.avatar;
             const oppName   = oppSide?.isBot ? 'J.A.R.V.I.S' : (oppSide?.player?.firstName ?? '???');
             const oppAvatar = oppSide?.player?.avatar;
+            const oppIsBot  = !!oppSide?.isBot;
             const myTimeLeft  = mySide?.timeLeft ?? 0;
-            const oppTimeLeft = oppSide?.timeLeft ?? 0;
             const fen = s.fen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
             return (
@@ -167,117 +184,80 @@ export const ActiveSessionsModal: React.FC<Props> = ({ sessions, onClose }) => {
                 className="asm-card"
                 onClick={() => handleGo(s.id)}
                 style={{
-                  background: isMyTurn
-                    ? 'linear-gradient(135deg,#191A08,#1E1E0E)'
-                    : 'linear-gradient(135deg,#0E100A,#111408)',
+                  background: isMyTurn ? 'linear-gradient(135deg,#191A08,#1E1E0E)' : 'linear-gradient(135deg,#0E100A,#111408)',
                   border: `.5px solid ${isMyTurn ? 'rgba(212,168,67,.4)' : 'rgba(212,168,67,.14)'}`,
-                  borderRadius: 14, padding: '12px 14px',
+                  borderRadius: 14, padding: '10px 12px',
                   cursor: 'pointer', position: 'relative', overflow: 'hidden',
                   transition: 'all .15s',
                 }}
               >
                 {/* Верхняя декор-линия */}
-                <div style={{
-                  position: 'absolute', top: 0, left: 0, right: 0, height: 1.5,
-                  background: isMyTurn
-                    ? 'linear-gradient(90deg,transparent,rgba(212,168,67,.55),transparent)'
-                    : 'linear-gradient(90deg,transparent,rgba(212,168,67,.14),transparent)',
-                }} />
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1.5, background: isMyTurn ? 'linear-gradient(90deg,transparent,rgba(212,168,67,.55),transparent)' : 'linear-gradient(90deg,transparent,rgba(212,168,67,.14),transparent)' }} />
 
-                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                {/* Тип партии */}
+                <div style={{ fontSize: '.44rem', fontWeight: 700, color: '#6A6050', textTransform: 'uppercase', letterSpacing: '.1em', textAlign: 'center', marginBottom: 8 }}>{typeLabel}</div>
 
-                  {/* ── Мини-доска ── */}
-                  <MiniBoard fen={fen} myIsWhite={myIsWhite} size={80} />
+                {/* ── 3 колонки: Я | Доска | Соперник ── */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
 
-                  {/* ── Инфо ── */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-
-                    {/* Тип */}
-                    <div style={{ fontSize: '.5rem', fontWeight: 700, color: '#6A6050', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 5 }}>
-                      {typeLabel}
-                    </div>
-
-                    {/* Соперник */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 7 }}>
-                      <div style={{
-                        width: 22, height: 22, borderRadius: '50%',
-                        background: oppAvatar ? 'transparent' : 'rgba(212,168,67,.1)',
-                        border: '.5px solid rgba(212,168,67,.2)',
-                        overflow: 'hidden', flexShrink: 0,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '.62rem', fontWeight: 800, color: '#D4A843',
-                      }}>
-                        {oppAvatar
-                          ? <img src={oppAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                          : (oppName[0]?.toUpperCase() ?? '?')
-                        }
-                      </div>
-                      <span style={{ fontSize: '.72rem', fontWeight: 700, color: '#C8C0A8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {oppName}
-                      </span>
-                      {/* Цвет соперника */}
-                      <div style={{
-                        width: 10, height: 10, borderRadius: 2, flexShrink: 0,
-                        background: myIsWhite ? '#1A1208' : '#F0E8D0',
-                        border: '.5px solid rgba(212,168,67,.3)',
-                      }} title={myIsWhite ? 'Соперник — чёрные' : 'Соперник — белые'} />
-                    </div>
-
-                    {/* Таймеры */}
-                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                      {/* Мой таймер */}
-                      <div style={{
-                        display: 'flex', alignItems: 'center', gap: 4,
-                        background: isMyTurn ? 'rgba(212,168,67,.12)' : 'rgba(255,255,255,.04)',
-                        border: `.5px solid ${isMyTurn ? 'rgba(212,168,67,.3)' : 'rgba(255,255,255,.07)'}`,
-                        borderRadius: 6, padding: '3px 8px',
-                      }}>
-                        <div style={{
-                          width: 7, height: 7, borderRadius: 2, flexShrink: 0,
-                          background: myIsWhite ? '#E8E0C8' : '#1A1208',
-                          border: '.5px solid rgba(212,168,67,.35)',
-                        }} />
-                        <span style={{
-                          fontSize: '.64rem', fontWeight: 900,
-                          color: isMyTurn ? '#F0C85A' : '#6A6050',
-                          fontVariantNumeric: 'tabular-nums',
-                        }}>
-                          {fmtTime(myTimeLeft)}
-                        </span>
-                      </div>
-                      {/* Таймер соперника */}
-                      <div style={{
-                        display: 'flex', alignItems: 'center', gap: 4,
-                        background: 'rgba(255,255,255,.04)',
-                        border: '.5px solid rgba(255,255,255,.07)',
-                        borderRadius: 6, padding: '3px 8px',
-                      }}>
-                        <div style={{
-                          width: 7, height: 7, borderRadius: 2, flexShrink: 0,
-                          background: myIsWhite ? '#1A1208' : '#E8E0C8',
-                          border: '.5px solid rgba(212,168,67,.35)',
-                        }} />
-                        <span style={{ fontSize: '.64rem', fontWeight: 900, color: '#5A5448', fontVariantNumeric: 'tabular-nums' }}>
-                          {fmtTime(oppTimeLeft)}
-                        </span>
-                      </div>
+                  {/* Левая: я */}
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, minWidth: 0 }}>
+                    <PlayerAvatar name={myName} avatar={myAvatar} size={34} />
+                    <span style={{ fontSize: '.6rem', fontWeight: 700, color: '#C8C0A8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', textAlign: 'center' }}>
+                      {myName.length > 8 ? myName.slice(0,8) + '…' : myName}
+                    </span>
+                    {/* Мой цвет */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: 2, background: myIsWhite ? '#E8E0C8' : '#1A1208', border: '.5px solid rgba(212,168,67,.35)' }} />
+                      <span style={{ fontSize: '.48rem', color: '#6A6050' }}>{myIsWhite ? 'Белые' : 'Чёрные'}</span>
                     </div>
                   </div>
 
-                  {/* ── Правая часть ── */}
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                    {isMyTurn && (
-                      <div style={{
-                        display: 'flex', alignItems: 'center', gap: 3,
-                        background: 'rgba(61,186,122,.1)', border: '.5px solid rgba(61,186,122,.32)',
-                        borderRadius: 7, padding: '4px 7px',
-                        animation: 'asm-blink 1.6s ease-in-out infinite',
-                      }}>
-                        <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#3DBA7A', boxShadow: '0 0 5px #3DBA7A' }} />
-                        <span style={{ fontSize: '.52rem', fontWeight: 900, color: '#6FEDB0', letterSpacing: '.05em', whiteSpace: 'nowrap' }}>ВАШ ХОД</span>
-                      </div>
-                    )}
-                    <span style={{ fontSize: '1rem', color: 'rgba(212,168,67,.35)' }}>›</span>
+                  {/* Центр: доска + индикатор + таймер */}
+                  <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
+                    <div style={{ position: 'relative' }}>
+                      <MiniBoard fen={fen} myIsWhite={myIsWhite} size={72} />
+                      {isMyTurn && (
+                        <div style={{
+                          position: 'absolute', inset: 0,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          borderRadius: 6,
+                          background: 'rgba(61,186,122,.12)',
+                        }}>
+                          <div style={{
+                            display: 'flex', alignItems: 'center', gap: 3,
+                            background: 'rgba(4,8,4,.75)', borderRadius: 5, padding: '3px 6px',
+                            animation: 'asm-blink 1.6s ease-in-out infinite',
+                          }}>
+                            <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#3DBA7A', boxShadow: '0 0 5px #3DBA7A', animation: 'asm-pulse 1.2s infinite' }} />
+                            <span style={{ fontSize: '.46rem', fontWeight: 900, color: '#6FEDB0', letterSpacing: '.05em' }}>ВАШ ХОД</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    {/* Таймер */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 3, background: isMyTurn ? 'rgba(212,168,67,.12)' : 'rgba(255,255,255,.04)', border: `.5px solid ${isMyTurn ? 'rgba(212,168,67,.3)' : 'rgba(255,255,255,.07)'}`, borderRadius: 6, padding: '3px 8px' }}>
+                      <svg width="8" height="8" viewBox="0 0 12 12" fill="none">
+                        <circle cx="6" cy="6" r="5" stroke={isMyTurn ? '#D4A843' : '#5A5448'} strokeWidth="1.2"/>
+                        <path d="M6 3.5V6l1.5 1.5" stroke={isMyTurn ? '#D4A843' : '#5A5448'} strokeWidth="1.2" strokeLinecap="round"/>
+                      </svg>
+                      <span style={{ fontSize: '.64rem', fontWeight: 900, color: isMyTurn ? '#F0C85A' : '#5A5448', fontVariantNumeric: 'tabular-nums' }}>
+                        {fmtTime(myTimeLeft)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Правая: соперник */}
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, minWidth: 0 }}>
+                    <PlayerAvatar name={oppName} avatar={oppAvatar} isBot={oppIsBot} size={34} />
+                    <span style={{ fontSize: '.6rem', fontWeight: 700, color: '#C8C0A8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', textAlign: 'center' }}>
+                      {oppName.length > 8 ? oppName.slice(0,8) + '…' : oppName}
+                    </span>
+                    {/* Цвет соперника */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: 2, background: myIsWhite ? '#1A1208' : '#E8E0C8', border: '.5px solid rgba(212,168,67,.35)' }} />
+                      <span style={{ fontSize: '.48rem', color: '#6A6050' }}>{myIsWhite ? 'Чёрные' : 'Белые'}</span>
+                    </div>
                   </div>
 
                 </div>
