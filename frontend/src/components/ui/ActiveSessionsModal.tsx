@@ -96,7 +96,7 @@ export const ActiveSessionsModal: React.FC<Props> = ({ sessions, onClose }) => {
         background: 'rgba(4,3,8,.84)',
         backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
         display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-        padding: '0 0 max(20px, env(safe-area-inset-bottom, 20px))',
+        paddingBottom: 'calc(82px + env(safe-area-inset-bottom, 0px))',
       }}
     >
       <style>{`

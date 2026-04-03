@@ -255,11 +255,11 @@ export const HomePage: React.FC = () => {
       {showAttemptsModal && (
         <AttemptsModal user={user} onClose={() => setShowAttemptsModal(false)} />
       )}
-      {showSessionsModal && activeSessions.length > 1 && (
+      {showSessionsModal && activeSessions.length > 0 && (
         <ActiveSessionsModal sessions={activeSessions} onClose={() => setShowSessionsModal(false)} />
       )}
 
-      <div className="hp-shell" style={{ padding: '0 0 90px', background: '#0D0D12', minHeight: '100vh' }}>
+      <div className="hp-shell" style={{ padding: '0 0 90px', background: '#0D0D12' }}>
 
         {/* ══ ПАСПОРТНАЯ КАРТОЧКА ══ */}
         <div className="hp-hero" style={{
@@ -294,7 +294,7 @@ export const HomePage: React.FC = () => {
           {/* паспорт: аватар | имя+ело | бейджи */}
           <div style={{
             display: 'flex', alignItems: 'center', gap: '.8rem',
-            padding: '.7rem .9rem .8rem', position: 'relative', zIndex: 2,
+            padding: '.9rem .9rem 1rem', position: 'relative', zIndex: 2,
           }}>
             {/* аватар с золотым кольцом (+20% → 80px) */}
             <div style={{ flexShrink: 0 }}>
@@ -337,38 +337,35 @@ export const HomePage: React.FC = () => {
               </div>
             </div>
 
-            {/* бейджи — авто-ширина, расширяются влево */}
+            {/* бейджи — фиксированная ширина, оба одинаковые */}
             <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '.28rem', alignItems: 'flex-end' }}>
               <div style={{
                 display: 'flex', flexDirection: 'column',
-                borderRadius: 9, padding: '.22rem .55rem',
-                minWidth: 96,
+                borderRadius: 9, padding: '.24rem .55rem',
+                width: 112,
                 background: 'linear-gradient(135deg,rgba(212,168,67,.16),rgba(212,168,67,.07))',
                 border: '.5px solid rgba(212,168,67,.35)',
               }}>
-                <span style={{ fontSize: '.42rem', fontWeight: 700, color: '#9A8840', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '.05rem' }}>Звание</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '.28rem' }}>
-                  {/* иконка ранга — звёздочка */}
-                  <svg width="9" height="9" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0 }}>
-                    <path d="M5 1l1.1 2.6 2.8.25-2.1 1.97.65 2.73L5 7.08 2.55 8.55l.65-2.73L1.1 3.85l2.8-.25z" fill="#D4A843" opacity=".9"/>
-                  </svg>
-                  <span style={{ fontSize: '.87rem', fontWeight: 700, color: '#D4A843', letterSpacing: '.02em', lineHeight: 1.1, whiteSpace: 'nowrap' }}>{rankLabel}</span>
+                <span style={{ fontSize: '.42rem', fontWeight: 700, color: '#9A8840', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '.06rem' }}>Звание</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '.3rem' }}>
+                  <span style={{ fontSize: '.82rem', lineHeight: 1, flexShrink: 0 }}>{user.militaryRank?.emoji || '🙂'}</span>
+                  <span style={{ fontSize: '.82rem', fontWeight: 700, color: '#D4A843', letterSpacing: '.01em', lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{rankLabel}</span>
                 </div>
               </div>
               <div style={{
                 display: 'flex', flexDirection: 'column',
-                borderRadius: 9, padding: '.22rem .55rem',
-                minWidth: 96,
+                borderRadius: 9, padding: '.24rem .55rem',
+                width: 112,
                 background: 'rgba(74,158,255,.09)',
                 border: '.5px solid rgba(74,158,255,.28)',
               }}>
-                <span style={{ fontSize: '.42rem', fontWeight: 700, color: '#4A7090', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '.05rem' }}>JARVIS</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '.28rem' }}>
+                <span style={{ fontSize: '.42rem', fontWeight: 700, color: '#4A7090', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '.06rem' }}>JARVIS</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '.3rem' }}>
                   {/* иконка уровня — молния */}
                   <svg width="7" height="11" viewBox="0 0 8 12" fill="none" style={{ flexShrink: 0 }}>
                     <path d="M5 1L1 7h3l-1 4 4-6H4l1-4z" fill="#4A9EFF" opacity=".9"/>
                   </svg>
-                  <span style={{ fontSize: '.87rem', fontWeight: 700, color: '#82CFFF', letterSpacing: '.02em', lineHeight: 1.1, whiteSpace: 'nowrap' }}>{jarvisName}</span>
+                  <span style={{ fontSize: '.82rem', fontWeight: 700, color: '#82CFFF', letterSpacing: '.01em', lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{jarvisName}</span>
                 </div>
               </div>
             </div>
@@ -376,15 +373,15 @@ export const HomePage: React.FC = () => {
 
           {/* разделитель */}
           <div style={{
-            height: .5, position: 'relative', zIndex: 2,
+            height: .5, position: 'relative', zIndex: 2, margin: '0 .5rem',
             background: 'linear-gradient(90deg,transparent,rgba(212,168,67,.18),rgba(212,168,67,.35),rgba(212,168,67,.18),transparent)',
           }} />
 
           {/* 3 ячейки */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', position: 'relative', zIndex: 2 }}>
             {/* баланс */}
-            <div className="hp-hbal-cell" style={{ padding: '.5rem .4rem .6rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', borderRight: '.5px solid rgba(255,255,255,.05)', position: 'relative' }}>
-              <div style={{ fontSize: '.43rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '.2rem' }}>Баланс</div>
+            <div className="hp-hbal-cell" style={{ padding: '.65rem .4rem .75rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', borderRight: '.5px solid rgba(255,255,255,.05)', position: 'relative' }}>
+              <div style={{ fontSize: '.43rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '.22rem' }}>Баланс</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '.18rem' }}>
                 <span style={{ fontSize: '1.08rem', fontWeight: 900, color: '#D4A843', letterSpacing: '-.01em', lineHeight: 1, textShadow: '0 0 12px rgba(212,168,67,.4)' }}>{formattedBalance}</span>
                 <IcoCoin size={16} />
@@ -393,8 +390,8 @@ export const HomePage: React.FC = () => {
             </div>
 
             {/* попытки */}
-            <div className="hp-hbal-cell" style={{ padding: '.5rem .4rem .6rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', borderRight: '.5px solid rgba(255,255,255,.05)', position: 'relative' }}>
-              <div style={{ fontSize: '.43rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '.2rem' }}>Попытки</div>
+            <div className="hp-hbal-cell" style={{ padding: '.65rem .4rem .75rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', borderRight: '.5px solid rgba(255,255,255,.05)', position: 'relative' }}>
+              <div style={{ fontSize: '.43rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '.22rem' }}>Попытки</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '.22rem' }}>
                 <div style={{ display: 'flex', gap: '.04rem' }}>
                   {Array.from({ length: maxAttempts }, (_, i) => (
@@ -408,8 +405,8 @@ export const HomePage: React.FC = () => {
             </div>
 
             {/* таймер */}
-            <div className="hp-hbal-cell" style={{ padding: '.5rem .4rem .6rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', position: 'relative' }}>
-              <div style={{ fontSize: '.43rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '.2rem' }}>Следующая</div>
+            <div className="hp-hbal-cell" style={{ padding: '.65rem .4rem .75rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', position: 'relative' }}>
+              <div style={{ fontSize: '.43rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '.22rem' }}>Следующая</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '.2rem' }}>
                 <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
                   <circle cx="6" cy="6" r="5" stroke="#5E5A54" strokeWidth="1.2"/>
@@ -434,7 +431,7 @@ export const HomePage: React.FC = () => {
               borderRadius: 16, overflow: 'hidden', position: 'relative',
               cursor: 'pointer',
             }}
-              onClick={() => activeSessions.length === 1 ? navigate(`/game/${activeSessions[0].id}`) : setShowSessionsModal(true)}
+              onClick={() => setShowSessionsModal(true)}
             >
               {/* верхняя линия как у квестов */}
               <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1.5, background: 'linear-gradient(90deg,transparent,rgba(212,168,67,.35),rgba(61,186,122,.2),rgba(212,168,67,.35),transparent)' }} />
@@ -633,6 +630,9 @@ export const HomePage: React.FC = () => {
             <div style={{ fontSize: '.8rem', color: 'rgba(155,109,255,.4)', flexShrink: 0 }}>›</div>
           </div>
         </div>
+
+        {/* нижний декор — плавное завершение страницы */}
+        <div style={{ margin: '.55rem .85rem 0', height: .5, background: 'linear-gradient(90deg,transparent,rgba(155,109,255,.18),rgba(212,168,67,.1),transparent)' }} />
 
       </div>
     </PageLayout>
