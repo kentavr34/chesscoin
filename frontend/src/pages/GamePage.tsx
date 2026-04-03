@@ -20,7 +20,7 @@ const SORT_ORDER:    Record<string, number>  = { q: 0, r: 1, b: 2, n: 3, p: 4 };
 
 const PANEL_H   = 72;  // высота панели игрока
 const ACTBAR_H  = 64;  // нижняя панель кнопок
-const STATUS_GAP = 22; // полоска между панелью и доской — «Ваш ход» / «Думает...»
+const STATUS_GAP = 28; // полоска между панелью и доской — «Ваш ход» / «Думает...»
 
 // ── Хелперы ────────────────────────────────────────────────────────────────────
 function capturedFromFen(fen: string): { white: string[]; black: string[] } {
@@ -52,7 +52,7 @@ function fmtTime(secs: number): string {
 
 function calcBoardSize(): number {
   // Панели + статус-полоски + action bar + минимальные spacer-ы (8px сверху/снизу)
-  const reserved = PANEL_H * 2 + STATUS_GAP * 2 + ACTBAR_H + 22;
+  const reserved = PANEL_H * 2 + STATUS_GAP * 2 + ACTBAR_H + 16;
   return Math.floor(Math.min(window.innerWidth, window.innerHeight - reserved));
 }
 
@@ -736,8 +736,22 @@ export function GamePage() {
       getSocket().emit('game:accept_draw', { sessionId }, () => {});
     } else {
       getSocket().emit('game:offer_draw', { sessionId });
+      window.dispatchEvent(new CustomEvent('chesscoin:toast', {
+        detail: { text: 'Предложение ничьи отправлено', type: 'info' }
+      }));
     }
   }, [sessionId, gameOver, drawOfferedByMe, drawOfferedByOpp]);
+
+  // Тост когда соперник отклонил ничью
+  const prevDrawOffMeRef = useRef(false);
+  useEffect(() => {
+    if (prevDrawOffMeRef.current && !drawOfferedByMe && !gameOver) {
+      window.dispatchEvent(new CustomEvent('chesscoin:toast', {
+        detail: { text: 'Соперник отклонил предложение ничьи', type: 'info' }
+      }));
+    }
+    prevDrawOffMeRef.current = drawOfferedByMe;
+  }, [drawOfferedByMe, gameOver]);
 
   const handleDeclineDraw = useCallback(() => {
     getSocket().emit('game:decline_draw', { sessionId });
@@ -793,8 +807,8 @@ export function GamePage() {
         @keyframes result-pop{ from{opacity:0;transform:scale(.88)} to{opacity:1;transform:scale(1)} }
       `}</style>
 
-      {/* ── Диалог предложения ничьи ──────────────────────────────────────── */}
-      {drawOfferedByOpp && !gameOver && (
+      {/* ── Диалог предложения ничьи (только когда соперник предлагает) ──── */}
+      {drawOfferedByOpp && !drawOfferedByMe && !gameOver && (
         <GameDialog
           iconNode={
             <svg width="34" height="34" viewBox="0 0 24 24" fill="none">
@@ -828,7 +842,7 @@ export function GamePage() {
       </div>
 
       {/* ── Статус-полоска верх: «Думает...» когда ход бота ──────────────── */}
-      <div style={{ height: STATUS_GAP, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <div style={{ height: STATUS_GAP, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 4, flexShrink: 0 }}>
         {!isMyTurn && !gameOver && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4A9EFF', animation: 'gp-pulse 1.4s infinite', boxShadow: '0 0 6px #4A9EFF' }} />
@@ -853,7 +867,7 @@ export function GamePage() {
       </div>
 
       {/* ── Статус-полоска низ: «Ваш ход» зелёным ───────────────────────── */}
-      <div style={{ height: STATUS_GAP, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <div style={{ height: STATUS_GAP, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 4, flexShrink: 0 }}>
         {isMyTurn && !gameOver && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#4DDA8A', animation: 'gp-pulse 1.4s infinite', boxShadow: '0 0 8px #4DDA8A' }} />
@@ -873,7 +887,7 @@ export function GamePage() {
       </div>
 
       {/* ── Нижний spacer ────────────────────────────────────────────────── */}
-      <div style={{ flex: 1, minHeight: 16 }} />
+      <div style={{ flex: 1, minHeight: 6 }} />
 
       {/* ── Панель действий: 4 кнопки ─────────────────────────────── */}
       <div style={{
