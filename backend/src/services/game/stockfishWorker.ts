@@ -33,43 +33,47 @@ const log = {
 
 // ─── Уровни J.A.R.V.I.S (20 уровней) ────────────────────────────────────────
 //
-// СТРАТЕГИЯ:
-//   depthOnly: false → go movetime X depth Y  (останавливается первым условием — для слабых уровней)
-//   depthOnly: true  → go depth X             (гарантирует достижение заданной глубины — для средних/сильных)
-//
-// Уровни 1-5: короткий movetime → движок останавливается до нужной глубины → специально слабая игра
-// Уровни 6-15: depth-only → гарантированная сила независимо от скорости VPS
-// Уровни 16-20: долгий movetime без ограничения глубины → максимальный расчёт
+// СТРАТЕГИЯ (учит старый v1.0.2 архив):
+//   randomPct  → % случайных ходов вместо Stockfish (ключевой элемент слабости!)
+//               Уровень 1: 70% случайных ходов, уровень 7: 15%, уровень 12+: 0%
+//               Без этого Stockfish на Skill=0 всё равно играет сильнее новичка
+//   depthOnly  → false: go movetime X depth Y (первое условие wins — для слабых уровней)
+//               true:  go depth X            (гарантирует глубину на медленном VPS)
+//   contempt   → -100 для уровней 1-3: движок менее агрессивен, охотнее соглашается на ничью
 //
 const JARVIS_LEVELS = [
-  // 1-5: Novice (800-1600 Elo) — специально ограничены временем для слабой игры
-  { level: 1,  elo: 800,  movetime: 50,    useSkill: true,  skill: 0,  depth: 4,  depthOnly: false },
-  { level: 2,  elo: 1000, movetime: 100,   useSkill: true,  skill: 1,  depth: 5,  depthOnly: false },
-  { level: 3,  elo: 1200, movetime: 200,   useSkill: true,  skill: 3,  depth: 6,  depthOnly: false },
-  { level: 4,  elo: 1400, movetime: 350,   useSkill: true,  skill: 5,  depth: 7,  depthOnly: false },
-  { level: 5,  elo: 1600, movetime: 600,   useSkill: true,  skill: 7,  depth: 8,  depthOnly: false },
+  // 1-5: Novice (800-1600 Elo) — слабая игра через:
+  //   1) большой % случайных ходов (70%→15%)
+  //   2) короткий movetime + малая глубина
+  //   3) низкий Skill Level + UCI_Elo ограничение
+  { level: 1,  elo: 800,  movetime: 50,    useSkill: true,  skill: 0,  depth: 1,  depthOnly: false, randomPct: 70, contempt: -100 },
+  { level: 2,  elo: 900,  movetime: 80,    useSkill: true,  skill: 1,  depth: 2,  depthOnly: false, randomPct: 55, contempt: -100 },
+  { level: 3,  elo: 1100, movetime: 150,   useSkill: true,  skill: 2,  depth: 3,  depthOnly: false, randomPct: 40, contempt: -100 },
+  { level: 4,  elo: 1300, movetime: 300,   useSkill: true,  skill: 4,  depth: 5,  depthOnly: false, randomPct: 25, contempt: 0   },
+  { level: 5,  elo: 1500, movetime: 500,   useSkill: true,  skill: 6,  depth: 7,  depthOnly: false, randomPct: 15, contempt: 0   },
 
-  // 6-10: Intermediate (1700-2200 Elo) — depth-only, гарантированная сила
-  { level: 6,  elo: 1700, movetime: 5000,  useSkill: true,  skill: 9,  depth: 9,  depthOnly: true  },
-  { level: 7,  elo: 1800, movetime: 5000,  useSkill: true,  skill: 11, depth: 10, depthOnly: true  },
-  { level: 8,  elo: 1950, movetime: 5000,  useSkill: true,  skill: 13, depth: 11, depthOnly: true  },
-  { level: 9,  elo: 2100, movetime: 8000,  useSkill: true,  skill: 14, depth: 12, depthOnly: true  },
-  { level: 10, elo: 2200, movetime: 8000,  useSkill: true,  skill: 15, depth: 13, depthOnly: true  },
+  // 6-10: Intermediate (1700-2200 Elo) — depth-only гарантирует силу на медленном VPS
+  //   небольшой % случайных ходов (8%→2%) оставляем для реализма
+  { level: 6,  elo: 1700, movetime: 5000,  useSkill: true,  skill: 9,  depth: 9,  depthOnly: true,  randomPct: 8,  contempt: 0   },
+  { level: 7,  elo: 1800, movetime: 5000,  useSkill: true,  skill: 11, depth: 10, depthOnly: true,  randomPct: 5,  contempt: 0   },
+  { level: 8,  elo: 1950, movetime: 5000,  useSkill: true,  skill: 13, depth: 11, depthOnly: true,  randomPct: 3,  contempt: 0   },
+  { level: 9,  elo: 2100, movetime: 8000,  useSkill: true,  skill: 14, depth: 12, depthOnly: true,  randomPct: 2,  contempt: 0   },
+  { level: 10, elo: 2200, movetime: 8000,  useSkill: true,  skill: 15, depth: 13, depthOnly: true,  randomPct: 1,  contempt: 0   },
 
-  // 11-15: Advanced (2300-2700 Elo) — depth-only, серьёзная игра
-  { level: 11, elo: 2300, movetime: 8000,  useSkill: true,  skill: 16, depth: 14, depthOnly: true  },
-  { level: 12, elo: 2400, movetime: 10000, useSkill: true,  skill: 17, depth: 15, depthOnly: true  },
-  { level: 13, elo: 2500, movetime: 10000, useSkill: true,  skill: 18, depth: 16, depthOnly: true  },
-  { level: 14, elo: 2600, movetime: 12000, useSkill: true,  skill: 19, depth: 18, depthOnly: true  },
-  { level: 15, elo: 2700, movetime: 12000, useSkill: false, skill: 20, depth: 20, depthOnly: true  },
+  // 11-15: Advanced (2300-2700 Elo) — depth-only, серьёзная игра без случайных ходов
+  { level: 11, elo: 2300, movetime: 8000,  useSkill: true,  skill: 16, depth: 14, depthOnly: true,  randomPct: 0,  contempt: 0   },
+  { level: 12, elo: 2400, movetime: 10000, useSkill: true,  skill: 17, depth: 15, depthOnly: true,  randomPct: 0,  contempt: 0   },
+  { level: 13, elo: 2500, movetime: 10000, useSkill: true,  skill: 18, depth: 16, depthOnly: true,  randomPct: 0,  contempt: 0   },
+  { level: 14, elo: 2600, movetime: 12000, useSkill: true,  skill: 19, depth: 18, depthOnly: true,  randomPct: 0,  contempt: 0   },
+  { level: 15, elo: 2700, movetime: 12000, useSkill: false, skill: 20, depth: 20, depthOnly: true,  randomPct: 0,  contempt: 0   },
 
   // 16-20: Unbeatable (2800-3200+ Elo) — полная сила, movetime как страховка от OOM
-  { level: 16, elo: 2800, movetime: 5000,  useSkill: false, skill: 20, depth: 16, depthOnly: false },
-  { level: 17, elo: 2900, movetime: 6000,  useSkill: false, skill: 20, depth: 17, depthOnly: false },
-  { level: 18, elo: 3000, movetime: 7000,  useSkill: false, skill: 20, depth: 18, depthOnly: false },
-  { level: 19, elo: 3100, movetime: 8000,  useSkill: false, skill: 20, depth: 19, depthOnly: false },
+  { level: 16, elo: 2800, movetime: 5000,  useSkill: false, skill: 20, depth: 16, depthOnly: false, randomPct: 0,  contempt: 0   },
+  { level: 17, elo: 2900, movetime: 6000,  useSkill: false, skill: 20, depth: 17, depthOnly: false, randomPct: 0,  contempt: 0   },
+  { level: 18, elo: 3000, movetime: 7000,  useSkill: false, skill: 20, depth: 18, depthOnly: false, randomPct: 0,  contempt: 0   },
+  { level: 19, elo: 3100, movetime: 8000,  useSkill: false, skill: 20, depth: 19, depthOnly: false, randomPct: 0,  contempt: 0   },
   // 20: Mystic (Magnus level)
-  { level: 20, elo: 3200, movetime: 10000, useSkill: false, skill: 20, depth: 20, depthOnly: false },
+  { level: 20, elo: 3200, movetime: 10000, useSkill: false, skill: 20, depth: 20, depthOnly: false, randomPct: 0,  contempt: 0   },
 ];
 
 // ─── Fallback: случайный ход ──────────────────────────────────────────────────
@@ -160,6 +164,18 @@ parentPort?.on("message", async ({ fen, level, requestId }: {
     return;
   }
 
+  // ── Случайный ход (ключевой элемент слабости для низких уровней) ────────────
+  // Из анализа v1.0.2: уровень 1 → 70% случайных, уровень 7 → 5%, 12+ → 0%
+  // Без этого Stockfish даже на Skill=0 играет намного сильнее реального новичка
+  if ((cfg as any).randomPct > 0) {
+    const roll = Math.floor(Math.random() * 100);
+    if (roll < (cfg as any).randomPct) {
+      dlog(`[RANDOM] level ${level}, roll ${roll} < ${(cfg as any).randomPct}% → random move`);
+      parentPort?.postMessage({ move: getRandomMove(fen), requestId });
+      return;
+    }
+  }
+
   const timeoutMs = cfg.movetime + 4000;
 
   try {
@@ -187,8 +203,19 @@ parentPort?.on("message", async ({ fen, level, requestId }: {
           // Engine ready for this request — send options and go
           const send = (m: string) => { dlog("[SF IN] " + m); engine!.postMessage(m); };
 
-          // Добавляем память для стабильной работы глубоких уровней
+          // Память для стабильной работы глубоких уровней
           send("setoption name Hash value 16");
+          send("setoption name Threads value 1");
+
+          // Contempt: отрицательный = движок охотнее соглашается на ничью и менее агрессивен
+          // Используется для уровней 1-3 (из v1.0.2: contempt -100 создаёт пассивную игру)
+          const contemptVal = (cfg as any).contempt ?? 0;
+          // Stockfish 14+ убрал Contempt, но попробуем — будет молча проигнорировано если не поддерживается
+          if (contemptVal !== 0) {
+            send(`setoption name Contempt value ${contemptVal}`);
+          } else {
+            send("setoption name Contempt value 0");
+          }
 
           if (cfg.useSkill) {
             send("setoption name UCI_LimitStrength value true");
