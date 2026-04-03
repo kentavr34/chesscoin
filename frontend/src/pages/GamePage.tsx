@@ -17,10 +17,14 @@ const PIECE_VAL:     Record<string, number>  = { p: 1, n: 3, b: 3, r: 5, q: 9 };
 const PIECE_START:   Record<string, number>  = { p: 8, n: 2, b: 2, r: 2, q: 1 };
 const SORT_ORDER:    Record<string, number>  = { q: 0, r: 1, b: 2, n: 3, p: 4 };
 
-const TOPBAR_H  = 0;   // убираем отдельный топбар — статус встроен в панели
-const PANEL_H   = 72;  // высота панели игрока
-const ACTBAR_H  = 64;  // нижняя панель кнопок
-const PANEL_GAP = 8;   // отступ снаружи панелей (от края экрана/action bar)
+const TOPBAR_H      = 0;   // убираем отдельный топбар — статус встроен в панели
+const PANEL_H       = 72;  // высота панели игрока
+const ACTBAR_H      = 64;  // нижняя панель кнопок
+// Отступы: аватар ДОЛЖЕН быть на середине между краем экрана и верхом доски
+// Верх: paddingTop=4 → avatar center = 4+36 = 40px = (4+72)/2 = 38... корректно
+// Низ:  paddingBottom=12 → поднимаем панель выше от кнопок
+const PANEL_GAP_TOP = 4;   // отступ сверху (точное центрирование аватара оппонента)
+const PANEL_GAP_BOT = 12;  // отступ снизу  (поднимает панель игрока выше от кнопок)
 
 // ── Хелперы ────────────────────────────────────────────────────────────────────
 function capturedFromFen(fen: string): { white: string[]; black: string[] } {
@@ -51,7 +55,7 @@ function fmtTime(secs: number): string {
 }
 
 function calcBoardSize(): number {
-  const reserved = PANEL_H * 2 + ACTBAR_H + PANEL_GAP * 2 + 4;
+  const reserved = PANEL_H * 2 + ACTBAR_H + PANEL_GAP_TOP + PANEL_GAP_BOT + 4;
   return Math.floor(Math.min(window.innerWidth, window.innerHeight - reserved));
 }
 
@@ -205,9 +209,10 @@ const PlayerPanel: React.FC<PanelProps> = ({
         }
       </div>
 
-      {/* Центр: имя + ELO + статус + взятые фигуры */}
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 2 }}>
-        {/* Строка 1: цвет-маркер + имя + статус */}
+      {/* Центр: имя + ELO + взятые фигуры */}
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 3 }}>
+
+        {/* Строка 1: цвет-маркер + имя + статус-точка + [монеты справа] */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
           <div style={{
             width: 8, height: 8, borderRadius: 2.5, flexShrink: 0,
@@ -218,18 +223,15 @@ const PlayerPanel: React.FC<PanelProps> = ({
             fontSize: '1.02rem', fontWeight: 700,
             color: isActive ? '#EAE2CC' : '#5A5248',
             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-            maxWidth: 100, transition: 'color .3s',
+            maxWidth: 90, transition: 'color .3s',
           }}>
-            {name.length > 12 ? name.slice(0, 12) + '…' : name}
+            {name.length > 11 ? name.slice(0, 11) + '…' : name}
           </span>
           {statusLabel && (
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0,
-            }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
               <div style={{
                 width: 5, height: 5, borderRadius: '50%',
-                background: statusColor,
-                boxShadow: `0 0 5px ${statusColor}`,
+                background: statusColor, boxShadow: `0 0 5px ${statusColor}`,
                 animation: 'gp-pulse 1.4s infinite',
               }} />
               <span style={{ fontSize: '.62rem', fontWeight: 700, color: statusColor }}>
@@ -237,49 +239,56 @@ const PlayerPanel: React.FC<PanelProps> = ({
               </span>
             </div>
           )}
+          {/* Монеты — прижаты вправо, в одной строке с именем */}
+          {coins > 0 && (
+            <div style={{
+              marginLeft: 'auto', flexShrink: 0,
+              display: 'flex', alignItems: 'center', gap: 3,
+              background: 'rgba(200,154,48,.1)', border: '.5px solid rgba(200,154,48,.25)',
+              borderRadius: 8, padding: '2px 6px',
+            }}>
+              <CoinIcon size={12} />
+              <span style={{ fontSize: '.72rem', fontWeight: 800, color: '#D4A843' }}>
+                +{coins >= 1000 ? `${(coins/1000).toFixed(1)}K` : coins}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Строка 2: ELO */}
-        <div style={{ fontSize: '.7rem', color: '#6A6050', fontWeight: 600 }}>
+        <div style={{ fontSize: '.68rem', color: '#5A5248', fontWeight: 600 }}>
           {elo !== undefined ? `ELO ${elo}` : (isBot ? 'J.A.R.V.I.S' : '')}
         </div>
 
-        {/* Строка 3: взятые фигуры + монеты */}
-        {sorted.length > 0 ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-            <div style={{ display: 'flex' }}>
-              {sorted.slice(0, 8).map((p, i) => (
-                <span key={i} style={{
-                  fontSize: 11, lineHeight: 1, opacity: .75,
-                  marginLeft: i > 0 ? -1 : 0,
-                }}>
-                  {PIECE_SYMBOLS[p] ?? ''}
-                </span>
-              ))}
-              {sorted.length > 8 && (
-                <span style={{ fontSize: '.48rem', color: '#3A3830', fontWeight: 700, marginLeft: 1 }}>
-                  +{sorted.length - 8}
+        {/* Строка 3: взятые фигуры + преимущество */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 3, minHeight: 14 }}>
+          {sorted.length > 0 ? (
+            <>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 0 }}>
+                {sorted.slice(0, 10).map((p, i) => (
+                  <span key={i} style={{ fontSize: 12, lineHeight: 1, opacity: .82, marginLeft: i > 0 ? -1 : 0 }}>
+                    {PIECE_SYMBOLS[p] ?? ''}
+                  </span>
+                ))}
+                {sorted.length > 10 && (
+                  <span style={{ fontSize: '.5rem', color: '#6A5A40', fontWeight: 700, marginLeft: 1 }}>
+                    +{sorted.length - 10}
+                  </span>
+                )}
+              </div>
+              {adv > 0 && (
+                <span style={{ fontSize: '.65rem', fontWeight: 800, color: '#3DBA7A', marginLeft: 2 }}>
+                  +{adv}
                 </span>
               )}
-            </div>
-            {adv > 0 && (
-              <span style={{ fontSize: '.6rem', fontWeight: 800, color: '#3DBA7A' }}>+{adv}</span>
-            )}
-            {coins > 0 && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginLeft: 2 }}>
-                <CoinIcon size={11} />
-                <span style={{ fontSize: '.58rem', fontWeight: 800, color: '#C89A30' }}>
-                  +{coins >= 1000 ? `${(coins/1000).toFixed(1)}K` : coins}
-                </span>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div style={{ fontSize: '.5rem', color: '#1E1A14' }}>—</div>
-        )}
+            </>
+          ) : (
+            <span style={{ fontSize: '.52rem', color: '#242018' }}>—</span>
+          )}
+        </div>
       </div>
 
-      {/* Таймер (правый край) */}
+      {/* Таймер — крупнее, с отступом от правого края */}
       <div style={{
         background: isCritical
           ? 'rgba(220,50,47,.22)'
@@ -291,15 +300,15 @@ const PlayerPanel: React.FC<PanelProps> = ({
           : isActive  ? 'rgba(74,158,255,.38)'
           : 'rgba(255,255,255,.06)'
         }`,
-        borderRadius: 11, padding: '6px 13px', flexShrink: 0,
-        minWidth: 64, textAlign: 'center',
+        borderRadius: 12, padding: '7px 16px', flexShrink: 0,
+        minWidth: 70, textAlign: 'center', marginRight: 4,
         transition: 'all .3s',
         animation: isCritical ? 'timer-crit .75s infinite' : 'none',
       }}>
         <div style={{
-          fontSize: '1.08rem', fontWeight: 900,
+          fontSize: '1.18rem', fontWeight: 900,
           color: isCritical ? '#FF6868' : isActive ? '#82CFFF' : '#282420',
-          fontVariantNumeric: 'tabular-nums', letterSpacing: '-.01em',
+          fontVariantNumeric: 'tabular-nums', letterSpacing: '-.02em',
           transition: 'color .3s',
         }}>
           {timeDisplay}
@@ -621,7 +630,7 @@ export function GamePage() {
       )}
 
       {/* ── Соперник (сверху) ──────────────────────────────────────────────── */}
-      <div style={{ borderBottom: '.5px solid rgba(255,255,255,.05)', flexShrink: 0, paddingTop: PANEL_GAP }}>
+      <div style={{ borderBottom: '.5px solid rgba(255,255,255,.05)', flexShrink: 0, paddingTop: PANEL_GAP_TOP }}>
         <PlayerPanel
           name={oppName} elo={oppElo} avatar={oppAvatar} isBot={oppIsBot}
           isWhite={oppIsWhite} captured={oppCaptured} advantage={oppAdv} coins={oppCoins}
@@ -646,7 +655,7 @@ export function GamePage() {
       </div>
 
       {/* ── Игрок (снизу) ─────────────────────────────────────────────────── */}
-      <div style={{ borderTop: '.5px solid rgba(255,255,255,.05)', flexShrink: 0, paddingBottom: PANEL_GAP }}>
+      <div style={{ borderTop: '.5px solid rgba(255,255,255,.05)', flexShrink: 0, paddingBottom: PANEL_GAP_BOT }}>
         <PlayerPanel
           name={myName} elo={myElo} avatar={myAvatar} isBot={false}
           isWhite={myColor === 'white'} captured={myCaptured} advantage={myAdv} coins={myCoins}

@@ -355,6 +355,39 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
 
   return (
     <>
+      {/* Внешний контейнер — НЕ overflow:hidden, чтобы звёздочка могла выйти за пределы доски */}
+      <div style={{ width: '100%', position: 'relative' }}>
+        {/* Кнопка сохранения — над доской, в зоне панели оппонента */}
+        {sessionId && (
+          <button
+            onClick={toggleSave}
+            disabled={isSaving}
+            style={{
+              position: 'absolute',
+              top: -38,
+              right: 10,
+              zIndex: 20,
+              background: isSaved ? 'rgba(245,200,66,.18)' : 'rgba(14,16,22,.82)',
+              border: `1px solid ${isSaved ? 'rgba(245,200,66,.7)' : 'rgba(255,255,255,.12)'}`,
+              borderRadius: '50%',
+              width: 30,
+              height: 30,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: isSaved ? '#F5C842' : '#5A6070',
+              fontSize: 15,
+              cursor: isSaving ? 'wait' : 'pointer',
+              boxShadow: isSaved ? '0 0 10px rgba(245,200,66,.4)' : '0 2px 8px rgba(0,0,0,.5)',
+              transition: 'all .2s',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
+            }}
+            title="Сохранить партию"
+          >
+            {isSaved ? '★' : '☆'}
+          </button>
+        )}
       <div style={{
         width: '100%',
         borderRadius: 12,
@@ -362,34 +395,6 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
         boxShadow: 'var(--chess-board-shadow, 0 4px 24px rgba(0,0,0,0.4))',
         position: 'relative',
       }}>
-        {sessionId && (
-          <button
-            onClick={toggleSave}
-            disabled={isSaving}
-            style={{
-              position: 'absolute',
-              bottom: 8,
-              right: 8,
-              zIndex: "var(--z-base, 10)",
-              background: 'var(--chess-save-btn-bg, rgba(28, 32, 48, 0.85))',
-              border: `1px solid ${isSaved ? 'var(--color-accent, #F5C842)' : 'var(--color-border, rgba(255,255,255,0.1))'}`,
-              borderRadius: '50%',
-              width: 32,
-              height: 32,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: isSaved ? 'var(--color-accent, #F5C842)' : 'var(--color-text-secondary, #8B92A8)',
-              fontSize: 16,
-              cursor: isSaving ? 'wait' : 'pointer',
-              boxShadow: isSaved ? 'var(--chess-save-btn-active-shadow, 0 0 10px rgba(245,200,66,0.3))' : 'var(--chess-save-btn-shadow, 0 2px 8px rgba(0,0,0,0.5))',
-              transition: 'all 0.2s',
-            }}
-            title="Save Game"
-          >
-            {isSaved ? '★' : '☆'}
-          </button>
-        )}
         <Chessboard
           position={localFen}
           boardOrientation={orientation}
@@ -413,7 +418,8 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
           customSquareStyles={mergedSqs}
           animationDuration={moveAnim.duration}
         />
-      </div>
+      </div>{/* конец overflow:hidden div */}
+      </div>{/* конец внешнего position:relative div */}
       {/* V1: Диалог промоции */}
       {pendingPromotion && (
         <PromotionModal
