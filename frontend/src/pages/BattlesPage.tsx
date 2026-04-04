@@ -490,40 +490,35 @@ const BattleChallengeCard: React.FC<{
       margin: '0 .85rem 8px',
       background: 'linear-gradient(135deg,#141018,#0F0E18)',
       border: isTop ? '.5px solid rgba(212,168,67,.38)' : '.5px solid rgba(212,168,67,.22)',
-      borderRadius: 16, padding: '13px 14px',
-      display: 'flex', alignItems: 'center', gap: 12,
+      borderRadius: 16, padding: '12px 14px',
+      display: 'flex', alignItems: 'center', gap: 10,
     }}>
-      {/* Аватар — кликабельный → профиль */}
+      {/* Аватар — кликабельный → профиль (+50% размер) */}
       <div
-        style={{ flexShrink: 0, cursor: creatorAsUser ? 'pointer' : 'default' }}
+        style={{ flexShrink: 0, cursor: creatorAsUser ? 'pointer' : 'default', width: 48, height: 48, borderRadius: '50%', overflow: 'hidden' }}
         onClick={() => creatorAsUser && onProfile(creatorAsUser.id)}
       >
-        <Avatar user={creatorAsUser as any} size="s" />
+        <Avatar user={creatorAsUser as any} size="m" />
       </div>
 
       {/* Имя + ELO */}
       <div style={{ minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
-          <span style={{ fontSize: '.8rem', fontWeight: 700, color: '#E8E4DC', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {battle.creator?.firstName ?? '?'}
-          </span>
-          {isTop && (
-            <span style={{ fontSize: '.52rem', padding: '1px 5px', background: 'rgba(212,168,67,.15)', color: '#D4A843', border: '.5px solid rgba(212,168,67,.3)', borderRadius: 4, fontWeight: 800, letterSpacing: '.08em', flexShrink: 0 }}>TOP</span>
-          )}
+        <div style={{ fontSize: '.88rem', fontWeight: 700, color: '#EAE2CC', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 3 }}>
+          {battle.creator?.firstName ?? '?'}
         </div>
-        <div style={{ fontSize: '.62rem', color: '#6A6660' }}>ELO {battle.creator?.elo ?? '?'}</div>
+        <div style={{ fontSize: '.65rem', color: '#9A9490' }}>ELO {battle.creator?.elo ?? '?'}</div>
       </div>
 
       {/* Центр: время + ставка */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 3 }}>
-        <div style={{ fontSize: '.75rem', fontWeight: 800, color: '#D4A843' }}>{durationMins} мин</div>
+        <div style={{ fontSize: '.78rem', fontWeight: 800, color: '#D4A843' }}>{durationMins} мин</div>
         <div style={{ fontSize: '.65rem', color: '#9A8840', display: 'flex', alignItems: 'center', gap: 3 }}>
           <svg width="9" height="9" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#D4A843" strokeWidth="1.5"/><text x="10" y="14" textAnchor="middle" fill="#D4A843" fontSize="10" fontWeight="800">ᚙ</text></svg>
           {fmtBalance(battle.bet)}
         </div>
       </div>
 
-      {/* Цвет фигур соперника (меня) */}
+      {/* Цвет фигур (что достанется принимающему) */}
       <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 3 }}>
         <ColorIcon isWhite={opponentIsWhite} />
         <div style={{ fontSize: '.52rem', fontWeight: 700, color: opponentIsWhite ? '#9A8840' : '#5A8AB0', letterSpacing: '.04em' }}>

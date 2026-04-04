@@ -30,6 +30,10 @@ export const profileApi = {
     api.get<{ games: GameSession[] }>(
       `/profile/games?limit=${limit}&offset=${offset}`
     ),
+  getUserGames: (userId: string, limit = 20, offset = 0) =>
+    api.get<{ total: number; games: GameSession[] }>(
+      `/profile/${userId}/games?limit=${limit}&offset=${offset}`
+    ),
   getTransactions: (limit = 20, offset = 0) =>
     api.get<{ total: number; transactions: Transaction[] }>(
       `/profile/transactions?limit=${limit}&offset=${offset}`

@@ -143,16 +143,24 @@ export const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     if (tab === 'info') {
-      profileApi.getGames(10).then((r) => setRecentGames((r.games ?? []) as unknown as GameHistoryItem[])).catch(() => {});
+      if (isOwnProfile) {
+        profileApi.getGames(10).then((r) => setRecentGames((r.games ?? []) as unknown as GameHistoryItem[])).catch(() => {});
+      } else if (viewedUserId) {
+        profileApi.getUserGames(viewedUserId, 10).then((r) => setRecentGames((r.games ?? []) as unknown as GameHistoryItem[])).catch(() => {});
+      }
     }
     if (tab === 'games') {
-      profileApi.getGames().then((r) => setRecentGames((r.games ?? []) as unknown as GameHistoryItem[])).catch(() => {});
-      profileApi.getTransactions().then((r) => setTransactions(r.transactions)).catch(() => {});
+      if (isOwnProfile) {
+        profileApi.getGames().then((r) => setRecentGames((r.games ?? []) as unknown as GameHistoryItem[])).catch(() => {});
+        profileApi.getTransactions().then((r) => setTransactions(r.transactions)).catch(() => {});
+      } else if (viewedUserId) {
+        profileApi.getUserGames(viewedUserId).then((r) => setRecentGames((r.games ?? []) as unknown as GameHistoryItem[])).catch(() => {});
+      }
     }
     if (tab === 'saves') {
       warsApi.savedGames().then((r) => setSavedGames(r.savedGames as unknown as SavedGameItem[])).catch(() => {});
     }
-  }, [tab]);
+  }, [tab, isOwnProfile, viewedUserId]);
 
   if (!user) return null;
   if (!isOwnProfile && !viewedProfile) return null;
@@ -179,7 +187,11 @@ export const ProfilePage: React.FC = () => {
 
   const rightAction = isOwnProfile ? (
     <button onClick={() => setShowSettings(true)} style={tbaStyle}>⚙</button>
-  ) : undefined;
+  ) : (
+    <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#5A8AB0', letterSpacing: '.08em', padding: '3px 8px', background: 'rgba(74,158,255,.08)', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 6 }}>
+      ПРОСМОТР
+    </div>
+  );
 
   return (
     <>
