@@ -845,32 +845,18 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
         {/* ── Кнопка создания ── */}
         <div style={{ margin: '0 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {!hasAttempts ? (
-            <>
-              <button
-                onClick={onBuyAttempts}
-                style={{
-                  width: '100%', padding: '13px',
-                  background: 'linear-gradient(135deg,#3A0808,#5A1010)',
-                  border: '.5px solid rgba(220,50,47,.4)',
-                  borderRadius: 14,
-                  fontFamily: 'Inter, sans-serif', fontSize: '.9rem', fontWeight: 900, letterSpacing: '.04em',
-                  color: '#FF8080', cursor: 'pointer',
-                  boxShadow: '0 4px 20px rgba(220,50,47,.15)',
-                  transition: 'all .15s',
-                }}
-              >⭐ НЕТ ПОПЫТОК — КУПИТЬ</button>
-              <button
-                onClick={onClose}
-                style={{
-                  width: '100%', padding: '11px',
-                  background: 'rgba(255,255,255,.04)',
-                  border: '.5px solid rgba(255,255,255,.07)',
-                  borderRadius: 14,
-                  fontFamily: 'Inter, sans-serif', fontSize: '.82rem', fontWeight: 700,
-                  color: '#5A5850', cursor: 'pointer',
-                }}
-              >Подождать</button>
-            </>
+            <button
+              disabled
+              style={{
+                width: '100%', padding: '14px',
+                background: 'linear-gradient(135deg,#3A0808,#5A1010)',
+                border: '.5px solid rgba(220,50,47,.4)',
+                borderRadius: 14,
+                fontFamily: 'Inter, sans-serif', fontSize: '.9rem', fontWeight: 900, letterSpacing: '.06em',
+                color: '#FF8080', cursor: 'default',
+                boxShadow: '0 4px 20px rgba(220,50,47,.15)',
+              }}
+            >⭐ НЕТ ПОПЫТОК</button>
           ) : (
             <button
               onClick={handleCreate}
