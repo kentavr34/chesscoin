@@ -4,6 +4,7 @@ import { PageLayout, InfoPopup, useInfoPopup } from '@/components/layout/PageLay
 import { useGameStore } from '@/store/useGameStore';
 import { useUserStore } from '@/store/useUserStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
+import { AttemptsModal } from '@/components/ui/AttemptsModal';
 import { getSocket } from '@/api/socket';
 import { fmtBalance, fmtTime } from '@/utils/format';
 import { translations } from '@/i18n/translations';
@@ -36,6 +37,10 @@ export const BattlesPage: React.FC = () => {
   const [tab, setTab] = useState<Tab>('public');
   const [showCreate, setShowCreate] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [showAttempts, setShowAttempts] = useState(false);
+
+  const attempts = user?.attempts ?? 3;
+  const hasAttempts = attempts > 0;
 
   const info = useInfoPopup('battles', [...t.battles.info] as Parameters<typeof InfoPopup>[0]["slides"]);
 
@@ -490,23 +495,28 @@ export const BattlesPage: React.FC = () => {
 
       {/* FAB — создать батл */}
       <button
-        onClick={() => setShowCreate(true)}
+        onClick={() => hasAttempts ? setShowCreate(true) : setShowAttempts(true)}
         style={{
           position: 'fixed',
           bottom: 'max(98px, calc(88px + env(safe-area-inset-bottom, 14px)))',
           right: 24, width: 50, height: 50,
           borderRadius: '50%',
-          background: 'linear-gradient(135deg,#D4A843,#F0C85A)',
-          color: '#0D0D12',
-          fontSize: 24, fontWeight: 800,
+          background: hasAttempts
+            ? 'linear-gradient(135deg,#D4A843,#F0C85A)'
+            : 'linear-gradient(135deg,#3A0808,#5A1010)',
+          color: hasAttempts ? '#0D0D12' : '#FF8080',
+          fontSize: hasAttempts ? 24 : 20, fontWeight: 800,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           cursor: 'pointer', border: 'none', zIndex: 49,
-          boxShadow: '0 4px 24px rgba(212,168,67,.45)',
+          boxShadow: hasAttempts
+            ? '0 4px 24px rgba(212,168,67,.45)'
+            : '0 4px 24px rgba(220,50,47,.3)',
           fontFamily: 'inherit',
         }}
-      >＋</button>
+      >{hasAttempts ? '＋' : '⭐'}</button>
 
-      {showCreate && <CreateBattleModal onClose={() => setShowCreate(false)} />}
+      {showCreate && <CreateBattleModal onClose={() => setShowCreate(false)} onBuyAttempts={() => { setShowCreate(false); setShowAttempts(true); }} />}
+      {showAttempts && user && <AttemptsModal user={user} onClose={() => setShowAttempts(false)} />}
     </PageLayout>
   );
 };
@@ -565,12 +575,14 @@ const IcoKingB = () => (
   </svg>
 );
 
-const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => void }> = ({ onClose, onBuyAttempts }) => {
   const t = useT();
   const { upsertSession } = useGameStore();
   const { user } = useUserStore();
   const navigate = useNavigate();
 
+  const userAttempts = user?.attempts ?? 3;
+  const hasAttempts = userAttempts > 0;
   const userBalance = Number(BigInt(user?.balance ?? '0'));
   const maxBet = Math.max(MIN_BET, Math.min(userBalance, 5_000_000));
   const canCreate = userBalance >= MIN_BET;
@@ -816,25 +828,54 @@ const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         </div>
 
         {/* ── Кнопка создания ── */}
-        <div style={{ margin: '0 14px' }}>
-          <button
-            onClick={handleCreate}
-            disabled={loading || !canCreate}
-            style={{
-              width: '100%', padding: '13px',
-              background: canCreate ? 'linear-gradient(135deg,#3A2A08,#5A4010)' : 'rgba(255,255,255,.04)',
-              border: `.5px solid ${canCreate ? 'rgba(212,168,67,.5)' : 'rgba(255,255,255,.07)'}`,
-              borderRadius: 14,
-              fontFamily: 'Inter, sans-serif', fontSize: '.9rem', fontWeight: 900, letterSpacing: '.04em',
-              color: canCreate ? '#F0C85A' : '#3A4052',
-              cursor: canCreate && !loading ? 'pointer' : 'not-allowed',
-              opacity: loading ? 0.7 : 1,
-              boxShadow: canCreate ? '0 4px 20px rgba(212,168,67,.18)' : 'none',
-              transition: 'all .15s',
-            }}
-          >
-            {loading ? t.battles.creating : t.battles.createBtn.toUpperCase()}
-          </button>
+        <div style={{ margin: '0 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {!hasAttempts ? (
+            <>
+              <button
+                onClick={onBuyAttempts}
+                style={{
+                  width: '100%', padding: '13px',
+                  background: 'linear-gradient(135deg,#3A0808,#5A1010)',
+                  border: '.5px solid rgba(220,50,47,.4)',
+                  borderRadius: 14,
+                  fontFamily: 'Inter, sans-serif', fontSize: '.9rem', fontWeight: 900, letterSpacing: '.04em',
+                  color: '#FF8080', cursor: 'pointer',
+                  boxShadow: '0 4px 20px rgba(220,50,47,.15)',
+                  transition: 'all .15s',
+                }}
+              >⭐ НЕТ ПОПЫТОК — КУПИТЬ</button>
+              <button
+                onClick={onClose}
+                style={{
+                  width: '100%', padding: '11px',
+                  background: 'rgba(255,255,255,.04)',
+                  border: '.5px solid rgba(255,255,255,.07)',
+                  borderRadius: 14,
+                  fontFamily: 'Inter, sans-serif', fontSize: '.82rem', fontWeight: 700,
+                  color: '#5A5850', cursor: 'pointer',
+                }}
+              >Подождать</button>
+            </>
+          ) : (
+            <button
+              onClick={handleCreate}
+              disabled={loading || !canCreate}
+              style={{
+                width: '100%', padding: '13px',
+                background: canCreate ? 'linear-gradient(135deg,#3A2A08,#5A4010)' : 'rgba(255,255,255,.04)',
+                border: `.5px solid ${canCreate ? 'rgba(212,168,67,.5)' : 'rgba(255,255,255,.07)'}`,
+                borderRadius: 14,
+                fontFamily: 'Inter, sans-serif', fontSize: '.9rem', fontWeight: 900, letterSpacing: '.04em',
+                color: canCreate ? '#F0C85A' : '#3A4052',
+                cursor: canCreate && !loading ? 'pointer' : 'not-allowed',
+                opacity: loading ? 0.7 : 1,
+                boxShadow: canCreate ? '0 4px 20px rgba(212,168,67,.18)' : 'none',
+                transition: 'all .15s',
+              }}
+            >
+              {loading ? t.battles.creating : t.battles.createBtn.toUpperCase()}
+            </button>
+          )}
         </div>
       </div>
     </div>
