@@ -11,6 +11,7 @@ import { api } from '@/api/client';
 import { useGameStore } from '@/store/useGameStore';
 import { ChessBoard } from '@/components/game/ChessBoard';
 import { sound } from '@/lib/sound';
+import { fmtBalance } from '@/utils/format';
 
 // ── Константы ──────────────────────────────────────────────────────────────────
 const PIECE_SYMBOLS: Record<string, string> = { p: '♟', n: '♞', b: '♝', r: '♜', q: '♛' };
@@ -593,6 +594,9 @@ export function GamePage() {
   const [isSaved,           setIsSaved]           = useState(false);
   const [isSaving,          setIsSaving]          = useState(false);
   const [showResignDialog,  setShowResignDialog]  = useState(false);
+  const [donatePool,        setDonatePool]        = useState<string | null>(null);
+  const [spectatorCount,    setSpectatorCount]    = useState(session?.spectatorCount ?? 0);
+  const [selectedDonateAmt, setSelectedDonateAmt] = useState(1000);
 
   const mySecsRef   = useRef(0);
   const oppSecsRef  = useRef(0);
@@ -603,6 +607,10 @@ export function GamePage() {
   const gameOver = !!session
     && session.status !== 'IN_PROGRESS'
     && session.status !== 'WAITING_FOR_OPPONENT';
+
+  const isBattle    = session?.type === 'BATTLE';
+  const isSpectator = isBattle && !session?.mySideId;
+  const hasBet      = isBattle && session?.bet && BigInt(session.bet) > 0n;
 
   useEffect(() => { isMyTurnRef.current = isMyTurn; },  [isMyTurn]);
   useEffect(() => { gameOverRef.current = gameOver; }, [gameOver]);
@@ -615,6 +623,32 @@ export function GamePage() {
     const isDraw = !session.winnerSideId || session.status === 'DRAW';
     if (!isDraw) setTimeout(() => isWin ? sound.win() : sound.lose(), 200);
   }, [gameOver, soundPlayed, session]);
+
+  // battle:donated listener + spectate emit
+  useEffect(() => {
+    if (!isBattle) return;
+    const sock = getSocket();
+
+    const onDonated = (data: { totalPool: string; amount: string }) => {
+      setDonatePool(data.totalPool);
+      window.dispatchEvent(new CustomEvent('chesscoin:toast', {
+        detail: { text: `🎁 +${fmtBalance(data.amount)} ᚙ доната`, type: 'info' }
+      }));
+    };
+    sock.on('battle:donated', onDonated);
+
+    if (isSpectator) {
+      sock.emit('spectate', { sessionId });
+    }
+
+    return () => {
+      sock.off('battle:donated', onDonated);
+      if (isSpectator) {
+        sock.emit('unspectate', { sessionId });
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isBattle, isSpectator, sessionId]);
 
   // Синхронизируем таймеры при новом FEN
   const prevFenRef = useRef('');
@@ -853,7 +887,7 @@ export function GamePage() {
 
       {/* ── Доска — точный размер, НЕ flex-центрирование ─────────────────── */}
       <div style={{ height: boardSize, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'visible' }}>
-        <div style={{ width: boardSize }}>
+        <div style={{ width: boardSize, position: 'relative' }}>
           <ChessBoard
             fen={fen}
             orientation={myColor}
@@ -863,6 +897,28 @@ export function GamePage() {
             lastMove={lastMove}
             sessionId={sessionId}
           />
+          {/* ── Счётчик зрителей (топ-правый угол доски) ── */}
+          {isBattle && spectatorCount > 0 && (
+            <div style={{
+              position: 'absolute', top: 6, right: 6,
+              display: 'flex', alignItems: 'center', gap: 4,
+              background: 'rgba(0,0,0,.6)',
+              border: '.5px solid rgba(255,255,255,.12)',
+              borderRadius: 20,
+              padding: '4px 10px',
+              pointerEvents: 'none',
+              zIndex: 10,
+            }}>
+              {/* Иконка глаза */}
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                <path d="M1 12S5 5 12 5s11 7 11 7-4 7-11 7S1 12 1 12z" stroke="rgba(154,148,144,.8)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                <circle cx="12" cy="12" r="3" stroke="rgba(154,148,144,.8)" strokeWidth="1.8"/>
+              </svg>
+              <span style={{ fontSize: '.62rem', color: '#9A9490', fontWeight: 600, letterSpacing: '.01em' }}>
+                {spectatorCount}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -875,6 +931,25 @@ export function GamePage() {
           </div>
         )}
       </div>
+
+      {/* ── Пул доната (между статус-полоской и панелью игрока) ─────────── */}
+      {isBattle && donatePool && BigInt(donatePool) > 0n && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 6,
+          background: 'rgba(212,168,67,.08)',
+          border: '.5px solid rgba(212,168,67,.2)',
+          borderRadius: 10,
+          padding: '6px 14px',
+          margin: '0 10px',
+          flexShrink: 0,
+        }}>
+          {/* Монета */}
+          <CoinIcon size={14} />
+          <span style={{ fontSize: '.68rem', color: '#D4A843', fontWeight: 700, letterSpacing: '.01em' }}>
+            Пул доната: {fmtBalance(donatePool)} ᚙ
+          </span>
+        </div>
+      )}
 
       {/* ── Игрок (снизу, вплотную к доске) ──────────────────────────────── */}
       <div style={{ borderTop: '.5px solid rgba(255,255,255,.05)', flexShrink: 0 }}>
@@ -889,90 +964,175 @@ export function GamePage() {
       {/* ── Нижний spacer ────────────────────────────────────────────────── */}
       <div style={{ flex: 1, minHeight: 6 }} />
 
-      {/* ── Панель действий: 4 кнопки ─────────────────────────────── */}
-      <div style={{
-        display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr',
-        height: ACTBAR_H,
-        paddingBottom: 'max(0px, env(safe-area-inset-bottom, 0px))',
-        borderTop: '.5px solid rgba(255,255,255,.09)',
-        flexShrink: 0, background: 'rgba(10,12,18,.6)',
-        gap: 1,
-      }}>
-        {/* Главная */}
-        <button
-          onClick={() => navigate('/')}
-          style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            gap: 5, background: 'rgba(255,255,255,.03)', border: 'none',
-            color: '#7A8898', cursor: 'pointer', fontFamily: 'inherit',
-            transition: 'background .15s, color .15s',
-          }}
-        >
-          <IcoHome />
-          <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Главная</span>
-        </button>
+      {/* ── Панель действий ──────────────────────────────────────────────── */}
+      {isSpectator ? (
+        /* ── Панель зрителя: Выйти | Донат | Зрители ──────────────────── */
+        <div style={{
+          display: 'grid', gridTemplateColumns: '1fr 2fr 1fr',
+          height: ACTBAR_H,
+          paddingBottom: 'max(0px, env(safe-area-inset-bottom, 0px))',
+          borderTop: '.5px solid rgba(255,255,255,.09)',
+          flexShrink: 0, background: 'rgba(10,12,18,.6)',
+          gap: 1, alignItems: 'stretch',
+        }}>
+          {/* Выйти */}
+          <button
+            onClick={() => navigate('/')}
+            style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              gap: 4, background: 'rgba(255,255,255,.05)', border: 'none',
+              color: '#7A7875', cursor: 'pointer', fontFamily: 'inherit',
+              fontSize: '.72rem', fontWeight: 700,
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M19 12H5M12 5l-7 7 7 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Выйти
+          </button>
 
-        {/* Сохранить */}
-        <button
-          onClick={handleToggleSave}
-          disabled={isSaving}
-          style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            gap: 5,
-            background: isSaved ? 'rgba(245,200,66,.07)' : 'rgba(255,255,255,.03)',
-            border: 'none',
-            color: isSaved ? '#F5C842' : '#7A8898',
-            cursor: isSaving ? 'wait' : 'pointer',
-            fontFamily: 'inherit',
-            transition: 'background .15s, color .15s',
-          }}
-        >
-          <IcoStarBtn filled={isSaved} />
-          <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>
-            {isSaved ? 'Сохранено' : 'Сохранить'}
-          </span>
-        </button>
+          {/* Донат с выбором суммы */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+            {/* Быстрые суммы */}
+            <div style={{ display: 'flex', gap: 4 }}>
+              {[1000, 5000, 10000, 50000].map(amt => (
+                <button
+                  key={amt}
+                  onClick={() => setSelectedDonateAmt(amt)}
+                  style={{
+                    padding: '2px 6px', borderRadius: 6, border: 'none', cursor: 'pointer',
+                    fontFamily: 'inherit', fontSize: '.58rem', fontWeight: 700,
+                    background: selectedDonateAmt === amt ? 'rgba(212,168,67,.25)' : 'rgba(255,255,255,.06)',
+                    color: selectedDonateAmt === amt ? '#F0C85A' : '#5A5248',
+                    transition: 'background .15s, color .15s',
+                  }}
+                >
+                  {amt >= 1000 ? `${amt / 1000}K` : amt}
+                </button>
+              ))}
+            </div>
+            {/* Кнопка доната */}
+            <button
+              disabled={gameOver}
+              onClick={() => {
+                if (gameOver) return;
+                getSocket().emit('battle:donate', { sessionId, amount: String(selectedDonateAmt) });
+              }}
+              style={{
+                padding: '5px 18px', borderRadius: 10,
+                background: gameOver ? 'rgba(255,255,255,.04)' : 'linear-gradient(135deg,#2A1E08,#4A3810)',
+                border: `.5px solid ${gameOver ? 'rgba(255,255,255,.08)' : 'rgba(212,168,67,.42)'}`,
+                color: gameOver ? '#3A3028' : '#F0C85A',
+                fontSize: '.72rem', fontWeight: 800,
+                cursor: gameOver ? 'default' : 'pointer', fontFamily: 'inherit',
+                display: 'flex', alignItems: 'center', gap: 5,
+              }}
+            >
+              <CoinIcon size={12} />
+              Задонатить {fmtBalance(String(selectedDonateAmt))} ᚙ
+            </button>
+          </div>
 
-        {/* Ничья */}
-        <button
-          onClick={handleDrawOffer}
-          disabled={gameOver || drawOfferedByMe}
-          style={{
+          {/* Зрители */}
+          <div style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            gap: 5,
-            background: drawOfferedByOpp ? 'rgba(130,207,255,.1)' : 'rgba(255,255,255,.03)',
-            border: 'none',
-            color: drawOfferedByOpp ? '#82CFFF' : drawOfferedByMe ? '#2A2A30' : '#7A8898',
-            cursor: gameOver || drawOfferedByMe ? 'default' : 'pointer',
-            fontFamily: 'inherit',
-            opacity: drawOfferedByMe ? 0.4 : 1,
-            transition: 'background .15s, color .15s',
-          }}
-        >
-          <IcoHandshake />
-          <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>
-            {drawOfferedByOpp ? 'Принять' : drawOfferedByMe ? 'Ждём...' : 'Ничья'}
-          </span>
-        </button>
+            gap: 3,
+          }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M1 12S5 5 12 5s11 7 11 7-4 7-11 7S1 12 1 12z" stroke="#9A9490" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+              <circle cx="12" cy="12" r="3" stroke="#9A9490" strokeWidth="1.6"/>
+            </svg>
+            <span style={{ fontSize: '.62rem', color: '#9A9490', fontWeight: 600 }}>
+              {spectatorCount} зрит.
+            </span>
+          </div>
+        </div>
+      ) : (
+        /* ── Обычная панель: 4 кнопки ──────────────────────────────────── */
+        <div style={{
+          display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr',
+          height: ACTBAR_H,
+          paddingBottom: 'max(0px, env(safe-area-inset-bottom, 0px))',
+          borderTop: '.5px solid rgba(255,255,255,.09)',
+          flexShrink: 0, background: 'rgba(10,12,18,.6)',
+          gap: 1,
+        }}>
+          {/* Главная */}
+          <button
+            onClick={() => navigate('/')}
+            style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              gap: 5, background: 'rgba(255,255,255,.03)', border: 'none',
+              color: '#7A8898', cursor: 'pointer', fontFamily: 'inherit',
+              transition: 'background .15s, color .15s',
+            }}
+          >
+            <IcoHome />
+            <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Главная</span>
+          </button>
 
-        {/* Сдаться */}
-        <button
-          onClick={handleSurrender}
-          disabled={gameOver}
-          style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            gap: 5,
-            background: gameOver ? 'rgba(255,255,255,.02)' : 'rgba(220,50,47,.06)',
-            border: 'none',
-            color: gameOver ? '#2A2420' : '#BB5555',
-            cursor: gameOver ? 'default' : 'pointer',
-            fontFamily: 'inherit', transition: 'background .15s, color .15s',
-          }}
-        >
-          <IcoFlag />
-          <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Сдаться</span>
-        </button>
-      </div>
+          {/* Сохранить */}
+          <button
+            onClick={handleToggleSave}
+            disabled={isSaving}
+            style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              gap: 5,
+              background: isSaved ? 'rgba(245,200,66,.07)' : 'rgba(255,255,255,.03)',
+              border: 'none',
+              color: isSaved ? '#F5C842' : '#7A8898',
+              cursor: isSaving ? 'wait' : 'pointer',
+              fontFamily: 'inherit',
+              transition: 'background .15s, color .15s',
+            }}
+          >
+            <IcoStarBtn filled={isSaved} />
+            <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>
+              {isSaved ? 'Сохранено' : 'Сохранить'}
+            </span>
+          </button>
+
+          {/* Ничья */}
+          <button
+            onClick={handleDrawOffer}
+            disabled={gameOver || drawOfferedByMe}
+            style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              gap: 5,
+              background: drawOfferedByOpp ? 'rgba(130,207,255,.1)' : 'rgba(255,255,255,.03)',
+              border: 'none',
+              color: drawOfferedByOpp ? '#82CFFF' : drawOfferedByMe ? '#2A2A30' : '#7A8898',
+              cursor: gameOver || drawOfferedByMe ? 'default' : 'pointer',
+              fontFamily: 'inherit',
+              opacity: drawOfferedByMe ? 0.4 : 1,
+              transition: 'background .15s, color .15s',
+            }}
+          >
+            <IcoHandshake />
+            <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>
+              {drawOfferedByOpp ? 'Принять' : drawOfferedByMe ? 'Ждём...' : 'Ничья'}
+            </span>
+          </button>
+
+          {/* Сдаться */}
+          <button
+            onClick={handleSurrender}
+            disabled={gameOver}
+            style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              gap: 5,
+              background: gameOver ? 'rgba(255,255,255,.02)' : 'rgba(220,50,47,.06)',
+              border: 'none',
+              color: gameOver ? '#2A2420' : '#BB5555',
+              cursor: gameOver ? 'default' : 'pointer',
+              fontFamily: 'inherit', transition: 'background .15s, color .15s',
+            }}
+          >
+            <IcoFlag />
+            <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Сдаться</span>
+          </button>
+        </div>
+      )}
 
       {/* ── Диалог подтверждения сдачи ──────────────────────────────────── */}
       {showResignDialog && (
