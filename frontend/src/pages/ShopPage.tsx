@@ -1,10 +1,7 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { PageLayout, useInfoPopup, InfoPopup } from '@/components/layout/PageLayout';
 import { useConfirm } from '@/components/ui/ConfirmModal';
-import { Button } from '@/components/ui/Button';
-import { Text } from '@/components/ui/Text';
-import { Card } from '@/components/ui/Card';
 import { shopApi, authApi, tonApi, profileApi } from '@/api';
 import { connectWallet, sendVerificationPayment, getWalletAddress } from '@/lib/tonconnect';
 import { useUserStore } from '@/store/useUserStore';
@@ -21,18 +18,13 @@ import { ItemCard, AvatarItemCard, RARITY_COLOR } from '@/components/shop/ShopIt
 type Tab = 'avatars' | 'frames' | 'visual' | 'themes' | 'effects' | 'exchange';
 
 // S1: маппинг вкладок → типы товаров
-// 'visual' = Доски + Фигуры (subtabs внутри), 'exchange' = биржа (нет товаров)
 const TAB_TYPE: Partial<Record<Tab, ItemType | ItemType[]>> = {
   avatars:  'PREMIUM_AVATAR',
   frames:   'AVATAR_FRAME',
-  visual:   'BOARD_SKIN',   // default subtab; внутри ещё subtab Фигуры
+  visual:   'BOARD_SKIN',
   effects:  ['WIN_ANIMATION', 'CAPTURE_EFFECT', 'SPECIAL_MOVE'],
   themes:   'THEME',
-  // exchange — не загружает товары, рендерит ExchangeTab
 };
-
-
-// TAB_LABELS moved to t.shop.tabs
 
 // Map item name to ThemeKey
 const THEME_NAME_TO_KEY: Record<string, ThemeKey> = {
@@ -44,13 +36,48 @@ const THEME_NAME_TO_KEY: Record<string, ThemeKey> = {
   'Crystal Ice':   'crystal_ice',
 };
 
-// RARITY_COLOR imported from @/components/shop/ShopItemCards
-
-// RARITY_LABEL moved to t.shop.rarity
-
 const DEFAULT_TON_TO_COINS = 1_000_000;
 const DEFAULT_USDT_TO_COINS = 200_000;
 const FEE_PERCENT = 0.5;
+
+// ── Premium Dark style constants ─────────────────────────────
+const S = {
+  card: {
+    background: 'linear-gradient(135deg,#141018,#0F0E18)',
+    border: '.5px solid rgba(154,148,144,.22)',
+    borderRadius: 16,
+  } as React.CSSProperties,
+  sectionLabel: {
+    fontSize: '.58rem',
+    fontWeight: 700,
+    color: '#7A7875',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '.14em',
+  } as React.CSSProperties,
+  primaryText: { color: '#EAE2CC' } as React.CSSProperties,
+  mutedText: { color: '#7A7875' } as React.CSSProperties,
+  goldBtn: {
+    background: 'linear-gradient(135deg,#2A1E08,#4A3810)',
+    border: '.5px solid rgba(212,168,67,.42)',
+    color: '#F0C85A',
+    borderRadius: 12,
+    padding: '12px 20px',
+    fontWeight: 900,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    transition: 'all .15s',
+  } as React.CSSProperties,
+  input: {
+    background: 'rgba(255,255,255,.05)',
+    border: '1px solid rgba(255,255,255,.1)',
+    color: '#EAE2CC',
+    borderRadius: 10,
+    padding: '10px 14px',
+    fontFamily: 'inherit',
+    fontSize: 13,
+    outline: 'none',
+  } as React.CSSProperties,
+};
 
 // ── TON Tab ─────────────────────────────────────────────────
 interface TonTabProps {
@@ -72,17 +99,14 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
   const [tonHistory, setTonHistory] = useState<Array<Record<string,unknown>>>([]);
   const [connectStep, setConnectStep] = useState<'idle' | 'connecting' | 'paying' | 'verifying'>('idle');
 
-  // Check if user already unlocked TON features (tonWalletAddress set)
   useEffect(() => {
     if (user?.tonWalletAddress) {
       setWalletConnected(true);
       setWalletAddress(user.tonWalletAddress);
-      // Загружаем историю TON транзакций
       tonApi.history(10).then(r => setTonHistory(r.transactions ?? [])).catch(() => {});
     }
   }, [user]);
 
-  // Load live rate
   useEffect(() => {
     tonApi.rate().then(r => {
       setTonToCoins(r.coinsPerTon);
@@ -94,24 +118,20 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
   const handleConnectWallet = async () => {
     if (connectStep !== 'idle') return;
     try {
-      // Шаг 1: подключаем кошелёк через TonConnect
       setConnectStep('connecting');
       showToast('Opening wallet...');
       const wallet = await connectWallet();
       const addr = wallet.account?.address;
       if (!addr) throw new Error('Failed to get wallet address');
 
-      // Шаг 2: отправляем 1 TON платёж
       setConnectStep('paying');
       showToast('Confirm 1 TON payment in wallet...');
       const user = onUserRefresh as unknown as () => { id?: string };
       const userId = (window as unknown as { __userId?: string }).__userId ?? '';
       const boc = await sendVerificationPayment(userId);
 
-      // Шаг 3: верифицируем на бэкенде
       setConnectStep('verifying');
       showToast('Verifying transaction...');
-      // Ждём ~15 сек пока транзакция появится в блокчейне
       await new Promise(r => setTimeout(r, 15_000));
       await tonApi.verifyWallet(addr, boc);
 
@@ -123,7 +143,6 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
       const msg = e instanceof Error ? e.message : 'Connection error';
       if (msg.includes('not confirmed')) {
         showToast('⏳ ' + msg + ' — retrying');
-        // Повторная попытка верификации через 30 сек
         setTimeout(async () => {
           try {
             const addr = await getWalletAddress();
@@ -162,10 +181,13 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
   if (!walletConnected) {
     return (
       <div style={{ padding: '0 18px 24px' }}>
-        <div style={{ ...heroCard, gap: 0 }}>
-          <div style={{ fontSize: 48, marginBottom: 12 }}>💎</div>
-          <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text-primary, #F0F2F8)', marginBottom: 6 }}>TON / USDT</div>
-          <div style={{ fontSize: 12, color: 'var(--text-secondary, #8B92A8)', textAlign: 'center', lineHeight: 1.6, marginBottom: 20 }}>
+        <div style={{ ...S.card, padding: 20, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
+          {/* Diamond icon */}
+          <div style={{ width: 56, height: 56, borderRadius: 16, background: 'linear-gradient(135deg,rgba(0,152,234,.18),rgba(0,122,194,.08))', border: '.5px solid rgba(0,152,234,.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, marginBottom: 14 }}>
+            💎
+          </div>
+          <div style={{ fontSize: 17, fontWeight: 800, color: '#EAE2CC', marginBottom: 6 }}>TON / USDT</div>
+          <div style={{ fontSize: 12, color: '#7A7875', textAlign: 'center', lineHeight: 1.6, marginBottom: 20 }}>
             Connect a TON wallet and get access to buying coins with real crypto and withdrawing earnings
           </div>
 
@@ -175,11 +197,11 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
               { ico: '💸', text: 'Withdraw coins to TON', sub: '0.5% fee on all operations' },
               { ico: '🔒', text: 'One-time unlock payment', sub: '1 TON — forever' },
             ].map(r => (
-              <div key={r.ico} style={{ display: 'flex', gap: 10, padding: '10px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 12, alignItems: 'flex-start' }}>
+              <div key={r.ico} style={{ display: 'flex', gap: 10, padding: '10px 12px', background: 'rgba(255,255,255,.04)', border: '.5px solid rgba(154,148,144,.14)', borderRadius: 12, alignItems: 'flex-start', transition: 'all .15s' }}>
                 <span style={{ fontSize: 18 }}>{r.ico}</span>
                 <div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>{r.text}</div>
-                  <div style={{ fontSize: 10, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>{r.sub}</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#EAE2CC' }}>{r.text}</div>
+                  <div style={{ fontSize: 10, color: '#7A7875', marginTop: 2 }}>{r.sub}</div>
                 </div>
               </div>
             ))}
@@ -188,14 +210,14 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
           <button
             onClick={handleConnectWallet}
             disabled={connectStep !== 'idle'}
-            style={{ width: '100%', padding: '14px', background: 'var(--exchange-ton-shop-gradient, linear-gradient(90deg,#0098EA,#007AC2))', color: '#fff', border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+            style={{ width: '100%', padding: '14px', background: 'linear-gradient(135deg,#0098EA,#006BBF)', color: '#fff', border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: connectStep === 'idle' ? 'pointer' : 'default', fontFamily: 'inherit', transition: 'all .15s', opacity: connectStep !== 'idle' ? 0.7 : 1 }}
           >
             {connectStep === 'idle' ? '💎 Connect TON Wallet' :
-       connectStep === 'connecting' ? '🔗 Opening wallet...' :
-       connectStep === 'paying' ? '💸 Awaiting payment...' :
-       '⏳ Verifying...'}
+             connectStep === 'connecting' ? '🔗 Opening wallet...' :
+             connectStep === 'paying' ? '💸 Awaiting payment...' :
+             '⏳ Verifying...'}
           </button>
-          <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', marginTop: 8, textAlign: 'center' }}>
+          <div style={{ fontSize: 10, color: '#7A7875', marginTop: 8, textAlign: 'center' }}>
             1 TON payment to unlock
           </div>
         </div>
@@ -204,55 +226,66 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
   }
 
   return (
-    <div style={{ padding: '0 18px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div style={{ padding: '0 18px 24px', display: 'flex', flexDirection: 'column', gap: 10 }}>
       {/* Wallet Info */}
-      <div style={{ padding: '14px 16px', background: 'linear-gradient(135deg, rgba(0,152,234,0.15), rgba(0,122,194,0.08))', border: '1px solid rgba(0,152,234,0.3)', borderRadius: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ padding: '13px 15px', background: 'linear-gradient(135deg,rgba(0,152,234,.12),rgba(0,122,194,.06))', border: '.5px solid rgba(0,152,234,.28)', borderRadius: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
         <div style={{ fontSize: 22 }}>💎</div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 11, color: 'var(--color-blue, #0098EA)', fontWeight: 700, marginBottom: 2 }}>TON wallet connected</div>
-          <div style={{ fontSize: 10, color: 'var(--text-secondary, #8B92A8)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{walletAddress}</div>
+          <div style={{ fontSize: 11, color: '#0098EA', fontWeight: 700, marginBottom: 2 }}>TON wallet connected</div>
+          <div style={{ fontSize: 10, color: '#7A7875', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{walletAddress}</div>
         </div>
-        <div style={{ fontSize: 10, color: 'var(--green, #00D68F)', fontWeight: 700 }}>✓ Active</div>
+        <div style={{ fontSize: 10, color: '#3DBA7A', fontWeight: 700 }}>✓ Active</div>
       </div>
 
       {/* Balance row */}
       <div style={{ display: 'flex', gap: 8 }}>
-        <div style={{ flex: 1, padding: '12px', background: 'var(--bg-card, #1C2030)', borderRadius: 14, textAlign: 'center' }}>
-          <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', marginBottom: 4 }}>BALANCE ᚙ</div>
-          <div style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 14, fontWeight: 700, color: 'var(--accent, #F5C842)' }}>{fmtBalance(user?.balance ?? '0')}</div>
+        <div style={{ flex: 1, padding: '12px', ...S.card, borderRadius: 12, textAlign: 'center' }}>
+          <div style={{ ...S.sectionLabel, marginBottom: 4 }}>BALANCE ᚙ</div>
+          <div style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 14, fontWeight: 700, color: '#F5C842' }}>{fmtBalance(user?.balance ?? '0')}</div>
         </div>
-        <div style={{ flex: 1, padding: '12px', background: 'var(--bg-card, #1C2030)', borderRadius: 14, textAlign: 'center' }}>
-          <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', marginBottom: 4 }}>RATE</div>
-          <div style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 12, fontWeight: 700, color: 'var(--color-blue, #0098EA)' }}>1 TON = {(tonToCoins / 1000).toFixed(0)}K ᚙ</div>
-          <div style={{ fontSize: 9, color: 'var(--text-muted, #4A5270)', marginTop: 2 }}>≈ ${tonUsdt.toFixed(2)}</div>
+        <div style={{ flex: 1, padding: '12px', ...S.card, borderRadius: 12, textAlign: 'center' }}>
+          <div style={{ ...S.sectionLabel, marginBottom: 4 }}>RATE</div>
+          <div style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 12, fontWeight: 700, color: '#0098EA' }}>1 TON = {(tonToCoins / 1000).toFixed(0)}K ᚙ</div>
+          <div style={{ fontSize: 9, color: '#7A7875', marginTop: 2 }}>≈ ${tonUsdt.toFixed(2)}</div>
         </div>
       </div>
 
       {/* Actions */}
-      <div style={{ display: 'flex', gap: 8 }}>
-        {(['buy', 'sell', 'withdraw'] as const).map(a => (
-          <button key={a} onClick={() => setActiveAction(activeAction === a ? null : a)} style={{
-            flex: 1, padding: '10px 4px', border: 'none', borderRadius: 12, fontFamily: 'inherit',
-            fontSize: 11, fontWeight: 700, cursor: 'pointer',
-            background: activeAction === a ? (a === 'buy' ? 'var(--color-blue, #0098EA)' : a === 'sell' ? 'var(--color-purple-dark, #7B61FF)' : 'var(--color-green, #00D68F)') : 'var(--bg-card, #1C2030)',
-            color: activeAction === a ? '#fff' : 'var(--text-secondary, #8B92A8)',
-          }}>
-            {a === 'buy' ? '📥 Buy' : a === 'sell' ? '📤 Sell' : '🏦 Withdraw'}
-          </button>
-        ))}
+      <div style={{ display: 'flex', gap: 6 }}>
+        {(['buy', 'sell', 'withdraw'] as const).map(a => {
+          const isActive = activeAction === a;
+          const activeColor = a === 'buy' ? '#0098EA' : a === 'sell' ? '#7B61FF' : '#3DBA7A';
+          return (
+            <button key={a} onClick={() => setActiveAction(activeAction === a ? null : a)} style={{
+              flex: 1, padding: '10px 4px', border: isActive ? `.5px solid ${activeColor}40` : '.5px solid rgba(154,148,144,.18)', borderRadius: 12, fontFamily: 'inherit',
+              fontSize: 11, fontWeight: 700, cursor: 'pointer', transition: 'all .15s',
+              background: isActive ? `${activeColor}18` : 'rgba(255,255,255,.04)',
+              color: isActive ? activeColor : '#7A7875',
+            }}>
+              {a === 'buy' ? '📥 Buy' : a === 'sell' ? '📤 Sell' : '🏦 Withdraw'}
+            </button>
+          );
+        })}
       </div>
 
       {/* Buy panel */}
       {activeAction === 'buy' && (
-        <div style={{ padding: '16px', background: 'var(--bg-card, #13161E)', border: '1px solid rgba(0,152,234,0.2)', borderRadius: 16 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)', marginBottom: 12 }}>Buy coins</div>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+        <div style={{ padding: '16px', ...S.card, border: '.5px solid rgba(0,152,234,.22)' }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#EAE2CC', marginBottom: 12 }}>Buy coins</div>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
             {[{ label: '0.5 TON', val: '0.5', ton: true }, { label: '1 TON', val: '1', ton: true }, { label: '10 USDT', val: '10', ton: false }].map(opt => {
               const c = calcCoins(opt.val, opt.ton);
+              const isSelected = amount === opt.val;
               return (
-                <button key={opt.label} onClick={() => setAmount(opt.val)} style={{ flex: 1, padding: '8px 4px', border: `1px solid ${amount === opt.val ? 'var(--color-blue, #0098EA)' : 'rgba(255,255,255,0.1)'}`, borderRadius: 10, background: amount === opt.val ? 'rgba(0,152,234,0.12)' : 'var(--bg-card, #1C2030)', color: 'var(--text-primary, #F0F2F8)', fontSize: 10, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                <button key={opt.label} onClick={() => setAmount(opt.val)} style={{
+                  flex: 1, padding: '8px 4px',
+                  border: isSelected ? '.5px solid rgba(0,152,234,.5)' : '.5px solid rgba(154,148,144,.18)',
+                  borderRadius: 10,
+                  background: isSelected ? 'rgba(0,152,234,.1)' : 'rgba(255,255,255,.04)',
+                  color: '#EAE2CC', fontSize: 10, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s',
+                }}>
                   <div>{opt.label}</div>
-                  <div style={{ color: 'var(--accent, #F5C842)', marginTop: 2 }}>+{fmtBalance(String(Math.round(c.net)))} ᚙ</div>
+                  <div style={{ color: '#F5C842', marginTop: 2 }}>+{fmtBalance(String(Math.round(c.net)))} ᚙ</div>
                 </button>
               );
             })}
@@ -263,11 +296,10 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
               placeholder="TON amount"
               value={amount}
               onChange={e => setAmount(e.target.value)}
-              style={{ flex: 1, padding: '10px 12px', background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'var(--text-primary, #F0F2F8)', fontSize: 13, fontFamily: 'inherit' }}
+              style={{ ...S.input, flex: 1 }}
             />
             <button
               disabled={processing || !amount}
-              style={{ padding: '10px 16px', background: processing ? '#555' : 'var(--color-blue, #0098EA)', color: '#fff', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: processing ? 'default' : 'pointer', fontFamily: 'inherit' }}
               onClick={async () => {
                 if (!amount || parseFloat(amount) < 0.1) { showToast('Minimum 0.1 TON'); return; }
                 setProcessing(true);
@@ -279,14 +311,15 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
                 } catch (e: unknown) { showToast((e instanceof Error ? e.message : "Error") || 'Error'); }
                 finally { setProcessing(false); }
               }}
+              style={{ padding: '10px 16px', background: processing ? 'rgba(255,255,255,.08)' : 'linear-gradient(135deg,#0065A0,#0098EA)', color: processing ? '#7A7875' : '#fff', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: processing ? 'default' : 'pointer', fontFamily: 'inherit', transition: 'all .15s' }}
             >
               {processing ? '...' : 'Buy'}
             </button>
           </div>
           {amount && (
-            <div style={{ marginTop: 10, fontSize: 11, color: 'var(--text-secondary, #8B92A8)', lineHeight: 1.8 }}>
+            <div style={{ marginTop: 10, fontSize: 11, color: '#7A7875', lineHeight: 1.8 }}>
               {(() => { const c = calcCoins(amount, true); return <>
-                <div>You receive: <b style={{ color: 'var(--accent, #F5C842)' }}>{fmtBalance(String(Math.round(c.net)))} ᚙ</b></div>
+                <div>You receive: <b style={{ color: '#F5C842' }}>{fmtBalance(String(Math.round(c.net)))} ᚙ</b></div>
                 <div>Fee {FEE_PERCENT}%: {fmtBalance(String(Math.round(c.fee)))} ᚙ</div>
               </>; })()}
             </div>
@@ -296,19 +329,18 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
 
       {/* Sell panel */}
       {activeAction === 'sell' && (
-        <div style={{ padding: '16px', background: 'var(--bg-card, #13161E)', border: '1px solid rgba(123,97,255,0.2)', borderRadius: 16 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)', marginBottom: 12 }}>Sell coins for TON</div>
+        <div style={{ padding: '16px', ...S.card, border: '.5px solid rgba(123,97,255,.22)' }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#EAE2CC', marginBottom: 12 }}>Sell coins for TON</div>
           <div style={{ display: 'flex', gap: 8 }}>
             <input
               type="number"
               placeholder="Amount ᚙ"
               value={amount}
               onChange={e => setAmount(e.target.value)}
-              style={{ flex: 1, padding: '10px 12px', background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'var(--text-primary, #F0F2F8)', fontSize: 13, fontFamily: 'inherit' }}
+              style={{ ...S.input, flex: 1 }}
             />
             <button
               disabled={processing || !amount}
-              style={{ padding: '10px 16px', background: processing ? '#555' : '#7B61FF', color: '#fff', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: processing ? 'default' : 'pointer', fontFamily: 'inherit' }}
               onClick={async () => {
                 if (!amount || BigInt(amount.replace(/\D/g,'') || '0') < 1_000_000n) { showToast('Minimum 1,000,000 ᚙ'); return; }
                 setProcessing(true);
@@ -320,14 +352,15 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
                 } catch (e: unknown) { showToast((e instanceof Error ? e.message : "Error") || 'Error'); }
                 finally { setProcessing(false); }
               }}
+              style={{ padding: '10px 16px', background: processing ? 'rgba(255,255,255,.08)' : 'linear-gradient(135deg,#4A2E9A,#7B61FF)', color: processing ? '#7A7875' : '#fff', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: processing ? 'default' : 'pointer', fontFamily: 'inherit', transition: 'all .15s' }}
             >
               {processing ? '...' : 'Sell'}
             </button>
           </div>
           {amount && (
-            <div style={{ marginTop: 10, fontSize: 11, color: 'var(--text-secondary, #8B92A8)', lineHeight: 1.8 }}>
+            <div style={{ marginTop: 10, fontSize: 11, color: '#7A7875', lineHeight: 1.8 }}>
               {(() => { const c = calcWithdraw(amount); return <>
-                <div>You receive: <b style={{ color: 'var(--color-blue, #0098EA)' }}>{c.net.toFixed(4)} TON</b></div>
+                <div>You receive: <b style={{ color: '#0098EA' }}>{c.net.toFixed(4)} TON</b></div>
                 <div>Fee {FEE_PERCENT}%: {c.fee.toFixed(4)} TON</div>
               </>; })()}
             </div>
@@ -337,20 +370,19 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
 
       {/* Withdraw panel */}
       {activeAction === 'withdraw' && (
-        <div style={{ padding: '16px', background: 'var(--bg-card, #13161E)', border: '1px solid rgba(0,214,143,0.2)', borderRadius: 16 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)', marginBottom: 4 }}>Withdraw to TON</div>
-          <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginBottom: 12 }}>To wallet: {walletAddress?.slice(0, 12)}...{walletAddress?.slice(-6)}</div>
+        <div style={{ padding: '16px', ...S.card, border: '.5px solid rgba(61,186,122,.22)' }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#EAE2CC', marginBottom: 4 }}>Withdraw to TON</div>
+          <div style={{ fontSize: 11, color: '#7A7875', marginBottom: 12 }}>To wallet: {walletAddress?.slice(0, 12)}...{walletAddress?.slice(-6)}</div>
           <div style={{ display: 'flex', gap: 8 }}>
             <input
               type="number"
               placeholder="Amount ᚙ"
               value={amount}
               onChange={e => setAmount(e.target.value)}
-              style={{ flex: 1, padding: '10px 12px', background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'var(--text-primary, #F0F2F8)', fontSize: 13, fontFamily: 'inherit' }}
+              style={{ ...S.input, flex: 1 }}
             />
             <button
               disabled={processing || !amount}
-              style={{ padding: '10px 16px', background: processing ? '#555' : 'var(--green, #00D68F)', color: 'var(--bg, #0B0D11)', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: processing ? 'default' : 'pointer', fontFamily: 'inherit' }}
               onClick={async () => {
                 if (!amount || BigInt(amount.replace(/\D/g,'') || '0') < 1_000_000n) { showToast('Minimum 1,000,000 ᚙ'); return; }
                 setProcessing(true);
@@ -362,27 +394,28 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
                 } catch (e: unknown) { showToast((e instanceof Error ? e.message : "Error") || 'Error'); }
                 finally { setProcessing(false); }
               }}
+              style={{ padding: '10px 16px', background: processing ? 'rgba(255,255,255,.08)' : 'linear-gradient(135deg,#1A5C3A,#3DBA7A)', color: processing ? '#7A7875' : '#0D0D12', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: processing ? 'default' : 'pointer', fontFamily: 'inherit', transition: 'all .15s' }}
             >
               {processing ? '...' : 'Withdraw'}
             </button>
           </div>
           {amount && (
-            <div style={{ marginTop: 10, fontSize: 11, color: 'var(--text-secondary, #8B92A8)', lineHeight: 1.8 }}>
+            <div style={{ marginTop: 10, fontSize: 11, color: '#7A7875', lineHeight: 1.8 }}>
               {(() => { const c = calcWithdraw(amount); return <>
-                <div>You receive: <b style={{ color: 'var(--green, #00D68F)' }}>{c.net.toFixed(4)} TON</b></div>
+                <div>You receive: <b style={{ color: '#3DBA7A' }}>{c.net.toFixed(4)} TON</b></div>
                 <div>Fee {FEE_PERCENT}%: {c.fee.toFixed(4)} TON</div>
-                <div style={{ color: 'var(--text-muted, #4A5270)' }}>≈ {(c.net * 5.5).toFixed(2)} USDT</div>
+                <div style={{ color: '#7A7875' }}>≈ {(c.net * 5.5).toFixed(2)} USDT</div>
               </>; })()}
             </div>
           )}
         </div>
       )}
 
-      {/* История TON операций */}
-      <div style={{ padding: '14px', background: 'var(--bg-card, #1C2030)', borderRadius: 14 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted, #4A5270)', marginBottom: 8 }}>TRANSACTION HISTORY</div>
+      {/* Transaction History */}
+      <div style={{ padding: '14px', ...S.card }}>
+        <div style={{ ...S.sectionLabel, marginBottom: 10 }}>TRANSACTION HISTORY</div>
         {tonHistory.length === 0 ? (
-          <div style={{ fontSize: 12, color: 'var(--text-muted, #4A5270)', textAlign: 'center', padding: '12px 0' }}>
+          <div style={{ fontSize: 12, color: '#7A7875', textAlign: 'center', padding: '12px 0' }}>
             No TON transactions
           </div>
         ) : (
@@ -392,16 +425,16 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
             const date = new Date(tx.createdAt as string);
             const isIn = ['TON_DEPOSIT'].includes(type);
             return (
-              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '.5px solid rgba(154,148,144,.12)' }}>
                 <div>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary, #F0F2F8)' }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#EAE2CC' }}>
                     {type === 'TON_DEPOSIT' ? '📥 Deposit' : type === 'WITHDRAWAL' ? '📤 Withdrawal' : '🔒 Verification'}
                   </div>
-                  <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>
+                  <div style={{ fontSize: 10, color: '#7A7875' }}>
                     {date.toLocaleDateString('en-US')}
                   </div>
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: isIn ? 'var(--green, #00D68F)' : '#FF4D6A', fontFamily: 'JetBrains Mono, monospace' }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: isIn ? '#3DBA7A' : '#FF4D6A', fontFamily: 'JetBrains Mono, monospace' }}>
                   {isIn ? '+' : '-'}{fmtBalance(amount)} ᚙ
                 </div>
               </div>
@@ -418,8 +451,7 @@ export const ShopPage: React.FC = () => {
   const t = useT();
   const { user, setUser } = useUserStore();
   const location = useLocation();
-  // Deep link: navigate('/shop', { state: { tab: 'frames', highlightItemId: 'item_123' } })
-  const initTab = (location.state as Record<string,unknown>)?.tab as Tab ?? 'avatars'; // N6: по умолчанию Аватары
+  const initTab = (location.state as Record<string,unknown>)?.tab as Tab ?? 'avatars';
   const highlightItemId: string | null = ((location.state as Record<string,unknown>)?.highlightItemId as string) ?? null;
   const [tab, setTab] = useState<Tab>(initTab);
   const [visualSubType, setVisualSubType] = useState<'BOARD_SKIN'|'PIECE_SKIN'|'PIECE_SET'|'MOVE_ANIMATION'|'FONT'>('BOARD_SKIN');
@@ -433,8 +465,8 @@ export const ShopPage: React.FC = () => {
     { icon: '✨', title: 'Как использовать предметы', desc: 'Купи предмет, затем нажми "Применить". Он мгновенно появится в твоем профиле и будет виден для других игроков.' },
     { icon: '💎', title: 'TON Wallet', desc: 'Подключи TON кошелек чтобы выводить заработанные монеты. Курс конвертации обновляется автоматически.' },
   ];
-  const shopInfo = useInfoPopup('shop', shopSlides); // N6: TON modal
-  const [confirmPurchase, ConfirmPurchaseDialog] = useConfirm(); // N9
+  const shopInfo = useInfoPopup('shop', shopSlides);
+  const [confirmPurchase, ConfirmPurchaseDialog] = useConfirm();
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -447,10 +479,9 @@ export const ShopPage: React.FC = () => {
 
   const loadItems = useCallback(async () => {
     const tabType = TAB_TYPE[tab];
-    if (!tabType) return; // exchange и др. не загружают товары
+    if (!tabType) return;
     setLoading(true);
     try {
-      // S1: для visual загружаем только текущий субтаб
       if (tab === 'visual') {
         const data = await shopApi.getItems(visualSubType);
         setItems(data.items);
@@ -475,7 +506,6 @@ export const ShopPage: React.FC = () => {
       const res = await shopApi.purchase(item.id);
       await refreshUser();
       await loadItems();
-      // Apply theme immediately after purchase
       const key = THEME_NAME_TO_KEY[item.name] ?? 'default';
       setActiveTheme(key);
       profileApi.saveTheme(key).catch(() => {});
@@ -525,7 +555,6 @@ export const ShopPage: React.FC = () => {
     }
   };
 
-  // Снять надетый аватар (вернуть Telegram/градиент)
   const handleUnequip = async (item: ShopItem) => {
     setActionId(item.id);
     try {
@@ -540,145 +569,159 @@ export const ShopPage: React.FC = () => {
     }
   };
 
+  const SHOP_TABS: { key: Tab; label: string }[] = [
+    { key: 'avatars',   label: t.shop.tabs.avatars   },
+    { key: 'frames',    label: t.shop.tabs.frames    },
+    { key: 'visual',    label: t.shop.tabs.visual    },
+    { key: 'themes',    label: t.shop.tabs.themes    },
+    { key: 'effects',   label: t.shop.tabs.effects   },
+    { key: 'exchange',  label: t.shop.tabs.exchange  },
+  ];
+  const tabRows = [SHOP_TABS.slice(0, 3), SHOP_TABS.slice(3, 6)];
+
   return (
     <PageLayout title={t.shop.title} centered>
       {shopInfo.show && <InfoPopup infoKey="shop" slides={shopSlides} onClose={shopInfo.close} />}
-      {/* N9: Кастомный диалог подтверждения покупки */}
       {ConfirmPurchaseDialog}
+
       {/* Toast */}
       {toast && (
         <div style={{
           position: 'fixed', top: 60, left: '50%', transform: 'translateX(-50%)',
-          background: 'var(--bg-input, #232840)', border: '1px solid #F5C842', borderRadius: 12,
-          padding: '10px 20px', fontSize: 13, color: 'var(--accent, #F5C842)',
-          zIndex: "var(--z-toast, 400)", fontWeight: 600, whiteSpace: 'nowrap',
+          background: 'linear-gradient(135deg,#1A1508,#2A2010)',
+          border: '.5px solid rgba(212,168,67,.42)',
+          borderRadius: 12, padding: '10px 20px',
+          fontSize: 13, color: '#F0C85A',
+          zIndex: 400, fontWeight: 700, whiteSpace: 'nowrap',
+          boxShadow: '0 4px 20px rgba(0,0,0,.5)',
         }}>
           {toast}
         </div>
       )}
 
-      {/* N6: TON модал — открывается по клику на кнопку сверху */}
+      {/* TON modal — bottom sheet */}
       {showTon && (
         <div
           onClick={(e) => e.target === e.currentTarget && setShowTon(false)}
-          style={{ position: 'fixed', inset: 0, zIndex: "var(--z-modal, 300)", background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'flex-end' }}
+          style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,.82)', backdropFilter: 'blur(18px)', display: 'flex', alignItems: 'flex-end' }}
         >
-          <div style={{ width: '100%', maxWidth: 480, background: 'var(--bg-card, #13161F)', borderRadius: '24px 24px 0 0', border: '1px solid rgba(0,152,234,0.3)', borderBottom: 'none', paddingBottom: 'max(20px, env(safe-area-inset-bottom))' }}>
+          <div style={{ width: '100%', maxWidth: 480, background: 'linear-gradient(160deg,#12151E,#0E111A)', borderRadius: '24px 24px 0 0', border: '1px solid rgba(0,152,234,.22)', borderBottom: 'none', paddingBottom: 'max(20px, env(safe-area-inset-bottom))' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 18px 12px' }}>
-              <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--color-blue, #0098EA)' }}>💎 TON Wallet</div>
-              <button onClick={() => setShowTon(false)} style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: '#8B92A8', fontSize: 16, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>✕</button>
+              <div style={{ fontSize: 17, fontWeight: 800, color: '#0098EA' }}>💎 TON Wallet</div>
+              <button onClick={() => setShowTon(false)} style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,.07)', border: '.5px solid rgba(154,148,144,.2)', color: '#7A7875', fontSize: 15, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all .15s' }}>✕</button>
             </div>
             <TonTab user={user} showToast={showToast} onUserRefresh={refreshUser} />
           </div>
         </div>
       )}
 
-      {/* Balance */}
+      {/* Balance bar */}
       {user && (
-        <Card padding="md" style={{ margin: '4px 18px 8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text variant="body" color="secondary">Balance</Text>
-          <Text variant="body" weight="bold" color="accent" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
+        <div style={{ margin: '4px 18px 10px', padding: '11px 16px', ...S.card, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ ...S.sectionLabel }}>BALANCE</span>
+          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 14, fontWeight: 700, color: '#F5C842' }}>
             {fmtBalance(user.balance)} ᚙ
-          </Text>
-        </Card>
+          </span>
+        </div>
       )}
 
-      {/* N6: TON — синяя кнопка сверху, отдельно от вкладок покупок */}
+      {/* TON wallet button */}
       <div style={{ margin: '0 18px 14px' }}>
-        <Button
+        <button
           onClick={() => setShowTon(true)}
-          fullWidth
           style={{
-            background: 'linear-gradient(135deg, #0098EA, #006BBF)',
+            width: '100%', padding: '13px 16px',
+            background: 'linear-gradient(135deg,rgba(0,101,160,.6),rgba(0,152,234,.35))',
+            border: '.5px solid rgba(0,152,234,.4)',
+            borderRadius: 14, cursor: 'pointer', fontFamily: 'inherit',
             display: 'flex', alignItems: 'center', gap: 12,
-            boxShadow: '0 4px 20px rgba(0,152,234,0.3)',
-            color: '#fff',
+            boxShadow: '0 4px 20px rgba(0,152,234,.15)',
+            transition: 'all .15s',
           }}
         >
           <span style={{ fontSize: 24 }}>💎</span>
           <div style={{ textAlign: 'left', flex: 1 }}>
-            <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{t.shop.tonTab.connectWallet.replace('💎 ', '')}</div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', marginTop: 1 }}>{t.shop.tonTab.benefits[0].text}</div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#5BC8F5' }}>{t.shop.tonTab.connectWallet.replace('💎 ', '')}</div>
+            <div style={{ fontSize: 11, color: 'rgba(91,200,245,.7)', marginTop: 1 }}>{t.shop.tonTab.benefits[0].text}</div>
           </div>
-          <span style={{ marginLeft: 'auto', color: 'rgba(255,255,255,0.7)', fontSize: 18 }}>→</span>
-        </Button>
+          <span style={{ color: 'rgba(91,200,245,.6)', fontSize: 18 }}>→</span>
+        </button>
       </div>
 
-      {/* N6: 6 вкладок покупок в 2 ряда по 3 */}
-      {(() => {
-        // S1: Ровно 6 вкладок в 2 ряда по 3
-        const SHOP_TABS: { key: Tab; label: string }[] = [
-          { key: 'avatars',   label: t.shop.tabs.avatars   },
-          { key: 'frames',    label: t.shop.tabs.frames    },
-          { key: 'visual',    label: t.shop.tabs.visual    },
-          { key: 'themes',    label: t.shop.tabs.themes    },
-          { key: 'effects',   label: t.shop.tabs.effects   },
-          { key: 'exchange',  label: t.shop.tabs.exchange  },
-        ];
-        const rows = [SHOP_TABS.slice(0, 3), SHOP_TABS.slice(3, 6)];
-        return (
-          <div style={{ margin: '0 18px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {rows.map((row, ri) => (
-              <div key={ri} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
-                {row.map(({ key, label }) => (
-                  <Button
+      {/* Tab bar — 2 rows × 3 */}
+      <div style={{ margin: '0 18px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {/* Tab container background */}
+        <div style={{ background: 'rgba(255,255,255,.05)', borderRadius: 14, padding: 4, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {tabRows.map((row, ri) => (
+            <div key={ri} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4 }}>
+              {row.map(({ key, label }) => {
+                const isActive = tab === key;
+                return (
+                  <button
                     key={key}
                     onClick={() => setTab(key)}
-                    variant={tab === key ? 'primary' : 'secondary'}
-                    size="sm"
+                    style={{
+                      padding: '8px 4px', border: 'none', borderRadius: 10, fontFamily: 'inherit',
+                      fontSize: 11, fontWeight: isActive ? 800 : 600, cursor: 'pointer', transition: 'all .15s',
+                      background: isActive ? 'linear-gradient(135deg,#2A1E08,#4A3810)' : 'transparent',
+                      color: isActive ? '#F0C85A' : '#7A7875',
+                    }}
                   >
                     {label}
-                  </Button>
-                ))}
-              </div>
-            ))}
-          </div>
-        );
-      })()}
-
-      {/* Заголовок вкладки эффектов */}
-      {tab === 'effects' && (
-        <Card padding="md" style={{ margin: '0 18px 8px', background: 'rgba(155,133,255,0.08)', border: '1px solid rgba(155,133,255,0.2)' }}>
-          <Text variant="body" weight="bold" color="accent" style={{ marginBottom: 3 }}>🎬 Game Effects</Text>
-          <Text variant="caption" color="muted">Win animations · Capture effects · Opening styles</Text>
-        </Card>
-      )}
-
-      {/* S1: Визуал — сабтабы Доски / Фигуры */}
-      {tab === 'visual' && (
-        <div style={{ margin: '0 18px 10px', display: 'flex', background: 'var(--bg-card, #1C2030)', borderRadius: 10, padding: 3, gap: 2 }}>
-          {([
-            ['BOARD_SKIN',   t.shop.visualTabs.boards],
-            ['PIECE_SKIN',   t.shop.visualTabs.pieces],
-            ['PIECE_SET',    t.shop.visualTabs.sets],
-            ['MOVE_ANIMATION', t.shop.visualTabs.animations],
-            ['FONT', t.shop.visualTabs.fonts],
-          ] as const).map(([type, label]) => (
-            <button key={type} onClick={() => setVisualSubType(type)} style={{
-              flex: 1, padding: '7px 4px', border: 'none', borderRadius: 8,
-              fontFamily: 'inherit', fontSize: 10, fontWeight: 600, cursor: 'pointer',
-              background: visualSubType === type ? 'var(--bg-input, #232840)' : 'transparent',
-              color: visualSubType === type ? 'var(--text-primary, #F0F2F8)' : 'var(--text-secondary, #8B92A8)',
-            }}>{label}</button>
+                  </button>
+                );
+              })}
+            </div>
           ))}
+        </div>
+      </div>
+
+      {/* Effects tab header */}
+      {tab === 'effects' && (
+        <div style={{ margin: '0 18px 10px', padding: '12px 14px', ...S.card, background: 'linear-gradient(135deg,rgba(155,133,255,.1),rgba(100,80,220,.06))', border: '.5px solid rgba(155,133,255,.22)' }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#EAE2CC', marginBottom: 3 }}>🎬 Game Effects</div>
+          <div style={{ fontSize: 11, color: '#7A7875' }}>Win animations · Capture effects · Opening styles</div>
         </div>
       )}
 
-      {/* S2: Биржа — ExchangeTab (отдельный компонент) */}
+      {/* Visual subtabs */}
+      {tab === 'visual' && (
+        <div style={{ margin: '0 18px 10px', display: 'flex', background: 'rgba(255,255,255,.05)', borderRadius: 10, padding: 3, gap: 2 }}>
+          {([
+            ['BOARD_SKIN',     t.shop.visualTabs.boards],
+            ['PIECE_SKIN',     t.shop.visualTabs.pieces],
+            ['PIECE_SET',      t.shop.visualTabs.sets],
+            ['MOVE_ANIMATION', t.shop.visualTabs.animations],
+            ['FONT',           t.shop.visualTabs.fonts],
+          ] as const).map(([type, label]) => {
+            const isActive = visualSubType === type;
+            return (
+              <button key={type} onClick={() => setVisualSubType(type)} style={{
+                flex: 1, padding: '7px 4px', border: 'none', borderRadius: 8,
+                fontFamily: 'inherit', fontSize: 10, fontWeight: 600, cursor: 'pointer', transition: 'all .15s',
+                background: isActive ? 'linear-gradient(135deg,#2A1E08,#4A3810)' : 'transparent',
+                color: isActive ? '#F0C85A' : '#7A7875',
+              }}>{label}</button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Exchange tab */}
       {tab === 'exchange' && (
         <ExchangeTab user={user} showToast={showToast} onUserRefresh={refreshUser} />
       )}
 
+      {/* Avatars grid */}
       {tab === 'avatars' && (
         loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted, #4A5270)', fontSize: 13 }}>Loading...</div>
+          <div style={{ textAlign: 'center', padding: 40, color: '#7A7875', fontSize: 13 }}>Loading...</div>
         ) : items.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted, #4A5270)', fontSize: 13 }}>No avatars</div>
+          <div style={{ textAlign: 'center', padding: 40, color: '#7A7875', fontSize: 13 }}>No avatars</div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 0, padding: '0 18px 24px' }}>
-            {/* Подсказка */}
-            <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginBottom: 12, lineHeight: 1.5 }}>
-              Buy a premium avatar and click <b style={{ color: 'var(--accent, #F5C842)' }}>Apply</b> — it will appear in your profile.
+          <div style={{ padding: '0 18px 24px' }}>
+            <div style={{ fontSize: 11, color: '#7A7875', marginBottom: 12, lineHeight: 1.5 }}>
+              Buy a premium avatar and click <b style={{ color: '#F5C842' }}>Apply</b> — it will appear in your profile.
               Other players will see your avatar on your profile and can navigate here.
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -698,14 +741,12 @@ export const ShopPage: React.FC = () => {
         )
       )}
 
-      {/* Все остальные вкладки кроме avatars и exchange — стандартная сетка */}
+      {/* All other tabs except avatars and exchange */}
       {tab !== 'avatars' && tab !== 'exchange' && (
         loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted, #4A5270)', fontSize: 13 }}>Loading...</div>
+          <div style={{ textAlign: 'center', padding: 40, color: '#7A7875', fontSize: 13 }}>Loading...</div>
         ) : items.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted, #4A5270)', fontSize: 13 }}>
-            'No items'
-          </div>
+          <div style={{ textAlign: 'center', padding: 40, color: '#7A7875', fontSize: 13 }}>No items</div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, padding: '0 18px 24px' }}>
             {items.map((item) => (
@@ -723,12 +764,4 @@ export const ShopPage: React.FC = () => {
       )}
     </PageLayout>
   );
-};
-const heroCard: React.CSSProperties = {
-  padding: 'var(--space-xl)',
-  background: 'var(--bg-card)',
-  border: '1px solid var(--border)',
-  borderRadius: 'var(--radius-xl)',
-  boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
-  display: 'flex', flexDirection: 'column', alignItems: 'center',
 };
