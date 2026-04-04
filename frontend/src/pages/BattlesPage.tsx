@@ -245,10 +245,7 @@ export const BattlesPage: React.FC = () => {
                           color: '#D4A843',
                           display: 'flex', alignItems: 'center', gap: 3,
                         }}>
-                          <svg width="10" height="10" viewBox="0 0 20 20" fill="none">
-                            <circle cx="10" cy="10" r="9" stroke="#D4A843" strokeWidth="1.5"/>
-                            <text x="10" y="14" textAnchor="middle" fill="#D4A843" fontSize="10" fontWeight="800">ᚙ</text>
-                          </svg>
+                          <CoinIcon size={11} />
                           {fmtBalance(s.bet)}
                         </span>
                       )}
@@ -384,7 +381,7 @@ export const BattlesPage: React.FC = () => {
                   <div style={{ fontSize: '.75rem', fontWeight: 800, color: '#D4A843' }}>{durationMins} мин</div>
                   {s.bet && BigInt(s.bet) > 0n && (
                     <div style={{ fontSize: '.65rem', color: '#9A8840', display: 'flex', alignItems: 'center', gap: 3 }}>
-                      <svg width="9" height="9" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#D4A843" strokeWidth="1.5"/><text x="10" y="14" textAnchor="middle" fill="#D4A843" fontSize="10" fontWeight="800">ᚙ</text></svg>
+                      <CoinIcon size={10} />
                       {fmtBalance(s.bet)}
                     </div>
                   )}
@@ -436,7 +433,7 @@ export const BattlesPage: React.FC = () => {
         }}
       >＋</button>
 
-      {showCreate && <CreateBattleModal onClose={() => setShowCreate(false)} onBuyAttempts={() => { setShowCreate(false); setShowAttempts(true); }} />}
+      {showCreate && <CreateBattleModal onClose={() => setShowCreate(false)} onBuyAttempts={() => setShowAttempts(true)} />}
       {showAttempts && user && <AttemptsModal user={user} onClose={() => setShowAttempts(false)} />}
     </PageLayout>
   );
@@ -509,7 +506,7 @@ const BattleChallengeCard: React.FC<{
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 3 }}>
         <div style={{ fontSize: '.78rem', fontWeight: 800, color: '#D4A843' }}>{durationMins} мин</div>
         <div style={{ fontSize: '.65rem', color: '#9A8840', display: 'flex', alignItems: 'center', gap: 3 }}>
-          <svg width="9" height="9" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#D4A843" strokeWidth="1.5"/><text x="10" y="14" textAnchor="middle" fill="#D4A843" fontSize="10" fontWeight="800">ᚙ</text></svg>
+          <CoinIcon size={10} />
           {fmtBalance(battle.bet)}
         </div>
       </div>
@@ -846,14 +843,14 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
         <div style={{ margin: '0 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {!hasAttempts ? (
             <button
-              disabled
+              onClick={onBuyAttempts}
               style={{
                 width: '100%', padding: '14px',
                 background: 'linear-gradient(135deg,#3A0808,#5A1010)',
                 border: '.5px solid rgba(220,50,47,.4)',
                 borderRadius: 14,
                 fontFamily: 'Inter, sans-serif', fontSize: '.9rem', fontWeight: 900, letterSpacing: '.06em',
-                color: '#FF8080', cursor: 'default',
+                color: '#FF8080', cursor: 'pointer',
                 boxShadow: '0 4px 20px rgba(220,50,47,.15)',
               }}
             >⭐ НЕТ ПОПЫТОК</button>

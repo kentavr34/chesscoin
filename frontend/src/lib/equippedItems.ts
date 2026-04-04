@@ -16,7 +16,10 @@ export interface BoardSkin {
 }
 
 export const BOARD_SKIN_COLORS: Record<string, BoardSkin> = {
-  // ── Original ChessCoin (default) ──────────────────────────────────────
+  // ── Premium Oak (default) — дубовый паркетный стиль для Premium Dark ──
+  "Premium Oak":     { light: "#DEB887", dark: "#8B4513" },
+
+  // ── Original ChessCoin ──────────────────────────────────────────────────
   "ChessCoin":       { light: "radial-gradient(circle at 45% 35%, #EDF1FB, #E8EDF9)", dark: "radial-gradient(circle at 45% 35%, #96A8DC, #8B9DD4)" },
 
   // ── Classic wooden ────────────────────────────────────────────────
@@ -90,9 +93,9 @@ export const AVATAR_FRAME_STYLE: Record<string, {
 export function useEquippedBoardColors(): BoardSkin {
   const user = useUserStore((s) => s.user);
   const skin = user?.equippedItems?.BOARD_SKIN;
-  // Default — branded ChessCoin board
-  if (!skin) return BOARD_SKIN_COLORS["ChessCoin"]!;
-  return BOARD_SKIN_COLORS[skin.name] ?? BOARD_SKIN_COLORS["ChessCoin"]!;
+  // Default — Premium Oak (дубовый паркет для Premium Dark темы)
+  if (!skin) return BOARD_SKIN_COLORS["Premium Oak"]!;
+  return BOARD_SKIN_COLORS[skin.name] ?? BOARD_SKIN_COLORS["Premium Oak"]!;
 }
 
 /** Hook: get CSS filter for pieces from equipped PIECE_SKIN */

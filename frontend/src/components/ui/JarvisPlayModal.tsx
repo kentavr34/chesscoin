@@ -242,7 +242,7 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
           <div style={{ margin: '0 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
             {onBuyAttempts && (
               <button
-                onClick={() => { onClose(); setTimeout(onBuyAttempts, 100); }}
+                onClick={() => onBuyAttempts()}
                 style={{
                   width: '100%', padding: '14px',
                   background: 'linear-gradient(135deg,#3A2A08,#5A4010)',
