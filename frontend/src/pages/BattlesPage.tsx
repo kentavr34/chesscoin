@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout, InfoPopup, useInfoPopup } from '@/components/layout/PageLayout';
 import { Avatar } from '@/components/ui/Avatar';
@@ -9,7 +9,7 @@ import { AttemptsModal } from '@/components/ui/AttemptsModal';
 import { getSocket } from '@/api/socket';
 import { fmtBalance, fmtTime } from '@/utils/format';
 import { translations } from '@/i18n/translations';
-import type { BattleLobbyItem } from '@/types';
+import type { BattleLobbyItem, GameSession } from '@/types';
 import { useT } from '@/i18n/useT';
 
 const showToast = (text: string, type: 'error' | 'info' = 'error') => {
@@ -191,100 +191,14 @@ export const BattlesPage: React.FC = () => {
                 }} />
                 LIVE
               </div>
-              {liveSessions.map((s) => {
-                const mySide = s.sides.find((sd) => sd.id === s.mySideId);
-                const opSide = s.sides.find((sd) => sd.id !== s.mySideId);
-                const sourceType = (s as any).sourceType;
-                const sourceIcon = sourceType === 'TOURNAMENT'
-                  ? <svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M5 2h10v7a5 5 0 0 1-10 0V2Z" stroke="#D4A843" strokeWidth="1.5"/><path d="M2 3h3M15 3h3M2 3a2 2 0 0 0 0 4h3M18 3a2 2 0 0 1 0 4h-3M10 14v2M7 16h6" stroke="#D4A843" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                  : sourceType === 'WAR'
-                  ? <svg width="12" height="12" viewBox="0 0 20 20" fill="none"><line x1="3" y1="3" x2="14" y2="14" stroke="#3DBA7A" strokeWidth="2" strokeLinecap="round"/><line x1="3" y1="6" x2="3" y2="3" stroke="#3DBA7A" strokeWidth="2.5" strokeLinecap="round"/><line x1="3" y1="3" x2="6" y2="3" stroke="#3DBA7A" strokeWidth="2.5" strokeLinecap="round"/><line x1="14" y1="17" x2="17" y2="17" stroke="#3DBA7A" strokeWidth="2.5" strokeLinecap="round"/><line x1="17" y1="14" x2="17" y2="17" stroke="#3DBA7A" strokeWidth="2.5" strokeLinecap="round"/><line x1="17" y1="6" x2="6" y2="17" stroke="#3DBA7A" strokeWidth="2" strokeLinecap="round"/></svg>
-                  : <span style={{ fontSize: 12 }}>♟</span>;
-                const whitePlayer = s.sides.find((sd) => sd.isWhite);
-                const blackPlayer = s.sides.find((sd) => !sd.isWhite);
-                return (
-                  <div
-                    key={s.id}
-                    onClick={() => navigate('/game/' + s.id)}
-                    style={{
-                      margin: '0 .85rem 8px',
-                      background: 'linear-gradient(135deg,#141018,#0F0E18)',
-                      border: '.5px solid rgba(61,186,122,.30)',
-                      borderRadius: 16, padding: '14px 14px',
-                      display: 'flex', alignItems: 'center', gap: 10,
-                      cursor: 'pointer',
-                      boxShadow: '0 2px 16px rgba(61,186,122,.08)',
-                    }}
-                  >
-                    {/* Белый игрок */}
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, minWidth: 52 }}>
-                      <div style={{
-                        width: 38, height: 38, borderRadius: '50%',
-                        background: 'rgba(255,255,255,.08)',
-                        border: '.5px solid rgba(255,255,255,.15)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 18,
-                      }}>♔</div>
-                      <span style={{
-                        fontSize: '.62rem', fontWeight: 600, color: '#C8C4BE',
-                        maxWidth: 52, overflow: 'hidden',
-                        textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const,
-                        textAlign: 'center' as const,
-                      }}>
-                        {whitePlayer?.player?.firstName ?? '?'}
-                      </span>
-                    </div>
-
-                    {/* Центр */}
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                        <span style={{
-                          width: 7, height: 7, borderRadius: '50%',
-                          background: '#3DBA7A', animation: 'pulse 1.5s infinite',
-                          display: 'inline-block',
-                        }} />
-                        <span style={{ fontSize: '.58rem', fontWeight: 800, color: '#3DBA7A', letterSpacing: '.14em', textTransform: 'uppercase' as const }}>LIVE</span>
-                        <span style={{ display: 'flex', alignItems: 'center' }}>{sourceIcon}</span>
-                      </div>
-                      <span style={{
-                        fontFamily: "'JetBrains Mono',monospace",
-                        fontSize: '1rem', fontWeight: 700, color: '#F0F0E8',
-                      }}>
-                        {fmtTime(mySide?.timeLeft ?? opSide?.timeLeft ?? 300)}
-                      </span>
-                      {s.bet && (
-                        <span style={{
-                          fontSize: '.65rem', fontWeight: 700,
-                          color: '#D4A843',
-                          display: 'flex', alignItems: 'center', gap: 3,
-                        }}>
-                          <CoinIcon size={11} />
-                          {fmtBalance(s.bet)}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Чёрный игрок */}
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, minWidth: 52 }}>
-                      <div style={{
-                        width: 38, height: 38, borderRadius: '50%',
-                        background: 'rgba(0,0,0,.4)',
-                        border: '.5px solid rgba(255,255,255,.12)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 18,
-                      }}>♚</div>
-                      <span style={{
-                        fontSize: '.62rem', fontWeight: 600, color: '#C8C4BE',
-                        maxWidth: 52, overflow: 'hidden',
-                        textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const,
-                        textAlign: 'center' as const,
-                      }}>
-                        {blackPlayer?.player?.firstName ?? '?'}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
+              {liveSessions.map((s) => (
+                <BattleLiveCard
+                  key={s.id}
+                  session={s}
+                  onNavigate={(id) => navigate('/game/' + id)}
+                  onProfile={(id) => navigate('/profile/' + id)}
+                />
+              ))}
             </>
           )}
 
@@ -600,6 +514,134 @@ const IcoKingB = () => (
     <rect x="5" y="6.5" width="8" height="9" rx="1" fill="currentColor" opacity=".15"/>
   </svg>
 );
+
+// ── Шаблон «Сражение» (Stage 2 / LIVE) — карточка идущей партии ──────────
+const BattleLiveCard: React.FC<{
+  session: GameSession;
+  onNavigate: (id: string) => void;
+  onProfile: (id: string) => void;
+}> = ({ session, onNavigate, onProfile }) => {
+  const whitePlayer = session.sides.find((sd) => sd.isWhite);
+  const blackPlayer = session.sides.find((sd) => !sd.isWhite);
+  const activeSide  = session.sides.find((sd) => sd.id === session.currentSideId);
+
+  // Тикающий таймер активного игрока
+  const [timeLeft, setTimeLeft] = useState<number>(activeSide?.timeLeft ?? 0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    // При смене хода (currentSideId) сбрасываем таймер
+    const initial = activeSide?.timeLeft ?? 0;
+    setTimeLeft(initial);
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (initial > 0) {
+      timerRef.current = setInterval(() => {
+        setTimeLeft((t) => (t > 0 ? t - 1 : 0));
+      }, 1000);
+    }
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [session.currentSideId, activeSide?.timeLeft]);
+
+  const sourceType = (session as any).sourceType;
+  const sourceIcon = sourceType === 'TOURNAMENT'
+    ? <svg width="11" height="11" viewBox="0 0 20 20" fill="none"><path d="M5 2h10v7a5 5 0 0 1-10 0V2Z" stroke="#D4A843" strokeWidth="1.5"/><path d="M2 3h3M15 3h3M2 3a2 2 0 0 0 0 4h3M18 3a2 2 0 0 1 0 4h-3M10 14v2M7 16h6" stroke="#D4A843" strokeWidth="1.5" strokeLinecap="round"/></svg>
+    : sourceType === 'WAR'
+    ? <svg width="11" height="11" viewBox="0 0 20 20" fill="none"><line x1="3" y1="3" x2="14" y2="14" stroke="#3DBA7A" strokeWidth="2" strokeLinecap="round"/><line x1="3" y1="6" x2="3" y2="3" stroke="#3DBA7A" strokeWidth="2.5" strokeLinecap="round"/><line x1="3" y1="3" x2="6" y2="3" stroke="#3DBA7A" strokeWidth="2.5" strokeLinecap="round"/><line x1="14" y1="17" x2="17" y2="17" stroke="#3DBA7A" strokeWidth="2.5" strokeLinecap="round"/><line x1="17" y1="14" x2="17" y2="17" stroke="#3DBA7A" strokeWidth="2.5" strokeLinecap="round"/><line x1="17" y1="6" x2="6" y2="17" stroke="#3DBA7A" strokeWidth="2" strokeLinecap="round"/></svg>
+    : null;
+
+  const PlayerCol: React.FC<{ side: typeof whitePlayer; isRight?: boolean }> = ({ side, isRight }) => {
+    if (!side) return <div style={{ minWidth: 56 }} />;
+    const playerAsUser = {
+      id: side.playerId,
+      firstName: side.player.firstName,
+      avatar: side.player.avatar,
+      avatarGradient: side.player.avatarGradient,
+      elo: side.player.elo,
+    };
+    return (
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        gap: 3, minWidth: 56, maxWidth: 68,
+      }}>
+        {/* Аватар — клик на профиль, стоп-пропагация (не переходим в игру) */}
+        <div
+          style={{ borderRadius: '50%', overflow: 'hidden', width: 40, height: 40 }}
+          onClick={(e) => { e.stopPropagation(); onProfile(side.playerId); }}
+        >
+          <Avatar user={playerAsUser as any} size="s" />
+        </div>
+        {/* Имя */}
+        <span style={{
+          fontSize: '.62rem', fontWeight: 700, color: '#D4C8B0',
+          maxWidth: 64, overflow: 'hidden', textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap' as const, textAlign: 'center' as const,
+        }}>
+          {side.player.firstName}
+        </span>
+        {/* ELO */}
+        <span style={{ fontSize: '.52rem', color: '#6A6660', fontWeight: 600 }}>
+          {side.player.elo}
+        </span>
+        {/* ColorIcon */}
+        <ColorIcon isWhite={side.isWhite} />
+      </div>
+    );
+  };
+
+  return (
+    <div
+      onClick={() => onNavigate(session.id)}
+      style={{
+        margin: '0 .85rem 8px',
+        background: 'linear-gradient(135deg,#0E1210,#0F1218)',
+        border: '.5px solid rgba(61,186,122,.32)',
+        borderRadius: 16, padding: '12px 10px',
+        display: 'flex', alignItems: 'center', gap: 8,
+        cursor: 'pointer',
+        boxShadow: '0 2px 16px rgba(61,186,122,.08)',
+      }}
+    >
+      {/* Белый игрок */}
+      <PlayerCol side={whitePlayer} />
+
+      {/* Центр */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+        {/* LIVE badge */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span style={{
+            width: 6, height: 6, borderRadius: '50%',
+            background: '#3DBA7A', display: 'inline-block',
+            animation: 'pulse 1.5s infinite',
+          }} />
+          <span style={{ fontSize: '.55rem', fontWeight: 900, color: '#3DBA7A', letterSpacing: '.16em' }}>LIVE</span>
+          {sourceIcon && <span style={{ display: 'flex', alignItems: 'center' }}>{sourceIcon}</span>}
+        </div>
+        {/* Таймер */}
+        <span style={{
+          fontFamily: "'JetBrains Mono',monospace",
+          fontSize: '1.05rem', fontWeight: 800, color: '#F0F0E8',
+          letterSpacing: '.02em',
+        }}>
+          {fmtTime(timeLeft)}
+        </span>
+        {/* Ставка */}
+        {session.bet && (
+          <span style={{
+            fontSize: '.78rem', fontWeight: 800,
+            color: '#D4A843',
+            display: 'flex', alignItems: 'center', gap: 3,
+          }}>
+            <CoinIcon size={13} />
+            {fmtBalance(session.bet)}
+          </span>
+        )}
+      </div>
+
+      {/* Чёрный игрок */}
+      <PlayerCol side={blackPlayer} isRight />
+    </div>
+  );
+};
 
 const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => void }> = ({ onClose, onBuyAttempts }) => {
   const t = useT();
