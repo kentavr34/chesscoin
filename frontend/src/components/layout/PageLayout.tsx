@@ -186,7 +186,7 @@ interface PageLayoutProps {
 }
 
 export const PageLayout: React.FC<PageLayoutProps> = ({
-  children, title, logo, backTo, rightAction, leftAction, noScroll, centered, onBack, noHeader,
+  children, title, logo, backTo, rightAction, leftAction, noScroll, centered = true, onBack, noHeader,
 }) => {
   const navigate = useNavigate();
 
@@ -224,10 +224,10 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
           ) : (
             <span style={{
               fontFamily: 'Inter, sans-serif',
-              fontSize: '1rem', fontWeight: 700,
-              color: 'var(--text-primary)',
+              fontSize: '1.25rem', fontWeight: 900,
+              color: '#EAE2CC',
               whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', display: 'block',
-              letterSpacing: '-.01em',
+              letterSpacing: '-.02em',
             }}>
               {title}
             </span>

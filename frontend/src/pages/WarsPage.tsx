@@ -690,25 +690,20 @@ export const WarsPage: React.FC = () => {
     return null;
   };
 
+  const warsInfoBtn = (
+    <button
+      onClick={() => setShowIntro(true)}
+      style={{
+        width: 32, height: 32, borderRadius: '50%', background: 'rgba(61,186,122,0.10)',
+        border: '.5px solid rgba(61,186,122,0.3)', color: '#3DBA7A', fontSize: 14,
+        cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center',
+        justifyContent: 'center', transition: 'all .15s',
+      }}
+    >?</button>
+  );
+
   return (
-    <PageLayout title="">
-      {/* Заголовок */}
-      <div style={{ padding: '14px 18px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ fontSize: 20, fontWeight: 900, color: '#EAE2CC', fontFamily: "'Inter',sans-serif", letterSpacing: '-.01em' }}>
-          {t.wars.title}
-        </div>
-        <button
-          onClick={() => setShowIntro(true)}
-          style={{
-            width: 32, height: 32, borderRadius: '50%', background: 'rgba(61,186,122,0.10)',
-            border: '.5px solid rgba(61,186,122,0.3)', color: '#3DBA7A', fontSize: 14,
-            cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center',
-            justifyContent: 'center', transition: 'all .15s',
-          }}
-        >
-          ⓘ
-        </button>
-      </div>
+    <PageLayout title={t.wars.title} rightAction={warsInfoBtn}>
 
       {/* Моя страна — плашка */}
       {myCountry && (
