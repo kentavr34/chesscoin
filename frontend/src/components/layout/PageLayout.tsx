@@ -151,6 +151,7 @@ interface PageLayoutProps {
   logo?: boolean;
   backTo?: string;
   rightAction?: React.ReactNode;
+  leftAction?: React.ReactNode;
   noScroll?: boolean;
   centered?: boolean;  // заголовок по центру
   onBack?: () => void;  // кастомная кнопка назад
@@ -158,7 +159,7 @@ interface PageLayoutProps {
 }
 
 export const PageLayout: React.FC<PageLayoutProps> = ({
-  children, title, logo, backTo, rightAction, noScroll, centered, onBack, noHeader,
+  children, title, logo, backTo, rightAction, leftAction, noScroll, centered, onBack, noHeader,
 }) => {
   const navigate = useNavigate();
 
@@ -181,7 +182,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
         <div style={{ minWidth: 36, display: 'flex', justifyContent: 'flex-start', zIndex: 2 }}>
           {backTo || onBack ? (
             <button onClick={() => onBack ? onBack() : navigate(backTo!)} style={tbaBtnStyle}>←</button>
-          ) : null}
+          ) : leftAction ?? null}
         </div>
 
         {/* Центр */}
