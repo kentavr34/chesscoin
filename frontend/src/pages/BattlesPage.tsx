@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout, InfoPopup, useInfoPopup } from '@/components/layout/PageLayout';
+import { Avatar } from '@/components/ui/Avatar';
 import { useGameStore } from '@/store/useGameStore';
 import { useUserStore } from '@/store/useUserStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
@@ -292,86 +293,14 @@ export const BattlesPage: React.FC = () => {
                 {t.battles.tabWaiting ?? 'CHALLENGES'}
               </div>
               {waitingSessions.map((battle, idx) => (
-                <div
+                <BattleChallengeCard
                   key={battle.id}
-                  style={{
-                    margin: '0 .85rem 8px',
-                    background: 'linear-gradient(135deg,#141018,#0F0E18)',
-                    border: idx === 0
-                      ? '.5px solid rgba(212,168,67,.38)'
-                      : '.5px solid rgba(212,168,67,.22)',
-                    borderRadius: 16, padding: '14px 14px',
-                    display: 'flex', alignItems: 'center', gap: 12,
-                  }}
-                >
-                  {/* Аватар-плейсхолдер */}
-                  <div style={{
-                    width: 44, height: 44, borderRadius: '50%',
-                    background: 'linear-gradient(135deg,rgba(212,168,67,.18),rgba(212,168,67,.06))',
-                    border: '.5px solid rgba(212,168,67,.3)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 20, flexShrink: 0,
-                    color: '#D4A843',
-                  }}>
-                    {battle.creator?.firstName?.slice(0,1)?.toUpperCase() ?? '?'}
-                  </div>
-
-                  {/* Инфо */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-                      <span style={{
-                        fontSize: '.8rem', fontWeight: 700, color: '#E8E4DC',
-                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const,
-                      }}>
-                        {battle.creator?.firstName ?? '?'}
-                      </span>
-                      {idx === 0 && (
-                        <span style={{
-                          fontSize: '.55rem', padding: '1px 6px',
-                          background: 'rgba(212,168,67,.15)',
-                          color: '#D4A843',
-                          border: '.5px solid rgba(212,168,67,.3)',
-                          borderRadius: 5, fontWeight: 800,
-                          textTransform: 'uppercase' as const, letterSpacing: '.08em',
-                        }}>TOP</span>
-                      )}
-                    </div>
-                    <div style={{ fontSize: '.68rem', color: '#7A7875', marginBottom: 5 }}>
-                      {Math.round((battle.duration ?? 300) / 60)} мин · ELO {battle.creator?.elo ?? '?'}
-                    </div>
-                    <div style={{
-                      display: 'inline-flex', alignItems: 'center', gap: 4,
-                      padding: '3px 9px',
-                      background: 'rgba(212,168,67,.1)',
-                      border: '.5px solid rgba(212,168,67,.22)',
-                      borderRadius: 7,
-                      fontSize: '.68rem', fontWeight: 700, color: '#D4A843',
-                    }}>
-                      <svg width="10" height="10" viewBox="0 0 20 20" fill="none">
-                        <circle cx="10" cy="10" r="9" stroke="#D4A843" strokeWidth="1.5"/>
-                        <text x="10" y="14" textAnchor="middle" fill="#D4A843" fontSize="10" fontWeight="800">ᚙ</text>
-                      </svg>
-                      {fmtBalance(battle.bet)}
-                    </div>
-                  </div>
-
-                  {/* Кнопка войти */}
-                  <button
-                    onClick={() => handleJoin(battle)}
-                    style={{
-                      padding: '9px 16px',
-                      background: 'linear-gradient(135deg,#D4A843,#F0C85A)',
-                      border: 'none', borderRadius: 11,
-                      color: '#0D0D12', fontSize: '.72rem', fontWeight: 800,
-                      cursor: 'pointer', fontFamily: 'inherit',
-                      boxShadow: '0 2px 12px rgba(212,168,67,.35)',
-                      flexShrink: 0,
-                      whiteSpace: 'nowrap' as const,
-                    }}
-                  >
-                    {t.battles.accept ?? 'Войти'}
-                  </button>
-                </div>
+                  battle={battle}
+                  isTop={idx === 0}
+                  onJoin={() => handleJoin(battle)}
+                  onProfile={(id) => navigate('/profile/' + id)}
+                  acceptLabel={t.battles.accept ?? 'Войти'}
+                />
               ))}
             </>
           )}
@@ -421,27 +350,9 @@ export const BattlesPage: React.FC = () => {
             </div>
           )}
           {myPrivateSessions.map((s) => {
-            const sourceType = (s as any).sourceType;
-            const sourceIcon = sourceType === 'TOURNAMENT'
-              ? <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 2h10v7a5 5 0 0 1-10 0V2Z" stroke="#D4A843" strokeWidth="1.5"/><path d="M2 3h3M15 3h3M2 3a2 2 0 0 0 0 4h3M18 3a2 2 0 0 1 0 4h-3M10 14v2M7 16h6" stroke="#D4A843" strokeWidth="1.5" strokeLinecap="round"/></svg>
-              : sourceType === 'WAR'
-              ? <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><line x1="3" y1="3" x2="14" y2="14" stroke="#FF4D6A" strokeWidth="2" strokeLinecap="round"/><line x1="3" y1="6" x2="3" y2="3" stroke="#FF4D6A" strokeWidth="2.5" strokeLinecap="round"/><line x1="3" y1="3" x2="6" y2="3" stroke="#FF4D6A" strokeWidth="2.5" strokeLinecap="round"/><line x1="14" y1="17" x2="17" y2="17" stroke="#FF4D6A" strokeWidth="2.5" strokeLinecap="round"/><line x1="17" y1="14" x2="17" y2="17" stroke="#FF4D6A" strokeWidth="2.5" strokeLinecap="round"/><line x1="17" y1="6" x2="6" y2="17" stroke="#FF4D6A" strokeWidth="2" strokeLinecap="round"/></svg>
-              : <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="9" width="14" height="9" rx="2" stroke="#9B85FF" strokeWidth="1.8"/><path d="M6.5 9V6.5a3.5 3.5 0 0 1 7 0V9" stroke="#9B85FF" strokeWidth="1.8" strokeLinecap="round"/></svg>;
-            const sourceName = sourceType === 'TOURNAMENT'
-              ? (t.battles.fromTournament ?? 'Tournament')
-              : sourceType === 'WAR'
-              ? (t.battles.fromWar ?? 'Country War')
-              : (t.battles.privateChallenge ?? 'Private Challenge');
-            const iconBg = sourceType === 'TOURNAMENT'
-              ? 'rgba(212,168,67,.1)'
-              : sourceType === 'WAR'
-              ? 'rgba(255,77,106,.1)'
-              : 'rgba(155,133,255,.1)';
-            const iconBorder = sourceType === 'TOURNAMENT'
-              ? 'rgba(212,168,67,.22)'
-              : sourceType === 'WAR'
-              ? 'rgba(255,77,106,.22)'
-              : 'rgba(155,133,255,.22)';
+            const mySide = s.sides.find((sd) => sd.id === s.mySideId);
+            const isWhiteCreator = mySide?.isWhite ?? true;
+            const durationMins = Math.round((s as any).duration ? (s as any).duration / 60 : 5);
             return (
               <div
                 key={s.id}
@@ -449,44 +360,58 @@ export const BattlesPage: React.FC = () => {
                   margin: '0 .85rem 8px',
                   background: 'linear-gradient(135deg,#141018,#0F0E18)',
                   border: '.5px solid rgba(212,168,67,.22)',
-                  borderRadius: 16, padding: '14px 14px',
+                  borderRadius: 16, padding: '13px 14px',
                   display: 'flex', alignItems: 'center', gap: 12,
                 }}
               >
+                {/* Мой аватар */}
+                <div style={{ flexShrink: 0, cursor: 'pointer' }} onClick={() => user?.id && navigate('/profile/' + user.id)}>
+                  <Avatar user={user as any} size="s" />
+                </div>
+
+                {/* Имя + ELO */}
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: '.8rem', fontWeight: 700, color: '#E8E4DC', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {user?.firstName ?? '?'}
+                  </div>
+                  <div style={{ fontSize: '.62rem', color: '#6A6660', marginTop: 1 }}>
+                    ELO {user?.elo ?? '?'}
+                  </div>
+                </div>
+
+                {/* Центр: время + ставка */}
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 3 }}>
+                  <div style={{ fontSize: '.75rem', fontWeight: 800, color: '#D4A843' }}>{durationMins} мин</div>
+                  {s.bet && BigInt(s.bet) > 0n && (
+                    <div style={{ fontSize: '.65rem', color: '#9A8840', display: 'flex', alignItems: 'center', gap: 3 }}>
+                      <svg width="9" height="9" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#D4A843" strokeWidth="1.5"/><text x="10" y="14" textAnchor="middle" fill="#D4A843" fontSize="10" fontWeight="800">ᚙ</text></svg>
+                      {fmtBalance(s.bet)}
+                    </div>
+                  )}
+                </div>
+
+                {/* Цвет + статус ожидания */}
+                <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 4 }}>
+                  <ColorIcon isWhite={isWhiteCreator} />
+                  <div style={{
+                    fontSize: '.52rem', fontWeight: 700, color: '#7A6830',
+                    letterSpacing: '.06em', textTransform: 'uppercase' as const,
+                  }}>
+                    {isWhiteCreator ? 'Белые' : 'Чёрные'}
+                  </div>
+                </div>
+
+                {/* Кнопка — неактивная "Ожидание" */}
                 <div style={{
-                  width: 44, height: 44, borderRadius: 13,
-                  background: iconBg,
-                  border: `.5px solid ${iconBorder}`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexShrink: 0,
+                  padding: '8px 12px', borderRadius: 11, flexShrink: 0,
+                  background: 'rgba(212,168,67,.06)',
+                  border: '.5px solid rgba(212,168,67,.18)',
+                  fontSize: '.65rem', fontWeight: 700, color: '#7A6830',
+                  display: 'flex', alignItems: 'center', gap: 5,
                 }}>
-                  {sourceIcon}
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#D4A843', display: 'inline-block', animation: 'pulse 1.5s infinite' }} />
+                  Ждём
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '.8rem', fontWeight: 700, color: '#E8E4DC', marginBottom: 3 }}>
-                    {sourceName}
-                  </div>
-                  <div style={{ fontSize: '.68rem', color: '#7A7875' }}>
-                    {s.bet && BigInt(s.bet) > 0n
-                      ? `${fmtBalance(s.bet)} ᚙ · `
-                      : ''}
-                    {t.battles.waitingForOpponent ?? 'Ждём соперника...'}
-                  </div>
-                </div>
-                <button
-                  onClick={() => navigate('/game/' + s.id)}
-                  style={{
-                    padding: '9px 16px',
-                    background: 'linear-gradient(135deg,#D4A843,#F0C85A)',
-                    border: 'none', borderRadius: 11,
-                    color: '#0D0D12', fontSize: '.72rem', fontWeight: 800,
-                    cursor: 'pointer', fontFamily: 'inherit',
-                    boxShadow: '0 2px 12px rgba(212,168,67,.35)',
-                    flexShrink: 0,
-                  }}
-                >
-                  {t.battles.accept ?? '→'}
-                </button>
               </div>
             );
           })}
@@ -523,6 +448,105 @@ export const BattlesPage: React.FC = () => {
 
 // ── Sub components ──
 const MIN_BET = 10000;
+
+// Иконка цвета фигур (белый / чёрный король)
+const ColorIcon: React.FC<{ isWhite: boolean }> = ({ isWhite }) => (
+  <div style={{
+    width: 32, height: 32, borderRadius: 8,
+    background: isWhite ? 'rgba(240,200,90,.12)' : 'rgba(74,158,255,.1)',
+    border: `.5px solid ${isWhite ? 'rgba(240,200,90,.35)' : 'rgba(74,158,255,.25)'}`,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+  }}>
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <path d="M9 2v3M7.5 3.5h3" stroke={isWhite ? '#F0C85A' : '#82CFFF'} strokeWidth="1.3" strokeLinecap="round"/>
+      <rect x="7" y="5" width="4" height="2" rx=".5" fill={isWhite ? '#F0C85A' : '#82CFFF'} opacity=".8"/>
+      <path d="M5.5 7h7l-1 8H6.5L5.5 7z" fill={isWhite ? '#F0C85A' : '#82CFFF'} opacity={isWhite ? '.7' : '.9'}/>
+      <path d="M4 15h10" stroke={isWhite ? '#F0C85A' : '#82CFFF'} strokeWidth="1.3" strokeLinecap="round"/>
+      {!isWhite && <rect x="5" y="6.5" width="8" height="9" rx="1" fill="#82CFFF" opacity=".15"/>}
+    </svg>
+  </div>
+);
+
+// Шаблон «Вызов» (Stage 1) — карточка батла в ожидании соперника
+const BattleChallengeCard: React.FC<{
+  battle: BattleLobbyItem;
+  isTop: boolean;
+  onJoin: () => void;
+  onProfile: (id: string) => void;
+  acceptLabel: string;
+}> = ({ battle, isTop, onJoin, onProfile, acceptLabel }) => {
+  const durationMins = Math.round((battle.duration ?? 300) / 60);
+  const creatorAsUser = battle.creator ? {
+    id: battle.creator.id,
+    firstName: battle.creator.firstName,
+    avatar: battle.creator.avatar,
+    avatarGradient: battle.creator.avatarGradient,
+  } : null;
+  // creator.isWhite = цвет создателя → соперник получает противоположный
+  const opponentIsWhite = !battle.creator?.isWhite;
+
+  return (
+    <div style={{
+      margin: '0 .85rem 8px',
+      background: 'linear-gradient(135deg,#141018,#0F0E18)',
+      border: isTop ? '.5px solid rgba(212,168,67,.38)' : '.5px solid rgba(212,168,67,.22)',
+      borderRadius: 16, padding: '13px 14px',
+      display: 'flex', alignItems: 'center', gap: 12,
+    }}>
+      {/* Аватар — кликабельный → профиль */}
+      <div
+        style={{ flexShrink: 0, cursor: creatorAsUser ? 'pointer' : 'default' }}
+        onClick={() => creatorAsUser && onProfile(creatorAsUser.id)}
+      >
+        <Avatar user={creatorAsUser as any} size="s" />
+      </div>
+
+      {/* Имя + ELO */}
+      <div style={{ minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
+          <span style={{ fontSize: '.8rem', fontWeight: 700, color: '#E8E4DC', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {battle.creator?.firstName ?? '?'}
+          </span>
+          {isTop && (
+            <span style={{ fontSize: '.52rem', padding: '1px 5px', background: 'rgba(212,168,67,.15)', color: '#D4A843', border: '.5px solid rgba(212,168,67,.3)', borderRadius: 4, fontWeight: 800, letterSpacing: '.08em', flexShrink: 0 }}>TOP</span>
+          )}
+        </div>
+        <div style={{ fontSize: '.62rem', color: '#6A6660' }}>ELO {battle.creator?.elo ?? '?'}</div>
+      </div>
+
+      {/* Центр: время + ставка */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 3 }}>
+        <div style={{ fontSize: '.75rem', fontWeight: 800, color: '#D4A843' }}>{durationMins} мин</div>
+        <div style={{ fontSize: '.65rem', color: '#9A8840', display: 'flex', alignItems: 'center', gap: 3 }}>
+          <svg width="9" height="9" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#D4A843" strokeWidth="1.5"/><text x="10" y="14" textAnchor="middle" fill="#D4A843" fontSize="10" fontWeight="800">ᚙ</text></svg>
+          {fmtBalance(battle.bet)}
+        </div>
+      </div>
+
+      {/* Цвет фигур соперника (меня) */}
+      <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 3 }}>
+        <ColorIcon isWhite={opponentIsWhite} />
+        <div style={{ fontSize: '.52rem', fontWeight: 700, color: opponentIsWhite ? '#9A8840' : '#5A8AB0', letterSpacing: '.04em' }}>
+          {opponentIsWhite ? 'Белые' : 'Чёрные'}
+        </div>
+      </div>
+
+      {/* Кнопка принять */}
+      <button
+        onClick={onJoin}
+        style={{
+          padding: '9px 14px', flexShrink: 0,
+          background: 'linear-gradient(135deg,#D4A843,#F0C85A)',
+          border: 'none', borderRadius: 11,
+          color: '#0D0D12', fontSize: '.72rem', fontWeight: 800,
+          cursor: 'pointer', fontFamily: 'inherit',
+          boxShadow: '0 2px 12px rgba(212,168,67,.35)',
+          whiteSpace: 'nowrap' as const,
+        }}
+      >{acceptLabel}</button>
+    </div>
+  );
+};
 
 // CoinIcon — золотой конь (из GamePage)
 const CoinIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
