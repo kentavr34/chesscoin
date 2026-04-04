@@ -420,25 +420,21 @@ export const BattlesPage: React.FC = () => {
 
       {/* FAB — создать батл */}
       <button
-        onClick={() => hasAttempts ? setShowCreate(true) : setShowAttempts(true)}
+        onClick={() => setShowCreate(true)}
         style={{
           position: 'fixed',
           bottom: 'max(98px, calc(88px + env(safe-area-inset-bottom, 14px)))',
           right: 24, width: 50, height: 50,
           borderRadius: '50%',
-          background: hasAttempts
-            ? 'linear-gradient(135deg,#D4A843,#F0C85A)'
-            : 'linear-gradient(135deg,#3A0808,#5A1010)',
-          color: hasAttempts ? '#0D0D12' : '#FF8080',
-          fontSize: hasAttempts ? 24 : 20, fontWeight: 800,
+          background: 'linear-gradient(135deg,#D4A843,#F0C85A)',
+          color: '#0D0D12',
+          fontSize: 24, fontWeight: 800,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           cursor: 'pointer', border: 'none', zIndex: 49,
-          boxShadow: hasAttempts
-            ? '0 4px 24px rgba(212,168,67,.45)'
-            : '0 4px 24px rgba(220,50,47,.3)',
+          boxShadow: '0 4px 24px rgba(212,168,67,.45)',
           fontFamily: 'inherit',
         }}
-      >{hasAttempts ? '＋' : '⭐'}</button>
+      >＋</button>
 
       {showCreate && <CreateBattleModal onClose={() => setShowCreate(false)} onBuyAttempts={() => { setShowCreate(false); setShowAttempts(true); }} />}
       {showAttempts && user && <AttemptsModal user={user} onClose={() => setShowAttempts(false)} />}
@@ -612,7 +608,7 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
   const [isPublic, setIsPublic] = useState(true);
   const [loading, setLoading] = useState(false);
 
-  const TIME_OPTIONS = [1, 3, 5, 10, 20, 30];
+  const TIME_OPTIONS = [1, 3, 5, 15, 30, 60];
   const QUICK_BETS = [10000, 50000, 100000, 500000];
 
   const durationMins = duration / 60;
@@ -880,18 +876,26 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
               onClick={handleCreate}
               disabled={loading || !canCreate}
               style={{
-                width: '100%', padding: '13px',
+                width: '100%', padding: '14px',
                 background: canCreate ? 'linear-gradient(135deg,#3A2A08,#5A4010)' : 'rgba(255,255,255,.04)',
-                border: `.5px solid ${canCreate ? 'rgba(212,168,67,.5)' : 'rgba(255,255,255,.07)'}`,
+                border: `.5px solid ${canCreate ? 'rgba(212,168,67,.5)' : 'rgba(255,255,255,.08)'}`,
                 borderRadius: 14,
-                fontFamily: 'Inter, sans-serif', fontSize: '.9rem', fontWeight: 900, letterSpacing: '.04em',
+                fontFamily: 'Inter, sans-serif', fontSize: '.9rem', fontWeight: 900, letterSpacing: '.06em',
                 color: canCreate ? '#F0C85A' : '#3A4052',
                 cursor: canCreate && !loading ? 'pointer' : 'not-allowed',
                 opacity: loading ? 0.7 : 1,
                 boxShadow: canCreate ? '0 4px 20px rgba(212,168,67,.18)' : 'none',
-                transition: 'all .15s',
+                transition: 'all .15s', position: 'relative', overflow: 'hidden',
               }}
             >
+              {canCreate && !loading && (
+                <div style={{
+                  position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%',
+                  background: 'linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent)',
+                  animation: 'cbm-shine 2.5s ease-in-out infinite',
+                }} />
+              )}
+              <style>{`@keyframes cbm-shine{0%{left:-100%}100%{left:200%}}`}</style>
               {loading ? t.battles.creating : t.battles.createBtn.toUpperCase()}
             </button>
           )}
