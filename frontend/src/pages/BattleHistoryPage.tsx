@@ -21,6 +21,7 @@ interface HistoryGame {
 }
 
 type FilterTab = 'all' | 'battle' | 'bot' | 'friendly';
+type SortKey = 'date' | 'bet' | 'result';
 
 const PAGE_SIZE = 20;
 
@@ -77,6 +78,9 @@ export const BattleHistoryPage: React.FC = () => {
   const [offset, setOffset] = useState(0);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<FilterTab>('all');
+  const [search, setSearch] = useState('');
+  const [sortKey, setSortKey] = useState<SortKey>('date');
+  const [showSort, setShowSort] = useState(false);
 
   const loadGames = useCallback(async (off: number) => {
     setLoading(true);
@@ -95,19 +99,121 @@ export const BattleHistoryPage: React.FC = () => {
   const totalPages = Math.ceil(total / PAGE_SIZE);
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
 
-  const filteredGames = games.filter((g) => {
-    if (activeFilter === 'all') return true;
-    if (activeFilter === 'bot') return !!g.hasBot;
-    if (activeFilter === 'friendly') return g.type === 'FRIENDLY';
-    if (activeFilter === 'battle') return !g.hasBot && g.type !== 'FRIENDLY';
-    return true;
-  });
+  const filteredGames = games
+    .filter((g) => {
+      if (activeFilter === 'bot') return !!g.hasBot;
+      if (activeFilter === 'friendly') return g.type === 'FRIENDLY';
+      if (activeFilter === 'battle') return !g.hasBot && g.type !== 'FRIENDLY';
+      return true;
+    })
+    .filter((g) => {
+      if (!search.trim()) return true;
+      const q = search.trim().toLowerCase();
+      const name = (g.opponent?.firstName ?? '').toLowerCase();
+      const botName = g.hasBot ? `jarvis lv.${g.botLevel}` : '';
+      return name.includes(q) || botName.includes(q);
+    })
+    .sort((a, b) => {
+      if (sortKey === 'date') {
+        return (b.finishedAt ?? '').localeCompare(a.finishedAt ?? '');
+      }
+      if (sortKey === 'bet') {
+        return Number(BigInt(b.bet ?? '0') - BigInt(a.bet ?? '0'));
+      }
+      if (sortKey === 'result') {
+        const ord = { WON: 0, DRAW: 1, LOST: 2 };
+        return (ord[a.result as keyof typeof ord] ?? 3) - (ord[b.result as keyof typeof ord] ?? 3);
+      }
+      return 0;
+    });
+
+  const sortLabels: Record<SortKey, string> = { date: 'По дате', bet: 'По ставке', result: 'По результату' };
 
   return (
-    <PageLayout title="История батлов" backTo="/">
+    <PageLayout title="История игр" backTo="/">
+      {/* Строка поиска */}
+      <div style={{ padding: '10px 14px 0', display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div style={{
+          flex: 1, display: 'flex', alignItems: 'center', gap: 8,
+          background: 'rgba(255,255,255,.04)',
+          border: '.5px solid rgba(255,255,255,.09)',
+          borderRadius: 12, padding: '9px 12px',
+        }}>
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+            <circle cx="8.5" cy="8.5" r="5.5" stroke="#7A7875" strokeWidth="1.6"/>
+            <line x1="13" y1="13" x2="17.5" y2="17.5" stroke="#7A7875" strokeWidth="1.6" strokeLinecap="round"/>
+          </svg>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Поиск по игроку..."
+            style={{
+              flex: 1, background: 'none', border: 'none', outline: 'none',
+              fontFamily: 'Inter, sans-serif', fontSize: '.82rem',
+              color: '#E8E4DC',
+              caretColor: '#D4A843',
+            }}
+          />
+          {search && (
+            <button onClick={() => setSearch('')} style={{
+              background: 'none', border: 'none', color: '#5A5248',
+              cursor: 'pointer', fontSize: 12, padding: 0, lineHeight: 1,
+            }}>✕</button>
+          )}
+        </div>
+        {/* Сортировка */}
+        <div style={{ position: 'relative' }}>
+          <button
+            onClick={() => setShowSort(v => !v)}
+            style={{
+              width: 38, height: 38, borderRadius: 11,
+              background: showSort ? 'rgba(212,168,67,.15)' : 'rgba(255,255,255,.04)',
+              border: showSort ? '.5px solid rgba(212,168,67,.35)' : '.5px solid rgba(255,255,255,.09)',
+              color: showSort ? '#F0C85A' : '#7A7875',
+              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontFamily: 'inherit',
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+              <line x1="3" y1="5" x2="17" y2="5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+              <line x1="5" y1="10" x2="15" y2="10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+              <line x1="8" y1="15" x2="12" y2="15" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+            </svg>
+          </button>
+          {showSort && (
+            <div style={{
+              position: 'absolute', top: 44, right: 0, zIndex: 50,
+              background: 'linear-gradient(160deg,#12151E,#0E111A)',
+              border: '.5px solid rgba(255,255,255,.1)',
+              borderRadius: 14, overflow: 'hidden', minWidth: 160,
+              boxShadow: '0 8px 32px rgba(0,0,0,.6)',
+            }}>
+              {(['date', 'bet', 'result'] as SortKey[]).map((key) => (
+                <button
+                  key={key}
+                  onClick={() => { setSortKey(key); setShowSort(false); }}
+                  style={{
+                    width: '100%', padding: '11px 14px',
+                    background: sortKey === key ? 'rgba(212,168,67,.1)' : 'none',
+                    border: 'none', borderBottom: '.5px solid rgba(255,255,255,.05)',
+                    color: sortKey === key ? '#F0C85A' : '#9A9490',
+                    fontSize: '.78rem', fontWeight: 700,
+                    fontFamily: 'Inter, sans-serif', textAlign: 'left' as const,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {sortLabels[key]}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Табы-фильтры */}
       <div style={{
-        display: 'flex', gap: 6, padding: '12px 14px 8px',
+        display: 'flex', gap: 6, padding: '10px 14px 8px',
         overflowX: 'auto', scrollbarWidth: 'none',
       }}>
         {FILTER_TABS.map((tab) => {

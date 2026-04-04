@@ -19,6 +19,19 @@ export const InfoPopup: React.FC<InfoPopupProps> = ({ slides, onClose }) => {
   const isLast = idx === slides.length - 1;
   const slide = slides[idx];
 
+  // Touch swipe
+  const touchStart = React.useRef<number | null>(null);
+  const handleTouchStart = (e: React.TouchEvent) => { touchStart.current = e.touches[0].clientX; };
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStart.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStart.current;
+    touchStart.current = null;
+    if (Math.abs(dx) < 40) return;
+    if (dx < 0 && !isLast) setIdx(i => i + 1);
+    else if (dx > 0 && idx > 0) setIdx(i => i - 1);
+    else if (dx < 0 && isLast) onClose();
+  };
+
   return (
     <div
       onClick={(e) => e.target === e.currentTarget && onClose()}
@@ -32,17 +45,21 @@ export const InfoPopup: React.FC<InfoPopupProps> = ({ slides, onClose }) => {
       }}
     >
       <style>{`@keyframes info-pop{ from{opacity:0;transform:scale(.88)} to{opacity:1;transform:scale(1)} }`}</style>
-      <div style={{
-        width: '100%', maxWidth: 340,
-        background: 'linear-gradient(160deg,#12151E,#0E111A)',
-        border: '1px solid rgba(255,255,255,.09)',
-        borderRadius: 28,
-        padding: '36px 24px 24px',
-        boxShadow: '0 24px 60px rgba(0,0,0,.75)',
-        animation: 'info-pop .35s cubic-bezier(.2,.9,.3,1.05) both',
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        textAlign: 'center', position: 'relative',
-      }}>
+      <div
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        style={{
+          width: '100%', maxWidth: 340,
+          background: 'linear-gradient(160deg,#12151E,#0E111A)',
+          border: '1px solid rgba(255,255,255,.09)',
+          borderRadius: 28,
+          padding: '36px 24px 24px',
+          boxShadow: '0 24px 60px rgba(0,0,0,.75)',
+          animation: 'info-pop .35s cubic-bezier(.2,.9,.3,1.05) both',
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          textAlign: 'center', position: 'relative',
+          userSelect: 'none',
+        }}>
         {/* Close */}
         <button
           onClick={onClose}
@@ -51,7 +68,7 @@ export const InfoPopup: React.FC<InfoPopupProps> = ({ slides, onClose }) => {
             width: 28, height: 28, borderRadius: '50%',
             background: 'rgba(255,255,255,.06)',
             border: '.5px solid rgba(255,255,255,.1)',
-            color: '#5A5860', fontSize: 13, cursor: 'pointer',
+            color: '#9A9490', fontSize: 13, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontFamily: 'inherit',
           }}
@@ -70,6 +87,7 @@ export const InfoPopup: React.FC<InfoPopupProps> = ({ slides, onClose }) => {
 
         {/* Title */}
         <div style={{
+          fontFamily: 'Inter, sans-serif',
           fontSize: '1.18rem', fontWeight: 900,
           color: '#EAE2CC', letterSpacing: '-.02em',
           marginBottom: 10, lineHeight: 1.2,
@@ -77,9 +95,10 @@ export const InfoPopup: React.FC<InfoPopupProps> = ({ slides, onClose }) => {
           {slide.title}
         </div>
 
-        {/* Desc */}
+        {/* Desc — светлее и крупнее */}
         <div style={{
-          fontSize: '.77rem', color: '#5A5860',
+          fontFamily: 'Inter, sans-serif',
+          fontSize: '.84rem', color: '#9A9490',
           lineHeight: 1.65, marginBottom: 24,
           maxWidth: 280,
         }} dangerouslySetInnerHTML={{ __html: slide.desc }} />
@@ -101,6 +120,13 @@ export const InfoPopup: React.FC<InfoPopupProps> = ({ slides, onClose }) => {
           </div>
         )}
 
+        {/* Swipe hint */}
+        {slides.length > 1 && (
+          <div style={{ fontSize: '.62rem', color: 'rgba(255,255,255,.2)', marginBottom: 12, letterSpacing: '.06em' }}>
+            ← свайп →
+          </div>
+        )}
+
         {/* Button */}
         <button
           onClick={() => isLast ? onClose() : setIdx(idx + 1)}
@@ -110,8 +136,9 @@ export const InfoPopup: React.FC<InfoPopupProps> = ({ slides, onClose }) => {
             border: '.5px solid rgba(212,168,67,.42)',
             borderRadius: 14,
             color: '#F0C85A',
-            fontSize: '.88rem', fontWeight: 900,
-            cursor: 'pointer', fontFamily: 'inherit',
+            fontFamily: 'Inter, sans-serif',
+            fontSize: '.9rem', fontWeight: 900,
+            cursor: 'pointer',
             boxShadow: '0 4px 22px rgba(212,168,67,.15)',
           }}
         >
@@ -175,7 +202,6 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
         padding: 'clamp(12px, 3vw, 16px) var(--space-l) clamp(10px, 2vw, 12px)',
         paddingTop: 'max(16px, env(safe-area-inset-top, 16px))',
         flexShrink: 0,
-        borderBottom: '1px solid var(--border)',
         position: 'relative', zIndex: 'var(--z-header)',
       }}>
         {/* Левая часть */}
@@ -196,9 +222,12 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
               ChessCoin
             </span>
           ) : (
-            <span className="ui-heading-1" style={{
-              fontSize: 16, color: 'var(--text-primary)',
-              whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', display: 'block'
+            <span style={{
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '1rem', fontWeight: 700,
+              color: 'var(--text-primary)',
+              whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', display: 'block',
+              letterSpacing: '-.01em',
             }}>
               {title}
             </span>
