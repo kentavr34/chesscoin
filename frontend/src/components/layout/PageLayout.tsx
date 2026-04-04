@@ -199,8 +199,8 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
       {!noHeader && <div style={{
         display: 'flex', alignItems: 'center',
         justifyContent: 'space-between',
-        padding: 'clamp(12px, 3vw, 16px) var(--space-l) clamp(10px, 2vw, 12px)',
-        paddingTop: 'max(16px, env(safe-area-inset-top, 16px))',
+        padding: '18px var(--space-l) 16px',
+        paddingTop: 'max(28px, calc(env(safe-area-inset-top, 0px) + 18px))',
         flexShrink: 0,
         position: 'relative', zIndex: 'var(--z-header)',
       }}>
