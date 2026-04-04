@@ -27,6 +27,42 @@ const BOT_TOKEN = () => process.env.BOT_TOKEN ?? "";
 const CHANNEL_ID = () => process.env.TELEGRAM_CHANNEL_ID ?? "";
 const BOT_LINK = "https://t.me/chessgamecoin_bot";
 
+// ── Личное уведомление игроку в чат бота ─────────────────────────────────────
+async function sendTgToUser(
+  telegramId: string,
+  text: string,
+  url?: string,
+  urlLabel?: string,
+) {
+  if (!BOT_TOKEN() || !telegramId) return;
+  try {
+    const body: Record<string, unknown> = {
+      chat_id: telegramId,
+      text,
+      parse_mode: "HTML",
+    };
+    if (url && urlLabel) {
+      body.reply_markup = { inline_keyboard: [[{ text: urlLabel, url }]] };
+    }
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN()}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  } catch { /* silent */ }
+}
+
+// Проверяем: находится ли пользователь сейчас в комнате игры (просматривает партию)
+function isUserInGameRoom(io: Server, sessionId: string, targetUserId: string): boolean {
+  const room = io.sockets.adapter.rooms.get(sessionId);
+  if (!room) return false;
+  for (const socketId of room) {
+    const s = io.sockets.sockets.get(socketId);
+    if ((s as any)?.data?.userId === targetUserId) return true;
+  }
+  return false;
+}
+
 async function postNewBattleToChannel(
   creatorName: string,
   bet: bigint,
@@ -283,6 +319,31 @@ export const setupSocketHandlers = (io: Server) => {
 
           // T18: diff — убираем батл из лобби (он начался)
           io.to("lobby").emit("battles:removed", session.id);
+
+          // 🔔 Уведомление создателю батла: противник принял вызов
+          try {
+            const creatorSide = session.sides.find((s: Record<string, unknown>) => s.playerId !== userId);
+            if (creatorSide) {
+              const creator = await prisma.user.findUnique({
+                where: { id: String(creatorSide.playerId) },
+                select: { telegramId: true, firstName: true },
+              });
+              const joiner = session.sides.find((s: Record<string, unknown>) => s.playerId === userId);
+              const joinerName = (joiner as any)?.player?.firstName ?? "Противник";
+              if (creator?.telegramId) {
+                const mins = Math.round((session as any).duration / 60);
+                const betFmt = session.bet ? Number(session.bet) >= 1_000_000
+                  ? `${(Number(session.bet) / 1_000_000).toFixed(2)}M`
+                  : `${Math.round(Number(session.bet) / 1000)}K` : "0";
+                await sendTgToUser(
+                  creator.telegramId,
+                  `⚔️ <b>Батл начался!</b>\n\n👤 Принял: <b>${joinerName}</b>\n💰 Ставка: <b>${betFmt} ᚙ</b>\n⏱ Время: <b>${mins} мин</b>\n\n▶️ Открой игру и ходи!`,
+                  `${BOT_LINK}?start=game_${session.id}`,
+                  "▶️ Играть",
+                );
+              }
+            }
+          } catch { /* silent — уведомление не блокирует игру */ }
         } catch (err: unknown) {
           if (callback) callback({ ok: false, error: (err as Error).message });
         }
@@ -500,6 +561,31 @@ export const setupSocketHandlers = (io: Server) => {
           const formatted = formatSession(updatedSession, userId);
           io.to(sessionId).emit("game", formatted);
           if (callback) callback({ ok: true, session: formatted });
+
+          // 🔔 Уведомление сопернику о ходе — только если он НЕ в комнате игры
+          if (
+            session.type === SessionType.BATTLE &&
+            nextSide && !nextSide.isBot &&
+            !isUserInGameRoom(io, sessionId, nextSide.playerId)
+          ) {
+            try {
+              const opponent = await prisma.user.findUnique({
+                where: { id: nextSide.playerId },
+                select: { telegramId: true },
+              });
+              if (opponent?.telegramId) {
+                const moverName = mySide
+                  ? (session.sides.find((s: Record<string,unknown>) => s.id === mySide.id) as any)?.player?.firstName ?? "Противник"
+                  : "Противник";
+                await sendTgToUser(
+                  opponent.telegramId,
+                  `♟️ <b>${moverName}</b> сделал ход!\n\n⚡ Твой ход — не затягивай!`,
+                  `${BOT_LINK}?start=game_${sessionId}`,
+                  "▶️ Сделать ход",
+                );
+              }
+            } catch { /* silent */ }
+          }
 
           // Ход бота
           if (session.type === SessionType.BOT && nextSide?.isBot) {
