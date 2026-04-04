@@ -33,7 +33,7 @@ type Tab = 'public' | 'private';
 export const BattlesPage: React.FC = () => {
   const t = useT();
   const navigate = useNavigate();
-  const { battles, sessions, upsertSession } = useGameStore();
+  const { battles, sessions, liveBattles, upsertSession } = useGameStore();
   const { user } = useUserStore();
   const [tab, setTab] = useState<Tab>('public');
   const [showCreate, setShowCreate] = useState(false);
@@ -45,8 +45,13 @@ export const BattlesPage: React.FC = () => {
 
   const info = useInfoPopup('battles', [...t.battles.info] as Parameters<typeof InfoPopup>[0]["slides"]);
 
-  // Live — активные батлы IN_PROGRESS (без ботов)
-  const liveSessions = sessions.filter((s) => s.status === 'IN_PROGRESS' && s.type !== 'BOT');
+  // Live — публичные IN_PROGRESS батлы из лобби (видны всем, не только участникам)
+  // Дополняем личными сессиями на случай, если сервер ещё не прислал событие
+  const myLiveSessions = sessions.filter((s) => s.status === 'IN_PROGRESS' && s.type !== 'BOT');
+  const liveSessions = [
+    ...liveBattles,
+    ...myLiveSessions.filter((s) => !liveBattles.some((lb) => lb.id === s.id)),
+  ];
 
   // Ожидающие — публичные, отсортированные по ставке (desc)
   const waitingSessions = [...battles].sort((a, b) => {
@@ -191,14 +196,18 @@ export const BattlesPage: React.FC = () => {
                 }} />
                 LIVE
               </div>
-              {liveSessions.map((s) => (
-                <BattleLiveCard
-                  key={s.id}
-                  session={s}
-                  onNavigate={(id) => navigate('/game/' + id)}
-                  onProfile={(id) => navigate('/profile/' + id)}
-                />
-              ))}
+              {liveSessions.map((s) => {
+                const amParticipant = s.sides.some((sd) => sd.playerId === user?.id);
+                return (
+                  <BattleLiveCard
+                    key={s.id}
+                    session={s}
+                    onNavigate={(id) => navigate('/game/' + id + (amParticipant ? '' : '?spectate=1'))}
+                    onProfile={(id) => navigate('/profile/' + id)}
+                    isSpectator={!amParticipant}
+                  />
+                );
+              })}
             </>
           )}
 
@@ -520,7 +529,8 @@ const BattleLiveCard: React.FC<{
   session: GameSession;
   onNavigate: (id: string) => void;
   onProfile: (id: string) => void;
-}> = ({ session, onNavigate, onProfile }) => {
+  isSpectator?: boolean; // третий игрок смотрит, не участвует
+}> = ({ session, onNavigate, onProfile, isSpectator }) => {
   const whitePlayer = session.sides.find((sd) => sd.isWhite);
   const blackPlayer = session.sides.find((sd) => !sd.isWhite);
   const activeSide  = session.sides.find((sd) => sd.id === session.currentSideId);
@@ -634,6 +644,27 @@ const BattleLiveCard: React.FC<{
             <CoinIcon size={13} />
             {fmtBalance(session.bet)}
           </span>
+        )}
+        {/* Кнопка наблюдателя */}
+        {isSpectator && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onNavigate(session.id); }}
+            style={{
+              marginTop: 2, padding: '4px 10px',
+              background: 'rgba(61,186,122,.12)',
+              border: '.5px solid rgba(61,186,122,.3)',
+              borderRadius: 8, cursor: 'pointer',
+              fontFamily: 'inherit', fontSize: '.6rem', fontWeight: 800,
+              color: '#3DBA7A', letterSpacing: '.06em',
+              display: 'flex', alignItems: 'center', gap: 4,
+            }}
+          >
+            <svg width="9" height="9" viewBox="0 0 20 20" fill="none">
+              <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.8"/>
+              <circle cx="10" cy="10" r="3.5" fill="currentColor"/>
+            </svg>
+            СМОТРЕТЬ
+          </button>
         )}
       </div>
 
@@ -790,9 +821,22 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
               })}
             </div>
           ) : (
-            <div style={{ textAlign: 'center', color: '#FF4D6A', fontFamily: 'Inter, sans-serif', fontSize: '.78rem', marginTop: 8 }}>
-              {t.battles.needMin(fmtBalance(MIN_BET))}
-            </div>
+            <button
+              onClick={() => { onClose(); navigate('/shop'); }}
+              style={{
+                width: '100%', marginTop: 8,
+                padding: '11px 14px',
+                background: 'linear-gradient(135deg,#1A1208,#2A1E08)',
+                border: '.5px solid rgba(212,168,67,.35)',
+                borderRadius: 12, cursor: 'pointer',
+                fontFamily: 'Inter, sans-serif', fontSize: '.82rem', fontWeight: 800,
+                color: '#D4A843', letterSpacing: '.03em',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+              }}
+            >
+              <CoinIcon size={18} />
+              Пополнить баланс
+            </button>
           )}
         </div>
 
@@ -910,24 +954,41 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
                 boxShadow: '0 4px 20px rgba(220,50,47,.15)',
               }}
             >⭐ НЕТ ПОПЫТОК</button>
+          ) : !canCreate ? (
+            <button
+              onClick={() => { onClose(); navigate('/shop'); }}
+              style={{
+                width: '100%', padding: '14px',
+                background: 'linear-gradient(135deg,#1A1208,#2A1E08)',
+                border: '.5px solid rgba(212,168,67,.35)',
+                borderRadius: 14,
+                fontFamily: 'Inter, sans-serif', fontSize: '.9rem', fontWeight: 900, letterSpacing: '.04em',
+                color: '#D4A843', cursor: 'pointer',
+                boxShadow: '0 4px 20px rgba(212,168,67,.12)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              }}
+            >
+              <CoinIcon size={20} />
+              Пополнить баланс
+            </button>
           ) : (
             <button
               onClick={handleCreate}
-              disabled={loading || !canCreate}
+              disabled={loading}
               style={{
                 width: '100%', padding: '14px',
-                background: canCreate ? 'linear-gradient(135deg,#3A2A08,#5A4010)' : 'rgba(255,255,255,.04)',
-                border: `.5px solid ${canCreate ? 'rgba(212,168,67,.5)' : 'rgba(255,255,255,.08)'}`,
+                background: 'linear-gradient(135deg,#3A2A08,#5A4010)',
+                border: '.5px solid rgba(212,168,67,.5)',
                 borderRadius: 14,
                 fontFamily: 'Inter, sans-serif', fontSize: '.9rem', fontWeight: 900, letterSpacing: '.06em',
-                color: canCreate ? '#F0C85A' : '#3A4052',
-                cursor: canCreate && !loading ? 'pointer' : 'not-allowed',
+                color: '#F0C85A',
+                cursor: loading ? 'not-allowed' : 'pointer',
                 opacity: loading ? 0.7 : 1,
-                boxShadow: canCreate ? '0 4px 20px rgba(212,168,67,.18)' : 'none',
+                boxShadow: '0 4px 20px rgba(212,168,67,.18)',
                 transition: 'all .15s', position: 'relative', overflow: 'hidden',
               }}
             >
-              {canCreate && !loading && (
+              {!loading && (
                 <div style={{
                   position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%',
                   background: 'linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent)',

@@ -6,8 +6,10 @@ interface GameStore {
   sessions: GameSession[];
   // Текущая открытая сессия (на доске)
   activeSession: GameSession | null;
-  // Лобби батлов
+  // Лобби батлов (WAITING_FOR_OPPONENT)
   battles: BattleLobbyItem[];
+  // Живые публичные батлы (IN_PROGRESS) — видны всем как наблюдатели
+  liveBattles: GameSession[];
   // Оффер ничьи
   drawOfferedBy: string | null;
 
@@ -16,6 +18,9 @@ interface GameStore {
   removeSession: (sessionId: string) => void;
   setActiveSession: (session: GameSession | null) => void;
   setBattles: (battles: BattleLobbyItem[]) => void;
+  setLiveBattles: (battles: GameSession[]) => void;
+  addLiveBattle: (battle: GameSession) => void;
+  removeLiveBattle: (sessionId: string) => void;
   setDrawOffered: (by: string | null) => void;
 }
 
@@ -23,6 +28,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   sessions: [],
   activeSession: null,
   battles: [],
+  liveBattles: [],
   drawOfferedBy: null,
 
   setSessions: (sessions) => set({ sessions }),
@@ -50,6 +56,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setActiveSession: (session) => set({ activeSession: session }),
 
   setBattles: (battles) => set({ battles }),
+
+  setLiveBattles: (battles) => set({ liveBattles: battles }),
+
+  addLiveBattle: (battle) =>
+    set((state) => ({
+      liveBattles: state.liveBattles.some((b) => b.id === battle.id)
+        ? state.liveBattles
+        : [battle, ...state.liveBattles],
+    })),
+
+  removeLiveBattle: (sessionId) =>
+    set((state) => ({
+      liveBattles: state.liveBattles.filter((b) => b.id !== sessionId),
+    })),
 
   setDrawOffered: (drawOfferedBy) => set({ drawOfferedBy }),
 }));

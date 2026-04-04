@@ -171,6 +171,7 @@ export const startTimerWatcher = () => {
         const finished = await finishSession(session.id, SessionStatus.CANCELLED, { isDraw: true });
         getIo().to(session.id).emit("game", formatSession(finished, null));
         getIo().to(session.id).emit("game:over", { status: "CANCELLED" });
+        getIo().to("lobby").emit("battles:live:removed", session.id);
         return;
       }
 
@@ -193,6 +194,7 @@ export const startTimerWatcher = () => {
         status: "TIME_EXPIRED",
         winnerSideId,
       });
+      getIo().to("lobby").emit("battles:live:removed", session.id);
 
     } catch (err: unknown) {
       logger.error("[Timer] Error processing expiry:", err);

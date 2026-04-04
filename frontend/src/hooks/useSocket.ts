@@ -18,7 +18,7 @@ const showActionToast = (text: string, actionLabel: string, onAction: () => void
 };
 
 export const useSocket = () => {
-  const { upsertSession, removeSession, setSessions, setBattles, setDrawOffered } =
+  const { upsertSession, removeSession, setSessions, setBattles, setLiveBattles, addLiveBattle, removeLiveBattle, setDrawOffered } =
     useGameStore();
   const battlesRef = useRef<import('@/types').BattleLobbyItem[]>([]);
   
@@ -102,6 +102,16 @@ export const useSocket = () => {
     });
     socket.on('battles:removed', (sessionId) => {
       setBattles(battlesRef.current.filter((b) => b.id !== sessionId));
+    });
+    // Живые батлы (IN_PROGRESS) — для наблюдателей
+    socket.on('battles:live:list', (battles) => {
+      setLiveBattles(battles);
+    });
+    socket.on('battles:live:added', (battle) => {
+      addLiveBattle(battle);
+    });
+    socket.on('battles:live:removed', (sessionId) => {
+      removeLiveBattle(sessionId);
     });
 
     // ── Ничья ──
@@ -191,6 +201,9 @@ export const useSocket = () => {
       socket.off('battles:list');
       socket.off('battles:added');
       socket.off('battles:removed');
+      socket.off('battles:live:list');
+      socket.off('battles:live:added');
+      socket.off('battles:live:removed');
       socket.off('game:draw_offered');
       socket.off('game:draw_declined');
       socket.offAny();

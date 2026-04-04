@@ -12,6 +12,7 @@ import {
   createFriendlySession,
   joinBattleSession,
   getActiveBattles,
+  getActiveLiveBattles,
   cacheSession,
 } from "./session";
 import { finishSession } from "./finish";
@@ -319,6 +320,8 @@ export const setupSocketHandlers = (io: Server) => {
 
           // T18: diff — убираем батл из лобби (он начался)
           io.to("lobby").emit("battles:removed", session.id);
+          // Живые батлы: добавляем в live-список для наблюдателей
+          io.to("lobby").emit("battles:live:added", formatSession(session, null));
 
           // 🔔 Уведомление создателю батла: противник принял вызов
           try {
@@ -529,6 +532,7 @@ export const setupSocketHandlers = (io: Server) => {
             const formattedFinished = { ...formatSession(finished, userId), pieceCoins: pieceCoinsRaw ?? '0' };
             io.to(sessionId).emit("game", formattedFinished);
             io.to(sessionId).emit("game:over", { status: finished.status });
+            io.to("lobby").emit("battles:live:removed", sessionId);
             cleanupSpectators(sessionId);
             if (callback) callback({ ok: true, session: formattedFinished });
             return;
@@ -640,6 +644,7 @@ export const setupSocketHandlers = (io: Server) => {
 
           if (session.type === SessionType.BATTLE) {
             io.to("lobby").emit("battles:removed", data.sessionId);
+            io.to("lobby").emit("battles:live:removed", data.sessionId);
           }
         } catch (err: unknown) {
           if (callback) callback({ ok: false, error: (err as Error).message });
@@ -778,8 +783,12 @@ export const setupSocketHandlers = (io: Server) => {
     socket.on("battles:subscribe", async () => {
       try {
         socket.join("lobby");
-        const battles = await getActiveBattles();
+        const [battles, liveBattles] = await Promise.all([
+          getActiveBattles(),
+          getActiveLiveBattles(),
+        ]);
         socket.emit("battles:list", formatBattlesList(battles, buildSpectatorCounts(battles)));
+        socket.emit("battles:live:list", liveBattles.map((s) => formatSession(s, null)));
       } catch (err: unknown) {
         logger.error("[Socket] battles:subscribe error:", (err as Error).message);
       }
