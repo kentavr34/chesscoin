@@ -39,8 +39,8 @@ export const BattlesPage: React.FC = () => {
 
   const info = useInfoPopup('battles', [...t.battles.info] as Parameters<typeof InfoPopup>[0]["slides"]);
 
-  // Live — активные публичные IN_PROGRESS (показываются вверху публичного списка)
-  const liveSessions = sessions.filter((s) => s.status === 'IN_PROGRESS');
+  // Live — активные батлы IN_PROGRESS (без ботов)
+  const liveSessions = sessions.filter((s) => s.status === 'IN_PROGRESS' && s.type !== 'BOT');
 
   // Ожидающие — публичные, отсортированные по ставке (desc)
   const waitingSessions = [...battles].sort((a, b) => {
@@ -49,8 +49,8 @@ export const BattlesPage: React.FC = () => {
     return betB > betA ? 1 : betB < betA ? -1 : 0;
   });
 
-  // Приватные — мои ожидающие вызовы
-  const myPrivateSessions = sessions.filter((s) => s.status === 'WAITING_FOR_OPPONENT');
+  // Приватные — только приватные WAITING_FOR_OPPONENT (без ботов и без публичных)
+  const myPrivateSessions = sessions.filter((s) => s.status === 'WAITING_FOR_OPPONENT' && s.isPrivate && s.type !== 'BOT');
 
   const handleJoin = (battle: BattleLobbyItem) => {
     const socket = getSocket();
@@ -76,7 +76,7 @@ export const BattlesPage: React.FC = () => {
 
   const leftAction = (
     <button
-      onClick={() => navigate('/battle-history')}
+      onClick={() => navigate('/battles/history')}
       title="История батлов"
       style={goldCircleBtn}
     >
@@ -493,8 +493,8 @@ export const BattlesPage: React.FC = () => {
         onClick={() => setShowCreate(true)}
         style={{
           position: 'fixed',
-          bottom: 'max(80px, calc(70px + env(safe-area-inset-bottom, 14px)))',
-          right: 18, width: 50, height: 50,
+          bottom: 'max(98px, calc(88px + env(safe-area-inset-bottom, 14px)))',
+          right: 24, width: 50, height: 50,
           borderRadius: '50%',
           background: 'linear-gradient(135deg,#D4A843,#F0C85A)',
           color: '#0D0D12',

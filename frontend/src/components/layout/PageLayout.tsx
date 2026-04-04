@@ -142,7 +142,7 @@ export const InfoPopup: React.FC<InfoPopupProps> = ({ slides, onClose }) => {
             boxShadow: '0 4px 22px rgba(212,168,67,.15)',
           }}
         >
-          {isLast ? t.home.letsGo : `${t.home.next} →`}
+          {isLast ? t.home.letsGo : t.home.next}
         </button>
       </div>
     </div>

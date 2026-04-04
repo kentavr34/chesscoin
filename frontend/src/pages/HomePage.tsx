@@ -107,7 +107,8 @@ export const HomePage: React.FC = () => {
   const t = useT();
 
   const activeSessions = sessions.filter(s =>
-    s.status === 'IN_PROGRESS' || s.status === 'WAITING_FOR_OPPONENT'
+    s.status === 'IN_PROGRESS' ||
+    (s.status === 'WAITING_FOR_OPPONENT' && s.type !== 'BATTLE')
   );
 
   const [showJarvisModal, setShowJarvisModal] = useState(false);

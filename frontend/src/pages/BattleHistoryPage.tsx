@@ -130,7 +130,7 @@ export const BattleHistoryPage: React.FC = () => {
   const sortLabels: Record<SortKey, string> = { date: 'По дате', bet: 'По ставке', result: 'По результату' };
 
   return (
-    <PageLayout title="История игр" backTo="/">
+    <PageLayout title="История игр" centered backTo="/battles">
       {/* Строка поиска */}
       <div style={{ padding: '10px 14px 0', display: 'flex', gap: 8, alignItems: 'center' }}>
         <div style={{
