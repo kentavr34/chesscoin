@@ -59,6 +59,19 @@ export const BattlesPage: React.FC = () => {
   const myPrivateSessions = sessions.filter((s) => s.status === 'WAITING_FOR_OPPONENT' && s.isPrivate && s.type !== 'BOT');
 
   const handleJoin = (battle: BattleLobbyItem) => {
+    // Нет попыток → открыть покупку попыток
+    if (!hasAttempts) {
+      setShowAttempts(true);
+      return;
+    }
+    // Недостаточно баланса → в магазин
+    const userBalance = BigInt(user?.balance ?? '0');
+    const betAmount = BigInt(battle.bet || '0');
+    if (userBalance < betAmount) {
+      showToast('Недостаточно монет — пополни баланс', 'info');
+      navigate('/shop');
+      return;
+    }
     const socket = getSocket();
     socket.emit('game:join', { code: battle.code }, (res) => {
       if (res.ok && res.session) {
@@ -487,11 +500,12 @@ const BattleChallengeCard: React.FC<{
       display: 'flex', alignItems: 'center', gap: 10,
     }}>
       {/* Аватар — кликабельный → профиль (+50% размер) */}
-      <div
-        style={{ flexShrink: 0, cursor: creatorAsUser ? 'pointer' : 'default', width: 48, height: 48, borderRadius: '50%', overflow: 'hidden' }}
-        onClick={() => creatorAsUser && onProfile(creatorAsUser.id)}
-      >
-        <Avatar user={creatorAsUser as any} size="m" />
+      <div style={{ flexShrink: 0, width: 48, height: 48, borderRadius: '50%', overflow: 'hidden' }}>
+        <Avatar
+          user={creatorAsUser as any}
+          size="m"
+          onClick={creatorAsUser ? () => onProfile(creatorAsUser.id) : undefined}
+        />
       </div>
 
       {/* Имя + ELO */}
