@@ -140,6 +140,24 @@ const Confetti: React.FC = () => {
   );
 };
 
+// ── Иконка цвета фигур прямо на доске ────────────────────────────────────────
+const BoardKingIcon: React.FC<{ isWhite: boolean; size?: number }> = ({ isWhite, size = 22 }) => (
+  <div style={{
+    width: size, height: size, borderRadius: 5, flexShrink: 0,
+    background: isWhite ? 'rgba(240,200,90,.18)' : 'rgba(74,158,255,.15)',
+    border: `.5px solid ${isWhite ? 'rgba(240,200,90,.5)' : 'rgba(74,158,255,.4)'}`,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+  }}>
+    <svg width={size * 0.68} height={size * 0.68} viewBox="0 0 18 18" fill="none">
+      <path d="M9 2v3M7.5 3.5h3" stroke={isWhite ? '#F0C85A' : '#82CFFF'} strokeWidth="1.3" strokeLinecap="round"/>
+      <rect x="7" y="5" width="4" height="2" rx=".5" fill={isWhite ? '#F0C85A' : '#82CFFF'} opacity=".8"/>
+      <path d="M5.5 7h7l-1 8H6.5L5.5 7z" fill={isWhite ? '#F0C85A' : '#82CFFF'} opacity={isWhite ? '.7' : '.9'}/>
+      <path d="M4 15h10" stroke={isWhite ? '#F0C85A' : '#82CFFF'} strokeWidth="1.3" strokeLinecap="round"/>
+      {!isWhite && <rect x="5" y="6.5" width="8" height="9" rx="1" fill="#82CFFF" opacity=".15"/>}
+    </svg>
+  </div>
+);
+
 // ── Панель игрока (по референсу) ──────────────────────────────────────────────
 interface PanelProps {
   name: string;
@@ -157,7 +175,7 @@ interface PanelProps {
 }
 
 const PlayerPanel: React.FC<PanelProps> = ({
-  name, elo, avatar, isBot, captured, advantage: adv,
+  name, elo, avatar, isBot, isWhite, captured, advantage: adv,
   coins, timeDisplay, timeSecs, isActive, isGameOver,
 }) => {
   const sorted = useMemo(() => sortCaptured(captured), [captured]);
@@ -203,16 +221,19 @@ const PlayerPanel: React.FC<PanelProps> = ({
         }
       </div>
 
-      {/* ── Колонка: имя + ELO (без точки, без отступа) ─────────────────── */}
+      {/* ── Колонка: имя + ELO + иконка цвета ──────────────────────────── */}
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 4, minWidth: 0 }}>
-        <span style={{
-          fontSize: '1rem', fontWeight: 700, lineHeight: 1,
-          color: isActive ? '#EAE2CC' : '#9A9490',
-          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-          maxWidth: 88, transition: 'color .3s',
-        }}>
-          {name.length > 11 ? name.slice(0, 11) + '…' : name}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{
+            fontSize: '1rem', fontWeight: 700, lineHeight: 1,
+            color: isActive ? '#EAE2CC' : '#9A9490',
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+            maxWidth: 80, transition: 'color .3s',
+          }}>
+            {name.length > 10 ? name.slice(0, 10) + '…' : name}
+          </span>
+          <BoardKingIcon isWhite={isWhite} size={22} />
+        </div>
         <span style={{ fontSize: '.68rem', color: '#5A5248', fontWeight: 600, lineHeight: 1 }}>
           {elo !== undefined ? `ELO ${elo}` : (isBot ? 'J.A.R.V.I.S' : '')}
         </span>
@@ -255,10 +276,10 @@ const PlayerPanel: React.FC<PanelProps> = ({
       <div style={{
         background: isCritical
           ? 'rgba(220,50,47,.22)'
-          : isActive ? 'rgba(74,158,255,.14)' : 'rgba(255,255,255,.04)',
+          : isActive ? 'rgba(74,158,255,.14)' : 'rgba(255,255,255,.06)',
         border: `.5px solid ${
           isCritical ? 'rgba(220,50,47,.55)'
-          : isActive  ? 'rgba(74,158,255,.38)' : 'rgba(255,255,255,.06)'
+          : isActive  ? 'rgba(74,158,255,.38)' : 'rgba(255,255,255,.12)'
         }`,
         borderRadius: 12, padding: '7px 15px', flexShrink: 0,
         minWidth: 68, textAlign: 'center', marginRight: 2,
@@ -267,7 +288,7 @@ const PlayerPanel: React.FC<PanelProps> = ({
       }}>
         <div style={{
           fontSize: '1.18rem', fontWeight: 900,
-          color: isCritical ? '#FF6868' : isActive ? '#82CFFF' : '#282420',
+          color: isCritical ? '#FF6868' : isActive ? '#82CFFF' : '#7A7470',
           fontVariantNumeric: 'tabular-nums', letterSpacing: '-.02em',
           transition: 'color .3s',
         }}>
@@ -897,6 +918,65 @@ export function GamePage() {
             lastMove={lastMove}
             sessionId={sessionId}
           />
+
+          {/* ── Оверлей: таймер соперника (топ-левый) ── */}
+          {!gameOver && (
+            <div style={{
+              position: 'absolute', top: 7, left: 7, zIndex: 10,
+              display: 'flex', alignItems: 'center', gap: 5,
+              background: 'rgba(0,0,0,.72)',
+              border: `.5px solid ${!isMyTurn ? 'rgba(74,158,255,.55)' : 'rgba(255,255,255,.1)'}`,
+              borderRadius: 10, padding: '4px 8px 4px 5px',
+              boxShadow: !isMyTurn ? '0 0 10px rgba(74,158,255,.2)' : 'none',
+              transition: 'border-color .3s, box-shadow .3s',
+            }}>
+              <BoardKingIcon isWhite={oppIsWhite} size={20} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                <span style={{ fontSize: '.54rem', fontWeight: 700, color: '#8A8480', letterSpacing: '.01em', lineHeight: 1.1 }}>
+                  {oppName.length > 9 ? oppName.slice(0, 9) + '…' : oppName}
+                </span>
+                <span style={{
+                  fontFamily: "'JetBrains Mono','Courier New',monospace",
+                  fontSize: '.88rem', fontWeight: 900, lineHeight: 1.1,
+                  color: !isMyTurn && oppTimeSecs < 15 ? '#FF6868' : !isMyTurn ? '#82CFFF' : '#6A6460',
+                  letterSpacing: '-.01em',
+                  animation: !isMyTurn && oppTimeSecs < 15 ? 'timer-crit .75s infinite' : 'none',
+                }}>
+                  {oppTimeDisplay}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* ── Оверлей: мой таймер (боттом-левый) ── */}
+          {!gameOver && (
+            <div style={{
+              position: 'absolute', bottom: 7, left: 7, zIndex: 10,
+              display: 'flex', alignItems: 'center', gap: 5,
+              background: 'rgba(0,0,0,.72)',
+              border: `.5px solid ${isMyTurn && myTimeSecs < 15 ? 'rgba(220,50,47,.6)' : isMyTurn ? 'rgba(61,186,122,.55)' : 'rgba(255,255,255,.1)'}`,
+              borderRadius: 10, padding: '4px 8px 4px 5px',
+              boxShadow: isMyTurn ? '0 0 10px rgba(61,186,122,.15)' : 'none',
+              transition: 'border-color .3s, box-shadow .3s',
+            }}>
+              <BoardKingIcon isWhite={myColor === 'white'} size={20} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                <span style={{ fontSize: '.54rem', fontWeight: 700, color: '#8A8480', letterSpacing: '.01em', lineHeight: 1.1 }}>
+                  {myName.length > 9 ? myName.slice(0, 9) + '…' : myName}
+                </span>
+                <span style={{
+                  fontFamily: "'JetBrains Mono','Courier New',monospace",
+                  fontSize: '.88rem', fontWeight: 900, lineHeight: 1.1,
+                  color: isMyTurn && myTimeSecs < 15 ? '#FF6868' : isMyTurn ? '#4DDA8A' : '#6A6460',
+                  letterSpacing: '-.01em',
+                  animation: isMyTurn && myTimeSecs < 15 ? 'timer-crit .75s infinite' : 'none',
+                }}>
+                  {myTimeDisplay}
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* ── Счётчик зрителей (топ-правый угол доски) ── */}
           {isBattle && spectatorCount > 0 && (
             <div style={{

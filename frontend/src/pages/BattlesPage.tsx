@@ -63,6 +63,17 @@ export const BattlesPage: React.FC = () => {
   // Приватные — только приватные WAITING_FOR_OPPONENT (без ботов и без публичных)
   const myPrivateSessions = sessions.filter((s) => s.status === 'WAITING_FOR_OPPONENT' && s.isPrivate && s.type !== 'BOT');
 
+  const handleCancel = (sessionId: string) => {
+    const socket = getSocket();
+    socket.emit('game:cancel', { sessionId }, (res: any) => {
+      if (res?.ok) {
+        showToast('Батл отменён, попытка возвращена', 'info');
+      } else {
+        showToast(getErrText(res?.error ?? ''), 'error');
+      }
+    });
+  };
+
   const handleJoin = (battle: BattleLobbyItem) => {
     // Нет попыток → открыть покупку попыток
     if (!hasAttempts) {
@@ -225,16 +236,20 @@ export const BattlesPage: React.FC = () => {
                 </svg>
                 {t.battles.tabWaiting ?? 'CHALLENGES'}
               </div>
-              {waitingSessions.map((battle, idx) => (
-                <BattleChallengeCard
-                  key={battle.id}
-                  battle={battle}
-                  isTop={idx === 0}
-                  onJoin={() => handleJoin(battle)}
-                  onProfile={(id) => navigate('/profile/' + id)}
-                  acceptLabel={t.battles.accept ?? 'Войти'}
-                />
-              ))}
+              {waitingSessions.map((battle, idx) => {
+                const isMyBattle = battle.creator?.id === user?.id;
+                return (
+                  <BattleChallengeCard
+                    key={battle.id}
+                    battle={battle}
+                    isTop={idx === 0}
+                    onJoin={() => handleJoin(battle)}
+                    onCancel={isMyBattle ? () => handleCancel(battle.id) : undefined}
+                    onProfile={(id) => navigate('/profile/' + id)}
+                    acceptLabel={t.battles.accept ?? 'Войти'}
+                  />
+                );
+              })}
             </>
           )}
 
@@ -323,18 +338,28 @@ export const BattlesPage: React.FC = () => {
                   )}
                 </div>
 
-                {/* Цвет + статус ожидания */}
-                <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 4 }}>
+                {/* Цвет игрока — только иконка */}
+                <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>
                   <ColorIcon isWhite={isWhiteCreator} />
-                  <div style={{
-                    fontSize: '.52rem', fontWeight: 700, color: '#7A6830',
-                    letterSpacing: '.06em', textTransform: 'uppercase' as const,
-                  }}>
-                    {isWhiteCreator ? 'Белые' : 'Чёрные'}
-                  </div>
                 </div>
 
-                {/* Кнопка — Поделиться ссылкой */}
+                {/* Кнопки — Отменить + Поделиться */}
+                <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 6, flexShrink: 0 }}>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCancel(s.id);
+                  }}
+                  style={{
+                    padding: '6px 10px', borderRadius: 10, cursor: 'pointer',
+                    background: 'linear-gradient(135deg,#3A0808,#5A1010)',
+                    border: '.5px solid rgba(220,50,47,.35)',
+                    fontSize: '.62rem', fontWeight: 800, color: '#FF8080',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  Отменить
+                </button>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -366,6 +391,7 @@ export const BattlesPage: React.FC = () => {
                   Поделиться
                 </button>
               </div>
+            </div>
             );
           })}
         </>
@@ -421,73 +447,118 @@ const BattleChallengeCard: React.FC<{
   battle: BattleLobbyItem;
   isTop: boolean;
   onJoin: () => void;
+  onCancel?: () => void;
   onProfile: (id: string) => void;
   acceptLabel: string;
-}> = ({ battle, isTop, onJoin, onProfile, acceptLabel }) => {
-  const durationMins = Math.round((battle.duration ?? 300) / 60);
+}> = ({ battle, isTop, onJoin, onCancel, onProfile, acceptLabel }) => {
+  const durationSecs = battle.duration ?? 300;
+  const timerDisplay = `${String(Math.floor(durationSecs / 60)).padStart(2,'0')}:00`;
+  const creatorId = battle.creator?.id;
   const creatorAsUser = battle.creator ? {
-    id: battle.creator.id,
+    id: creatorId,
     firstName: battle.creator.firstName,
     avatar: battle.creator.avatar,
     avatarGradient: battle.creator.avatarGradient,
   } : null;
-  // creator.isWhite = цвет создателя → соперник получает противоположный
-  const opponentIsWhite = !battle.creator?.isWhite;
+  const creatorIsWhite = battle.creator?.isWhite ?? true;
+  const opponentIsWhite = !creatorIsWhite;
 
   return (
     <div style={{
       margin: '0 .85rem 8px',
       background: 'linear-gradient(135deg,#141018,#0F0E18)',
       border: isTop ? '.5px solid rgba(212,168,67,.38)' : '.5px solid rgba(212,168,67,.22)',
-      borderRadius: 16, padding: '12px 14px',
-      display: 'flex', alignItems: 'center', gap: 10,
+      borderRadius: 16, padding: '12px 12px',
+      display: 'flex', alignItems: 'center', gap: 6,
     }}>
-      {/* Аватар — кликабельный → профиль */}
-      <div
-        style={{ flexShrink: 0, width: 52, height: 52, borderRadius: '50%', overflow: 'hidden', cursor: creatorAsUser ? 'pointer' : undefined }}
-        onClick={creatorAsUser?.id ? (e) => { e.stopPropagation(); onProfile(creatorAsUser.id); } : undefined}
-      >
-        <Avatar user={creatorAsUser as any} size="m" />
-      </div>
 
-      {/* Имя + ELO */}
-      <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: '.88rem', fontWeight: 700, color: '#EAE2CC', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 3 }}>
-          {battle.creator?.firstName ?? '?'}
+      {/* Слева: Аватар создателя + ЦветИконка / Имя + ELO */}
+      <div style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'flex-start', gap: 5, flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <button
+            type="button"
+            style={{
+              padding: 0, border: 'none', background: 'none',
+              borderRadius: '50%', overflow: 'hidden',
+              width: 52, height: 52, flexShrink: 0,
+              cursor: creatorId ? 'pointer' : 'default',
+            }}
+            onClick={creatorId ? (e) => { e.stopPropagation(); e.preventDefault(); onProfile(creatorId); } : undefined}
+          >
+            <Avatar user={creatorAsUser as any} size="m" />
+          </button>
+          <SmallColorIcon isWhite={creatorIsWhite} />
         </div>
-        <div style={{ fontSize: '.65rem', color: '#9A9490' }}>ELO {battle.creator?.elo ?? '?'}</div>
-      </div>
-
-      {/* Центр: время + ставка */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 3 }}>
-        <div style={{ fontSize: '.78rem', fontWeight: 800, color: '#D4A843' }}>{durationMins} мин</div>
-        <div style={{ fontSize: '.65rem', color: '#9A8840', display: 'flex', alignItems: 'center', gap: 3 }}>
-          <CoinIcon size={10} />
-          {fmtBalance(battle.bet)}
-        </div>
-      </div>
-
-      {/* Цвет фигур (что достанется принимающему) */}
-      <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 3 }}>
-        <ColorIcon isWhite={opponentIsWhite} />
-        <div style={{ fontSize: '.52rem', fontWeight: 700, color: opponentIsWhite ? '#9A8840' : '#5A8AB0', letterSpacing: '.04em' }}>
-          {opponentIsWhite ? 'Белые' : 'Чёрные'}
+        <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 2 }}>
+          <span style={{ fontSize: '.72rem', fontWeight: 700, color: '#D4C8B0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const, maxWidth: 88 }}>
+            {battle.creator?.firstName ?? '?'}
+          </span>
+          <span style={{ fontSize: '.6rem', color: '#6A6660', fontWeight: 600 }}>ELO {battle.creator?.elo ?? '?'}</span>
         </div>
       </div>
 
-      {/* Кнопка принять */}
-      <button
-        onClick={onJoin}
-        style={{
-          padding: '9px 14px', flexShrink: 0,
-          background: 'linear-gradient(135deg,#D4A843,#F0C85A)',
-          border: 'none', borderRadius: 11,
-          color: '#0D0D12', fontSize: '.72rem', fontWeight: 800,
-          cursor: 'pointer', fontFamily: 'inherit',
-          boxShadow: '0 2px 12px rgba(212,168,67,.35)',
-          whiteSpace: 'nowrap' as const,
-        }}
-      >{acceptLabel}</button>
+      {/* Центр: статус + статический таймер + ставка */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, flexShrink: 0, minWidth: 76 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#D4A843', display: 'inline-block', animation: 'pulse 1.5s infinite' }} />
+          <span style={{ fontSize: '.52rem', fontWeight: 900, color: '#D4A843', letterSpacing: '.14em' }}>ЖДЁМ</span>
+        </div>
+        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '1.1rem', fontWeight: 800, color: '#F0F0E8', letterSpacing: '.02em' }}>
+          {timerDisplay}
+        </span>
+        {battle.bet && (
+          <span style={{ fontSize: '.82rem', fontWeight: 800, color: '#D4A843', display: 'flex', alignItems: 'center', gap: 3 }}>
+            <CoinIcon size={13} />
+            {fmtBalance(battle.bet)}
+          </span>
+        )}
+      </div>
+
+      {/* Справа: иконка цвета соперника + кнопка принятия */}
+      <div style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'flex-end', gap: 5, flex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexDirection: 'row-reverse' as const }}>
+          {/* Заглушка-место для второго игрока */}
+          <div style={{
+            width: 52, height: 52, borderRadius: '50%', flexShrink: 0,
+            background: 'rgba(255,255,255,.03)',
+            border: '.5px dashed rgba(212,168,67,.2)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="8" r="4" stroke="rgba(212,168,67,.35)" strokeWidth="1.5"/>
+              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="rgba(212,168,67,.35)" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          </div>
+          <SmallColorIcon isWhite={opponentIsWhite} />
+        </div>
+        {onCancel ? (
+          <button
+            onClick={onCancel}
+            style={{
+              padding: '9px 14px',
+              background: 'linear-gradient(135deg,#3A0808,#5A1010)',
+              border: '.5px solid rgba(220,50,47,.4)', borderRadius: 11,
+              color: '#FF8080', fontSize: '.72rem', fontWeight: 800,
+              cursor: 'pointer', fontFamily: 'inherit',
+              boxShadow: '0 2px 12px rgba(220,50,47,.15)',
+              whiteSpace: 'nowrap' as const,
+            }}
+          >Отменить</button>
+        ) : (
+          <button
+            onClick={onJoin}
+            style={{
+              padding: '9px 14px',
+              background: 'linear-gradient(135deg,#D4A843,#F0C85A)',
+              border: 'none', borderRadius: 11,
+              color: '#0D0D12', fontSize: '.72rem', fontWeight: 800,
+              cursor: 'pointer', fontFamily: 'inherit',
+              boxShadow: '0 2px 12px rgba(212,168,67,.35)',
+              whiteSpace: 'nowrap' as const,
+            }}
+          >{acceptLabel}</button>
+        )}
+      </div>
     </div>
   );
 };
@@ -589,11 +660,12 @@ const BattleLiveCard: React.FC<{
 
   const sourceType = (session as any).sourceType;
 
-  // ── Горизонтальная колонка игрока ──────────────────────────────────────
-  const PlayerRow: React.FC<{ side: typeof whitePlayer; isRight?: boolean }> = ({ side, isRight }) => {
+  // ── Вертикальная колонка игрока: [Аватар + ЦветИконка] / [Имя + ELO] ──
+  const PlayerCol: React.FC<{ side: typeof whitePlayer; isRight?: boolean }> = ({ side, isRight }) => {
     if (!side) return <div style={{ flex: 1 }} />;
+    const pid = side.player?.id ?? side.playerId;
     const playerAsUser = {
-      id: side.player.id,
+      id: pid,
       firstName: side.player.firstName,
       avatar: side.player.avatar,
       avatarGradient: side.player.avatarGradient,
@@ -601,28 +673,36 @@ const BattleLiveCard: React.FC<{
     };
     return (
       <div style={{
-        display: 'flex',
-        flexDirection: isRight ? 'row-reverse' : 'row',
-        alignItems: 'center',
-        gap: 7, flex: 1, minWidth: 0,
+        display: 'flex', flexDirection: 'column' as const,
+        alignItems: isRight ? 'flex-end' : 'flex-start',
+        gap: 5, flex: 1, minWidth: 0,
       }}>
-        {/* Аватар (+50% vs раньше: 40→60px) — клик → профиль */}
-        <div
-          style={{ borderRadius: '50%', overflow: 'hidden', width: 52, height: 52, flexShrink: 0, cursor: 'pointer' }}
-          onClick={(e) => { e.stopPropagation(); if (side.player.id) onProfile(side.player.id); }}
-        >
-          <Avatar user={playerAsUser as any} size="m" />
-        </div>
-        {/* Имя + ELO */}
+        {/* Строка 1: Аватар + ЦветИконка (иконка ближе к центру) */}
         <div style={{
-          display: 'flex', flexDirection: 'column' as const,
-          alignItems: isRight ? 'flex-end' : 'flex-start',
-          gap: 2, minWidth: 0, flex: 1,
+          display: 'flex',
+          flexDirection: isRight ? 'row-reverse' : 'row',
+          alignItems: 'center', gap: 6,
         }}>
+          {/* Аватар — клик → профиль (stopPropagation + preventDefault) */}
+          <button
+            type="button"
+            style={{
+              padding: 0, border: 'none', background: 'none',
+              borderRadius: '50%', overflow: 'hidden',
+              width: 52, height: 52, flexShrink: 0, cursor: 'pointer',
+            }}
+            onClick={(e) => { e.stopPropagation(); e.preventDefault(); if (pid) onProfile(pid); }}
+          >
+            <Avatar user={playerAsUser as any} size="m" />
+          </button>
+          <SmallColorIcon isWhite={side.isWhite} />
+        </div>
+        {/* Строка 2: Имя + ELO под аватаром */}
+        <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 2 }}>
           <span style={{
             fontSize: '.72rem', fontWeight: 700, color: '#D4C8B0',
             overflow: 'hidden', textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap' as const, width: '100%',
+            whiteSpace: 'nowrap' as const, maxWidth: 88,
             textAlign: isRight ? 'right' : 'left' as const,
           }}>
             {side.player.firstName}
@@ -631,8 +711,6 @@ const BattleLiveCard: React.FC<{
             ELO {side.player.elo}
           </span>
         </div>
-        {/* Иконка цвета — ближе к центру */}
-        <SmallColorIcon isWhite={side.isWhite} />
       </div>
     );
   };
@@ -644,17 +722,17 @@ const BattleLiveCard: React.FC<{
         margin: '0 .85rem 8px',
         background: 'linear-gradient(135deg,#0E1210,#0F1218)',
         border: '.5px solid rgba(61,186,122,.32)',
-        borderRadius: 16, padding: '10px 12px',
+        borderRadius: 16, padding: '12px 12px',
         display: 'flex', alignItems: 'center', gap: 6,
         cursor: 'pointer',
         boxShadow: '0 2px 16px rgba(61,186,122,.08)',
       }}
     >
       {/* Белый игрок */}
-      <PlayerRow side={whitePlayer} />
+      <PlayerCol side={whitePlayer} />
 
       {/* Центр: LIVE + таймер + ставка + СМОТРЕТЬ */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, flexShrink: 0, minWidth: 72 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, flexShrink: 0, minWidth: 76 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#3DBA7A', display: 'inline-block', animation: 'pulse 1.5s infinite' }} />
           <span style={{ fontSize: '.52rem', fontWeight: 900, color: '#3DBA7A', letterSpacing: '.16em' }}>
@@ -693,7 +771,7 @@ const BattleLiveCard: React.FC<{
       </div>
 
       {/* Чёрный игрок */}
-      <PlayerRow side={blackPlayer} isRight />
+      <PlayerCol side={blackPlayer} isRight />
     </div>
   );
 };
