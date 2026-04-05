@@ -919,64 +919,6 @@ export function GamePage() {
             sessionId={sessionId}
           />
 
-          {/* ── Оверлей: таймер соперника (топ-левый) ── */}
-          {!gameOver && (
-            <div style={{
-              position: 'absolute', top: 7, left: 7, zIndex: 10,
-              display: 'flex', alignItems: 'center', gap: 5,
-              background: 'rgba(0,0,0,.72)',
-              border: `.5px solid ${!isMyTurn ? 'rgba(74,158,255,.55)' : 'rgba(255,255,255,.1)'}`,
-              borderRadius: 10, padding: '4px 8px 4px 5px',
-              boxShadow: !isMyTurn ? '0 0 10px rgba(74,158,255,.2)' : 'none',
-              transition: 'border-color .3s, box-shadow .3s',
-            }}>
-              <BoardKingIcon isWhite={oppIsWhite} size={20} />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-                <span style={{ fontSize: '.54rem', fontWeight: 700, color: '#8A8480', letterSpacing: '.01em', lineHeight: 1.1 }}>
-                  {oppName.length > 9 ? oppName.slice(0, 9) + '…' : oppName}
-                </span>
-                <span style={{
-                  fontFamily: "'JetBrains Mono','Courier New',monospace",
-                  fontSize: '.88rem', fontWeight: 900, lineHeight: 1.1,
-                  color: !isMyTurn && oppTimeSecs < 15 ? '#FF6868' : !isMyTurn ? '#82CFFF' : '#6A6460',
-                  letterSpacing: '-.01em',
-                  animation: !isMyTurn && oppTimeSecs < 15 ? 'timer-crit .75s infinite' : 'none',
-                }}>
-                  {oppTimeDisplay}
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* ── Оверлей: мой таймер (боттом-левый) ── */}
-          {!gameOver && (
-            <div style={{
-              position: 'absolute', bottom: 7, left: 7, zIndex: 10,
-              display: 'flex', alignItems: 'center', gap: 5,
-              background: 'rgba(0,0,0,.72)',
-              border: `.5px solid ${isMyTurn && myTimeSecs < 15 ? 'rgba(220,50,47,.6)' : isMyTurn ? 'rgba(61,186,122,.55)' : 'rgba(255,255,255,.1)'}`,
-              borderRadius: 10, padding: '4px 8px 4px 5px',
-              boxShadow: isMyTurn ? '0 0 10px rgba(61,186,122,.15)' : 'none',
-              transition: 'border-color .3s, box-shadow .3s',
-            }}>
-              <BoardKingIcon isWhite={myColor === 'white'} size={20} />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-                <span style={{ fontSize: '.54rem', fontWeight: 700, color: '#8A8480', letterSpacing: '.01em', lineHeight: 1.1 }}>
-                  {myName.length > 9 ? myName.slice(0, 9) + '…' : myName}
-                </span>
-                <span style={{
-                  fontFamily: "'JetBrains Mono','Courier New',monospace",
-                  fontSize: '.88rem', fontWeight: 900, lineHeight: 1.1,
-                  color: isMyTurn && myTimeSecs < 15 ? '#FF6868' : isMyTurn ? '#4DDA8A' : '#6A6460',
-                  letterSpacing: '-.01em',
-                  animation: isMyTurn && myTimeSecs < 15 ? 'timer-crit .75s infinite' : 'none',
-                }}>
-                  {myTimeDisplay}
-                </span>
-              </div>
-            </div>
-          )}
-
           {/* ── Счётчик зрителей (топ-правый угол доски) ── */}
           {isBattle && spectatorCount > 0 && (
             <div style={{
