@@ -334,17 +334,37 @@ export const BattlesPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Кнопка — неактивная "Ожидание" */}
-                <div style={{
-                  padding: '8px 12px', borderRadius: 11, flexShrink: 0,
-                  background: 'rgba(212,168,67,.06)',
-                  border: '.5px solid rgba(212,168,67,.18)',
-                  fontSize: '.65rem', fontWeight: 700, color: '#7A6830',
-                  display: 'flex', alignItems: 'center', gap: 5,
-                }}>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#D4A843', display: 'inline-block', animation: 'pulse 1.5s infinite' }} />
-                  Ждём
-                </div>
+                {/* Кнопка — Поделиться ссылкой */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const myRef = user?.referralCode ?? user?.telegramId;
+                    const botUrl = `https://t.me/chessgamecoin_bot?start=battle_${s.code}_ref_${myRef}`;
+                    const shareText = `Вызов на шахматный батл! Ставка: ${fmtBalance(s.bet ?? '0')} монет`;
+                    if (window.Telegram?.WebApp?.openTelegramLink) {
+                      try { window.Telegram.WebApp.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(botUrl)}&text=${encodeURIComponent(shareText)}`); } catch {}
+                    } else {
+                      try { navigator.clipboard?.writeText(botUrl).catch(() => {}); showToast('Ссылка скопирована!', 'info'); } catch {}
+                    }
+                  }}
+                  style={{
+                    padding: '8px 12px', borderRadius: 11, flexShrink: 0, cursor: 'pointer',
+                    background: 'linear-gradient(135deg,#3A2A08,#5A4010)',
+                    border: '.5px solid rgba(212,168,67,.4)',
+                    fontSize: '.65rem', fontWeight: 800, color: '#F0C85A',
+                    fontFamily: 'inherit',
+                    display: 'flex', alignItems: 'center', gap: 5,
+                  }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 20 20" fill="none">
+                    <circle cx="15" cy="4" r="2.5" stroke="currentColor" strokeWidth="1.5"/>
+                    <circle cx="15" cy="16" r="2.5" stroke="currentColor" strokeWidth="1.5"/>
+                    <circle cx="5" cy="10" r="2.5" stroke="currentColor" strokeWidth="1.5"/>
+                    <line x1="7.3" y1="8.8" x2="12.7" y2="5.2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                    <line x1="7.3" y1="11.2" x2="12.7" y2="14.8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                  </svg>
+                  Поделиться
+                </button>
               </div>
             );
           })}
@@ -422,13 +442,12 @@ const BattleChallengeCard: React.FC<{
       borderRadius: 16, padding: '12px 14px',
       display: 'flex', alignItems: 'center', gap: 10,
     }}>
-      {/* Аватар — кликабельный → профиль (+50% размер) */}
-      <div style={{ flexShrink: 0, width: 48, height: 48, borderRadius: '50%', overflow: 'hidden' }}>
-        <Avatar
-          user={creatorAsUser as any}
-          size="m"
-          onClick={creatorAsUser ? () => onProfile(creatorAsUser.id) : undefined}
-        />
+      {/* Аватар — кликабельный → профиль */}
+      <div
+        style={{ flexShrink: 0, width: 52, height: 52, borderRadius: '50%', overflow: 'hidden', cursor: creatorAsUser ? 'pointer' : undefined }}
+        onClick={creatorAsUser?.id ? (e) => { e.stopPropagation(); onProfile(creatorAsUser.id); } : undefined}
+      >
+        <Avatar user={creatorAsUser as any} size="m" />
       </div>
 
       {/* Имя + ELO */}
@@ -524,23 +543,39 @@ const IcoKingB = () => (
   </svg>
 );
 
+// Маленькая иконка цвета (для LiveCard — компактнее)
+const SmallColorIcon: React.FC<{ isWhite: boolean }> = ({ isWhite }) => (
+  <div style={{
+    width: 26, height: 26, borderRadius: 6, flexShrink: 0,
+    background: isWhite ? 'rgba(240,200,90,.12)' : 'rgba(74,158,255,.1)',
+    border: `.5px solid ${isWhite ? 'rgba(240,200,90,.35)' : 'rgba(74,158,255,.25)'}`,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+  }}>
+    <svg width="15" height="15" viewBox="0 0 18 18" fill="none">
+      <path d="M9 2v3M7.5 3.5h3" stroke={isWhite ? '#F0C85A' : '#82CFFF'} strokeWidth="1.3" strokeLinecap="round"/>
+      <rect x="7" y="5" width="4" height="2" rx=".5" fill={isWhite ? '#F0C85A' : '#82CFFF'} opacity=".8"/>
+      <path d="M5.5 7h7l-1 8H6.5L5.5 7z" fill={isWhite ? '#F0C85A' : '#82CFFF'} opacity={isWhite ? '.7' : '.9'}/>
+      <path d="M4 15h10" stroke={isWhite ? '#F0C85A' : '#82CFFF'} strokeWidth="1.3" strokeLinecap="round"/>
+      {!isWhite && <rect x="5" y="6.5" width="8" height="9" rx="1" fill="#82CFFF" opacity=".15"/>}
+    </svg>
+  </div>
+);
+
 // ── Шаблон «Сражение» (Stage 2 / LIVE) — карточка идущей партии ──────────
 const BattleLiveCard: React.FC<{
   session: GameSession;
   onNavigate: (id: string) => void;
   onProfile: (id: string) => void;
-  isSpectator?: boolean; // третий игрок смотрит, не участвует
+  isSpectator?: boolean;
 }> = ({ session, onNavigate, onProfile, isSpectator }) => {
   const whitePlayer = session.sides.find((sd) => sd.isWhite);
   const blackPlayer = session.sides.find((sd) => !sd.isWhite);
   const activeSide  = session.sides.find((sd) => sd.id === session.currentSideId);
 
-  // Тикающий таймер активного игрока
   const [timeLeft, setTimeLeft] = useState<number>(activeSide?.timeLeft ?? 0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    // При смене хода (currentSideId) сбрасываем таймер
     const initial = activeSide?.timeLeft ?? 0;
     setTimeLeft(initial);
     if (timerRef.current) clearInterval(timerRef.current);
@@ -553,16 +588,12 @@ const BattleLiveCard: React.FC<{
   }, [session.currentSideId, activeSide?.timeLeft]);
 
   const sourceType = (session as any).sourceType;
-  const sourceIcon = sourceType === 'TOURNAMENT'
-    ? <svg width="11" height="11" viewBox="0 0 20 20" fill="none"><path d="M5 2h10v7a5 5 0 0 1-10 0V2Z" stroke="#D4A843" strokeWidth="1.5"/><path d="M2 3h3M15 3h3M2 3a2 2 0 0 0 0 4h3M18 3a2 2 0 0 1 0 4h-3M10 14v2M7 16h6" stroke="#D4A843" strokeWidth="1.5" strokeLinecap="round"/></svg>
-    : sourceType === 'WAR'
-    ? <svg width="11" height="11" viewBox="0 0 20 20" fill="none"><line x1="3" y1="3" x2="14" y2="14" stroke="#3DBA7A" strokeWidth="2" strokeLinecap="round"/><line x1="3" y1="6" x2="3" y2="3" stroke="#3DBA7A" strokeWidth="2.5" strokeLinecap="round"/><line x1="3" y1="3" x2="6" y2="3" stroke="#3DBA7A" strokeWidth="2.5" strokeLinecap="round"/><line x1="14" y1="17" x2="17" y2="17" stroke="#3DBA7A" strokeWidth="2.5" strokeLinecap="round"/><line x1="17" y1="14" x2="17" y2="17" stroke="#3DBA7A" strokeWidth="2.5" strokeLinecap="round"/><line x1="17" y1="6" x2="6" y2="17" stroke="#3DBA7A" strokeWidth="2" strokeLinecap="round"/></svg>
-    : null;
 
-  const PlayerCol: React.FC<{ side: typeof whitePlayer; isRight?: boolean }> = ({ side, isRight }) => {
-    if (!side) return <div style={{ minWidth: 56 }} />;
+  // ── Горизонтальная колонка игрока ──────────────────────────────────────
+  const PlayerRow: React.FC<{ side: typeof whitePlayer; isRight?: boolean }> = ({ side, isRight }) => {
+    if (!side) return <div style={{ flex: 1 }} />;
     const playerAsUser = {
-      id: side.playerId,
+      id: side.player.id,
       firstName: side.player.firstName,
       avatar: side.player.avatar,
       avatarGradient: side.player.avatarGradient,
@@ -570,30 +601,38 @@ const BattleLiveCard: React.FC<{
     };
     return (
       <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        gap: 3, minWidth: 56, maxWidth: 68,
+        display: 'flex',
+        flexDirection: isRight ? 'row-reverse' : 'row',
+        alignItems: 'center',
+        gap: 7, flex: 1, minWidth: 0,
       }}>
-        {/* Аватар — клик на профиль, стоп-пропагация (не переходим в игру) */}
+        {/* Аватар (+50% vs раньше: 40→60px) — клик → профиль */}
         <div
-          style={{ borderRadius: '50%', overflow: 'hidden', width: 40, height: 40 }}
-          onClick={(e) => { e.stopPropagation(); onProfile(side.playerId); }}
+          style={{ borderRadius: '50%', overflow: 'hidden', width: 52, height: 52, flexShrink: 0, cursor: 'pointer' }}
+          onClick={(e) => { e.stopPropagation(); if (side.player.id) onProfile(side.player.id); }}
         >
-          <Avatar user={playerAsUser as any} size="s" />
+          <Avatar user={playerAsUser as any} size="m" />
         </div>
-        {/* Имя */}
-        <span style={{
-          fontSize: '.62rem', fontWeight: 700, color: '#D4C8B0',
-          maxWidth: 64, overflow: 'hidden', textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap' as const, textAlign: 'center' as const,
+        {/* Имя + ELO */}
+        <div style={{
+          display: 'flex', flexDirection: 'column' as const,
+          alignItems: isRight ? 'flex-end' : 'flex-start',
+          gap: 2, minWidth: 0, flex: 1,
         }}>
-          {side.player.firstName}
-        </span>
-        {/* ELO */}
-        <span style={{ fontSize: '.52rem', color: '#6A6660', fontWeight: 600 }}>
-          {side.player.elo}
-        </span>
-        {/* ColorIcon */}
-        <ColorIcon isWhite={side.isWhite} />
+          <span style={{
+            fontSize: '.72rem', fontWeight: 700, color: '#D4C8B0',
+            overflow: 'hidden', textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap' as const, width: '100%',
+            textAlign: isRight ? 'right' : 'left' as const,
+          }}>
+            {side.player.firstName}
+          </span>
+          <span style={{ fontSize: '.6rem', color: '#6A6660', fontWeight: 600 }}>
+            ELO {side.player.elo}
+          </span>
+        </div>
+        {/* Иконка цвета — ближе к центру */}
+        <SmallColorIcon isWhite={side.isWhite} />
       </div>
     );
   };
@@ -605,56 +644,41 @@ const BattleLiveCard: React.FC<{
         margin: '0 .85rem 8px',
         background: 'linear-gradient(135deg,#0E1210,#0F1218)',
         border: '.5px solid rgba(61,186,122,.32)',
-        borderRadius: 16, padding: '12px 10px',
-        display: 'flex', alignItems: 'center', gap: 8,
+        borderRadius: 16, padding: '10px 12px',
+        display: 'flex', alignItems: 'center', gap: 6,
         cursor: 'pointer',
         boxShadow: '0 2px 16px rgba(61,186,122,.08)',
       }}
     >
       {/* Белый игрок */}
-      <PlayerCol side={whitePlayer} />
+      <PlayerRow side={whitePlayer} />
 
-      {/* Центр */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-        {/* LIVE badge */}
+      {/* Центр: LIVE + таймер + ставка + СМОТРЕТЬ */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, flexShrink: 0, minWidth: 72 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span style={{
-            width: 6, height: 6, borderRadius: '50%',
-            background: '#3DBA7A', display: 'inline-block',
-            animation: 'pulse 1.5s infinite',
-          }} />
-          <span style={{ fontSize: '.55rem', fontWeight: 900, color: '#3DBA7A', letterSpacing: '.16em' }}>LIVE</span>
-          {sourceIcon && <span style={{ display: 'flex', alignItems: 'center' }}>{sourceIcon}</span>}
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#3DBA7A', display: 'inline-block', animation: 'pulse 1.5s infinite' }} />
+          <span style={{ fontSize: '.52rem', fontWeight: 900, color: '#3DBA7A', letterSpacing: '.16em' }}>
+            LIVE{sourceType === 'TOURNAMENT' ? ' 🏆' : sourceType === 'WAR' ? ' ⚔️' : ''}
+          </span>
         </div>
-        {/* Таймер */}
-        <span style={{
-          fontFamily: "'JetBrains Mono',monospace",
-          fontSize: '1.05rem', fontWeight: 800, color: '#F0F0E8',
-          letterSpacing: '.02em',
-        }}>
+        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '1.1rem', fontWeight: 800, color: '#F0F0E8', letterSpacing: '.02em' }}>
           {fmtTime(timeLeft)}
         </span>
-        {/* Ставка */}
         {session.bet && (
-          <span style={{
-            fontSize: '.78rem', fontWeight: 800,
-            color: '#D4A843',
-            display: 'flex', alignItems: 'center', gap: 3,
-          }}>
+          <span style={{ fontSize: '.82rem', fontWeight: 800, color: '#D4A843', display: 'flex', alignItems: 'center', gap: 3 }}>
             <CoinIcon size={13} />
             {fmtBalance(session.bet)}
           </span>
         )}
-        {/* Кнопка наблюдателя */}
         {isSpectator && (
           <button
             onClick={(e) => { e.stopPropagation(); onNavigate(session.id); }}
             style={{
-              marginTop: 2, padding: '4px 10px',
+              marginTop: 1, padding: '4px 10px',
               background: 'rgba(61,186,122,.12)',
               border: '.5px solid rgba(61,186,122,.3)',
               borderRadius: 8, cursor: 'pointer',
-              fontFamily: 'inherit', fontSize: '.6rem', fontWeight: 800,
+              fontFamily: 'inherit', fontSize: '.58rem', fontWeight: 800,
               color: '#3DBA7A', letterSpacing: '.06em',
               display: 'flex', alignItems: 'center', gap: 4,
             }}
@@ -669,7 +693,7 @@ const BattleLiveCard: React.FC<{
       </div>
 
       {/* Чёрный игрок */}
-      <PlayerCol side={blackPlayer} isRight />
+      <PlayerRow side={blackPlayer} isRight />
     </div>
   );
 };
@@ -698,7 +722,7 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
   const durationMins = duration / 60;
 
   const handleCreate = () => {
-    if (!canCreate) { showToast(t.battles.insufficientBalance(fmtBalance(MIN_BET)), 'error'); return; }
+    if (!canCreate) return;
     setLoading(true);
     const socket = getSocket();
     const selectedColor = color === 'random' ? (Math.random() > 0.5 ? 'white' : 'black') : color;
@@ -706,16 +730,7 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
       setLoading(false);
       if (res.ok && res.session) {
         upsertSession(res.session);
-        if (!isPublic && res.session.code) {
-          const myRef = user?.referralCode ?? user?.telegramId;
-          const shareText = t.battles.challengeShare(fmtBalance(String(bet)));
-          const botUrl = `https://t.me/chessgamecoin_bot?start=battle_${res.session.code}_ref_${myRef}`;
-          try { navigator.clipboard?.writeText(botUrl).catch(() => {}); } catch {}
-          try { window.Telegram?.WebApp?.openTelegramLink?.(`https://t.me/share/url?url=${encodeURIComponent(botUrl)}&text=${encodeURIComponent(shareText)}`); } catch {}
-          showToast(t.battles.privateBattleCreated, 'info');
-        } else {
-          showToast(t.battles.battleCreated, 'info');
-        }
+        showToast(isPublic ? t.battles.battleCreated : t.battles.privateBattleCreated, 'info');
         onClose();
       } else {
         showToast(getErrText(res.error ?? ''), 'error');
@@ -802,7 +817,7 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
               )}
             </div>
           </div>
-          {canCreate ? (
+          {canCreate && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 5, marginTop: 7 }}>
               {QUICK_BETS.map((v) => {
                 const capped = Math.min(v, maxBet);
@@ -820,23 +835,6 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
                 );
               })}
             </div>
-          ) : (
-            <button
-              onClick={() => { onClose(); navigate('/shop'); }}
-              style={{
-                width: '100%', marginTop: 8,
-                padding: '11px 14px',
-                background: 'linear-gradient(135deg,#1A1208,#2A1E08)',
-                border: '.5px solid rgba(212,168,67,.35)',
-                borderRadius: 12, cursor: 'pointer',
-                fontFamily: 'Inter, sans-serif', fontSize: '.82rem', fontWeight: 800,
-                color: '#D4A843', letterSpacing: '.03em',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-              }}
-            >
-              <CoinIcon size={18} />
-              Пополнить баланс
-            </button>
           )}
         </div>
 
@@ -959,12 +957,12 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
               onClick={() => { onClose(); navigate('/shop'); }}
               style={{
                 width: '100%', padding: '14px',
-                background: 'linear-gradient(135deg,#1A1208,#2A1E08)',
-                border: '.5px solid rgba(212,168,67,.35)',
+                background: 'linear-gradient(135deg,#3A2A08,#5A4010)',
+                border: '.5px solid rgba(212,168,67,.5)',
                 borderRadius: 14,
                 fontFamily: 'Inter, sans-serif', fontSize: '.9rem', fontWeight: 900, letterSpacing: '.04em',
-                color: '#D4A843', cursor: 'pointer',
-                boxShadow: '0 4px 20px rgba(212,168,67,.12)',
+                color: '#F0C85A', cursor: 'pointer',
+                boxShadow: '0 4px 20px rgba(212,168,67,.18)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               }}
             >
