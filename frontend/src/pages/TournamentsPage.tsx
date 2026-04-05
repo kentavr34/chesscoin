@@ -271,7 +271,7 @@ export const TournamentsPage: React.FC = () => {
         if (!items?.length) return null;
         return (
           <div key={type}>
-            <div style={{ ...LABEL_STYLE, padding: '14px 18px 8px', display: 'block', color: TYPE_COLORS[type] ?? '#9B6DFF' }}>
+            <div style={{ ...LABEL_STYLE, padding: '14px 18px 8px', display: 'block', color: TYPE_COLORS[type] ?? '#D4A843' }}>
               {TYPE_ICONS[type]} {items[0].typeLabel}
             </div>
             {items.map(item => (
