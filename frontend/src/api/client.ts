@@ -65,9 +65,9 @@ export async function apiFetch<T = unknown>(
   if (res.status === 401 && retry) {
     const ok = await doRefresh();
     if (ok) return apiFetch<T>(path, options, false);
-    // Рефреш не удался — кидаем юзера на логин
+    // Рефреш не удался — чистим токены и кидаем ошибку (без reload!)
     clearTokens();
-    window.location.reload();
+    throw new Error('Unauthorized');
   }
 
   if (!res.ok) {
