@@ -50,7 +50,7 @@ router.get("/games", authMiddleware, async (req: Request, res: Response) => {
       where: {
         playerId: userId,
         isBot: false,
-        session: { status: { in: ["FINISHED", "DRAW"] } },
+        session: { status: { in: ["FINISHED", "DRAW", "TIME_EXPIRED"] } },
       },
       orderBy: { updatedAt: "desc" },
       take: limit,
@@ -88,7 +88,7 @@ router.get("/games", authMiddleware, async (req: Request, res: Response) => {
       where: {
         playerId: userId,
         isBot: false,
-        session: { status: { in: ["FINISHED", "DRAW"] } },
+        session: { status: { in: ["FINISHED", "DRAW", "TIME_EXPIRED"] } },
       },
     });
 
