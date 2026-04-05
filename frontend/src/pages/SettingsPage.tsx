@@ -120,7 +120,7 @@ export const SettingsPage: React.FC = () => {
       onClick={onToggle}
       style={{
         width: 44, height: 24, borderRadius: 12,
-        background: on ? 'rgba(74,158,255,.9)' : 'rgba(255,255,255,.10)',
+        background: on ? 'rgba(212,168,67,.9)' : 'rgba(255,255,255,.10)',
         position: 'relative', cursor: 'pointer', transition: 'background .2s',
         flexShrink: 0,
       }}
@@ -128,7 +128,7 @@ export const SettingsPage: React.FC = () => {
       <div style={{
         position: 'absolute', top: 2, left: on ? 22 : 2, width: 20, height: 20,
         borderRadius: '50%', background: '#fff', transition: 'left .2s',
-        boxShadow: on ? '0 0 6px rgba(74,158,255,.6)' : 'none',
+        boxShadow: on ? '0 0 6px rgba(212,168,67,.6)' : 'none',
       }} />
     </div>
   );
@@ -189,10 +189,10 @@ export const SettingsPage: React.FC = () => {
               {(['ru', 'en'] as const).map((l) => (
                 <button key={l} onClick={() => setLang(l)} style={{
                   padding: '5px 14px', borderRadius: 8,
-                  border: lang === l ? '.5px solid rgba(74,158,255,.4)' : '.5px solid rgba(255,255,255,.08)',
+                  border: lang === l ? '.5px solid rgba(212,168,67,.4)' : '.5px solid rgba(255,255,255,.08)',
                   cursor: 'pointer',
-                  background: lang === l ? 'rgba(74,158,255,.25)' : 'rgba(255,255,255,.06)',
-                  color: lang === l ? '#4A9EFF' : '#9A9490',
+                  background: lang === l ? 'rgba(212,168,67,.15)' : 'rgba(255,255,255,.06)',
+                  color: lang === l ? '#F0C85A' : '#9A9490',
                   fontWeight: 700, fontSize: '.78rem', fontFamily: 'inherit',
                   transition: 'all .15s',
                 }}>
@@ -213,10 +213,10 @@ export const SettingsPage: React.FC = () => {
               {(['dark', 'light'] as const).map((th) => (
                 <button key={th} onClick={() => toggleTheme()} disabled={theme === th} style={{
                   padding: '5px 14px', borderRadius: 8,
-                  border: theme === th ? '.5px solid rgba(74,158,255,.4)' : '.5px solid rgba(255,255,255,.08)',
+                  border: theme === th ? '.5px solid rgba(212,168,67,.4)' : '.5px solid rgba(255,255,255,.08)',
                   cursor: theme === th ? 'default' : 'pointer',
-                  background: theme === th ? 'rgba(74,158,255,.25)' : 'rgba(255,255,255,.06)',
-                  color: theme === th ? '#4A9EFF' : '#9A9490',
+                  background: theme === th ? 'rgba(212,168,67,.15)' : 'rgba(255,255,255,.06)',
+                  color: theme === th ? '#F0C85A' : '#9A9490',
                   fontWeight: 700, fontSize: '.78rem', fontFamily: 'inherit',
                   opacity: 1,
                   transition: 'all .15s',

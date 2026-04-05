@@ -17,8 +17,8 @@ const TYPE_ICONS: Record<string, string> = {
   WORLD: '🌍', COUNTRY: '🏴', WEEKLY: '📅', MONTHLY: '🗓️', SEASONAL: '🌸', YEARLY: '🏆',
 };
 const TYPE_COLORS: Record<string, string> = {
-  WORLD: '#F5C842', COUNTRY: '#3DBA7A', WEEKLY: '#9B6DFF',
-  MONTHLY: '#FF9F43', SEASONAL: '#FF6B9D', YEARLY: '#F5C842',
+  WORLD: '#F5C842', COUNTRY: '#3DBA7A', WEEKLY: '#D4A843',
+  MONTHLY: '#E8B84B', SEASONAL: '#C4A843', YEARLY: '#F5C842',
 };
 
 type TFilter = 'all' | 'joined';
@@ -171,7 +171,7 @@ export const TournamentsPage: React.FC = () => {
             )}
             <button
               onClick={() => setTournamentFinish(null)}
-              style={{ width: '100%', padding: '13px 0', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg,#9B6DFF,#7B4FE8)', color: '#fff', fontSize: '0.92rem', fontWeight: 700, cursor: 'pointer' }}
+              style={{ width: '100%', padding: '13px 0', borderRadius: 12, border: '.5px solid rgba(212,168,67,.4)', background: 'linear-gradient(135deg,rgba(212,168,67,.25),rgba(212,168,67,.15))', color: '#F0C85A', fontSize: '0.92rem', fontWeight: 700, cursor: 'pointer' }}
             >
               {tt.awesome}
             </button>
@@ -223,7 +223,7 @@ export const TournamentsPage: React.FC = () => {
                         }
                       }
                     }}
-                    style={{ padding: '7px 14px', borderRadius: 9, border: 'none', background: 'rgba(155,109,255,.18)', color: '#C4A8FF', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
+                    style={{ padding: '7px 14px', borderRadius: 9, border: '.5px solid rgba(212,168,67,.35)', background: 'rgba(212,168,67,.12)', color: '#F0C85A', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
                   >
                     {tt.play}
                   </button>
@@ -242,9 +242,9 @@ export const TournamentsPage: React.FC = () => {
             onClick={() => setFilter(f)}
             style={{
               flex: 1, padding: '9px 0', borderRadius: 10,
-              border: filter === f ? '.5px solid rgba(155,109,255,.45)' : '.5px solid rgba(255,255,255,.08)',
-              background: filter === f ? 'rgba(155,109,255,.15)' : 'rgba(255,255,255,.04)',
-              color: filter === f ? '#C4A8FF' : '#7A7875',
+              border: filter === f ? '.5px solid rgba(212,168,67,.45)' : '.5px solid rgba(255,255,255,.08)',
+              background: filter === f ? 'rgba(212,168,67,.12)' : 'rgba(255,255,255,.04)',
+              color: filter === f ? '#F0C85A' : '#7A7875',
               fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer',
               transition: 'all .15s',
             }}
@@ -318,7 +318,7 @@ const TournamentCard: React.FC<{
       margin: '0 16px 10px',
       background: 'linear-gradient(135deg,#141018,#0F0E18)',
       borderRadius: 16,
-      border: `.5px solid rgba(155,109,255,.22)`,
+      border: `.5px solid rgba(212,168,67,.18)`,
       overflow: 'hidden',
     }}>
       {/* Header */}
@@ -326,7 +326,7 @@ const TournamentCard: React.FC<{
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
             width: 44, height: 44, borderRadius: '50%',
-            background: `rgba(155,109,255,.1)`,
+            background: `rgba(212,168,67,.08)`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 22, flexShrink: 0,
           }}>
@@ -405,7 +405,7 @@ const TournamentCard: React.FC<{
         </button>
         <button
           onClick={onDonate}
-          style={{ padding: '8px 12px', borderRadius: 9, background: 'rgba(155,109,255,.12)', color: '#C4A8FF', border: '.5px solid rgba(155,109,255,.28)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
+          style={{ padding: '8px 12px', borderRadius: 9, background: 'rgba(212,168,67,.08)', color: '#D4A843', border: '.5px solid rgba(212,168,67,.22)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
         >
           {tt.donateToPrize}
         </button>
@@ -415,8 +415,8 @@ const TournamentCard: React.FC<{
             disabled={joining}
             style={{
               flex: 1, padding: '8px 0', borderRadius: 9,
-              background: 'rgba(155,109,255,.15)', color: '#C4A8FF',
-              border: '.5px solid rgba(155,109,255,.35)',
+              background: 'rgba(212,168,67,.12)', color: '#F0C85A',
+              border: '.5px solid rgba(212,168,67,.35)',
               fontSize: '0.78rem', fontWeight: 700, cursor: joining ? 'default' : 'pointer',
               opacity: joining ? 0.6 : 1,
             }}
@@ -530,9 +530,9 @@ const DonateModal: React.FC<{ tournamentId: string; onClose: () => void; onSucce
               onClick={() => setAmount(v)}
               style={{
                 flex: 1, padding: '9px 0', borderRadius: 9, cursor: 'pointer',
-                border: amount === v ? '.5px solid rgba(155,109,255,.45)' : '.5px solid rgba(255,255,255,.08)',
-                background: amount === v ? 'rgba(155,109,255,.18)' : 'rgba(255,255,255,.04)',
-                color: amount === v ? '#C4A8FF' : '#7A7875',
+                border: amount === v ? '.5px solid rgba(212,168,67,.45)' : '.5px solid rgba(255,255,255,.08)',
+                background: amount === v ? 'rgba(212,168,67,.15)' : 'rgba(255,255,255,.04)',
+                color: amount === v ? '#F0C85A' : '#7A7875',
                 fontSize: '0.72rem', fontWeight: 700,
               }}
             >
@@ -545,8 +545,8 @@ const DonateModal: React.FC<{ tournamentId: string; onClose: () => void; onSucce
           disabled={loading}
           style={{
             width: '100%', padding: '13px 0', borderRadius: 12,
-            border: 'none', background: 'linear-gradient(135deg,#9B6DFF,#7B4FE8)',
-            color: '#fff', fontSize: '0.92rem', fontWeight: 700,
+            border: '.5px solid rgba(212,168,67,.4)', background: 'linear-gradient(135deg,rgba(212,168,67,.25),rgba(212,168,67,.15))',
+            color: '#F0C85A', fontSize: '0.92rem', fontWeight: 700,
             cursor: loading ? 'default' : 'pointer', opacity: loading ? 0.7 : 1,
           }}
         >
@@ -566,10 +566,10 @@ const overlayStyle: React.CSSProperties = {
 };
 const modalStyle: React.CSSProperties = {
   width: '100%',
-  background: 'linear-gradient(180deg,#161020,#0F0E18)',
+  background: 'linear-gradient(180deg,#100C18,#0A080E)',
   borderRadius: '22px 22px 0 0',
   padding: '16px 20px 28px',
-  borderTop: '.5px solid rgba(155,109,255,.2)',
+  borderTop: '.5px solid rgba(212,168,67,.18)',
   maxHeight: '85vh',
   overflowY: 'auto',
 };
