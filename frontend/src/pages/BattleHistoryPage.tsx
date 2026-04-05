@@ -355,12 +355,18 @@ export const BattleHistoryPage: React.FC = () => {
                     opacity: 0.85,
                   }} />
 
-                  {/* Аватар оппонента или иконка типа */}
+                  {/* Аватар оппонента — клик → профиль (stopPropagation чтобы не открылся PGN) */}
                   {g.opponent ? (
-                    <Avatar user={g.opponent} size="s" />
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); e.preventDefault(); navigate('/profile/' + g.opponent!.id); }}
+                      style={{ padding: 0, border: 'none', background: 'none', borderRadius: '50%', overflow: 'hidden', flexShrink: 0, cursor: 'pointer', width: 36, height: 36 }}
+                    >
+                      <Avatar user={g.opponent} size="s" />
+                    </button>
                   ) : (
                     <div style={{
-                      width: 32, height: 32, borderRadius: '50%',
+                      width: 36, height: 36, borderRadius: '50%',
                       background: 'rgba(154,148,144,.08)',
                       border: '.5px solid rgba(154,148,144,.18)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -372,14 +378,18 @@ export const BattleHistoryPage: React.FC = () => {
 
                   {/* Имя + дата */}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{
-                      fontSize: '.8rem',
-                      fontWeight: 700,
-                      color: '#EAE2CC',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}>
+                    <div
+                      onClick={g.opponent ? (e) => { e.stopPropagation(); e.preventDefault(); navigate('/profile/' + g.opponent!.id); } : undefined}
+                      style={{
+                        fontSize: '.8rem',
+                        fontWeight: 700,
+                        color: '#EAE2CC',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        cursor: g.opponent ? 'pointer' : 'default',
+                      }}
+                    >
                       {g.opponent?.firstName ?? (g.hasBot ? `J.A.R.V.I.S Lv.${g.botLevel ?? '?'}` : 'Неизвестно')}
                     </div>
                     <div style={{

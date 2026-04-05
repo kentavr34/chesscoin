@@ -653,14 +653,15 @@ const BattleLiveCard: React.FC<{
 
   // ── Колонка игрока: Аватар / Имя + ELO (без иконки цвета — она в центре) ──
   const PlayerCol: React.FC<{ side: typeof whitePlayer; isRight?: boolean }> = ({ side, isRight }) => {
-    if (!side) return <div style={{ flex: 1 }} />;
-    const pid = side.player?.id ?? side.playerId;
+    if (!side) return <div style={{ flexShrink: 0, width: 72 }} />;
+    // playerId всегда задан на SessionSide; player?.id — запасной вариант
+    const pid = side.playerId || side.player?.id;
     const playerAsUser = {
       id: pid,
-      firstName: side.player.firstName,
-      avatar: side.player.avatar,
-      avatarGradient: side.player.avatarGradient,
-      elo: side.player.elo,
+      firstName: side.player?.firstName ?? '?',
+      avatar: side.player?.avatar,
+      avatarGradient: side.player?.avatarGradient,
+      elo: side.player?.elo ?? 0,
     };
     return (
       <div style={{
@@ -668,7 +669,7 @@ const BattleLiveCard: React.FC<{
         alignItems: isRight ? 'flex-end' : 'flex-start',
         gap: 5, flexShrink: 0,
       }}>
-        {/* Аватар — клик → профиль */}
+        {/* Аватар — клик → профиль, e.stopPropagation чтобы не уйти на страницу батла */}
         <button
           type="button"
           style={{
@@ -676,7 +677,7 @@ const BattleLiveCard: React.FC<{
             borderRadius: '50%', overflow: 'hidden',
             width: 56, height: 56, flexShrink: 0, cursor: 'pointer',
           }}
-          onClick={(e) => { e.stopPropagation(); e.preventDefault(); if (pid) onProfile(pid); }}
+          onClick={(e) => { e.stopPropagation(); e.preventDefault(); pid && onProfile(pid); }}
         >
           <Avatar user={playerAsUser as any} size="m" />
         </button>
@@ -688,10 +689,10 @@ const BattleLiveCard: React.FC<{
             whiteSpace: 'nowrap' as const, maxWidth: 72,
             textAlign: isRight ? 'right' : 'left' as const,
           }}>
-            {side.player.firstName}
+            {side.player?.firstName ?? '?'}
           </span>
           <span style={{ fontSize: '.62rem', color: '#6A6660', fontWeight: 600 }}>
-            ELO {side.player.elo}
+            ELO {side.player?.elo ?? '?'}
           </span>
         </div>
       </div>
