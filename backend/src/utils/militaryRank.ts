@@ -35,7 +35,7 @@ export const MILITARY_RANKS: {
 // activationBonus = единоразовый бонус за нового члена команды (когда он сыграет первую игру)
 // l1Percent       = % от выигрышей прямых рефералов (уровень 1)
 export const RANK_BONUSES: Record<MilitaryRank, { activationBonus: bigint; l1Percent: number }> = {
-  RECRUIT:       { activationBonus:       0n, l1Percent:  0 },
+  RECRUIT:       { activationBonus:   3_000n, l1Percent:  1 },
   PRIVATE:       { activationBonus:   3_000n, l1Percent:  1 },
   CORPORAL:      { activationBonus:   4_000n, l1Percent:  2 },
   SERGEANT:      { activationBonus:   5_000n, l1Percent:  3 },

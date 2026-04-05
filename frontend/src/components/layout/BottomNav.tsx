@@ -34,17 +34,17 @@ const NavIcoWars = ({ active }: { active: boolean }) => (
 
 const NavIcoTournament = ({ active }: { active: boolean }) => (
   <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-    <path d="M8 3h8v7a4 4 0 01-8 0V3z" stroke={active ? '#9B6DFF' : '#5A6070'} strokeWidth="1.4" strokeLinejoin="round"/>
-    <path d="M8 6H5a1.5 1.5 0 000 3h3M16 6h3a1.5 1.5 0 010 3h-3" stroke={active ? '#9B6DFF' : '#5A6070'} strokeWidth="1.3" strokeLinecap="round"/>
-    <path d="M12 14v4M9 20h6" stroke={active ? '#9B6DFF' : '#5A6070'} strokeWidth="1.4" strokeLinecap="round"/>
-    <path d="M10 7l1.5 1.5L14 6" stroke={active ? '#C4A8FF' : '#5A6070'} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M8 3h8v7a4 4 0 01-8 0V3z" stroke={active ? '#D4A843' : '#5A6070'} strokeWidth="1.4" strokeLinejoin="round"/>
+    <path d="M8 6H5a1.5 1.5 0 000 3h3M16 6h3a1.5 1.5 0 010 3h-3" stroke={active ? '#D4A843' : '#5A6070'} strokeWidth="1.3" strokeLinecap="round"/>
+    <path d="M12 14v4M9 20h6" stroke={active ? '#D4A843' : '#5A6070'} strokeWidth="1.4" strokeLinecap="round"/>
+    <path d="M10 7l1.5 1.5L14 6" stroke={active ? '#F0C85A' : '#5A6070'} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
 );
 
 const NavIcoProfile = ({ active }: { active: boolean }) => (
   <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-    <circle cx="12" cy="8" r="3.5" stroke={active ? '#4A9EFF' : '#5A6070'} strokeWidth="1.4"/>
-    <path d="M5 19c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke={active ? '#4A9EFF' : '#5A6070'} strokeWidth="1.4" strokeLinecap="round"/>
+    <circle cx="12" cy="8" r="3.5" stroke={active ? '#D4A843' : '#5A6070'} strokeWidth="1.4"/>
+    <path d="M5 19c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke={active ? '#D4A843' : '#5A6070'} strokeWidth="1.4" strokeLinecap="round"/>
   </svg>
 );
 

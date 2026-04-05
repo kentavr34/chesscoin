@@ -257,7 +257,7 @@ export const ReferralsPage: React.FC = () => {
                         : unlocked ? '.5px solid rgba(61,186,122,.14)' : '.5px solid rgba(255,255,255,.04)',
                       borderRadius: 10,
                       padding: '7px 10px',
-                      opacity: unlocked ? 1 : 0.42,
+                      opacity: unlocked ? 1 : 0.62,
                       transition: 'all .15s',
                     }}
                   >
@@ -272,21 +272,21 @@ export const ReferralsPage: React.FC = () => {
                     <span style={{ fontSize: 18, minWidth: 50, textAlign: 'center', flexShrink: 0 }}>{rk.emoji}</span>
                     <div style={{ flex: 1 }}>
                       <div style={{
-                        fontSize: '0.75rem', fontWeight: 700,
-                        color: isCurrent ? '#3DBA7A' : unlocked ? '#E8E3DB' : '#7A7875',
+                        fontSize: '0.78rem', fontWeight: 800,
+                        color: isCurrent ? '#3DBA7A' : unlocked ? '#E8E3DB' : '#B8B0A8',
                       }}>
                         {rk.label}
                       </div>
-                      <div style={{ fontSize: '0.65rem', color: '#4A5270', marginTop: 1 }}>
+                      <div style={{ fontSize: '0.65rem', color: unlocked ? '#7A7875' : '#6A6460', marginTop: 1 }}>
                         {rk.minReferrals.toLocaleString()} {r.ref}
                       </div>
                     </div>
                     {rk.bonus > 0 && (
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <div style={{ fontSize: '0.72rem', fontWeight: 700, color: isCurrent ? '#3DBA7A' : unlocked ? '#3DBA7A' : '#4A5270' }}>
+                        <div style={{ fontSize: '0.72rem', fontWeight: 800, color: isCurrent ? '#3DBA7A' : unlocked ? '#3DBA7A' : '#6A7A6A' }}>
                           +{rk.bonus.toLocaleString()} ᚙ
                         </div>
-                        <div style={{ fontSize: '0.58rem', color: '#4A5270' }}>{rk.pct}%</div>
+                        <div style={{ fontSize: '0.6rem', color: unlocked ? '#7A7875' : '#5A5A5A', fontWeight: 700 }}>{rk.pct}%</div>
                       </div>
                     )}
                     {isCurrent

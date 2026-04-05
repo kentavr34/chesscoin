@@ -126,8 +126,7 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
 
       setConnectStep('paying');
       showToast('Confirm 1 TON payment in wallet...');
-      const user = onUserRefresh as unknown as () => { id?: string };
-      const userId = (window as unknown as { __userId?: string }).__userId ?? '';
+      const userId = user?.id ?? '';
       const boc = await sendVerificationPayment(userId);
 
       setConnectStep('verifying');

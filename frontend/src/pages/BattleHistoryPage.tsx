@@ -269,8 +269,8 @@ export const BattleHistoryPage: React.FC = () => {
         <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
           <div style={{
             width: 26, height: 26,
-            border: '2.5px solid rgba(74,158,255,.18)',
-            borderTopColor: '#4A9EFF',
+            border: '2.5px solid rgba(212,168,67,.18)',
+            borderTopColor: '#D4A843',
             borderRadius: '50%',
             animation: 'spin 0.75s linear infinite',
           }} />
