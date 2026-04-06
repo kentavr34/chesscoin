@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getSocket } from '@/api/socket';
 import type { GameSession } from '@/types';
 import { fmtBalance } from '@/utils/format';
 import { haptic } from '@/lib/haptic';
 import { useT } from '@/i18n/useT';
+import { Avatar } from '@/components/ui/Avatar';
 
 interface Props {
   session: GameSession;
@@ -19,15 +20,18 @@ export const WaitingForOpponent: React.FC<Props> = ({ session }) => {
 
   const inviteLink = `https://t.me/${BOT_USERNAME}?start=game_${session.code}`;
 
+  // Определяем стороны
+  const mySide = session.sides.find((s) => s.id === session.mySideId);
+  const myPlayer = mySide?.player ?? null;
+  const myIsWhite = mySide?.isWhite ?? true;
+
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(inviteLink);
       haptic.impact('light');
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // fallback
-    }
+    } catch {}
   };
 
   const handleShare = () => {
@@ -52,34 +56,64 @@ export const WaitingForOpponent: React.FC<Props> = ({ session }) => {
     });
   };
 
-  // Фикс 0.4: уйти назад в батлы БЕЗ отмены игры
   const handleBack = () => {
     haptic.impact('light');
     navigate('/battles');
+  };
+
+  const goToProfile = (userId?: string) => {
+    if (userId) navigate('/profile/' + userId);
   };
 
   return (
     <div style={rootStyle}>
       <div style={cardStyle}>
 
-        {/* Кнопка "← Назад" — не отменяет батл, только уходит */}
+        {/* Кнопка "← Назад" */}
         <button onClick={handleBack} style={backBtnStyle}>
           {t.game.backToBattles}
         </button>
 
-        {/* Пульсирующий индикатор */}
-        <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <div style={pulseWrap}>
-            <div style={pulseDot} />
-            <span style={{ fontSize: 32 }}>⏳</span>
+        {/* ── Панель игроков ── */}
+        <div style={playersRowStyle}>
+          {/* Левый игрок — я */}
+          <div style={playerColStyle}>
+            <div
+              onClick={() => goToProfile(myPlayer?.id)}
+              style={{ cursor: myPlayer?.id ? 'pointer' : 'default' }}
+            >
+              <Avatar user={myPlayer} size="m" />
+            </div>
+            <span style={playerNameStyle}>
+              {myPlayer?.firstName ?? '?'}
+            </span>
+            <span style={colorBadgeStyle(myIsWhite)}>
+              {myIsWhite ? '♔' : '♚'}
+            </span>
           </div>
-          <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 18, fontWeight: 800, color: 'var(--color-text-primary, #F0F2F8)', marginTop: 12 }}>
-            {t.game.waitingForOpponent}
+
+          {/* Центр: VS + LIVE индикатор */}
+          <div style={centerColStyle}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#FF4D6A', animation: 'pulse-ring 1.4s ease-out infinite', flexShrink: 0 }} />
+              <span style={{ fontSize: 9, fontWeight: 800, color: '#FF4D6A', letterSpacing: '.1em' }}>LIVE</span>
+            </div>
+            <span style={vsStyle}>VS</span>
+            {session.bet && BigInt(session.bet) > 0n && (
+              <span style={betStyle}>{fmtBalance(session.bet)} ᚙ</span>
+            )}
           </div>
-          <div style={{ fontSize: 12, color: 'var(--color-text-secondary, #8B92A8)', marginTop: 6 }}>
-            {t.game.bet}:{' '}
-            <span style={{ color: 'var(--color-accent, #F5C842)', fontWeight: 700 }}>
-              {fmtBalance(session.bet ?? '0')} ᚙ
+
+          {/* Правый игрок — соперник (ожидание) */}
+          <div style={playerColStyle}>
+            <div style={opponentAvatarStyle}>
+              <span style={{ fontSize: 22, opacity: 0.4 }}>?</span>
+            </div>
+            <span style={playerNameStyle}>
+              {t.game.waitingForOpponent ?? '...'}
+            </span>
+            <span style={colorBadgeStyle(!myIsWhite)}>
+              {myIsWhite ? '♚' : '♔'}
             </span>
           </div>
         </div>
@@ -140,40 +174,110 @@ export const WaitingForOpponent: React.FC<Props> = ({ session }) => {
   );
 };
 
-// Styles
+// ── Styles ──────────────────────────────────────────────────────────────────
+
+const SIDE_PAD = 18; // горизонтальный отступ аватаров от края панели
+
 const rootStyle: React.CSSProperties = {
   position: 'absolute', inset: 0, background: 'var(--color-bg-dark, #0B0D11)',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   padding: '24px 20px',
 };
+
 const cardStyle: React.CSSProperties = {
   width: '100%', maxWidth: 340,
   background: 'var(--color-bg-card, #161927)',
   border: '1px solid var(--waiting-card-border, rgba(255,255,255,0.1))',
   borderRadius: 24, padding: 24,
 };
-const pulseWrap: React.CSSProperties = {
-  position: 'relative', display: 'inline-flex',
-  alignItems: 'center', justifyContent: 'center',
-  width: 70, height: 70,
+
+const playersRowStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  marginBottom: 20,
+  // одинаковый отступ сверху, снизу и по бокам
+  padding: `${SIDE_PAD}px ${SIDE_PAD}px`,
+  background: 'rgba(255,255,255,0.03)',
+  borderRadius: 16,
+  border: '1px solid rgba(255,255,255,0.06)',
 };
-const pulseDot: React.CSSProperties = {
-  position: 'absolute', inset: 0, borderRadius: '50%',
-  border: '2px solid var(--waiting-pulse-dot-border, rgba(155, 133, 255, 0.5))',
-  animation: 'pulse-ring 1.4s ease-out infinite',
+
+const playerColStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: 6,
 };
+
+const centerColStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: 4,
+};
+
+const vsStyle: React.CSSProperties = {
+  fontFamily: "'Unbounded', sans-serif",
+  fontSize: 18,
+  fontWeight: 800,
+  color: 'rgba(255,255,255,0.25)',
+  letterSpacing: '.08em',
+};
+
+const betStyle: React.CSSProperties = {
+  fontSize: 11,
+  fontWeight: 700,
+  color: 'var(--color-accent, #F5C842)',
+  fontFamily: "'JetBrains Mono', monospace",
+};
+
+const playerNameStyle: React.CSSProperties = {
+  fontSize: 11,
+  fontWeight: 600,
+  color: 'var(--color-text-secondary, #8B92A8)',
+  maxWidth: 72,
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+  textAlign: 'center',
+};
+
+// Знак цвета — размер идентичен шрифту таймера (JetBrains Mono 28px → 26px)
+const colorBadgeStyle = (isWhite: boolean): React.CSSProperties => ({
+  fontFamily: "'JetBrains Mono', monospace",
+  fontSize: 22,
+  lineHeight: 1,
+  color: isWhite ? '#F0F2F8' : '#8B92A8',
+  opacity: 0.85,
+});
+
+// Плейсхолдер аватара соперника
+const opponentAvatarStyle: React.CSSProperties = {
+  width: 44,
+  height: 44,
+  borderRadius: '50%',
+  background: 'rgba(255,255,255,0.06)',
+  border: '1px dashed rgba(255,255,255,0.15)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+};
+
 const codeBlock: React.CSSProperties = {
   background: 'var(--waiting-code-block-bg, rgba(245, 200, 66, 0.06))',
   border: '1px solid var(--waiting-code-block-border, rgba(245, 200, 66, 0.15))',
   borderRadius: 16, padding: '14px 16px',
   textAlign: 'center', marginBottom: 14,
 };
+
 const linkBox: React.CSSProperties = {
   display: 'flex', alignItems: 'center', gap: 8,
   background: 'var(--waiting-link-box-bg, rgba(155, 133, 255, 0.08))',
   border: '1px solid var(--waiting-link-box-border, rgba(155, 133, 255, 0.15))',
   borderRadius: 12, padding: '10px 12px',
 };
+
 const iconBtn = (color: string): React.CSSProperties => {
   const isGreen = color.includes('00D68F') || color.includes('green');
   const bg = isGreen ? 'var(--waiting-icon-btn-green-bg, rgba(0, 214, 143, 0.12))' : 'var(--waiting-icon-btn-accent-bg, rgba(245, 200, 66, 0.12))';
@@ -186,6 +290,7 @@ const iconBtn = (color: string): React.CSSProperties => {
     transition: 'all .2s',
   };
 };
+
 const shareBtn = (color: string, bg: string): React.CSSProperties => ({
   flex: 1, padding: '11px 8px',
   background: bg, color,
@@ -194,6 +299,7 @@ const shareBtn = (color: string, bg: string): React.CSSProperties => ({
   cursor: 'pointer', fontFamily: 'inherit',
   transition: 'all .15s',
 });
+
 const cancelBtn: React.CSSProperties = {
   width: '100%', padding: 11,
   background: 'transparent',
@@ -202,6 +308,7 @@ const cancelBtn: React.CSSProperties = {
   fontSize: 13, fontWeight: 600,
   cursor: 'pointer', fontFamily: 'inherit',
 };
+
 const backBtnStyle: React.CSSProperties = {
   display: 'flex', alignItems: 'center', gap: 6,
   background: 'transparent', border: 'none',
