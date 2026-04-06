@@ -82,7 +82,7 @@ export const WaitingForOpponent: React.FC<Props> = ({ session }) => {
               onClick={() => myPlayer?.id ? navigate('/profile/' + myPlayer.id) : undefined}
               style={{ cursor: myPlayer?.id ? 'pointer' : 'default' }}
             >
-              <Avatar user={myPlayer} size="m" />
+              <Avatar user={myPlayer} size="l" />
             </div>
             <span style={playerNameStyle}>{myPlayer?.firstName ?? '?'}</span>
           </div>
@@ -221,25 +221,26 @@ const playerNameStyle: React.CSSProperties = {
   whiteSpace: 'nowrap', textAlign: 'center',
 };
 const opponentAvatarStyle: React.CSSProperties = {
-  width: 44, height: 44, borderRadius: '50%',
+  width: 56, height: 56, borderRadius: '50%',
   background: 'rgba(255,255,255,0.06)',
   border: '1px dashed rgba(255,255,255,0.15)',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
 };
 
 // Знаки цвета: строка под панелью, знаки прижаты к краям на том же отступе SIDE_PAD
+// marginBottom = 10px — отступ от знаков до блока с кодом (таймером)
 const colorSignsRowStyle: React.CSSProperties = {
   display: 'flex',
   justifyContent: 'space-between',
   paddingLeft: SIDE_PAD,
   paddingRight: SIDE_PAD,
   marginTop: 8,
-  marginBottom: 14,
+  marginBottom: 10,
 };
-// fontSize = 28 (= размер кода таймера в codeBlock)
+// fontSize = 36 (= 28 × 1.3, базовый размер кода таймера +30%)
 const colorSignStyle = (isWhite: boolean): React.CSSProperties => ({
   fontFamily: "'JetBrains Mono', monospace",
-  fontSize: 28, lineHeight: 1,
+  fontSize: 36, lineHeight: 1,
   color: isWhite ? '#F0F2F8' : '#8B92A8',
   opacity: 0.85,
 });

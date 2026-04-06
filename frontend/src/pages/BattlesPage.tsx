@@ -427,12 +427,12 @@ const MIN_BET = 10000;
 // Иконка цвета фигур (белый / чёрный король)
 const ColorIcon: React.FC<{ isWhite: boolean }> = ({ isWhite }) => (
   <div style={{
-    width: 32, height: 32, borderRadius: 8,
+    width: 42, height: 42, borderRadius: 10,
     background: isWhite ? 'rgba(240,200,90,.12)' : 'rgba(74,158,255,.1)',
     border: `.5px solid ${isWhite ? 'rgba(240,200,90,.35)' : 'rgba(74,158,255,.25)'}`,
     display: 'flex', alignItems: 'center', justifyContent: 'center',
   }}>
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+    <svg width="23" height="23" viewBox="0 0 18 18" fill="none">
       <path d="M9 2v3M7.5 3.5h3" stroke={isWhite ? '#F0C85A' : '#82CFFF'} strokeWidth="1.3" strokeLinecap="round"/>
       <rect x="7" y="5" width="4" height="2" rx=".5" fill={isWhite ? '#F0C85A' : '#82CFFF'} opacity=".8"/>
       <path d="M5.5 7h7l-1 8H6.5L5.5 7z" fill={isWhite ? '#F0C85A' : '#82CFFF'} opacity={isWhite ? '.7' : '.9'}/>
@@ -608,12 +608,12 @@ const IcoKingB = () => (
 // Маленькая иконка цвета (для LiveCard — компактнее)
 const SmallColorIcon: React.FC<{ isWhite: boolean }> = ({ isWhite }) => (
   <div style={{
-    width: 26, height: 26, borderRadius: 6, flexShrink: 0,
+    width: 34, height: 34, borderRadius: 8, flexShrink: 0,
     background: isWhite ? 'rgba(240,200,90,.12)' : 'rgba(74,158,255,.1)',
     border: `.5px solid ${isWhite ? 'rgba(240,200,90,.35)' : 'rgba(74,158,255,.25)'}`,
     display: 'flex', alignItems: 'center', justifyContent: 'center',
   }}>
-    <svg width="15" height="15" viewBox="0 0 18 18" fill="none">
+    <svg width="19" height="19" viewBox="0 0 18 18" fill="none">
       <path d="M9 2v3M7.5 3.5h3" stroke={isWhite ? '#F0C85A' : '#82CFFF'} strokeWidth="1.3" strokeLinecap="round"/>
       <rect x="7" y="5" width="4" height="2" rx=".5" fill={isWhite ? '#F0C85A' : '#82CFFF'} opacity=".8"/>
       <path d="M5.5 7h7l-1 8H6.5L5.5 7z" fill={isWhite ? '#F0C85A' : '#82CFFF'} opacity={isWhite ? '.7' : '.9'}/>
@@ -675,11 +675,11 @@ const BattleLiveCard: React.FC<{
           style={{
             padding: 0, border: 'none', background: 'none',
             borderRadius: '50%', overflow: 'hidden',
-            width: 56, height: 56, flexShrink: 0, cursor: 'pointer',
+            width: 56, height: 56, flexShrink: 0, cursor: pid ? 'pointer' : 'default',
           }}
           onClick={(e) => { e.stopPropagation(); e.preventDefault(); pid && onProfile(pid); }}
         >
-          <Avatar user={playerAsUser as any} size="m" />
+          <Avatar user={playerAsUser as any} size="l" />
         </button>
         {/* Имя + ELO */}
         <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 2 }}>
@@ -716,7 +716,7 @@ const BattleLiveCard: React.FC<{
       <PlayerCol side={whitePlayer} />
 
       {/* Центр: [ЦветИконка белых] LIVE+таймер+ставка+СМОТРЕТЬ [ЦветИконка чёрных] */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
         <SmallColorIcon isWhite={true} />
 
         <div style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 3 }}>

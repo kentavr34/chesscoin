@@ -355,26 +355,38 @@ export const BattleHistoryPage: React.FC = () => {
                     opacity: 0.85,
                   }} />
 
-                  {/* Аватар оппонента — клик → профиль (stopPropagation чтобы не открылся PGN) */}
-                  {g.opponent ? (
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); e.preventDefault(); navigate('/profile/' + g.opponent!.id); }}
-                      style={{ padding: 0, border: 'none', background: 'none', borderRadius: '50%', overflow: 'hidden', flexShrink: 0, cursor: 'pointer', width: 36, height: 36 }}
-                    >
-                      <Avatar user={g.opponent} size="s" />
-                    </button>
-                  ) : (
-                    <div style={{
-                      width: 36, height: 36, borderRadius: '50%',
-                      background: 'rgba(154,148,144,.08)',
-                      border: '.5px solid rgba(154,148,144,.18)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      flexShrink: 0,
+                  {/* Аватар + знак цвета фигур под ним */}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, flexShrink: 0 }}>
+                    {g.opponent ? (
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); e.preventDefault(); navigate('/profile/' + g.opponent!.id); }}
+                        style={{ padding: 0, border: 'none', background: 'none', borderRadius: '50%', overflow: 'hidden', flexShrink: 0, cursor: 'pointer', width: 46, height: 46 }}
+                      >
+                        <Avatar user={g.opponent} size="m" />
+                      </button>
+                    ) : (
+                      <div style={{
+                        width: 46, height: 46, borderRadius: '50%',
+                        background: 'rgba(154,148,144,.08)',
+                        border: '.5px solid rgba(154,148,144,.18)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        flexShrink: 0,
+                      }}>
+                        {typeIconEl}
+                      </div>
+                    )}
+                    {/* Знак цвета фигур — 10px от аватара, +30% от базового 13px */}
+                    <span style={{
+                      fontFamily: "'JetBrains Mono', monospace",
+                      fontSize: 17, lineHeight: 1,
+                      color: g.isWhite ? '#F0F2F8' : '#8B92A8',
+                      opacity: 0.8,
+                      marginTop: 10,
                     }}>
-                      {typeIconEl}
-                    </div>
-                  )}
+                      {g.isWhite ? '♔' : '♚'}
+                    </span>
+                  </div>
 
                   {/* Имя + дата */}
                   <div style={{ flex: 1, minWidth: 0 }}>
