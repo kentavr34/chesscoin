@@ -322,8 +322,9 @@ export const BattlesPage: React.FC = () => {
                   <div style={{ fontSize: '.8rem', fontWeight: 700, color: '#E8E4DC', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {user?.firstName ?? '?'}
                   </div>
-                  <div style={{ fontSize: '.62rem', color: '#6A6660', marginTop: 1 }}>
-                    ELO {user?.elo ?? '?'}
+                  <div style={{ fontSize: '.62rem', marginTop: 1 }}>
+                    <span style={{ color: '#7A7470' }}>ELO </span>
+                    <span style={{ color: '#F0C85A' }}>{user?.elo ?? '?'}</span>
                   </div>
                 </div>
 
@@ -490,7 +491,10 @@ const BattleChallengeCard: React.FC<{
           <span style={{ fontSize: '.78rem', fontWeight: 700, color: '#D4C8B0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const, maxWidth: 68 }}>
             {battle.creator?.firstName ?? '?'}
           </span>
-          <span style={{ fontSize: '.64rem', color: '#6A6660', fontWeight: 600 }}>ELO {battle.creator?.elo ?? '?'}</span>
+          <span style={{ fontSize: '.64rem', fontWeight: 600 }}>
+            <span style={{ color: '#7A7470' }}>ELO </span>
+            <span style={{ color: '#F0C85A' }}>{battle.creator?.elo ?? '?'}</span>
+          </span>
         </div>
       </div>
 
@@ -666,7 +670,7 @@ const BattleLiveCard: React.FC<{
     return (
       <div style={{
         display: 'flex', flexDirection: 'column' as const,
-        alignItems: isRight ? 'flex-end' : 'flex-start',
+        alignItems: 'center',
         gap: 5, flexShrink: 0,
       }}>
         {/* Аватар — клик → профиль, e.stopPropagation чтобы не уйти на страницу батла */}
@@ -682,17 +686,18 @@ const BattleLiveCard: React.FC<{
           <Avatar user={playerAsUser as any} size="l" />
         </button>
         {/* Имя + ELO */}
-        <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 2 }}>
+        <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 2, alignItems: 'center' }}>
           <span style={{
             fontSize: '.76rem', fontWeight: 700, color: '#D4C8B0',
             overflow: 'hidden', textOverflow: 'ellipsis',
             whiteSpace: 'nowrap' as const, maxWidth: 72,
-            textAlign: isRight ? 'right' : 'left' as const,
+            textAlign: 'center' as const,
           }}>
             {side.player?.firstName ?? '?'}
           </span>
-          <span style={{ fontSize: '.62rem', color: '#6A6660', fontWeight: 600 }}>
-            ELO {side.player?.elo ?? '?'}
+          <span style={{ fontSize: '.62rem', fontWeight: 600 }}>
+            <span style={{ color: '#7A7470' }}>ELO </span>
+            <span style={{ color: '#F0C85A' }}>{side.player?.elo ?? '?'}</span>
           </span>
         </div>
       </div>

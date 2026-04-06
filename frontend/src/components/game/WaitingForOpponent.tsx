@@ -85,6 +85,12 @@ export const WaitingForOpponent: React.FC<Props> = ({ session }) => {
               <Avatar user={myPlayer} size="l" />
             </div>
             <span style={playerNameStyle}>{myPlayer?.firstName ?? '?'}</span>
+            {myPlayer?.elo != null && (
+              <span style={{ fontSize: 10, fontWeight: 600, textAlign: 'center' as const }}>
+                <span style={{ color: '#7A7470' }}>ELO </span>
+                <span style={{ color: '#F0C85A' }}>{myPlayer.elo}</span>
+              </span>
+            )}
           </div>
 
           {/* Центр: VS + LIVE + ставка */}

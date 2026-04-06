@@ -355,8 +355,8 @@ export const BattleHistoryPage: React.FC = () => {
                     opacity: 0.85,
                   }} />
 
-                  {/* Аватар + знак цвета фигур под ним */}
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, flexShrink: 0 }}>
+                  {/* Аватар + знак цвета + имя + ELO — всё строго по центру колонки */}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, width: 56 }}>
                     {g.opponent ? (
                       <button
                         type="button"
@@ -376,45 +376,48 @@ export const BattleHistoryPage: React.FC = () => {
                         {typeIconEl}
                       </div>
                     )}
-                    {/* Знак цвета фигур — 10px от аватара, +30% от базового 13px */}
+                    {/* Знак цвета фигур */}
                     <span style={{
                       fontFamily: "'JetBrains Mono', monospace",
                       fontSize: 17, lineHeight: 1,
                       color: g.isWhite ? '#F0F2F8' : '#8B92A8',
                       opacity: 0.8,
-                      marginTop: 10,
+                      marginTop: 6,
                     }}>
                       {g.isWhite ? '♔' : '♚'}
                     </span>
-                  </div>
-
-                  {/* Имя + дата */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
+                    {/* Имя — строго по центру аватара */}
+                    <span
                       onClick={g.opponent ? (e) => { e.stopPropagation(); e.preventDefault(); navigate('/profile/' + g.opponent!.id); } : undefined}
                       style={{
-                        fontSize: '.8rem',
-                        fontWeight: 700,
-                        color: '#EAE2CC',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
+                        fontSize: '.68rem', fontWeight: 700, color: '#C8C0B0',
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        maxWidth: 56, textAlign: 'center',
                         cursor: g.opponent ? 'pointer' : 'default',
+                        marginTop: 4,
                       }}
                     >
-                      {g.opponent?.firstName ?? (g.hasBot ? `J.A.R.V.I.S Lv.${g.botLevel ?? '?'}` : 'Неизвестно')}
-                    </div>
-                    <div style={{
-                      fontSize: '.65rem',
-                      color: '#7A7875',
-                      marginTop: 3,
-                      display: 'flex', alignItems: 'center', gap: 4,
-                    }}>
+                      {g.opponent?.firstName ?? (g.hasBot ? `JARVIS` : '?')}
+                    </span>
+                    {/* ELO */}
+                    {(g.opponent?.elo != null) && (
+                      <span style={{ fontSize: '.58rem', fontWeight: 600, marginTop: 2 }}>
+                        <span style={{ color: '#7A7470' }}>ELO </span>
+                        <span style={{ color: '#F0C85A' }}>{g.opponent.elo}</span>
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Дата + ставка */}
+                  <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 3 }}>
+                    <div style={{ fontSize: '.65rem', color: '#7A7875' }}>
                       {g.finishedAt ? fmtDate(g.finishedAt) : ''}
-                      {g.bet && BigInt(g.bet) > 0n
-                        ? <span style={{ color: '#3A3632', display: 'inline-flex', alignItems: 'center', gap: 2 }}>· {fmtBalance(g.bet)} <CoinIcon size={10} /></span>
-                        : null}
                     </div>
+                    {g.bet && BigInt(g.bet) > 0n && (
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 2, color: '#5A5248', fontSize: '.62rem' }}>
+                        {fmtBalance(g.bet)} <CoinIcon size={10} />
+                      </div>
+                    )}
                   </div>
 
                   {/* Результат + выигрыш + просмотр */}
