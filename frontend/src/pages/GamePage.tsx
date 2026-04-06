@@ -158,6 +158,14 @@ const BoardKingIcon: React.FC<{ isWhite: boolean; size?: number }> = ({ isWhite,
   </div>
 );
 
+// Флаг страны: 'RU' → '🇷🇺', иначе null
+const flagEmoji = (code?: string | null): string | null => {
+  if (!code || code.length !== 2) return null;
+  const a = code.toUpperCase().charCodeAt(0) + 0x1F1A5;
+  const b = code.toUpperCase().charCodeAt(1) + 0x1F1A5;
+  return String.fromCodePoint(a, b);
+};
+
 // ── Панель игрока (по референсу) ──────────────────────────────────────────────
 interface PanelProps {
   name: string;
@@ -165,6 +173,7 @@ interface PanelProps {
   avatar?: string | null;
   isBot?: boolean;
   isWhite: boolean;
+  country?: string | null;
   captured: string[];
   advantage: number;
   coins: number;      // монеты за взятые фигуры
@@ -175,7 +184,7 @@ interface PanelProps {
 }
 
 const PlayerPanel: React.FC<PanelProps> = ({
-  name, elo, avatar, isBot, isWhite, captured, advantage: adv,
+  name, elo, avatar, isBot, isWhite, country, captured, advantage: adv,
   coins, timeDisplay, timeSecs, isActive, isGameOver,
 }) => {
   const sorted = useMemo(() => sortCaptured(captured), [captured]);
@@ -185,7 +194,7 @@ const PlayerPanel: React.FC<PanelProps> = ({
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 10,
-      height: PANEL_H, padding: '0 10px 0 12px', flexShrink: 0,
+      height: PANEL_H, padding: '0 10px 0 22px', flexShrink: 0,
       background: isActive ? 'rgba(74,158,255,.03)' : 'transparent',
       borderLeft: `3px solid ${
         isCritical ? 'rgba(220,50,47,.85)'
@@ -221,9 +230,9 @@ const PlayerPanel: React.FC<PanelProps> = ({
         }
       </div>
 
-      {/* ── Колонка: имя + ELO + иконка цвета ──────────────────────────── */}
+      {/* ── Колонка: имя + флаг/глобус + ELO ───────────────────────────── */}
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 4, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
           <span style={{
             fontSize: '1rem', fontWeight: 700, lineHeight: 1,
             color: isActive ? '#EAE2CC' : '#9A9490',
@@ -232,7 +241,10 @@ const PlayerPanel: React.FC<PanelProps> = ({
           }}>
             {name.length > 10 ? name.slice(0, 10) + '…' : name}
           </span>
-          <BoardKingIcon isWhite={isWhite} size={22} />
+          {/* Флаг страны или глобус */}
+          <span style={{ fontSize: 14, lineHeight: 1, flexShrink: 0 }}>
+            {flagEmoji(country) ?? '🌐'}
+          </span>
         </div>
         <span style={{ fontSize: '.68rem', color: '#5A5248', fontWeight: 600, lineHeight: 1 }}>
           {elo !== undefined ? `ELO ${elo}` : (isBot ? 'J.A.R.V.I.S' : '')}
@@ -276,20 +288,22 @@ const PlayerPanel: React.FC<PanelProps> = ({
       <div style={{
         background: isCritical
           ? 'rgba(220,50,47,.22)'
-          : isActive ? 'rgba(74,158,255,.14)' : 'rgba(255,255,255,.06)',
-        border: `.5px solid ${
-          isCritical ? 'rgba(220,50,47,.55)'
-          : isActive  ? 'rgba(74,158,255,.38)' : 'rgba(255,255,255,.12)'
+          : isActive ? 'rgba(212,168,67,.14)' : 'rgba(255,255,255,.06)',
+        border: `1px solid ${
+          isCritical ? 'rgba(220,50,47,.65)'
+          : isActive  ? 'rgba(212,168,67,.5)' : 'rgba(255,255,255,.14)'
         }`,
-        borderRadius: 12, padding: '7px 15px', flexShrink: 0,
-        minWidth: 68, textAlign: 'center', marginRight: 2,
+        borderRadius: 6, padding: '7px 15px', flexShrink: 0,
+        minWidth: 72, textAlign: 'center', marginRight: 2,
         transition: 'all .3s',
         animation: isCritical ? 'timer-crit .75s infinite' : 'none',
+        boxShadow: isActive && !isCritical ? '0 0 8px rgba(212,168,67,.18)' : 'none',
       }}>
         <div style={{
-          fontSize: '1.18rem', fontWeight: 900,
-          color: isCritical ? '#FF6868' : isActive ? '#82CFFF' : '#7A7470',
+          fontSize: '1.42rem', fontWeight: 900,
+          color: isCritical ? '#FF6868' : isActive ? '#D4A843' : '#6A6258',
           fontVariantNumeric: 'tabular-nums', letterSpacing: '-.02em',
+          fontFamily: "'JetBrains Mono', monospace",
           transition: 'color .3s',
         }}>
           {timeDisplay}
@@ -726,15 +740,17 @@ export function GamePage() {
   const oppSide  = session?.sides.find(s => s.id !== session?.mySideId);
 
   const myColor: 'white' | 'black' = mySide?.isWhite ? 'white' : 'black';
-  const myName   = mySide?.player?.firstName ?? 'Вы';
-  const myAvatar = mySide?.player?.avatar;
-  const myElo    = mySide?.player?.elo;
+  const myName    = mySide?.player?.firstName ?? 'Вы';
+  const myAvatar  = mySide?.player?.avatar;
+  const myElo     = mySide?.player?.elo;
+  const myCountry = mySide?.player?.country;
 
-  const oppIsBot   = !!oppSide?.isBot;
-  const oppName    = oppIsBot ? 'J.A.R.V.I.S' : (oppSide?.player?.firstName ?? '...');
-  const oppAvatar  = oppSide?.player?.avatar;
-  const oppIsWhite = !!oppSide?.isWhite;
-  const oppElo     = oppSide?.player?.elo;
+  const oppIsBot    = !!oppSide?.isBot;
+  const oppName     = oppIsBot ? 'J.A.R.V.I.S' : (oppSide?.player?.firstName ?? '...');
+  const oppAvatar   = oppSide?.player?.avatar;
+  const oppIsWhite  = !!oppSide?.isWhite;
+  const oppElo      = oppSide?.player?.elo;
+  const oppCountry  = oppSide?.player?.country;
 
   const fen = session?.fen ?? 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
   const { white: whiteCap, black: blackCap } = capturedFromFen(fen);
@@ -890,7 +906,7 @@ export function GamePage() {
       <div style={{ borderBottom: '.5px solid rgba(255,255,255,.05)', flexShrink: 0 }}>
         <PlayerPanel
           name={oppName} elo={oppElo} avatar={oppAvatar} isBot={oppIsBot}
-          isWhite={oppIsWhite} captured={oppCaptured} advantage={oppAdv} coins={oppCoins}
+          isWhite={oppIsWhite} country={oppCountry} captured={oppCaptured} advantage={oppAdv} coins={oppCoins}
           timeDisplay={oppTimeDisplay} timeSecs={oppTimeSecs}
           isActive={!isMyTurn && !gameOver} isGameOver={gameOver}
         />
@@ -900,8 +916,8 @@ export function GamePage() {
       <div style={{ height: STATUS_GAP, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 4, flexShrink: 0 }}>
         {!isMyTurn && !gameOver && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4A9EFF', animation: 'gp-pulse 1.4s infinite', boxShadow: '0 0 6px #4A9EFF' }} />
-            <span style={{ fontSize: '.72rem', fontWeight: 800, color: '#4A9EFF', letterSpacing: '.02em' }}>Думает...</span>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4DDA8A', animation: 'gp-pulse 1.4s infinite', boxShadow: '0 0 6px #4DDA8A' }} />
+            <span style={{ fontSize: '.72rem', fontWeight: 800, color: '#4DDA8A', letterSpacing: '.02em' }}>Думает...</span>
           </div>
         )}
       </div>
@@ -977,7 +993,7 @@ export function GamePage() {
       <div style={{ borderTop: '.5px solid rgba(255,255,255,.05)', flexShrink: 0 }}>
         <PlayerPanel
           name={myName} elo={myElo} avatar={myAvatar} isBot={false}
-          isWhite={myColor === 'white'} captured={myCaptured} advantage={myAdv} coins={myCoins}
+          isWhite={myColor === 'white'} country={myCountry} captured={myCaptured} advantage={myAdv} coins={myCoins}
           timeDisplay={myTimeDisplay} timeSecs={myTimeSecs}
           isActive={isMyTurn && !gameOver} isGameOver={gameOver}
         />
