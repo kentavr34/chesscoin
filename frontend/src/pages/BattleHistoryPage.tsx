@@ -86,15 +86,21 @@ export const BattleHistoryPage: React.FC = () => {
                 }} onClick={() => g.pgn && navigate(`/profile`, { state: { replay: { pgn: g.pgn, title: g.opponent?.firstName ? `vs ${g.opponent.firstName}` : 'Game', sessionId: g.sessionId } } })}>
                   <div style={{ width: 4, height: 40, borderRadius: 2, background: statusColor, flexShrink: 0 }} />
 
-                  {g.opponent ? (
-                    <div onClick={(e) => { if (g.opponent?.id) { e.stopPropagation(); navigate('/profile/' + g.opponent.id); } }} style={{ cursor: g.opponent?.id ? 'pointer' : 'default', flexShrink: 0 }}>
-                      <Avatar user={g.opponent} size="s" />
-                    </div>
-                  ) : (
-                    <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
-                      {typeIcon}
-                    </div>
-                  )}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, flexShrink: 0 }}>
+                    {g.opponent ? (
+                      <div onClick={(e) => { if (g.opponent?.id) { e.stopPropagation(); navigate('/profile/' + g.opponent.id); } }} style={{ cursor: g.opponent?.id ? 'pointer' : 'default' }}>
+                        <Avatar user={g.opponent} size="s" />
+                      </div>
+                    ) : (
+                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
+                        {typeIcon}
+                      </div>
+                    )}
+                    {/* Знак цвета под аватаром */}
+                    <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, lineHeight: 1, color: g.isWhite ? '#F0F2F8' : '#8B92A8', opacity: 0.75 }}>
+                      {g.isWhite ? '♔' : '♚'}
+                    </span>
+                  </div>
 
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text-primary, #F0F2F8)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

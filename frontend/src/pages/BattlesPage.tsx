@@ -108,22 +108,23 @@ export const BattlesPage: React.FC = () => {
                 const whitePlayer = s.sides.find((sd) => sd.isWhite);
                 const blackPlayer = s.sides.find((sd) => !sd.isWhite);
                 return (
-                  <Card key={s.id} padding="md" onClick={() => navigate('/game/' + s.id)} style={{ borderColor: 'rgba(255,77,106,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, margin: '4px 18px 0' }}>
+                  <Card key={s.id} onClick={() => navigate('/game/' + s.id)} style={{ borderColor: 'rgba(255,77,106,0.15)', cursor: 'pointer', margin: '4px 18px 0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', padding: '14px 18px', gap: 8 }}>
                       {/* Белый игрок */}
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, minWidth: 54 }}>
-                        <div onClick={(e) => { if (whitePlayer?.player?.id) { e.stopPropagation(); navigate('/profile/' + whitePlayer.player.id); } }}>
+                      <div style={livePlayerCol}>
+                        <div onClick={(e) => { if (whitePlayer?.player?.id) { e.stopPropagation(); navigate('/profile/' + whitePlayer.player.id); } }} style={{ cursor: whitePlayer?.player?.id ? 'pointer' : 'default' }}>
                           <Avatar user={whitePlayer?.player} size="s" />
                         </div>
-                        <span style={{ fontSize: 10, fontWeight: 600, color: '#F0F2F8', maxWidth: 54, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{whitePlayer?.player?.firstName ?? '?'}</span>
-                        <span style={{ fontSize: 8, color: '#8B92A8', background: 'rgba(255,255,255,0.1)', padding: '1px 4px', borderRadius: 3 }}>♔</span>
+                        <span style={livePlayerName}>{whitePlayer?.player?.firstName ?? '?'}</span>
+                        <span style={liveColorSign(true)}>♔</span>
                       </div>
 
-                      {/* Центр: иконка + LIVE + время */}
-                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                      {/* Центр: LIVE + таймер + ставка */}
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#FF4D6A', animation: 'pulse 1.5s infinite' }} />
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#FF4D6A', flexShrink: 0 }} />
                           <span style={{ fontSize: 9, fontWeight: 800, color: '#FF4D6A', letterSpacing: '.08em' }}>LIVE</span>
-                          <span style={{ fontSize: 14 }}>{sourceIcon}</span>
+                          <span style={{ fontSize: 13 }}>{sourceIcon}</span>
                         </div>
                         <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 16, fontWeight: 700, color: '#F0F2F8' }}>
                           {fmtTime(mySide?.timeLeft ?? opSide?.timeLeft ?? 300)}
@@ -132,13 +133,14 @@ export const BattlesPage: React.FC = () => {
                       </div>
 
                       {/* Чёрный игрок */}
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, minWidth: 54 }}>
-                        <div onClick={(e) => { if (blackPlayer?.player?.id) { e.stopPropagation(); navigate('/profile/' + blackPlayer.player.id); } }}>
+                      <div style={livePlayerCol}>
+                        <div onClick={(e) => { if (blackPlayer?.player?.id) { e.stopPropagation(); navigate('/profile/' + blackPlayer.player.id); } }} style={{ cursor: blackPlayer?.player?.id ? 'pointer' : 'default' }}>
                           <Avatar user={blackPlayer?.player} size="s" />
                         </div>
-                        <span style={{ fontSize: 10, fontWeight: 600, color: '#F0F2F8', maxWidth: 54, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{blackPlayer?.player?.firstName ?? '?'}</span>
-                        <span style={{ fontSize: 8, color: '#8B92A8', background: 'rgba(0,0,0,0.3)', padding: '1px 4px', borderRadius: 3 }}>♚</span>
+                        <span style={livePlayerName}>{blackPlayer?.player?.firstName ?? '?'}</span>
+                        <span style={liveColorSign(false)}>♚</span>
                       </div>
+                    </div>
                   </Card>
                 );
               })}
@@ -513,4 +515,23 @@ const bmTypeBtn = (active: boolean): React.CSSProperties => ({
   border: `1px solid ${active ? 'rgba(245,200,66,0.3)' : 'var(--border, rgba(255,255,255,0.07))'}`,
   color: active ? 'var(--accent, #F5C842)' : 'var(--text-secondary, #8B92A8)',
   fontSize: 12, fontWeight: 600, fontFamily: 'inherit', textAlign: 'center' as const,
+});
+
+// ── LIVE карточка ──
+const livePlayerCol: React.CSSProperties = {
+  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+  width: 58, flexShrink: 0,
+};
+const livePlayerName: React.CSSProperties = {
+  fontSize: 10, fontWeight: 600, color: '#F0F2F8',
+  maxWidth: 58, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const,
+  textAlign: 'center' as const,
+};
+// Знак цвета — тот же JetBrains Mono и размер что у таймера (16px)
+const liveColorSign = (isWhite: boolean): React.CSSProperties => ({
+  fontFamily: "'JetBrains Mono', monospace",
+  fontSize: 16,
+  lineHeight: 1,
+  color: isWhite ? '#F0F2F8' : '#8B92A8',
+  opacity: 0.8,
 });
