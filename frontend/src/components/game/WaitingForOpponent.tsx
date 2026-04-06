@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getSocket } from '@/api/socket';
 import type { GameSession } from '@/types';
 import { fmtBalance } from '@/utils/format';
 import { haptic } from '@/lib/haptic';
 import { useT } from '@/i18n/useT';
+import { Avatar } from '@/components/ui/Avatar';
 
 interface Props {
   session: GameSession;
@@ -18,6 +19,11 @@ export const WaitingForOpponent: React.FC<Props> = ({ session }) => {
   const [copied, setCopied] = useState(false);
 
   const inviteLink = `https://t.me/${BOT_USERNAME}?start=game_${session.code}`;
+
+  // Определяем стороны
+  const mySide = session.sides.find((s) => s.id === session.mySideId);
+  const myPlayer = mySide?.player ?? null;
+  const myIsWhite = mySide?.isWhite ?? true;
 
   const handleCopy = async () => {
     try {
@@ -67,21 +73,46 @@ export const WaitingForOpponent: React.FC<Props> = ({ session }) => {
           {t.game.backToBattles}
         </button>
 
-        {/* Пульсирующий индикатор */}
-        <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <div style={pulseWrap}>
-            <div style={pulseDot} />
-            <span style={{ fontSize: 32 }}>⏳</span>
+        {/* ── Панель игроков ── */}
+        <div style={playersRowStyle}>
+
+          {/* Левый игрок — я */}
+          <div style={playerColStyle}>
+            <div
+              onClick={() => myPlayer?.id ? navigate('/profile/' + myPlayer.id) : undefined}
+              style={{ cursor: myPlayer?.id ? 'pointer' : 'default' }}
+            >
+              <Avatar user={myPlayer} size="m" />
+            </div>
+            <span style={playerNameStyle}>{myPlayer?.firstName ?? '?'}</span>
           </div>
-          <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 18, fontWeight: 800, color: 'var(--color-text-primary, #F0F2F8)', marginTop: 12 }}>
-            {t.game.waitingForOpponent}
+
+          {/* Центр: VS + LIVE + ставка */}
+          <div style={centerColStyle}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#FF4D6A', animation: 'pulse-ring 1.4s ease-out infinite', flexShrink: 0 }} />
+              <span style={{ fontSize: 9, fontWeight: 800, color: '#FF4D6A', letterSpacing: '.1em' }}>LIVE</span>
+            </div>
+            <span style={vsStyle}>VS</span>
+            {session.bet && BigInt(session.bet) > 0n && (
+              <span style={betStyle}>{fmtBalance(session.bet)} ᚙ</span>
+            )}
           </div>
-          <div style={{ fontSize: 12, color: 'var(--color-text-secondary, #8B92A8)', marginTop: 6 }}>
-            {t.game.bet}:{' '}
-            <span style={{ color: 'var(--color-accent, #F5C842)', fontWeight: 700 }}>
-              {fmtBalance(session.bet ?? '0')} ᚙ
-            </span>
+
+          {/* Правый игрок — соперник (ожидание) */}
+          <div style={playerColStyle}>
+            <div style={opponentAvatarStyle}>
+              <span style={{ fontSize: 22, opacity: 0.4 }}>?</span>
+            </div>
+            <span style={playerNameStyle}>{t.game.waitingForOpponent ?? '...'}</span>
           </div>
+
+        </div>
+
+        {/* Знаки цвета фигур — под панелью, по краям */}
+        <div style={colorSignsRowStyle}>
+          <span style={colorSignStyle(myIsWhite)}>{myIsWhite ? '♔' : '♚'}</span>
+          <span style={colorSignStyle(!myIsWhite)}>{myIsWhite ? '♚' : '♔'}</span>
         </div>
 
         {/* Код партии */}
@@ -140,7 +171,10 @@ export const WaitingForOpponent: React.FC<Props> = ({ session }) => {
   );
 };
 
-// Styles
+// ── Константа отступа — одинакова для панели и знаков цвета ──────────────────
+const SIDE_PAD = 18;
+
+// ── Styles ────────────────────────────────────────────────────────────────────
 const rootStyle: React.CSSProperties = {
   position: 'absolute', inset: 0, background: 'var(--color-bg-dark, #0B0D11)',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -152,16 +186,63 @@ const cardStyle: React.CSSProperties = {
   border: '1px solid var(--waiting-card-border, rgba(255,255,255,0.1))',
   borderRadius: 24, padding: 24,
 };
-const pulseWrap: React.CSSProperties = {
-  position: 'relative', display: 'inline-flex',
-  alignItems: 'center', justifyContent: 'center',
-  width: 70, height: 70,
+
+// Панель игроков
+const playersRowStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: `${SIDE_PAD}px ${SIDE_PAD}px`,
+  background: 'rgba(255,255,255,0.03)',
+  borderRadius: 16,
+  border: '1px solid rgba(255,255,255,0.06)',
+  marginBottom: 0,
 };
-const pulseDot: React.CSSProperties = {
-  position: 'absolute', inset: 0, borderRadius: '50%',
-  border: '2px solid var(--waiting-pulse-dot-border, rgba(155, 133, 255, 0.5))',
-  animation: 'pulse-ring 1.4s ease-out infinite',
+const playerColStyle: React.CSSProperties = {
+  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
 };
+const centerColStyle: React.CSSProperties = {
+  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+};
+const vsStyle: React.CSSProperties = {
+  fontFamily: "'Unbounded', sans-serif",
+  fontSize: 18, fontWeight: 800,
+  color: 'rgba(255,255,255,0.25)', letterSpacing: '.08em',
+};
+const betStyle: React.CSSProperties = {
+  fontSize: 11, fontWeight: 700,
+  color: 'var(--color-accent, #F5C842)',
+  fontFamily: "'JetBrains Mono', monospace",
+};
+const playerNameStyle: React.CSSProperties = {
+  fontSize: 11, fontWeight: 600,
+  color: 'var(--color-text-secondary, #8B92A8)',
+  maxWidth: 72, overflow: 'hidden', textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap', textAlign: 'center',
+};
+const opponentAvatarStyle: React.CSSProperties = {
+  width: 44, height: 44, borderRadius: '50%',
+  background: 'rgba(255,255,255,0.06)',
+  border: '1px dashed rgba(255,255,255,0.15)',
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+};
+
+// Знаки цвета: строка под панелью, знаки прижаты к краям на том же отступе SIDE_PAD
+const colorSignsRowStyle: React.CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  paddingLeft: SIDE_PAD,
+  paddingRight: SIDE_PAD,
+  marginTop: 8,
+  marginBottom: 14,
+};
+// fontSize = 28 (= размер кода таймера в codeBlock)
+const colorSignStyle = (isWhite: boolean): React.CSSProperties => ({
+  fontFamily: "'JetBrains Mono', monospace",
+  fontSize: 28, lineHeight: 1,
+  color: isWhite ? '#F0F2F8' : '#8B92A8',
+  opacity: 0.85,
+});
 const codeBlock: React.CSSProperties = {
   background: 'var(--waiting-code-block-bg, rgba(245, 200, 66, 0.06))',
   border: '1px solid var(--waiting-code-block-border, rgba(245, 200, 66, 0.15))',
