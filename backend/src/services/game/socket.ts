@@ -22,6 +22,43 @@ import { formatSession, formatBattlesList } from "./format";
 // Используем Set чтобы не было дублей при реконнекте
 const spectatorRooms = new Map<string, Set<string>>();
 
+// ── Telegram: автопост в канал при создании публичного батла ─────────────────
+const BOT_TOKEN = () => process.env.BOT_TOKEN ?? "";
+const CHANNEL_ID = () => process.env.TELEGRAM_CHANNEL_ID ?? "";
+const BOT_LINK = "https://t.me/chessgamecoin_bot";
+
+async function postNewBattleToChannel(
+  creatorName: string,
+  bet: bigint,
+  durationSecs: number,
+  sessionCode: string,
+) {
+  if (!BOT_TOKEN() || !CHANNEL_ID()) return;
+  if (bet < 50_000n) return; // постим только батлы от 50к монет
+  try {
+    const mins = Math.round(durationSecs / 60);
+    const betFmt = (Number(bet) / 1_000_000).toFixed(bet % 1_000_000n === 0n ? 0 : 2);
+    const text =
+      `⚔️ <b>Новый публичный батл!</b>\n\n` +
+      `👤 Игрок: <b>${creatorName}</b>\n` +
+      `💰 Ставка: <b>${betFmt}M ᚙ</b>\n` +
+      `⏱ Время: <b>${mins} мин</b>\n\n` +
+      `🎯 Принять вызов и сыграть → <a href="${BOT_LINK}?start=battle_${sessionCode}">Войти в батл</a>`;
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN()}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: CHANNEL_ID(),
+        text,
+        parse_mode: "HTML",
+        reply_markup: {
+          inline_keyboard: [[{ text: "⚔️ Принять вызов", url: `${BOT_LINK}?start=battle_${sessionCode}` }]],
+        },
+      }),
+    });
+  } catch { /* silent — не блокируем игру из-за канала */ }
+}
+
 export const cleanupSpectators = (sessionId: string) => {
   spectatorRooms.delete(sessionId);
 };
@@ -218,6 +255,10 @@ export const setupSocketHandlers = (io: Server) => {
           if (!data.isPrivate) {
             const newBattle = formatBattlesList([session], buildSpectatorCounts([session]))[0];
             io.to("lobby").emit("battles:added", newBattle);
+            // Автопост в Telegram-канал для крупных публичных батлов
+            const creator = session.sides[0]?.player;
+            const creatorName = creator?.firstName ?? creator?.username ?? "Игрок";
+            postNewBattleToChannel(creatorName, BigInt(data.bet), data.duration, session.code ?? "").catch(() => {});
           }
         } catch (err: unknown) {
           if (callback) callback({ ok: false, error: (err as Error).message });

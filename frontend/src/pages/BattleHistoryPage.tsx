@@ -87,7 +87,9 @@ export const BattleHistoryPage: React.FC = () => {
                   <div style={{ width: 4, height: 40, borderRadius: 2, background: statusColor, flexShrink: 0 }} />
 
                   {g.opponent ? (
-                    <Avatar user={g.opponent} size="s" />
+                    <div onClick={(e) => { if (g.opponent?.id) { e.stopPropagation(); navigate('/profile/' + g.opponent.id); } }} style={{ cursor: g.opponent?.id ? 'pointer' : 'default', flexShrink: 0 }}>
+                      <Avatar user={g.opponent} size="s" />
+                    </div>
                   ) : (
                     <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
                       {typeIcon}

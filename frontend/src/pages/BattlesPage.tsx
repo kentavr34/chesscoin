@@ -111,7 +111,9 @@ export const BattlesPage: React.FC = () => {
                   <Card key={s.id} padding="md" onClick={() => navigate('/game/' + s.id)} style={{ borderColor: 'rgba(255,77,106,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, margin: '4px 18px 0' }}>
                       {/* Белый игрок */}
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, minWidth: 54 }}>
-                        <Avatar user={whitePlayer?.player} size="s" />
+                        <div onClick={(e) => { if (whitePlayer?.player?.id) { e.stopPropagation(); navigate('/profile/' + whitePlayer.player.id); } }}>
+                          <Avatar user={whitePlayer?.player} size="s" />
+                        </div>
                         <span style={{ fontSize: 10, fontWeight: 600, color: '#F0F2F8', maxWidth: 54, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{whitePlayer?.player?.firstName ?? '?'}</span>
                         <span style={{ fontSize: 8, color: '#8B92A8', background: 'rgba(255,255,255,0.1)', padding: '1px 4px', borderRadius: 3 }}>♔</span>
                       </div>
@@ -131,7 +133,9 @@ export const BattlesPage: React.FC = () => {
 
                       {/* Чёрный игрок */}
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, minWidth: 54 }}>
-                        <Avatar user={blackPlayer?.player} size="s" />
+                        <div onClick={(e) => { if (blackPlayer?.player?.id) { e.stopPropagation(); navigate('/profile/' + blackPlayer.player.id); } }}>
+                          <Avatar user={blackPlayer?.player} size="s" />
+                        </div>
                         <span style={{ fontSize: 10, fontWeight: 600, color: '#F0F2F8', maxWidth: 54, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{blackPlayer?.player?.firstName ?? '?'}</span>
                         <span style={{ fontSize: 8, color: '#8B92A8', background: 'rgba(0,0,0,0.3)', padding: '1px 4px', borderRadius: 3 }}>♚</span>
                       </div>
@@ -147,7 +151,9 @@ export const BattlesPage: React.FC = () => {
               <Text variant="caption" color="muted" weight="bold" style={{ fontSize: 10, letterSpacing: '.09em', textTransform: 'uppercase', padding: '16px 18px 8px' }}>⚔️ {t.battles.tabWaiting ?? 'CHALLENGES'}</Text>
               {waitingSessions.map((battle, idx) => (
                 <Card key={battle.id} padding="md" style={{ borderColor: idx === 0 ? 'rgba(245,200,66,0.2)' : 'rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', gap: 12, margin: '4px 18px 0' }}>
-                  <Avatar user={battle.creator as import('@/types').UserPublic | null} size="m" />
+                  <div onClick={() => battle.creator?.id && navigate('/profile/' + battle.creator.id)} style={{ cursor: battle.creator?.id ? 'pointer' : 'default' }}>
+                    <Avatar user={battle.creator as import('@/types').UserPublic | null} size="m" />
+                  </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <Text variant="body" weight="bold" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{battle.creator?.firstName ?? '?'}</Text>
