@@ -79,8 +79,8 @@ export const WaitingForOpponent: React.FC<Props> = ({ session }) => {
           {/* Левый игрок — я */}
           <div style={playerColStyle}>
             <div
-              onClick={() => myPlayer?.id ? navigate('/profile/' + myPlayer.id) : undefined}
-              style={{ cursor: myPlayer?.id ? 'pointer' : 'default' }}
+              onClick={() => { const id = mySide?.player?.id; if (id) navigate('/profile/' + id); }}
+              style={{ cursor: mySide?.player?.id ? 'pointer' : 'default' }}
             >
               <Avatar user={myPlayer} size="l" />
             </div>
@@ -188,14 +188,16 @@ const cardStyle: React.CSSProperties = {
 };
 
 // Панель игроков
+// paddingLeft/Right = SIDE_PAD + 10 → аватары сдвинуты к центру на 10px
 const playersRowStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  padding: `${SIDE_PAD}px ${SIDE_PAD}px`,
-  background: 'rgba(255,255,255,0.03)',
+  padding: `${SIDE_PAD}px ${SIDE_PAD + 10}px`,
+  background: 'rgba(255,255,255,0.055)',
   borderRadius: 16,
-  border: '1px solid rgba(255,255,255,0.06)',
+  border: '1.5px solid rgba(155,133,255,0.28)',
+  boxShadow: '0 0 14px rgba(155,133,255,0.10), inset 0 0 12px rgba(155,133,255,0.04)',
   marginBottom: 0,
 };
 const playerColStyle: React.CSSProperties = {

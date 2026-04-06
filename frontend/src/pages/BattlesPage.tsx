@@ -495,7 +495,7 @@ const BattleChallengeCard: React.FC<{
       </div>
 
       {/* Центр: [ЦветИконка] ЖДЁМ + таймер + ставка [ЦветИконка] */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
         {/* Иконка цвета создателя */}
         <SmallColorIcon isWhite={creatorIsWhite} />
 
@@ -654,8 +654,8 @@ const BattleLiveCard: React.FC<{
   // ── Колонка игрока: Аватар / Имя + ELO (без иконки цвета — она в центре) ──
   const PlayerCol: React.FC<{ side: typeof whitePlayer; isRight?: boolean }> = ({ side, isRight }) => {
     if (!side) return <div style={{ flexShrink: 0, width: 72 }} />;
-    // playerId всегда задан на SessionSide; player?.id — запасной вариант
-    const pid = side.playerId || side.player?.id;
+    // player.id — берём напрямую из объекта игрока (playerId может приходить некорректно)
+    const pid = side.player?.id || side.playerId;
     const playerAsUser = {
       id: pid,
       firstName: side.player?.firstName ?? '?',
