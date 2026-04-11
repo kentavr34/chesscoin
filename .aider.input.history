@@ -20,3 +20,55 @@
 +  frontend/src/components/Modals/ModalContainer.tsx: Добавить проверку на соответствие размеров модальных окон стандартным шаблонам (ширина 400px для информационных, 500px для действий)
 +
 +Отчёт: кратко опиши что было сделано.
+
+# 2026-04-11 21:56:30.787888
++Исправить выравнивание текста под аватаром в карточке вызова, улучшить видимость иконок выбора цвета фигур, скорректировать поведение модальных окон при недостатке попыток, унифицировать размеры элементов в шаблонных модальных окнах.
++
++Этапы выполнения:
++  frontend/src/components/Battle/BattleChallengeCard.tsx: Выровнять текстовый блок (имя и уровень) строго по центру под аватаром, убрать смещение влево
++  frontend/src/components/Battle/ColorSelection.tsx: Добавить контур/подсветку иконкам выбора цвета (#D4A843 с opacity 0.3 для фона, белый border 1px)
++  frontend/src/components/Battle/BattleChallengeCard.tsx: Осветлить фон карточки вызова (изменить background-color с текущего на #1A1A23)
++  frontend/src/components/Modals/InsufficientAttemptsModal.tsx: Исправить логику отображения - при клике на красную кнопку "Купить попытки" должен закрываться текущий модал и открываться PurchaseAttemptsModal
++  frontend/src/components/Modals/PurchaseAttemptsModal.tsx: Унифицировать размеры кнопок, иконок и текста согласно общему шаблону (сравнить с TournamentJoinModal)
++  frontend/src/hooks/useBattleActions.ts: Изменить обработку ошибки недостатка попыток - вместо показа красного toast уведомления, программно открывать PurchaseAttemptsModal
++
++Отчёт: кратко опиши что было сделано.
+
+# 2026-04-11 21:56:30.788028
++Исправить выравнивание текста под аватаром в карточке вызова, улучшить видимость иконок выбора цвета фигур, скорректировать поведение модальных окон при недостатке попыток, унифицировать размеры элементов в шаблонных модальных окнах.
++
++Этапы выполнения:
++  frontend/src/components/Battle/BattleChallengeCard.tsx: Выровнять текстовый блок (имя и уровень) строго по центру под аватаром, убрать смещение влево
++  frontend/src/components/Battle/ColorSelection.tsx: Добавить контур/подсветку иконкам выбора цвета (#D4A843 с opacity 0.3 для фона, белый border 1px)
++  frontend/src/components/Battle/BattleChallengeCard.tsx: Осветлить фон карточки вызова (изменить background-color с текущего на #1A1A23)
++  frontend/src/components/Modals/InsufficientAttemptsModal.tsx: Исправить логику отображения - при клике на красную кнопку "Купить попытки" должен закрываться текущий модал и открываться PurchaseAttemptsModal
++  frontend/src/components/Modals/PurchaseAttemptsModal.tsx: Унифицировать размеры кнопок, иконок и текста согласно общему шаблону (сравнить с TournamentJoinModal)
++  frontend/src/hooks/useBattleActions.ts: Изменить обработку ошибки недостатка попыток - вместо показа красного toast уведомления, программно открывать PurchaseAttemptsModal
++
++Отчёт: кратко опиши что было сделано.
+
+# 2026-04-11 22:11:51.139580
++Исправить выравнивание текста под аватаром в карточке вызова, улучшить видимость иконок выбора цвета фигур, скорректировать поведение модальных окон при недостатке попыток, унифицировать размеры элементов в шаблонных модальных окнах.
++
++Этапы выполнения:
++  frontend/src/components/Battle/BattleChallengeCard.tsx: Выровнять текстовый блок (имя и уровень) строго по центру под аватаром, убрать смещение влево
++  frontend/src/components/Battle/ColorSelection.tsx: Добавить контур/подсветку иконкам выбора цвета (#D4A843 с opacity 0.3 для фона, белый border 1px)
++  frontend/src/components/Battle/BattleChallengeCard.tsx: Осветлить фон карточки вызова (изменить background-color с текущего на #1A1A23)
++  frontend/src/components/Modals/InsufficientAttemptsModal.tsx: Исправить логику отображения - при клике на красную кнопку "Купить попытки" должен закрываться текущий модал и открываться PurchaseAttemptsModal
++  frontend/src/components/Modals/PurchaseAttemptsModal.tsx: Унифицировать размеры кнопок, иконок и текста согласно общему шаблону (сравнить с TournamentJoinModal)
++  frontend/src/hooks/useBattleActions.ts: Изменить обработку ошибки недостатка попыток - вместо показа красного toast уведомления, программно открывать PurchaseAttemptsModal
++
++Отчёт: кратко опиши что было сделано.
+
+# 2026-04-11 22:11:51.139666
++Исправить выравнивание текста под аватаром в карточке вызова, улучшить видимость иконок выбора цвета фигур, скорректировать поведение модальных окон при недостатке попыток, унифицировать размеры элементов в шаблонных модальных окнах.
++
++Этапы выполнения:
++  frontend/src/components/Battle/BattleChallengeCard.tsx: Выровнять текстовый блок (имя и уровень) строго по центру под аватаром, убрать смещение влево
++  frontend/src/components/Battle/ColorSelection.tsx: Добавить контур/подсветку иконкам выбора цвета (#D4A843 с opacity 0.3 для фона, белый border 1px)
++  frontend/src/components/Battle/BattleChallengeCard.tsx: Осветлить фон карточки вызова (изменить background-color с текущего на #1A1A23)
++  frontend/src/components/Modals/InsufficientAttemptsModal.tsx: Исправить логику отображения - при клике на красную кнопку "Купить попытки" должен закрываться текущий модал и открываться PurchaseAttemptsModal
++  frontend/src/components/Modals/PurchaseAttemptsModal.tsx: Унифицировать размеры кнопок, иконок и текста согласно общему шаблону (сравнить с TournamentJoinModal)
++  frontend/src/hooks/useBattleActions.ts: Изменить обработку ошибки недостатка попыток - вместо показа красного toast уведомления, программно открывать PurchaseAttemptsModal
++
++Отчёт: кратко опиши что было сделано.
