@@ -96,3 +96,169 @@
 +  **vite.config.ts**: Убедиться в правильности конфигурации сборки для production-режима.
 +
 +Отчёт: кратко опиши что было сделано.
+
+# 2026-04-11 22:58:36.160025
++СРОЧНЫЙ ФИКС после неудачного билда.
++
++Ошибки:
++n't reach database server at `pgbouncer:5432`\n\nPlease make sure your database server is running at `pgbouncer:5432`.\n    at t (/app/node_modules/@prisma/client/runtime/library.js:112:2488)\n    at async start (/app/dist/index.js:151:9)","timestamp":"2026-04-11 22:58:14"}
++chesscoin_backend    | [Redis] Connected
++chesscoin_backend    | [Redis] Connected
++chesscoin_backend    | [Redis] Connected
++chesscoin_backend    | [Redis] Keyspace notifications enabled
++chesscoin_backend    | {"level":"info","message":"[Socket.io] Redis adapter enabled","timestamp":"2026-04-11 22:58:16"}
++chesscoin_backend    | {"level":"error","message":"[[Start] Fatal:] Can't reach database server at `pgbouncer:5432`\n\nPlease make sure your database server is running at `pgbouncer:5432`.","stack":"PrismaClientInitializationError: Can't reach database server at `pgbouncer:5432`\n\nPlease make sure your database server is running at `pgbouncer:5432`.\n    at t (/app/node_modules/@prisma/client/runtime/library.js:112:2488)\n    at async start (/app/dist/index.js:151:9)","timestamp":"2026-04-11 22:58:21"}
++chesscoin_backend    | [Redis] Connected
++chesscoin_backend    | [Redis] Connected
++chesscoin_backend    | [Redis] Connected
++chesscoin_backend    | [Redis] Keyspace notifications enabled
++chesscoin_backend    | {"level":"info","message":"[Socket.io] Redis adapter enabled","timestamp":"2026-04-11 22:58:22"}
++chesscoin_frontend   | /docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform 
++
++Что исправить:
++1. **docker-compose.yml** — добавить зависимость между сервисами:
++   ```yaml
++   services:
++     backend:
++       depends_on:
++         pgbouncer:
++           condition: service_healthy
++   ```
++
++2. **docker-compose.yml** — добавить healthcheck для pgbouncer:
++   ```yaml
++   services:
++     pgbouncer:
++       healthcheck:
++         test: ["CMD", "pg_isready", "-h", "localhost", "-p", "6432"]
++         interval: 5s
++         timeout: 3s
++         retries: 5
++   ```
++
++3. **backend/Dockerfile** — добавить ожидание БД перед запуском:
++   ```dockerfile
++   # Добавить wait-for-it или использовать healthcheck
++   COPY wait-for-it.sh /wait-for-it.sh
++   RUN chmod +x /wait-for-it.sh
++   CMD ["/wait-for-it.sh", "pgbouncer:6432", "--", "npm", "start"]
++   ```
++
++4. **backend/src/index.ts** (или точка входа) — увеличить таймаут подключения Prisma:
++   ```typescript
++   const prisma = new PrismaClient({
++     datasources: {
++       db: {
++         url: process.env.DATABASE_URL
++       }
++     },
++     // Добавить:
++     __internal: {
++       engine: {
++         enableConnectionTimeout: false
++       }
++     }
++   })
++   ```
++
++5. **.env** (или переменные окружения backend) — проверить DATABASE_URL:
++   ```
++   DATABASE_URL=postgresql://user:pass@pgbouncer:6432/dbname?pgbouncer=true
++   ```
++
++6. **docker-compose.yml** — убедиться, что pgbouncer слушает на порту 5432 внутри сети:
++   ```yaml
++   pgbouncer:
++     ports:
++       - "5432:5432"  # или "6432:6432" если используется порт 6432
++   ```
++
++7. **pgbouncer/pgbouncer.ini** — проверить конфигурацию:
++   ```
++   listen_port = 5432
++   listen_addr = *
++   auth_type = md5
++   auth_file = /etc/pgbouncer/userlist.txt
+
+# 2026-04-11 22:58:36.160168
++СРОЧНЫЙ ФИКС после неудачного билда.
++
++Ошибки:
++n't reach database server at `pgbouncer:5432`\n\nPlease make sure your database server is running at `pgbouncer:5432`.\n    at t (/app/node_modules/@prisma/client/runtime/library.js:112:2488)\n    at async start (/app/dist/index.js:151:9)","timestamp":"2026-04-11 22:58:14"}
++chesscoin_backend    | [Redis] Connected
++chesscoin_backend    | [Redis] Connected
++chesscoin_backend    | [Redis] Connected
++chesscoin_backend    | [Redis] Keyspace notifications enabled
++chesscoin_backend    | {"level":"info","message":"[Socket.io] Redis adapter enabled","timestamp":"2026-04-11 22:58:16"}
++chesscoin_backend    | {"level":"error","message":"[[Start] Fatal:] Can't reach database server at `pgbouncer:5432`\n\nPlease make sure your database server is running at `pgbouncer:5432`.","stack":"PrismaClientInitializationError: Can't reach database server at `pgbouncer:5432`\n\nPlease make sure your database server is running at `pgbouncer:5432`.\n    at t (/app/node_modules/@prisma/client/runtime/library.js:112:2488)\n    at async start (/app/dist/index.js:151:9)","timestamp":"2026-04-11 22:58:21"}
++chesscoin_backend    | [Redis] Connected
++chesscoin_backend    | [Redis] Connected
++chesscoin_backend    | [Redis] Connected
++chesscoin_backend    | [Redis] Keyspace notifications enabled
++chesscoin_backend    | {"level":"info","message":"[Socket.io] Redis adapter enabled","timestamp":"2026-04-11 22:58:22"}
++chesscoin_frontend   | /docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform 
++
++Что исправить:
++1. **docker-compose.yml** — добавить зависимость между сервисами:
++   ```yaml
++   services:
++     backend:
++       depends_on:
++         pgbouncer:
++           condition: service_healthy
++   ```
++
++2. **docker-compose.yml** — добавить healthcheck для pgbouncer:
++   ```yaml
++   services:
++     pgbouncer:
++       healthcheck:
++         test: ["CMD", "pg_isready", "-h", "localhost", "-p", "6432"]
++         interval: 5s
++         timeout: 3s
++         retries: 5
++   ```
++
++3. **backend/Dockerfile** — добавить ожидание БД перед запуском:
++   ```dockerfile
++   # Добавить wait-for-it или использовать healthcheck
++   COPY wait-for-it.sh /wait-for-it.sh
++   RUN chmod +x /wait-for-it.sh
++   CMD ["/wait-for-it.sh", "pgbouncer:6432", "--", "npm", "start"]
++   ```
++
++4. **backend/src/index.ts** (или точка входа) — увеличить таймаут подключения Prisma:
++   ```typescript
++   const prisma = new PrismaClient({
++     datasources: {
++       db: {
++         url: process.env.DATABASE_URL
++       }
++     },
++     // Добавить:
++     __internal: {
++       engine: {
++         enableConnectionTimeout: false
++       }
++     }
++   })
++   ```
++
++5. **.env** (или переменные окружения backend) — проверить DATABASE_URL:
++   ```
++   DATABASE_URL=postgresql://user:pass@pgbouncer:6432/dbname?pgbouncer=true
++   ```
++
++6. **docker-compose.yml** — убедиться, что pgbouncer слушает на порту 5432 внутри сети:
++   ```yaml
++   pgbouncer:
++     ports:
++       - "5432:5432"  # или "6432:6432" если используется порт 6432
++   ```
++
++7. **pgbouncer/pgbouncer.ini** — проверить конфигурацию:
++   ```
++   listen_port = 5432
++   listen_addr = *
++   auth_type = md5
++   auth_file = /etc/pgbouncer/userlist.txt
