@@ -1,0 +1,59 @@
+{
+  "name": "chesscoin",
+  "version": "7.1.2",
+  "created": "2026-04-13",
+  "description": "",
+  "changelog": [],
+  "tasks": [
+    {
+      "id": "T007",
+      "title": "Реализовать обрезку аудиофайлов на сегменты по 1 минуту перед отправкой на расшифровку",
+      "goal": "Необходимо добавить функционал автоматической обрезки загруженных аудиофайлов на сегменты по 1 минуте (60 секунд) для последующей отправки каждого сегмента на сервис расшифровки. Это позволит обрабатывать длинные записи более эффективно и избегать таймаутов при расшифровке.",
+      "status": "pending",
+      "priority": "medium",
+      "assignee": "claudia-agent",
+      "date_start": "2026-04-13",
+      "subtasks": [
+        {
+          "id": "T007.1",
+          "title": "server/src/services/audioProcessor.ts: Добавить функцию splitAudioIntoMinutes() для обработки аудиофайлов с использованием библиотеки fluent-ffmpeg",
+          "status": "pending",
+          "assignee": "claudia-agent",
+          "date_start": "2026-04-13",
+          "date_completed": null
+        },
+        {
+          "id": "T007.2",
+          "title": "server/src/routes/transcription.ts: Модифицировать эндпоинт POST /api/transcribe для вызова функции обрезки перед отправкой на расшифровку",
+          "status": "pending",
+          "assignee": "claudia-agent",
+          "date_start": "2026-04-13",
+          "date_completed": null
+        },
+        {
+          "id": "T007.3",
+          "title": "client/src/components/AudioUploader.tsx: Добавить индикатор прогресса обрезки аудио на сегменты",
+          "status": "pending",
+          "assignee": "claudia-agent",
+          "date_start": "2026-04-13",
+          "date_completed": null
+        },
+        {
+          "id": "T007.4",
+          "title": "server/src/types/audio.ts: Добавить интерфейс AudioSegment с полями segmentNumber, startTime, endTime, filePath",
+          "status": "pending",
+          "assignee": "claudia-agent",
+          "date_start": "2026-04-13",
+          "date_completed": null
+        }
+      ]
+    }
+  ],
+  "log": [
+    {
+      "date": "2026-04-13",
+      "author": "Клаудиа",
+      "event": "Задача #7 добавлена: Реализовать обрезку аудиофайлов на сегменты по 1 минуту перед отправкой на расшифровку"
+    }
+  ]
+}
