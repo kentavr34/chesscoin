@@ -296,3 +296,447 @@
 +  server/package.json: Добавить скрипты для запуска CLI команд
 +
 +Отчёт: кратко опиши что было сделано.
+
+# 2026-04-15 20:42:19.730079
++КОНТЕКСТ ПРОЕКТА (реальное состояние кода):
++=== Структура /opt/chesscoin ===
++BATTLES_COMPLETE.md
++BIBLE.md
++CLAUDE.md
++Claude.docx
++HOMEPAGE_COMPLETE.md
++HOMEPAGE_GLASSMORPHISM.md
++MODAL_DESIGN_FINAL.html
++PROJECT.json
++README.md
++START_CHESSCOIN.ps1
++START_GAME.bat
++Style.txt
++_backup
++backend
++bot
++chesscoin-old
++create_test_user.js
++docker-compose.prod.yml
++docker-compose.yml
++docx_unzipped
++fix_backticks.js
++fix_jarvis_level.sh
++frontend
++generate_token.js
++inject_token.html
++modal_design.html
++nginx
++output.txt
++package-lock.json
++package.json
++patch_bot.py
++read_docx.js
++read_docx.py
++scripts
++update.tar.gz
++Задачи.txt
++Шахматы.docx
++
++=== backend/src/ ===
++__tests__
++cli
++config.ts
++index.ts
++lib
++middleware
++routes
++services
++types
++utils
++
++=== frontend/src/ ===
++App.tsx
++api
++assets
++components
++hooks
++i18n
++index.css
++lib
++main.tsx
++pages
++store
++types
++utils
++
++=== backend/package.json ===
++scripts: ['dev', 'build', 'start', 'migrate', 'migrate:dev', 'generate', 'seed', 'test', 'test:integration', 'test:all', 'test:coverage', 'test:watch']
++deps: ['@aws-sdk/client-s3', '@prisma/client', '@socket.io/redis-adapter', '@telegram-apps/init-data-node', 'chess.js', 'compression', 'cors', 'dotenv', 'express', 'express-rate-limit', 'helmet', 'ioredis', 'jsonwebtoken', 'multer', 'nanoid']
++
++=== backend/src/index.ts ===
++import "dotenv/config";
++import { logger, logError } from "@/lib/logger"; // Q2
++
++// ─── Глобальные обработчики необработанных ошибок ─────────────────────────────
++process.on("unhandledRejection", (reason) => {
++  logger.error("[PROCESS] Unhandled rejection:", reason instanceof Error ? reason.message : String(reason));
++  if (reason instanceof Error && reason.stack) {
++    logger.error("[PROCESS] Stack:", reason.stack);
++  }
++});
++
++process.on("uncaughtException", (err) => {
++  logger.error("[PROCESS] Uncaught exception:", err.message);
++  logger.error("[PROCESS] Stack:", err.stack);
++  // Даём время записать логи, потом выходим
++  setTimeout(() => process.exit(1), 1000);
++});
++
++import express from "express";
++import cors from "cors";
++import compression from "compression"; // OPT-2: gzip сжатие ответов
++import helmet from "helmet"; // Q4: security headers
++
++// ─── Глобальный фикс BigInt сериализации ─────────────────────────────────────
++// Патч обратной совместимости — для res.json() с BigInt полями.
++// Для новых роутов: safeJson из @/lib/json. Удалить в v6.1 после полного перехода.
++(BigInt.prototype as any).toJSON = function () {
++  return this.toString();
++};
++
++import { createServer } from "http";
++import { Server } from "socket.io";
++import { createAdapter } from "@socket.io/redis-adapter";
++import { prisma } from "@/lib/prisma";
++import { redis, connectRedis, redisPub, redisSub } from "@/lib/redis";
++import config from "@/config";
++import { startAttemptsCron } from "@/services/attempts";
++import { s
++
++=== backend/src/middleware/auth.ts ===
++import { Request, Response, NextFunction } from "express";
++import { verifyAccessToken } from "@/services/auth";
++import { prisma } from "@/lib/prisma";
++
++declare global {
++  namespace Express {
++    interface Request {
++      userId: string;
++      user?: { id: string; isAdmin?: boolean };
++    }
++  }
++}
++
++export interface AuthRequest extends Request {
++  userId: string;
++}
++
++export const authMiddleware = (
++  req: Request,
++  res: Response,
++  next: NextFunction
++) => {
++  const authHeader = req.headers.authorization;
++  if (!authHeader?.startsWith("Bearer ")) {
++    return res.status(401).json({ error: "No token provided" });
++  }
++
++  const token = authHeader.slice(7);
++  try {
++    const userId = verifyAccessToken(token);
++    req.userId = userId;
++    req.user = { id: userId };
++    next();
++  } catch {
++    return res.status(401).json({ error: "Invalid token" });
++  }
++};
++
++export const adminMiddleware = async (
++  req: Request,
++  res: Response,
++  next: NextFunction
++) => {
++  if (!req.user?.id) {
++    return res.status(401).json({ error: "Not authenticated" });
++  }
++  try {
++    const user = await prisma.user.findUnique({
++      where: { id: req.user.id },
++      select: { isAdmin: true },
++    });
++    if (!user?.is
++
++=== backend/src/middleware/validate.ts ===
++/**
++ * middleware/validate.ts — R4: Zod валидация входных данных
++ *
++ * Использование:
++ *   import { validate } from "@/middleware/validate";
++ *   import { z } from "zod";
++ *
++ *   const Schema = z.object({ amount: z.string().regex(/^\d+$/) });
++ *   router.post("/donate", validate(Schema), async (req, res) => {
++ *     const { amount } = req.body; // типизировано
++ *   });
++ */
++
++import { ZodSchema, ZodError } from "zod";
++import { Request, Response, NextFunction } from "express";
++import { logger } from "@/lib/logger";
++
++export const validate = (schema: ZodSchema) =>
++  (req: Request, res: Response, next: NextFunction): void => {
++    const result = schema.safeParse(req.body);
++    if (!result.success) {
++      const errors = (result.error as ZodError).flatten().fieldErrors;
++      logger.warn("[Validate] Invalid input", { path: req.path, errors });
++      res.status(400).json({
++        error: "INVALID_INPUT",
++        details: errors,
++      });
++      return;
++    }
++    req.body = result.data; // заменяем body на типизированные данные
++    next();
++  };
++
++/** Валидация query параметров */
++export const validateQuery = (schema: ZodSchema) =>
++  (req: Request, res: Response, next: NextFunction): void => 
++
++=== git log (последние) ===
++53ddc46 chore: авто-коммит перед новой задачей
++876e226 Merge task-6 -> main
++a088c09 task: Реализовать CLI-интерфейс для запуска команд с сервера
++699e4a7 chore: авто-коммит перед новой задачей
++ecd4eef Merge task-4 -> main
++0273bd0 task: Анализ и исправление ошибок деплоя ChessCoin
++bcab3ab Merge task-3 -> main
++c420887 task: Исправить визуальные баги в модальных окнах вызова и покупки
++
++--- ЗАДАЧА ---
++ВАЖНО: Создавай файлы ТОЛЬКО в директориях из структуры выше.
++Перед изменениями — прочитай релевантные файлы через команду read.
++
++Переработать структуру данных пользователя в базе данных или файловой системе, устранить дублирование полей, оптимизировать схему хранения для повышения производительности и поддерживаемости.
++
++Отчёт: кратко опиши что было сделано.
+
+# 2026-04-15 20:42:19.730272
++КОНТЕКСТ ПРОЕКТА (реальное состояние кода):
++=== Структура /opt/chesscoin ===
++BATTLES_COMPLETE.md
++BIBLE.md
++CLAUDE.md
++Claude.docx
++HOMEPAGE_COMPLETE.md
++HOMEPAGE_GLASSMORPHISM.md
++MODAL_DESIGN_FINAL.html
++PROJECT.json
++README.md
++START_CHESSCOIN.ps1
++START_GAME.bat
++Style.txt
++_backup
++backend
++bot
++chesscoin-old
++create_test_user.js
++docker-compose.prod.yml
++docker-compose.yml
++docx_unzipped
++fix_backticks.js
++fix_jarvis_level.sh
++frontend
++generate_token.js
++inject_token.html
++modal_design.html
++nginx
++output.txt
++package-lock.json
++package.json
++patch_bot.py
++read_docx.js
++read_docx.py
++scripts
++update.tar.gz
++Задачи.txt
++Шахматы.docx
++
++=== backend/src/ ===
++__tests__
++cli
++config.ts
++index.ts
++lib
++middleware
++routes
++services
++types
++utils
++
++=== frontend/src/ ===
++App.tsx
++api
++assets
++components
++hooks
++i18n
++index.css
++lib
++main.tsx
++pages
++store
++types
++utils
++
++=== backend/package.json ===
++scripts: ['dev', 'build', 'start', 'migrate', 'migrate:dev', 'generate', 'seed', 'test', 'test:integration', 'test:all', 'test:coverage', 'test:watch']
++deps: ['@aws-sdk/client-s3', '@prisma/client', '@socket.io/redis-adapter', '@telegram-apps/init-data-node', 'chess.js', 'compression', 'cors', 'dotenv', 'express', 'express-rate-limit', 'helmet', 'ioredis', 'jsonwebtoken', 'multer', 'nanoid']
++
++=== backend/src/index.ts ===
++import "dotenv/config";
++import { logger, logError } from "@/lib/logger"; // Q2
++
++// ─── Глобальные обработчики необработанных ошибок ─────────────────────────────
++process.on("unhandledRejection", (reason) => {
++  logger.error("[PROCESS] Unhandled rejection:", reason instanceof Error ? reason.message : String(reason));
++  if (reason instanceof Error && reason.stack) {
++    logger.error("[PROCESS] Stack:", reason.stack);
++  }
++});
++
++process.on("uncaughtException", (err) => {
++  logger.error("[PROCESS] Uncaught exception:", err.message);
++  logger.error("[PROCESS] Stack:", err.stack);
++  // Даём время записать логи, потом выходим
++  setTimeout(() => process.exit(1), 1000);
++});
++
++import express from "express";
++import cors from "cors";
++import compression from "compression"; // OPT-2: gzip сжатие ответов
++import helmet from "helmet"; // Q4: security headers
++
++// ─── Глобальный фикс BigInt сериализации ─────────────────────────────────────
++// Патч обратной совместимости — для res.json() с BigInt полями.
++// Для новых роутов: safeJson из @/lib/json. Удалить в v6.1 после полного перехода.
++(BigInt.prototype as any).toJSON = function () {
++  return this.toString();
++};
++
++import { createServer } from "http";
++import { Server } from "socket.io";
++import { createAdapter } from "@socket.io/redis-adapter";
++import { prisma } from "@/lib/prisma";
++import { redis, connectRedis, redisPub, redisSub } from "@/lib/redis";
++import config from "@/config";
++import { startAttemptsCron } from "@/services/attempts";
++import { s
++
++=== backend/src/middleware/auth.ts ===
++import { Request, Response, NextFunction } from "express";
++import { verifyAccessToken } from "@/services/auth";
++import { prisma } from "@/lib/prisma";
++
++declare global {
++  namespace Express {
++    interface Request {
++      userId: string;
++      user?: { id: string; isAdmin?: boolean };
++    }
++  }
++}
++
++export interface AuthRequest extends Request {
++  userId: string;
++}
++
++export const authMiddleware = (
++  req: Request,
++  res: Response,
++  next: NextFunction
++) => {
++  const authHeader = req.headers.authorization;
++  if (!authHeader?.startsWith("Bearer ")) {
++    return res.status(401).json({ error: "No token provided" });
++  }
++
++  const token = authHeader.slice(7);
++  try {
++    const userId = verifyAccessToken(token);
++    req.userId = userId;
++    req.user = { id: userId };
++    next();
++  } catch {
++    return res.status(401).json({ error: "Invalid token" });
++  }
++};
++
++export const adminMiddleware = async (
++  req: Request,
++  res: Response,
++  next: NextFunction
++) => {
++  if (!req.user?.id) {
++    return res.status(401).json({ error: "Not authenticated" });
++  }
++  try {
++    const user = await prisma.user.findUnique({
++      where: { id: req.user.id },
++      select: { isAdmin: true },
++    });
++    if (!user?.is
++
++=== backend/src/middleware/validate.ts ===
++/**
++ * middleware/validate.ts — R4: Zod валидация входных данных
++ *
++ * Использование:
++ *   import { validate } from "@/middleware/validate";
++ *   import { z } from "zod";
++ *
++ *   const Schema = z.object({ amount: z.string().regex(/^\d+$/) });
++ *   router.post("/donate", validate(Schema), async (req, res) => {
++ *     const { amount } = req.body; // типизировано
++ *   });
++ */
++
++import { ZodSchema, ZodError } from "zod";
++import { Request, Response, NextFunction } from "express";
++import { logger } from "@/lib/logger";
++
++export const validate = (schema: ZodSchema) =>
++  (req: Request, res: Response, next: NextFunction): void => {
++    const result = schema.safeParse(req.body);
++    if (!result.success) {
++      const errors = (result.error as ZodError).flatten().fieldErrors;
++      logger.warn("[Validate] Invalid input", { path: req.path, errors });
++      res.status(400).json({
++        error: "INVALID_INPUT",
++        details: errors,
++      });
++      return;
++    }
++    req.body = result.data; // заменяем body на типизированные данные
++    next();
++  };
++
++/** Валидация query параметров */
++export const validateQuery = (schema: ZodSchema) =>
++  (req: Request, res: Response, next: NextFunction): void => 
++
++=== git log (последние) ===
++53ddc46 chore: авто-коммит перед новой задачей
++876e226 Merge task-6 -> main
++a088c09 task: Реализовать CLI-интерфейс для запуска команд с сервера
++699e4a7 chore: авто-коммит перед новой задачей
++ecd4eef Merge task-4 -> main
++0273bd0 task: Анализ и исправление ошибок деплоя ChessCoin
++bcab3ab Merge task-3 -> main
++c420887 task: Исправить визуальные баги в модальных окнах вызова и покупки
++
++--- ЗАДАЧА ---
++ВАЖНО: Создавай файлы ТОЛЬКО в директориях из структуры выше.
++Перед изменениями — прочитай релевантные файлы через команду read.
++
++Переработать структуру данных пользователя в базе данных или файловой системе, устранить дублирование полей, оптимизировать схему хранения для повышения производительности и поддерживаемости.
++
++Отчёт: кратко опиши что было сделано.
