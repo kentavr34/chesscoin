@@ -1,6 +1,6 @@
 {
   "name": "chesscoin-backend",
-  "version": "7.1.2",
+  "version": "7.1.3",
   "private": true,
   "scripts": {
     "dev": "tsx --tsconfig tsconfig.json -r tsconfig-paths/register watch src/index.ts",

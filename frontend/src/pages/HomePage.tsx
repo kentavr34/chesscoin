@@ -8,8 +8,7 @@ import { JarvisPlayModal } from '@/components/ui/JarvisPlayModal';
 import { AttemptsModal } from '@/components/ui/AttemptsModal';
 import { ActiveSessionsModal } from '@/components/ui/ActiveSessionsModal';
 import { type JarvisLevel } from '@/components/ui/JarvisModal';
-
-const JARVIS_NAMES = ['Beginner','Rookie','Player','Challenger','Fighter','Warrior','Expert','Master','Legend','God'];
+import { useT } from '@/i18n/useT';
 
 // ── SVG иконки ────────────────────────────────────────────────────────────────
 
@@ -105,9 +104,11 @@ export const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useUserStore();
   const { upsertSession, sessions } = useGameStore();
+  const t = useT();
 
   const activeSessions = sessions.filter(s =>
-    s.status === 'IN_PROGRESS' || s.status === 'WAITING_FOR_OPPONENT'
+    s.status === 'IN_PROGRESS' ||
+    (s.status === 'WAITING_FOR_OPPONENT' && s.type !== 'BATTLE')
   );
 
   const [showJarvisModal, setShowJarvisModal] = useState(false);
@@ -115,14 +116,24 @@ export const HomePage: React.FC = () => {
   const [showAttemptsModal, setShowAttemptsModal] = useState(false);
   const [timeLeft, setTimeLeft] = useState('');
   const [pressedBlk, setPressedBlk] = useState<string | null>(null);
+  const [targetAt, setTargetAt] = useState<number | null>(null);
 
+  // Конвертируем статичное поле сервера в абсолютный timestamp один раз при изменении user
   useEffect(() => {
-    if (!user?.nextRestoreSeconds && !user?.nextAttemptAt) return;
+    if (user?.nextAttemptAt) {
+      setTargetAt(new Date(user.nextAttemptAt).getTime());
+    } else if (user?.nextRestoreSeconds && user.nextRestoreSeconds > 0) {
+      setTargetAt(Date.now() + user.nextRestoreSeconds * 1000);
+    } else {
+      setTargetAt(null);
+    }
+  }, [user?.nextAttemptAt, user?.nextRestoreSeconds]);
+
+  // Тикаем каждую секунду от абсолютного timestamp
+  useEffect(() => {
+    if (!targetAt) { setTimeLeft(''); return; }
     const update = () => {
-      let secs = 0;
-      if (user.nextRestoreSeconds) secs = user.nextRestoreSeconds;
-      else if (user.nextAttemptAt)
-        secs = Math.max(0, Math.floor((new Date(user.nextAttemptAt).getTime() - Date.now()) / 1000));
+      const secs = Math.max(0, Math.floor((targetAt - Date.now()) / 1000));
       if (secs <= 0) { setTimeLeft(''); return; }
       const h = Math.floor(secs / 3600);
       const m = Math.floor((secs % 3600) / 60);
@@ -134,7 +145,7 @@ export const HomePage: React.FC = () => {
     update();
     const id = setInterval(update, 1000);
     return () => clearInterval(id);
-  }, [user?.nextRestoreSeconds, user?.nextAttemptAt]);
+  }, [targetAt]);
 
   const handleGameStart = (color: 'white' | 'black', timeMinutes: number, level: JarvisLevel) => {
     const socket = getSocket();
@@ -172,7 +183,7 @@ export const HomePage: React.FC = () => {
   if (!user) return <PageLayout><div style={{ padding: 24, color: '#fff' }}>Загрузка...</div></PageLayout>;
 
   const jarvisLevel = user.jarvisLevel || 1;
-  const jarvisName = JARVIS_NAMES[Math.min(jarvisLevel - 1, JARVIS_NAMES.length - 1)];
+  const jarvisName = t.jarvis.levels[Math.min(jarvisLevel - 1, 19)].name;
   const rankLabel = user.militaryRank?.label || 'Новобранец';
 
   // 1) Имя — максимум 14 символов
@@ -248,8 +259,12 @@ export const HomePage: React.FC = () => {
       {showJarvisModal && (
         <JarvisPlayModal
           currentJarvisLevel={jarvisLevel}
+          userAttempts={user.attempts ?? 0}
+          maxAttempts={user.maxAttempts ?? 3}
+          nextRestoreSeconds={user.nextRestoreSeconds}
           onStart={handleGameStart}
           onClose={() => setShowJarvisModal(false)}
+          onBuyAttempts={() => setShowAttemptsModal(true)}
         />
       )}
       {showAttemptsModal && (
@@ -265,7 +280,7 @@ export const HomePage: React.FC = () => {
         <div className="hp-hero" style={{
           position: 'relative', overflow: 'hidden',
           background: 'linear-gradient(175deg,#120E04 0%,#0E0E14 100%)',
-          margin: '.45rem .85rem 0',
+          margin: '1.1rem .85rem 0',
           borderRadius: 20,
           border: '.5px solid rgba(212,168,67,.28)',
           boxShadow: '0 6px 36px rgba(0,0,0,.55),inset 0 0 0 .5px rgba(212,168,67,.06)',
@@ -342,7 +357,7 @@ export const HomePage: React.FC = () => {
               {/* Звание */}
               <div>
                 {/* лейбл: отступ = icon(20px) + gap(4px) + boxPad(8px) = 32px → точно над текстом */}
-                <div style={{ fontSize: '.37rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.12em', marginBottom: '.1rem', paddingLeft: 32 }}>Звание</div>
+                <div style={{ fontSize: '.37rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.12em', marginBottom: '.22rem', paddingLeft: 32 }}>Звание</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                   <span style={{ width: 20, height: 20, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', lineHeight: 1 }}>{user.militaryRank?.emoji || '🙂'}</span>
                   <div style={{ borderRadius: 8, padding: '4px 8px', minWidth: 98, background: 'linear-gradient(135deg,rgba(212,168,67,.14),rgba(212,168,67,.06))', border: '.5px solid rgba(212,168,67,.32)' }}>
@@ -352,7 +367,7 @@ export const HomePage: React.FC = () => {
               </div>
               {/* Jarvis */}
               <div>
-                <div style={{ fontSize: '.37rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.12em', marginBottom: '.1rem', paddingLeft: 32 }}>Jarvis</div>
+                <div style={{ fontSize: '.37rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.12em', marginBottom: '.22rem', paddingLeft: 32 }}>Уровень</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                   <span style={{ width: 20, height: 20, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <svg width="8" height="13" viewBox="0 0 8 14" fill="none"><path d="M5.5 1L1 8h3.5L3 13 8 6H4.5L5.5 1z" fill="#4A9EFF" opacity=".85"/></svg>
@@ -374,8 +389,8 @@ export const HomePage: React.FC = () => {
           {/* 3 ячейки */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', position: 'relative', zIndex: 2 }}>
             {/* баланс */}
-            <div className="hp-hbal-cell" style={{ padding: '.65rem .4rem .75rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', borderRight: '.5px solid rgba(255,255,255,.05)', position: 'relative' }}>
-              <div style={{ fontSize: '.43rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '.22rem' }}>Баланс</div>
+            <div className="hp-hbal-cell" style={{ padding: '.78rem .4rem .85rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', borderRight: '.5px solid rgba(255,255,255,.05)', position: 'relative' }}>
+              <div style={{ fontSize: '.43rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '.32rem' }}>Баланс</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '.18rem' }}>
                 <span style={{ fontSize: '1.08rem', fontWeight: 900, color: '#D4A843', letterSpacing: '-.01em', lineHeight: 1, textShadow: '0 0 12px rgba(212,168,67,.4)' }}>{formattedBalance}</span>
                 <IcoCoin size={16} />
@@ -384,8 +399,8 @@ export const HomePage: React.FC = () => {
             </div>
 
             {/* попытки */}
-            <div className="hp-hbal-cell" style={{ padding: '.65rem .4rem .75rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', borderRight: '.5px solid rgba(255,255,255,.05)', position: 'relative' }}>
-              <div style={{ fontSize: '.43rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '.22rem' }}>Попытки</div>
+            <div className="hp-hbal-cell" style={{ padding: '.78rem .4rem .85rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', borderRight: '.5px solid rgba(255,255,255,.05)', position: 'relative' }}>
+              <div style={{ fontSize: '.43rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '.32rem' }}>Попытки</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '.22rem' }}>
                 <div style={{ display: 'flex', gap: '.04rem' }}>
                   {Array.from({ length: maxAttempts }, (_, i) => (
@@ -399,8 +414,8 @@ export const HomePage: React.FC = () => {
             </div>
 
             {/* таймер */}
-            <div className="hp-hbal-cell" style={{ padding: '.65rem .4rem .75rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', position: 'relative' }}>
-              <div style={{ fontSize: '.43rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '.22rem' }}>Следующая</div>
+            <div className="hp-hbal-cell" style={{ padding: '.78rem .4rem .85rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', position: 'relative' }}>
+              <div style={{ fontSize: '.43rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '.32rem' }}>Следующая</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '.2rem' }}>
                 <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
                   <circle cx="6" cy="6" r="5" stroke="#5E5A54" strokeWidth="1.2"/>
@@ -583,12 +598,17 @@ export const HomePage: React.FC = () => {
         </div>
 
         {/* ══ КВЕСТЫ ══ */}
-        <div className="hp-quests hp-quests-wrap" style={{
-          margin: '0 .85rem 0',
-          background: 'linear-gradient(135deg,#141018,#0F0E18)',
-          border: '.5px solid rgba(155,109,255,.22)',
-          borderRadius: 16, overflow: 'hidden', position: 'relative',
-        }}>
+        <div
+          className="hp-quests hp-quests-wrap"
+          onClick={() => navigate('/tasks')}
+          style={{
+            margin: '0 .85rem 0',
+            background: 'linear-gradient(135deg,#141018,#0F0E18)',
+            border: '.5px solid rgba(155,109,255,.22)',
+            borderRadius: 16, overflow: 'hidden', position: 'relative',
+            cursor: 'pointer',
+          }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: '.7rem', padding: '.6rem .85rem .65rem' }}>
             <div style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, background: 'rgba(155,109,255,.12)', border: '.5px solid rgba(155,109,255,.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
@@ -621,7 +641,7 @@ export const HomePage: React.FC = () => {
                 ))}
               </div>
             </div>
-            <div style={{ fontSize: '.8rem', color: 'rgba(155,109,255,.4)', flexShrink: 0 }}>›</div>
+            <div style={{ fontSize: '1.1rem', color: 'rgba(155,109,255,.7)', flexShrink: 0 }}>›</div>
           </div>
         </div>
 

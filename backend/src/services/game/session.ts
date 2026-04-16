@@ -403,6 +403,32 @@ export const generateUniqueCode = async (): Promise<string> => {
 // ─────────────────────────────────────────
 // Получить список активных батлов (для лобби)
 // ─────────────────────────────────────────
+// Живые публичные батлы (IN_PROGRESS) для лобби зрителей
+export const getActiveLiveBattles = async () => {
+  return prisma.session.findMany({
+    where: {
+      type: SessionType.BATTLE,
+      status: SessionStatus.IN_PROGRESS,
+      isPrivate: false,
+    },
+    include: {
+      sides: {
+        include: {
+          player: {
+            select: {
+              id: true, firstName: true, lastName: true, username: true,
+              avatar: true, avatarType: true, avatarGradient: true,
+              elo: true, league: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: { bet: "desc" },
+    take: 20,
+  });
+};
+
 export const getActiveBattles = async () => {
   return prisma.session.findMany({
     where: {

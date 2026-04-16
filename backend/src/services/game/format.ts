@@ -73,6 +73,7 @@ export const formatBattlesList = (sessions: SessionWithSides[], spectatorCounts?
     sourceMeta: (s as any).sourceMeta ?? null,
     creator: s.sides[0]
       ? {
+          id: s.sides[0].player.id,       // нужен для навигации на профиль
           firstName: s.sides[0].player.firstName,
           avatar: s.sides[0].player.avatar,
           avatarGradient: s.sides[0].player.avatarGradient,

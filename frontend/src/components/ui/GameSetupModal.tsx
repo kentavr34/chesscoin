@@ -130,7 +130,7 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
     <div style={overlayStyle}>
       {/* J4: Информационный попап — первый раз автоматически, потом по кнопке ℹ️ */}
       {jarvisInfo.show && (
-        <InfoPopup infoKey="jarvis" slides={JARVIS_INFO_SLIDES} onClose={jarvisInfo.close} />
+        <InfoPopup infoKey="jarvis" slides={getJarvisInfoSlides(t)} onClose={jarvisInfo.close} />
       )}
       <div style={sheetStyle} onClick={(e) => e.stopPropagation()}>
         {/* ── HEADER (fixed) ────────────────────────────────────────────────────────── */}
@@ -168,10 +168,17 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
                   onClick={() => setColor(c)}
                   style={colorBtnStyle(color === c, c)}
                 >
-                  <span style={{ fontSize: 'var(--font-size-xl)', display: 'block', marginBottom: 'var(--gap-xs)' }}>
+                  <span style={{
+                    fontSize: 'var(--font-size-lg)',
+                    display: 'block',
+                    marginBottom: 'var(--gap-xs)',
+                    opacity: color === c ? 1 : 0.4,
+                    filter: color !== c ? 'grayscale(1)' : 'none',
+                    transition: 'opacity .15s, filter .15s',
+                  }}>
                     {c === 'random' ? '🎲' : c === 'white' ? '♔' : '♚'}
                   </span>
-                  <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 'var(--font-weight-bold)' }}>
+                  <span style={{ fontSize: '9px', fontWeight: 'var(--font-weight-bold)' }}>
                     {c === 'random' ? t.gameSetup.random.replace('🎲 ','') : c === 'white' ? t.gameSetup.white.replace('☀️ ','') : t.gameSetup.black.replace('🌙 ','')}
                   </span>
                 </button>
@@ -191,10 +198,17 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
                   onClick={() => setTime(opt)}
                   style={timeBtnStyle(time === opt)}
                 >
-                  <span style={{ fontSize: 'var(--font-size-base)', display: 'block', marginBottom: 'var(--gap-xs)' }}>
+                  <span style={{
+                    fontSize: 'var(--font-size-sm)',
+                    display: 'block',
+                    marginBottom: 'var(--gap-xs)',
+                    opacity: time === opt ? 1 : 0.5,
+                    filter: time !== opt ? 'grayscale(0.6)' : 'none',
+                    transition: 'opacity .15s, filter .15s',
+                  }}>
                     {opt === 1 ? '⚡' : opt === 3 ? '🔥' : opt === 5 ? '♟' : opt === 15 ? '🎯' : opt === 30 ? '🏆' : '👑'}
                   </span>
-                  <span style={{ fontSize: 'var(--font-size-xs)' }}>
+                  <span style={{ fontSize: '9px' }}>
                     {getTimeLabel(opt)}
                   </span>
                 </button>

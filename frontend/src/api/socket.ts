@@ -13,6 +13,7 @@ interface ServerToClient {
   'battles:list': (battles: BattleLobbyItem[]) => void;
   'battles:added': (battle: BattleLobbyItem) => void;
   'battles:removed': (sessionId: string) => void;
+  'battle:donated': (data: { donorId: string; amount: string; totalPool: string }) => void;
   'pong': () => void;
 }
 

@@ -12,6 +12,7 @@ import {
   createFriendlySession,
   joinBattleSession,
   getActiveBattles,
+  getActiveLiveBattles,
   cacheSession,
 } from "./session";
 import { finishSession } from "./finish";
@@ -26,6 +27,42 @@ const spectatorRooms = new Map<string, Set<string>>();
 const BOT_TOKEN = () => process.env.BOT_TOKEN ?? "";
 const CHANNEL_ID = () => process.env.TELEGRAM_CHANNEL_ID ?? "";
 const BOT_LINK = "https://t.me/chessgamecoin_bot";
+
+// ── Личное уведомление игроку в чат бота ─────────────────────────────────────
+async function sendTgToUser(
+  telegramId: string,
+  text: string,
+  url?: string,
+  urlLabel?: string,
+) {
+  if (!BOT_TOKEN() || !telegramId) return;
+  try {
+    const body: Record<string, unknown> = {
+      chat_id: telegramId,
+      text,
+      parse_mode: "HTML",
+    };
+    if (url && urlLabel) {
+      body.reply_markup = { inline_keyboard: [[{ text: urlLabel, url }]] };
+    }
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN()}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  } catch { /* silent */ }
+}
+
+// Проверяем: находится ли пользователь сейчас в комнате игры (просматривает партию)
+function isUserInGameRoom(io: Server, sessionId: string, targetUserId: string): boolean {
+  const room = io.sockets.adapter.rooms.get(sessionId);
+  if (!room) return false;
+  for (const socketId of room) {
+    const s = io.sockets.sockets.get(socketId);
+    if ((s as any)?.data?.userId === targetUserId) return true;
+  }
+  return false;
+}
 
 async function postNewBattleToChannel(
   creatorName: string,
@@ -43,7 +80,7 @@ async function postNewBattleToChannel(
       `👤 Игрок: <b>${creatorName}</b>\n` +
       `💰 Ставка: <b>${betFmt}M ᚙ</b>\n` +
       `⏱ Время: <b>${mins} мин</b>\n\n` +
-      `🎯 Принять вызов и сыграть → <a href="${BOT_LINK}?start=battle_${sessionCode}">Войти в батл</a>`;
+      `🎯 Принять вызов → <a href="${BOT_LINK}?start=battle_${sessionCode}">Войти в батл</a>`;
     await fetch(`https://api.telegram.org/bot${BOT_TOKEN()}/sendMessage`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -56,7 +93,7 @@ async function postNewBattleToChannel(
         },
       }),
     });
-  } catch { /* silent — не блокируем игру из-за канала */ }
+  } catch { /* silent — не блокируем и��ру */ }
 }
 
 export const cleanupSpectators = (sessionId: string) => {
@@ -283,6 +320,33 @@ export const setupSocketHandlers = (io: Server) => {
 
           // T18: diff — убираем батл из лобби (он начался)
           io.to("lobby").emit("battles:removed", session.id);
+          // Живые батлы: добавляем в live-список для наблюдателей
+          io.to("lobby").emit("battles:live:added", formatSession(session, null));
+
+          // 🔔 Уведомление создателю батла: противник принял вызов
+          try {
+            const creatorSide = session.sides.find((s: Record<string, unknown>) => s.playerId !== userId);
+            if (creatorSide) {
+              const creator = await prisma.user.findUnique({
+                where: { id: String(creatorSide.playerId) },
+                select: { telegramId: true, firstName: true },
+              });
+              const joiner = session.sides.find((s: Record<string, unknown>) => s.playerId === userId);
+              const joinerName = (joiner as any)?.player?.firstName ?? "Противник";
+              if (creator?.telegramId) {
+                const mins = Math.round((session as any).duration / 60);
+                const betFmt = session.bet ? Number(session.bet) >= 1_000_000
+                  ? `${(Number(session.bet) / 1_000_000).toFixed(2)}M`
+                  : `${Math.round(Number(session.bet) / 1000)}K` : "0";
+                await sendTgToUser(
+                  creator.telegramId,
+                  `⚔️ <b>Батл начался!</b>\n\n👤 Принял: <b>${joinerName}</b>\n💰 Ставка: <b>${betFmt} ᚙ</b>\n⏱ Время: <b>${mins} мин</b>\n\n▶️ Открой игру и ходи!`,
+                  `${BOT_LINK}?start=game_${session.id}`,
+                  "▶️ Играть",
+                );
+              }
+            }
+          } catch { /* silent — уведомление не блокирует игру */ }
         } catch (err: unknown) {
           if (callback) callback({ ok: false, error: (err as Error).message });
         }
@@ -468,6 +532,7 @@ export const setupSocketHandlers = (io: Server) => {
             const formattedFinished = { ...formatSession(finished, userId), pieceCoins: pieceCoinsRaw ?? '0' };
             io.to(sessionId).emit("game", formattedFinished);
             io.to(sessionId).emit("game:over", { status: finished.status });
+            io.to("lobby").emit("battles:live:removed", sessionId);
             cleanupSpectators(sessionId);
             if (callback) callback({ ok: true, session: formattedFinished });
             return;
@@ -500,6 +565,31 @@ export const setupSocketHandlers = (io: Server) => {
           const formatted = formatSession(updatedSession, userId);
           io.to(sessionId).emit("game", formatted);
           if (callback) callback({ ok: true, session: formatted });
+
+          // 🔔 Уведомление сопернику о ходе — только если он НЕ в комнате игры
+          if (
+            session.type === SessionType.BATTLE &&
+            nextSide && !nextSide.isBot &&
+            !isUserInGameRoom(io, sessionId, nextSide.playerId)
+          ) {
+            try {
+              const opponent = await prisma.user.findUnique({
+                where: { id: nextSide.playerId },
+                select: { telegramId: true },
+              });
+              if (opponent?.telegramId) {
+                const moverName = mySide
+                  ? (session.sides.find((s: Record<string,unknown>) => s.id === mySide.id) as any)?.player?.firstName ?? "Противник"
+                  : "Противник";
+                await sendTgToUser(
+                  opponent.telegramId,
+                  `♟️ <b>${moverName}</b> сделал ход!\n\n⚡ Твой ход — не затягивай!`,
+                  `${BOT_LINK}?start=game_${sessionId}`,
+                  "▶️ Сделать ход",
+                );
+              }
+            } catch { /* silent */ }
+          }
 
           // Ход бота
           if (session.type === SessionType.BOT && nextSide?.isBot) {
@@ -554,6 +644,7 @@ export const setupSocketHandlers = (io: Server) => {
 
           if (session.type === SessionType.BATTLE) {
             io.to("lobby").emit("battles:removed", data.sessionId);
+            io.to("lobby").emit("battles:live:removed", data.sessionId);
           }
         } catch (err: unknown) {
           if (callback) callback({ ok: false, error: (err as Error).message });
@@ -692,8 +783,12 @@ export const setupSocketHandlers = (io: Server) => {
     socket.on("battles:subscribe", async () => {
       try {
         socket.join("lobby");
-        const battles = await getActiveBattles();
+        const [battles, liveBattles] = await Promise.all([
+          getActiveBattles(),
+          getActiveLiveBattles(),
+        ]);
         socket.emit("battles:list", formatBattlesList(battles, buildSpectatorCounts(battles)));
+        socket.emit("battles:live:list", liveBattles.map((s) => formatSession(s, null)));
       } catch (err: unknown) {
         logger.error("[Socket] battles:subscribe error:", (err as Error).message);
       }
@@ -899,101 +994,59 @@ const makeBotMove = async (socket: AuthSocket, io: Server, sessionId: string) =>
 };
 
 // ─────────────────────────────────────────
+// Stockfish через нативный HTTP микросервис
+// Архитектура идентична v1.0.2:
+//   - Отдельный контейнер с нативным бинарником Stockfish
+//   - node-uci общается с ним через stdin/stdout нативного процесса
+//   - depth 10 за ~200-500ms (WASM было 8-15 секунд!)
+//   - Простой HTTP POST /move { fen, level } → { bestmove }
 // ─────────────────────────────────────────
-// Stockfish WASM через Worker Thread
-// Не блокирует основной event loop.
-// Каждый запрос — отдельный Worker, изолированное состояние.
-// ─────────────────────────────────────────
-import { Worker } from "worker_threads";
-import { stockfishPool } from "./stockfishPool"; // OPT-6: Worker Pool
-import path from "path";
-import { v4 as uuidv4 } from "uuid";
+const STOCKFISH_URL = process.env.STOCKFISH_URL ?? "http://stockfish:3020";
 
-// Путь к скомпилированному воркеру (tsc собирает в dist/)
-const WORKER_PATH = path.join(__dirname, "stockfishWorker.js");
+// Таймауты по уровням (с запасом: maxMovetime из server.js + 5 секунд)
+const LEVEL_TIMEOUTS = [
+  5000, 5000, 5000, 5000, 5000,   // 1-5:  50-500ms movetime + запас
+  7000, 7500, 8000, 8500, 8500,   // 6-10: 2000-3500ms movetime + запас
+  9000, 9500, 10000, 10500, 11000,// 11-15: 4000-6000ms + запас
+  9000, 10000, 11000, 12000, 13000,// 16-20: 4000-8000ms + запас
+];
 
-export const getStockfishMove = (
+export const getStockfishMove = async (
   fen: string,
   level: number
 ): Promise<{ from: string; to: string } | null> => {
-  return new Promise(async (resolve) => {
-    const requestId = uuidv4();
-    // movetime на уровень + 5 сек запаса до полного kill
-    // BUG-02 fix: расширено до 20 уровней (было 10)
-    const levelMovetimes = [
-      200,  // 1  Beginner
-      300,  // 2  Rookie
-      400,  // 3  Player
-      500,  // 4  Amateur
-      600,  // 5  Skilled
-      800,  // 6  Advanced
-      1000, // 7  Expert
-      1200, // 8  Master
-      1500, // 9  Grandmaster
-      1800, // 10 Champion
-      2000, // 11 Prodigy
-      2500, // 12 Virtuoso
-      3000, // 13 Titan
-      3500, // 14 Legend
-      4000, // 15 Immortal
-      5000, // 16 Demigod
-      6000, // 17 Overlord
-      7000, // 18 Transcendent
-      8000, // 19 Legendary
-      10000,// 20 Mystic (max 10 sec)
-    ];
-    const movetime = levelMovetimes[Math.max(0, Math.min(19, level - 1))];
-    const hardTimeout = movetime + 6000;
+  const timeoutMs = LEVEL_TIMEOUTS[Math.max(0, Math.min(19, level - 1))];
 
-    let worker: Worker;
-    try {
-      worker = await stockfishPool.acquire(movetime + 2000); // OPT-6: берём из пула
-    } catch (err: unknown) {
-      logger.warn("[JARVIS] Pool exhausted:", (err as Error).message, "→ random fallback");
-      resolve(getRandomMove(fen));
-      return;
-    }
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-    const killTimer = setTimeout(() => {
-      logger.warn("[JARVIS] Hard kill worker after", hardTimeout, "ms");
-      stockfishPool.release(worker); // OPT-6: возвращаем в пул
-      resolve(getRandomMove(fen));
-    }, hardTimeout);
+    const res = await fetch(`${STOCKFISH_URL}/move`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fen, level }),
+      signal: controller.signal,
+    });
 
-    const messageHandler = (msg: { bestmove?: string; type?: string; [key: string]: unknown }) => {
-      if (msg.ready) return;
-      if (msg.requestId !== requestId) return;
-      cleanup();
-      resolve((msg.move ?? getRandomMove(fen)) as { from: string; to: string } | null);
-    };
+    clearTimeout(timer);
 
-    const errorHandler = (err: Error) => {
-      logger.warn("[JARVIS] Worker error:", err.message, "→ random fallback");
-      cleanup();
-      resolve(getRandomMove(fen));
-    };
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-    const exitHandler = (code: number) => {
-      if (code !== 0) {
-        logger.warn("[JARVIS] Worker exited with code", code);
-      }
-    };
+    const data = await res.json() as { bestmove?: string };
+    const bestmove = data.bestmove;
 
-    const cleanup = () => {
-      clearTimeout(killTimer);
-      worker.off("message", messageHandler);
-      worker.off("error", errorHandler);
-      worker.off("exit", exitHandler);
-      stockfishPool.release(worker); // OPT-6: возвращаем в пул
-    };
+    if (!bestmove || bestmove === "(none)") return getRandomMove(fen);
 
-    worker.on("message", messageHandler);
-    worker.on("error", errorHandler);
-    worker.on("exit", exitHandler);
+    const from = bestmove.slice(0, 2);
+    const to   = bestmove.slice(2, 4);
+    if (!/^[a-h][1-8]$/.test(from) || !/^[a-h][1-8]$/.test(to)) return getRandomMove(fen);
 
-    // Отправляем задание воркеру
-    worker.postMessage({ fen, level, requestId });
-  });
+    return { from, to };
+
+  } catch (err: unknown) {
+    logger.warn("[JARVIS] Stockfish HTTP error:", err instanceof Error ? err.message : String(err), "→ random fallback");
+    return getRandomMove(fen);
+  }
 };
 
 const getRandomMove = (fen: string): { from: string; to: string } | null => {

@@ -19,58 +19,88 @@ export const InfoPopup: React.FC<InfoPopupProps> = ({ slides, onClose }) => {
   const isLast = idx === slides.length - 1;
   const slide = slides[idx];
 
+  // Touch swipe
+  const touchStart = React.useRef<number | null>(null);
+  const handleTouchStart = (e: React.TouchEvent) => { touchStart.current = e.touches[0].clientX; };
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStart.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStart.current;
+    touchStart.current = null;
+    if (Math.abs(dx) < 40) return;
+    if (dx < 0 && !isLast) setIdx(i => i + 1);
+    else if (dx > 0 && idx > 0) setIdx(i => i - 1);
+    else if (dx < 0 && isLast) onClose();
+  };
+
   return (
     <div
       onClick={(e) => e.target === e.currentTarget && onClose()}
       style={{
         position: 'fixed', inset: 0, zIndex: "var(--z-modal, 300)",
-        background: 'var(--page-layout-overlay-bg, rgba(0,0,0,0.75))',
-        backdropFilter: 'blur(10px)',
-        WebkitBackdropFilter: 'blur(10px)',
+        background: 'rgba(0,0,0,.82)',
+        backdropFilter: 'blur(18px)',
+        WebkitBackdropFilter: 'blur(18px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: 24,
       }}
     >
-      <div style={{
-        width: '100%', maxWidth: 360,
-        background: 'var(--color-bg-modal, #161927)',
-        border: '1px solid var(--page-layout-modal-border, rgba(255,255,255,0.1))',
-        borderRadius: 24, padding: '28px 24px 22px',
-        boxShadow: 'var(--page-layout-modal-shadow, 0 20px 60px rgba(0,0,0,0.5))',
-      }}>
+      <style>{`@keyframes info-pop{ from{opacity:0;transform:scale(.88)} to{opacity:1;transform:scale(1)} }`}</style>
+      <div
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        style={{
+          width: '100%', maxWidth: 340,
+          background: 'linear-gradient(160deg,#12151E,#0E111A)',
+          border: '1px solid rgba(255,255,255,.09)',
+          borderRadius: 28,
+          padding: '36px 24px 24px',
+          boxShadow: '0 24px 60px rgba(0,0,0,.75)',
+          animation: 'info-pop .35s cubic-bezier(.2,.9,.3,1.05) both',
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          textAlign: 'center', position: 'relative',
+          userSelect: 'none',
+        }}>
         {/* Close */}
         <button
           onClick={onClose}
           style={{
             position: 'absolute', top: 14, right: 14,
             width: 28, height: 28, borderRadius: '50%',
-            background: 'var(--page-layout-btn-bg, rgba(255,255,255,0.07))',
-            border: '1px solid var(--page-layout-modal-border, rgba(255,255,255,0.1))',
-            color: 'var(--color-text-secondary, #8B92A8)', fontSize: 14, cursor: 'pointer',
+            background: 'rgba(255,255,255,.06)',
+            border: '.5px solid rgba(255,255,255,.1)',
+            color: '#9A9490', fontSize: 13, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontFamily: 'inherit',
           }}
         >✕</button>
 
-        {/* Icon */}
-        <div style={{ textAlign: 'center', fontSize: 52, lineHeight: 1, marginBottom: 16 }}>
+        {/* Icon в круге */}
+        <div style={{
+          width: 72, height: 72, borderRadius: '50%',
+          background: 'rgba(245,200,66,.09)',
+          border: '1.5px solid rgba(245,200,66,.22)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          marginBottom: 20, fontSize: 32, lineHeight: 1,
+        }}>
           {slide.icon}
         </div>
 
         {/* Title */}
         <div style={{
-          textAlign: 'center',
-          fontFamily: "'Unbounded',sans-serif",
-          fontSize: 17, fontWeight: 800, color: 'var(--color-accent, #F5C842)',
-          letterSpacing: '-.02em', marginBottom: 12,
+          fontFamily: 'Inter, sans-serif',
+          fontSize: '1.18rem', fontWeight: 900,
+          color: '#EAE2CC', letterSpacing: '-.02em',
+          marginBottom: 10, lineHeight: 1.2,
         }}>
           {slide.title}
         </div>
 
-        {/* Desc */}
+        {/* Desc — светлее и крупнее */}
         <div style={{
-          textAlign: 'center', fontSize: 13, color: 'var(--color-text-secondary, #8B92A8)',
-          lineHeight: 1.7, marginBottom: 24,
+          fontFamily: 'Inter, sans-serif',
+          fontSize: '.84rem', color: '#9A9490',
+          lineHeight: 1.65, marginBottom: 24,
+          maxWidth: 280,
         }} dangerouslySetInnerHTML={{ __html: slide.desc }} />
 
         {/* Dots */}
@@ -81,8 +111,8 @@ export const InfoPopup: React.FC<InfoPopupProps> = ({ slides, onClose }) => {
                 key={i}
                 onClick={() => setIdx(i)}
                 style={{
-                  width: i === idx ? 18 : 6, height: 6, borderRadius: 3,
-                  background: i === idx ? 'var(--color-accent, #F5C842)' : 'var(--page-layout-dot-inactive-bg, rgba(255,255,255,0.15))',
+                  width: i === idx ? 20 : 6, height: 6, borderRadius: 3,
+                  background: i === idx ? '#F5C842' : 'rgba(255,255,255,.12)',
                   transition: 'all .2s', cursor: 'pointer',
                 }}
               />
@@ -90,19 +120,29 @@ export const InfoPopup: React.FC<InfoPopupProps> = ({ slides, onClose }) => {
           </div>
         )}
 
+        {/* Swipe hint */}
+        {slides.length > 1 && (
+          <div style={{ fontSize: '.62rem', color: 'rgba(255,255,255,.2)', marginBottom: 12, letterSpacing: '.06em' }}>
+            ← свайп →
+          </div>
+        )}
+
         {/* Button */}
         <button
           onClick={() => isLast ? onClose() : setIdx(idx + 1)}
           style={{
-            width: '100%', padding: '13px',
-            background: 'var(--color-accent, #F5C842)', borderRadius: 14,
-            border: 'none', color: 'var(--color-bg-dark, #0B0D11)',
-            fontSize: 14, fontWeight: 700,
-            cursor: 'pointer', fontFamily: 'inherit',
-            transition: 'opacity .15s',
+            width: '100%', padding: '14px',
+            background: 'linear-gradient(135deg,#2A1E08,#4A3810)',
+            border: '.5px solid rgba(212,168,67,.42)',
+            borderRadius: 14,
+            color: '#F0C85A',
+            fontFamily: 'Inter, sans-serif',
+            fontSize: '.9rem', fontWeight: 900,
+            cursor: 'pointer',
+            boxShadow: '0 4px 22px rgba(212,168,67,.15)',
           }}
         >
-          {isLast ? t.home.letsGo : `${t.home.next}`}
+          {isLast ? t.home.letsGo : t.home.next}
         </button>
       </div>
     </div>
@@ -138,6 +178,7 @@ interface PageLayoutProps {
   logo?: boolean;
   backTo?: string;
   rightAction?: React.ReactNode;
+  leftAction?: React.ReactNode;
   noScroll?: boolean;
   centered?: boolean;  // заголовок по центру
   onBack?: () => void;  // кастомная кнопка назад
@@ -145,7 +186,7 @@ interface PageLayoutProps {
 }
 
 export const PageLayout: React.FC<PageLayoutProps> = ({
-  children, title, logo, backTo, rightAction, noScroll, centered, onBack, noHeader,
+  children, title, logo, backTo, rightAction, leftAction, noScroll, centered = true, onBack, noHeader,
 }) => {
   const navigate = useNavigate();
 
@@ -158,17 +199,16 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
       {!noHeader && <div style={{
         display: 'flex', alignItems: 'center',
         justifyContent: 'space-between',
-        padding: 'clamp(12px, 3vw, 16px) var(--space-l) clamp(10px, 2vw, 12px)',
-        paddingTop: 'max(16px, env(safe-area-inset-top, 16px))',
+        padding: '18px var(--space-l) 16px',
+        paddingTop: 'max(28px, calc(env(safe-area-inset-top, 0px) + 18px))',
         flexShrink: 0,
-        borderBottom: '1px solid var(--border)',
         position: 'relative', zIndex: 'var(--z-header)',
       }}>
         {/* Левая часть */}
         <div style={{ minWidth: 36, display: 'flex', justifyContent: 'flex-start', zIndex: 2 }}>
           {backTo || onBack ? (
             <button onClick={() => onBack ? onBack() : navigate(backTo!)} style={tbaBtnStyle}>←</button>
-          ) : null}
+          ) : leftAction ?? null}
         </div>
 
         {/* Центр */}
@@ -182,9 +222,12 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
               ChessCoin
             </span>
           ) : (
-            <span className="ui-heading-1" style={{
-              fontSize: 16, color: 'var(--text-primary)',
-              whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', display: 'block'
+            <span style={{
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '1.25rem', fontWeight: 900,
+              color: '#EAE2CC',
+              whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', display: 'block',
+              letterSpacing: '-.02em',
             }}>
               {title}
             </span>

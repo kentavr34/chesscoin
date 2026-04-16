@@ -50,7 +50,7 @@ router.get("/games", authMiddleware, async (req: Request, res: Response) => {
       where: {
         playerId: userId,
         isBot: false,
-        session: { status: { in: ["FINISHED", "DRAW"] } },
+        session: { status: { in: ["FINISHED", "DRAW", "TIME_EXPIRED"] } },
       },
       orderBy: { updatedAt: "desc" },
       take: limit,
@@ -88,7 +88,7 @@ router.get("/games", authMiddleware, async (req: Request, res: Response) => {
       where: {
         playerId: userId,
         isBot: false,
-        session: { status: { in: ["FINISHED", "DRAW"] } },
+        session: { status: { in: ["FINISHED", "DRAW", "TIME_EXPIRED"] } },
       },
     });
 
@@ -622,6 +622,76 @@ router.post("/ton/sell", authMiddleware, async (req: Request, res: Response) => 
       data: { userId, amountCoins: BigInt(amountCoins), tonCommission: tonFee, tonWalletAddress: user.tonWalletAddress },
     });
     res.json({ success: true, tonAmount: tonNet, fee: tonFee });
+  } catch (err: unknown) {
+    res.status(500).json({ error: (err instanceof Error ? err.message : String(err)) });
+  }
+});
+
+// GET /profile/:userId/games — публичные игры другого игрока
+router.get("/:userId/games", authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { limit, offset } = z.object({
+      limit:  z.coerce.number().min(1).max(50).default(20),
+      offset: z.coerce.number().min(0).default(0),
+    }).parse(req.query);
+
+    const sides = await prisma.sessionSide.findMany({
+      where: {
+        playerId: req.params.userId,
+        isBot: false,
+        session: { status: { in: ["FINISHED", "DRAW", "TIME_EXPIRED", "CANCELLED"] } },
+      },
+      orderBy: { updatedAt: "desc" },
+      take: limit,
+      skip: offset,
+      select: {
+        id: true, status: true, isWhite: true, winningAmount: true,
+        session: {
+          select: {
+            id: true, type: true, status: true, pgn: true,
+            botLevel: true, bet: true, duration: true,
+            startedAt: true, finishedAt: true,
+            sides: {
+              select: {
+                isBot: true, isWhite: true, status: true,
+                player: { select: { id: true, firstName: true, lastName: true, username: true, avatar: true, avatarGradient: true, avatarType: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const total = await prisma.sessionSide.count({
+      where: {
+        playerId: req.params.userId,
+        isBot: false,
+        session: { status: { in: ["FINISHED", "DRAW", "TIME_EXPIRED", "CANCELLED"] } },
+      },
+    });
+
+    const games = sides.map(side => {
+      const session = side.session;
+      const opponent = session.sides.find(s => s.player?.id !== req.params.userId && !s.isBot);
+      const botSide = session.sides.find(s => s.isBot);
+      return {
+        sessionId: session.id,
+        type: session.type,
+        result: side.status === "WON" ? "win" : side.status === "LOST" ? "loss" : "draw",
+        isWhite: side.isWhite,
+        winningAmount: side.winningAmount?.toString() ?? null,
+        bet: session.bet?.toString() ?? null,
+        botLevel: session.botLevel,
+        pgn: session.pgn,
+        duration: session.duration,
+        startedAt: session.startedAt,
+        finishedAt: session.finishedAt,
+        opponent: opponent?.player ?? null,
+        hasBot: !!botSide,
+      };
+    });
+
+    res.json({ total, games });
   } catch (err: unknown) {
     res.status(500).json({ error: (err instanceof Error ? err.message : String(err)) });
   }

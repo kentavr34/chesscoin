@@ -4,7 +4,7 @@ import { useT } from '@/i18n/useT';
 
 // SVG иконки для нижней навигации
 const NavIcoPlay = ({ active }: { active: boolean }) => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
     {/* Шахматная доска 2×2 */}
     <rect x="3" y="3" width="8" height="8" rx="1.5" fill={active ? '#D4A843' : '#5A6070'} opacity={active ? .95 : .75}/>
     <rect x="13" y="3" width="8" height="8" rx="1.5" stroke={active ? '#D4A843' : '#5A6070'} strokeWidth="1.4" fill="none"/>
@@ -14,7 +14,7 @@ const NavIcoPlay = ({ active }: { active: boolean }) => (
 );
 
 const NavIcoBattle = ({ active }: { active: boolean }) => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
     <path d="M4 4l4 1.5-1.5 4" stroke={active ? '#D4A843' : '#5A6070'} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
     <path d="M4 4l11 11" stroke={active ? '#D4A843' : '#5A6070'} strokeWidth="1.5" strokeLinecap="round"/>
     <circle cx="17" cy="17" r="2.5" stroke={active ? '#D4A843' : '#5A6070'} strokeWidth="1.3"/>
@@ -25,7 +25,7 @@ const NavIcoBattle = ({ active }: { active: boolean }) => (
 );
 
 const NavIcoWars = ({ active }: { active: boolean }) => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
     <circle cx="12" cy="12" r="8.5" stroke={active ? '#3DBA7A' : '#5A6070'} strokeWidth="1.4"/>
     <ellipse cx="12" cy="12" rx="3.5" ry="8.5" stroke={active ? '#3DBA7A' : '#5A6070'} strokeWidth="1.2"/>
     <path d="M3.5 12h17M12 3.5c-2.5 2.5-2.5 5.5 0 8.5s2.5 6 0 8.5" stroke={active ? '#3DBA7A' : '#5A6070'} strokeWidth="1.2" strokeLinecap="round"/>
@@ -33,18 +33,18 @@ const NavIcoWars = ({ active }: { active: boolean }) => (
 );
 
 const NavIcoTournament = ({ active }: { active: boolean }) => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-    <path d="M8 3h8v7a4 4 0 01-8 0V3z" stroke={active ? '#9B6DFF' : '#5A6070'} strokeWidth="1.4" strokeLinejoin="round"/>
-    <path d="M8 6H5a1.5 1.5 0 000 3h3M16 6h3a1.5 1.5 0 010 3h-3" stroke={active ? '#9B6DFF' : '#5A6070'} strokeWidth="1.3" strokeLinecap="round"/>
-    <path d="M12 14v4M9 20h6" stroke={active ? '#9B6DFF' : '#5A6070'} strokeWidth="1.4" strokeLinecap="round"/>
-    <path d="M10 7l1.5 1.5L14 6" stroke={active ? '#C4A8FF' : '#5A6070'} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+    <path d="M8 3h8v7a4 4 0 01-8 0V3z" stroke={active ? '#D4A843' : '#5A6070'} strokeWidth="1.4" strokeLinejoin="round"/>
+    <path d="M8 6H5a1.5 1.5 0 000 3h3M16 6h3a1.5 1.5 0 010 3h-3" stroke={active ? '#D4A843' : '#5A6070'} strokeWidth="1.3" strokeLinecap="round"/>
+    <path d="M12 14v4M9 20h6" stroke={active ? '#D4A843' : '#5A6070'} strokeWidth="1.4" strokeLinecap="round"/>
+    <path d="M10 7l1.5 1.5L14 6" stroke={active ? '#F0C85A' : '#5A6070'} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
 );
 
 const NavIcoProfile = ({ active }: { active: boolean }) => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-    <circle cx="12" cy="8" r="3.5" stroke={active ? '#4A9EFF' : '#5A6070'} strokeWidth="1.4"/>
-    <path d="M5 19c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke={active ? '#4A9EFF' : '#5A6070'} strokeWidth="1.4" strokeLinecap="round"/>
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+    <circle cx="12" cy="8" r="3.5" stroke={active ? '#D4A843' : '#5A6070'} strokeWidth="1.4"/>
+    <path d="M5 19c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke={active ? '#D4A843' : '#5A6070'} strokeWidth="1.4" strokeLinecap="round"/>
   </svg>
 );
 
@@ -95,7 +95,7 @@ export const BottomNav: React.FC = () => {
                 boxShadow: 'var(--bottom-nav-active-shadow, 0 2px 8px rgba(245, 200, 66, 0.5))',
               }} />
             )}
-            <span style={{ height: 24, display: 'flex', alignItems: 'center', transition: 'filter .2s', filter: active ? 'drop-shadow(0 0 5px rgba(212,168,67,.5))' : 'none' }}>
+            <span style={{ height: 28, display: 'flex', alignItems: 'center', transition: 'filter .2s', filter: active ? 'drop-shadow(0 0 5px rgba(212,168,67,.5))' : 'none' }}>
               <tab.Icon active={active} />
             </span>
             <span style={{

@@ -76,25 +76,27 @@ export const WaitingForOpponent: React.FC<Props> = ({ session }) => {
 
         {/* ── Панель игроков ── */}
         <div style={playersRowStyle}>
+
           {/* Левый игрок — я */}
           <div style={playerColStyle}>
             <div
-              onClick={() => goToProfile(myPlayer?.id)}
-              style={{ cursor: myPlayer?.id ? 'pointer' : 'default' }}
+              onClick={() => { const id = mySide?.player?.id; if (id) navigate('/profile/' + id); }}
+              style={{ cursor: mySide?.player?.id ? 'pointer' : 'default' }}
             >
-              <Avatar user={myPlayer} size="m" />
+              <Avatar user={myPlayer} size="l" />
             </div>
-            <span style={playerNameStyle}>
-              {myPlayer?.firstName ?? '?'}
-            </span>
-            <span style={colorBadgeStyle(myIsWhite)}>
-              {myIsWhite ? '♔' : '♚'}
-            </span>
+            <span style={playerNameStyle}>{myPlayer?.firstName ?? '?'}</span>
+            {myPlayer?.elo != null && (
+              <span style={{ fontSize: 10, fontWeight: 600, textAlign: 'center' as const }}>
+                <span style={{ color: '#7A7470' }}>ELO </span>
+                <span style={{ color: '#F0C85A' }}>{myPlayer.elo}</span>
+              </span>
+            )}
           </div>
 
-          {/* Центр: VS + LIVE индикатор */}
+          {/* Центр: VS + LIVE + ставка */}
           <div style={centerColStyle}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
               <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#FF4D6A', animation: 'pulse-ring 1.4s ease-out infinite', flexShrink: 0 }} />
               <span style={{ fontSize: 9, fontWeight: 800, color: '#FF4D6A', letterSpacing: '.1em' }}>LIVE</span>
             </div>
@@ -109,13 +111,15 @@ export const WaitingForOpponent: React.FC<Props> = ({ session }) => {
             <div style={opponentAvatarStyle}>
               <span style={{ fontSize: 22, opacity: 0.4 }}>?</span>
             </div>
-            <span style={playerNameStyle}>
-              {t.game.waitingForOpponent ?? '...'}
-            </span>
-            <span style={colorBadgeStyle(!myIsWhite)}>
-              {myIsWhite ? '♚' : '♔'}
-            </span>
+            <span style={playerNameStyle}>{t.game.waitingForOpponent ?? '...'}</span>
           </div>
+
+        </div>
+
+        {/* Знаки цвета фигур — под панелью, по краям */}
+        <div style={colorSignsRowStyle}>
+          <span style={colorSignStyle(myIsWhite)}>{myIsWhite ? '♔' : '♚'}</span>
+          <span style={colorSignStyle(!myIsWhite)}>{myIsWhite ? '♚' : '♔'}</span>
         </div>
 
         {/* Код партии */}
@@ -174,10 +178,10 @@ export const WaitingForOpponent: React.FC<Props> = ({ session }) => {
   );
 };
 
-// ── Styles ──────────────────────────────────────────────────────────────────
+// ── Константа отступа — одинакова для панели и знаков цвета ──────────────────
+const SIDE_PAD = 18;
 
-const SIDE_PAD = 18; // горизонтальный отступ аватаров от края панели
-
+// ── Styles ────────────────────────────────────────────────────────────────────
 const rootStyle: React.CSSProperties = {
   position: 'absolute', inset: 0, background: 'var(--color-bg-dark, #0B0D11)',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -191,79 +195,65 @@ const cardStyle: React.CSSProperties = {
   borderRadius: 24, padding: 24,
 };
 
+// Панель игроков
+// paddingLeft/Right = SIDE_PAD + 10 → аватары сдвинуты к центру на 10px
 const playersRowStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  marginBottom: 20,
-  // одинаковый отступ сверху, снизу и по бокам
-  padding: `${SIDE_PAD}px ${SIDE_PAD}px`,
-  background: 'rgba(255,255,255,0.03)',
+  padding: `${SIDE_PAD}px ${SIDE_PAD + 10}px`,
+  background: 'rgba(255,255,255,0.055)',
   borderRadius: 16,
-  border: '1px solid rgba(255,255,255,0.06)',
+  border: '1.5px solid rgba(155,133,255,0.28)',
+  boxShadow: '0 0 14px rgba(155,133,255,0.10), inset 0 0 12px rgba(155,133,255,0.04)',
+  marginBottom: 0,
 };
-
 const playerColStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  gap: 6,
+  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
 };
-
 const centerColStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  gap: 4,
+  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
 };
-
 const vsStyle: React.CSSProperties = {
   fontFamily: "'Unbounded', sans-serif",
-  fontSize: 18,
-  fontWeight: 800,
-  color: 'rgba(255,255,255,0.25)',
-  letterSpacing: '.08em',
+  fontSize: 18, fontWeight: 800,
+  color: 'rgba(255,255,255,0.25)', letterSpacing: '.08em',
 };
-
 const betStyle: React.CSSProperties = {
-  fontSize: 11,
-  fontWeight: 700,
+  fontSize: 11, fontWeight: 700,
   color: 'var(--color-accent, #F5C842)',
   fontFamily: "'JetBrains Mono', monospace",
 };
-
 const playerNameStyle: React.CSSProperties = {
-  fontSize: 11,
-  fontWeight: 600,
+  fontSize: 11, fontWeight: 600,
   color: 'var(--color-text-secondary, #8B92A8)',
-  maxWidth: 72,
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  whiteSpace: 'nowrap',
-  textAlign: 'center',
+  maxWidth: 72, overflow: 'hidden', textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap', textAlign: 'center',
+};
+const opponentAvatarStyle: React.CSSProperties = {
+  width: 56, height: 56, borderRadius: '50%',
+  background: 'rgba(255,255,255,0.06)',
+  border: '1px dashed rgba(255,255,255,0.15)',
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
 };
 
-// Знак цвета — размер идентичен шрифту таймера (JetBrains Mono 28px → 26px)
-const colorBadgeStyle = (isWhite: boolean): React.CSSProperties => ({
+// Знаки цвета: строка под панелью, знаки прижаты к краям на том же отступе SIDE_PAD
+// marginBottom = 10px — отступ от знаков до блока с кодом (таймером)
+const colorSignsRowStyle: React.CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  paddingLeft: SIDE_PAD,
+  paddingRight: SIDE_PAD,
+  marginTop: 8,
+  marginBottom: 10,
+};
+// fontSize = 36 (= 28 × 1.3, базовый размер кода таймера +30%)
+const colorSignStyle = (isWhite: boolean): React.CSSProperties => ({
   fontFamily: "'JetBrains Mono', monospace",
-  fontSize: 22,
-  lineHeight: 1,
+  fontSize: 36, lineHeight: 1,
   color: isWhite ? '#F0F2F8' : '#8B92A8',
   opacity: 0.85,
 });
-
-// Плейсхолдер аватара соперника
-const opponentAvatarStyle: React.CSSProperties = {
-  width: 44,
-  height: 44,
-  borderRadius: '50%',
-  background: 'rgba(255,255,255,0.06)',
-  border: '1px dashed rgba(255,255,255,0.15)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-};
-
 const codeBlock: React.CSSProperties = {
   background: 'var(--waiting-code-block-bg, rgba(245, 200, 66, 0.06))',
   border: '1px solid var(--waiting-code-block-border, rgba(245, 200, 66, 0.15))',

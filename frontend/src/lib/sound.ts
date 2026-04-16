@@ -149,12 +149,21 @@ export const sound = {
     } catch {}
   },
 
-  /** Defeat — descending two notes */
+  /** Defeat — dramatic descending minor scale */
   lose() {
     if (!isSoundEnabled()) return;
     try {
-      playTone({ freq: 440, type: 'sine', gainStart: 0.2, gainEnd: 0, duration: 0.25 });
-      playTone({ freq: 330, type: 'sine', gainStart: 0.18, gainEnd: 0, duration: 0.3, startTime: 0.28 });
+      // Тяжёлый удар в начале
+      playNoise(0.32, 0.18);
+      playTone({ freq: 180, type: 'sawtooth', gainStart: 0.28, gainEnd: 0, duration: 0.45 });
+      // Нисходящая минорная гамма — трагичная мелодия
+      playTone({ freq: 370, type: 'triangle', gainStart: 0.22, gainEnd: 0, duration: 0.3, startTime: 0.12 });
+      playTone({ freq: 311, type: 'triangle', gainStart: 0.20, gainEnd: 0, duration: 0.3, startTime: 0.38 });
+      playTone({ freq: 277, type: 'triangle', gainStart: 0.18, gainEnd: 0, duration: 0.3, startTime: 0.62 });
+      playTone({ freq: 233, type: 'sine',     gainStart: 0.22, gainEnd: 0, duration: 0.45, startTime: 0.88 });
+      // Финальный глубокий аккорд — замирание
+      playTone({ freq: 185, type: 'sine',     gainStart: 0.20, gainEnd: 0, duration: 0.9,  startTime: 1.18 });
+      playTone({ freq: 147, type: 'triangle', gainStart: 0.12, gainEnd: 0, duration: 0.9,  startTime: 1.18 });
     } catch {}
   },
 

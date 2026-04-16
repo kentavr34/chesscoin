@@ -4,6 +4,92 @@ import { PageLayout } from '@/components/layout/PageLayout';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { useT } from '@/i18n/useT';
 
+const CARD_STYLE: React.CSSProperties = {
+  background: 'linear-gradient(135deg,#141018,#0F0E18)',
+  border: '.5px solid rgba(154,148,144,.22)',
+  borderRadius: 16,
+  margin: '0 .85rem',
+  overflow: 'hidden',
+};
+
+const SECTION_LABEL_STYLE: React.CSSProperties = {
+  fontSize: '.58rem',
+  fontWeight: 700,
+  color: '#7A7875',
+  textTransform: 'uppercase',
+  letterSpacing: '.14em',
+  padding: '.9rem .85rem .45rem',
+};
+
+const ROW_LABEL_STYLE: React.CSSProperties = {
+  fontSize: '.9rem',
+  fontWeight: 900,
+  color: '#EAE2CC',
+};
+
+const ROW_HINT_STYLE: React.CSSProperties = {
+  fontSize: '.78rem',
+  color: '#9A9490',
+  marginTop: 2,
+};
+
+// SVG иконки
+const IconGlobe = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+    <circle cx="12" cy="12" r="9" stroke="#9A9490" strokeWidth="1.5"/>
+    <ellipse cx="12" cy="12" rx="4" ry="9" stroke="#9A9490" strokeWidth="1.5"/>
+    <path d="M3 12h18" stroke="#9A9490" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
+);
+
+const IconMoon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="#9A9490" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const IconVibrate = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+    <rect x="7" y="4" width="10" height="16" rx="2" stroke="#9A9490" strokeWidth="1.5"/>
+    <path d="M4 8v8M20 8v8" stroke="#9A9490" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
+);
+
+const IconVolume = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+    <path d="M11 5L6 9H2v6h4l5 4V5z" stroke="#9A9490" strokeWidth="1.5" strokeLinejoin="round"/>
+    <path d="M15.54 8.46a5 5 0 0 1 0 7.07" stroke="#9A9490" strokeWidth="1.5" strokeLinecap="round"/>
+    <path d="M19.07 4.93a10 10 0 0 1 0 14.14" stroke="#9A9490" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
+);
+
+const IconUser = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+    <circle cx="12" cy="8" r="4" stroke="#9A9490" strokeWidth="1.5"/>
+    <path d="M4 20c0-4 3.58-7 8-7s8 3 8 7" stroke="#9A9490" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
+);
+
+const IconShield = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+    <path d="M12 2L4 6v6c0 5.25 3.5 9.74 8 11 4.5-1.26 8-5.75 8-11V6L12 2z" stroke="#9A9490" strokeWidth="1.5" strokeLinejoin="round"/>
+    <path d="M9 12l2 2 4-4" stroke="#9A9490" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const IconInfo = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+    <circle cx="12" cy="12" r="9" stroke="#9A9490" strokeWidth="1.5"/>
+    <path d="M12 8v.5M12 11v5" stroke="#9A9490" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
+);
+
+const IconChevron = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+    <path d="M9 18l6-6-6-6" stroke="#9A9490" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
 export const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const t = useT();
@@ -29,45 +115,62 @@ export const SettingsPage: React.FC = () => {
     document.documentElement.setAttribute('data-theme', next);
   };
 
-  const row = (label: string, right: React.ReactNode, border = true) => (
-    <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: '14px 16px',
-      borderBottom: border ? '1px solid #1C2030' : 'none',
-    }}>
-      <span style={{ fontSize: 14, color: '#E8EAF0', fontWeight: 500 }}>{label}</span>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>{right}</div>
-    </div>
-  );
-
   const toggle = (on: boolean, onToggle: () => void) => (
-    <div onClick={onToggle} style={{
-      width: 44, height: 24, borderRadius: 12, background: on ? '#7B61FF' : '#2A2D3A',
-      position: 'relative', cursor: 'pointer', transition: 'background .2s',
-    }}>
+    <div
+      onClick={onToggle}
+      style={{
+        width: 44, height: 24, borderRadius: 12,
+        background: on ? 'rgba(212,168,67,.9)' : 'rgba(255,255,255,.10)',
+        position: 'relative', cursor: 'pointer', transition: 'background .2s',
+        flexShrink: 0,
+      }}
+    >
       <div style={{
         position: 'absolute', top: 2, left: on ? 22 : 2, width: 20, height: 20,
         borderRadius: '50%', background: '#fff', transition: 'left .2s',
+        boxShadow: on ? '0 0 6px rgba(212,168,67,.6)' : 'none',
       }} />
     </div>
   );
 
-  const sectionTitle = (title: string) => (
-    <div style={{ padding: '20px 16px 8px', fontSize: 11, color: '#6B7494', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase' }}>
-      {title}
+  const row = (icon: React.ReactNode, label: string, right: React.ReactNode, border = true) => (
+    <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      padding: '.78rem .85rem',
+      borderBottom: border ? '.5px solid rgba(255,255,255,.07)' : 'none',
+      gap: 10,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1 }}>
+        {icon}
+        <span style={ROW_LABEL_STYLE}>{label}</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>{right}</div>
     </div>
   );
 
-  const disabledRow = (label: string, hint: string) => (
+  const sectionLabel = (title: string) => (
+    <div style={SECTION_LABEL_STYLE}>{title}</div>
+  );
+
+  const disabledRow = (icon: React.ReactNode, label: string, hint: string, border = true) => (
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: '14px 16px', borderBottom: '1px solid #1C2030', opacity: 0.45,
+      padding: '.78rem .85rem',
+      borderBottom: border ? '.5px solid rgba(255,255,255,.07)' : 'none',
+      opacity: 0.45, gap: 10,
     }}>
-      <div>
-        <div style={{ fontSize: 14, color: '#E8EAF0', fontWeight: 500 }}>{label}</div>
-        <div style={{ fontSize: 11, color: '#A8B0C8', marginTop: 2 }}>{hint}</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1 }}>
+        {icon}
+        <div>
+          <div style={ROW_LABEL_STYLE}>{label}</div>
+          <div style={ROW_HINT_STYLE}>{hint}</div>
+        </div>
       </div>
-      <span style={{ fontSize: 11, color: '#6B7494', background: '#1C2030', borderRadius: 6, padding: '2px 8px' }}>
+      <span style={{
+        fontSize: '.72rem', color: '#9A9490',
+        background: 'rgba(255,255,255,.06)', borderRadius: 6, padding: '2px 8px',
+        whiteSpace: 'nowrap',
+      }}>
         {s.soon}
       </span>
     </div>
@@ -75,60 +178,83 @@ export const SettingsPage: React.FC = () => {
 
   return (
     <PageLayout title={s.title} onBack={() => navigate(-1)}>
-      <div style={{ paddingBottom: 40 }}>
-        {sectionTitle(s.langInterface)}
-        <div style={{ background: '#13161E', borderRadius: 16, margin: '0 16px' }}>
-          {row(s.appLang,
+      <div style={{ paddingBottom: 40, background: '#0D0D12', minHeight: '100%' }}>
+
+        {sectionLabel(s.langInterface)}
+        <div style={CARD_STYLE}>
+          {row(
+            <IconGlobe />,
+            s.appLang,
             <div style={{ display: 'flex', gap: 6 }}>
               {(['ru', 'en'] as const).map((l) => (
                 <button key={l} onClick={() => setLang(l)} style={{
-                  padding: '4px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                  background: lang === l ? '#7B61FF' : '#1C2030',
-                  color: lang === l ? '#fff' : '#A8B0C8',
-                  fontWeight: 600, fontSize: 13,
+                  padding: '5px 14px', borderRadius: 8,
+                  border: lang === l ? '.5px solid rgba(212,168,67,.4)' : '.5px solid rgba(255,255,255,.08)',
+                  cursor: 'pointer',
+                  background: lang === l ? 'rgba(212,168,67,.15)' : 'rgba(255,255,255,.06)',
+                  color: lang === l ? '#F0C85A' : '#9A9490',
+                  fontWeight: 700, fontSize: '.78rem', fontFamily: 'inherit',
+                  transition: 'all .15s',
                 }}>
-                  {l === 'ru' ? '🇷🇺 RU' : '🇬🇧 EN'}
+                  {l.toUpperCase()}
                 </button>
               ))}
             </div>
           )}
-          {row(s.vibration, toggle(vibration, toggleVibration))}
-          {row(s.theme,
+          {row(
+            <IconVibrate />,
+            s.vibration,
+            toggle(vibration, toggleVibration)
+          )}
+          {row(
+            <IconMoon />,
+            s.theme,
             <div style={{ display: 'flex', gap: 6 }}>
-              {(['dark', 'light'] as const).map((t) => (
-                <button key={t} onClick={() => toggleTheme()} disabled={theme === t} style={{
-                  padding: '4px 14px', borderRadius: 8, border: 'none', cursor: theme === t ? 'default' : 'pointer',
-                  background: theme === t ? '#7B61FF' : '#1C2030',
-                  color: theme === t ? '#fff' : '#A8B0C8',
-                  fontWeight: 600, fontSize: 13,
-                  opacity: theme === t ? 1 : 0.6,
+              {(['dark', 'light'] as const).map((th) => (
+                <button key={th} onClick={() => toggleTheme()} disabled={theme === th} style={{
+                  padding: '5px 14px', borderRadius: 8,
+                  border: theme === th ? '.5px solid rgba(212,168,67,.4)' : '.5px solid rgba(255,255,255,.08)',
+                  cursor: theme === th ? 'default' : 'pointer',
+                  background: theme === th ? 'rgba(212,168,67,.15)' : 'rgba(255,255,255,.06)',
+                  color: theme === th ? '#F0C85A' : '#9A9490',
+                  fontWeight: 700, fontSize: '.78rem', fontFamily: 'inherit',
+                  opacity: 1,
+                  transition: 'all .15s',
                 }}>
-                  {t === 'dark' ? '🌙' : '☀️'} {t === 'dark' ? s.themeDark : s.themeLight}
+                  {th === 'dark' ? s.themeDark : s.themeLight}
                 </button>
               ))}
-            </div>
-          , false)}
+            </div>,
+            false
+          )}
         </div>
 
-        {sectionTitle(s.account)}
-        <div style={{ background: '#13161E', borderRadius: 16, margin: '0 16px' }}>
-          {disabledRow(s.dob, s.dobHint)}
-          {disabledRow(s.email, s.emailHint)}
-          {disabledRow(s.phone, s.phoneHint)}
-          {disabledRow(s.biometric, s.biometricHint)}
+        {sectionLabel(s.account)}
+        <div style={CARD_STYLE}>
+          {disabledRow(<IconUser />, s.dob, s.dobHint)}
+          {disabledRow(<IconUser />, s.email, s.emailHint)}
+          {disabledRow(<IconUser />, s.phone, s.phoneHint)}
+          {disabledRow(<IconShield />, s.biometric, s.biometricHint, false)}
         </div>
 
-        {sectionTitle(s.security)}
-        <div style={{ background: '#13161E', borderRadius: 16, margin: '0 16px' }}>
-          {disabledRow(s.changePin, s.changePinHint)}
-          {disabledRow(s.twoFa, s.twoFaHint)}
+        {sectionLabel(s.security)}
+        <div style={CARD_STYLE}>
+          {disabledRow(<IconShield />, s.changePin, s.changePinHint)}
+          {disabledRow(<IconShield />, s.twoFa, s.twoFaHint, false)}
         </div>
 
-        {sectionTitle(s.about)}
-        <div style={{ background: '#13161E', borderRadius: 16, margin: '0 16px' }}>
-          {row(s.version, <span style={{ fontSize: 13, color: '#A8B0C8' }}>v7.2.0</span>)}
-          {row(s.privacy,
-            <span style={{ fontSize: 18, color: '#6B7494' }}>›</span>, false
+        {sectionLabel(s.about)}
+        <div style={CARD_STYLE}>
+          {row(
+            <IconInfo />,
+            s.version,
+            <span style={{ fontSize: '.78rem', color: '#9A9490' }}>v7.2.0</span>
+          )}
+          {row(
+            <IconInfo />,
+            s.privacy,
+            <IconChevron />,
+            false
           )}
         </div>
       </div>
