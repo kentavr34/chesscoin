@@ -18,7 +18,7 @@ import { parentPort } from "worker_threads";
 import { Chess } from "chess.js";
 import * as fs from "fs";
 
-const DEBUG_LOG = "c:\\Users\\SAM\\Desktop\\chesscoin\\backend\\sf_debug.log";
+const DEBUG_LOG = "/tmp/stockfish_debug.log";  // production path
 function dlog(msg: string) {
   try { fs.appendFileSync(DEBUG_LOG, new Date().toISOString() + " " + msg + "\n"); } catch {}
 }
