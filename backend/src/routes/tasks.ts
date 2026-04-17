@@ -6,6 +6,7 @@ import { authMiddleware } from "../middleware/auth";
 import { validate } from "@/middleware/validate";
 import { updateBalance } from "@/services/economy";
 import { TransactionType } from "@prisma/client";
+import { redis } from "@/lib/redis";
 
 const CompleteTaskSchema = z.object({ taskId: z.string() });
 
@@ -72,8 +73,33 @@ tasksRouter.get("/", authMiddleware, async (req: Request, res: Response) => {
       }
     };
 
+    // Загружаем прогресс пользователя для прогресс-баров
+    const [wonBattles, wonBotGames, totalGames, referralCount, winStreak] = await Promise.all([
+      prisma.sessionSide.count({ where: { playerId: userId, status: 'WON', session: { type: 'BATTLE' } } }),
+      prisma.sessionSide.count({ where: { playerId: userId, status: 'WON', session: { type: 'BOT' } } }),
+      prisma.sessionSide.count({ where: { playerId: userId } }),
+      prisma.user.count({ where: { referrerId: userId, referralActivated: true } }),
+      redis.get(`streak:${userId}`).then(v => Number(v ?? 0)).catch(() => 0),
+    ]);
+
+    const getProgress = (task: any): { progress?: number; maxProgress?: number } => {
+      if (completedSet.has(task.id)) return {};
+      const meta = task.metadata as Record<string, unknown>;
+      const target = Number(meta?.targetCount ?? meta?.referralCount ?? 0);
+      if (!target) return {};
+      switch (task.taskType) {
+        case 'WIN_N':      return { progress: wonBattles, maxProgress: target };
+        case 'WIN_BOT_N':  return { progress: wonBotGames, maxProgress: target };
+        case 'PLAY_N':     return { progress: totalGames, maxProgress: target };
+        case 'WIN_STREAK_N': return { progress: winStreak, maxProgress: target };
+        case 'REFERRAL':   return { progress: referralCount, maxProgress: target };
+        default:           return {};
+      }
+    };
+
     const result = tasks.map((task) => {
       const isCompleted = completedSet.has(task.id);
+      const prog = getProgress(task);
       return {
         id: task.id,
         type: getCategory(task),
@@ -88,6 +114,7 @@ tasksRouter.get("/", authMiddleware, async (req: Request, res: Response) => {
         isCompleted,
         completed: isCompleted,
         completedAt: completedSet.get(task.id) ?? null,
+        ...prog,
       };
     });
 
