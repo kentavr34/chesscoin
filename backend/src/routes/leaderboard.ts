@@ -75,7 +75,8 @@ router.get("/", authMiddleware, async (req: Request, res: Response) => {
 
     // For large offsets, use cursor-based pagination to avoid slow SKIP scans.
     // We first grab the ID at `offset` position, then fetch from that cursor.
-    let users;
+    type LBUser = { id: string; firstName: string | null; lastName: string | null; username: string | null; avatar: string | null; avatarGradient: string | null; elo: number; league: string; balance: bigint; isMonthlyChampion: boolean; };
+    let users: LBUser[] = [];
     if (offset > 500) {
       // Get the cursor row: the single row at `offset` position
       const cursorRows = await prisma.user.findMany({
