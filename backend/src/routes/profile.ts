@@ -13,9 +13,9 @@ import { TransactionType } from "@prisma/client";
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
-  fileFilter: (_req: import("express").Request, file: { mimetype: string }, cb: (error: Error | null, acceptFile: boolean) => void) => {
+  fileFilter: (_req: import("express").Request, file: Express.Multer.File, cb: import("multer").FileFilterCallback) => {
     if (file.mimetype.startsWith("image/")) cb(null, true);
-    else cb(new Error("Only image files are allowed"), false);
+    else cb(new Error("Only image files are allowed"));
   },
 });
 
@@ -555,7 +555,7 @@ router.get("/ton/rate", authMiddleware, async (_req: Request, res: Response) => 
     try {
       const resp = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=the-open-network&vs_currencies=usd", { signal: AbortSignal.timeout(3000) });
       if (resp.ok) {
-        const data = await resp.json();
+        const data = await resp.json() as Record<string, { usd?: number }>;
         tonUsdt = data["the-open-network"]?.usd ?? tonUsdt;
       }
     } catch {}
