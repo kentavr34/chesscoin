@@ -131,12 +131,15 @@ tasksRouter.post("/complete", authMiddleware, validate(CompleteTaskSchema), asyn
       }
     }
 
-    // Если код — проверяем
+    // Если код — проверяем (если autoComplete=true — код не нужен)
     if (task.taskType === "ENTER_CODE") {
       const meta = task.metadata as Record<string, unknown>;
-      const { code } = req.body;
-      if (!code || code !== meta?.code)
-        return res.status(400).json({ error: "Invalid code" });
+      const isAutoComplete = meta?.autoComplete === true;
+      if (!isAutoComplete) {
+        const { code } = req.body;
+        if (!code || code !== meta?.code)
+          return res.status(400).json({ error: "Invalid code" });
+      }
     }
 
     // Начислить награду через updateBalance (создаёт транзакцию автоматически)
