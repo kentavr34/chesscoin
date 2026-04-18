@@ -726,6 +726,10 @@ nationsRouter.post("/battle/:id/record-result", authMiddleware, async (req: Requ
     if (winnerId && !sessionPlayerIds.includes(winnerId)) {
       return res.status(400).json({ error: "Winner is not a participant of this session" });
     }
+    // S1.3: только участники партии могут регистрировать результат
+    if (!req.user || !sessionPlayerIds.includes(req.user.id)) {
+      return res.status(403).json({ error: "Only session participants can record result" });
+    }
 
     // Записываем игру
     await prisma.clanBattleGame.upsert({
