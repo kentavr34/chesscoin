@@ -99,10 +99,9 @@ export async function verifyTonTransaction(params: {
     return { status: 'invalid', reason: 'Не предоставлен ни boc ни txHash' };
   }
 
-  // Если API ключ не задан — работаем в PENDING режиме
+  // Если API ключ не задан — работаем без ключа (rate limit 1 req/sec, достаточно для тестнет)
   if (!config.ton.toncenterApiKey) {
-    logger.warn('[tonverify] TONCENTER_API_KEY not set — skipping verification (PENDING mode)');
-    return { status: 'pending', reason: 'TON API key not configured' };
+    logger.warn('[tonverify] TONCENTER_API_KEY not set — proceeding without key (rate-limited mode)');
   }
 
   try {

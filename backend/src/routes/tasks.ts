@@ -57,6 +57,16 @@ tasksRouter.get("/", authMiddleware, async (req: Request, res: Response) => {
         case 'FOLLOW_LINK':
         case 'REFERRAL':
           return 'SOCIAL';
+        case 'DAILY_LOGIN':
+        case 'WIN_N':
+        case 'WIN_STREAK_N':
+        case 'PLAY_N':
+        case 'FIRST_GAME':
+          return 'DAILY';
+        case 'WIN_BOT_N':
+        case 'ENTER_CODE':
+        case 'PUZZLE':
+          return 'LEARN';
         default:
           return 'OTHER';
       }

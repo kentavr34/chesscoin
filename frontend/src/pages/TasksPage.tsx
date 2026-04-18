@@ -23,6 +23,26 @@ const groupByCategory = (tasks: Task[]): Record<string, Task[]> => {
   }, {} as Record<string, Task[]>);
 };
 
+// Хук для таймера до полуночи UTC
+function useMidnightCountdown(): string {
+  const [timeStr, setTimeStr] = React.useState('');
+  React.useEffect(() => {
+    const calc = () => {
+      const now = new Date();
+      const midnight = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+      const diff = Math.max(0, Math.floor((midnight.getTime() - now.getTime()) / 1000));
+      const h = Math.floor(diff / 3600);
+      const m = Math.floor((diff % 3600) / 60);
+      const s = diff % 60;
+      return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    };
+    setTimeStr(calc());
+    const id = setInterval(() => setTimeStr(calc()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  return timeStr;
+}
+
 export const TasksPage: React.FC = () => {
   const t = useT();
   const tp = t.tasksPage;
@@ -34,6 +54,7 @@ export const TasksPage: React.FC = () => {
   const [claiming, setClaiming] = useState<string | null>(null);
   const [dailyPuzzle, setDailyPuzzle] = useState<PuzzleItem | null>(null);
   const [puzzleLoading, setPuzzleLoading] = useState(true);
+  const midnightTimer = useMidnightCountdown();
 
   const CAT_LABEL: Record<string, string> = {
     DAILY: tp.catDaily,
@@ -88,7 +109,7 @@ export const TasksPage: React.FC = () => {
           <div style={{ fontSize: 13, fontWeight: 700, color: '#C8C0E0' }}>
             {completed} / {tasks.length} {tp.completed} · +{fmtBalance(String(totalReward))} ᚙ {tp.remaining}
           </div>
-          <div style={{ fontSize: 11, color: '#9A9490', marginTop: 2 }}>{tp.refreshIn} 08:38</div>
+          <div style={{ fontSize: 11, color: '#9A9490', marginTop: 2 }}>{tp.refreshIn} {midnightTimer}</div>
           <div style={{ height: 3, background: 'rgba(155,109,255,.12)', borderRadius: 2, marginTop: 7, overflow: 'hidden' }}>
             <div style={{ height: '100%', width: `${tasks.length ? (completed / tasks.length) * 100 : 0}%`, background: 'linear-gradient(90deg,#7B61FF,#9B85FF)', borderRadius: 2, transition: 'width .6s' }} />
           </div>

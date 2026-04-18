@@ -19,10 +19,10 @@ type Tab = 'avatars' | 'frames' | 'visual' | 'themes' | 'effects' | 'exchange';
 
 // S1: маппинг вкладок → типы товаров
 const TAB_TYPE: Partial<Record<Tab, ItemType | ItemType[]>> = {
-  avatars:  'PREMIUM_AVATAR',
+  avatars:  ['PIECE_SET', 'PIECE_SKIN'],  // наборы/скины фигур (PREMIUM_AVATAR в разработке)
   frames:   'AVATAR_FRAME',
   visual:   'BOARD_SKIN',
-  effects:  ['WIN_ANIMATION', 'CAPTURE_EFFECT', 'SPECIAL_MOVE'],
+  effects:  'MOVE_ANIMATION',             // анимации ходов (WIN_ANIMATION/CAPTURE_EFFECT в разработке)
   themes:   'THEME',
 };
 
@@ -678,8 +678,8 @@ export const ShopPage: React.FC = () => {
       {/* Effects tab header */}
       {tab === 'effects' && (
         <div style={{ margin: '0 18px 10px', padding: '12px 14px', ...S.card, background: 'linear-gradient(135deg,rgba(155,133,255,.1),rgba(100,80,220,.06))', border: '.5px solid rgba(155,133,255,.22)' }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#EAE2CC', marginBottom: 3 }}>🎬 Game Effects</div>
-          <div style={{ fontSize: 11, color: '#7A7875' }}>Win animations · Capture effects · Opening styles</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#EAE2CC', marginBottom: 3 }}>✨ Move Animations</div>
+          <div style={{ fontSize: 11, color: '#7A7875' }}>Animate your pieces · Trails · Effects</div>
         </div>
       )}
 
@@ -711,31 +711,24 @@ export const ShopPage: React.FC = () => {
         <ExchangeTab user={user} showToast={showToast} onUserRefresh={refreshUser} />
       )}
 
-      {/* Avatars grid */}
+      {/* Piece sets & skins grid */}
       {tab === 'avatars' && (
         loading ? (
           <div style={{ textAlign: 'center', padding: 40, color: '#7A7875', fontSize: 13 }}>Loading...</div>
         ) : items.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 40, color: '#7A7875', fontSize: 13 }}>No avatars</div>
+          <div style={{ textAlign: 'center', padding: 40, color: '#7A7875', fontSize: 13 }}>No items</div>
         ) : (
-          <div style={{ padding: '0 18px 24px' }}>
-            <div style={{ fontSize: 11, color: '#7A7875', marginBottom: 12, lineHeight: 1.5 }}>
-              Buy a premium avatar and click <b style={{ color: '#F5C842' }}>Apply</b> — it will appear in your profile.
-              Other players will see your avatar on your profile and can navigate here.
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              {items.map((item) => (
-                <AvatarItemCard
-                  key={item.id}
-                  item={item}
-                  loading={actionId === item.id}
-                  highlighted={item.id === highlightItemId}
-                  onPurchase={() => handlePurchase(item)}
-                  onEquip={() => handleEquip(item)}
-                  onUnequip={() => handleUnequip(item)}
-                />
-              ))}
-            </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, padding: '0 18px 24px' }}>
+            {items.map((item) => (
+              <ItemCard
+                key={item.id}
+                item={item}
+                loading={actionId === item.id}
+                highlighted={item.id === highlightItemId}
+                onPurchase={() => handlePurchase(item)}
+                onEquip={() => handleEquip(item)}
+              />
+            ))}
           </div>
         )
       )}
