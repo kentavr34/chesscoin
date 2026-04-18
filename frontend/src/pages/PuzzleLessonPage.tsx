@@ -172,8 +172,8 @@ export const PuzzleLessonPage: React.FC = () => {
   }
 
   const boardFen = mode === 'lesson' ? fen : testFen;
-  // In Lichess puzzles, the first move is the opponent's. Player's color is the OPPOSITE of whose turn it is.
-  const playerColor = lesson.fen.includes(' b ') ? 'white' : 'black';
+  // FEN.turn = цвет игрока; player двигается первым, затем авто-ответ соперника.
+  const playerColor: 'white' | 'black' = lesson.fen.includes(' w ') ? 'white' : 'black';
 
   return (
     <PageLayout title={lesson.title} onBack={() => navigate(-1)}>

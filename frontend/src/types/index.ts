@@ -132,6 +132,7 @@ export interface GameSession {
   // S3: скины создателя батла
   boardSkinUrl?: string | null;
   pieceSkinUrl?: string | null; // монеты за взятые фигуры (только бот-игры, при завершении)
+  spectatorCount?: number;      // зрители батла (live)
 }
 
 export interface BattleLobbyItem {

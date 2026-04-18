@@ -311,7 +311,16 @@ export const BattlesPage: React.FC = () => {
                 const shareText = `Вызов на шахматный батл! Ставка: ${fmtBalance(s.bet ?? '0')} монет`;
                 const shareUrl  = `https://t.me/share/url?url=https://t.me/ChessCoinBot/app?startapp=battle_${s.id}&text=${encodeURIComponent(shareText)}`;
                 return (
-                  <PrivateBattleCard key={s.id} session={s} onShare={() => window.open(shareUrl, '_blank')} onCancel={() => handleCancel(s.id)} onProfile={(id) => navigate('/profile/' + id)} />
+                  <div key={s.id} style={{ background: 'rgba(212,168,67,.06)', border: '1px solid rgba(212,168,67,.22)', borderRadius: 14, padding: '12px 14px', marginBottom: 10 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                      <div style={{ fontSize: '.78rem', fontWeight: 700, color: '#F0C85A' }}>Код: {s.code}</div>
+                      <div style={{ fontSize: '.72rem', color: '#8B92A8' }}>Ставка: {fmtBalance(s.bet ?? '0')}</div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button onClick={() => window.open(shareUrl, '_blank')} style={{ flex: 1, padding: '7px', borderRadius: 10, border: '1px solid rgba(212,168,67,.3)', background: 'rgba(212,168,67,.08)', color: '#F0C85A', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Поделиться</button>
+                      <button onClick={() => handleCancel(s.id)} style={{ flex: 1, padding: '7px', borderRadius: 10, border: '1px solid rgba(255,77,106,.3)', background: 'rgba(255,77,106,.08)', color: '#FF4D6A', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Отменить</button>
+                    </div>
+                  </div>
                 );
               })}
             </>
@@ -964,7 +973,7 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
         {/* ── Публичный / Приватный ── */}
         <div style={{ margin: '0 14px 10px' }}>
           <div style={{ fontSize: '.52rem', fontWeight: 700, color: '#6A5A30', textTransform: 'uppercase' as const, letterSpacing: '.12em', marginBottom: 6 }}>
-            {t.battles.visibility ?? 'Видимость'}
+            {(t.battles as { visibility?: string }).visibility ?? 'Видимость'}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7 }}>
             {[

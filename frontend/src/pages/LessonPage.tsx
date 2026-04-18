@@ -90,17 +90,13 @@ export const LessonPage: React.FC = () => {
     setPhase('intro');
   };
 
-  // Начинаем — противник делает первый ход автоматически
+  // Начинаем — ПЕРВЫЙ ход в solution делает ИГРОК (convention сидов).
+  // solution[0]=player, solution[1]=opponent, solution[2]=player ...
   const startPuzzle = useCallback(() => {
     if (!puzzle) return;
     setPhase('playing');
-
-    // Первый ход в solution — ход противника
-    if (puzzle.moves.length > 0) {
-      setTimeout(() => {
-        applyOpponentMove(puzzle, new Chess(puzzle.fen), 0);
-      }, 600);
-    }
+    setSolutionIdx(0);
+    setIsPlayerTurn(true);
   }, [puzzle]);
 
   const applyOpponentMove = (p: PuzzleItem, c: Chess, idx: number) => {
@@ -315,6 +311,7 @@ export const LessonPage: React.FC = () => {
             id="lesson-board"
             position={fen}
             boardWidth={boardSize}
+            boardOrientation={puzzle && puzzle.fen.includes(' w ') ? 'white' : 'black'}
             onSquareClick={handleSquareClick}
             onPieceDrop={(from, to) => { handlePieceDrop(from, to); return true; }}
             arePiecesDraggable={isPlayerTurn && phase === 'playing'}

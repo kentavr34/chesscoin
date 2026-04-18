@@ -11,6 +11,7 @@ import { profileApi, authApi, warsApi } from '@/api';
 import { fmtBalance, fmtDate, leagueEmoji } from '@/utils/format';
 import type { Transaction, UserPublic } from '@/types';
 import { JARVIS_LEVELS } from '@/components/ui/JarvisModal';
+import { tgConfirm } from '@/lib/tgDialog';
 
 // Local type for Tab
 type Tab = 'info' | 'games' | 'saves' | 'ach';
@@ -127,7 +128,7 @@ export const ProfilePage: React.FC = () => {
   };
 
   const handleAvatarDelete = async () => {
-    if (!confirm(t.profile.deleteAvatar)) return;
+    if (!(await tgConfirm(t.profile.deleteAvatar))) return;
     setAvatarLoading(true);
     try {
       await profileApi.deleteAvatar();

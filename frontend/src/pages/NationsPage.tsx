@@ -6,6 +6,7 @@ import { nationsApi, clanBattlesApi } from '@/api';
 import { fmtBalance } from '@/utils/format';
 import type { Nation, ClanWar, ClanMemberData, ClanBattle } from '@/types';
 import { useT } from '@/i18n/useT';
+import { tgConfirm } from '@/lib/tgDialog';
 
 const showToast = (text: string, type: 'error' | 'info' = 'error') => {
   window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text, type } }));
@@ -66,7 +67,7 @@ export const NationsPage: React.FC = () => {
   useEffect(() => { if (tab === 'members') loadMembers(); }, [tab]);
 
   const handleLeave = async () => {
-    if (!confirm(t.nations.leaveConfirm)) return;
+    if (!(await tgConfirm(t.nations.leaveConfirm))) return;
     await nationsApi.leave();
     await load();
     setTab('ranking');
@@ -78,7 +79,7 @@ export const NationsPage: React.FC = () => {
   };
 
   const handleKick = async (targetUserId: string) => {
-    if (!confirm(t.nations.kickConfirm)) return;
+    if (!(await tgConfirm(t.nations.kickConfirm))) return;
     await nationsApi.kickMember(targetUserId);
     await loadMembers();
   };

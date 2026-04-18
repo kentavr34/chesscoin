@@ -1054,7 +1054,7 @@ export function GamePage() {
               disabled={gameOver}
               onClick={() => {
                 if (gameOver) return;
-                getSocket().emit('battle:donate', { sessionId, amount: String(selectedDonateAmt) });
+                getSocket().emit('battle:donate', { sessionId, amount: String(selectedDonateAmt) }, () => {});
               }}
               style={{
                 padding: '5px 18px', borderRadius: 10,
