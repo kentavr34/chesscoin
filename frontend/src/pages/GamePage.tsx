@@ -9,6 +9,7 @@ import type { Square } from 'chess.js';
 import { getSocket } from '@/api/socket';
 import { api } from '@/api/client';
 import { useGameStore } from '@/store/useGameStore';
+import { useUserStore } from '@/store/useUserStore';
 import { ChessBoard } from '@/components/game/ChessBoard';
 import { sound } from '@/lib/sound';
 import { fmtBalance } from '@/utils/format';
@@ -19,7 +20,7 @@ const PIECE_VAL:     Record<string, number>  = { p: 1, n: 3, b: 3, r: 5, q: 9 };
 const PIECE_START:   Record<string, number>  = { p: 8, n: 2, b: 2, r: 2, q: 1 };
 const SORT_ORDER:    Record<string, number>  = { q: 0, r: 1, b: 2, n: 3, p: 4 };
 
-const PANEL_H   = 72;  // высота панели игрока
+const PANEL_H   = 86;  // высота панели игрока (расширена на ~20% от 72)
 const ACTBAR_H  = 64;  // нижняя панель кнопок
 const STATUS_GAP = 28; // полоска между панелью и доской — «Ваш ход» / «Думает...»
 
@@ -140,6 +141,22 @@ const flagEmoji = (code?: string | null): string | null => {
   return String.fromCodePoint(a, b);
 };
 
+// SVG-иконка глобуса (никаких эмодзи — только системные SVG)
+const IcoGlobe: React.FC<{ size?: number }> = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, opacity: .55 }}>
+    <circle cx="12" cy="12" r="9" stroke="#9A8E78" strokeWidth="1.6" />
+    <ellipse cx="12" cy="12" rx="4" ry="9" stroke="#9A8E78" strokeWidth="1.4" />
+    <path d="M3 12h18" stroke="#9A8E78" strokeWidth="1.4" />
+  </svg>
+);
+
+// Универсальный флаг игрока: из countryMember.country.flag, либо из country-кода, либо глобус SVG
+const PlayerFlag: React.FC<{ flag?: string | null; country?: string | null; size?: number }> = ({ flag, country, size = 18 }) => {
+  const resolved = flag || flagEmoji(country);
+  if (resolved) return <span style={{ fontSize: size, lineHeight: 1, flexShrink: 0, opacity: .85 }}>{resolved}</span>;
+  return <IcoGlobe size={size - 2} />;
+};
+
 // ── Панель игрока (по референсу) ──────────────────────────────────────────────
 interface PanelProps {
   name: string;
@@ -148,6 +165,7 @@ interface PanelProps {
   isBot?: boolean;
   isWhite: boolean;
   country?: string | null;
+  countryFlag?: string | null;
   captured: string[];
   advantage: number;
   coins: number;      // монеты за взятые фигуры
@@ -158,7 +176,7 @@ interface PanelProps {
 }
 
 const PlayerPanel: React.FC<PanelProps> = ({
-  name, elo, avatar, isBot, isWhite, country, captured, advantage: adv,
+  name, elo, avatar, isBot, isWhite, country, countryFlag, captured, advantage: adv,
   coins, timeDisplay, timeSecs, isActive, isGameOver,
 }) => {
   const sorted = useMemo(() => sortCaptured(captured), [captured]);
@@ -170,15 +188,9 @@ const PlayerPanel: React.FC<PanelProps> = ({
       display: 'flex', alignItems: 'center', gap: 10,
       height: PANEL_H, padding: '0 14px 0 14px', flexShrink: 0,
       margin: '0 6px', borderRadius: 12,
-      background: isActive
-        ? 'linear-gradient(90deg, rgba(240,200,90,.22) 0%, rgba(240,200,90,.14) 50%, rgba(240,200,90,.08) 100%)'
-        : 'rgba(255,255,255,.02)',
-      border: `1px solid ${
-        isCritical ? 'rgba(220,50,47,.65)'
-        : isActive  ? 'rgba(240,200,90,.6)'
-        : 'rgba(255,255,255,.05)'
-      }`,
-      boxShadow: isActive && !isCritical ? '0 0 18px rgba(240,200,90,.2), inset 0 0 18px rgba(240,200,90,.06)' : 'none',
+      background: 'linear-gradient(90deg, rgba(240,200,90,.18) 0%, rgba(240,200,90,.10) 50%, rgba(240,200,90,.06) 100%)',
+      border: '1px solid rgba(240,200,90,.5)',
+      boxShadow: '0 0 14px rgba(240,200,90,.15), inset 0 0 14px rgba(240,200,90,.05)',
       transition: 'background .3s, border-color .3s, box-shadow .3s',
     }}>
 
@@ -222,9 +234,7 @@ const PlayerPanel: React.FC<PanelProps> = ({
           <span style={{ fontSize: '.75rem', color: '#9A8E78', fontWeight: 600 }}>
             {elo !== undefined ? `ELO ${elo}` : (isBot ? 'J.A.R.V.I.S' : '')}
           </span>
-          <span style={{ fontSize: 18, lineHeight: 1, flexShrink: 0, opacity: .75 }}>
-            {flagEmoji(country) ?? '🌍'}
-          </span>
+          <PlayerFlag flag={countryFlag} country={country} size={18} />
         </div>
       </div>
 
@@ -729,6 +739,11 @@ export function GamePage() {
   const oppIsWhite  = !!oppSide?.isWhite;
   const oppElo      = oppSide?.player?.elo;
   const oppCountry  = oppSide?.player?.country;
+  const oppCountryFlag = (oppSide?.player as { countryFlag?: string } | undefined)?.countryFlag ?? null;
+
+  // Свой флаг — из useUserStore, поле countryMember.country.flag (хранится в БД как символьный флаг)
+  const currentUser = useUserStore((s) => s.user);
+  const myCountryFlag = currentUser?.countryMember?.country?.flag ?? null;
 
   const fen = session?.fen ?? 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
   const { white: whiteCap, black: blackCap } = capturedFromFen(fen);
@@ -884,7 +899,7 @@ export function GamePage() {
       <div style={{ borderBottom: '.5px solid rgba(255,255,255,.05)', flexShrink: 0 }}>
         <PlayerPanel
           name={oppName} elo={oppElo} avatar={oppAvatar} isBot={oppIsBot}
-          isWhite={oppIsWhite} country={oppCountry} captured={oppCaptured} advantage={oppAdv} coins={oppCoins}
+          isWhite={oppIsWhite} country={oppCountry} countryFlag={oppCountryFlag} captured={oppCaptured} advantage={oppAdv} coins={oppCoins}
           timeDisplay={oppTimeDisplay} timeSecs={oppTimeSecs}
           isActive={!isMyTurn && !gameOver} isGameOver={gameOver}
         />
@@ -971,7 +986,7 @@ export function GamePage() {
       <div style={{ borderTop: '.5px solid rgba(255,255,255,.05)', flexShrink: 0 }}>
         <PlayerPanel
           name={myName} elo={myElo} avatar={myAvatar} isBot={false}
-          isWhite={myColor === 'white'} country={myCountry} captured={myCaptured} advantage={myAdv} coins={myCoins}
+          isWhite={myColor === 'white'} country={myCountry} countryFlag={myCountryFlag} captured={myCaptured} advantage={myAdv} coins={myCoins}
           timeDisplay={myTimeDisplay} timeSecs={myTimeSecs}
           isActive={isMyTurn && !gameOver} isGameOver={gameOver}
         />
