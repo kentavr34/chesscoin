@@ -1,0 +1,145 @@
+/* ChessCoin Design System — Colors & Type
+   Brand palette, typography, spacing tokens.
+   Import: <link rel="stylesheet" href="../colors_and_type.css"> */
+
+:root {
+  /* ── BRAND PALETTE ─────────────────────────────────── */
+  --cc-bg:            #0D0D12;   /* Page background */
+  --cc-bg-hero:       #120E04;   /* Deep gold hero bg */
+  --cc-bg-card:       #141018;   /* Card surface */
+  --cc-bg-elev:       #181228;   /* Elevated surface */
+
+  --cc-text:          #F4F0E8;   /* Primary text */
+  --cc-text-2:        #C8C0E0;   /* Secondary text */
+  --cc-text-muted:    #7A7875;   /* Muted / captions */
+  --cc-text-heading:  #EAE2CC;   /* Warm cream headings */
+
+  /* Gold — brand identity */
+  --cc-gold:          #D4A843;
+  --cc-gold-light:    #F0C85A;
+  --cc-gold-dark:     #A07830;
+
+  /* Semantic channels */
+  --cc-blue:          #4A9EFF;   /* J.A.R.V.I.S */
+  --cc-blue-light:    #82CFFF;
+  --cc-purple:        #9B6DFF;   /* Турниры / Cups */
+  --cc-purple-light:  #C4A8FF;
+  --cc-green:         #3DBA7A;   /* Войны / online */
+  --cc-green-light:   #6FEDB0;
+  --cc-red:           #EF4444;   /* Errors */
+
+  /* Divider & glass */
+  --cc-divider:       rgba(255,255,255,.05);
+  --cc-border:        rgba(255,255,255,.10);
+  --cc-border-gold:   rgba(212,168,67,.28);
+
+  /* Premium Oak chess board (default) */
+  --cc-board-light:   #DEB887;
+  --cc-board-dark:    #8B4513;
+
+  /* ── TYPOGRAPHY ────────────────────────────────────── */
+  --cc-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* Scale */
+  --cc-fs-micro:   .43rem;   /* 6.8px — tiny cap labels */
+  --cc-fs-label:   .58rem;   /* 9.3px — section labels */
+  --cc-fs-xs:      .7rem;    /* 11.2px — chip text */
+  --cc-fs-sm:      .76rem;   /* 12.2px — small body */
+  --cc-fs-body:    .86rem;   /* 13.8px — body */
+  --cc-fs-name:    1.08rem;  /* 17.3px — username */
+  --cc-fs-h1:      1.25rem;  /* 20px — page heading */
+  --cc-fs-hero:    1.5rem;   /* 24px — hero numbers */
+
+  --cc-fw-regular: 400;
+  --cc-fw-medium:  500;
+  --cc-fw-semi:    600;
+  --cc-fw-bold:    700;
+  --cc-fw-heavy:   900;
+
+  /* ── RADII ─────────────────────────────────────────── */
+  --cc-r-btn:      8px;
+  --cc-r-btn-lg:   12px;
+  --cc-r-card:     16px;
+  --cc-r-card-lg:  20px;
+  --cc-r-round:    9999px;
+
+  /* ── SPACING ───────────────────────────────────────── */
+  --cc-side-pad:  .85rem;    /* Canonical side padding */
+  --cc-gap-xs:    .22rem;
+  --cc-gap-sm:    .45rem;
+  --cc-gap:       .7rem;
+  --cc-gap-lg:    1.1rem;
+
+  /* Safe area (Telegram WebApp) */
+  --cc-safe-top:     18px;
+  --cc-safe-bottom:  80px;
+
+  /* ── SHADOWS ───────────────────────────────────────── */
+  --cc-shadow-hero:  0 6px 36px rgba(0,0,0,.55), inset 0 0 0 .5px rgba(212,168,67,.06);
+  --cc-shadow-gold:  0 0 20px rgba(212,168,67,.35), 0 0 48px rgba(212,168,67,.1);
+  --cc-glow-gold:    0 0 12px rgba(212,168,67,.4);
+  --cc-glow-blue:    0 0 8px rgba(74,158,255,.5);
+  --cc-glow-green:   0 0 6px rgba(61,186,122,.8);
+
+  /* ── MOTION ────────────────────────────────────────── */
+  --cc-ease:     cubic-bezier(.34, 1.56, .64, 1);   /* Spring for press */
+  --cc-ease-io:  cubic-bezier(.4, 0, .2, 1);
+  --cc-t-fast:   .15s;
+  --cc-t-normal: .25s;
+}
+
+/* ── SEMANTIC STYLES ────────────────────────────────── */
+
+html, body {
+  background: var(--cc-bg);
+  color: var(--cc-text);
+  font-family: var(--cc-font);
+  font-size: 16px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.cc-h1 {
+  font-size: var(--cc-fs-h1);
+  font-weight: var(--cc-fw-heavy);
+  color: var(--cc-text-heading);
+  letter-spacing: -.02em;
+  line-height: 1.15;
+}
+
+.cc-name {
+  font-size: var(--cc-fs-name);
+  font-weight: var(--cc-fw-bold);
+  color: var(--cc-text);
+  letter-spacing: .04em;
+  line-height: 1.1;
+}
+
+.cc-body { font-size: var(--cc-fs-body); color: var(--cc-text); }
+.cc-sm   { font-size: var(--cc-fs-sm); color: var(--cc-text-2); }
+
+.cc-label {
+  font-size: var(--cc-fs-label);
+  font-weight: var(--cc-fw-bold);
+  color: var(--cc-text-muted);
+  text-transform: uppercase;
+  letter-spacing: .14em;
+}
+
+.cc-micro-label {
+  font-size: var(--cc-fs-micro);
+  font-weight: var(--cc-fw-bold);
+  color: var(--cc-text-muted);
+  text-transform: uppercase;
+  letter-spacing: .12em;
+}
+
+.cc-gold-num {
+  font-size: var(--cc-fs-body);
+  font-weight: var(--cc-fw-heavy);
+  color: var(--cc-gold);
+  letter-spacing: -.01em;
+  text-shadow: var(--cc-glow-gold);
+  font-variant-numeric: tabular-nums;
+}
