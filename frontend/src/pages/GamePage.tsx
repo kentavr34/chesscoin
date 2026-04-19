@@ -168,14 +168,16 @@ const PlayerPanel: React.FC<PanelProps> = ({
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 10,
-      height: PANEL_H, padding: '0 10px 0 22px', flexShrink: 0,
-      background: isActive ? 'rgba(74,158,255,.03)' : 'transparent',
-      borderLeft: `3px solid ${
-        isCritical ? 'rgba(220,50,47,.85)'
-        : isActive  ? '#4A9EFF'
-        : 'transparent'
+      height: PANEL_H, padding: '0 14px 0 14px', flexShrink: 0,
+      margin: '0 6px', borderRadius: 12,
+      background: isActive ? 'rgba(240,200,90,.06)' : 'rgba(255,255,255,.02)',
+      border: `1px solid ${
+        isCritical ? 'rgba(220,50,47,.65)'
+        : isActive  ? 'rgba(240,200,90,.55)'
+        : 'rgba(255,255,255,.05)'
       }`,
-      transition: 'background .3s, border-color .3s',
+      boxShadow: isActive && !isCritical ? '0 0 14px rgba(240,200,90,.15)' : 'none',
+      transition: 'background .3s, border-color .3s, box-shadow .3s',
     }}>
 
       {/* ── Аватар ─────────────────────────────────────────────────────────── */}
@@ -204,25 +206,26 @@ const PlayerPanel: React.FC<PanelProps> = ({
         }
       </div>
 
-      {/* ── Колонка: имя + флаг/глобус + ELO ───────────────────────────── */}
-      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 4, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-          <span style={{
-            fontSize: '1rem', fontWeight: 700, lineHeight: 1,
-            color: isActive ? '#EAE2CC' : '#9A9490',
-            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-            maxWidth: 80, transition: 'color .3s',
-          }}>
-            {name.length > 10 ? name.slice(0, 10) + '…' : name}
-          </span>
-          {/* Флаг страны или глобус */}
-          <span style={{ fontSize: 14, lineHeight: 1, flexShrink: 0 }}>
-            {flagEmoji(country) ?? '🌐'}
-          </span>
-        </div>
-        <span style={{ fontSize: '.68rem', color: '#5A5248', fontWeight: 600, lineHeight: 1 }}>
-          {elo !== undefined ? `ELO ${elo}` : (isBot ? 'J.A.R.V.I.S' : '')}
+      {/* ── Колонка: имя (строка 1), ELO + флаг (строка 2) ─────────────── */}
+      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 4, minWidth: 0, maxWidth: 130 }}>
+        <span style={{
+          fontSize: '1rem', fontWeight: 700, lineHeight: 1,
+          color: isActive ? '#EAE2CC' : '#9A9490',
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+          maxWidth: 130, transition: 'color .3s',
+        }}>
+          {name}
         </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, lineHeight: 1 }}>
+          <span style={{ fontSize: '.68rem', color: '#5A5248', fontWeight: 600 }}>
+            {elo !== undefined ? `ELO ${elo}` : (isBot ? 'J.A.R.V.I.S' : '')}
+          </span>
+          {flagEmoji(country) && (
+            <span style={{ fontSize: 18, lineHeight: 1, flexShrink: 0, opacity: .7 }}>
+              {flagEmoji(country)}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* ── Центр: монеты (строка 1) + взятые фигуры (строка 2) ─────────── */}
@@ -240,15 +243,16 @@ const PlayerPanel: React.FC<PanelProps> = ({
         )}
         {/* Строка 2: взятые фигуры + преимущество */}
         {sorted.length > 0 ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            {sorted.slice(0, 8).map((p, i) => (
+          <div style={{
+            display: 'flex', flexWrap: 'wrap', justifyContent: 'center',
+            alignItems: 'center', gap: '1px 2px',
+            maxWidth: 120, maxHeight: 28, overflow: 'hidden',
+          }}>
+            {sorted.map((p, i) => (
               <span key={i} style={{ fontSize: 12, lineHeight: 1, opacity: .82 }}>
                 {PIECE_SYMBOLS[p] ?? ''}
               </span>
             ))}
-            {sorted.length > 8 && (
-              <span style={{ fontSize: '.5rem', color: '#6A5A40', fontWeight: 700 }}>+{sorted.length - 8}</span>
-            )}
             {adv > 0 && (
               <span style={{ fontSize: '.65rem', fontWeight: 800, color: '#3DBA7A', marginLeft: 3 }}>+{adv}</span>
             )}
@@ -267,14 +271,14 @@ const PlayerPanel: React.FC<PanelProps> = ({
           isCritical ? 'rgba(220,50,47,.65)'
           : isActive  ? 'rgba(212,168,67,.5)' : 'rgba(255,255,255,.14)'
         }`,
-        borderRadius: 6, padding: '7px 15px', flexShrink: 0,
-        minWidth: 72, textAlign: 'center', marginRight: 2,
+        borderRadius: 6, padding: '6px 13px', flexShrink: 0,
+        minWidth: 65, textAlign: 'center', margin: '0 4px',
         transition: 'all .3s',
         animation: isCritical ? 'timer-crit .75s infinite' : 'none',
         boxShadow: isActive && !isCritical ? '0 0 8px rgba(212,168,67,.18)' : 'none',
       }}>
         <div style={{
-          fontSize: '1.42rem', fontWeight: 900,
+          fontSize: '1.28rem', fontWeight: 900,
           color: isCritical ? '#FF6868' : isActive ? '#D4A843' : '#6A6258',
           fontVariantNumeric: 'tabular-nums', letterSpacing: '-.02em',
           fontFamily: "'JetBrains Mono', monospace",
