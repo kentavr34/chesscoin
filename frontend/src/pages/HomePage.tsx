@@ -511,7 +511,25 @@ export const HomePage: React.FC = () => {
               transform: blkScale('jarvis'),
             }}
             onPointerDown={() => setPressedBlk('jarvis')}
-            onPointerUp={() => { setPressedBlk(null); setShowJarvisModal(true); }}
+            onPointerUp={() => {
+              setPressedBlk(null);
+              // Проверка: есть ли уже активная партия с Jarvis
+              const activeJarvis = sessions.find(s =>
+                s.type === 'BOT' && (s.status === 'IN_PROGRESS' || s.status === 'WAITING_FOR_OPPONENT')
+              );
+              if (activeJarvis) {
+                window.dispatchEvent(new CustomEvent('chesscoin:toast', {
+                  detail: {
+                    text: 'У тебя уже есть активная партия с J.A.R.V.I.S — сначала заверши её',
+                    type: 'error',
+                    actionLabel: 'Продолжить',
+                    onAction: () => { window.location.href = '/game/' + activeJarvis.id; },
+                  }
+                }));
+                return;
+              }
+              setShowJarvisModal(true);
+            }}
             onPointerLeave={() => setPressedBlk(null)}
           >
             <div style={{ position: 'relative', marginBottom: '.55rem' }}>
