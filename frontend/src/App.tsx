@@ -153,9 +153,9 @@ const SplashScreen: React.FC = () => {
           animation: 'pulse 2s ease-in-out infinite',
         }}><CoinIconSplash size={144} /></div>
         <div style={{
-          fontFamily: "'Unbounded',sans-serif",
+          fontFamily: "'Inter',sans-serif",
           fontSize: 22, fontWeight: 800, color: '#F5C842',
-          letterSpacing: '-.02em',
+          letterSpacing: '-.01em',
           textShadow: '0 0 20px rgba(245,200,66,0.4)',
         }}>ChessCoin</div>
       </div>
@@ -189,7 +189,10 @@ const AuthErrorScreen: React.FC = () => {
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       flexDirection: 'column', gap: 12, padding: 24,
     }}>
-      <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 22, fontWeight: 800, color: '#F5C842' }}>ChessCoin</div>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+        <CoinIconSplash size={72} />
+        <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 22, fontWeight: 800, color: '#F5C842', letterSpacing: '-.01em' }}>ChessCoin</div>
+      </div>
       <div style={{ fontSize: 13, color: '#8B92A8', textAlign: 'center' }}>
         {t.auth.openViaBot}
       </div>
