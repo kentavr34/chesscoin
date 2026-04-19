@@ -984,12 +984,12 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
           </div>
         </div>
 
-        {/* ── Цвет фигур — по шаблону JarvisPlayModal ── */}
-        <div style={{ margin: '0 14px 10px' }}>
-          <div style={{ fontSize: '.52rem', fontWeight: 700, color: '#6A5A30', textTransform: 'uppercase' as const, letterSpacing: '.12em', marginBottom: 6 }}>
+        {/* ── Цвет фигур — эталон JarvisPlayModal ── */}
+        <div style={{ margin: '0 14px 14px' }}>
+          <div style={{ fontSize: '.52rem', fontWeight: 700, color: '#6A5A30', textTransform: 'uppercase' as const, letterSpacing: '.12em', marginBottom: 8 }}>
             {t.battles.colorChoice}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 7 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
             {COLOR_OPTS.map(opt => {
               const active = color === opt.key;
               return (
@@ -1000,28 +1000,28 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
                   style={{
                     background: active ? opt.activeBg : opt.bg,
                     border: `.5px solid ${active ? opt.activeBorder : opt.border}`,
-                    borderRadius: 12, padding: '12px 6px',
-                    display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 6,
+                    borderRadius: 12, padding: '14px 8px',
+                    display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 8,
                     cursor: 'pointer', fontFamily: 'inherit',
                     transition: 'all .15s', transform: 'scale(1)',
                     boxShadow: active ? `0 0 12px ${opt.activeBorder}40` : 'none',
                   }}
                 >
-                  <span style={{ color: opt.color, opacity: active ? 1 : 0.35, transition: 'opacity .15s' }}><opt.Icon /></span>
-                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '.76rem', fontWeight: 800, color: active ? opt.color : 'rgba(255,255,255,.45)', letterSpacing: '.02em' }}>{opt.label}</span>
-                  {active && <div style={{ width: 16, height: 2, borderRadius: 1, background: opt.activeBorder }} />}
+                  <span style={{ color: opt.color, opacity: active ? 1 : 0.35, filter: active ? 'none' : 'grayscale(0.7)', transition: 'opacity .15s, filter .15s' }}><opt.Icon /></span>
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.96rem', fontWeight: 800, color: active ? opt.color : 'rgba(255,255,255,.5)', letterSpacing: '.03em' }}>{opt.label}</span>
+                  {active && <div style={{ width: 18, height: 2, borderRadius: 1, background: opt.activeBorder }} />}
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* ── Время партии — по шаблону JarvisPlayModal ── */}
-        <div style={{ margin: '0 14px 12px' }}>
-          <div style={{ fontSize: '.52rem', fontWeight: 700, color: '#6A5A30', textTransform: 'uppercase' as const, letterSpacing: '.12em', marginBottom: 6 }}>
+        {/* ── Время партии — эталон JarvisPlayModal ── */}
+        <div style={{ margin: '0 14px 18px' }}>
+          <div style={{ fontSize: '.52rem', fontWeight: 700, color: '#6A5A30', textTransform: 'uppercase' as const, letterSpacing: '.12em', marginBottom: 8 }}>
             {t.battles.timeControl}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 6 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 7 }}>
             {TIME_OPTIONS.map(mins => {
               const secs = mins * 60;
               const active = duration === secs;
@@ -1031,18 +1031,18 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
                   className="cbm-time"
                   onClick={() => setDuration(secs)}
                   style={{
-                    background: active ? 'rgba(212,168,67,.16)' : 'rgba(255,255,255,.04)',
-                    border: `.5px solid ${active ? 'rgba(212,168,67,.6)' : 'rgba(255,255,255,.09)'}`,
-                    borderRadius: 10, padding: '11px 6px',
+                    background: active ? 'rgba(212,168,67,.16)' : 'rgba(255,255,255,.05)',
+                    border: `.5px solid ${active ? 'rgba(212,168,67,.6)' : 'rgba(255,255,255,.1)'}`,
+                    borderRadius: 10, padding: '14px 6px',
                     cursor: 'pointer', fontFamily: 'inherit',
                     transition: 'all .15s', transform: 'scale(1)',
-                    boxShadow: active ? '0 0 10px rgba(212,168,67,.22)' : 'none',
+                    boxShadow: active ? '0 0 10px rgba(212,168,67,.25)' : 'none',
                   }}
                 >
-                  <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '1.3rem', fontWeight: 900, color: active ? '#F0C85A' : 'rgba(255,255,255,.4)', lineHeight: 1 }}>
-                    {mins}
+                  <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '1.44rem', fontWeight: 900, color: active ? '#F0C85A' : 'rgba(255,255,255,.45)', letterSpacing: '-.01em', lineHeight: 1 }}>
+                    {mins < 60 ? mins : '60'}
                   </div>
-                  <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '.68rem', fontWeight: 700, color: active ? 'rgba(240,200,90,.65)' : 'rgba(255,255,255,.2)', letterSpacing: '.06em', marginTop: 3 }}>
+                  <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '.76rem', fontWeight: 700, color: active ? 'rgba(240,200,90,.65)' : 'rgba(255,255,255,.22)', letterSpacing: '.06em', marginTop: 4 }}>
                     МИН
                   </div>
                 </button>
