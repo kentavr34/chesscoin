@@ -36,7 +36,7 @@ services:
       RESERVE_POOL_SIZE: 5
       AUTH_TYPE: scram-sha-256
     volumes:
-      - ./pgbouncer-userlist.txt:/etc/pgbouncer/userlist.txt:ro
+      - ./pgbouncer-userlist.txt:/etc/pgbouncer/userlist.txt
     depends_on:
       postgres:
         condition: service_healthy
