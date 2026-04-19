@@ -9,6 +9,7 @@ import { AttemptsModal } from '@/components/ui/AttemptsModal';
 import { ActiveSessionsModal } from '@/components/ui/ActiveSessionsModal';
 import { type JarvisLevel } from '@/components/ui/JarvisModal';
 import { useT } from '@/i18n/useT';
+import { CoinIcon } from '@/components/ui/CoinIcon';
 
 // ── SVG иконки ────────────────────────────────────────────────────────────────
 
@@ -61,20 +62,7 @@ const IcoWars = ({ size = 28 }: { size?: number }) => (
   </svg>
 );
 
-const IcoCoin = ({ size = 16 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 20 20" fill="none">
-    <circle cx="10" cy="10" r="9" fill="url(#coinGrad)" stroke="#A07830" strokeWidth=".8"/>
-    <circle cx="10" cy="10" r="6.5" stroke="rgba(255,255,255,.15)" strokeWidth=".5"/>
-    <text x="10" y="14" textAnchor="middle" fontSize="9" fontWeight="800" fontFamily="serif" fill="#120E04">₿</text>
-    <defs>
-      <radialGradient id="coinGrad" cx="35%" cy="30%" r="70%">
-        <stop offset="0%" stopColor="#F0C85A"/>
-        <stop offset="60%" stopColor="#D4A843"/>
-        <stop offset="100%" stopColor="#8A6020"/>
-      </radialGradient>
-    </defs>
-  </svg>
-);
+const IcoCoin = ({ size = 16 }: { size?: number }) => <CoinIcon size={size} />;
 
 const IcoAvatar = ({ src, initial }: { src?: string; initial?: string }) => (
   <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -540,7 +528,7 @@ export const HomePage: React.FC = () => {
               <IcoBattle size={52} />
             </div>
             <div style={{ fontSize: '.86rem', fontWeight: 900, letterSpacing: '.01em', marginBottom: '.12rem', color: '#F0C85A' }}>Батлы</div>
-            <div style={{ fontSize: '.58rem', lineHeight: 1.35, color: 'rgba(212,168,67,.82)' }}>1 на 1 · до 10 🪙</div>
+            <div style={{ fontSize: '.58rem', lineHeight: 1.35, color: 'rgba(212,168,67,.82)', display: 'inline-flex', alignItems: 'center', gap: 3 }}>1 на 1 · до 10 <CoinIcon size={10} /></div>
           </div>
 
           {/* КУБКИ */}

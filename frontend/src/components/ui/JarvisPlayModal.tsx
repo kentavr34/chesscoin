@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { getJarvisLevels, JARVIS_LEVELS, type JarvisLevel } from './JarvisModal';
 import { useT } from '@/i18n/useT';
+import { CoinIcon } from '@/components/ui/CoinIcon';
 
 // ── Типы ──────────────────────────────────────────────────────────────────────
 type ColorChoice = 'random' | 'white' | 'black';
@@ -233,7 +234,7 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
               <div style={{ fontSize: '.7rem', fontWeight: 700, color: '#6A6458', lineHeight: 1.6 }}>
                 <div>⭐ Система выдаёт <span style={{ color: '#D4A843' }}>1 попытку</span> каждые <span style={{ color: '#D4A843' }}>8 часов</span></div>
                 <div>🎮 Максимум <span style={{ color: '#D4A843' }}>{maxAttempts} бесплатных</span> попытки в день</div>
-                <div>🪙 Дополнительные попытки — за монеты</div>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><CoinIcon size={14} /> Дополнительные попытки — за монеты</div>
               </div>
             </div>
           </div>
@@ -253,7 +254,7 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
                   boxShadow: '0 4px 20px rgba(212,168,67,.18)',
                 }}
               >
-                🛒 Купить попытки — 1 000 🪙 / шт
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>🛒 Купить попытки — 1 000 <CoinIcon size={14} /> / шт</span>
               </button>
             )}
             <button
@@ -425,8 +426,8 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
                     : '#82CFFF',
                 }}>{levelName}</div>
               </div>
-              <div style={{ fontSize: '.87rem', color: levelStatus === 'current' ? 'rgba(74,158,255,.6)' : 'rgba(74,158,255,.25)' }}>
-                {levelStatus === 'completed' ? 'Пройдено' : levelStatus === 'locked' ? 'Закрыто' : `Победа: +${(level?.reward || 0).toLocaleString()} 🪙`}
+              <div style={{ fontSize: '.87rem', color: levelStatus === 'current' ? 'rgba(74,158,255,.6)' : 'rgba(74,158,255,.25)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                {levelStatus === 'completed' ? 'Пройдено' : levelStatus === 'locked' ? 'Закрыто' : (<>Победа: +{(level?.reward || 0).toLocaleString()} <CoinIcon size={12} /></>)}
               </div>
             </div>
 

@@ -13,6 +13,7 @@ import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { useT } from '@/i18n/useT';
 import type { Lang } from '@/i18n/translations';
 import { applyThemeToCss, getActiveTheme, THEMES } from '@/lib/theme';
+import { CoinIcon as CoinIconSplash } from '@/components/ui/CoinIcon';
 
 // Q3: lazy loading — каждая страница загружается отдельным чанком
 import { lazy, Suspense } from 'react';
@@ -152,10 +153,9 @@ const SplashScreen: React.FC = () => {
           background: 'linear-gradient(135deg,#2A1F6A,#1A1540)',
           border: '2px solid rgba(245,200,66,0.3)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 36,
           boxShadow: '0 0 40px rgba(123,97,255,0.25)',
           animation: 'pulse 2s ease-in-out infinite',
-        }}>♟</div>
+        }}><CoinIconSplash size={44} /></div>
         <div style={{
           fontFamily: "'Unbounded',sans-serif",
           fontSize: 22, fontWeight: 800, color: '#F5C842',

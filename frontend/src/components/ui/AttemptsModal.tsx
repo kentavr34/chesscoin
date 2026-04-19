@@ -3,6 +3,7 @@ import { shopApi } from '@/api';
 import { useUserStore } from '@/store/useUserStore';
 import type { User } from '@/types';
 import { useT } from '@/i18n/useT';
+import { CoinIcon } from '@/components/ui/CoinIcon';
 
 interface Props {
   user: User;
@@ -24,19 +25,7 @@ const IcoStar = ({ filled, size = 30 }: { filled: boolean; size?: number }) => (
   </svg>
 );
 
-const IcoCoin = ({ size = 15 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 20 20" fill="none">
-    <circle cx="10" cy="10" r="9" fill="url(#buyAttCoinGrad)" stroke="#A07830" strokeWidth=".8"/>
-    <text x="10" y="14" textAnchor="middle" fontSize="9" fontWeight="800" fontFamily="serif" fill="#120E04">₿</text>
-    <defs>
-      <radialGradient id="buyAttCoinGrad" cx="35%" cy="30%" r="70%">
-        <stop offset="0%" stopColor="#F0C85A"/>
-        <stop offset="60%" stopColor="#D4A843"/>
-        <stop offset="100%" stopColor="#8A6020"/>
-      </radialGradient>
-    </defs>
-  </svg>
-);
+const IcoCoin = ({ size = 15 }: { size?: number }) => <CoinIcon size={size} />;
 
 export const AttemptsModal: React.FC<Props> = ({ user, onClose }) => {
   const t = useT();
