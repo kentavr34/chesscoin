@@ -213,19 +213,6 @@ export const HomePage: React.FC = () => {
 
   return (
     <PageLayout noHeader>
-      {/* Плавающая кнопка — переход на превью нового дизайна (v2) */}
-      <div
-        onClick={() => navigate('/design-v2')}
-        style={{
-          position: 'fixed', right: 12, top: 'calc(env(safe-area-inset-top,0px) + 68px)',
-          zIndex: 9999, padding: '8px 12px', borderRadius: 999,
-          background: 'linear-gradient(180deg,#F0C85A,#D4A843)',
-          color: '#0D0D12', fontSize: 12, fontWeight: 800,
-          letterSpacing: '.02em', cursor: 'pointer',
-          boxShadow: '0 6px 20px rgba(212,168,67,.4)',
-          display: 'flex', alignItems: 'center', gap: 6,
-        }}
-      >🎨 Новый дизайн</div>
       <style>{`
         @keyframes cc-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
         @keyframes cc-fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
