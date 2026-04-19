@@ -427,95 +427,111 @@ const BattleChallengeCard: React.FC<{
   const creatorIsWhite = battle.creator?.isWhite ?? true;
   const opponentIsWhite = !creatorIsWhite;
 
+  const creatorMode: 'white' | 'black' = creatorIsWhite ? 'white' : 'black';
+  const opponentMode: 'white' | 'black' = opponentIsWhite ? 'white' : 'black';
+
   return (
     <div style={{
       margin: '0 .85rem 8px',
       background: 'linear-gradient(135deg,#141018,#0F0E18)',
       border: isTop ? '.5px solid rgba(212,168,67,.38)' : '.5px solid rgba(212,168,67,.22)',
-      borderRadius: 16, padding: '12px 14px',
-      display: 'flex', alignItems: 'center', gap: 10,
+      borderRadius: 16, padding: '12px 10px',
+      display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', alignItems: 'start', gap: 6,
     }}>
-
-      {/* Слева: крупный аватар + имя + ELO (без иконки цвета) */}
-      <div style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'flex-start', gap: 5, flexShrink: 0 }}>
+      {/* ── ЛЕВАЯ КОЛОНКА: создатель ── */}
+      <div style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 5 }}>
         <button
           type="button"
           style={{
             padding: 0, border: 'none', background: 'none',
             borderRadius: '50%', overflow: 'hidden',
-            width: 60, height: 60, flexShrink: 0,
-            cursor: creatorId ? 'pointer' : 'default',
+            width: 58, height: 58, cursor: creatorId ? 'pointer' : 'default',
           }}
           onClick={creatorId ? (e) => { e.stopPropagation(); e.preventDefault(); onProfile(creatorId); } : undefined}
         >
           <Avatar user={creatorAsUser as any} size="l" />
         </button>
-        <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 2 }}>
-          <span style={{ fontSize: '.78rem', fontWeight: 700, color: '#D4C8B0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const, maxWidth: 68 }}>
-            {battle.creator?.firstName ?? '?'}
-          </span>
-          <span style={{ fontSize: '.64rem', fontWeight: 600 }}>
-            <span style={{ color: '#7A7470' }}>ELO </span>
-            <span style={{ color: '#F0C85A' }}>{battle.creator?.elo ?? '?'}</span>
-          </span>
+        <span style={{ fontSize: '.74rem', fontWeight: 700, color: '#D4C8B0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const, maxWidth: '100%', textAlign: 'center' as const }}>
+          {battle.creator?.firstName ?? '?'}
+        </span>
+        <span style={{ fontSize: '.62rem', fontWeight: 600 }}>
+          <span style={{ color: '#7A7470' }}>ELO </span>
+          <span style={{ color: '#F0C85A' }}>{battle.creator?.elo ?? '?'}</span>
+        </span>
+        {/* 5px отступ от блока выше */}
+        <div style={{ marginTop: 5, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 3 }}>
+          <SmallColorIcon mode={creatorMode} />
+          <ColorLabel mode={creatorMode} />
         </div>
       </div>
 
-      {/* Центр: [ЦветИконка] ЖДЁМ + таймер + ставка [ЦветИконка] */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-        {/* Иконка цвета создателя */}
-        <SmallColorIcon isWhite={creatorIsWhite} />
-
-        {/* Таймер и статус */}
-        <div style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 3 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#D4A843', display: 'inline-block', animation: 'pulse 1.5s infinite' }} />
-            <span style={{ fontSize: '.52rem', fontWeight: 900, color: '#D4A843', letterSpacing: '.14em' }}>ЖДЁМ</span>
-          </div>
-          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '1.1rem', fontWeight: 800, color: '#F0F0E8', letterSpacing: '.02em' }}>
-            {timerDisplay}
+      {/* ── СРЕДНЯЯ КОЛОНКА: ЖДЁМ + таймер + ставка ── */}
+      <div style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 5, paddingTop: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#D4A843', display: 'inline-block', animation: 'pulse 1.5s infinite' }} />
+          <span style={{ fontSize: '.56rem', fontWeight: 900, color: '#D4A843', letterSpacing: '.14em' }}>ЖДЁМ</span>
+        </div>
+        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '1.14rem', fontWeight: 800, color: '#F0F0E8', letterSpacing: '.02em' }}>
+          {timerDisplay}
+        </span>
+        {battle.bet && (
+          <span style={{ fontSize: '.82rem', fontWeight: 800, color: '#D4A843', display: 'flex', alignItems: 'center', gap: 3 }}>
+            <CoinIcon size={13} />
+            {fmtBalance(battle.bet)}
           </span>
-          {battle.bet && (
-            <span style={{ fontSize: '.82rem', fontWeight: 800, color: '#D4A843', display: 'flex', alignItems: 'center', gap: 3 }}>
-              <CoinIcon size={13} />
-              {fmtBalance(battle.bet)}
-            </span>
+        )}
+      </div>
+
+      {/* ── ПРАВАЯ КОЛОНКА: соперник (плейсхолдер) + кнопка ── */}
+      <div style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 5 }}>
+        <div style={{
+          width: 58, height: 58, borderRadius: '50%',
+          background: 'rgba(255,255,255,.04)',
+          border: '1.5px dashed rgba(212,168,67,.28)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" opacity="0.5">
+            <circle cx="12" cy="8.5" r="3.5" stroke="#8B8478" strokeWidth="1.5"/>
+            <path d="M5 19c1.3-3.2 4-5 7-5s5.7 1.8 7 5" stroke="#8B8478" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+        </div>
+        <span style={{ fontSize: '.68rem', fontWeight: 700, color: '#6A6458', letterSpacing: '.04em' }}>
+          Ожидаем
+        </span>
+        <span style={{ fontSize: '.62rem', fontWeight: 600, color: '#4A4640' }}>—</span>
+        <div style={{ marginTop: 5, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 3 }}>
+          <SmallColorIcon mode={opponentMode} />
+          <ColorLabel mode={opponentMode} />
+        </div>
+        {/* Кнопка под всей правой колонкой */}
+        <div style={{ marginTop: 4, width: '100%' }}>
+          {onCancel ? (
+            <button
+              onClick={onCancel}
+              style={{
+                width: '100%', padding: '8px 4px',
+                background: 'linear-gradient(135deg,#3A0808,#5A1010)',
+                border: '.5px solid rgba(220,50,47,.4)', borderRadius: 10,
+                color: '#FF8080', fontSize: '.68rem', fontWeight: 800,
+                cursor: 'pointer', fontFamily: 'inherit',
+                whiteSpace: 'nowrap' as const,
+              }}
+            >Отменить</button>
+          ) : (
+            <button
+              onClick={onJoin}
+              style={{
+                width: '100%', padding: '8px 4px',
+                background: 'linear-gradient(135deg,#D4A843,#F0C85A)',
+                border: 'none', borderRadius: 10,
+                color: '#0D0D12', fontSize: '.7rem', fontWeight: 800,
+                cursor: 'pointer', fontFamily: 'inherit',
+                boxShadow: '0 2px 12px rgba(212,168,67,.35)',
+                whiteSpace: 'nowrap' as const,
+              }}
+            >{acceptLabel}</button>
           )}
         </div>
-
-        {/* Иконка цвета соперника */}
-        <SmallColorIcon isWhite={opponentIsWhite} />
-      </div>
-
-      {/* Справа: только кнопка, без аватара */}
-      <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        {onCancel ? (
-          <button
-            onClick={onCancel}
-            style={{
-              padding: '10px 14px',
-              background: 'linear-gradient(135deg,#3A0808,#5A1010)',
-              border: '.5px solid rgba(220,50,47,.4)', borderRadius: 11,
-              color: '#FF8080', fontSize: '.72rem', fontWeight: 800,
-              cursor: 'pointer', fontFamily: 'inherit',
-              boxShadow: '0 2px 12px rgba(220,50,47,.15)',
-              whiteSpace: 'nowrap' as const,
-            }}
-          >Отменить</button>
-        ) : (
-          <button
-            onClick={onJoin}
-            style={{
-              padding: '10px 14px',
-              background: 'linear-gradient(135deg,#D4A843,#F0C85A)',
-              border: 'none', borderRadius: 11,
-              color: '#0D0D12', fontSize: '.72rem', fontWeight: 800,
-              cursor: 'pointer', fontFamily: 'inherit',
-              boxShadow: '0 2px 12px rgba(212,168,67,.35)',
-              whiteSpace: 'nowrap' as const,
-            }}
-          >{acceptLabel}</button>
-        )}
       </div>
     </div>
   );
@@ -555,21 +571,46 @@ const IcoKingB = () => (
 );
 
 // Маленькая иконка цвета (для LiveCard — компактнее)
-const SmallColorIcon: React.FC<{ isWhite: boolean }> = ({ isWhite }) => (
-  <div style={{
-    width: 34, height: 34, borderRadius: 8, flexShrink: 0,
-    background: isWhite ? 'rgba(240,200,90,.12)' : 'rgba(74,158,255,.1)',
-    border: `.5px solid ${isWhite ? 'rgba(240,200,90,.35)' : 'rgba(74,158,255,.25)'}`,
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
+// mode: 'white' | 'black' | 'random' — при random рисуется полосатая фигура (пол-белая, пол-чёрная)
+const SmallColorIcon: React.FC<{ mode: 'white' | 'black' | 'random' }> = ({ mode }) => {
+  const isWhite = mode === 'white';
+  const isBlack = mode === 'black';
+  const isRand  = mode === 'random';
+  const border = isWhite ? 'rgba(240,200,90,.35)' : isBlack ? 'rgba(74,158,255,.25)' : 'rgba(180,180,180,.3)';
+  const bg     = isWhite ? 'rgba(240,200,90,.12)' : isBlack ? 'rgba(74,158,255,.1)' : 'rgba(154,148,144,.1)';
+  return (
+    <div style={{
+      width: 30, height: 30, borderRadius: 7, flexShrink: 0,
+      background: bg, border: `.5px solid ${border}`,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      <svg width="17" height="17" viewBox="0 0 18 18" fill="none">
+        {isRand && (
+          <defs>
+            <linearGradient id="randKing" x1="0" x2="18" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+              <stop offset="50%" stopColor="#F0C85A"/>
+              <stop offset="50%" stopColor="#82CFFF"/>
+            </linearGradient>
+          </defs>
+        )}
+        <path d="M9 2v3M7.5 3.5h3" stroke={isRand ? 'url(#randKing)' : isWhite ? '#F0C85A' : '#82CFFF'} strokeWidth="1.3" strokeLinecap="round"/>
+        <rect x="7" y="5" width="4" height="2" rx=".5" fill={isRand ? 'url(#randKing)' : isWhite ? '#F0C85A' : '#82CFFF'} opacity=".8"/>
+        <path d="M5.5 7h7l-1 8H6.5L5.5 7z" fill={isRand ? 'url(#randKing)' : isWhite ? '#F0C85A' : '#82CFFF'} opacity={isWhite ? '.7' : '.9'}/>
+        <path d="M4 15h10" stroke={isRand ? 'url(#randKing)' : isWhite ? '#F0C85A' : '#82CFFF'} strokeWidth="1.3" strokeLinecap="round"/>
+        {isBlack && <rect x="5" y="6.5" width="8" height="9" rx="1" fill="#82CFFF" opacity=".15"/>}
+      </svg>
+    </div>
+  );
+};
+
+const ColorLabel: React.FC<{ mode: 'white' | 'black' | 'random' }> = ({ mode }) => (
+  <span style={{
+    fontSize: '.56rem', fontWeight: 800, letterSpacing: '.08em',
+    color: mode === 'white' ? '#F0C85A' : mode === 'black' ? '#82CFFF' : '#9A9490',
+    textTransform: 'uppercase' as const,
   }}>
-    <svg width="19" height="19" viewBox="0 0 18 18" fill="none">
-      <path d="M9 2v3M7.5 3.5h3" stroke={isWhite ? '#F0C85A' : '#82CFFF'} strokeWidth="1.3" strokeLinecap="round"/>
-      <rect x="7" y="5" width="4" height="2" rx=".5" fill={isWhite ? '#F0C85A' : '#82CFFF'} opacity=".8"/>
-      <path d="M5.5 7h7l-1 8H6.5L5.5 7z" fill={isWhite ? '#F0C85A' : '#82CFFF'} opacity={isWhite ? '.7' : '.9'}/>
-      <path d="M4 15h10" stroke={isWhite ? '#F0C85A' : '#82CFFF'} strokeWidth="1.3" strokeLinecap="round"/>
-      {!isWhite && <rect x="5" y="6.5" width="8" height="9" rx="1" fill="#82CFFF" opacity=".15"/>}
-    </svg>
-  </div>
+    {mode === 'white' ? 'Белый' : mode === 'black' ? 'Чёрный' : 'Рандом'}
+  </span>
 );
 
 // ── Шаблон «Сражение» (Stage 2 / LIVE) — карточка идущей партии ──────────
@@ -600,10 +641,24 @@ const BattleLiveCard: React.FC<{
 
   const sourceType = (session as any).sourceType;
 
-  // ── Колонка игрока: Аватар / Имя + ELO (без иконки цвета — она в центре) ──
-  const PlayerCol: React.FC<{ side: typeof whitePlayer; isRight?: boolean }> = ({ side, isRight }) => {
-    if (!side) return <div style={{ flexShrink: 0, width: 72 }} />;
-    // player.id — берём напрямую из объекта игрока (playerId может приходить некорректно)
+  // ── Колонка игрока: Аватар центрирован / Имя + ELO / Цвет + Лейбл ──
+  const PlayerCol: React.FC<{ side: typeof whitePlayer; mode: 'white' | 'black' }> = ({ side, mode }) => {
+    if (!side) {
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 5 }}>
+          <div style={{
+            width: 56, height: 56, borderRadius: '50%',
+            background: 'rgba(255,255,255,.04)',
+            border: '1.5px dashed rgba(255,255,255,.15)',
+          }} />
+          <span style={{ fontSize: '.68rem', fontWeight: 700, color: '#6A6458' }}>—</span>
+          <div style={{ marginTop: 5, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 3 }}>
+            <SmallColorIcon mode={mode} />
+            <ColorLabel mode={mode} />
+          </div>
+        </div>
+      );
+    }
     const pid = side.player?.id || side.playerId;
     const playerAsUser = {
       id: pid,
@@ -613,37 +668,33 @@ const BattleLiveCard: React.FC<{
       elo: side.player?.elo ?? 0,
     };
     return (
-      <div style={{
-        display: 'flex', flexDirection: 'column' as const,
-        alignItems: 'center',
-        gap: 5, flexShrink: 0,
-      }}>
-        {/* Аватар — клик → профиль, e.stopPropagation чтобы не уйти на страницу батла */}
+      <div style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 5 }}>
         <button
           type="button"
           style={{
             padding: 0, border: 'none', background: 'none',
             borderRadius: '50%', overflow: 'hidden',
-            width: 56, height: 56, flexShrink: 0, cursor: pid ? 'pointer' : 'default',
+            width: 56, height: 56, cursor: pid ? 'pointer' : 'default',
           }}
           onClick={(e) => { e.stopPropagation(); e.preventDefault(); pid && onProfile(pid); }}
         >
           <Avatar user={playerAsUser as any} size="l" />
         </button>
-        {/* Имя + ELO */}
-        <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 2, alignItems: 'center' }}>
-          <span style={{
-            fontSize: '.76rem', fontWeight: 700, color: '#D4C8B0',
-            overflow: 'hidden', textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap' as const, maxWidth: 72,
-            textAlign: 'center' as const,
-          }}>
-            {side.player?.firstName ?? '?'}
-          </span>
-          <span style={{ fontSize: '.62rem', fontWeight: 600 }}>
-            <span style={{ color: '#7A7470' }}>ELO </span>
-            <span style={{ color: '#F0C85A' }}>{side.player?.elo ?? '?'}</span>
-          </span>
+        <span style={{
+          fontSize: '.74rem', fontWeight: 700, color: '#D4C8B0',
+          overflow: 'hidden', textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap' as const, maxWidth: '100%',
+          textAlign: 'center' as const,
+        }}>
+          {side.player?.firstName ?? '?'}
+        </span>
+        <span style={{ fontSize: '.62rem', fontWeight: 600 }}>
+          <span style={{ color: '#7A7470' }}>ELO </span>
+          <span style={{ color: '#F0C85A' }}>{side.player?.elo ?? '?'}</span>
+        </span>
+        <div style={{ marginTop: 5, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 3 }}>
+          <SmallColorIcon mode={mode} />
+          <ColorLabel mode={mode} />
         </div>
       </div>
     );
@@ -656,62 +707,56 @@ const BattleLiveCard: React.FC<{
         margin: '0 .85rem 8px',
         background: 'linear-gradient(135deg,#0E1210,#0F1218)',
         border: '.5px solid rgba(61,186,122,.32)',
-        borderRadius: 16, padding: '12px 14px',
-        display: 'flex', alignItems: 'center', gap: 10,
+        borderRadius: 16, padding: '12px 10px',
+        display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', alignItems: 'start', gap: 6,
         cursor: 'pointer',
         boxShadow: '0 2px 16px rgba(61,186,122,.08)',
       }}
     >
-      {/* Белый игрок */}
-      <PlayerCol side={whitePlayer} />
+      {/* ЛЕВАЯ: белый игрок */}
+      <PlayerCol side={whitePlayer} mode="white" />
 
-      {/* Центр: [ЦветИконка белых] LIVE+таймер+ставка+СМОТРЕТЬ [ЦветИконка чёрных] */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-        <SmallColorIcon isWhite={true} />
-
-        <div style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 3 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#3DBA7A', display: 'inline-block', animation: 'pulse 1.5s infinite' }} />
-            <span style={{ fontSize: '.52rem', fontWeight: 900, color: '#3DBA7A', letterSpacing: '.16em' }}>
-              LIVE{sourceType === 'TOURNAMENT' ? ' 🏆' : sourceType === 'WAR' ? ' ⚔️' : ''}
-            </span>
-          </div>
-          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '1.1rem', fontWeight: 800, color: '#F0F0E8', letterSpacing: '.02em' }}>
-            {fmtTime(timeLeft)}
+      {/* СРЕДНЯЯ: LIVE + таймер + ставка + (опц.) СМОТРЕТЬ */}
+      <div style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 5, paddingTop: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#FF4D6A', display: 'inline-block', animation: 'pulse 1.5s infinite' }} />
+          <span style={{ fontSize: '.56rem', fontWeight: 900, color: '#FF4D6A', letterSpacing: '.16em' }}>
+            LIVE{sourceType === 'TOURNAMENT' ? ' T' : sourceType === 'WAR' ? ' W' : ''}
           </span>
-          {session.bet && (
-            <span style={{ fontSize: '.82rem', fontWeight: 800, color: '#D4A843', display: 'flex', alignItems: 'center', gap: 3 }}>
-              <CoinIcon size={13} />
-              {fmtBalance(session.bet)}
-            </span>
-          )}
-          {isSpectator && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onNavigate(session.id); }}
-              style={{
-                marginTop: 1, padding: '4px 10px',
-                background: 'rgba(61,186,122,.12)',
-                border: '.5px solid rgba(61,186,122,.3)',
-                borderRadius: 8, cursor: 'pointer',
-                fontFamily: 'inherit', fontSize: '.58rem', fontWeight: 800,
-                color: '#3DBA7A', letterSpacing: '.06em',
-                display: 'flex', alignItems: 'center', gap: 4,
-              }}
-            >
-              <svg width="9" height="9" viewBox="0 0 20 20" fill="none">
-                <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.8"/>
-                <circle cx="10" cy="10" r="3.5" fill="currentColor"/>
-              </svg>
-              СМОТРЕТЬ
-            </button>
-          )}
         </div>
-
-        <SmallColorIcon isWhite={false} />
+        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '1.14rem', fontWeight: 800, color: '#F0F0E8', letterSpacing: '.02em' }}>
+          {fmtTime(timeLeft)}
+        </span>
+        {session.bet && (
+          <span style={{ fontSize: '.82rem', fontWeight: 800, color: '#D4A843', display: 'flex', alignItems: 'center', gap: 3 }}>
+            <CoinIcon size={13} />
+            {fmtBalance(session.bet)}
+          </span>
+        )}
+        {isSpectator && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onNavigate(session.id); }}
+            style={{
+              marginTop: 2, padding: '5px 10px',
+              background: 'rgba(61,186,122,.12)',
+              border: '.5px solid rgba(61,186,122,.3)',
+              borderRadius: 8, cursor: 'pointer',
+              fontFamily: 'inherit', fontSize: '.58rem', fontWeight: 800,
+              color: '#3DBA7A', letterSpacing: '.06em',
+              display: 'flex', alignItems: 'center', gap: 4,
+            }}
+          >
+            <svg width="9" height="9" viewBox="0 0 20 20" fill="none">
+              <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.8"/>
+              <circle cx="10" cy="10" r="3.5" fill="currentColor"/>
+            </svg>
+            СМОТРЕТЬ
+          </button>
+        )}
       </div>
 
-      {/* Чёрный игрок */}
-      <PlayerCol side={blackPlayer} isRight />
+      {/* ПРАВАЯ: чёрный игрок */}
+      <PlayerCol side={blackPlayer} mode="black" />
     </div>
   );
 };
