@@ -6,6 +6,35 @@ import { InfoPopup, useInfoPopup } from '@/components/layout/PageLayout';
 const TIME_OPTIONS = [1, 3, 5, 15, 30, 60];
 type ColorChoice = 'random' | 'white' | 'black';
 
+// ── Иконки (эталон JarvisPlayModal) ──────────────────────────────────────────
+const IcoDice = () => (
+  <svg width="33" height="33" viewBox="0 0 18 18" fill="none">
+    <rect x="1.5" y="1.5" width="15" height="15" rx="3" stroke="currentColor" strokeWidth="1.3"/>
+    <circle cx="5.5" cy="5.5" r="1.2" fill="currentColor"/>
+    <circle cx="12.5" cy="5.5" r="1.2" fill="currentColor"/>
+    <circle cx="9" cy="9" r="1.2" fill="currentColor"/>
+    <circle cx="5.5" cy="12.5" r="1.2" fill="currentColor"/>
+    <circle cx="12.5" cy="12.5" r="1.2" fill="currentColor"/>
+  </svg>
+);
+const IcoKingWhite = () => (
+  <svg width="33" height="33" viewBox="0 0 18 18" fill="none">
+    <path d="M9 2v3M7.5 3.5h3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+    <rect x="7" y="5" width="4" height="2" rx=".5" fill="currentColor" opacity=".8"/>
+    <path d="M5.5 7h7l-1 8H6.5L5.5 7z" fill="currentColor" opacity=".7"/>
+    <path d="M4 15h10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+  </svg>
+);
+const IcoKingBlack = () => (
+  <svg width="33" height="33" viewBox="0 0 18 18" fill="none">
+    <path d="M9 2v3M7.5 3.5h3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+    <rect x="7" y="5" width="4" height="2" rx=".5" fill="currentColor" opacity=".9"/>
+    <path d="M5.5 7h7l-1 8H6.5L5.5 7z" fill="currentColor" opacity=".9"/>
+    <path d="M4 15h10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+    <rect x="5" y="6.5" width="8" height="9" rx="1" fill="currentColor" opacity=".15"/>
+  </svg>
+);
+
 interface GameSetupModalProps {
   selectedLevel: JarvisLevel;
   onStart: (color: 'white' | 'black', timeMinutes: number) => void;
@@ -156,63 +185,67 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
 
         {/* ── CONTENT (scrollable) ───────────────────────────────────────────────────── */}
         <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingRight: 2, display: 'flex', flexDirection: 'column', gap: 'var(--gap-md)' }}>
-          {/* Color selection */}
+          {/* Color selection — эталон JarvisPlayModal */}
           <div>
-            <div style={sectionLbl}>{t.gameSetup.color}</div>
-            <div className="grid-auto-2-3" style={{
-              gap: 'var(--gap-xs)',
-            }}>
-              {(['random', 'white', 'black'] as ColorChoice[]).map((c) => (
-                <button
-                  key={c}
-                  onClick={() => setColor(c)}
-                  style={colorBtnStyle(color === c, c)}
-                >
-                  <span style={{
-                    fontSize: 'var(--font-size-lg)',
-                    display: 'block',
-                    marginBottom: 'var(--gap-xs)',
-                    opacity: color === c ? 1 : 0.4,
-                    filter: color !== c ? 'grayscale(1)' : 'none',
-                    transition: 'opacity .15s, filter .15s',
-                  }}>
-                    {c === 'random' ? '🎲' : c === 'white' ? '♔' : '♚'}
-                  </span>
-                  <span style={{ fontSize: '9px', fontWeight: 'var(--font-weight-bold)' }}>
-                    {c === 'random' ? t.gameSetup.random.replace('🎲 ','') : c === 'white' ? t.gameSetup.white.replace('☀️ ','') : t.gameSetup.black.replace('🌙 ','')}
-                  </span>
-                </button>
-              ))}
+            <div style={{ fontSize: '.52rem', fontWeight: 700, color: '#4A6080', textTransform: 'uppercase', letterSpacing: '.12em', marginBottom: 8 }}>{t.gameSetup.color}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+              {([
+                { key: 'random' as ColorChoice, label: t.gameSetup.random.replace('🎲 ',''), Icon: IcoDice,      bg: 'rgba(212,168,67,.1)', border: 'rgba(212,168,67,.3)', color: '#F0C85A', activeBg: 'rgba(212,168,67,.18)', activeBorder: '#D4A843' },
+                { key: 'white'  as ColorChoice, label: t.gameSetup.white.replace('☀️ ',''),  Icon: IcoKingWhite, bg: 'rgba(240,240,240,.08)', border: 'rgba(240,240,240,.18)', color: '#E8E0D0', activeBg: 'rgba(240,240,240,.16)', activeBorder: '#D0C8B8' },
+                { key: 'black'  as ColorChoice, label: t.gameSetup.black.replace('🌙 ',''),  Icon: IcoKingBlack, bg: 'rgba(74,158,255,.08)', border: 'rgba(74,158,255,.2)', color: '#82CFFF', activeBg: 'rgba(74,158,255,.16)', activeBorder: '#4A9EFF' },
+              ]).map(opt => {
+                const active = color === opt.key;
+                return (
+                  <button
+                    key={opt.key}
+                    onClick={() => setColor(opt.key)}
+                    style={{
+                      background: active ? opt.activeBg : opt.bg,
+                      border: `.5px solid ${active ? opt.activeBorder : opt.border}`,
+                      borderRadius: 12, padding: '14px 8px',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+                      cursor: 'pointer', fontFamily: 'inherit',
+                      transition: 'all .15s',
+                      boxShadow: active ? `0 0 12px ${opt.activeBorder}40` : 'none',
+                    }}
+                  >
+                    <span style={{ color: opt.color, opacity: active ? 1 : 0.35, filter: active ? 'none' : 'grayscale(0.7)', transition: 'opacity .15s, filter .15s' }}><opt.Icon /></span>
+                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.96rem', fontWeight: 800, color: active ? opt.color : 'rgba(255,255,255,.5)', letterSpacing: '.03em' }}>{opt.label}</span>
+                    {active && <div style={{ width: 18, height: 2, borderRadius: 1, background: opt.activeBorder }} />}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          {/* Time selection */}
+          {/* Time selection — эталон JarvisPlayModal */}
           <div>
-            <div style={sectionLbl}>{t.gameSetup.duration}</div>
-            <div className="grid-auto-3-6" style={{
-              gap: 'var(--gap-xs)',
-            }}>
-              {TIME_OPTIONS.map((opt) => (
-                <button
-                  key={opt}
-                  onClick={() => setTime(opt)}
-                  style={timeBtnStyle(time === opt)}
-                >
-                  <span style={{
-                    fontSize: 'var(--font-size-sm)',
-                    display: 'block',
-                    marginBottom: 'var(--gap-xs)',
-                    opacity: time === opt ? 1 : 0.5,
-                    filter: time !== opt ? 'grayscale(0.6)' : 'none',
-                    transition: 'opacity .15s, filter .15s',
-                  }}>
-                    {opt === 1 ? '⚡' : opt === 3 ? '🔥' : opt === 5 ? '♟' : opt === 15 ? '🎯' : opt === 30 ? '🏆' : '👑'}
-                  </span>
-                  <span style={{ fontSize: '9px' }}>
-                    {getTimeLabel(opt)}
-                  </span>
-                </button>
-              ))}
+            <div style={{ fontSize: '.52rem', fontWeight: 700, color: '#4A6080', textTransform: 'uppercase', letterSpacing: '.12em', marginBottom: 8 }}>{t.gameSetup.duration}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 7 }}>
+              {TIME_OPTIONS.map((opt) => {
+                const active = time === opt;
+                return (
+                  <button
+                    key={opt}
+                    onClick={() => setTime(opt)}
+                    style={{
+                      background: active ? 'rgba(212,168,67,.16)' : 'rgba(255,255,255,.05)',
+                      border: `.5px solid ${active ? 'rgba(212,168,67,.6)' : 'rgba(255,255,255,.1)'}`,
+                      borderRadius: 10, padding: '14px 6px',
+                      cursor: 'pointer', fontFamily: 'inherit',
+                      transition: 'all .15s',
+                      boxShadow: active ? '0 0 10px rgba(212,168,67,.25)' : 'none',
+                    }}
+                  >
+                    <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '1.44rem', fontWeight: 900, color: active ? '#F0C85A' : 'rgba(255,255,255,.45)', letterSpacing: '-.01em', lineHeight: 1 }}>
+                      {opt < 60 ? opt : '60'}
+                    </div>
+                    <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '.76rem', fontWeight: 700, color: active ? 'rgba(240,200,90,.65)' : 'rgba(255,255,255,.22)', letterSpacing: '.06em', marginTop: 4 }}>
+                      МИН
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
