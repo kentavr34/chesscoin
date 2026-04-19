@@ -142,6 +142,8 @@ export interface BattleLobbyItem {
   duration: number;
   createdAt: string;
   spectatorCount?: number;  // зрители батла
+  // Оригинальный выбор цвета создателем (для карточки вызова)
+  colorChoice?: 'white' | 'black' | 'random';
   creator: {
     id: string;
     firstName: string;

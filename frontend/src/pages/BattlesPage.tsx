@@ -426,9 +426,13 @@ const BattleChallengeCard: React.FC<{
   } : null;
   const creatorIsWhite = battle.creator?.isWhite ?? true;
   const opponentIsWhite = !creatorIsWhite;
+  // Оригинальный выбор цвета создателя (может быть 'random')
+  const creatorChoice: 'white' | 'black' | 'random' = battle.colorChoice ?? (creatorIsWhite ? 'white' : 'black');
 
-  const creatorMode: 'white' | 'black' = creatorIsWhite ? 'white' : 'black';
-  const opponentMode: 'white' | 'black' = opponentIsWhite ? 'white' : 'black';
+  // Если создатель выбрал «Рандом» — показываем у обоих полосатую фигуру с лейблом «Рандом»
+  // Иначе: создатель в своём цвете, соперник в противоположном
+  const creatorMode: 'white' | 'black' | 'random' = creatorChoice === 'random' ? 'random' : (creatorIsWhite ? 'white' : 'black');
+  const opponentMode: 'white' | 'black' | 'random' = creatorChoice === 'random' ? 'random' : (opponentIsWhite ? 'white' : 'black');
 
   return (
     <div style={{
@@ -787,8 +791,8 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
     if (!canCreate) return;
     setLoading(true);
     const socket = getSocket();
-    const selectedColor = color === 'random' ? (Math.random() > 0.5 ? 'white' : 'black') : color;
-    socket.emit('game:create:battle', { color: selectedColor, duration, bet: String(bet), isPrivate: !isPublic }, (res: any) => {
+    // Передаём оригинальный выбор ('random' тоже) — сервер резолвит и запоминает
+    socket.emit('game:create:battle', { color, duration, bet: String(bet), isPrivate: !isPublic }, (res: any) => {
       setLoading(false);
       if (res.ok && res.session) {
         upsertSession(res.session);

@@ -271,17 +271,26 @@ export const setupSocketHandlers = (io: Server) => {
     socket.on(
       "game:create:battle",
       async (
-        data: { color: "white" | "black"; duration: number; bet: string; isPrivate?: boolean },
+        data: { color: "white" | "black" | "random"; duration: number; bet: string; isPrivate?: boolean },
         callback?: Function
       ) => {
         try {
+          // Если выбран «random» — резолвим случайный цвет, но оригинал сохраним для карточки лобби
+          const originalChoice = data.color;
+          const resolvedColor: "white" | "black" =
+            originalChoice === "random"
+              ? (Math.random() > 0.5 ? "white" : "black")
+              : originalChoice;
           const session = await createBattleSession(
             userId,
-            data.color,
+            resolvedColor,
             data.duration,
             BigInt(data.bet),
             data.isPrivate ?? false
           );
+          // Запоминаем оригинальный выбор цвета (для отображения «Рандом» в лобби)
+          const { battleColorChoices } = await import("./format");
+          battleColorChoices.set(session.id, originalChoice);
           socket.join(session.id);
           const formatted = formatSession(session, userId);
 
@@ -309,6 +318,9 @@ export const setupSocketHandlers = (io: Server) => {
       async (data: { code: string }, callback?: Function) => {
         try {
           const session = await joinBattleSession(userId, data.code);
+          // Оппонент присоединился — цвет уже резолвлен, чистим оригинальный выбор
+          const { battleColorChoices } = await import("./format");
+          battleColorChoices.delete(session.id);
           socket.join(session.id);
           const formatted = formatSession(session, userId);
 
@@ -698,6 +710,10 @@ export const setupSocketHandlers = (io: Server) => {
             where: { id: userId },
             data: { activeSessions: { disconnect: { id: data.sessionId } } },
           });
+
+          // Чистим запомненный оригинальный выбор цвета
+          const { battleColorChoices } = await import("./format");
+          battleColorChoices.delete(data.sessionId);
 
           if (callback) callback({ ok: true });
           // T18: diff — убираем отменённый батл

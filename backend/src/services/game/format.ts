@@ -59,6 +59,10 @@ export const formatSession = (session: SessionWithSides, userId: string | null) 
   };
 };
 
+// In-memory хранилище оригинального выбора цвета создателем батла
+// (WAITING-сессии живут недолго, персистентность не нужна)
+export const battleColorChoices = new Map<string, 'white' | 'black' | 'random'>();
+
 // Форматирует список батлов для лобби
 export const formatBattlesList = (sessions: SessionWithSides[], spectatorCounts?: Map<string, number>) => {
   return sessions.map((s) => ({
@@ -71,6 +75,8 @@ export const formatBattlesList = (sessions: SessionWithSides[], spectatorCounts?
     spectatorCount: spectatorCounts?.get(s.id) ?? 0,
     sourceType: (s as any).sourceType ?? null,
     sourceMeta: (s as any).sourceMeta ?? null,
+    // Оригинальный выбор цвета (нужен для отображения «Рандом» на карточке вызова)
+    colorChoice: battleColorChoices.get(s.id) ?? (s.sides[0]?.isWhite ? 'white' : 'black'),
     creator: s.sides[0]
       ? {
           id: s.sides[0].player.id,       // нужен для навигации на профиль
