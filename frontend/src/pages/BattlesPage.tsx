@@ -6,6 +6,7 @@ import { useGameStore } from '@/store/useGameStore';
 import { useUserStore } from '@/store/useUserStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { AttemptsModal } from '@/components/ui/AttemptsModal';
+import { NoAttemptsInfoModal } from '@/components/ui/NoAttemptsInfoModal';
 import { getSocket } from '@/api/socket';
 import { profileApi } from '@/api';
 import { fmtBalance, fmtTime } from '@/utils/format';
@@ -43,6 +44,10 @@ export const BattlesPage: React.FC = () => {
   const [showCreate, setShowCreate] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showAttempts, setShowAttempts] = useState(false);
+  // Инфо-модал «нет попыток» (перед покупкой)
+  const [showNoAttemptsInfo, setShowNoAttemptsInfo] = useState(false);
+  // Возврат в CreateBattleModal после закрытия покупки / инфо
+  const [reopenCreateAfter, setReopenCreateAfter] = useState(false);
 
   const attempts = user?.attempts ?? 3;
   const hasAttempts = attempts > 0;
@@ -79,9 +84,9 @@ export const BattlesPage: React.FC = () => {
   };
 
   const handleJoin = (battle: BattleLobbyItem) => {
-    // Нет попыток → открыть покупку попыток
+    // Нет попыток → сначала инфо-модал, потом покупка
     if (!hasAttempts) {
-      setShowAttempts(true);
+      setShowNoAttemptsInfo(true);
       return;
     }
     // Недостаточно баланса → в магазин
@@ -475,8 +480,43 @@ export const BattlesPage: React.FC = () => {
         }}
       >＋</button>
 
-      {showCreate && <CreateBattleModal onClose={() => setShowCreate(false)} onBuyAttempts={() => setShowAttempts(true)} />}
-      {showAttempts && user && <AttemptsModal user={user} onClose={() => setShowAttempts(false)} />}
+      {showCreate && <CreateBattleModal
+        onClose={() => setShowCreate(false)}
+        onBuyAttempts={() => {
+          // Закрываем модал создания, показываем инфо. После покупки — вернём обратно
+          setShowCreate(false);
+          setReopenCreateAfter(true);
+          setShowNoAttemptsInfo(true);
+        }}
+      />}
+      {showNoAttemptsInfo && user && (
+        <NoAttemptsInfoModal
+          userAttempts={user.attempts ?? 0}
+          maxAttempts={user.maxAttempts ?? 3}
+          nextRestoreSeconds={user.nextRestoreSeconds}
+          onBuyAttempts={() => {
+            setShowNoAttemptsInfo(false);
+            setShowAttempts(true);
+          }}
+          onClose={() => {
+            setShowNoAttemptsInfo(false);
+            if (reopenCreateAfter) {
+              setReopenCreateAfter(false);
+              setShowCreate(true);
+            }
+          }}
+        />
+      )}
+      {showAttempts && user && (
+        <AttemptsModal user={user} onClose={() => {
+          setShowAttempts(false);
+          // Возврат в CreateBattleModal (на шаг назад)
+          if (reopenCreateAfter) {
+            setReopenCreateAfter(false);
+            setShowCreate(true);
+          }
+        }} />
+      )}
     </PageLayout>
   );
 };

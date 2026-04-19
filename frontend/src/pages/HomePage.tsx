@@ -102,6 +102,8 @@ export const HomePage: React.FC = () => {
   const [showJarvisModal, setShowJarvisModal] = useState(false);
   const [showSessionsModal, setShowSessionsModal] = useState(false);
   const [showAttemptsModal, setShowAttemptsModal] = useState(false);
+  // Флаг: надо ли после закрытия AttemptsModal снова открыть JarvisPlayModal
+  const [reopenJarvisAfter, setReopenJarvisAfter] = useState(false);
   const [timeLeft, setTimeLeft] = useState('');
   const [pressedBlk, setPressedBlk] = useState<string | null>(null);
   const [targetAt, setTargetAt] = useState<number | null>(null);
@@ -252,11 +254,23 @@ export const HomePage: React.FC = () => {
           nextRestoreSeconds={user.nextRestoreSeconds}
           onStart={handleGameStart}
           onClose={() => setShowJarvisModal(false)}
-          onBuyAttempts={() => setShowAttemptsModal(true)}
+          onBuyAttempts={() => {
+            // Закрываем инфо-модал Jarvis и открываем покупку
+            setShowJarvisModal(false);
+            setReopenJarvisAfter(true);
+            setShowAttemptsModal(true);
+          }}
         />
       )}
       {showAttemptsModal && (
-        <AttemptsModal user={user} onClose={() => setShowAttemptsModal(false)} />
+        <AttemptsModal user={user} onClose={() => {
+          setShowAttemptsModal(false);
+          // Возвращаемся к Jarvis модалу (туда, откуда пришёл пользователь)
+          if (reopenJarvisAfter) {
+            setReopenJarvisAfter(false);
+            setShowJarvisModal(true);
+          }
+        }} />
       )}
       {showSessionsModal && activeSessions.length > 0 && (
         <ActiveSessionsModal sessions={activeSessions} onClose={() => setShowSessionsModal(false)} />
