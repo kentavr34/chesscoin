@@ -170,13 +170,15 @@ const PlayerPanel: React.FC<PanelProps> = ({
       display: 'flex', alignItems: 'center', gap: 10,
       height: PANEL_H, padding: '0 14px 0 14px', flexShrink: 0,
       margin: '0 6px', borderRadius: 12,
-      background: isActive ? 'rgba(240,200,90,.06)' : 'rgba(255,255,255,.02)',
+      background: isActive
+        ? 'linear-gradient(90deg, rgba(240,200,90,.22) 0%, rgba(240,200,90,.14) 50%, rgba(240,200,90,.08) 100%)'
+        : 'rgba(255,255,255,.02)',
       border: `1px solid ${
         isCritical ? 'rgba(220,50,47,.65)'
-        : isActive  ? 'rgba(240,200,90,.55)'
+        : isActive  ? 'rgba(240,200,90,.6)'
         : 'rgba(255,255,255,.05)'
       }`,
-      boxShadow: isActive && !isCritical ? '0 0 14px rgba(240,200,90,.15)' : 'none',
+      boxShadow: isActive && !isCritical ? '0 0 18px rgba(240,200,90,.2), inset 0 0 18px rgba(240,200,90,.06)' : 'none',
       transition: 'background .3s, border-color .3s, box-shadow .3s',
     }}>
 
@@ -217,14 +219,12 @@ const PlayerPanel: React.FC<PanelProps> = ({
           {name}
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, lineHeight: 1 }}>
-          <span style={{ fontSize: '.68rem', color: '#5A5248', fontWeight: 600 }}>
+          <span style={{ fontSize: '.75rem', color: '#9A8E78', fontWeight: 600 }}>
             {elo !== undefined ? `ELO ${elo}` : (isBot ? 'J.A.R.V.I.S' : '')}
           </span>
-          {flagEmoji(country) && (
-            <span style={{ fontSize: 18, lineHeight: 1, flexShrink: 0, opacity: .7 }}>
-              {flagEmoji(country)}
-            </span>
-          )}
+          <span style={{ fontSize: 18, lineHeight: 1, flexShrink: 0, opacity: .75 }}>
+            {flagEmoji(country) ?? '🌍'}
+          </span>
         </div>
       </div>
 
