@@ -643,9 +643,26 @@ export function GamePage() {
     && session.status !== 'IN_PROGRESS'
     && session.status !== 'WAITING_FOR_OPPONENT';
 
-  const isBattle    = session?.type === 'BATTLE';
-  const isSpectator = isBattle && !session?.mySideId;
-  const hasBet      = isBattle && session?.bet && BigInt(session.bet) > 0n;
+  const isBattle        = session?.type === 'BATTLE';
+  const isSpectator     = isBattle && !session?.mySideId;
+  const hasBet          = isBattle && session?.bet && BigInt(session.bet) > 0n;
+  const isPrivateBattle = isBattle && !!session?.isPrivate;
+  const isPublicBattle  = isBattle && !session?.isPrivate;
+
+  // ── Касса: ставки обоих игроков + донаты зрителей ─────────────────────────
+  // СИНХРОНИЗАЦИЯ С backend/src/services/game/finish.ts:
+  //   • комиссия 10% берётся ТОЛЬКО со ставок (totalPot = bet*2)
+  //   • донаты зрителей целиком уходят победителю (без комиссии)
+  //   • ничья: каждому возвращается его ставка, донаты распределяются по правилам бэка
+  const betBig         = session?.bet ? BigInt(session.bet) : 0n;
+  const totalBetPot    = betBig * 2n;
+  const donationsBig   = donatePool ? BigInt(donatePool) : 0n;
+  const bank           = totalBetPot + donationsBig;        // вся касса (для отображения)
+  const BANK_COMMISSION_PCT = 10n;                          // комиссия стола
+  const bankCommission = (totalBetPot * BANK_COMMISSION_PCT) / 100n; // 10% со ставок
+  const winnerTake     = totalBetPot - bankCommission + donationsBig; // ставки-10% + донаты 100%
+  // viewCount — накопительный счётчик просмотров (backend: sessions.viewCount, опционально)
+  const viewCount      = session?.viewCount ?? 0;
 
   useEffect(() => { isMyTurnRef.current = isMyTurn; },  [isMyTurn]);
   useEffect(() => { gameOverRef.current = gameOver; }, [gameOver]);
@@ -937,11 +954,11 @@ export function GamePage() {
             sessionId={sessionId}
           />
 
-          {/* ── Счётчик зрителей (топ-правый угол доски) ── */}
-          {isBattle && spectatorCount > 0 && (
+          {/* ── Публичный батл: наблюдатели лайв + всего просмотров (топ-правый угол доски) ── */}
+          {isPublicBattle && (
             <div style={{
               position: 'absolute', top: 6, right: 6,
-              display: 'flex', alignItems: 'center', gap: 4,
+              display: 'flex', alignItems: 'center', gap: 8,
               background: 'rgba(0,0,0,.6)',
               border: '.5px solid rgba(255,255,255,.12)',
               borderRadius: 20,
@@ -949,14 +966,36 @@ export function GamePage() {
               pointerEvents: 'none',
               zIndex: 10,
             }}>
-              {/* Иконка глаза */}
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                <path d="M1 12S5 5 12 5s11 7 11 7-4 7-11 7S1 12 1 12z" stroke="rgba(154,148,144,.8)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                <circle cx="12" cy="12" r="3" stroke="rgba(154,148,144,.8)" strokeWidth="1.8"/>
-              </svg>
-              <span style={{ fontSize: '.62rem', color: '#9A9490', fontWeight: 600, letterSpacing: '.01em' }}>
-                {spectatorCount}
-              </span>
+              {/* Лайв-зрители (пульс-индикатор, если > 0) */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                {spectatorCount > 0 && (
+                  <span style={{
+                    width: 6, height: 6, borderRadius: '50%',
+                    background: '#E7484F',
+                    animation: 'gp-pulse 1.4s infinite',
+                    boxShadow: '0 0 5px #E7484F',
+                  }} />
+                )}
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                  <path d="M1 12S5 5 12 5s11 7 11 7-4 7-11 7S1 12 1 12z" stroke="rgba(154,148,144,.8)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  <circle cx="12" cy="12" r="3" stroke="rgba(154,148,144,.8)" strokeWidth="1.8"/>
+                </svg>
+                <span style={{ fontSize: '.62rem', color: '#9A9490', fontWeight: 700, letterSpacing: '.01em' }}>
+                  {spectatorCount}
+                </span>
+              </div>
+              {/* Разделитель */}
+              <span style={{ width: 1, height: 10, background: 'rgba(255,255,255,.15)' }} />
+              {/* Всего просмотров */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 4.5C7 4.5 3 8.5 3 12s4 7.5 9 7.5 9-4 9-7.5-4-7.5-9-7.5z" stroke="rgba(154,148,144,.8)" strokeWidth="1.8" strokeLinecap="round"/>
+                  <path d="M12 8v4l2 2" stroke="rgba(154,148,144,.8)" strokeWidth="1.8" strokeLinecap="round"/>
+                </svg>
+                <span style={{ fontSize: '.62rem', color: '#9A9490', fontWeight: 600, letterSpacing: '.01em' }}>
+                  {viewCount >= 1000 ? `${(viewCount / 1000).toFixed(1)}K` : viewCount}
+                </span>
+              </div>
             </div>
           )}
         </div>
@@ -972,23 +1011,69 @@ export function GamePage() {
         )}
       </div>
 
-      {/* ── Пул доната (между статус-полоской и панелью игрока) ─────────── */}
-      {isBattle && donatePool && BigInt(donatePool) > 0n && (
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          background: 'rgba(212,168,67,.08)',
-          border: '.5px solid rgba(212,168,67,.2)',
-          borderRadius: 10,
-          padding: '6px 14px',
-          margin: '0 10px',
-          flexShrink: 0,
-        }}>
-          {/* Монета */}
-          <CoinIcon size={14} />
-          <span style={{ fontSize: '.68rem', color: '#D4A843', fontWeight: 700, letterSpacing: '.01em' }}>
-            Пул доната: {fmtBalance(donatePool)} ᚙ
-          </span>
-        </div>
+      {/* ── Касса батла (между статус-полоской и панелью игрока) ─────────
+          Private — компактная: банк + «победителю после 10%».
+          Public — с разбивкой: ставки + донаты → итого → победителю. */}
+      {isBattle && hasBet && (
+        isPrivateBattle ? (
+          /* Приватный: только касса, без зрителей/доната */
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+            background: 'rgba(212,168,67,.08)',
+            border: '.5px solid rgba(212,168,67,.22)',
+            borderRadius: 10,
+            padding: '6px 12px',
+            margin: '0 10px',
+            flexShrink: 0,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <CoinIcon size={14} />
+              <span style={{ fontSize: '.62rem', color: '#9A9490', fontWeight: 600, letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                Касса
+              </span>
+              <span style={{ fontSize: '.78rem', color: '#F0C85A', fontWeight: 800 }}>
+                {fmtBalance(bank.toString())} ᚙ
+              </span>
+            </div>
+            <div style={{ fontSize: '.58rem', color: '#6E6A66', fontWeight: 600, letterSpacing: '.02em' }}>
+              победителю <span style={{ color: '#4DDA8A', fontWeight: 800 }}>{fmtBalance(winnerTake.toString())} ᚙ</span>
+              <span style={{ color: '#4A4440' }}> · комиссия 10%</span>
+            </div>
+          </div>
+        ) : (
+          /* Публичный: касса + разбивка (ставки / донаты) + к выплате */
+          <div style={{
+            display: 'flex', flexDirection: 'column', gap: 4,
+            background: 'linear-gradient(135deg, rgba(212,168,67,.10), rgba(212,168,67,.04))',
+            border: '.5px solid rgba(212,168,67,.28)',
+            borderRadius: 12,
+            padding: '7px 12px',
+            margin: '0 10px',
+            flexShrink: 0,
+          }}>
+            {/* Строка 1: Касса + общая сумма */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <CoinIcon size={14} />
+                <span style={{ fontSize: '.62rem', color: '#D4A843', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                  Касса
+                </span>
+              </div>
+              <span style={{ fontSize: '.86rem', color: '#F0C85A', fontWeight: 800, letterSpacing: '.01em' }}>
+                {fmtBalance(bank.toString())} ᚙ
+              </span>
+            </div>
+            {/* Строка 2: разбивка ставки + донаты */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, fontSize: '.56rem', color: '#7A7470', fontWeight: 600 }}>
+              <span>ставки: <span style={{ color: '#A8A29C' }}>{fmtBalance(totalBetPot.toString())}</span></span>
+              <span>донаты: <span style={{ color: donationsBig > 0n ? '#E78F4F' : '#5A5550' }}>{fmtBalance(donationsBig.toString())}</span></span>
+              <span>
+                победителю: <span style={{ color: '#4DDA8A', fontWeight: 800 }}>{fmtBalance(winnerTake.toString())}</span>
+                <span style={{ color: '#4A4440' }}> · стол 10%</span>
+              </span>
+            </div>
+          </div>
+        )
       )}
 
       {/* ── Игрок (снизу, вплотную к доске) ──────────────────────────────── */}
@@ -1006,9 +1091,9 @@ export function GamePage() {
 
       {/* ── Панель действий ──────────────────────────────────────────────── */}
       {isSpectator ? (
-        /* ── Панель зрителя: Выйти | Донат | Зрители ──────────────────── */
+        /* ── Панель зрителя: Выйти | [Донат — только public] | Зрители ── */
         <div style={{
-          display: 'grid', gridTemplateColumns: '1fr 2fr 1fr',
+          display: 'grid', gridTemplateColumns: isPublicBattle ? '1fr 2fr 1fr' : '1fr 1fr',
           height: ACTBAR_H,
           paddingBottom: 'max(0px, env(safe-area-inset-bottom, 0px))',
           borderTop: '.5px solid rgba(255,255,255,.09)',
@@ -1031,7 +1116,8 @@ export function GamePage() {
             Выйти
           </button>
 
-          {/* Донат с выбором суммы */}
+          {/* Донат с выбором суммы — только для публичных батлов */}
+          {isPublicBattle && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
             {/* Быстрые суммы */}
             <div style={{ display: 'flex', gap: 4 }}>
@@ -1072,8 +1158,10 @@ export function GamePage() {
               Задонатить {fmtBalance(String(selectedDonateAmt))} ᚙ
             </button>
           </div>
+          )}
 
-          {/* Зрители */}
+          {/* Зрители (только публичные: лайв + всего) */}
+          {isPublicBattle && (
           <div style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
             gap: 3,
@@ -1083,9 +1171,25 @@ export function GamePage() {
               <circle cx="12" cy="12" r="3" stroke="#9A9490" strokeWidth="1.6"/>
             </svg>
             <span style={{ fontSize: '.62rem', color: '#9A9490', fontWeight: 600 }}>
-              {spectatorCount} зрит.
+              {spectatorCount} лайв
+            </span>
+            <span style={{ fontSize: '.54rem', color: '#6A6460', fontWeight: 600 }}>
+              {viewCount >= 1000 ? `${(viewCount / 1000).toFixed(1)}K` : viewCount} всего
             </span>
           </div>
+          )}
+
+          {/* Зрители приватного батла (компактно, без доната) */}
+          {isPrivateBattle && (
+          <div style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            gap: 3,
+          }}>
+            <span style={{ fontSize: '.62rem', color: '#6A6460', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase' }}>
+              🔒 Приватный
+            </span>
+          </div>
+          )}
         </div>
       ) : (
         /* ── Обычная панель: 4 кнопки ──────────────────────────────────── */
