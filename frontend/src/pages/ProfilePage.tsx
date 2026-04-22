@@ -11,7 +11,6 @@ import { profileApi, authApi, warsApi } from '@/api';
 import { fmtBalance, fmtDate, leagueEmoji } from '@/utils/format';
 import type { Transaction, UserPublic } from '@/types';
 import { JARVIS_LEVELS } from '@/components/ui/JarvisModal';
-import { tgConfirm } from '@/lib/tgDialog';
 
 // Local type for Tab
 type Tab = 'info' | 'games' | 'saves' | 'ach';
@@ -83,7 +82,13 @@ export const ProfilePage: React.FC = () => {
   const [recentGames, setRecentGames]   = useState<GameHistoryItem[]>([]);
   const [savedGames, setSavedGames]     = useState<SavedGameItem[]>([]);
   const [showSettings, setShowSettings] = useState(false);
-  const [replayGame, setReplayGame] = useState<{ pgn: string; title?: string; sessionId?: string } | null>(null);
+  const [replayGame, setReplayGame] = useState<{
+    pgn: string;
+    title?: string;
+    sessionId?: string;
+    whitePlayer?: import('@/types').UserPublic | null;
+    blackPlayer?: import('@/types').UserPublic | null;
+  } | null>(null);
   const [selectedBadge, setSelectedBadge] = useState<{ name: string; date?: string } | null>(null);
   const [avatarLoading, setAvatarLoading] = useState(false);
   const [cropFile, setCropFile] = useState<File | null>(null);
@@ -128,7 +133,7 @@ export const ProfilePage: React.FC = () => {
   };
 
   const handleAvatarDelete = async () => {
-    if (!(await tgConfirm(t.profile.deleteAvatar))) return;
+    if (!confirm(t.profile.deleteAvatar)) return;
     setAvatarLoading(true);
     try {
       await profileApi.deleteAvatar();
@@ -552,7 +557,14 @@ export const ProfilePage: React.FC = () => {
                         )}
                         {g.pgn && (
                           <button
-                            onClick={() => setReplayGame({ pgn: g.pgn!, title: oppPlayer ? `vs ${oppPlayer.firstName}` : t.profile.gameLabel, sessionId: g.sessionId })}
+                            onClick={() => setReplayGame({
+                              pgn: g.pgn!,
+                              title: oppPlayer ? `vs ${oppPlayer.firstName}` : t.profile.gameLabel,
+                              sessionId: g.sessionId,
+                              // Раскладка по цветам: клик по аватару → профиль игрока
+                              whitePlayer: (g as any).isWhite ? (user as any) : oppPlayer,
+                              blackPlayer: (g as any).isWhite ? oppPlayer : (user as any),
+                            })}
                             style={{ fontSize: 9, padding: '2px 7px', background: 'rgba(245,200,66,0.08)', color: 'var(--accent,#F5C842)', border: '1px solid rgba(245,200,66,0.2)', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}
                           >♟ Replay</button>
                         )}
@@ -675,7 +687,19 @@ export const ProfilePage: React.FC = () => {
                     </div>
                     {s?.pgn && (
                       <button style={{ width: '100%', marginTop: 8, padding: '8px', background: 'rgba(74,158,255,.08)', color: '#82CFFF', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
-                        onClick={() => setReplayGame({ pgn: s.pgn!, title: `${p1?.firstName ?? '?'} vs ${p2?.firstName ?? '?'}`, sessionId: s.id })}
+                        onClick={() => {
+                          // p1/p2 — стороны сохранённой партии; ищем белого/чёрного по isWhite
+                          const sides = (s as any).sides as Array<{ isWhite: boolean; player: any }> | undefined;
+                          const white = sides?.find(x => x.isWhite)?.player ?? p1;
+                          const black = sides?.find(x => !x.isWhite)?.player ?? p2;
+                          setReplayGame({
+                            pgn: s.pgn!,
+                            title: `${p1?.firstName ?? '?'} vs ${p2?.firstName ?? '?'}`,
+                            sessionId: s.id,
+                            whitePlayer: white,
+                            blackPlayer: black,
+                          });
+                        }}
                       >
                         ♟ Replay game
                       </button>
@@ -894,6 +918,8 @@ export const ProfilePage: React.FC = () => {
           pgn={replayGame.pgn}
           title={replayGame.title}
           sessionId={replayGame.sessionId}
+          whitePlayer={replayGame.whitePlayer}
+          blackPlayer={replayGame.blackPlayer}
           onClose={() => setReplayGame(null)}
         />
       )}
