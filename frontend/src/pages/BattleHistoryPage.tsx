@@ -5,6 +5,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { profileApi } from '@/api';
 import { fmtBalance, fmtDate } from '@/utils/format';
 import { PgnReplayModal } from '@/components/profile/PgnReplayModal';
+import { useUserStore } from '@/store/useUserStore';
 import type { UserPublic } from '@/types';
 
 // CoinIcon — золотой конь
@@ -35,7 +36,8 @@ interface HistoryGame {
   hasBot?: boolean;
 }
 
-type FilterTab = 'all' | 'battle' | 'bot' | 'friendly';
+// Бот-игры исключены из истории батлов как «процесс» (это тренировка, а не стат-батл)
+type FilterTab = 'all' | 'battle' | 'friendly';
 type SortKey = 'date' | 'bet' | 'result';
 
 const PAGE_SIZE = 20;
@@ -82,7 +84,6 @@ const HandshakeIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
 const FILTER_TABS: { key: FilterTab; label: string }[] = [
   { key: 'all', label: 'Все' },
   { key: 'battle', label: 'Батлы' },
-  { key: 'bot', label: 'Бот' },
   { key: 'friendly', label: 'Дружеские' },
 ];
 
@@ -96,7 +97,14 @@ export const BattleHistoryPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('date');
   const [showSort, setShowSort] = useState(false);
-  const [replayData, setReplayData] = useState<{ pgn: string; title: string; sessionId: string } | null>(null);
+  const [replayData, setReplayData] = useState<{
+    pgn: string;
+    title: string;
+    sessionId: string;
+    whitePlayer?: UserPublic | null;
+    blackPlayer?: UserPublic | null;
+  } | null>(null);
+  const me = useUserStore((s) => s.user);
 
   const loadGames = useCallback(async (off: number) => {
     setLoading(true);
@@ -116,18 +124,18 @@ export const BattleHistoryPage: React.FC = () => {
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
 
   const filteredGames = games
+    // Бот-игры вычищены из истории батлов: это тренировка, не стат-процесс
+    .filter((g) => !g.hasBot)
     .filter((g) => {
-      if (activeFilter === 'bot') return !!g.hasBot;
       if (activeFilter === 'friendly') return g.type === 'FRIENDLY';
-      if (activeFilter === 'battle') return !g.hasBot && g.type !== 'FRIENDLY';
-      return true;
+      if (activeFilter === 'battle') return g.type !== 'FRIENDLY';
+      return true; // 'all'
     })
     .filter((g) => {
       if (!search.trim()) return true;
       const q = search.trim().toLowerCase();
       const name = (g.opponent?.firstName ?? '').toLowerCase();
-      const botName = g.hasBot ? `jarvis lv.${g.botLevel}` : '';
-      return name.includes(q) || botName.includes(q);
+      return name.includes(q);
     })
     .sort((a, b) => {
       if (sortKey === 'date') {
@@ -297,7 +305,7 @@ export const BattleHistoryPage: React.FC = () => {
       {/* Список партий */}
       {!loading && filteredGames.length > 0 && (
         <>
-          {/* Счётчик */}
+          {/* Счётчик — показываем только отфильтрованные (без бот-игр) */}
           <div style={{
             padding: '0 16px 6px',
             fontSize: '.62rem',
@@ -305,7 +313,7 @@ export const BattleHistoryPage: React.FC = () => {
             fontFamily: 'Inter, sans-serif',
             fontWeight: 500,
           }}>
-            {total} партий · стр. {currentPage} из {totalPages}
+            {filteredGames.length} на стр. · стр. {currentPage} из {totalPages}
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '0 14px' }}>
@@ -344,6 +352,9 @@ export const BattleHistoryPage: React.FC = () => {
                     pgn: g.pgn,
                     title: g.opponent?.firstName ? `vs ${g.opponent.firstName}` : (g.hasBot ? `vs J.A.R.V.I.S Lv.${g.botLevel}` : 'Партия'),
                     sessionId: g.sessionId,
+                    // Раскладка по цветам: клик по аватару → профиль игрока
+                    whitePlayer: g.isWhite ? (me as UserPublic | null) : g.opponent,
+                    blackPlayer: g.isWhite ? g.opponent : (me as UserPublic | null),
                   })}
                 >
                   {/* Цветная полоска статуса */}
@@ -507,6 +518,8 @@ export const BattleHistoryPage: React.FC = () => {
           pgn={replayData.pgn}
           title={replayData.title}
           sessionId={replayData.sessionId}
+          whitePlayer={replayData.whitePlayer}
+          blackPlayer={replayData.blackPlayer}
           onClose={() => setReplayData(null)}
         />
       )}
