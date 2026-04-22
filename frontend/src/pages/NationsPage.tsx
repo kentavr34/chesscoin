@@ -803,11 +803,16 @@ const approveBtn: React.CSSProperties = {
 const rejectBtn: React.CSSProperties = { ...kickBtn };
 const overlayStyle: React.CSSProperties = {
   position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)',
-  backdropFilter: 'blur(8px)', zIndex: "var(--z-modal, 300)", display: 'flex', alignItems: 'flex-end',
+  backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+  zIndex: "var(--z-modal, 300)" as any, display: 'flex', alignItems: 'flex-end',
+  // iOS safe-area: боттом-шит не прижимается к системной панели
+  paddingBottom: 'env(safe-area-inset-bottom, 0px)',
 };
 const modalStyle: React.CSSProperties = {
   width: '100%', background: 'var(--bg-card, #161927)', borderRadius: '24px 24px 0 0',
-  padding: 20, borderTop: '1px solid rgba(255,255,255,0.1)',
+  // +8px к нижнему паддингу для home-indicator
+  padding: '20px 20px calc(20px + env(safe-area-inset-bottom, 0px))',
+  borderTop: '1px solid rgba(255,255,255,0.1)',
   maxHeight: '85vh', overflowY: 'auto',
 };
 const handleBar: React.CSSProperties = {

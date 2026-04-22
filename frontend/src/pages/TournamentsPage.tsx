@@ -561,14 +561,18 @@ const overlayStyle: React.CSSProperties = {
   position: 'fixed', inset: 0,
   background: 'rgba(0,0,0,0.75)',
   backdropFilter: 'blur(10px)',
+  WebkitBackdropFilter: 'blur(10px)',
   zIndex: "var(--z-modal, 300)" as any,
   display: 'flex', alignItems: 'flex-end',
+  // iOS safe-area: не прижимаем боттом-шит к системной панели жестов
+  paddingBottom: 'env(safe-area-inset-bottom, 0px)',
 };
 const modalStyle: React.CSSProperties = {
   width: '100%',
   background: 'linear-gradient(180deg,#100C18,#0A080E)',
   borderRadius: '22px 22px 0 0',
-  padding: '16px 20px 28px',
+  // +8px к нижнему паддингу, чтобы кнопки «Донат»/Закрыть не съедались home-indicator'ом
+  padding: '16px 20px calc(28px + env(safe-area-inset-bottom, 0px))',
   borderTop: '.5px solid rgba(212,168,67,.18)',
   maxHeight: '85vh',
   overflowY: 'auto',
