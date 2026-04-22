@@ -9,7 +9,6 @@ import type { Square } from 'chess.js';
 import { getSocket } from '@/api/socket';
 import { api } from '@/api/client';
 import { useGameStore } from '@/store/useGameStore';
-import { useUserStore } from '@/store/useUserStore';
 import { ChessBoard } from '@/components/game/ChessBoard';
 import { sound } from '@/lib/sound';
 import { fmtBalance } from '@/utils/format';
@@ -20,7 +19,7 @@ const PIECE_VAL:     Record<string, number>  = { p: 1, n: 3, b: 3, r: 5, q: 9 };
 const PIECE_START:   Record<string, number>  = { p: 8, n: 2, b: 2, r: 2, q: 1 };
 const SORT_ORDER:    Record<string, number>  = { q: 0, r: 1, b: 2, n: 3, p: 4 };
 
-const PANEL_H   = 86;  // высота панели игрока (расширена на ~20% от 72)
+const PANEL_H   = 72;  // высота панели игрока
 const ACTBAR_H  = 64;  // нижняя панель кнопок
 const STATUS_GAP = 28; // полоска между панелью и доской — «Ваш ход» / «Думает...»
 
@@ -69,8 +68,34 @@ function lastMoveFromPgn(pgn: string): { from: string; to: string } | null {
   } catch { return null; }
 }
 
-// ── ChessCoin иконка монеты — единый компонент ───────────────────────────────
-import { CoinIcon } from '@/components/ui/CoinIcon';
+// ── ChessCoin иконка монеты (золотой конь) ────────────────────────────────────
+const CoinIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
+    <circle cx="16" cy="16" r="15" fill="url(#coinBg)" stroke="url(#coinBorder)" strokeWidth="1.2"/>
+    {/* Орнаментальное кольцо */}
+    <circle cx="16" cy="16" r="12" fill="none" stroke="rgba(180,130,20,.4)" strokeWidth=".6"/>
+    {/* Конь (шахматный конь) */}
+    <path d="M11 24c0-1 .5-2 1.5-2.5L14 21c-1-1-1.5-2.5-1-4 .3-1 1-2 2-2.5-.5-.8-.5-1.5 0-2 .8-.5 2-.3 2.5.5.5.8.3 2-.5 2.5.5.5 1 1.5.8 2.5l2 1c1 .5 1.7 1.5 1.7 2.5v.5H11z" fill="url(#coinKnight)"/>
+    {/* Грива */}
+    <path d="M16.5 12c.5-1 1.5-2 2-3 .3-.5 0-1-.3-1.2-.5-.3-1 0-1.2.5L16 10l-1-.5c-.3-1.5.5-3 2-3.5 1.5-.5 3 .2 3.5 1.5.3.8 0 1.8-.5 2.5l-1 1.5" fill="url(#coinKnight)" opacity=".9"/>
+    <defs>
+      <radialGradient id="coinBg" cx="38%" cy="30%" r="75%">
+        <stop offset="0%" stopColor="#F0C85A"/>
+        <stop offset="55%" stopColor="#D4A843"/>
+        <stop offset="100%" stopColor="#8A6020"/>
+      </radialGradient>
+      <linearGradient id="coinBorder" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#F0C85A"/>
+        <stop offset="50%" stopColor="#A07830"/>
+        <stop offset="100%" stopColor="#F0C85A"/>
+      </linearGradient>
+      <linearGradient id="coinKnight" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor="#120E04"/>
+        <stop offset="100%" stopColor="#1E1608"/>
+      </linearGradient>
+    </defs>
+  </svg>
+);
 
 // ── J.A.R.V.I.S аватар ────────────────────────────────────────────────────────
 const JarvisAva: React.FC<{ size: number }> = ({ size }) => (
@@ -141,22 +166,6 @@ const flagEmoji = (code?: string | null): string | null => {
   return String.fromCodePoint(a, b);
 };
 
-// SVG-иконка глобуса (никаких эмодзи — только системные SVG)
-const IcoGlobe: React.FC<{ size?: number }> = ({ size = 16 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, opacity: .55 }}>
-    <circle cx="12" cy="12" r="9" stroke="#9A8E78" strokeWidth="1.6" />
-    <ellipse cx="12" cy="12" rx="4" ry="9" stroke="#9A8E78" strokeWidth="1.4" />
-    <path d="M3 12h18" stroke="#9A8E78" strokeWidth="1.4" />
-  </svg>
-);
-
-// Универсальный флаг игрока: из countryMember.country.flag, либо из country-кода, либо глобус SVG
-const PlayerFlag: React.FC<{ flag?: string | null; country?: string | null; size?: number }> = ({ flag, country, size = 18 }) => {
-  const resolved = flag || flagEmoji(country);
-  if (resolved) return <span style={{ fontSize: size, lineHeight: 1, flexShrink: 0, opacity: .85 }}>{resolved}</span>;
-  return <IcoGlobe size={size - 2} />;
-};
-
 // ── Панель игрока (по референсу) ──────────────────────────────────────────────
 interface PanelProps {
   name: string;
@@ -165,7 +174,6 @@ interface PanelProps {
   isBot?: boolean;
   isWhite: boolean;
   country?: string | null;
-  countryFlag?: string | null;
   captured: string[];
   advantage: number;
   coins: number;      // монеты за взятые фигуры
@@ -176,7 +184,7 @@ interface PanelProps {
 }
 
 const PlayerPanel: React.FC<PanelProps> = ({
-  name, elo, avatar, isBot, isWhite, country, countryFlag, captured, advantage: adv,
+  name, elo, avatar, isBot, isWhite, country, captured, advantage: adv,
   coins, timeDisplay, timeSecs, isActive, isGameOver,
 }) => {
   const sorted = useMemo(() => sortCaptured(captured), [captured]);
@@ -186,12 +194,14 @@ const PlayerPanel: React.FC<PanelProps> = ({
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 10,
-      height: PANEL_H, padding: '0 14px 0 14px', flexShrink: 0,
-      margin: '0 6px', borderRadius: 12,
-      background: 'linear-gradient(90deg, rgba(240,200,90,.18) 0%, rgba(240,200,90,.10) 50%, rgba(240,200,90,.06) 100%)',
-      border: '1px solid rgba(240,200,90,.5)',
-      boxShadow: '0 0 14px rgba(240,200,90,.15), inset 0 0 14px rgba(240,200,90,.05)',
-      transition: 'background .3s, border-color .3s, box-shadow .3s',
+      height: PANEL_H, padding: '0 10px 0 22px', flexShrink: 0,
+      background: isActive ? 'rgba(74,158,255,.03)' : 'transparent',
+      borderLeft: `3px solid ${
+        isCritical ? 'rgba(220,50,47,.85)'
+        : isActive  ? '#4A9EFF'
+        : 'transparent'
+      }`,
+      transition: 'background .3s, border-color .3s',
     }}>
 
       {/* ── Аватар ─────────────────────────────────────────────────────────── */}
@@ -220,22 +230,25 @@ const PlayerPanel: React.FC<PanelProps> = ({
         }
       </div>
 
-      {/* ── Колонка: имя (строка 1), ELO + флаг (строка 2) ─────────────── */}
-      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 4, minWidth: 0, maxWidth: 130 }}>
-        <span style={{
-          fontSize: '1rem', fontWeight: 700, lineHeight: 1,
-          color: isActive ? '#EAE2CC' : '#9A9490',
-          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-          maxWidth: 130, transition: 'color .3s',
-        }}>
-          {name}
-        </span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, lineHeight: 1 }}>
-          <span style={{ fontSize: '.75rem', color: '#9A8E78', fontWeight: 600 }}>
-            {elo !== undefined ? `ELO ${elo}` : (isBot ? 'J.A.R.V.I.S' : '')}
+      {/* ── Колонка: имя + флаг/глобус + ELO ───────────────────────────── */}
+      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 4, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+          <span style={{
+            fontSize: '1rem', fontWeight: 700, lineHeight: 1,
+            color: isActive ? '#EAE2CC' : '#9A9490',
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+            maxWidth: 80, transition: 'color .3s',
+          }}>
+            {name.length > 10 ? name.slice(0, 10) + '…' : name}
           </span>
-          <PlayerFlag flag={countryFlag} country={country} size={18} />
+          {/* Флаг страны или глобус */}
+          <span style={{ fontSize: 14, lineHeight: 1, flexShrink: 0 }}>
+            {flagEmoji(country) ?? '🌐'}
+          </span>
         </div>
+        <span style={{ fontSize: '.68rem', color: '#5A5248', fontWeight: 600, lineHeight: 1 }}>
+          {elo !== undefined ? `ELO ${elo}` : (isBot ? 'J.A.R.V.I.S' : '')}
+        </span>
       </div>
 
       {/* ── Центр: монеты (строка 1) + взятые фигуры (строка 2) ─────────── */}
@@ -253,16 +266,15 @@ const PlayerPanel: React.FC<PanelProps> = ({
         )}
         {/* Строка 2: взятые фигуры + преимущество */}
         {sorted.length > 0 ? (
-          <div style={{
-            display: 'flex', flexWrap: 'wrap', justifyContent: 'center',
-            alignItems: 'center', gap: '1px 2px',
-            maxWidth: 120, maxHeight: 28, overflow: 'hidden',
-          }}>
-            {sorted.map((p, i) => (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            {sorted.slice(0, 8).map((p, i) => (
               <span key={i} style={{ fontSize: 12, lineHeight: 1, opacity: .82 }}>
                 {PIECE_SYMBOLS[p] ?? ''}
               </span>
             ))}
+            {sorted.length > 8 && (
+              <span style={{ fontSize: '.5rem', color: '#6A5A40', fontWeight: 700 }}>+{sorted.length - 8}</span>
+            )}
             {adv > 0 && (
               <span style={{ fontSize: '.65rem', fontWeight: 800, color: '#3DBA7A', marginLeft: 3 }}>+{adv}</span>
             )}
@@ -281,14 +293,14 @@ const PlayerPanel: React.FC<PanelProps> = ({
           isCritical ? 'rgba(220,50,47,.65)'
           : isActive  ? 'rgba(212,168,67,.5)' : 'rgba(255,255,255,.14)'
         }`,
-        borderRadius: 6, padding: '6px 13px', flexShrink: 0,
-        minWidth: 65, textAlign: 'center', margin: '0 4px',
+        borderRadius: 6, padding: '7px 15px', flexShrink: 0,
+        minWidth: 72, textAlign: 'center', marginRight: 2,
         transition: 'all .3s',
         animation: isCritical ? 'timer-crit .75s infinite' : 'none',
         boxShadow: isActive && !isCritical ? '0 0 8px rgba(212,168,67,.18)' : 'none',
       }}>
         <div style={{
-          fontSize: '1.28rem', fontWeight: 900,
+          fontSize: '1.42rem', fontWeight: 900,
           color: isCritical ? '#FF6868' : isActive ? '#D4A843' : '#6A6258',
           fontVariantNumeric: 'tabular-nums', letterSpacing: '-.02em',
           fontFamily: "'JetBrains Mono', monospace",
@@ -631,9 +643,22 @@ export function GamePage() {
     && session.status !== 'IN_PROGRESS'
     && session.status !== 'WAITING_FOR_OPPONENT';
 
-  const isBattle    = session?.type === 'BATTLE';
-  const isSpectator = isBattle && !session?.mySideId;
-  const hasBet      = isBattle && session?.bet && BigInt(session.bet) > 0n;
+  const isBattle        = session?.type === 'BATTLE';
+  const isSpectator     = isBattle && !session?.mySideId;
+  const hasBet          = isBattle && session?.bet && BigInt(session.bet) > 0n;
+  const isPrivateBattle = isBattle && !!session?.isPrivate;
+  const isPublicBattle  = isBattle && !session?.isPrivate;
+
+  // ── Касса: ставки обоих игроков + донаты зрителей ─────────────────────────
+  const betBig         = session?.bet ? BigInt(session.bet) : 0n;
+  const totalBetPot    = betBig * 2n;
+  const donationsBig   = donatePool ? BigInt(donatePool) : 0n;
+  const bank           = totalBetPot + donationsBig;        // вся касса
+  const BANK_COMMISSION_PCT = 10n;                          // комиссия стола
+  const bankCommission = (bank * BANK_COMMISSION_PCT) / 100n;
+  const winnerTake     = bank - bankCommission;             // победитель забирает
+  // viewCount — накопительный счётчик просмотров (backend: sessions.viewCount, опционально)
+  const viewCount      = session?.viewCount ?? 0;
 
   useEffect(() => { isMyTurnRef.current = isMyTurn; },  [isMyTurn]);
   useEffect(() => { gameOverRef.current = gameOver; }, [gameOver]);
@@ -739,11 +764,6 @@ export function GamePage() {
   const oppIsWhite  = !!oppSide?.isWhite;
   const oppElo      = oppSide?.player?.elo;
   const oppCountry  = oppSide?.player?.country;
-  const oppCountryFlag = (oppSide?.player as { countryFlag?: string } | undefined)?.countryFlag ?? null;
-
-  // Свой флаг — из useUserStore, поле countryMember.country.flag (хранится в БД как символьный флаг)
-  const currentUser = useUserStore((s) => s.user);
-  const myCountryFlag = currentUser?.countryMember?.country?.flag ?? null;
 
   const fen = session?.fen ?? 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
   const { white: whiteCap, black: blackCap } = capturedFromFen(fen);
@@ -859,6 +879,8 @@ export function GamePage() {
     );
   }
 
+  const opLabel = opSide?.isBot ? 'J.A.R.V.I.S' : (opSide?.player.firstName ?? '?');
+
   return (
     <div style={{ position: 'fixed', inset: 0, background: '#0B0D11', display: 'flex', flexDirection: 'column', fontFamily: 'Inter, sans-serif', overflow: 'hidden' }}>
       <style>{`
@@ -899,7 +921,7 @@ export function GamePage() {
       <div style={{ borderBottom: '.5px solid rgba(255,255,255,.05)', flexShrink: 0 }}>
         <PlayerPanel
           name={oppName} elo={oppElo} avatar={oppAvatar} isBot={oppIsBot}
-          isWhite={oppIsWhite} country={oppCountry} countryFlag={oppCountryFlag} captured={oppCaptured} advantage={oppAdv} coins={oppCoins}
+          isWhite={oppIsWhite} country={oppCountry} captured={oppCaptured} advantage={oppAdv} coins={oppCoins}
           timeDisplay={oppTimeDisplay} timeSecs={oppTimeSecs}
           isActive={!isMyTurn && !gameOver} isGameOver={gameOver}
         />
@@ -928,11 +950,11 @@ export function GamePage() {
             sessionId={sessionId}
           />
 
-          {/* ── Счётчик зрителей (топ-правый угол доски) ── */}
-          {isBattle && spectatorCount > 0 && (
+          {/* ── Публичный батл: наблюдатели лайв + всего просмотров (топ-правый угол доски) ── */}
+          {isPublicBattle && (
             <div style={{
               position: 'absolute', top: 6, right: 6,
-              display: 'flex', alignItems: 'center', gap: 4,
+              display: 'flex', alignItems: 'center', gap: 8,
               background: 'rgba(0,0,0,.6)',
               border: '.5px solid rgba(255,255,255,.12)',
               borderRadius: 20,
@@ -940,14 +962,36 @@ export function GamePage() {
               pointerEvents: 'none',
               zIndex: 10,
             }}>
-              {/* Иконка глаза */}
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                <path d="M1 12S5 5 12 5s11 7 11 7-4 7-11 7S1 12 1 12z" stroke="rgba(154,148,144,.8)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                <circle cx="12" cy="12" r="3" stroke="rgba(154,148,144,.8)" strokeWidth="1.8"/>
-              </svg>
-              <span style={{ fontSize: '.62rem', color: '#9A9490', fontWeight: 600, letterSpacing: '.01em' }}>
-                {spectatorCount}
-              </span>
+              {/* Лайв-зрители (пульс-индикатор, если > 0) */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                {spectatorCount > 0 && (
+                  <span style={{
+                    width: 6, height: 6, borderRadius: '50%',
+                    background: '#E7484F',
+                    animation: 'gp-pulse 1.4s infinite',
+                    boxShadow: '0 0 5px #E7484F',
+                  }} />
+                )}
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                  <path d="M1 12S5 5 12 5s11 7 11 7-4 7-11 7S1 12 1 12z" stroke="rgba(154,148,144,.8)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  <circle cx="12" cy="12" r="3" stroke="rgba(154,148,144,.8)" strokeWidth="1.8"/>
+                </svg>
+                <span style={{ fontSize: '.62rem', color: '#9A9490', fontWeight: 700, letterSpacing: '.01em' }}>
+                  {spectatorCount}
+                </span>
+              </div>
+              {/* Разделитель */}
+              <span style={{ width: 1, height: 10, background: 'rgba(255,255,255,.15)' }} />
+              {/* Всего просмотров */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 4.5C7 4.5 3 8.5 3 12s4 7.5 9 7.5 9-4 9-7.5-4-7.5-9-7.5z" stroke="rgba(154,148,144,.8)" strokeWidth="1.8" strokeLinecap="round"/>
+                  <path d="M12 8v4l2 2" stroke="rgba(154,148,144,.8)" strokeWidth="1.8" strokeLinecap="round"/>
+                </svg>
+                <span style={{ fontSize: '.62rem', color: '#9A9490', fontWeight: 600, letterSpacing: '.01em' }}>
+                  {viewCount >= 1000 ? `${(viewCount / 1000).toFixed(1)}K` : viewCount}
+                </span>
+              </div>
             </div>
           )}
         </div>
@@ -963,30 +1007,76 @@ export function GamePage() {
         )}
       </div>
 
-      {/* ── Пул доната (между статус-полоской и панелью игрока) ─────────── */}
-      {isBattle && donatePool && BigInt(donatePool) > 0n && (
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          background: 'rgba(212,168,67,.08)',
-          border: '.5px solid rgba(212,168,67,.2)',
-          borderRadius: 10,
-          padding: '6px 14px',
-          margin: '0 10px',
-          flexShrink: 0,
-        }}>
-          {/* Монета */}
-          <CoinIcon size={14} />
-          <span style={{ fontSize: '.68rem', color: '#D4A843', fontWeight: 700, letterSpacing: '.01em' }}>
-            Пул доната: {fmtBalance(donatePool)} ᚙ
-          </span>
-        </div>
+      {/* ── Касса батла (между статус-полоской и панелью игрока) ─────────
+          Private — компактная: банк + «победителю после 10%».
+          Public — с разбивкой: ставки + донаты → итого → победителю. */}
+      {isBattle && hasBet && (
+        isPrivateBattle ? (
+          /* Приватный: только касса, без зрителей/доната */
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+            background: 'rgba(212,168,67,.08)',
+            border: '.5px solid rgba(212,168,67,.22)',
+            borderRadius: 10,
+            padding: '6px 12px',
+            margin: '0 10px',
+            flexShrink: 0,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <CoinIcon size={14} />
+              <span style={{ fontSize: '.62rem', color: '#9A9490', fontWeight: 600, letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                Касса
+              </span>
+              <span style={{ fontSize: '.78rem', color: '#F0C85A', fontWeight: 800 }}>
+                {fmtBalance(bank.toString())} ᚙ
+              </span>
+            </div>
+            <div style={{ fontSize: '.58rem', color: '#6E6A66', fontWeight: 600, letterSpacing: '.02em' }}>
+              победителю <span style={{ color: '#4DDA8A', fontWeight: 800 }}>{fmtBalance(winnerTake.toString())} ᚙ</span>
+              <span style={{ color: '#4A4440' }}> · комиссия 10%</span>
+            </div>
+          </div>
+        ) : (
+          /* Публичный: касса + разбивка (ставки / донаты) + к выплате */
+          <div style={{
+            display: 'flex', flexDirection: 'column', gap: 4,
+            background: 'linear-gradient(135deg, rgba(212,168,67,.10), rgba(212,168,67,.04))',
+            border: '.5px solid rgba(212,168,67,.28)',
+            borderRadius: 12,
+            padding: '7px 12px',
+            margin: '0 10px',
+            flexShrink: 0,
+          }}>
+            {/* Строка 1: Касса + общая сумма */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <CoinIcon size={14} />
+                <span style={{ fontSize: '.62rem', color: '#D4A843', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                  Касса
+                </span>
+              </div>
+              <span style={{ fontSize: '.86rem', color: '#F0C85A', fontWeight: 800, letterSpacing: '.01em' }}>
+                {fmtBalance(bank.toString())} ᚙ
+              </span>
+            </div>
+            {/* Строка 2: разбивка ставки + донаты */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, fontSize: '.56rem', color: '#7A7470', fontWeight: 600 }}>
+              <span>ставки: <span style={{ color: '#A8A29C' }}>{fmtBalance(totalBetPot.toString())}</span></span>
+              <span>донаты: <span style={{ color: donationsBig > 0n ? '#E78F4F' : '#5A5550' }}>{fmtBalance(donationsBig.toString())}</span></span>
+              <span>
+                победителю: <span style={{ color: '#4DDA8A', fontWeight: 800 }}>{fmtBalance(winnerTake.toString())}</span>
+                <span style={{ color: '#4A4440' }}> · стол 10%</span>
+              </span>
+            </div>
+          </div>
+        )
       )}
 
       {/* ── Игрок (снизу, вплотную к доске) ──────────────────────────────── */}
       <div style={{ borderTop: '.5px solid rgba(255,255,255,.05)', flexShrink: 0 }}>
         <PlayerPanel
           name={myName} elo={myElo} avatar={myAvatar} isBot={false}
-          isWhite={myColor === 'white'} country={myCountry} countryFlag={myCountryFlag} captured={myCaptured} advantage={myAdv} coins={myCoins}
+          isWhite={myColor === 'white'} country={myCountry} captured={myCaptured} advantage={myAdv} coins={myCoins}
           timeDisplay={myTimeDisplay} timeSecs={myTimeSecs}
           isActive={isMyTurn && !gameOver} isGameOver={gameOver}
         />
@@ -997,9 +1087,9 @@ export function GamePage() {
 
       {/* ── Панель действий ──────────────────────────────────────────────── */}
       {isSpectator ? (
-        /* ── Панель зрителя: Выйти | Донат | Зрители ──────────────────── */
+        /* ── Панель зрителя: Выйти | [Донат — только public] | Зрители ── */
         <div style={{
-          display: 'grid', gridTemplateColumns: '1fr 2fr 1fr',
+          display: 'grid', gridTemplateColumns: isPublicBattle ? '1fr 2fr 1fr' : '1fr 1fr',
           height: ACTBAR_H,
           paddingBottom: 'max(0px, env(safe-area-inset-bottom, 0px))',
           borderTop: '.5px solid rgba(255,255,255,.09)',
@@ -1022,7 +1112,8 @@ export function GamePage() {
             Выйти
           </button>
 
-          {/* Донат с выбором суммы */}
+          {/* Донат с выбором суммы — только для публичных батлов */}
+          {isPublicBattle && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
             {/* Быстрые суммы */}
             <div style={{ display: 'flex', gap: 4 }}>
@@ -1047,7 +1138,7 @@ export function GamePage() {
               disabled={gameOver}
               onClick={() => {
                 if (gameOver) return;
-                getSocket().emit('battle:donate', { sessionId, amount: String(selectedDonateAmt) }, () => {});
+                getSocket().emit('battle:donate', { sessionId, amount: String(selectedDonateAmt) });
               }}
               style={{
                 padding: '5px 18px', borderRadius: 10,
@@ -1063,8 +1154,10 @@ export function GamePage() {
               Задонатить {fmtBalance(String(selectedDonateAmt))} ᚙ
             </button>
           </div>
+          )}
 
-          {/* Зрители */}
+          {/* Зрители (только публичные: лайв + всего) */}
+          {isPublicBattle && (
           <div style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
             gap: 3,
@@ -1074,9 +1167,25 @@ export function GamePage() {
               <circle cx="12" cy="12" r="3" stroke="#9A9490" strokeWidth="1.6"/>
             </svg>
             <span style={{ fontSize: '.62rem', color: '#9A9490', fontWeight: 600 }}>
-              {spectatorCount} зрит.
+              {spectatorCount} лайв
+            </span>
+            <span style={{ fontSize: '.54rem', color: '#6A6460', fontWeight: 600 }}>
+              {viewCount >= 1000 ? `${(viewCount / 1000).toFixed(1)}K` : viewCount} всего
             </span>
           </div>
+          )}
+
+          {/* Зрители приватного батла (компактно, без доната) */}
+          {isPrivateBattle && (
+          <div style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            gap: 3,
+          }}>
+            <span style={{ fontSize: '.62rem', color: '#6A6460', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase' }}>
+              🔒 Приватный
+            </span>
+          </div>
+          )}
         </div>
       ) : (
         /* ── Обычная панель: 4 кнопки ──────────────────────────────────── */
@@ -1196,6 +1305,252 @@ export function GamePage() {
           onHome={() => navigate('/')}
         />
       )}
+
+      {/* Метка хода */}
+      <div style={{ textAlign: 'center', padding: '4px 0 2px', flexShrink: 0 }}>
+        {!isGameOver && (
+          <span style={isMyTurn
+            ? tagStyle('var(--green, #00D68F)', 'rgba(0,214,143,0.10)')
+            : tagStyle('var(--text-secondary, #8B92A8)', 'var(--bg-input, #232840)')}>
+            {isMyTurn ? t.game.yourTurn : t.game.opponentTurn}
+          </span>
+        )}
+      </div>
+
+      {/* Я */}
+      <div style={{ padding: '4px 12px', flexShrink: 0 }}>
+        <PlayerRow player={mySide?.player ?? user as import("@/types").User & { telegramId: string }}
+          timeLeft={mySide?.timeLeft ?? 0}
+          isActive={isMyTurn && !isGameOver} label={t.game.you} isMe />
+      </div>
+
+      {/* Кнопки */}
+      {!isGameOver ? (
+        <div style={{ display: 'flex', gap: 6, padding: '6px 12px', flexShrink: 0 }}>
+          <button onClick={() => navigate('/')} style={actionBtn()}>{t.common.back}</button>
+          <button onClick={() => getSocket().emit('game:offer_draw', { sessionId: session.id })}
+            style={actionBtn()}>{t.game.offerDraw}</button>
+          <button onClick={() => setConfirmSurrender(true)}
+            style={actionBtn('var(--red, #FF4D6A)', 'rgba(255,77,106,0.08)')}>{t.game.surrender}</button>
+        </div>
+      ) : !showResult ? (
+        <div style={{ padding: '6px 12px', flexShrink: 0 }}>
+          <button onClick={handleResultClose} style={{ ...actionBtn(), width: '100%' }}>{t.gameResult.backToMenu}</button>
+        </div>
+      ) : null}
+
+      {/* История ходов */}
+      <div style={{
+        margin: '4px 12px 8px', padding: '8px 12px',
+        background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.07)',
+        borderRadius: 14, flexShrink: 0,
+      }}>
+        <div style={labelStyle}>{t.game.moveHistory}</div>
+        <MoveHistory pgn={session.pgn} />
+      </div>
+
+      <div style={{ height: 82, flexShrink: 0 }} />
+
+      {/* Оффер ничьи */}
+      {drawOfferedBy && drawOfferedBy !== user?.id && (
+        <Overlay>
+          <ModalBox>
+            <div style={modalTitle}>{t.game.drawOffered}</div>
+            <div style={modalSub}>{t.game.drawOffered}. {t.game.acceptDraw}?</div>
+            <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+              <button onClick={() => {
+                getSocket().emit('game:accept_draw', { sessionId: session.id }, () => {});
+                setDrawOffered(null);
+              }} style={btnGold}>{t.game.acceptDraw}</button>
+              <button onClick={() => {
+                setDrawOffered(null);
+                getSocket().emit('game:decline_draw', { sessionId: session.id });
+              }} style={btnSecondary}>{t.game.declineDraw}</button>
+            </div>
+          </ModalBox>
+        </Overlay>
+      )}
+
+      {/* Подтверждение сдачи */}
+      {confirmSurrender && (
+        <Overlay>
+          <ModalBox>
+            <div style={modalTitle}>{t.game.confirmSurrender}</div>
+            <div style={modalSub}>
+              {session.bet ? t.game.surrenderLoss(fmtBalance(session.bet)) : t.game.surrenderDefault}
+            </div>
+            <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+              <button onClick={handleSurrender} style={btnDanger}>{t.game.confirmSurrenderYes}</button>
+              <button onClick={() => setConfirmSurrender(false)} style={btnGold}>{t.common.cancel}</button>
+            </div>
+          </ModalBox>
+        </Overlay>
+      )}
+
+      {/* V3: Победный экран */}
+      {showVictory && resultData && (
+        <VictoryScreen
+          result={resultData.result}
+          opponentName={opSide?.player?.firstName}
+          earned={resultData.earned}
+          onDone={() => setShowVictory(false)}
+        />
+      )}
+
+      {/* Модал результата */}
+      {showResult && resultData && (
+        <GameResultModal
+          result={resultData.result}
+          earned={resultData.earned}
+          commission={resultData.commission}
+          pieceCoins={resultData.pieceCoins}
+          botLevelName={isBotGame && session?.botLevel ? JARVIS_LEVELS[Math.max(0, Math.min(JARVIS_LEVELS.length - 1, (session.botLevel ?? 1) - 1))]?.name : undefined}
+          userTelegramId={(user as import("@/types").User & { telegramId: string })?.telegramId}
+          sessionId={session?.id}
+          onClose={handleResultClose}
+          onRematch={isBotGame ? handleRematch : undefined}
+        />
+      )}
     </div>
   );
-}
+};
+
+// ── MoveHistory — ходы парами ────────────────────────────────────────────────
+const parsePgnMoves = (pgn: string) => {
+  const cleaned = pgn.replace(/\[.*?\]\s*/g, '').trim();
+  if (!cleaned) return [];
+  const moves: Array<{ num: number; white: string; black: string }> = [];
+  const regex = /(\d+)\.\s+(\S+)(?:\s+(\S+))?/g;
+  let match;
+  while ((match = regex.exec(cleaned)) !== null) {
+    moves.push({ num: parseInt(match[1]), white: match[2], black: match[3] ?? '' });
+  }
+  return moves;
+};
+
+const MoveHistory: React.FC<{ pgn: string }> = ({ pgn }) => {
+  const moves = parsePgnMoves(pgn);
+  const last8 = moves.slice(-8);
+  if (last8.length === 0) {
+    return <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: 'var(--text-muted, #4A5270)', marginTop: 4 }}>— ♟ —</div>;
+  }
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 12px', marginTop: 4 }}>
+      {last8.map((m) => (
+        <span key={m.num} style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: '#C8CDE0', whiteSpace: 'nowrap' }}>
+          <span style={{ color: 'var(--text-muted, #4A5270)' }}>{m.num}.</span> {m.white}{m.black ? ` ${m.black}` : ''}
+        </span>
+      ))}
+    </div>
+  );
+};
+
+// ── PlayerRow — с тикающим таймером (мемоизирован) ───────────────────────────
+const PlayerRow: React.FC<{
+  player?: import("@/types").UserPublic; timeLeft: number; isActive: boolean; label?: string; isMe?: boolean;
+}> = React.memo(({ player, timeLeft, isActive, label, isMe }) => {
+  const [localTime, setLocalTime] = React.useState(timeLeft);
+  const [pulseOn, setPulseOn] = React.useState(false);
+
+  // Синхронизируем с сервером при изменении timeLeft
+  React.useEffect(() => { setLocalTime(timeLeft); }, [timeLeft]);
+
+  // Тикаем локально пока isActive
+  React.useEffect(() => {
+    if (!isActive) return;
+    const t = setInterval(() => setLocalTime((s) => Math.max(0, s - 1)), 1000);
+    return () => clearInterval(t);
+  }, [isActive]);
+
+  const danger = localTime < 10 && isActive;
+
+  // Пульсация при критическом времени
+  React.useEffect(() => {
+    if (!danger) { setPulseOn(false); return; }
+    const t = setInterval(() => setPulseOn(p => !p), 500);
+    return () => clearInterval(t);
+  }, [danger]);
+
+  // Haptic каждые 3 секунды при критическом времени
+  React.useEffect(() => {
+    if (!danger || !isActive) return;
+    if (localTime > 0 && localTime % 3 === 0) {
+      try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium'); } catch {}
+    }
+  }, [localTime, danger, isActive]);
+
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 10,
+      padding: '9px 12px', background: 'var(--bg-card, #1C2030)',
+      border: `1px solid ${isActive ? 'var(--accent, #F5C842)' : 'var(--border, rgba(255,255,255,0.07))'}`,
+      boxShadow: isActive ? '0 0 0 1px rgba(245,200,66,0.1)' : undefined,
+      borderRadius: 14, transition: 'border-color .2s',
+    }}>
+      <Avatar user={player} size="s" gold={isMe && isActive} />
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary, #F0F2F8)' }}>
+          {label ?? player?.firstName ?? '?'}
+        </div>
+        <div style={{ fontSize: 10, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>
+          ELO {player?.elo ?? '—'}{isActive ? ' · Move' : ''}
+        </div>
+      </div>
+      <div style={{
+        fontFamily: "'JetBrains Mono',monospace", fontSize: 19, fontWeight: 700,
+        color: danger ? 'var(--red, #FF4D6A)' : isActive ? 'var(--accent, #F5C842)' : 'var(--text-muted, #4A5270)',
+        transition: 'color .25s', minWidth: 42, textAlign: 'right',
+        opacity: danger ? (pulseOn ? 1 : 0.4) : 1,
+      }}>
+        {fmtTime(localTime)}
+      </div>
+    </div>
+  );
+});
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+const Overlay: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <div style={{
+    position: 'absolute', inset: 0, zIndex: 100,
+    background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)',
+    WebkitBackdropFilter: 'blur(6px)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+  }}>{children}</div>
+);
+const ModalBox: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <div style={{
+    background: 'var(--bg-card, #161927)', border: '1px solid rgba(255,255,255,0.12)',
+    borderRadius: 20, padding: 20, width: '100%',
+  }}>{children}</div>
+);
+
+const rootStyle: React.CSSProperties = {
+  position: 'absolute', inset: 0,
+  display: 'flex', flexDirection: 'column',
+  background: 'var(--bg, #0B0D11)', overflow: 'hidden',
+};
+const tagStyle = (color: string, bg: string): React.CSSProperties => ({
+  display: 'inline-flex', padding: '3px 9px', background: bg, color,
+  borderRadius: 6, fontSize: 10, fontWeight: 700, letterSpacing: '.05em', textTransform: 'uppercase',
+});
+const actionBtn = (color = 'var(--text-secondary, #8B92A8)', bg = 'transparent'): React.CSSProperties => ({
+  flex: 1, padding: '9px 10px', background: bg, color,
+  border: '1px solid rgba(255,255,255,0.1)', borderRadius: 11,
+  fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+});
+const labelStyle: React.CSSProperties = {
+  fontSize: 9, fontWeight: 700, letterSpacing: '.08em',
+  textTransform: 'uppercase', color: 'var(--text-muted, #4A5270)',
+};
+const modalTitle: React.CSSProperties = { fontSize: 17, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)', marginBottom: 6 };
+const modalSub: React.CSSProperties = { fontSize: 13, color: 'var(--text-secondary, #8B92A8)' };
+const btnGold: React.CSSProperties = {
+  flex: 1, padding: 11, background: 'var(--accent, #F5C842)', color: 'var(--bg, #0B0D11)',
+  border: 'none', borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+};
+const btnSecondary: React.CSSProperties = {
+  ...btnGold, background: 'var(--bg-input, #232840)', color: 'var(--text-primary, #F0F2F8)', border: '1px solid rgba(255,255,255,0.1)',
+};
+const btnDanger: React.CSSProperties = {
+  ...btnGold, background: 'rgba(255,77,106,0.12)', color: 'var(--red, #FF4D6A)', border: '1px solid rgba(255,77,106,0.2)',
+};
