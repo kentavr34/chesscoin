@@ -22,6 +22,8 @@ interface ClientToServer {
   'game:create:bot': (data: { color: 'white' | 'black'; botLevel: number; timeSeconds?: number }, cb: SocketCallback<{ session: GameSession }>) => void;
   'game:create:battle': (data: { color: 'white' | 'black'; duration: number; bet: string; isPrivate?: boolean }, cb: SocketCallback<{ session: GameSession }>) => void;
   'game:join': (data: { code: string }, cb: SocketCallback<{ session: GameSession }>) => void;
+  // Автоформирование публичных батлов: найти соперника либо создать батл
+  'matchmaking:quick': (data: { duration: number; bet: string }, cb: SocketCallback<{ session: GameSession; matched: boolean }>) => void;
   'game:move': (data: { sessionId: string; from: string; to: string; promotion?: string }, cb: SocketCallback<{ session: GameSession }>) => void;
   'game:surrender': (data: { sessionId: string }, cb: SocketCallback<Record<string, never>>) => void;
   'game:cancel': (data: { sessionId: string }, cb: SocketCallback<Record<string, never>>) => void;

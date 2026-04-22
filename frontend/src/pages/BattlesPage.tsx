@@ -41,6 +41,7 @@ export const BattlesPage: React.FC = () => {
   const [histLoading, setHistLoading] = useState(false);
   const [histLoaded, setHistLoaded] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
+  const [showQuick, setShowQuick] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showAttempts, setShowAttempts] = useState(false);
 
@@ -448,6 +449,25 @@ export const BattlesPage: React.FC = () => {
         </>
       )}
 
+      {/* FAB — быстрая игра (автоподбор соперника) */}
+      <button
+        onClick={() => setShowQuick(true)}
+        title="Быстрая игра — найти соперника"
+        style={{
+          position: 'fixed',
+          bottom: 'max(98px, calc(88px + env(safe-area-inset-bottom, 14px)))',
+          right: 86, width: 50, height: 50,
+          borderRadius: '50%',
+          background: 'linear-gradient(135deg,#4A9EFF,#82CFFF)',
+          color: '#06121F',
+          fontSize: 22, fontWeight: 800,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer', border: 'none', zIndex: 49,
+          boxShadow: '0 4px 24px rgba(74,158,255,.45)',
+          fontFamily: 'inherit',
+        }}
+      >⚡</button>
+
       {/* FAB — создать батл */}
       <button
         onClick={() => setShowCreate(true)}
@@ -467,6 +487,7 @@ export const BattlesPage: React.FC = () => {
       >＋</button>
 
       {showCreate && <CreateBattleModal onClose={() => setShowCreate(false)} onBuyAttempts={() => setShowAttempts(true)} />}
+      {showQuick && <QuickMatchModal onClose={() => setShowQuick(false)} onBuyAttempts={() => setShowAttempts(true)} />}
       {showAttempts && user && <AttemptsModal user={user} onClose={() => setShowAttempts(false)} />}
     </PageLayout>
   );
@@ -817,6 +838,164 @@ const BattleLiveCard: React.FC<{
 
       {/* Чёрный игрок */}
       <PlayerCol side={blackPlayer} isRight />
+    </div>
+  );
+};
+
+// ── Быстрая игра: автоформирование публичных батлов ──────────────────────────
+// Пользователь выбирает время + ставку, сервер сам находит соперника либо
+// создаёт публичный батл в общий лист. Фидбэк Кенана 2026-04-22.
+const QuickMatchModal: React.FC<{ onClose: () => void; onBuyAttempts: () => void }> = ({ onClose, onBuyAttempts }) => {
+  const { upsertSession } = useGameStore();
+  const { user } = useUserStore();
+  const navigate = useNavigate();
+
+  const userAttempts = user?.attempts ?? 3;
+  const hasAttempts = userAttempts > 0;
+  const userBalance = Number(BigInt(user?.balance ?? '0'));
+
+  const TIME_OPTIONS = [1, 3, 5, 15, 30, 60];
+  const QUICK_BETS = [10000, 50000, 100000, 500000];
+
+  const [duration, setDuration] = useState(300); // секунды
+  const [bet, setBet] = useState(10000);
+  const [loading, setLoading] = useState(false);
+
+  const canStart = userBalance >= bet && hasAttempts;
+
+  const handleQuick = () => {
+    if (!hasAttempts) { onBuyAttempts(); return; }
+    if (userBalance < bet) {
+      showToast('Недостаточно монет — пополни баланс', 'info');
+      navigate('/shop');
+      return;
+    }
+    setLoading(true);
+    const socket = getSocket();
+    socket.emit('matchmaking:quick', { duration, bet: String(bet) }, (res: any) => {
+      setLoading(false);
+      if (res?.ok && res.session) {
+        upsertSession(res.session);
+        if (res.matched) {
+          // Соперник найден → сразу в игру
+          showToast('Соперник найден! Удачи ⚔️', 'info');
+          navigate('/game/' + res.session.id);
+        } else {
+          // Соперник не найден → батл опубликован, ждём оппонента
+          showToast('Батл опубликован — ждём соперника', 'info');
+        }
+        onClose();
+      } else {
+        showToast(getErrText(res?.error ?? ''), 'error');
+      }
+    });
+  };
+
+  return (
+    <div
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 200,
+        background: 'rgba(4,3,8,.82)',
+        backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+        display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+        paddingBottom: 'calc(82px + env(safe-area-inset-bottom, 0px))',
+        paddingTop: 16,
+      }}
+    >
+      <div style={{
+        width: '100%', maxWidth: 420,
+        background: 'linear-gradient(170deg,#0A1120,#06101A)',
+        border: '.5px solid rgba(74,158,255,.25)',
+        borderRadius: '24px 24px 0 0',
+        padding: '0 0 calc(16px + env(safe-area-inset-bottom, 0px))',
+        boxShadow: '0 -16px 48px rgba(0,0,0,.6), 0 -1px 0 rgba(74,158,255,.15)',
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 0 2px' }}>
+          <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(74,158,255,.25)' }} />
+        </div>
+
+        <div style={{ padding: '6px 20px 4px', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 22 }}>⚡</span>
+          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '1.02rem', fontWeight: 900, color: '#E8F2FF', letterSpacing: '.01em' }}>
+            Быстрая игра
+          </span>
+        </div>
+        <div style={{ padding: '0 20px 14px', fontSize: '.78rem', color: 'rgba(200,220,255,.65)', lineHeight: 1.4 }}>
+          Автоподбор соперника с такими же параметрами. Если никого нет — батл опубликуется в общем списке.
+        </div>
+
+        {/* Время */}
+        <div style={{ padding: '0 20px 10px' }}>
+          <div style={{ fontSize: '.72rem', color: 'rgba(200,220,255,.55)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 8 }}>Время</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 6 }}>
+            {TIME_OPTIONS.map((m) => {
+              const secs = m * 60;
+              const active = duration === secs;
+              return (
+                <button
+                  key={m}
+                  onClick={() => setDuration(secs)}
+                  style={{
+                    padding: '10px 0', borderRadius: 10,
+                    background: active ? 'rgba(74,158,255,.18)' : 'rgba(255,255,255,.03)',
+                    border: active ? '.5px solid #4A9EFF' : '.5px solid rgba(255,255,255,.08)',
+                    color: active ? '#82CFFF' : '#C8D8EC',
+                    fontSize: '.82rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                  }}
+                >{m}м</button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Ставка */}
+        <div style={{ padding: '0 20px 14px' }}>
+          <div style={{ fontSize: '.72rem', color: 'rgba(200,220,255,.55)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 8 }}>Ставка</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
+            {QUICK_BETS.map((v) => {
+              const active = bet === v;
+              const affordable = userBalance >= v;
+              return (
+                <button
+                  key={v}
+                  disabled={!affordable}
+                  onClick={() => setBet(v)}
+                  style={{
+                    padding: '12px 0', borderRadius: 10,
+                    background: active ? 'rgba(240,200,90,.18)' : 'rgba(255,255,255,.03)',
+                    border: active ? '.5px solid #F0C85A' : '.5px solid rgba(255,255,255,.08)',
+                    color: !affordable ? 'rgba(200,220,255,.25)' : active ? '#F0C85A' : '#E8E0D0',
+                    fontSize: '.82rem', fontWeight: 700, cursor: affordable ? 'pointer' : 'not-allowed',
+                    fontFamily: 'inherit', opacity: affordable ? 1 : .45,
+                  }}
+                >{fmtBalance(BigInt(v))}</button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Кнопка поиска */}
+        <div style={{ padding: '0 20px 6px' }}>
+          <button
+            onClick={handleQuick}
+            disabled={!canStart || loading}
+            style={{
+              width: '100%', padding: '14px 0', borderRadius: 14,
+              background: canStart && !loading
+                ? 'linear-gradient(135deg,#4A9EFF,#82CFFF)'
+                : 'rgba(120,140,170,.18)',
+              color: canStart && !loading ? '#06121F' : 'rgba(200,220,255,.4)',
+              border: 'none', cursor: canStart && !loading ? 'pointer' : 'not-allowed',
+              fontFamily: 'inherit', fontSize: '.95rem', fontWeight: 800,
+              letterSpacing: '.02em',
+              boxShadow: canStart && !loading ? '0 4px 20px rgba(74,158,255,.35)' : 'none',
+            }}
+          >
+            {loading ? 'Поиск…' : !hasAttempts ? 'Купить попытки' : userBalance < bet ? 'Недостаточно монет' : '⚡ Найти соперника'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

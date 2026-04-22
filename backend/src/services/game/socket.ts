@@ -303,6 +303,65 @@ export const setupSocketHandlers = (io: Server) => {
       }
     );
 
+    // ── Быстрый поиск соперника (автоформирование публичных батлов) ────────
+    // MVP: ищем подходящий публичный WAITING батл с теми же параметрами,
+    // присоединяемся. Если не нашли — создаём свой публичный батл с рандом-цветом.
+    // Фидбэк Кенана 2026-04-22: «система автоматического формирования публичных батлов».
+    socket.on(
+      "matchmaking:quick",
+      async (
+        data: { duration: number; bet: string },
+        callback?: Function
+      ) => {
+        try {
+          const betBig = BigInt(data.bet);
+          // Ищем первый подходящий WAITING публичный батл, где я не являюсь создателем
+          const candidate = await prisma.session.findFirst({
+            where: {
+              type: SessionType.BATTLE,
+              status: SessionStatus.WAITING_FOR_OPPONENT,
+              isPrivate: false,
+              duration: data.duration,
+              bet: betBig,
+              sides: { none: { playerId: userId } },
+            },
+            orderBy: { createdAt: "asc" },
+            select: { id: true, code: true },
+          });
+
+          if (candidate?.code) {
+            // Нашли → джойнимся по стандартному флоу
+            const session = await joinBattleSession(userId, candidate.code);
+            socket.join(session.id);
+            const formatted = formatSession(session, userId);
+
+            if (callback) callback({ ok: true, matched: true, session: formatted });
+            io.to(session.id).emit("game", formatted);
+            io.to(session.id).emit("game:started", { sessionId: session.id });
+
+            await setTimer(session.id);
+            io.to("lobby").emit("battles:removed", session.id);
+            io.to("lobby").emit("battles:live:added", formatSession(session, null));
+            return;
+          }
+
+          // Не нашли → создаём свой публичный батл со случайным цветом
+          const color: "white" | "black" = Math.random() < 0.5 ? "white" : "black";
+          const session = await createBattleSession(userId, color, data.duration, betBig, false);
+          socket.join(session.id);
+          const formatted = formatSession(session, userId);
+
+          if (callback) callback({ ok: true, matched: false, session: formatted });
+          socket.emit("game", formatted);
+
+          const newBattle = formatBattlesList([session], buildSpectatorCounts([session]))[0];
+          io.to("lobby").emit("battles:added", newBattle);
+        } catch (err: unknown) {
+          if (callback) callback({ ok: false, error: (err as Error).message });
+        }
+      }
+    );
+
     // ── Присоединиться к батлу ───────────────────────────
     socket.on(
       "game:join",
