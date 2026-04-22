@@ -650,13 +650,17 @@ export function GamePage() {
   const isPublicBattle  = isBattle && !session?.isPrivate;
 
   // ── Касса: ставки обоих игроков + донаты зрителей ─────────────────────────
+  // СИНХРОНИЗАЦИЯ С backend/src/services/game/finish.ts:
+  //   • комиссия 10% берётся ТОЛЬКО со ставок (totalPot = bet*2)
+  //   • донаты зрителей целиком уходят победителю (без комиссии)
+  //   • ничья: каждому возвращается его ставка, донаты распределяются по правилам бэка
   const betBig         = session?.bet ? BigInt(session.bet) : 0n;
   const totalBetPot    = betBig * 2n;
   const donationsBig   = donatePool ? BigInt(donatePool) : 0n;
-  const bank           = totalBetPot + donationsBig;        // вся касса
+  const bank           = totalBetPot + donationsBig;        // вся касса (для отображения)
   const BANK_COMMISSION_PCT = 10n;                          // комиссия стола
-  const bankCommission = (bank * BANK_COMMISSION_PCT) / 100n;
-  const winnerTake     = bank - bankCommission;             // победитель забирает
+  const bankCommission = (totalBetPot * BANK_COMMISSION_PCT) / 100n; // 10% со ставок
+  const winnerTake     = totalBetPot - bankCommission + donationsBig; // ставки-10% + донаты 100%
   // viewCount — накопительный счётчик просмотров (backend: sessions.viewCount, опционально)
   const viewCount      = session?.viewCount ?? 0;
 
