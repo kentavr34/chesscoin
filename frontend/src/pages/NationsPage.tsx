@@ -129,7 +129,7 @@ export const NationsPage: React.FC = () => {
                     {activeWar.attackerWins}:{activeWar.defenderWins}
                   </div>
                   <div style={{ fontSize: 10, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>
-                    💰 {fmtBalance(activeWar.prize ?? '0')} ᚙ {t.nations.atStake}
+                    {fmtBalance(activeWar.prize ?? '0')} ᚙ {t.nations.atStake}
                   </div>
                 </div>
                 <span style={{ fontSize: 24 }}>{activeWar.defenderClan.flag}</span>
@@ -207,7 +207,7 @@ export const NationsPage: React.FC = () => {
                     {war.attackerWins}:{war.defenderWins}
                   </div>
                   <div style={{ fontSize: 10, color: 'var(--accent, #F5C842)', fontWeight: 700 }}>
-                    💰 {fmtBalance(war.prize ?? '0')} ᚙ
+                    {fmtBalance(war.prize ?? '0')} ᚙ
                   </div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
@@ -285,7 +285,7 @@ export const NationsPage: React.FC = () => {
                   </div>
                   <div style={{ textAlign: 'center', flexShrink: 0 }}>
                     <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginBottom: 4 }}>vs</div>
-                    <div style={{ fontSize: 10, color: 'var(--accent, #F5C842)', fontWeight: 700 }}>💰 {fmtBalance(b.pool)} ᚙ</div>
+                    <div style={{ fontSize: 10, color: 'var(--accent, #F5C842)', fontWeight: 700 }}>{fmtBalance(b.pool)} ᚙ</div>
                     <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', marginTop: 4 }}>
                       {b.activeGames}/{b.maxSimultaneous} {t.nations.games}
                     </div>
