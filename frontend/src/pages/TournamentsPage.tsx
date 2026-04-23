@@ -8,6 +8,9 @@ import { useConfirm } from '@/components/ui/ConfirmModal';
 import type { TournamentFull, ActiveMatch, League } from '@/types'; // R1
 import { useNavigate } from 'react-router-dom';
 import { useT } from '@/i18n/useT';
+import { haptic } from '@/lib/haptic';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 const showToast = (text: string, type: 'error' | 'info' = 'error') => {
   window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text, type } }));
@@ -74,9 +77,7 @@ export const TournamentsPage: React.FC = () => {
             type: 'info',
             actionLabel: tt.play,
             onAction: () => {
-              import('react-router-dom').then(({ useNavigate: _ }) => {
-                window.location.hash = '#/battles';
-              });
+              navigate('/battles');
             },
           },
         }));
@@ -113,9 +114,11 @@ export const TournamentsPage: React.FC = () => {
 
   const handleJoin = async (id: string) => {
     setJoiningId(id);
+    haptic.impact('medium');
     try {
       await tournamentsApi.join(id);
       await load();
+      haptic.notification('success');
     } catch (e: unknown) {
       // T8: User-friendly message when country is required
       const err = e as Record<string, unknown>;
@@ -255,15 +258,11 @@ export const TournamentsPage: React.FC = () => {
       </div>
 
       {loading && (
-        <div style={{ textAlign: 'center', color: '#4A5270', padding: 32, fontSize: '0.82rem' }}>
-          {t.common.loading}
-        </div>
+        <div style={{ margin: '0 16px' }}><Skeleton.List count={3} height={150} /></div>
       )}
 
       {!loading && filtered.length === 0 && (
-        <div style={{ textAlign: 'center', color: '#4A5270', padding: 32, fontSize: '0.82rem' }}>
-          {filter === 'joined' ? tt.noJoined : tt.noActive}
-        </div>
+        <EmptyState icon="🏆" title={filter === 'joined' ? tt.noJoined : tt.noActive} accent="#F5C842" />
       )}
 
       {typeOrder.map(type => {

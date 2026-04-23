@@ -10,6 +10,9 @@ import type { ShopItem, ItemType } from '@/types';
 import { setActiveTheme, getActiveTheme, THEMES } from '@/lib/theme';
 import type { ThemeKey } from '@/lib/theme';
 import { useT } from '@/i18n/useT';
+import { haptic } from '@/lib/haptic';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { ExchangeTab } from './ExchangeTab';
 import { ItemCard, AvatarItemCard, RARITY_COLOR } from '@/components/shop/ShopItemCards';
 
@@ -528,12 +531,15 @@ export const ShopPage: React.FC = () => {
   const handlePurchase = async (item: ShopItem) => {
     if (!await confirmPurchase({ title: `Buy "${item.name}"?`, message: `Price: ${fmtBalance(item.priceCoins)} ᚙ`, okLabel: 'Buy' })) return;
     setActionId(item.id);
+    haptic.impact('medium');
     try {
       const res = await shopApi.purchase(item.id);
       await refreshUser();
       await loadItems();
+      haptic.notification('success');
       showToast(res.message);
     } catch (e: unknown) {
+      haptic.notification('error');
       showToast((e instanceof Error ? e.message : "Error"));
     } finally {
       setActionId(null);
@@ -542,6 +548,7 @@ export const ShopPage: React.FC = () => {
 
   const handleEquip = async (item: ShopItem) => {
     setActionId(item.id);
+    haptic.selection();
     try {
       const res = await shopApi.equip(item.id);
       await refreshUser();
@@ -714,9 +721,9 @@ export const ShopPage: React.FC = () => {
       {/* Piece sets & skins grid */}
       {tab === 'avatars' && (
         loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: '#7A7875', fontSize: 13 }}>Loading...</div>
+          <div style={{ padding: '0 18px' }}><div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>{Array.from({length:4}).map((_,i)=><Skeleton key={i} height={180} />)}</div></div>
         ) : items.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 40, color: '#7A7875', fontSize: 13 }}>No items</div>
+          <EmptyState icon="🛍" title="No items" desc="Проверь другие вкладки или зайди позже" accent="#F0C85A" />
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, padding: '0 18px 24px' }}>
             {items.map((item) => (
@@ -736,9 +743,9 @@ export const ShopPage: React.FC = () => {
       {/* All other tabs except avatars and exchange */}
       {tab !== 'avatars' && tab !== 'exchange' && (
         loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: '#7A7875', fontSize: 13 }}>Loading...</div>
+          <div style={{ padding: '0 18px' }}><div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>{Array.from({length:4}).map((_,i)=><Skeleton key={i} height={180} />)}</div></div>
         ) : items.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 40, color: '#7A7875', fontSize: 13 }}>No items</div>
+          <EmptyState icon="🛍" title="No items" desc="Проверь другие вкладки или зайди позже" accent="#F0C85A" />
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, padding: '0 18px 24px' }}>
             {items.map((item) => (

@@ -6,6 +6,9 @@ import { profileApi } from '@/api';
 import { fmtBalance, fmtDate } from '@/utils/format';
 import { toast } from '@/components/ui/Toast';
 import { useT } from '@/i18n/useT';
+import { haptic } from '@/lib/haptic';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 const RANK_THRESHOLDS_BASE = [
   { rank: 'EMPEROR',      emoji: '👑',     minReferrals: 1_000_000, bonus: 40_000,  pct: 15 },
@@ -87,6 +90,7 @@ export const ReferralsPage: React.FC = () => {
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(refLink);
+      haptic.notification('success');
       toast.success(t.common.success);
     } catch {
       toast.info(refLink);
@@ -94,6 +98,7 @@ export const ReferralsPage: React.FC = () => {
   };
 
   const handleShare = () => {
+    haptic.impact('light');
     const tg = window.Telegram?.WebApp;
     if (tg?.openTelegramLink) {
       tg.openTelegramLink(
@@ -436,9 +441,7 @@ export const ReferralsPage: React.FC = () => {
       )}
 
       {!loading && (data?.total ?? 0) === 0 && (
-        <div style={{ textAlign: 'center', color: '#4A5270', padding: '32px 0', fontSize: '0.82rem', whiteSpace: 'pre-line' }}>
-          {r.noReferrals}
-        </div>
+        <EmptyState icon="👥" title={r.noReferrals.split('\n')[0]} desc={r.noReferrals.split('\n').slice(1).join('\n') || undefined} accent="#3DBA7A" />
       )}
     </PageLayout>
   );
