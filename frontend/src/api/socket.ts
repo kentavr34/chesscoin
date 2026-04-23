@@ -13,6 +13,9 @@ interface ServerToClient {
   'battles:list': (battles: BattleLobbyItem[]) => void;
   'battles:added': (battle: BattleLobbyItem) => void;
   'battles:removed': (sessionId: string) => void;
+  'battles:live:list': (battles: GameSession[]) => void;
+  'battles:live:added': (battle: GameSession) => void;
+  'battles:live:removed': (sessionId: string) => void;
   'battle:donated': (data: { donorId: string; amount: string; totalPool: string }) => void;
   'pong': () => void;
 }
@@ -32,7 +35,7 @@ interface ClientToServer {
   'unspectate': (data: { sessionId: string }) => void;
   'battles:subscribe': () => void;
   'battles:unsubscribe': () => void;
-  'battle:donate': (data: { sessionId: string; amount: string }, cb: SocketCallback<{ donationPool: string }>) => void;
+  'battle:donate': (data: { sessionId: string; amount: string }, cb?: SocketCallback<{ donationPool: string }>) => void;
   'ping': () => void;
 }
 

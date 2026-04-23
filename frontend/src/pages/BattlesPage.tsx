@@ -1161,3 +1161,49 @@ const bmSectionLbl: React.CSSProperties = {
   color: '#7A7875',
   marginBottom: 10,
 };
+
+// ── PrivateBattleCard: карточка моего приватного ожидающего батла ──
+const PrivateBattleCard: React.FC<{
+  session: GameSession;
+  onShare: () => void;
+  onCancel: () => void;
+  onProfile: (id: string) => void;
+}> = ({ session, onShare, onCancel, onProfile }) => {
+  const me = session.sides?.[0];
+  return (
+    <div style={{
+      background: 'rgba(26,22,14,.55)',
+      border: '1px solid rgba(212,168,67,.22)',
+      borderRadius: 14, padding: '12px 14px',
+      display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8,
+    }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#F0C85A' }}>
+          Код: {session.code}
+        </div>
+        <div style={{ fontSize: 11, color: '#8B8570', marginTop: 2 }}>
+          Ставка: {session.bet ?? '0'} · {me ? 'ожидает соперника' : ''}
+        </div>
+      </div>
+      <button
+        onClick={onShare}
+        style={{ padding: '6px 12px', borderRadius: 8, background: 'linear-gradient(135deg,#2A1E08,#4A3810)', border: '.5px solid rgba(212,168,67,.42)', color: '#F0C85A', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+      >
+        Поделиться
+      </button>
+      <button
+        onClick={onCancel}
+        style={{ padding: '6px 10px', borderRadius: 8, background: 'transparent', border: '.5px solid rgba(255,77,106,.35)', color: '#FF4D6A', fontSize: 11, cursor: 'pointer' }}
+      >
+        Отмена
+      </button>
+      {me?.player?.id && (
+        <button
+          onClick={() => onProfile(me.player.id)}
+          style={{ display: 'none' }}
+          aria-hidden
+        />
+      )}
+    </div>
+  );
+};

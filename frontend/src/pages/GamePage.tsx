@@ -12,6 +12,7 @@ import { useGameStore } from '@/store/useGameStore';
 import { ChessBoard } from '@/components/game/ChessBoard';
 import { sound } from '@/lib/sound';
 import { fmtBalance } from '@/utils/format';
+import { Avatar } from '@/components/ui/Avatar';
 
 // ── Константы ──────────────────────────────────────────────────────────────────
 const PIECE_SYMBOLS: Record<string, string> = { p: '♟', n: '♞', b: '♝', r: '♜', q: '♛' };
@@ -866,7 +867,7 @@ export function GamePage() {
     );
   }
 
-  const opLabel = opSide?.isBot ? 'J.A.R.V.I.S' : (opSide?.player.firstName ?? '?');
+  const opLabel = oppSide?.isBot ? 'J.A.R.V.I.S' : (oppSide?.player.firstName ?? '?');
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: '#0B0D11', display: 'flex', flexDirection: 'column', fontFamily: 'Inter, sans-serif', overflow: 'hidden' }}>
@@ -1203,112 +1204,6 @@ export function GamePage() {
           pieceCoins={session.pieceCoins}
           onRematch={() => navigate('/')}
           onHome={() => navigate('/')}
-        />
-      )}
-
-      {/* Метка хода */}
-      <div style={{ textAlign: 'center', padding: '4px 0 2px', flexShrink: 0 }}>
-        {!isGameOver && (
-          <span style={isMyTurn
-            ? tagStyle('var(--green, #00D68F)', 'rgba(0,214,143,0.10)')
-            : tagStyle('var(--text-secondary, #8B92A8)', 'var(--bg-input, #232840)')}>
-            {isMyTurn ? t.game.yourTurn : t.game.opponentTurn}
-          </span>
-        )}
-      </div>
-
-      {/* Я */}
-      <div style={{ padding: '4px 12px', flexShrink: 0 }}>
-        <PlayerRow player={mySide?.player ?? user as import("@/types").User & { telegramId: string }}
-          timeLeft={mySide?.timeLeft ?? 0}
-          isActive={isMyTurn && !isGameOver} label={t.game.you} isMe />
-      </div>
-
-      {/* Кнопки */}
-      {!isGameOver ? (
-        <div style={{ display: 'flex', gap: 6, padding: '6px 12px', flexShrink: 0 }}>
-          <button onClick={() => navigate('/')} style={actionBtn()}>{t.common.back}</button>
-          <button onClick={() => getSocket().emit('game:offer_draw', { sessionId: session.id })}
-            style={actionBtn()}>{t.game.offerDraw}</button>
-          <button onClick={() => setConfirmSurrender(true)}
-            style={actionBtn('var(--red, #FF4D6A)', 'rgba(255,77,106,0.08)')}>{t.game.surrender}</button>
-        </div>
-      ) : !showResult ? (
-        <div style={{ padding: '6px 12px', flexShrink: 0 }}>
-          <button onClick={handleResultClose} style={{ ...actionBtn(), width: '100%' }}>{t.gameResult.backToMenu}</button>
-        </div>
-      ) : null}
-
-      {/* История ходов */}
-      <div style={{
-        margin: '4px 12px 8px', padding: '8px 12px',
-        background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.07)',
-        borderRadius: 14, flexShrink: 0,
-      }}>
-        <div style={labelStyle}>{t.game.moveHistory}</div>
-        <MoveHistory pgn={session.pgn} />
-      </div>
-
-      <div style={{ height: 82, flexShrink: 0 }} />
-
-      {/* Оффер ничьи */}
-      {drawOfferedBy && drawOfferedBy !== user?.id && (
-        <Overlay>
-          <ModalBox>
-            <div style={modalTitle}>{t.game.drawOffered}</div>
-            <div style={modalSub}>{t.game.drawOffered}. {t.game.acceptDraw}?</div>
-            <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-              <button onClick={() => {
-                getSocket().emit('game:accept_draw', { sessionId: session.id }, () => {});
-                setDrawOffered(null);
-              }} style={btnGold}>{t.game.acceptDraw}</button>
-              <button onClick={() => {
-                setDrawOffered(null);
-                getSocket().emit('game:decline_draw', { sessionId: session.id });
-              }} style={btnSecondary}>{t.game.declineDraw}</button>
-            </div>
-          </ModalBox>
-        </Overlay>
-      )}
-
-      {/* Подтверждение сдачи */}
-      {confirmSurrender && (
-        <Overlay>
-          <ModalBox>
-            <div style={modalTitle}>{t.game.confirmSurrender}</div>
-            <div style={modalSub}>
-              {session.bet ? t.game.surrenderLoss(fmtBalance(session.bet)) : t.game.surrenderDefault}
-            </div>
-            <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-              <button onClick={handleSurrender} style={btnDanger}>{t.game.confirmSurrenderYes}</button>
-              <button onClick={() => setConfirmSurrender(false)} style={btnGold}>{t.common.cancel}</button>
-            </div>
-          </ModalBox>
-        </Overlay>
-      )}
-
-      {/* V3: Победный экран */}
-      {showVictory && resultData && (
-        <VictoryScreen
-          result={resultData.result}
-          opponentName={opSide?.player?.firstName}
-          earned={resultData.earned}
-          onDone={() => setShowVictory(false)}
-        />
-      )}
-
-      {/* Модал результата */}
-      {showResult && resultData && (
-        <GameResultModal
-          result={resultData.result}
-          earned={resultData.earned}
-          commission={resultData.commission}
-          pieceCoins={resultData.pieceCoins}
-          botLevelName={isBotGame && session?.botLevel ? JARVIS_LEVELS[Math.max(0, Math.min(JARVIS_LEVELS.length - 1, (session.botLevel ?? 1) - 1))]?.name : undefined}
-          userTelegramId={(user as import("@/types").User & { telegramId: string })?.telegramId}
-          sessionId={session?.id}
-          onClose={handleResultClose}
-          onRematch={isBotGame ? handleRematch : undefined}
         />
       )}
     </div>
