@@ -46,12 +46,9 @@ const config = {
     botApiSecret: optional("BOT_API_SECRET", "internal_secret"),
   },
 
-  s3: {
-    endpoint: optional("S3_ENDPOINT", ""),
-    region: optional("S3_REGION", "ru-1"),
-    bucket: optional("S3_BUCKET", ""),
-    accessKey: optional("S3_ACCESS_KEY", ""),
-    secretKey: optional("S3_SECRET_ACCESS_KEY", ""),
+  // Локальное файловое хранилище (замена S3). Bind-mount /app/static ↔ ./static.
+  storage: {
+    staticRoot: optional("STATIC_ROOT", "/app/static"),
   },
 
   // ─── Экономика ───────────────────────────────────

@@ -6,7 +6,7 @@ import multer from "multer";
 import { prisma } from "@/lib/prisma";
 import config from "@/config";
 import { authMiddleware, AuthRequest } from "@/middleware/auth";
-import { uploadToS3, deleteFromS3 } from "@/lib/s3";
+import { saveFile, deleteFile } from "@/lib/storage";
 import { updateBalance } from "@/services/economy";
 import { TransactionType } from "@prisma/client";
 
@@ -272,11 +272,11 @@ router.post(
         select: { avatar: true, avatarType: true },
       });
       if (user?.avatarType === "UPLOAD" && user.avatar) {
-        const oldKey = user.avatar.split(".ru/")[1]?.split("/").slice(1).join("/");
-        if (oldKey) await deleteFromS3(oldKey).catch(() => {});
+        const oldKey = user.avatar;
+        if (oldKey) await deleteFile(oldKey).catch(() => {});
       }
 
-      const url = await uploadToS3(key, req.file.buffer, req.file.mimetype);
+      const url = await saveFile(key, req.file.buffer, req.file.mimetype);
 
       await prisma.user.update({
         where: { id: userId },
@@ -299,8 +299,8 @@ router.delete("/avatar", authMiddleware, async (req: Request, res: Response) => 
       select: { avatar: true, avatarType: true },
     });
     if (user?.avatarType === "UPLOAD" && user.avatar) {
-      const oldKey = user.avatar.split(".ru/")[1]?.split("/").slice(1).join("/");
-      if (oldKey) await deleteFromS3(oldKey).catch(() => {});
+      const oldKey = user.avatar;
+      if (oldKey) await deleteFile(oldKey).catch(() => {});
     }
     await prisma.user.update({
       where: { id: userId },

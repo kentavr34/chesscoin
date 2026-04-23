@@ -17,7 +17,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { PrismaClient } from "@prisma/client";
-import { uploadToS3 } from "../src/lib/s3";
+import { saveFile } from "../src/lib/storage";
 
 const prisma = new PrismaClient();
 
@@ -367,17 +367,16 @@ async function main() {
       ext = "svg";
     }
 
-    // Загружаем на S3
-    const s3Key = `premium-avatars/${avatar.id}.${ext}`;
+    // Сохраняем в локальное хранилище (/app/static → nginx /static/)
+    const storageKey = `premium-avatars/${avatar.id}.${ext}`;
     let imageUrl: string;
 
     try {
-      imageUrl = await uploadToS3(s3Key, buffer, contentType);
-      console.log(`  ✅ Uploaded to S3: ${s3Key}`);
+      imageUrl = await saveFile(storageKey, buffer, contentType);
+      console.log(`  ✅ Saved: ${storageKey}`);
     } catch (err: any) {
-      console.error(`  ❌ S3 upload failed for ${avatar.id}:`, err.message);
-      console.log(`     Storing placeholder URL (can be fixed later)`);
-      imageUrl = `https://s3.timeweb.cloud/chesscoin/${s3Key}`;
+      console.error(`  ❌ Storage write failed for ${avatar.id}:`, err.message);
+      throw err;
     }
 
     // Создаём запись в БД

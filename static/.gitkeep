@@ -1,0 +1,2 @@
+Локальное хранилище статики (замена S3). Bind-mount: backend пишет в /app/static,
+nginx читает с того же пути и отдаёт через location /static/.

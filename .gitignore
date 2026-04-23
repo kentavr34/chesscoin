@@ -50,3 +50,7 @@ docker-compose.override.yml
 # ─── Coverage ────────────────────────────────────────────────
 coverage/
 .nyc_output/
+
+# Локальное файловое хранилище — файлы пользователей, не коммитить
+/static/*
+!/static/.gitkeep

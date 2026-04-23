@@ -25,7 +25,7 @@ import { redis } from "@/lib/redis";
 import { safeStringify } from "@/lib/json"; // Q6: safe BigInt serialization
 import { updateBalance } from "@/services/economy";
 import { authMiddleware } from "@/middleware/auth";
-import { uploadToS3, deleteFromS3 } from "@/lib/s3";
+import { saveFile, deleteFile } from "@/lib/storage";
 
 
 // ── R4: Zod схемы валидации ───────────────────────────────────────────────────
@@ -137,7 +137,7 @@ adminRouter.post(
 
       // Загружаем на S3
       const s3Key = `premium-avatars/${slug}.webp`;
-      const imageUrl = await uploadToS3(s3Key, processedBuffer, "image/webp");
+      const imageUrl = await saveFile(s3Key, processedBuffer, "image/webp");
 
       // Определяем category по rarity
       const category = (rarity === "LEGENDARY" || rarity === "EPIC") ? "PREMIUM" : "BASIC";
@@ -243,7 +243,7 @@ adminRouter.delete("/avatars/:id", authMiddleware, adminOnly, async (req: Reques
     if (ownersCount === 0 && item.imageUrl?.includes("premium-avatars/")) {
       // Никто не купил — можно удалить с S3
       const key = item.imageUrl.split("/premium-avatars/")[1];
-      if (key) await deleteFromS3(`premium-avatars/${key}`).catch(() => {});
+      if (key) await deleteFile(`premium-avatars/${key}`).catch(() => {});
       await prisma.item.delete({ where: { id } });
       return res.json({ success: true, deleted: true });
     }
