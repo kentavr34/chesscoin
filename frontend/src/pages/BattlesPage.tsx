@@ -805,6 +805,23 @@ const BattleLiveCard: React.FC<{
               {fmtBalance(session.bet)}
             </span>
           )}
+          {/* Публичные батлы: зрители + донаты превью */}
+          {!session.isPrivate && ((session.spectatorCount ?? 0) > 0 || (session.donationPool && BigInt(session.donationPool) > 0n)) && (
+            <div style={{ display: 'flex', gap: 8, fontSize: '.58rem', fontWeight: 700, letterSpacing: '.04em', marginTop: 1 }}>
+              {(session.spectatorCount ?? 0) > 0 && (
+                <span style={{ color: '#8B92A8', display: 'flex', alignItems: 'center', gap: 3 }}>
+                  <svg width="10" height="10" viewBox="0 0 20 20" fill="none"><path d="M2 10s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6z" stroke="currentColor" strokeWidth="1.6"/><circle cx="10" cy="10" r="2.5" fill="currentColor"/></svg>
+                  {session.spectatorCount}
+                </span>
+              )}
+              {session.donationPool && BigInt(session.donationPool) > 0n && (
+                <span style={{ color: '#E78F4F', display: 'flex', alignItems: 'center', gap: 2 }}>
+                  +{fmtBalance(session.donationPool)}
+                  <span style={{ fontSize: '.62rem' }}>ᚙ</span>
+                </span>
+              )}
+            </div>
+          )}
           {isSpectator && (
             <button
               onClick={(e) => { e.stopPropagation(); onNavigate(session.id); }}
@@ -886,7 +903,7 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
     <div
       onClick={(e) => e.target === e.currentTarget && onClose()}
       style={{
-        position: 'fixed', inset: 0, zIndex: 200,
+        position: 'fixed', inset: 0, zIndex: 'var(--z-modal, 300)',
         background: 'rgba(4,3,8,.82)',
         backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
         display: 'flex', alignItems: 'flex-end', justifyContent: 'center',

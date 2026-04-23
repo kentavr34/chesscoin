@@ -133,6 +133,7 @@ export interface GameSession {
   boardSkinUrl?: string | null;
   pieceSkinUrl?: string | null; // монеты за взятые фигуры (только бот-игры, при завершении)
   spectatorCount?: number;  // зрители публичного батла
+  donationPool?: string | null; // пул донатов зрителей (BigInt как строка)
 }
 
 export interface BattleLobbyItem {
