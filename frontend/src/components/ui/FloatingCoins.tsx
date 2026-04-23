@@ -1,10 +1,10 @@
 /**
- * FloatingCoins — анимация +X ᚙ при получении монет
- * Использование в HomePage:
+ * FloatingCoins — анимация +X ᚙ при получении монет / доната.
  *   <FloatingCoins amount={earned} onDone={() => setEarned(null)} />
  */
 import React, { useEffect, useState } from 'react';
 import { fmtBalance } from '@/utils/format';
+import { CoinIcon } from '@/components/ui/CoinIcon';
 
 interface Props {
   amount: string;  // bigint строка
@@ -17,7 +17,7 @@ export const FloatingCoins: React.FC<Props> = ({ amount, onDone }) => {
   useEffect(() => {
     const t = setTimeout(() => { setVisible(false); setTimeout(onDone, 300); }, 1400);
     return () => clearTimeout(t);
-  }, []);
+  }, [onDone]);
 
   if (!visible) return null;
 
@@ -38,8 +38,9 @@ export const FloatingCoins: React.FC<Props> = ({ amount, onDone }) => {
       borderRadius: 20,
       padding: '8px 16px',
       backdropFilter: 'blur(8px)',
+      WebkitBackdropFilter: 'blur(8px)',
     }}>
-      <span style={{ fontSize: 20 }}>🪙</span>
+      <CoinIcon size={20} />
       <span style={{
         fontFamily: "'Unbounded',sans-serif",
         fontSize: 18,
