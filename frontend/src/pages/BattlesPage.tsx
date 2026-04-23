@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { PageLayout, InfoPopup, useInfoPopup } from '@/components/layout/PageLayout';
 import { Avatar } from '@/components/ui/Avatar';
 import { useGameStore } from '@/store/useGameStore';
@@ -34,6 +34,9 @@ type Tab = 'challenge' | 'live' | 'history';
 export const BattlesPage: React.FC = () => {
   const t = useT();
   const navigate = useNavigate();
+  const location = useLocation();
+  // Переход с профиля: «⚔️ Вызвать на дуэль» → открыть создание приватного батла
+  const challengeUserId = (location.state as Record<string, unknown> | null)?.challengeUserId as string | undefined;
   const { battles, sessions, liveBattles, upsertSession } = useGameStore();
   const { user } = useUserStore();
   const [tab, setTab] = useState<Tab>('challenge');
@@ -41,6 +44,18 @@ export const BattlesPage: React.FC = () => {
   const [histLoading, setHistLoading] = useState(false);
   const [histLoaded, setHistLoaded] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
+  const [createInitialPrivate, setCreateInitialPrivate] = useState(false);
+
+  // Автооткрытие формы создания приватного батла при переходе с профиля
+  useEffect(() => {
+    if (challengeUserId) {
+      setCreateInitialPrivate(true);
+      setShowCreate(true);
+      // Чистим state чтобы повторный рендер не переоткрывал модалку
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [challengeUserId]);
   const [showHistory, setShowHistory] = useState(false);
   const [showAttempts, setShowAttempts] = useState(false);
 
@@ -466,7 +481,7 @@ export const BattlesPage: React.FC = () => {
         }}
       >＋</button>
 
-      {showCreate && <CreateBattleModal onClose={() => setShowCreate(false)} onBuyAttempts={() => setShowAttempts(true)} />}
+      {showCreate && <CreateBattleModal onClose={() => { setShowCreate(false); setCreateInitialPrivate(false); }} onBuyAttempts={() => setShowAttempts(true)} initialPrivate={createInitialPrivate} />}
       {showAttempts && user && <AttemptsModal user={user} onClose={() => setShowAttempts(false)} />}
     </PageLayout>
   );
@@ -821,7 +836,7 @@ const BattleLiveCard: React.FC<{
   );
 };
 
-const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => void }> = ({ onClose, onBuyAttempts }) => {
+const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => void; initialPrivate?: boolean }> = ({ onClose, onBuyAttempts, initialPrivate }) => {
   const t = useT();
   const { upsertSession } = useGameStore();
   const { user } = useUserStore();
@@ -836,7 +851,7 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
   const [bet, setBet] = useState(Math.min(MIN_BET, maxBet));
   const [duration, setDuration] = useState(300);
   const [color, setColor] = useState<'white' | 'black' | 'random'>('random');
-  const [isPublic, setIsPublic] = useState(true);
+  const [isPublic, setIsPublic] = useState(!initialPrivate);
   const [loading, setLoading] = useState(false);
 
   const TIME_OPTIONS = [1, 3, 5, 15, 30, 60];
