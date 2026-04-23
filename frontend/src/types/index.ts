@@ -142,6 +142,7 @@ export interface BattleLobbyItem {
   duration: number;
   createdAt: string;
   spectatorCount?: number;  // зрители батла
+  colorChoice?: 'white' | 'black' | 'random';  // оригинальный выбор цвета создателя
   creator: {
     id: string;
     firstName: string;
