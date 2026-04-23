@@ -156,11 +156,13 @@ interface PanelProps {
   timeSecs: number;
   isActive: boolean;
   isGameOver: boolean;
+  playerId?: string;
+  onAvatarClick?: () => void;
 }
 
 const PlayerPanel: React.FC<PanelProps> = ({
   name, elo, avatar, isBot, isWhite, country, captured, advantage: adv,
-  coins, timeDisplay, timeSecs, isActive, isGameOver,
+  coins, timeDisplay, timeSecs, isActive, isGameOver, onAvatarClick,
 }) => {
   const sorted = useMemo(() => sortCaptured(captured), [captured]);
   const isCritical = isActive && timeSecs > 0 && timeSecs < 15;
@@ -179,8 +181,10 @@ const PlayerPanel: React.FC<PanelProps> = ({
       transition: 'background .3s, border-color .3s',
     }}>
 
-      {/* ── Аватар ─────────────────────────────────────────────────────────── */}
-      <div style={{
+      {/* ── Аватар (кликабельный → /profile/:id) ──────────────────────── */}
+      <div
+        onClick={onAvatarClick}
+        style={{
         width: AV, height: AV, borderRadius: '50%', flexShrink: 0,
         background: isBot ? 'rgba(74,158,255,.1)' : 'rgba(212,168,67,.07)',
         border: `1.5px solid ${
@@ -190,6 +194,7 @@ const PlayerPanel: React.FC<PanelProps> = ({
         }`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         overflow: 'hidden',
+        cursor: onAvatarClick && !isBot ? 'pointer' : 'default',
         boxShadow: isActive
           ? `0 0 14px ${isBot ? 'rgba(74,158,255,.3)' : 'rgba(61,186,122,.25)'}`
           : 'none',
@@ -885,6 +890,7 @@ export function GamePage() {
           isWhite={oppIsWhite} country={oppCountry} captured={oppCaptured} advantage={oppAdv} coins={oppCoins}
           timeDisplay={oppTimeDisplay} timeSecs={oppTimeSecs}
           isActive={!isMyTurn && !gameOver} isGameOver={gameOver}
+          onAvatarClick={() => { const pid = oppSide?.player?.id; if (pid && !oppIsBot) navigate(`/profile/${pid}`); }}
         />
       </div>
 
@@ -1008,6 +1014,7 @@ export function GamePage() {
           isWhite={myColor === 'white'} country={myCountry} captured={myCaptured} advantage={myAdv} coins={myCoins}
           timeDisplay={myTimeDisplay} timeSecs={myTimeSecs}
           isActive={isMyTurn && !gameOver} isGameOver={gameOver}
+          onAvatarClick={() => { const pid = mySide?.player?.id; if (pid) navigate(`/profile/${pid}`); }}
         />
       </div>
 

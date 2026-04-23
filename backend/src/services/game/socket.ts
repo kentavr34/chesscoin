@@ -753,16 +753,38 @@ export const setupSocketHandlers = (io: Server) => {
     });
 
     // ── Спектатор ────────────────────────────────────────
-    socket.on("spectate", (data: { sessionId: string }) => {
-      socket.join(`spectate:${data.sessionId}`);
-      // Добавляем в счётчик зрителей
-      if (!spectatorRooms.has(data.sessionId)) spectatorRooms.set(data.sessionId, new Set());
-      spectatorRooms.get(data.sessionId)!.add(socket.id);
+    socket.on("spectate", async (data: { sessionId: string }) => {
+      try {
+        socket.join(`spectate:${data.sessionId}`);
+        if (!spectatorRooms.has(data.sessionId)) spectatorRooms.set(data.sessionId, new Set());
+        spectatorRooms.get(data.sessionId)!.add(socket.id);
+
+        // Отправляем зрителю текущее состояние партии.
+        // Без этого у клиента session=null → isSpectator=false → стоит спиннер.
+        const session = await prisma.session.findUnique({
+          where: { id: data.sessionId },
+          include: { sides: { include: { player: { select: { id: true, firstName: true, lastName: true, username: true, elo: true, avatar: true, avatarType: true, avatarGradient: true, league: true } } } } }
+        });
+        if (!session) return;
+        // Разрешаем спектейт только публичных BATTLE IN_PROGRESS.
+        if (session.type !== "BATTLE" || session.isPrivate || session.status !== SessionStatus.IN_PROGRESS) return;
+
+        const formatted = formatSession(session as any, null);
+        socket.emit("game", formatted);
+
+        // Сообщаем всей комнате обновлённый счётчик зрителей.
+        const count = spectatorRooms.get(data.sessionId)?.size ?? 0;
+        io.to(`spectate:${data.sessionId}`).emit("battle:spectators", { sessionId: data.sessionId, count });
+      } catch (err: unknown) {
+        logger.error("[Socket] spectate error:", (err as Error).message);
+      }
     });
 
     socket.on("unspectate", (data: { sessionId: string }) => {
       socket.leave(`spectate:${data.sessionId}`);
       spectatorRooms.get(data.sessionId)?.delete(socket.id);
+      const count = spectatorRooms.get(data.sessionId)?.size ?? 0;
+      io.to(`spectate:${data.sessionId}`).emit("battle:spectators", { sessionId: data.sessionId, count });
     });
 
     // Чистим зрителей при дисконнекте

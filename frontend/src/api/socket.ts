@@ -17,6 +17,7 @@ interface ServerToClient {
   'battles:live:added': (battle: GameSession) => void;
   'battles:live:removed': (sessionId: string) => void;
   'battle:donated': (data: { donorId: string; amount: string; totalPool: string }) => void;
+  'battle:spectators': (data: { sessionId: string; count: number }) => void;
   'pong': () => void;
 }
 
