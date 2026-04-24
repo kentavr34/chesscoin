@@ -897,7 +897,13 @@ export const translations = {
       uploadError: 'Ошибка загрузки', deleteAvatar: 'Удалить аватар?',
       commanderBadge: 'Главнокомандующий',
       challengeBtn: 'Сразиться',
-      league: (name: string) => `Лига ${name}`,
+      league: (name: string) => {
+        const RU: Record<string, string> = {
+          BRONZE: 'Бронза', SILVER: 'Серебро', GOLD: 'Золото',
+          DIAMOND: 'Алмаз', CHAMPION: 'Чемпион', STAR: 'Звезда',
+        };
+        return `Лига ${RU[name] ?? name}`;
+      },
       leagueProgress: (pct: number) => `${pct}% до следующей лиги`,
       maxLeague: '★ Максимальная лига',
       toLeague: (name: string, amount: string) => `до ${name}: ${amount} ᚙ`,

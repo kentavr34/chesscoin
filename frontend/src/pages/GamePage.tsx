@@ -71,6 +71,7 @@ function lastMoveFromPgn(pgn: string): { from: string; to: string } | null {
 }
 
 import { CoinIcon } from '@/components/ui/CoinIcon';
+import { DonateModal } from '@/components/ui/DonateModal';
 
 // ── J.A.R.V.I.S аватар ────────────────────────────────────────────────────────
 const JarvisAva: React.FC<{ size: number }> = ({ size }) => (
@@ -611,7 +612,7 @@ export function GamePage() {
   const [showResignDialog,  setShowResignDialog]  = useState(false);
   const [donatePool,        setDonatePool]        = useState<string | null>(null);
   const [spectatorCount,    setSpectatorCount]    = useState(session?.spectatorCount ?? 0);
-  const [selectedDonateAmt, setSelectedDonateAmt] = useState(1000);
+  const [showDonateModal, setShowDonateModal] = useState(false);
   const [donationFx, setDonationFx] = useState<string | null>(null);
 
   const mySecsRef   = useRef(0);
@@ -1048,45 +1049,23 @@ export function GamePage() {
             Выйти
           </button>
 
-          {/* Донат с выбором суммы */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-            {/* Быстрые суммы */}
-            <div style={{ display: 'flex', gap: 4 }}>
-              {[1000, 5000, 10000, 50000].map(amt => (
-                <button
-                  key={amt}
-                  onClick={() => setSelectedDonateAmt(amt)}
-                  style={{
-                    padding: '2px 6px', borderRadius: 6, border: 'none', cursor: 'pointer',
-                    fontFamily: 'inherit', fontSize: '.58rem', fontWeight: 700,
-                    background: selectedDonateAmt === amt ? 'rgba(212,168,67,.25)' : 'rgba(255,255,255,.06)',
-                    color: selectedDonateAmt === amt ? '#F0C85A' : '#5A5248',
-                    transition: 'background .15s, color .15s',
-                  }}
-                >
-                  {amt >= 1000 ? `${amt / 1000}K` : amt}
-                </button>
-              ))}
-            </div>
-            {/* Кнопка доната */}
+          {/* Донат — открываем модал с ползунком и пресетами (как в CreateBattleModal) */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <button
               disabled={gameOver}
-              onClick={() => {
-                if (gameOver) return;
-                getSocket().emit('battle:donate', { sessionId, amount: String(selectedDonateAmt) });
-              }}
+              onClick={() => { if (!gameOver) setShowDonateModal(true); }}
               style={{
-                padding: '5px 18px', borderRadius: 10,
+                padding: '8px 22px', borderRadius: 12,
                 background: gameOver ? 'rgba(255,255,255,.04)' : 'linear-gradient(135deg,#2A1E08,#4A3810)',
                 border: `.5px solid ${gameOver ? 'rgba(255,255,255,.08)' : 'rgba(212,168,67,.42)'}`,
                 color: gameOver ? '#3A3028' : '#F0C85A',
-                fontSize: '.72rem', fontWeight: 800,
+                fontSize: '.82rem', fontWeight: 800,
                 cursor: gameOver ? 'default' : 'pointer', fontFamily: 'inherit',
-                display: 'flex', alignItems: 'center', gap: 5,
+                display: 'flex', alignItems: 'center', gap: 6,
               }}
             >
-              <CoinIcon size={12} />
-              Задонатить {fmtBalance(String(selectedDonateAmt))} ᚙ
+              <CoinIcon size={14} />
+              Задонатить
             </button>
           </div>
 
@@ -1209,6 +1188,17 @@ export function GamePage() {
           secondaryLabel="Отмена"
           onPrimary={handleResignConfirm}
           onSecondary={() => setShowResignDialog(false)}
+        />
+      )}
+
+      {/* ── Модал доната ──────────────────────────────────────────────────── */}
+      {showDonateModal && (
+        <DonateModal
+          currentPool={donatePool}
+          onClose={() => setShowDonateModal(false)}
+          onSubmit={(amount) => {
+            getSocket().emit('battle:donate', { sessionId, amount: String(amount) });
+          }}
         />
       )}
 

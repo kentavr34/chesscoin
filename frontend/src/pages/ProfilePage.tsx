@@ -84,10 +84,8 @@ export const ProfilePage: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [replayGame, setReplayGame] = useState<{ pgn: string; title?: string; sessionId?: string } | null>(null);
   const [selectedBadge, setSelectedBadge] = useState<{ name: string; date?: string } | null>(null);
-  const [avatarLoading, setAvatarLoading] = useState(false);
   const [cropFile, setCropFile] = useState<File | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [viewedProfile, setViewedProfile] = useState<Record<string, unknown> | null>(null);
 
@@ -101,18 +99,9 @@ export const ProfilePage: React.FC = () => {
     setTimeout(() => setToast(null), 2500);
   };
 
-  // Открываем AvatarCropModal вместо прямой загрузки
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setCropFile(file);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
-  // После обрезки — загружаем WebP blob
+  // После обрезки — загружаем WebP blob (используется если cropFile задан иначе)
   const handleCropConfirm = async (blob: Blob) => {
     setCropFile(null);
-    setAvatarLoading(true);
     try {
       const file = new File([blob], 'avatar.webp', { type: 'image/webp' });
       await profileApi.uploadAvatar(file);
@@ -121,23 +110,6 @@ export const ProfilePage: React.FC = () => {
       showToast(t.profile.avatarUpdated);
     } catch (err: unknown) {
       showToast((err instanceof Error ? err.message : String(err)) || t.profile.uploadError);
-    } finally {
-      setAvatarLoading(false);
-    }
-  };
-
-  const handleAvatarDelete = async () => {
-    if (!confirm(t.profile.deleteAvatar)) return;
-    setAvatarLoading(true);
-    try {
-      await profileApi.deleteAvatar();
-      const updated = await authApi.me();
-      setUser(updated);
-      showToast(t.profile.avatarDeleted);
-    } catch (err: unknown) {
-      showToast((err instanceof Error ? err.message : String(err)) || t.common.error);
-    } finally {
-      setAvatarLoading(false);
     }
   };
 
@@ -203,46 +175,40 @@ export const ProfilePage: React.FC = () => {
           {toast}
         </div>
       )}
-      {/* Hidden file input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        style={{ display: 'none' }}
-        onChange={handleAvatarUpload}
-      />
       {/* Header */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 18px 0' }}>
         <div style={{ position: 'relative', marginBottom: 12 }}>
           <div style={avatarRingStyle} />
 
-          {/* Аватар — кликабельный на чужом профиле */}
+          {/* Аватар — кликабельный: свой → в магазин аватаров, чужой → магазин с тем предметом */}
           {isOwnProfile ? (
-            <>
+            <div
+              style={{ position: 'relative', cursor: 'pointer' }}
+              onClick={() => navigate('/shop', { state: { tab: 'avatars' } })}
+              title={t.profile.shop}
+            >
               <Avatar user={user} size="xl" gold />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={avatarLoading}
-                style={{ position: 'absolute', bottom: -8, right: -8, width: 44, height: 44, borderRadius: '50%', background: 'var(--accent, #F5C842)', border: '2px solid #0B0D11', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 16, lineHeight: 1, flexShrink: 0 }}
-                title="Upload avatar"
-              >
-                {avatarLoading ? '…' : '📷'}
-              </button>
-              {user.avatarType === 'UPLOAD' && !avatarLoading && (
-                <button
-                  onClick={handleAvatarDelete}
-                  style={{ position: 'absolute', top: -8, right: -8, width: 44, height: 44, borderRadius: '50%', background: 'var(--red, #FF4D6A)', border: '2px solid #0B0D11', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 14, color: '#fff', flexShrink: 0 }}
-                  title="Delete avatar"
-                >
-                  ✕
-                </button>
-              )}
-            </>
+              {/* Маленькая иконка «магазин» в углу — подсказка, что клик ведёт в магазин */}
+              <div style={{
+                position: 'absolute', bottom: -2, right: -2,
+                width: 22, height: 22, borderRadius: '50%',
+                background: 'rgba(245,200,66,0.9)',
+                border: '1.5px solid #0B0D11',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 11, color: '#0B0D11',
+              }}>
+                🛍
+              </div>
+            </div>
           ) : (
-            /* Чужой профиль — аватар кликабелен → переход в магазин на конкретный товар */
+            /* Чужой профиль — показываем АВАТАР СОПЕРНИКА (был баг: тут брался свой user).
+               Клик по аватару чужого человека ведёт в магазин, если у него есть
+               премиум-аватар / рамка — прямо на тот же предмет, чтобы можно было
+               купить такой же. */
             <div style={{ position: 'relative', cursor: 'pointer' }} onClick={() => {
-              const premiumAvatar = user?.equippedItems?.PREMIUM_AVATAR;
-              const frame = user?.equippedItems?.AVATAR_FRAME;
+              const vp = viewedProfile as any;
+              const premiumAvatar = vp?.equippedItems?.PREMIUM_AVATAR;
+              const frame = vp?.equippedItems?.AVATAR_FRAME;
               if (premiumAvatar) {
                 navigate('/shop', { state: { tab: 'avatars', highlightItemId: premiumAvatar.id } });
               } else if (frame) {
@@ -251,9 +217,9 @@ export const ProfilePage: React.FC = () => {
                 navigate('/shop');
               }
             }}>
-              <Avatar user={user} size="xl" gold />
-              {/* Иконка магазина — видна если есть премиум-аватар или рамка */}
-              {(user?.equippedItems?.PREMIUM_AVATAR || user?.equippedItems?.AVATAR_FRAME) && (
+              <Avatar user={viewedProfile as any} size="xl" gold />
+              {/* Иконка магазина — видна если у СОПЕРНИКА есть премиум-аватар или рамка */}
+              {((viewedProfile as any)?.equippedItems?.PREMIUM_AVATAR || (viewedProfile as any)?.equippedItems?.AVATAR_FRAME) && (
                 <div style={{
                   position: 'absolute', bottom: -2, right: -2,
                   width: 22, height: 22, borderRadius: '50%',
@@ -265,15 +231,15 @@ export const ProfilePage: React.FC = () => {
                   🛍
                 </div>
               )}
-              {/* Подсказка с названием предмета */}
-              {(user?.equippedItems?.PREMIUM_AVATAR || user?.equippedItems?.AVATAR_FRAME) && (
+              {/* Подсказка с названием предмета соперника */}
+              {((viewedProfile as any)?.equippedItems?.PREMIUM_AVATAR || (viewedProfile as any)?.equippedItems?.AVATAR_FRAME) && (
                 <div style={{
                   position: 'absolute', top: '105%', left: '50%', transform: 'translateX(-50%)',
                   background: 'rgba(0,0,0,0.8)', borderRadius: 6, padding: '2px 8px',
                   fontSize: 9, color: '#F5C842', whiteSpace: 'nowrap',
                   border: '1px solid rgba(245,200,66,0.3)',
                 }}>
-                  {user?.equippedItems?.PREMIUM_AVATAR?.name ?? user?.equippedItems?.AVATAR_FRAME?.name}
+                  {(viewedProfile as any)?.equippedItems?.PREMIUM_AVATAR?.name ?? (viewedProfile as any)?.equippedItems?.AVATAR_FRAME?.name}
                 </div>
               )}
             </div>
@@ -281,12 +247,12 @@ export const ProfilePage: React.FC = () => {
         </div>
         <div style={{ textAlign: 'center', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
           {/* 2.1 Флаг страны рядом с именем */}
-          {user?.countryMember?.country?.flag && (
-            <span style={{ fontSize: 20 }}>{user?.countryMember.country.flag}</span>
+          {(displayUser as any)?.countryMember?.country?.flag && (
+            <span style={{ fontSize: 20 }}>{(displayUser as any)?.countryMember.country.flag}</span>
           )}
-          <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#EAE2CC' }}>{user.firstName} {user.lastName ?? ''}</span>
+          <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#EAE2CC' }}>{(displayUser as any)?.firstName} {(displayUser as any)?.lastName ?? ''}</span>
         </div>
-        <div style={{ marginTop: 3, textAlign: 'center', fontSize: '.72rem', color: '#5A5248' }}>@{user.username ?? 'unknown'}</div>
+        <div style={{ marginTop: 3, textAlign: 'center', fontSize: '.72rem', color: '#5A5248' }}>@{(displayUser as any)?.username ?? 'unknown'}</div>
         {/* 2.3 Кнопка "Сразиться" на чужом профиле */}
         {!isOwnProfile && (
           <button onClick={() => navigate('/battles', { state: { challengeUserId: viewedUserId } })} style={{ marginTop: 10, padding: '10px 20px', background: 'linear-gradient(135deg,#2A1E08,#4A3810)', border: '.5px solid rgba(212,168,67,.42)', borderRadius: 12, color: '#F0C85A', fontSize: '.85rem', fontWeight: 900, cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -294,28 +260,36 @@ export const ProfilePage: React.FC = () => {
           </button>
         )}
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8, justifyContent: 'center' }}>
-          <span style={tagGold}>{leagueEmoji[user.league]} #1</span>
-          <span style={{ display: 'inline-flex', padding: '3px 8px', background: 'rgba(74,158,255,.12)', color: '#82CFFF', borderRadius: 6, fontSize: 10, fontWeight: 700, border: '.5px solid rgba(74,158,255,.3)' }}>ELO {user.elo}</span>
-          {user?.countryMember?.isCommander && (
+          {/* Клик по лиге ведёт в таблицу лидеров */}
+          <span
+            style={{ ...tagGold, cursor: 'pointer' }}
+            onClick={() => navigate('/leaderboard')}
+            title={t.profile.league((displayUser as any)?.league)}
+          >
+            {leagueEmoji[(displayUser as any)?.league]} {t.profile.league((displayUser as any)?.league)}
+          </span>
+          <span style={{ display: 'inline-flex', padding: '3px 8px', background: 'rgba(74,158,255,.12)', color: '#82CFFF', borderRadius: 6, fontSize: 10, fontWeight: 700, border: '.5px solid rgba(74,158,255,.3)' }}>ELO {(displayUser as any)?.elo}</span>
+          {(displayUser as any)?.countryMember?.isCommander && (
             <span style={{ ...tagGr, background: 'linear-gradient(135deg, rgba(245,200,66,0.15), rgba(255,215,0,0.08))', color: '#FFD700', borderColor: 'rgba(255,215,0,0.35)', fontWeight: 800 }}>
               👑 {t.profile.commanderBadge}
             </span>
           )}
-          {user?.militaryRank && (
+          {(displayUser as any)?.militaryRank && (
             <span style={{ ...tagGr, background: 'rgba(255,159,67,0.1)', color: '#FF9F43', borderColor: 'rgba(255,159,67,0.2)' }}>
-              {user?.militaryRank.emoji} {user?.militaryRank.label}
-              {(user?.referralCount ?? 0) > 0 && (
+              {(displayUser as any)?.militaryRank.emoji} {(displayUser as any)?.militaryRank.label}
+              {((displayUser as any)?.referralCount ?? 0) > 0 && (
                 <span style={{ marginLeft: 4, fontSize: 10, opacity: 0.8 }}>
-                  — {(user.referralCount ?? 0).toLocaleString()} {t.profile.fighters ?? '👥'}
+                  — {((displayUser as any)?.referralCount ?? 0).toLocaleString()} {t.profile.fighters ?? '👥'}
                 </span>
               )}
             </span>
           )}
-          <span style={tagRobot}>🤖 {JARVIS_LEVELS[Math.max(0, (user?.jarvisLevel ?? 1) - 1)].name}</span>
+          <span style={tagRobot}>🤖 {JARVIS_LEVELS[Math.max(0, ((displayUser as any)?.jarvisLevel ?? 1) - 1)].name}</span>
         </div>
       </div>
 
-      {/* Balance — N7 */}
+      {/* Balance — N7. Показываем ТОЛЬКО на своём профиле (чужой баланс — приватная инфа). */}
+      {isOwnProfile && (
       <div style={{ margin: '12px 18px 0', padding: '14px 16px', background: 'linear-gradient(135deg,#141018,#0F0E18)', border: '.5px solid rgba(74,158,255,.18)', borderRadius: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
@@ -339,9 +313,10 @@ export const ProfilePage: React.FC = () => {
           <button onClick={() => navigate('/referrals')} style={{ padding: '8px 10px', background: 'rgba(74,158,255,.08)', color: '#82CFFF', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.profile.referrals} →</button>
         </div>
       </div>
+      )}
 
       {/* Чемпион месяца */}
-      {user?.isMonthlyChampion && (
+      {(displayUser as any)?.isMonthlyChampion && (
         <div style={{ margin: '8px 18px 0', padding: '12px 14px', background: 'linear-gradient(135deg, rgba(255,215,0,0.1), rgba(74,158,255,0.06))', border: '.5px solid rgba(255,215,0,0.3)', borderRadius: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 24, animation: 'pulse 2s ease-in-out infinite' }}>👑</span>
           <div style={{ flex: 1 }}>
@@ -349,7 +324,7 @@ export const ProfilePage: React.FC = () => {
               {t.profile.monthlyChampion ?? 'Monthly Champion'}
             </div>
             <div style={{ fontSize: '.65rem', color: '#7A7875', marginTop: 2 }}>
-              ELO rating {user?.monthlyChampionAt ? `· ${new Date(user?.monthlyChampionAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}` : ''}
+              ELO rating {(displayUser as any)?.monthlyChampionAt ? `· ${new Date((displayUser as any)?.monthlyChampionAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}` : ''}
             </div>
           </div>
         </div>
@@ -365,18 +340,24 @@ export const ProfilePage: React.FC = () => {
           CHAMPION: { next: 'STAR',     threshold: 10_000_000n,  nextThreshold: 50_000_000n },
           STAR:     { next: null,       threshold: 50_000_000n,  nextThreshold: 50_000_000n },
         };
-        const info = LEAGUE_THRESHOLDS[user.league];
+        const du = displayUser as any;
+        const info = LEAGUE_THRESHOLDS[du?.league];
         if (!info) return null;
-        const bal = BigInt(user.balance ?? '0');
+        // Баланс для прогресс-бара показываем только на своём профиле; иначе — прогресс по порогу текущей лиги 0
+        const bal = isOwnProfile ? BigInt(user.balance ?? '0') : info.threshold;
         const range = info.nextThreshold - info.threshold;
         const progress = info.next === null ? 100 : range > 0n ? Math.min(100, Number((bal - info.threshold) * 100n / range)) : 100;
         const remaining = info.next ? info.nextThreshold - bal : 0n;
         return (
-          <div style={{ margin: '0 18px 10px', padding: '12px 16px', background: 'linear-gradient(135deg,#141018,#0F0E18)', border: '.5px solid rgba(74,158,255,.18)', borderRadius: 16 }}>
+          <div
+            style={{ margin: '0 18px 10px', padding: '12px 16px', background: 'linear-gradient(135deg,#141018,#0F0E18)', border: '.5px solid rgba(74,158,255,.18)', borderRadius: 16, cursor: 'pointer' }}
+            onClick={() => navigate('/leaderboard')}
+            title={t.profile.league(du?.league)}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent, #F5C842)' }}>{leagueEmoji[user.league]} {t.profile.league(user.league)}</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent, #F5C842)' }}>{leagueEmoji[du?.league]} {t.profile.league(du?.league)}</div>
               {info.next ? (
-                <div style={{ fontSize: 10, color: 'var(--text-secondary, #8B92A8)' }}>{t.profile.toLeague(`${leagueEmoji[info.next]} ${info.next}`, fmtBalance(remaining.toString()))}</div>
+                <div style={{ fontSize: 10, color: 'var(--text-secondary, #8B92A8)' }}>{t.profile.toLeague(`${leagueEmoji[info.next]} ${t.profile.league(info.next).replace(/^Лига\s|^League\s/, '')}`, fmtBalance(remaining.toString()))}</div>
               ) : (
                 <div style={{ fontSize: 10, color: 'var(--green, #00D68F)', fontWeight: 700 }}>{t.profile.maxLeague}</div>
               )}
@@ -412,13 +393,13 @@ export const ProfilePage: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
               <div style={microLbl}>{t.profile.eloChart}</div>
               <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono',monospace", color: '#9B85FF', fontWeight: 700 }}>
-                {user.elo} ELO
+                {((displayUser as any)?.elo ?? 0)} ELO
               </div>
             </div>
             {(() => {
               // Строим ELO-динамику из последних партий (обратный порядок → хронологический)
               const eloHistory: number[] = [];
-              let elo = user.elo;
+              let elo = ((displayUser as any)?.elo ?? 0);
               const games = [...recentGames].reverse().slice(-10);
               // Аппроксимируем: +16 победа, -16 поражение, 0 ничья (K=32/2)
               for (const g of games) {
@@ -426,7 +407,7 @@ export const ProfilePage: React.FC = () => {
                 if (g.result === 'WON') elo = Math.max(100, elo - 16);
                 else if (g.result === 'LOST') elo = elo + 16;
               }
-              eloHistory.push(user.elo); // текущее
+              eloHistory.push(((displayUser as any)?.elo ?? 0)); // текущее
               if (eloHistory.length < 2) {
                 return (
                   <div style={{ height: 50, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -457,7 +438,7 @@ export const ProfilePage: React.FC = () => {
                     <path d={`M${pts}`} fill="none" stroke="#9B85FF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                     <path d={`M${fill}`} fill="url(#eg2)" />
                     {/* Текущая точка */}
-                    <circle cx={toX(eloHistory.length - 1)} cy={toY(user.elo)} r="3.5" fill="#9B85FF" />
+                    <circle cx={toX(eloHistory.length - 1)} cy={toY(((displayUser as any)?.elo ?? 0))} r="3.5" fill="#9B85FF" />
                   </svg>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
                     <span style={{ fontSize: 9, color: 'var(--text-muted,#4A5270)' }}>{t.profile.points(games.length + 1)}</span>
@@ -470,8 +451,8 @@ export const ProfilePage: React.FC = () => {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, padding: '8px 18px 0' }}>
             <StatCard val={totalGames}       lbl={t.profile.games}  />
-            <StatCard val={user.elo}         lbl={t.profile.elo}    color="#9B85FF" />
-            <StatCard val={user.winStreak ?? 0} lbl={t.profile.streak} color="var(--accent, #F5C842)" />
+            <StatCard val={((displayUser as any)?.elo ?? 0)}         lbl={t.profile.elo}    color="#9B85FF" />
+            <StatCard val={(displayUser as any)?.winStreak ?? 0} lbl={t.profile.streak} color="var(--accent, #F5C842)" />
           </div>
 
           <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem' }}>{t.profile.refSection}</div>
