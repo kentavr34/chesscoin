@@ -61,6 +61,14 @@ export const useSocket = () => {
       });
     }
 
+    // Deep link: сразу открыть окно конкретной партии по sessionId (из match_/refmatch_ startParam)
+    const pendingSid = (window as unknown as Record<string,unknown>).__pendingSessionId as string | undefined;
+    if (pendingSid) {
+      delete (window as unknown as Record<string,unknown>).__pendingSessionId;
+      // Если игрок не участник — GamePage сам включит спектаторский режим через ?spectate=1.
+      navigate('/game/' + pendingSid);
+    }
+
     socket.emit('battles:subscribe');
 
     // U2: При переподключении — обновляем список сессий

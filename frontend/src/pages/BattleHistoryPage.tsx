@@ -18,6 +18,7 @@ interface HistoryGame {
   sourceType?: 'TOURNAMENT' | 'WAR' | null;
   winningAmount?: string | null;
   bet?: string | null;
+  totalPool?: string | null;   // ставка × 2 + донаты (для публичных батлов)
   botLevel?: number | null;
   pgn?: string | null;
   finishedAt?: string | null;
@@ -403,16 +404,33 @@ export const BattleHistoryPage: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Дата + ставка */}
+                  {/* Дата + ставка/касса */}
                   <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 3 }}>
                     <div style={{ fontSize: '.65rem', color: '#7A7875' }}>
                       {g.finishedAt ? fmtDate(g.finishedAt) : ''}
                     </div>
-                    {g.bet && BigInt(g.bet) > 0n && (
-                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 2, color: '#5A5248', fontSize: '.62rem' }}>
-                        {fmtBalance(g.bet)} <CoinIcon size={10} />
-                      </div>
-                    )}
+                    {/* На публичных батлах показываем ОБЩУЮ КАССУ (ставка × 2 + донаты).
+                        На приватных/турнирах/войнах — просто свою ставку. */}
+                    {(() => {
+                      const isPublicBattle = !g.isPrivate && !g.sourceType && !g.hasBot && g.type === 'BATTLE';
+                      if (isPublicBattle && g.totalPool && BigInt(g.totalPool) > 0n) {
+                        return (
+                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: '.62rem' }}>
+                            <span style={{ color: '#7A6840', fontWeight: 600, fontSize: '.55rem', textTransform: 'uppercase', letterSpacing: '.08em' }}>Касса</span>
+                            <span style={{ color: '#D4A843', fontWeight: 800 }}>{fmtBalance(g.totalPool)}</span>
+                            <CoinIcon size={10} />
+                          </div>
+                        );
+                      }
+                      if (g.bet && BigInt(g.bet) > 0n) {
+                        return (
+                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 2, color: '#5A5248', fontSize: '.62rem' }}>
+                            {fmtBalance(g.bet)} <CoinIcon size={10} />
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
                   </div>
 
                   {/* Результат + выигрыш + просмотр */}

@@ -76,6 +76,7 @@ router.get("/games", authMiddleware, async (req: Request, res: Response) => {
             bet: true,
             duration: true,
             isPrivate: true,
+            donationPool: true,
             startedAt: true,
             finishedAt: true,
             warBattle: { select: { id: true } },
@@ -122,6 +123,14 @@ router.get("/games", authMiddleware, async (req: Request, res: Response) => {
         sourceType,
         winningAmount: side.winningAmount?.toString() ?? null,
         bet: session.bet?.toString() ?? null,
+        // Общая касса: ставки обеих сторон + пул донатов (на публичных батлах).
+        totalPool: (() => {
+          const betBig = session.bet ? BigInt(session.bet.toString()) : 0n;
+          const donateBig = session.donationPool ? BigInt(session.donationPool.toString()) : 0n;
+          const twoSided = session.type === "BATTLE" || session.type === "FRIENDLY";
+          const pot = (twoSided ? betBig * 2n : betBig) + donateBig;
+          return pot.toString();
+        })(),
         botLevel: session.botLevel,
         pgn: session.pgn,
         duration: session.duration,

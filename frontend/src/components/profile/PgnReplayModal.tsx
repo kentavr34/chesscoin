@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Chessboard } from 'react-chessboard';
 import { Chess } from 'chess.js';
 
@@ -6,6 +6,21 @@ export const PgnReplayModal: React.FC<{ pgn: string; title?: string; sessionId?:
   const [moves, setMoves] = useState<string[]>([]);
   const [step, setStep] = useState(0);
   const [fens, setFens] = useState<string[]>([]);
+  // Размер доски через ResizeObserver — без window.innerWidth (нарушение CLAUDE.md #3)
+  const boardWrapRef = useRef<HTMLDivElement>(null);
+  const [boardW, setBoardW] = useState(360);
+  useEffect(() => {
+    const el = boardWrapRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const w = Math.min(Math.floor(entry.contentRect.width), 400);
+        if (w > 0) setBoardW(w);
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     try {
@@ -22,7 +37,6 @@ export const PgnReplayModal: React.FC<{ pgn: string; title?: string; sessionId?:
   }, [pgn]);
 
   const currentFen = fens[step] ?? 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
-  const boardW = Math.min(window.innerWidth - 40, 400);
   const totalMoves = fens.length - 1;
   const currentMove = step > 0 ? moves[step - 1] : null;
 
@@ -81,8 +95,8 @@ export const PgnReplayModal: React.FC<{ pgn: string; title?: string; sessionId?:
           }}>✕</button>
         </div>
 
-        {/* Доска */}
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '0 0 10px' }}>
+        {/* Доска — центрирована, ширина через ResizeObserver (без window.innerWidth) */}
+        <div ref={boardWrapRef} style={{ display: 'flex', justifyContent: 'center', padding: '0 16px 10px', width: '100%', boxSizing: 'border-box' }}>
           <Chessboard position={currentFen} arePiecesDraggable={false} boardWidth={boardW} />
         </div>
 
