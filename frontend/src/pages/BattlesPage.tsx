@@ -303,6 +303,9 @@ export const BattlesPage: React.FC = () => {
                     onJoin={() => handleJoin(battle)}
                     onCancel={isMyBattle ? () => handleCancel(battle.id) : undefined}
                     onProfile={(id) => navigate('/profile/' + id)}
+                    // Публичный вызов → зайти наблюдателем (для стримеров: сидишь
+                    // у доски заранее, ждёшь когда соперник примет — и игра стартует).
+                    onSpectate={!isMyBattle ? () => navigate('/game/' + battle.id + '?spectate=1') : undefined}
                     acceptLabel={t.battles.accept ?? 'Войти'}
                   />
                 );
@@ -509,15 +512,18 @@ const ColorIcon: React.FC<{ isWhite: boolean }> = ({ isWhite }) => (
   </div>
 );
 
-// Шаблон «Вызов» (Stage 1) — карточка батла в ожидании соперника
+// Шаблон «Вызов» (Stage 1) — карточка батла в ожидании соперника.
+// На публичных вызовах доступен режим наблюдателя — клик по «СМОТРЕТЬ»
+// уводит на доску (для стримеров: сидишь ждёшь когда примут вызов).
 const BattleChallengeCard: React.FC<{
   battle: BattleLobbyItem;
   isTop: boolean;
   onJoin: () => void;
   onCancel?: () => void;
   onProfile: (id: string) => void;
+  onSpectate?: () => void;
   acceptLabel: string;
-}> = ({ battle, isTop, onJoin, onCancel, onProfile, acceptLabel }) => {
+}> = ({ battle, isTop, onJoin, onCancel, onProfile, onSpectate, acceptLabel }) => {
   const durationSecs = battle.duration ?? 300;
   const timerDisplay = `${String(Math.floor(durationSecs / 60)).padStart(2,'0')}:00`;
   const creatorId = battle.creator?.id;
@@ -583,6 +589,27 @@ const BattleChallengeCard: React.FC<{
               <CoinIcon size={13} />
               {fmtBalance(battle.bet)}
             </span>
+          )}
+          {/* Режим наблюдателя для публичных вызовов (не своих) */}
+          {onSpectate && !onCancel && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onSpectate(); }}
+              style={{
+                marginTop: 2, padding: '4px 9px',
+                background: 'rgba(130,207,255,.10)',
+                border: '.5px solid rgba(130,207,255,.28)',
+                borderRadius: 8, cursor: 'pointer',
+                fontFamily: 'inherit', fontSize: '.56rem', fontWeight: 800,
+                color: '#82CFFF', letterSpacing: '.06em',
+                display: 'flex', alignItems: 'center', gap: 4,
+              }}
+            >
+              <svg width="9" height="9" viewBox="0 0 20 20" fill="none">
+                <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.8"/>
+                <circle cx="10" cy="10" r="3.5" fill="currentColor"/>
+              </svg>
+              СМОТРЕТЬ
+            </button>
           )}
         </div>
 

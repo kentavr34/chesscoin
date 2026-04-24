@@ -1,4 +1,3 @@
-import { CoinIcon } from '@/components/ui/CoinIcon';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '@/components/layout/PageLayout';
@@ -8,12 +7,15 @@ import { fmtBalance, fmtDate } from '@/utils/format';
 import { PgnReplayModal } from '@/components/profile/PgnReplayModal';
 import type { UserPublic } from '@/types';
 
+import { CoinIcon } from '@/components/ui/CoinIcon';
 
 interface HistoryGame {
   sessionId: string;
   type: string;
   result: string;
   isWhite: boolean;
+  isPrivate?: boolean;
+  sourceType?: 'TOURNAMENT' | 'WAR' | null;
   winningAmount?: string | null;
   bet?: string | null;
   botLevel?: number | null;
@@ -23,7 +25,9 @@ interface HistoryGame {
   hasBot?: boolean;
 }
 
-type FilterTab = 'all' | 'battle' | 'bot' | 'friendly';
+// Этапы жизни одной партии — это «вызов → сражение → история».
+// Здесь, в «истории», вкладки — это ФОРМАТ уже сыгранной партии: публичный батл, приватный, турнир, война.
+type FilterTab = 'public' | 'private' | 'tournament' | 'war';
 type SortKey = 'date' | 'bet' | 'result';
 
 const PAGE_SIZE = 20;
@@ -68,10 +72,10 @@ const HandshakeIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
 );
 
 const FILTER_TABS: { key: FilterTab; label: string }[] = [
-  { key: 'all', label: 'Все' },
-  { key: 'battle', label: 'Батлы' },
-  { key: 'bot', label: 'Бот' },
-  { key: 'friendly', label: 'Дружеские' },
+  { key: 'public',     label: 'Публичные' },
+  { key: 'private',    label: 'Приватные' },
+  { key: 'tournament', label: 'Турниры' },
+  { key: 'war',        label: 'Воины' },
 ];
 
 export const BattleHistoryPage: React.FC = () => {
@@ -80,7 +84,7 @@ export const BattleHistoryPage: React.FC = () => {
   const [total, setTotal] = useState(0);
   const [offset, setOffset] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [activeFilter, setActiveFilter] = useState<FilterTab>('all');
+  const [activeFilter, setActiveFilter] = useState<FilterTab>('public');
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('date');
   const [showSort, setShowSort] = useState(false);
@@ -104,11 +108,14 @@ export const BattleHistoryPage: React.FC = () => {
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
 
   const filteredGames = games
+    // Подстраховка на случай, если бэк вернёт бота — в историю батлов не пускаем никогда
+    .filter((g) => !g.hasBot)
     .filter((g) => {
-      if (activeFilter === 'bot') return !!g.hasBot;
-      if (activeFilter === 'friendly') return g.type === 'FRIENDLY';
-      if (activeFilter === 'battle') return !g.hasBot && g.type !== 'FRIENDLY';
-      return true;
+      if (activeFilter === 'tournament') return g.sourceType === 'TOURNAMENT';
+      if (activeFilter === 'war')        return g.sourceType === 'WAR';
+      if (activeFilter === 'private')    return !g.sourceType && (g.isPrivate || g.type === 'FRIENDLY');
+      // public: обычные публичные батлы (не турнир, не война, не приватный)
+      return !g.sourceType && !g.isPrivate && g.type !== 'FRIENDLY';
     })
     .filter((g) => {
       if (!search.trim()) return true;
