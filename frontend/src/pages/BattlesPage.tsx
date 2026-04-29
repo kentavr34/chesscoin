@@ -1042,8 +1042,8 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
 
   const COLOR_OPTS = [
     { key: 'random' as const, label: t.battles.colorRandom, Icon: IcoDice,   bg: 'rgba(212,168,67,.1)',   border: 'rgba(212,168,67,.3)', color: '#F0C85A',  activeBg: 'rgba(212,168,67,.18)', activeBorder: '#D4A843' },
-    { key: 'white'  as const, label: t.battles.colorWhite,  Icon: IcoKingW,  bg: 'rgba(240,240,240,.06)', border: 'rgba(240,240,240,.15)', color: '#E8E0D0', activeBg: 'rgba(240,240,240,.14)', activeBorder: '#D0C8B8' },
-    { key: 'black'  as const, label: t.battles.colorBlack,  Icon: IcoKingB,  bg: 'rgba(74,158,255,.07)',  border: 'rgba(74,158,255,.18)', color: '#82CFFF',  activeBg: 'rgba(74,158,255,.15)', activeBorder: '#4A9EFF' },
+    { key: 'white'  as const, label: t.battles.colorWhite,  Icon: IcoKingW,  bg: 'rgba(240,240,240,.08)', border: 'rgba(240,240,240,.18)', color: '#E8E0D0', activeBg: 'rgba(240,240,240,.16)', activeBorder: '#D0C8B8' },
+    { key: 'black'  as const, label: t.battles.colorBlack,  Icon: IcoKingB,  bg: 'rgba(74,158,255,.08)',  border: 'rgba(74,158,255,.2)',  color: '#82CFFF',  activeBg: 'rgba(74,158,255,.16)', activeBorder: '#4A9EFF' },
   ];
 
   return (
@@ -1224,13 +1224,13 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
                     borderRadius: 10, padding: '14px 6px',
                     cursor: 'pointer', fontFamily: 'inherit',
                     transition: 'all .15s', transform: 'scale(1)',
-                    boxShadow: active ? '0 0 10px rgba(212,168,67,.22)' : 'none',
+                    boxShadow: active ? '0 0 10px rgba(212,168,67,.25)' : 'none',
                   }}
                 >
-                  <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '1.44rem', fontWeight: 900, color: active ? '#F0C85A' : 'rgba(255,255,255,.4)', lineHeight: 1 }}>
+                  <div style={{ fontSize: '1.44rem', fontWeight: 900, color: active ? '#F0C85A' : 'rgba(255,255,255,.45)', letterSpacing: '-.01em', lineHeight: 1 }}>
                     {mins}
                   </div>
-                  <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '.76rem', fontWeight: 700, color: active ? 'rgba(240,200,90,.65)' : 'rgba(255,255,255,.2)', letterSpacing: '.06em', marginTop: 4 }}>
+                  <div style={{ fontSize: '.76rem', fontWeight: 700, color: active ? 'rgba(240,200,90,.65)' : 'rgba(255,255,255,.22)', letterSpacing: '.06em', marginTop: 4 }}>
                     МИН
                   </div>
                 </button>
