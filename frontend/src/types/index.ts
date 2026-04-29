@@ -132,8 +132,9 @@ export interface GameSession {
   // S3: скины создателя батла
   boardSkinUrl?: string | null;
   pieceSkinUrl?: string | null; // монеты за взятые фигуры (только бот-игры, при завершении)
-  spectatorCount?: number;  // зрители публичного батла
-  donationPool?: string | null; // пул донатов зрителей (BigInt как строка)
+  spectatorCount?: number;      // лайв-зрители (публичные батлы)
+  viewCount?: number;           // накопительный счётчик просмотров (публичные батлы)
+  donationPool?: string | null; // накопленные донаты зрителей (BigInt как строка)
 }
 
 export interface BattleLobbyItem {
@@ -143,7 +144,6 @@ export interface BattleLobbyItem {
   duration: number;
   createdAt: string;
   spectatorCount?: number;  // зрители батла
-  colorChoice?: 'white' | 'black' | 'random';  // оригинальный выбор цвета создателя
   creator: {
     id: string;
     firstName: string;

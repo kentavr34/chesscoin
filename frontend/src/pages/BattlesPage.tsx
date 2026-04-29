@@ -1,6 +1,5 @@
-import { CoinIcon } from '@/components/ui/CoinIcon';
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { PageLayout, InfoPopup, useInfoPopup } from '@/components/layout/PageLayout';
 import { Avatar } from '@/components/ui/Avatar';
 import { useGameStore } from '@/store/useGameStore';
@@ -35,9 +34,6 @@ type Tab = 'challenge' | 'live' | 'history';
 export const BattlesPage: React.FC = () => {
   const t = useT();
   const navigate = useNavigate();
-  const location = useLocation();
-  // Переход с профиля: «⚔️ Вызвать на дуэль» → открыть создание приватного батла
-  const challengeUserId = (location.state as Record<string, unknown> | null)?.challengeUserId as string | undefined;
   const { battles, sessions, liveBattles, upsertSession } = useGameStore();
   const { user } = useUserStore();
   const [tab, setTab] = useState<Tab>('challenge');
@@ -45,18 +41,7 @@ export const BattlesPage: React.FC = () => {
   const [histLoading, setHistLoading] = useState(false);
   const [histLoaded, setHistLoaded] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
-  const [createInitialPrivate, setCreateInitialPrivate] = useState(false);
-
-  // Автооткрытие формы создания приватного батла при переходе с профиля
-  useEffect(() => {
-    if (challengeUserId) {
-      setCreateInitialPrivate(true);
-      setShowCreate(true);
-      // Чистим state чтобы повторный рендер не переоткрывал модалку
-      navigate(location.pathname, { replace: true, state: {} });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [challengeUserId]);
+  const [showQuick, setShowQuick] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showAttempts, setShowAttempts] = useState(false);
 
@@ -303,9 +288,6 @@ export const BattlesPage: React.FC = () => {
                     onJoin={() => handleJoin(battle)}
                     onCancel={isMyBattle ? () => handleCancel(battle.id) : undefined}
                     onProfile={(id) => navigate('/profile/' + id)}
-                    // Публичный вызов → зайти наблюдателем (для стримеров: сидишь
-                    // у доски заранее, ждёшь когда соперник примет — и игра стартует).
-                    onSpectate={!isMyBattle ? () => navigate('/game/' + battle.id + '?spectate=1') : undefined}
                     acceptLabel={t.battles.accept ?? 'Войти'}
                   />
                 );
@@ -467,6 +449,25 @@ export const BattlesPage: React.FC = () => {
         </>
       )}
 
+      {/* FAB — быстрая игра (автоподбор соперника) */}
+      <button
+        onClick={() => setShowQuick(true)}
+        title="Быстрая игра — найти соперника"
+        style={{
+          position: 'fixed',
+          bottom: 'max(98px, calc(88px + env(safe-area-inset-bottom, 14px)))',
+          right: 86, width: 50, height: 50,
+          borderRadius: '50%',
+          background: 'linear-gradient(135deg,#4A9EFF,#82CFFF)',
+          color: '#06121F',
+          fontSize: 22, fontWeight: 800,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer', border: 'none', zIndex: 49,
+          boxShadow: '0 4px 24px rgba(74,158,255,.45)',
+          fontFamily: 'inherit',
+        }}
+      >⚡</button>
+
       {/* FAB — создать батл */}
       <button
         onClick={() => setShowCreate(true)}
@@ -485,7 +486,8 @@ export const BattlesPage: React.FC = () => {
         }}
       >＋</button>
 
-      {showCreate && <CreateBattleModal onClose={() => { setShowCreate(false); setCreateInitialPrivate(false); }} onBuyAttempts={() => setShowAttempts(true)} initialPrivate={createInitialPrivate} />}
+      {showCreate && <CreateBattleModal onClose={() => setShowCreate(false)} onBuyAttempts={() => setShowAttempts(true)} />}
+      {showQuick && <QuickMatchModal onClose={() => setShowQuick(false)} onBuyAttempts={() => setShowAttempts(true)} />}
       {showAttempts && user && <AttemptsModal user={user} onClose={() => setShowAttempts(false)} />}
     </PageLayout>
   );
@@ -512,18 +514,15 @@ const ColorIcon: React.FC<{ isWhite: boolean }> = ({ isWhite }) => (
   </div>
 );
 
-// Шаблон «Вызов» (Stage 1) — карточка батла в ожидании соперника.
-// На публичных вызовах доступен режим наблюдателя — клик по «СМОТРЕТЬ»
-// уводит на доску (для стримеров: сидишь ждёшь когда примут вызов).
+// Шаблон «Вызов» (Stage 1) — карточка батла в ожидании соперника
 const BattleChallengeCard: React.FC<{
   battle: BattleLobbyItem;
   isTop: boolean;
   onJoin: () => void;
   onCancel?: () => void;
   onProfile: (id: string) => void;
-  onSpectate?: () => void;
   acceptLabel: string;
-}> = ({ battle, isTop, onJoin, onCancel, onProfile, onSpectate, acceptLabel }) => {
+}> = ({ battle, isTop, onJoin, onCancel, onProfile, acceptLabel }) => {
   const durationSecs = battle.duration ?? 300;
   const timerDisplay = `${String(Math.floor(durationSecs / 60)).padStart(2,'0')}:00`;
   const creatorId = battle.creator?.id;
@@ -590,27 +589,6 @@ const BattleChallengeCard: React.FC<{
               {fmtBalance(battle.bet)}
             </span>
           )}
-          {/* Режим наблюдателя для публичных вызовов (не своих) */}
-          {onSpectate && !onCancel && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onSpectate(); }}
-              style={{
-                marginTop: 2, padding: '4px 9px',
-                background: 'rgba(130,207,255,.10)',
-                border: '.5px solid rgba(130,207,255,.28)',
-                borderRadius: 8, cursor: 'pointer',
-                fontFamily: 'inherit', fontSize: '.56rem', fontWeight: 800,
-                color: '#82CFFF', letterSpacing: '.06em',
-                display: 'flex', alignItems: 'center', gap: 4,
-              }}
-            >
-              <svg width="9" height="9" viewBox="0 0 20 20" fill="none">
-                <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.8"/>
-                <circle cx="10" cy="10" r="3.5" fill="currentColor"/>
-              </svg>
-              СМОТРЕТЬ
-            </button>
-          )}
         </div>
 
         {/* Иконка цвета соперника */}
@@ -652,6 +630,25 @@ const BattleChallengeCard: React.FC<{
 };
 
 // CoinIcon — золотой конь (из GamePage)
+const CoinIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
+    <circle cx="16" cy="16" r="15" fill="url(#cbg)" stroke="url(#cbrd)" strokeWidth="1.2"/>
+    <circle cx="16" cy="16" r="12" fill="none" stroke="rgba(180,130,20,.4)" strokeWidth=".6"/>
+    <path d="M11 24c0-1 .5-2 1.5-2.5L14 21c-1-1-1.5-2.5-1-4 .3-1 1-2 2-2.5-.5-.8-.5-1.5 0-2 .8-.5 2-.3 2.5.5.5.8.3 2-.5 2.5.5.5 1 1.5.8 2.5l2 1c1 .5 1.7 1.5 1.7 2.5v.5H11z" fill="url(#ckn)"/>
+    <path d="M16.5 12c.5-1 1.5-2 2-3 .3-.5 0-1-.3-1.2-.5-.3-1 0-1.2.5L16 10l-1-.5c-.3-1.5.5-3 2-3.5 1.5-.5 3 .2 3.5 1.5.3.8 0 1.8-.5 2.5l-1 1.5" fill="url(#ckn)" opacity=".9"/>
+    <defs>
+      <radialGradient id="cbg" cx="38%" cy="30%" r="75%">
+        <stop offset="0%" stopColor="#F0C85A"/><stop offset="55%" stopColor="#D4A843"/><stop offset="100%" stopColor="#8A6020"/>
+      </radialGradient>
+      <linearGradient id="cbrd" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#F0C85A"/><stop offset="50%" stopColor="#A07830"/><stop offset="100%" stopColor="#F0C85A"/>
+      </linearGradient>
+      <linearGradient id="ckn" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor="#120E04"/><stop offset="100%" stopColor="#1E1608"/>
+      </linearGradient>
+    </defs>
+  </svg>
+);
 
 const IcoDice = () => (
   <svg width="30" height="30" viewBox="0 0 18 18" fill="none">
@@ -814,23 +811,6 @@ const BattleLiveCard: React.FC<{
               {fmtBalance(session.bet)}
             </span>
           )}
-          {/* Публичные батлы: зрители + донаты превью */}
-          {!session.isPrivate && ((session.spectatorCount ?? 0) > 0 || (session.donationPool && BigInt(session.donationPool) > 0n)) && (
-            <div style={{ display: 'flex', gap: 8, fontSize: '.58rem', fontWeight: 700, letterSpacing: '.04em', marginTop: 1 }}>
-              {(session.spectatorCount ?? 0) > 0 && (
-                <span style={{ color: '#8B92A8', display: 'flex', alignItems: 'center', gap: 3 }}>
-                  <svg width="10" height="10" viewBox="0 0 20 20" fill="none"><path d="M2 10s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6z" stroke="currentColor" strokeWidth="1.6"/><circle cx="10" cy="10" r="2.5" fill="currentColor"/></svg>
-                  {session.spectatorCount}
-                </span>
-              )}
-              {session.donationPool && BigInt(session.donationPool) > 0n && (
-                <span style={{ color: '#E78F4F', display: 'flex', alignItems: 'center', gap: 2 }}>
-                  +{fmtBalance(session.donationPool)}
-                  <span style={{ fontSize: '.62rem' }}>ᚙ</span>
-                </span>
-              )}
-            </div>
-          )}
           {isSpectator && (
             <button
               onClick={(e) => { e.stopPropagation(); onNavigate(session.id); }}
@@ -862,7 +842,165 @@ const BattleLiveCard: React.FC<{
   );
 };
 
-const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => void; initialPrivate?: boolean }> = ({ onClose, onBuyAttempts, initialPrivate }) => {
+// ── Быстрая игра: автоформирование публичных батлов ──────────────────────────
+// Пользователь выбирает время + ставку, сервер сам находит соперника либо
+// создаёт публичный батл в общий лист. Фидбэк Кенана 2026-04-22.
+const QuickMatchModal: React.FC<{ onClose: () => void; onBuyAttempts: () => void }> = ({ onClose, onBuyAttempts }) => {
+  const { upsertSession } = useGameStore();
+  const { user } = useUserStore();
+  const navigate = useNavigate();
+
+  const userAttempts = user?.attempts ?? 3;
+  const hasAttempts = userAttempts > 0;
+  const userBalance = Number(BigInt(user?.balance ?? '0'));
+
+  const TIME_OPTIONS = [1, 3, 5, 15, 30, 60];
+  const QUICK_BETS = [10000, 50000, 100000, 500000];
+
+  const [duration, setDuration] = useState(300); // секунды
+  const [bet, setBet] = useState(10000);
+  const [loading, setLoading] = useState(false);
+
+  const canStart = userBalance >= bet && hasAttempts;
+
+  const handleQuick = () => {
+    if (!hasAttempts) { onBuyAttempts(); return; }
+    if (userBalance < bet) {
+      showToast('Недостаточно монет — пополни баланс', 'info');
+      navigate('/shop');
+      return;
+    }
+    setLoading(true);
+    const socket = getSocket();
+    socket.emit('matchmaking:quick', { duration, bet: String(bet) }, (res: any) => {
+      setLoading(false);
+      if (res?.ok && res.session) {
+        upsertSession(res.session);
+        if (res.matched) {
+          // Соперник найден → сразу в игру
+          showToast('Соперник найден! Удачи ⚔️', 'info');
+          navigate('/game/' + res.session.id);
+        } else {
+          // Соперник не найден → батл опубликован, ждём оппонента
+          showToast('Батл опубликован — ждём соперника', 'info');
+        }
+        onClose();
+      } else {
+        showToast(getErrText(res?.error ?? ''), 'error');
+      }
+    });
+  };
+
+  return (
+    <div
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 200,
+        background: 'rgba(4,3,8,.82)',
+        backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+        display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+        paddingBottom: 'calc(82px + env(safe-area-inset-bottom, 0px))',
+        paddingTop: 16,
+      }}
+    >
+      <div style={{
+        width: '100%', maxWidth: 420,
+        background: 'linear-gradient(170deg,#0A1120,#06101A)',
+        border: '.5px solid rgba(74,158,255,.25)',
+        borderRadius: '24px 24px 0 0',
+        padding: '0 0 calc(16px + env(safe-area-inset-bottom, 0px))',
+        boxShadow: '0 -16px 48px rgba(0,0,0,.6), 0 -1px 0 rgba(74,158,255,.15)',
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 0 2px' }}>
+          <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(74,158,255,.25)' }} />
+        </div>
+
+        <div style={{ padding: '6px 20px 4px', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 22 }}>⚡</span>
+          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '1.02rem', fontWeight: 900, color: '#E8F2FF', letterSpacing: '.01em' }}>
+            Быстрая игра
+          </span>
+        </div>
+        <div style={{ padding: '0 20px 14px', fontSize: '.78rem', color: 'rgba(200,220,255,.65)', lineHeight: 1.4 }}>
+          Автоподбор соперника с такими же параметрами. Если никого нет — батл опубликуется в общем списке.
+        </div>
+
+        {/* Время */}
+        <div style={{ padding: '0 20px 10px' }}>
+          <div style={{ fontSize: '.72rem', color: 'rgba(200,220,255,.55)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 8 }}>Время</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 6 }}>
+            {TIME_OPTIONS.map((m) => {
+              const secs = m * 60;
+              const active = duration === secs;
+              return (
+                <button
+                  key={m}
+                  onClick={() => setDuration(secs)}
+                  style={{
+                    padding: '10px 0', borderRadius: 10,
+                    background: active ? 'rgba(74,158,255,.18)' : 'rgba(255,255,255,.03)',
+                    border: active ? '.5px solid #4A9EFF' : '.5px solid rgba(255,255,255,.08)',
+                    color: active ? '#82CFFF' : '#C8D8EC',
+                    fontSize: '.82rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                  }}
+                >{m}м</button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Ставка */}
+        <div style={{ padding: '0 20px 14px' }}>
+          <div style={{ fontSize: '.72rem', color: 'rgba(200,220,255,.55)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 8 }}>Ставка</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
+            {QUICK_BETS.map((v) => {
+              const active = bet === v;
+              const affordable = userBalance >= v;
+              return (
+                <button
+                  key={v}
+                  disabled={!affordable}
+                  onClick={() => setBet(v)}
+                  style={{
+                    padding: '12px 0', borderRadius: 10,
+                    background: active ? 'rgba(240,200,90,.18)' : 'rgba(255,255,255,.03)',
+                    border: active ? '.5px solid #F0C85A' : '.5px solid rgba(255,255,255,.08)',
+                    color: !affordable ? 'rgba(200,220,255,.25)' : active ? '#F0C85A' : '#E8E0D0',
+                    fontSize: '.82rem', fontWeight: 700, cursor: affordable ? 'pointer' : 'not-allowed',
+                    fontFamily: 'inherit', opacity: affordable ? 1 : .45,
+                  }}
+                >{fmtBalance(BigInt(v))}</button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Кнопка поиска */}
+        <div style={{ padding: '0 20px 6px' }}>
+          <button
+            onClick={handleQuick}
+            disabled={!canStart || loading}
+            style={{
+              width: '100%', padding: '14px 0', borderRadius: 14,
+              background: canStart && !loading
+                ? 'linear-gradient(135deg,#4A9EFF,#82CFFF)'
+                : 'rgba(120,140,170,.18)',
+              color: canStart && !loading ? '#06121F' : 'rgba(200,220,255,.4)',
+              border: 'none', cursor: canStart && !loading ? 'pointer' : 'not-allowed',
+              fontFamily: 'inherit', fontSize: '.95rem', fontWeight: 800,
+              letterSpacing: '.02em',
+              boxShadow: canStart && !loading ? '0 4px 20px rgba(74,158,255,.35)' : 'none',
+            }}
+          >
+            {loading ? 'Поиск…' : !hasAttempts ? 'Купить попытки' : userBalance < bet ? 'Недостаточно монет' : '⚡ Найти соперника'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => void }> = ({ onClose, onBuyAttempts }) => {
   const t = useT();
   const { upsertSession } = useGameStore();
   const { user } = useUserStore();
@@ -877,7 +1015,7 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
   const [bet, setBet] = useState(Math.min(MIN_BET, maxBet));
   const [duration, setDuration] = useState(300);
   const [color, setColor] = useState<'white' | 'black' | 'random'>('random');
-  const [isPublic, setIsPublic] = useState(!initialPrivate);
+  const [isPublic, setIsPublic] = useState(true);
   const [loading, setLoading] = useState(false);
 
   const TIME_OPTIONS = [1, 3, 5, 15, 30, 60];
@@ -912,11 +1050,11 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
     <div
       onClick={(e) => e.target === e.currentTarget && onClose()}
       style={{
-        position: 'fixed', inset: 0, zIndex: 'var(--z-modal, 300)',
+        position: 'fixed', inset: 0, zIndex: 200,
         background: 'rgba(4,3,8,.82)',
         backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
         display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-        paddingBottom: 'calc(82px + env(safe-area-inset-bottom, 0px))',
+        paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))',
         paddingTop: 16,
       }}
     >
@@ -1039,7 +1177,7 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
           <div style={{ fontSize: '.52rem', fontWeight: 700, color: '#6A5A30', textTransform: 'uppercase' as const, letterSpacing: '.12em', marginBottom: 6 }}>
             {t.battles.colorChoice}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 7 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
             {COLOR_OPTS.map(opt => {
               const active = color === opt.key;
               return (
@@ -1050,16 +1188,16 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
                   style={{
                     background: active ? opt.activeBg : opt.bg,
                     border: `.5px solid ${active ? opt.activeBorder : opt.border}`,
-                    borderRadius: 12, padding: '12px 6px',
-                    display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 6,
+                    borderRadius: 12, padding: '14px 8px',
+                    display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 8,
                     cursor: 'pointer', fontFamily: 'inherit',
                     transition: 'all .15s', transform: 'scale(1)',
                     boxShadow: active ? `0 0 12px ${opt.activeBorder}40` : 'none',
                   }}
                 >
                   <span style={{ color: opt.color, opacity: active ? 1 : 0.35, transition: 'opacity .15s' }}><opt.Icon /></span>
-                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '.76rem', fontWeight: 800, color: active ? opt.color : 'rgba(255,255,255,.45)', letterSpacing: '.02em' }}>{opt.label}</span>
-                  {active && <div style={{ width: 16, height: 2, borderRadius: 1, background: opt.activeBorder }} />}
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.96rem', fontWeight: 800, color: active ? opt.color : 'rgba(255,255,255,.45)', letterSpacing: '.02em' }}>{opt.label}</span>
+                  {active && <div style={{ width: 18, height: 2, borderRadius: 1, background: opt.activeBorder }} />}
                 </button>
               );
             })}
@@ -1071,7 +1209,7 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
           <div style={{ fontSize: '.52rem', fontWeight: 700, color: '#6A5A30', textTransform: 'uppercase' as const, letterSpacing: '.12em', marginBottom: 6 }}>
             {t.battles.timeControl}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 6 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 7 }}>
             {TIME_OPTIONS.map(mins => {
               const secs = mins * 60;
               const active = duration === secs;
@@ -1081,18 +1219,18 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
                   className="cbm-time"
                   onClick={() => setDuration(secs)}
                   style={{
-                    background: active ? 'rgba(212,168,67,.16)' : 'rgba(255,255,255,.04)',
-                    border: `.5px solid ${active ? 'rgba(212,168,67,.6)' : 'rgba(255,255,255,.09)'}`,
-                    borderRadius: 10, padding: '11px 6px',
+                    background: active ? 'rgba(212,168,67,.16)' : 'rgba(255,255,255,.05)',
+                    border: `.5px solid ${active ? 'rgba(212,168,67,.6)' : 'rgba(255,255,255,.1)'}`,
+                    borderRadius: 10, padding: '14px 6px',
                     cursor: 'pointer', fontFamily: 'inherit',
                     transition: 'all .15s', transform: 'scale(1)',
                     boxShadow: active ? '0 0 10px rgba(212,168,67,.22)' : 'none',
                   }}
                 >
-                  <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '1.3rem', fontWeight: 900, color: active ? '#F0C85A' : 'rgba(255,255,255,.4)', lineHeight: 1 }}>
+                  <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '1.44rem', fontWeight: 900, color: active ? '#F0C85A' : 'rgba(255,255,255,.4)', lineHeight: 1 }}>
                     {mins}
                   </div>
-                  <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '.68rem', fontWeight: 700, color: active ? 'rgba(240,200,90,.65)' : 'rgba(255,255,255,.2)', letterSpacing: '.06em', marginTop: 3 }}>
+                  <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '.76rem', fontWeight: 700, color: active ? 'rgba(240,200,90,.65)' : 'rgba(255,255,255,.2)', letterSpacing: '.06em', marginTop: 4 }}>
                     МИН
                   </div>
                 </button>
@@ -1186,50 +1324,4 @@ const bmSectionLbl: React.CSSProperties = {
   textTransform: 'uppercase',
   color: '#7A7875',
   marginBottom: 10,
-};
-
-// ── PrivateBattleCard: карточка моего приватного ожидающего батла ──
-const PrivateBattleCard: React.FC<{
-  session: GameSession;
-  onShare: () => void;
-  onCancel: () => void;
-  onProfile: (id: string) => void;
-}> = ({ session, onShare, onCancel, onProfile }) => {
-  const me = session.sides?.[0];
-  return (
-    <div style={{
-      background: 'rgba(26,22,14,.55)',
-      border: '1px solid rgba(212,168,67,.22)',
-      borderRadius: 14, padding: '12px 14px',
-      display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8,
-    }}>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: '#F0C85A' }}>
-          Код: {session.code}
-        </div>
-        <div style={{ fontSize: 11, color: '#8B8570', marginTop: 2 }}>
-          Ставка: {session.bet ?? '0'} · {me ? 'ожидает соперника' : ''}
-        </div>
-      </div>
-      <button
-        onClick={onShare}
-        style={{ padding: '6px 12px', borderRadius: 8, background: 'linear-gradient(135deg,#2A1E08,#4A3810)', border: '.5px solid rgba(212,168,67,.42)', color: '#F0C85A', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
-      >
-        Поделиться
-      </button>
-      <button
-        onClick={onCancel}
-        style={{ padding: '6px 10px', borderRadius: 8, background: 'transparent', border: '.5px solid rgba(255,77,106,.35)', color: '#FF4D6A', fontSize: 11, cursor: 'pointer' }}
-      >
-        Отмена
-      </button>
-      {me?.player?.id && (
-        <button
-          onClick={() => onProfile(me.player.id)}
-          style={{ display: 'none' }}
-          aria-hidden
-        />
-      )}
-    </div>
-  );
 };

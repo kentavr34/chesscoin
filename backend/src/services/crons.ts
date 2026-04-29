@@ -11,7 +11,7 @@ import { logger, logError } from "@/lib/logger"; // Q2
 import type { TournamentWithPlayers } from "@/types/db"; // R1
 import { updateBalance } from "@/services/economy";
 import { TransactionType } from "@prisma/client";
-import { ensureSystemTournaments, checkTournamentForfeits, matchmakeAllTournaments } from "@/routes/tournaments";
+import { ensureSystemTournaments, checkTournamentForfeits, matchmakeAllTournaments, processSwissAutoloss } from "@/routes/tournaments";
 import { settleClanBattle } from "@/routes/nations";
 import { verifyTonTransaction } from "@/lib/tonverify";
 
@@ -582,8 +582,15 @@ export function startGameCrons() {
 
   // T1: Matchmaking Engine — каждые 15 минут
   cron.schedule("*/15 * * * *", async () => {
-    await matchmakeAllTournaments().catch(err => 
+    await matchmakeAllTournaments().catch(err =>
       logError("[Crons/TournamentMatchmaker] Error:", err)
+    );
+  });
+
+  // Sprint 4: Swiss-system 24h autoloss — каждые 15 минут
+  cron.schedule("0 */15 * * *", async () => {
+    await processSwissAutoloss().catch(err =>
+      logError("[Crons/SwissAutoloss] Error:", err)
     );
   });
 

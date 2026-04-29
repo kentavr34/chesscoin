@@ -46,18 +46,12 @@ router.get("/games", authMiddleware, async (req: Request, res: Response) => {
       offset: z.coerce.number().min(0).default(0),
     }).parse(req.query);
 
-    // История батлов: исключаем игры с ботом (Jarvis) — они в отдельном разделе
-    const whereBase = {
-      playerId: userId,
-      isBot: false,
-      session: {
-        status: { in: ["FINISHED", "DRAW", "TIME_EXPIRED"] },
-        type: { not: "BOT" as const },
-      },
-    };
-
     const sides = await prisma.sessionSide.findMany({
-      where: whereBase,
+      where: {
+        playerId: userId,
+        isBot: false,
+        session: { status: { in: ["FINISHED", "DRAW", "TIME_EXPIRED"] } },
+      },
       orderBy: { updatedAt: "desc" },
       take: limit,
       skip: offset,
@@ -75,11 +69,8 @@ router.get("/games", authMiddleware, async (req: Request, res: Response) => {
             botLevel: true,
             bet: true,
             duration: true,
-            isPrivate: true,
-            donationPool: true,
             startedAt: true,
             finishedAt: true,
-            warBattle: { select: { id: true } },
             sides: {
               select: {
                 isBot: true,
@@ -93,44 +84,25 @@ router.get("/games", authMiddleware, async (req: Request, res: Response) => {
       },
     });
 
-    const total = await prisma.sessionSide.count({ where: whereBase });
-
-    // Связь «сессия → турнир» — TournamentMatch.sessionId
-    const sessionIds = sides.map(s => s.session.id);
-    const tmatches = sessionIds.length
-      ? await prisma.tournamentMatch.findMany({
-          where: { sessionId: { in: sessionIds } },
-          select: { sessionId: true },
-        })
-      : [];
-    const tournamentSet = new Set(tmatches.map(m => m.sessionId).filter(Boolean) as string[]);
+    const total = await prisma.sessionSide.count({
+      where: {
+        playerId: userId,
+        isBot: false,
+        session: { status: { in: ["FINISHED", "DRAW", "TIME_EXPIRED"] } },
+      },
+    });
 
     const games = sides.map(side => {
       const session = side.session;
       const opponent = session.sides.find(s => s.player.id !== userId && !s.isBot);
       const botSide = session.sides.find(s => s.isBot);
-      // Определяем «источник» игры: турнир / война / обычный батл
-      const sourceType: "TOURNAMENT" | "WAR" | null =
-        tournamentSet.has(session.id) ? "TOURNAMENT"
-        : session.warBattle ? "WAR"
-        : null;
       return {
         sessionId: session.id,
         type: session.type,
         result: side.status, // WON / LOST / DRAW
         isWhite: side.isWhite,
-        isPrivate: session.isPrivate,
-        sourceType,
         winningAmount: side.winningAmount?.toString() ?? null,
         bet: session.bet?.toString() ?? null,
-        // Общая касса: ставки обеих сторон + пул донатов (на публичных батлах).
-        totalPool: (() => {
-          const betBig = session.bet ? BigInt(session.bet.toString()) : 0n;
-          const donateBig = session.donationPool ? BigInt(session.donationPool.toString()) : 0n;
-          const twoSided = session.type === "BATTLE" || session.type === "FRIENDLY";
-          const pot = (twoSided ? betBig * 2n : betBig) + donateBig;
-          return pot.toString();
-        })(),
         botLevel: session.botLevel,
         pgn: session.pgn,
         duration: session.duration,

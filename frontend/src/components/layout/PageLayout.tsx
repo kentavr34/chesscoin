@@ -245,7 +245,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
         overflowY: noScroll ? 'hidden' : 'auto',
         overflowX: 'hidden',
         paddingBottom: `max(82px, calc(var(--space-l, 16px) * 6 + env(safe-area-inset-bottom, 0px)))`,
-        position: 'relative',
+        position: 'relative', zIndex: 'var(--z-base)',
       }}>
         {children}
       </div>

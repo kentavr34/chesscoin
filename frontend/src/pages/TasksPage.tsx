@@ -7,9 +7,6 @@ import type { PuzzleItem } from '@/api';
 import { fmtBalance } from '@/utils/format';
 import type { Task } from '@/types';
 import { useT } from '@/i18n/useT';
-import { haptic } from '@/lib/haptic';
-import { Skeleton } from '@/components/ui/Skeleton';
-import { EmptyState } from '@/components/ui/EmptyState';
 
 const CATEGORY_ICONS: Record<string, string> = {
   DAILY: '🌅',
@@ -80,15 +77,12 @@ export const TasksPage: React.FC = () => {
   const handleClaim = async (task: Task) => {
     if (task.isCompleted || claiming) return;
     setClaiming(task.id);
-    haptic.impact('light');
     try {
       await tasksApi.complete(task.id);
       setTasks((prev) => prev.map((tk) => tk.id === task.id ? { ...tk, isCompleted: true } : tk));
       const updated = await authApi.me();
       setUser(updated);
-      haptic.notification('success');
     } catch (e: unknown) {
-      haptic.notification('error');
       window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text: (e instanceof Error ? e.message : String(e)) ?? 'Error', type: 'error' } }));
     } finally {
       setClaiming(null);
@@ -218,10 +212,23 @@ export const TasksPage: React.FC = () => {
         </div>
       </div>
 
-      {loading && <div style={{ margin: '16px 18px 0' }}><Skeleton.List count={4} height={72} /></div>}
+      {loading && <div style={{ textAlign: 'center', color: '#5A5248', padding: 32 }}>{t.common.loading}</div>}
 
       {!loading && tasks.length === 0 && (
-        <EmptyState icon="📋" title={tp.comingSoon} desc={tp.emptyDesc} accent="#9B6DFF" />
+        <div style={{ textAlign: 'center', padding: '48px 24px' }}>
+          <div style={{ width: 56, height: 56, borderRadius: 16, background: 'rgba(155,109,255,.1)', border: '.5px solid rgba(155,109,255,.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+            <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+              <rect x="4" y="3" width="18" height="20" rx="3" stroke="#9B6DFF" strokeWidth="1.2"/>
+              <path d="M8 9h10M8 13h10M8 17h6" stroke="#9B6DFF" strokeWidth="1.2" strokeLinecap="round"/>
+            </svg>
+          </div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: '#EAE2CC', marginBottom: 8 }}>
+            {tp.comingSoon}
+          </div>
+          <div style={{ fontSize: 13, color: '#9A9490', lineHeight: 1.6, whiteSpace: 'pre-line' }}>
+            {tp.emptyDesc}
+          </div>
+        </div>
       )}
 
       {Object.entries(grouped).map(([cat, catTasks]) => (

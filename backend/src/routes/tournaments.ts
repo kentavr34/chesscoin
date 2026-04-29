@@ -9,8 +9,15 @@ import { updateBalance } from "@/services/economy";
 import { TransactionType } from "@prisma/client";
 import { Chess } from "chess.js";
 import { nanoid } from "nanoid";
+import {
+  pairSwissRound,
+  totalRoundsForBracket,
+  type SwissParticipant,
+  type SwissPreviousMatch,
+} from "@/services/tournamentSwiss"; // Sprint 4: Swiss bracket
 
 const router = Router();
+const MATCH_DEADLINE_MS = 24 * 60 * 60 * 1000; // 24h на матч (Sprint 4)
 
 // R4: Zod schemas
 const DonateTournamentSchema = z.object({
@@ -900,5 +907,490 @@ router.get("/team", async (req, res) => {
     res.status(500).json({ error: (err instanceof Error ? err.message : String(err)) });
   }
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sprint 4: Swiss-system bracket — стартовый и следующий раунд
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function isAdmin(userId: string): Promise<boolean> {
+  const adminIds = (process.env.ADMIN_IDS ?? "").split(",").map(s => s.trim()).filter(Boolean);
+  if (!adminIds.length) return false;
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { telegramId: true } });
+  return !!user && adminIds.includes(user.telegramId);
+}
+
+/**
+ * Создаёт пары следующего раунда турнира по Swiss-системе и оформляет:
+ *  - TournamentMatch (round, status=PENDING, deadline=now+24h)
+ *  - приватную Session BATTLE для каждой пары (sessionId сохранён в match)
+ *  - AdminNotification TOURNAMENT_MATCH обоим игрокам
+ *  - bye = авто-победа (status=FINISHED, winnerId, points=1)
+ */
+export async function generateSwissRound(tournamentId: string, round: number) {
+  const tournament = await prisma.tournament.findUniqueOrThrow({
+    where: { id: tournamentId },
+    select: { id: true, name: true, type: true, maxPlayers: true, status: true },
+  });
+
+  const players = await prisma.tournamentPlayer.findMany({
+    where: { tournamentId, isActive: true },
+    select: { id: true, userId: true, points: true },
+  });
+  if (players.length < 2) {
+    logger.info(`[Swiss] Tournament ${tournamentId} has <2 players, skipping round ${round}`);
+    return { pairs: [], byes: [] };
+  }
+
+  const previousMatches = await (prisma.tournamentMatch as any).findMany({
+    where: { tournamentId },
+    select: { player1Id: true, player2Id: true, winnerId: true, points: true },
+  }) as SwissPreviousMatch[];
+
+  const participants: SwissParticipant[] = players.map(p => ({
+    id: p.id,
+    userId: p.userId,
+    points: Number(p.points ?? 0),
+  }));
+
+  const pairs = pairSwissRound(participants, previousMatches, round);
+  const userIdByPlayer = new Map(players.map(p => [p.id, p.userId]));
+  const deadline = new Date(Date.now() + MATCH_DEADLINE_MS);
+
+  const createdMatches: Array<{ matchId: string; sessionId?: string; player1UserId: string; player2UserId?: string }> = [];
+
+  let order = 0;
+  for (const pair of pairs) {
+    order++;
+    if (pair.isBye || !pair.player2Id) {
+      // bye = авто-победа +1 очко
+      const userId = userIdByPlayer.get(pair.player1Id);
+      if (!userId) continue;
+      await prisma.$transaction(async (tx) => {
+        await (tx.tournamentMatch as any).create({
+          data: {
+            tournamentId,
+            player1Id: pair.player1Id,
+            player2Id: null,
+            winnerId: pair.player1Id,
+            round,
+            matchOrder: order,
+            status: 'FINISHED',
+            points: 1,
+            deadline,
+          },
+        });
+        await tx.tournamentPlayer.update({
+          where: { id: pair.player1Id },
+          data: { wins: { increment: 1 }, points: { increment: 1 } },
+        });
+      });
+      logger.info(`[Swiss] BYE: player ${pair.player1Id} round ${round}`);
+      continue;
+    }
+
+    const p1UserId = userIdByPlayer.get(pair.player1Id);
+    const p2UserId = userIdByPlayer.get(pair.player2Id);
+    if (!p1UserId || !p2UserId) continue;
+
+    const chess = new Chess();
+    const sessionCode = nanoid(8).toUpperCase();
+    const matchOrder = order;
+
+    const { sessionId, matchId } = await prisma.$transaction(async (tx) => {
+      const session = await tx.session.create({
+        data: {
+          status: 'WAITING_FOR_OPPONENT',
+          type: 'BATTLE',
+          isPrivate: true,
+          fen: chess.fen(),
+          pgn: '',
+          code: sessionCode,
+          duration: 300,
+          sides: {
+            create: [
+              { playerId: p1UserId, status: 'WAITING_FOR_OPPONENT', isWhite: true,  timeLeft: 300 },
+              { playerId: p2UserId, status: 'WAITING_FOR_OPPONENT', isWhite: false, timeLeft: 300 },
+            ],
+          },
+          activeUsers: { connect: [{ id: p1UserId }, { id: p2UserId }] },
+        },
+      });
+
+      const match = await (tx.tournamentMatch as any).create({
+        data: {
+          tournamentId,
+          player1Id: pair.player1Id,
+          player2Id: pair.player2Id,
+          round,
+          matchOrder,
+          status: 'PENDING',
+          sessionId: session.id,
+          deadline,
+        },
+      });
+
+      return { sessionId: session.id, matchId: match.id };
+    });
+
+    createdMatches.push({ matchId, sessionId, player1UserId: p1UserId, player2UserId: p2UserId });
+
+    // socket + AdminNotification
+    const [u1, u2] = await Promise.all([
+      prisma.user.findUnique({ where: { id: p1UserId }, select: { telegramId: true, firstName: true } }),
+      prisma.user.findUnique({ where: { id: p2UserId }, select: { telegramId: true, firstName: true } }),
+    ]);
+
+    const baseNotify = {
+      type: 'tournament:match',
+      matchId,
+      sessionId,
+      sessionCode,
+      tournamentName: tournament.name,
+      tournamentType: tournament.type,
+      round,
+      deadline: deadline.toISOString(),
+    };
+    try {
+      getIo().emit(`user:${p1UserId}`, { ...baseNotify, opponentName: u2?.firstName ?? 'Соперник' });
+      getIo().emit(`user:${p2UserId}`, { ...baseNotify, opponentName: u1?.firstName ?? 'Соперник' });
+    } catch {}
+
+    for (const [tg, oppName] of [
+      [u1?.telegramId, u2?.firstName],
+      [u2?.telegramId, u1?.firstName],
+    ] as [string | undefined, string | undefined][]) {
+      if (!tg) continue;
+      await prisma.adminNotification.create({
+        data: {
+          type: 'TOURNAMENT_MATCH',
+          payload: {
+            telegramId: tg,
+            tournamentName: tournament.name,
+            opponentName: oppName ?? 'Соперник',
+            sessionCode,
+            sessionId,
+            round,
+            deadline: deadline.toISOString(),
+          },
+        },
+      });
+    }
+  }
+
+  // Если статус был не IN_PROGRESS — переводим
+  if (tournament.status === 'REGISTRATION') {
+    await prisma.tournament.update({
+      where: { id: tournamentId },
+      data: { status: 'IN_PROGRESS' },
+    });
+  }
+
+  logger.info(`[Swiss] Tournament ${tournamentId} round ${round}: ${createdMatches.length} pairs + ${pairs.filter(p=>p.isBye).length} byes`);
+  return { pairs, byes: pairs.filter(p => p.isBye), createdMatches };
+}
+
+/**
+ * POST /tournaments/:id/start-swiss — стартовать Swiss-турнир (первый раунд).
+ * Только админ. Создаёт раунд 1 пар через Swiss и переводит статус в IN_PROGRESS.
+ */
+router.post("/:id/start-swiss", async (req, res) => {
+  try {
+    if (!(await isAdmin(req.userId))) return res.status(403).json({ error: "FORBIDDEN" });
+
+    const tournament = await prisma.tournament.findUnique({ where: { id: req.params.id } });
+    if (!tournament) return res.status(404).json({ error: "NOT_FOUND" });
+    if (tournament.status === 'FINISHED') return res.status(400).json({ error: "ALREADY_FINISHED" });
+
+    // Проверим, не было ли уже раундов
+    const existingRounds = await (prisma.tournamentMatch as any).count({
+      where: { tournamentId: tournament.id },
+    });
+    if (existingRounds > 0) return res.status(400).json({ error: "ALREADY_STARTED" });
+
+    const result = await generateSwissRound(tournament.id, 1);
+    res.json({ ok: true, round: 1, pairs: result.pairs.length, byes: result.byes.length });
+  } catch (err: unknown) {
+    logError("[Tournaments/start-swiss]", err);
+    res.status(500).json({ error: (err instanceof Error ? err.message : String(err)) });
+  }
+});
+
+/**
+ * POST /tournaments/:id/next-round — генерация следующего раунда.
+ * Только админ. Использует текущий standings → Swiss-пары.
+ * Останавливается, если round > totalRoundsForBracket(maxPlayers).
+ */
+router.post("/:id/next-round", async (req, res) => {
+  try {
+    if (!(await isAdmin(req.userId))) return res.status(403).json({ error: "FORBIDDEN" });
+
+    const tournament = await prisma.tournament.findUnique({ where: { id: req.params.id } });
+    if (!tournament) return res.status(404).json({ error: "NOT_FOUND" });
+    if (tournament.status !== 'IN_PROGRESS') return res.status(400).json({ error: "NOT_IN_PROGRESS" });
+
+    const lastRoundAgg = await (prisma.tournamentMatch as any).aggregate({
+      where: { tournamentId: tournament.id },
+      _max: { round: true },
+    });
+    const lastRound = lastRoundAgg._max.round ?? 0;
+
+    const totalRounds = totalRoundsForBracket(tournament.maxPlayers);
+    if (lastRound >= totalRounds) {
+      return res.status(400).json({ error: "MAX_ROUNDS_REACHED", lastRound, totalRounds });
+    }
+
+    // Все ли матчи прошлого раунда финализированы?
+    const pendingPrev = await (prisma.tournamentMatch as any).count({
+      where: { tournamentId: tournament.id, round: lastRound, status: { in: ['PENDING', 'IN_PROGRESS'] } },
+    });
+    if (pendingPrev > 0) {
+      return res.status(400).json({ error: "PREVIOUS_ROUND_NOT_FINISHED", pendingPrev });
+    }
+
+    const nextRound = lastRound + 1;
+    const result = await generateSwissRound(tournament.id, nextRound);
+    res.json({
+      ok: true, round: nextRound, totalRounds,
+      pairs: result.pairs.length, byes: result.byes.length,
+    });
+  } catch (err: unknown) {
+    logError("[Tournaments/next-round]", err);
+    res.status(500).json({ error: (err instanceof Error ? err.message : String(err)) });
+  }
+});
+
+/**
+ * GET /tournaments/:id/bracket — структурированный bracket для UI:
+ *  раунды как массив, каждый раунд — список матчей с участниками.
+ */
+router.get("/:id/bracket", async (req, res) => {
+  try {
+    const tournament = await prisma.tournament.findUnique({
+      where: { id: req.params.id },
+      select: { id: true, name: true, type: true, status: true, maxPlayers: true },
+    });
+    if (!tournament) return res.status(404).json({ error: "NOT_FOUND" });
+
+    const matches = await (prisma.tournamentMatch as any).findMany({
+      where: { tournamentId: tournament.id },
+      orderBy: [{ round: 'asc' }, { matchOrder: 'asc' }],
+    }) as any[];
+
+    const playerIds = Array.from(new Set(matches.flatMap(m => [m.player1Id, m.player2Id].filter(Boolean) as string[])));
+    const players = await prisma.tournamentPlayer.findMany({
+      where: { id: { in: playerIds } },
+      include: { user: { select: { id: true, firstName: true, avatar: true, avatarGradient: true } } },
+    });
+    const playerMap = new Map(players.map(p => [p.id, p]));
+
+    const totalRounds = totalRoundsForBracket(tournament.maxPlayers);
+    const rounds: Array<{ round: number; matches: any[] }> = [];
+    let currentRound = 0;
+    const lastRoundAgg = await (prisma.tournamentMatch as any).aggregate({
+      where: { tournamentId: tournament.id, status: { in: ['PENDING', 'IN_PROGRESS'] } },
+      _min: { round: true },
+    });
+    currentRound = lastRoundAgg._min.round ?? 0;
+
+    for (let r = 1; r <= totalRounds; r++) {
+      const rMatches = matches.filter(m => m.round === r).map(m => ({
+        id: m.id,
+        round: m.round,
+        matchOrder: m.matchOrder,
+        status: m.status,
+        sessionId: m.sessionId,
+        deadline: m.deadline,
+        winnerId: m.winnerId,
+        player1: m.player1Id ? {
+          playerId: m.player1Id,
+          user: playerMap.get(m.player1Id)?.user ?? null,
+          points: playerMap.get(m.player1Id)?.points ?? 0,
+        } : null,
+        player2: m.player2Id ? {
+          playerId: m.player2Id,
+          user: playerMap.get(m.player2Id)?.user ?? null,
+          points: playerMap.get(m.player2Id)?.points ?? 0,
+        } : null,
+        isBye: !!m.player1Id && !m.player2Id,
+      }));
+      rounds.push({ round: r, matches: rMatches });
+    }
+
+    res.json({
+      tournament: {
+        id: tournament.id, name: tournament.name, type: tournament.type,
+        status: tournament.status, maxPlayers: tournament.maxPlayers,
+        totalRounds, currentRound,
+      },
+      rounds,
+    });
+  } catch (err: unknown) {
+    res.status(500).json({ error: (err instanceof Error ? err.message : String(err)) });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sprint 4: 24h autoloss cron handler (вызывается из crons.ts каждые 15 мин)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Находит TournamentMatch с status=PENDING и deadline < now,
+ * у которых linked Session.status != FINISHED.
+ *  - один играл, другой нет → играющий побеждает (1 очко)
+ *  - оба не играли → DRAW (0.5 / 0.5)
+ *  - оба сделали ходы (но матч ещё не FINISHED) → не трогаем, ждём окончания партии
+ */
+export async function processSwissAutoloss() {
+  const now = new Date();
+  const stale = await (prisma.tournamentMatch as any).findMany({
+    where: {
+      status: 'PENDING',
+      deadline: { lt: now },
+    },
+    include: {
+      tournament: { select: { id: true, name: true } },
+    },
+    take: 200,
+  }) as any[];
+
+  let processed = 0;
+  for (const match of stale) {
+    try {
+      if (!match.player1Id || !match.player2Id) continue; // bye — пропуск
+
+      let session = null as any;
+      if (match.sessionId) {
+        session = await prisma.session.findUnique({
+          where: { id: match.sessionId },
+          include: { sides: true },
+        });
+      }
+      // если сессия уже FINISHED — отдельный поток обработает
+      if (session && session.status === 'FINISHED') continue;
+
+      // Кто сделал ходы? Проверяем через PGN session, либо через side.status
+      // Простая эвристика: если session.pgn содержит хотя бы один ход — игрок белыми играл;
+      // проверяем по sides — кто IN_PROGRESS / у кого ходы.
+      const movesPlayed = !!session && (session.pgn ?? '').trim().length > 0;
+
+      // Кто реально начал — определяется по side.status === IN_PROGRESS или по ходам.
+      const sides = session?.sides ?? [];
+      const p1User = await prisma.tournamentPlayer.findUnique({ where: { id: match.player1Id }, select: { userId: true } });
+      const p2User = await prisma.tournamentPlayer.findUnique({ where: { id: match.player2Id }, select: { userId: true } });
+
+      const p1Side = sides.find((s: any) => s.playerId === p1User?.userId);
+      const p2Side = sides.find((s: any) => s.playerId === p2User?.userId);
+
+      const p1Active = p1Side && p1Side.status === 'IN_PROGRESS';
+      const p2Active = p2Side && p2Side.status === 'IN_PROGRESS';
+
+      let winnerPlayerId: string | null = null;
+      let loserPlayerId: string | null = null;
+      let isDraw = false;
+
+      if (movesPlayed && p1Active && !p2Active) {
+        winnerPlayerId = match.player1Id;
+        loserPlayerId = match.player2Id;
+      } else if (movesPlayed && p2Active && !p1Active) {
+        winnerPlayerId = match.player2Id;
+        loserPlayerId = match.player1Id;
+      } else if (p1Active && !p2Active) {
+        winnerPlayerId = match.player1Id;
+        loserPlayerId = match.player2Id;
+      } else if (p2Active && !p1Active) {
+        winnerPlayerId = match.player2Id;
+        loserPlayerId = match.player1Id;
+      } else {
+        // оба не играли (или оба IN_PROGRESS без ходов на дедлайн) — DRAW
+        isDraw = true;
+      }
+
+      await prisma.$transaction(async (tx) => {
+        if (isDraw) {
+          await (tx.tournamentMatch as any).update({
+            where: { id: match.id },
+            data: { status: 'FINISHED', points: 0.5, winnerId: null },
+          });
+          await tx.tournamentPlayer.update({
+            where: { id: match.player1Id },
+            data: { draws: { increment: 1 }, points: { increment: 0.5 }, skippedMatches: { increment: 1 } },
+          });
+          await tx.tournamentPlayer.update({
+            where: { id: match.player2Id },
+            data: { draws: { increment: 1 }, points: { increment: 0.5 }, skippedMatches: { increment: 1 } },
+          });
+        } else if (winnerPlayerId && loserPlayerId) {
+          await (tx.tournamentMatch as any).update({
+            where: { id: match.id },
+            data: { status: 'FINISHED', winnerId: winnerPlayerId, points: 1 },
+          });
+          await tx.tournamentPlayer.update({
+            where: { id: winnerPlayerId },
+            data: { wins: { increment: 1 }, points: { increment: 1 } },
+          });
+          await tx.tournamentPlayer.update({
+            where: { id: loserPlayerId },
+            data: { losses: { increment: 1 }, skippedMatches: { increment: 1 } },
+          });
+        }
+
+        if (match.sessionId) {
+          await tx.session.update({
+            where: { id: match.sessionId },
+            data: { status: 'CANCELLED' },
+          });
+        }
+      });
+
+      // notifications
+      try {
+        const winnerUserId = winnerPlayerId === match.player1Id ? p1User?.userId : winnerPlayerId === match.player2Id ? p2User?.userId : null;
+        const loserUserId = loserPlayerId === match.player1Id ? p1User?.userId : loserPlayerId === match.player2Id ? p2User?.userId : null;
+
+        const targets: Array<{ userId: string | undefined; outcome: 'WIN' | 'LOSS' | 'DRAW' }> = isDraw
+          ? [
+              { userId: p1User?.userId, outcome: 'DRAW' },
+              { userId: p2User?.userId, outcome: 'DRAW' },
+            ]
+          : [
+              { userId: winnerUserId, outcome: 'WIN' },
+              { userId: loserUserId, outcome: 'LOSS' },
+            ];
+
+        for (const t of targets) {
+          if (!t.userId) continue;
+          const u = await prisma.user.findUnique({ where: { id: t.userId }, select: { telegramId: true } });
+          if (!u?.telegramId) continue;
+          await prisma.adminNotification.create({
+            data: {
+              type: 'TOURNAMENT_AUTOLOSS',
+              payload: {
+                telegramId: u.telegramId,
+                tournamentId: match.tournamentId,
+                tournamentName: match.tournament?.name,
+                round: match.round,
+                outcome: t.outcome,
+              },
+            },
+          });
+          try {
+            getIo().emit(`user:${t.userId}`, {
+              type: 'tournament:autoloss',
+              matchId: match.id,
+              outcome: t.outcome,
+            });
+          } catch {}
+        }
+      } catch {}
+
+      processed++;
+    } catch (e) {
+      logError(`[Swiss/Autoloss] Match ${match.id} error:`, e);
+    }
+  }
+
+  if (processed) logger.info(`[Swiss/Autoloss] Processed ${processed} stale matches`);
+  return { processed };
+}
 
 export default router;

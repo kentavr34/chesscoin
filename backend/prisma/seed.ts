@@ -304,6 +304,32 @@ async function main() {
   }
   console.log(`✅ ${tasks.length} Tasks`);
 
+  // ─── Sprint 5: Default rewards (canonical) — пере-выставляем награды
+  // по спецификации (idempotent upsert по id, чтобы не плодить дубликаты)
+  const sprint5Defaults: Array<{ id: string; taskType: any; icon: string; title: string; description: string; metadata: any; winningAmount: bigint }> = [
+    { id: 'task_daily_login',     taskType: 'DAILY_LOGIN',        icon: '📅', title: 'Ежедневный вход',         description: 'Войди в игру сегодня',                          metadata: { resetDaily: true, category: 'DAILY' },                  winningAmount: 500n },
+    { id: 'task_first_game',      taskType: 'FIRST_GAME',         icon: '♟️', title: 'Первая партия',           description: 'Сыграй свою первую шахматную партию',           metadata: { targetCount: 1, category: 'DAILY' },                    winningAmount: 2000n },
+    { id: 'task_win_5',           taskType: 'WIN_N',              icon: '🏆', title: '5 побед',                 description: 'Одержи 5 побед в батлах',                       metadata: { targetCount: 5, category: 'DAILY' },                    winningAmount: 5000n },
+    { id: 'task_win_bot_3',       taskType: 'WIN_BOT_N',          icon: '🤖', title: 'Победи Джарвиса 3 раза',  description: 'Одержи 3 победы против J.A.R.V.I.S',            metadata: { targetCount: 3, category: 'DAILY' },                    winningAmount: 3000n },
+    { id: 'task_win_streak_3',    taskType: 'WIN_STREAK_N',       icon: '🔥', title: '3 победы подряд',         description: 'Выиграй 3 партии без поражений',                metadata: { targetCount: 3, category: 'DAILY' },                    winningAmount: 7000n },
+    { id: 'task_play_10',         taskType: 'PLAY_N',             icon: '🎯', title: '10 партий',               description: 'Сыграй 10 партий (любых)',                      metadata: { targetCount: 10, category: 'DAILY' },                   winningAmount: 4000n },
+    { id: 'task_referral_1',      taskType: 'REFERRAL',           icon: '👥', title: 'Пригласи друга',          description: 'Пригласи 1 друга, активного игрока',            metadata: { referralCount: 1, category: 'SOCIAL' },                 winningAmount: 3000n },
+    { id: 'task_referral_5',      taskType: 'REFERRAL',           icon: '🤝', title: 'Пригласи 5 друзей',       description: 'Пригласи 5 активных рефералов',                  metadata: { referralCount: 5, category: 'SOCIAL' },                 winningAmount: 20000n },
+    { id: 'task_referral_10',    taskType: 'REFERRAL',            icon: '👑', title: 'Пригласи 10 друзей',     description: 'Пригласи 10 активных рефералов',                metadata: { referralCount: 10, category: 'SOCIAL' },                winningAmount: 50000n },
+    { id: 'task_subscribe_tg',    taskType: 'SUBSCRIBE_TELEGRAM', icon: '📢', title: 'Подпишись на канал',      description: 'Подпишись на официальный канал ChessCoin',      metadata: { url: 'https://t.me/chesscoin_official', category: 'SOCIAL' }, winningAmount: 1000n },
+    { id: 'task_follow_link',     taskType: 'FOLLOW_LINK',        icon: '🔗', title: 'Перейди по ссылке',       description: 'Открой ссылку и получи награду',                metadata: { url: 'https://chesscoin.app', category: 'SOCIAL' },     winningAmount: 500n },
+    { id: 'task_enter_code',      taskType: 'ENTER_CODE',         icon: '🎟️', title: 'Введи промокод',         description: 'Активируй промокод для бонуса',                  metadata: { code: 'CHESSCOIN', category: 'SOCIAL' },                winningAmount: 1000n },
+  ];
+
+  for (const t of sprint5Defaults) {
+    await prisma.task.upsert({
+      where: { id: t.id },
+      update: { winningAmount: t.winningAmount, title: t.title, description: t.description, icon: t.icon, metadata: t.metadata, status: 'ACTIVE' },
+      create: { ...t, status: 'ACTIVE' },
+    });
+  }
+  console.log(`✅ ${sprint5Defaults.length} Sprint5 default rewards (upsert)`);
+
   // ─── Темы интерфейса ─────────────────────────────────────────────────────
   const themes = [
     { name: 'Binance Pro',    description: 'Binance style — dark, professional',        priceCoins: 10_000n,    rarity: 'COMMON'    },

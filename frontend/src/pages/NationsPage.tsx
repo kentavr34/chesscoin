@@ -128,7 +128,7 @@ export const NationsPage: React.FC = () => {
                     {activeWar.attackerWins}:{activeWar.defenderWins}
                   </div>
                   <div style={{ fontSize: 10, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>
-                    {fmtBalance(activeWar.prize ?? '0')} ᚙ {t.nations.atStake}
+                    💰 {fmtBalance(activeWar.prize ?? '0')} ᚙ {t.nations.atStake}
                   </div>
                 </div>
                 <span style={{ fontSize: 24 }}>{activeWar.defenderClan.flag}</span>
@@ -206,7 +206,7 @@ export const NationsPage: React.FC = () => {
                     {war.attackerWins}:{war.defenderWins}
                   </div>
                   <div style={{ fontSize: 10, color: 'var(--accent, #F5C842)', fontWeight: 700 }}>
-                    {fmtBalance(war.prize ?? '0')} ᚙ
+                    💰 {fmtBalance(war.prize ?? '0')} ᚙ
                   </div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
@@ -284,7 +284,7 @@ export const NationsPage: React.FC = () => {
                   </div>
                   <div style={{ textAlign: 'center', flexShrink: 0 }}>
                     <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginBottom: 4 }}>vs</div>
-                    <div style={{ fontSize: 10, color: 'var(--accent, #F5C842)', fontWeight: 700 }}>{fmtBalance(b.pool)} ᚙ</div>
+                    <div style={{ fontSize: 10, color: 'var(--accent, #F5C842)', fontWeight: 700 }}>💰 {fmtBalance(b.pool)} ᚙ</div>
                     <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', marginTop: 4 }}>
                       {b.activeGames}/{b.maxSimultaneous} {t.nations.games}
                     </div>
@@ -803,11 +803,16 @@ const approveBtn: React.CSSProperties = {
 const rejectBtn: React.CSSProperties = { ...kickBtn };
 const overlayStyle: React.CSSProperties = {
   position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)',
-  backdropFilter: 'blur(8px)', zIndex: "var(--z-modal, 300)", display: 'flex', alignItems: 'flex-end',
+  backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+  zIndex: "var(--z-modal, 300)" as any, display: 'flex', alignItems: 'flex-end',
+  // iOS safe-area: боттом-шит не прижимается к системной панели
+  paddingBottom: 'env(safe-area-inset-bottom, 0px)',
 };
 const modalStyle: React.CSSProperties = {
   width: '100%', background: 'var(--bg-card, #161927)', borderRadius: '24px 24px 0 0',
-  padding: 20, borderTop: '1px solid rgba(255,255,255,0.1)',
+  // +8px к нижнему паддингу для home-indicator
+  padding: '20px 20px calc(20px + env(safe-area-inset-bottom, 0px))',
+  borderTop: '1px solid rgba(255,255,255,0.1)',
   maxHeight: '85vh', overflowY: 'auto',
 };
 const handleBar: React.CSSProperties = {

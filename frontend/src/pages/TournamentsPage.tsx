@@ -8,9 +8,6 @@ import { useConfirm } from '@/components/ui/ConfirmModal';
 import type { TournamentFull, ActiveMatch, League } from '@/types'; // R1
 import { useNavigate } from 'react-router-dom';
 import { useT } from '@/i18n/useT';
-import { haptic } from '@/lib/haptic';
-import { Skeleton } from '@/components/ui/Skeleton';
-import { EmptyState } from '@/components/ui/EmptyState';
 
 const showToast = (text: string, type: 'error' | 'info' = 'error') => {
   window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text, type } }));
@@ -77,7 +74,9 @@ export const TournamentsPage: React.FC = () => {
             type: 'info',
             actionLabel: tt.play,
             onAction: () => {
-              navigate('/battles');
+              import('react-router-dom').then(({ useNavigate: _ }) => {
+                window.location.hash = '#/battles';
+              });
             },
           },
         }));
@@ -114,11 +113,9 @@ export const TournamentsPage: React.FC = () => {
 
   const handleJoin = async (id: string) => {
     setJoiningId(id);
-    haptic.impact('medium');
     try {
       await tournamentsApi.join(id);
       await load();
-      haptic.notification('success');
     } catch (e: unknown) {
       // T8: User-friendly message when country is required
       const err = e as Record<string, unknown>;
@@ -258,11 +255,15 @@ export const TournamentsPage: React.FC = () => {
       </div>
 
       {loading && (
-        <div style={{ margin: '0 16px' }}><Skeleton.List count={3} height={150} /></div>
+        <div style={{ textAlign: 'center', color: '#4A5270', padding: 32, fontSize: '0.82rem' }}>
+          {t.common.loading}
+        </div>
       )}
 
       {!loading && filtered.length === 0 && (
-        <EmptyState icon="🏆" title={filter === 'joined' ? tt.noJoined : tt.noActive} accent="#F5C842" />
+        <div style={{ textAlign: 'center', color: '#4A5270', padding: 32, fontSize: '0.82rem' }}>
+          {filter === 'joined' ? tt.noJoined : tt.noActive}
+        </div>
       )}
 
       {typeOrder.map(type => {
@@ -560,14 +561,18 @@ const overlayStyle: React.CSSProperties = {
   position: 'fixed', inset: 0,
   background: 'rgba(0,0,0,0.75)',
   backdropFilter: 'blur(10px)',
+  WebkitBackdropFilter: 'blur(10px)',
   zIndex: "var(--z-modal, 300)" as any,
   display: 'flex', alignItems: 'flex-end',
+  // iOS safe-area: не прижимаем боттом-шит к системной панели жестов
+  paddingBottom: 'env(safe-area-inset-bottom, 0px)',
 };
 const modalStyle: React.CSSProperties = {
   width: '100%',
   background: 'linear-gradient(180deg,#100C18,#0A080E)',
   borderRadius: '22px 22px 0 0',
-  padding: '16px 20px 28px',
+  // +8px к нижнему паддингу, чтобы кнопки «Донат»/Закрыть не съедались home-indicator'ом
+  padding: '16px 20px calc(28px + env(safe-area-inset-bottom, 0px))',
   borderTop: '.5px solid rgba(212,168,67,.18)',
   maxHeight: '85vh',
   overflowY: 'auto',

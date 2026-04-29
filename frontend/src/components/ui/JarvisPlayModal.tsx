@@ -341,7 +341,7 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
         background: 'rgba(4,3,8,.82)',
         backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
         display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-        paddingBottom: 'calc(82px + env(safe-area-inset-bottom, 0px))',
+        paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))',
         paddingTop: '16px',
       }}
     >

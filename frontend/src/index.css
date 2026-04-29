@@ -1301,11 +1301,21 @@
   color: var(--color-text-primary);
 }
 
-*, *::before, *::after { 
-  box-sizing: border-box; 
-  margin: 0; 
-  padding: 0; 
-  -webkit-tap-highlight-color: transparent; 
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Кликабельные элементы: убираем 300мс задержку двойного тапа iOS + визуальный отклик
+   «Кликаемость кнопок при открытии» (фидбэк Кенана, 2026-04-22) */
+button, [role="button"], a {
+  touch-action: manipulation;
+}
+button:not(:disabled):active, [role="button"]:active {
+  transform: scale(0.97);
+  transition: transform .08s ease-out;
 }
 
 html, body, #root { 
@@ -1776,10 +1786,6 @@ div, span, button, input, select, textarea, p {
 @keyframes slideUpFade { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
 @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-@keyframes skeleton-shimmer {
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
 @keyframes pulse-glow { 0%,100%{box-shadow:0 0 20px rgba(245,200,66,0.2)} 50%{box-shadow:0 0 40px rgba(245,200,66,0.5)} }
 
 /* Устаревшие шахматные анимации (оставляем для обратной совместимости) */

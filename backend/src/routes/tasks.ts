@@ -222,6 +222,80 @@ tasksRouter.get("/puzzles/daily", authMiddleware, async (req: Request, res: Resp
   }
 });
 
+// ─── Sprint 5 (Floor 2: Learning) — последовательные уроки ─────────────────
+// Формула награды: 1000 + 1000 * level
+const lessonReward = (level: number) => BigInt(1000 + 1000 * level);
+
+// GET /api/v1/tasks/lessons/progress
+tasksRouter.get("/lessons/progress", authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const rows = await prisma.$queryRaw<Array<{ userId: string; currentLevel: number; completedAt: Date[] }>>`
+      SELECT "userId", "currentLevel", "completedAt"
+      FROM lesson_progress
+      WHERE "userId" = ${userId}
+      LIMIT 1
+    `;
+    const row = rows[0];
+    const currentLevel = row?.currentLevel ?? 1;
+    const completedLevels = (row?.completedAt ?? []).map((_, i) => i + 1);
+    res.json({
+      currentLevel,
+      completedLevels,
+      completedAt: row?.completedAt ?? [],
+      nextReward: lessonReward(currentLevel).toString(),
+    });
+  } catch (err) {
+    logger.error("[tasks/lessons/progress]", err);
+    res.status(500).json({ error: "Failed to load lesson progress" });
+  }
+});
+
+// POST /api/v1/tasks/lessons/:level/complete
+tasksRouter.post("/lessons/:level/complete", authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const level = Number(req.params.level);
+    if (!Number.isFinite(level) || level < 1 || level > 100) {
+      return res.status(400).json({ error: "Invalid level" });
+    }
+
+    const rows = await prisma.$queryRaw<Array<{ currentLevel: number; completedAt: Date[] }>>`
+      SELECT "currentLevel", "completedAt" FROM lesson_progress WHERE "userId" = ${userId} LIMIT 1
+    `;
+    const current = rows[0]?.currentLevel ?? 1;
+    if (level !== current) {
+      return res.status(400).json({ error: `Текущий уровень: ${current}, нельзя завершить ${level}` });
+    }
+
+    const reward = lessonReward(level);
+    const now = new Date();
+
+    // upsert progress
+    await prisma.$executeRaw`
+      INSERT INTO lesson_progress ("userId", "currentLevel", "completedAt", "updatedAt")
+      VALUES (${userId}, ${level + 1}, ARRAY[${now}::timestamp(3)], ${now})
+      ON CONFLICT ("userId") DO UPDATE
+      SET "currentLevel" = ${level + 1},
+          "completedAt" = lesson_progress."completedAt" || ARRAY[${now}::timestamp(3)],
+          "updatedAt"   = ${now}
+    `;
+
+    await updateBalance(userId, reward, TransactionType.TASK_REWARD, { lessonLevel: level }, { isEmission: true });
+
+    res.json({
+      success: true,
+      level,
+      nextLevel: level + 1,
+      reward: reward.toString(),
+      message: `+${reward} ᚙ за урок ${level}`,
+    });
+  } catch (err) {
+    logger.error("[tasks/lessons/complete]", err);
+    res.status(500).json({ error: "Failed to complete lesson" });
+  }
+});
+
 // ─── POST /api/v1/tasks/puzzles/:id/complete ─────────────────────────────────
 // Проверка решения и начисление награды
 tasksRouter.post("/puzzles/:id/complete", authMiddleware, async (req: Request, res: Response) => {

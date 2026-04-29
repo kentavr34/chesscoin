@@ -9,11 +9,9 @@ import type { Square } from 'chess.js';
 import { getSocket } from '@/api/socket';
 import { api } from '@/api/client';
 import { useGameStore } from '@/store/useGameStore';
-import { FloatingCoins } from '@/components/ui/FloatingCoins';
 import { ChessBoard } from '@/components/game/ChessBoard';
 import { sound } from '@/lib/sound';
 import { fmtBalance } from '@/utils/format';
-import { Avatar } from '@/components/ui/Avatar';
 
 // ── Константы ──────────────────────────────────────────────────────────────────
 const PIECE_SYMBOLS: Record<string, string> = { p: '♟', n: '♞', b: '♝', r: '♜', q: '♛' };
@@ -70,8 +68,34 @@ function lastMoveFromPgn(pgn: string): { from: string; to: string } | null {
   } catch { return null; }
 }
 
-import { CoinIcon } from '@/components/ui/CoinIcon';
-import { DonateModal } from '@/components/ui/DonateModal';
+// ── ChessCoin иконка монеты (золотой конь) ────────────────────────────────────
+const CoinIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
+    <circle cx="16" cy="16" r="15" fill="url(#coinBg)" stroke="url(#coinBorder)" strokeWidth="1.2"/>
+    {/* Орнаментальное кольцо */}
+    <circle cx="16" cy="16" r="12" fill="none" stroke="rgba(180,130,20,.4)" strokeWidth=".6"/>
+    {/* Конь (шахматный конь) */}
+    <path d="M11 24c0-1 .5-2 1.5-2.5L14 21c-1-1-1.5-2.5-1-4 .3-1 1-2 2-2.5-.5-.8-.5-1.5 0-2 .8-.5 2-.3 2.5.5.5.8.3 2-.5 2.5.5.5 1 1.5.8 2.5l2 1c1 .5 1.7 1.5 1.7 2.5v.5H11z" fill="url(#coinKnight)"/>
+    {/* Грива */}
+    <path d="M16.5 12c.5-1 1.5-2 2-3 .3-.5 0-1-.3-1.2-.5-.3-1 0-1.2.5L16 10l-1-.5c-.3-1.5.5-3 2-3.5 1.5-.5 3 .2 3.5 1.5.3.8 0 1.8-.5 2.5l-1 1.5" fill="url(#coinKnight)" opacity=".9"/>
+    <defs>
+      <radialGradient id="coinBg" cx="38%" cy="30%" r="75%">
+        <stop offset="0%" stopColor="#F0C85A"/>
+        <stop offset="55%" stopColor="#D4A843"/>
+        <stop offset="100%" stopColor="#8A6020"/>
+      </radialGradient>
+      <linearGradient id="coinBorder" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#F0C85A"/>
+        <stop offset="50%" stopColor="#A07830"/>
+        <stop offset="100%" stopColor="#F0C85A"/>
+      </linearGradient>
+      <linearGradient id="coinKnight" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor="#120E04"/>
+        <stop offset="100%" stopColor="#1E1608"/>
+      </linearGradient>
+    </defs>
+  </svg>
+);
 
 // ── J.A.R.V.I.S аватар ────────────────────────────────────────────────────────
 const JarvisAva: React.FC<{ size: number }> = ({ size }) => (
@@ -157,13 +181,11 @@ interface PanelProps {
   timeSecs: number;
   isActive: boolean;
   isGameOver: boolean;
-  playerId?: string;
-  onAvatarClick?: () => void;
 }
 
 const PlayerPanel: React.FC<PanelProps> = ({
   name, elo, avatar, isBot, isWhite, country, captured, advantage: adv,
-  coins, timeDisplay, timeSecs, isActive, isGameOver, onAvatarClick,
+  coins, timeDisplay, timeSecs, isActive, isGameOver,
 }) => {
   const sorted = useMemo(() => sortCaptured(captured), [captured]);
   const isCritical = isActive && timeSecs > 0 && timeSecs < 15;
@@ -182,10 +204,8 @@ const PlayerPanel: React.FC<PanelProps> = ({
       transition: 'background .3s, border-color .3s',
     }}>
 
-      {/* ── Аватар (кликабельный → /profile/:id) ──────────────────────── */}
-      <div
-        onClick={onAvatarClick}
-        style={{
+      {/* ── Аватар ─────────────────────────────────────────────────────────── */}
+      <div style={{
         width: AV, height: AV, borderRadius: '50%', flexShrink: 0,
         background: isBot ? 'rgba(74,158,255,.1)' : 'rgba(212,168,67,.07)',
         border: `1.5px solid ${
@@ -195,7 +215,6 @@ const PlayerPanel: React.FC<PanelProps> = ({
         }`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         overflow: 'hidden',
-        cursor: onAvatarClick && !isBot ? 'pointer' : 'default',
         boxShadow: isActive
           ? `0 0 14px ${isBot ? 'rgba(74,158,255,.3)' : 'rgba(61,186,122,.25)'}`
           : 'none',
@@ -612,8 +631,7 @@ export function GamePage() {
   const [showResignDialog,  setShowResignDialog]  = useState(false);
   const [donatePool,        setDonatePool]        = useState<string | null>(null);
   const [spectatorCount,    setSpectatorCount]    = useState(session?.spectatorCount ?? 0);
-  const [showDonateModal, setShowDonateModal] = useState(false);
-  const [donationFx, setDonationFx] = useState<string | null>(null);
+  const [selectedDonateAmt, setSelectedDonateAmt] = useState(1000);
 
   const mySecsRef   = useRef(0);
   const oppSecsRef  = useRef(0);
@@ -625,9 +643,26 @@ export function GamePage() {
     && session.status !== 'IN_PROGRESS'
     && session.status !== 'WAITING_FOR_OPPONENT';
 
-  const isBattle    = session?.type === 'BATTLE';
-  const isSpectator = isBattle && !session?.mySideId;
-  const hasBet      = isBattle && session?.bet && BigInt(session.bet) > 0n;
+  const isBattle        = session?.type === 'BATTLE';
+  const isSpectator     = isBattle && !session?.mySideId;
+  const hasBet          = isBattle && session?.bet && BigInt(session.bet) > 0n;
+  const isPrivateBattle = isBattle && !!session?.isPrivate;
+  const isPublicBattle  = isBattle && !session?.isPrivate;
+
+  // ── Касса: ставки обоих игроков + донаты зрителей ─────────────────────────
+  // СИНХРОНИЗАЦИЯ С backend/src/services/game/finish.ts:
+  //   • комиссия 10% берётся ТОЛЬКО со ставок (totalPot = bet*2)
+  //   • донаты зрителей целиком уходят победителю (без комиссии)
+  //   • ничья: каждому возвращается его ставка, донаты распределяются по правилам бэка
+  const betBig         = session?.bet ? BigInt(session.bet) : 0n;
+  const totalBetPot    = betBig * 2n;
+  const donationsBig   = donatePool ? BigInt(donatePool) : 0n;
+  const bank           = totalBetPot + donationsBig;        // вся касса (для отображения)
+  const BANK_COMMISSION_PCT = 10n;                          // комиссия стола
+  const bankCommission = (totalBetPot * BANK_COMMISSION_PCT) / 100n; // 10% со ставок
+  const winnerTake     = totalBetPot - bankCommission + donationsBig; // ставки-10% + донаты 100%
+  // viewCount — накопительный счётчик просмотров (backend: sessions.viewCount, опционально)
+  const viewCount      = session?.viewCount ?? 0;
 
   useEffect(() => { isMyTurnRef.current = isMyTurn; },  [isMyTurn]);
   useEffect(() => { gameOverRef.current = gameOver; }, [gameOver]);
@@ -648,7 +683,9 @@ export function GamePage() {
 
     const onDonated = (data: { totalPool: string; amount: string }) => {
       setDonatePool(data.totalPool);
-      setDonationFx(data.amount);
+      window.dispatchEvent(new CustomEvent('chesscoin:toast', {
+        detail: { text: `🎁 +${fmtBalance(data.amount)} ᚙ доната`, type: 'info' }
+      }));
     };
     sock.on('battle:donated', onDonated);
 
@@ -846,7 +883,7 @@ export function GamePage() {
     );
   }
 
-  const opLabel = oppSide?.isBot ? 'J.A.R.V.I.S' : (oppSide?.player.firstName ?? '?');
+  const opLabel = opSide?.isBot ? 'J.A.R.V.I.S' : (opSide?.player.firstName ?? '?');
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: '#0B0D11', display: 'flex', flexDirection: 'column', fontFamily: 'Inter, sans-serif', overflow: 'hidden' }}>
@@ -891,7 +928,6 @@ export function GamePage() {
           isWhite={oppIsWhite} country={oppCountry} captured={oppCaptured} advantage={oppAdv} coins={oppCoins}
           timeDisplay={oppTimeDisplay} timeSecs={oppTimeSecs}
           isActive={!isMyTurn && !gameOver} isGameOver={gameOver}
-          onAvatarClick={() => { const pid = oppSide?.player?.id; if (pid && !oppIsBot) navigate(`/profile/${pid}`); }}
         />
       </div>
 
@@ -918,11 +954,11 @@ export function GamePage() {
             sessionId={sessionId}
           />
 
-          {/* ── Счётчик зрителей (топ-правый угол доски) ── */}
-          {isBattle && spectatorCount > 0 && (
+          {/* ── Публичный батл: наблюдатели лайв + всего просмотров (топ-правый угол доски) ── */}
+          {isPublicBattle && (
             <div style={{
               position: 'absolute', top: 6, right: 6,
-              display: 'flex', alignItems: 'center', gap: 4,
+              display: 'flex', alignItems: 'center', gap: 8,
               background: 'rgba(0,0,0,.6)',
               border: '.5px solid rgba(255,255,255,.12)',
               borderRadius: 20,
@@ -930,14 +966,36 @@ export function GamePage() {
               pointerEvents: 'none',
               zIndex: 10,
             }}>
-              {/* Иконка глаза */}
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                <path d="M1 12S5 5 12 5s11 7 11 7-4 7-11 7S1 12 1 12z" stroke="rgba(154,148,144,.8)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                <circle cx="12" cy="12" r="3" stroke="rgba(154,148,144,.8)" strokeWidth="1.8"/>
-              </svg>
-              <span style={{ fontSize: '.62rem', color: '#9A9490', fontWeight: 600, letterSpacing: '.01em' }}>
-                {spectatorCount}
-              </span>
+              {/* Лайв-зрители (пульс-индикатор, если > 0) */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                {spectatorCount > 0 && (
+                  <span style={{
+                    width: 6, height: 6, borderRadius: '50%',
+                    background: '#E7484F',
+                    animation: 'gp-pulse 1.4s infinite',
+                    boxShadow: '0 0 5px #E7484F',
+                  }} />
+                )}
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                  <path d="M1 12S5 5 12 5s11 7 11 7-4 7-11 7S1 12 1 12z" stroke="rgba(154,148,144,.8)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  <circle cx="12" cy="12" r="3" stroke="rgba(154,148,144,.8)" strokeWidth="1.8"/>
+                </svg>
+                <span style={{ fontSize: '.62rem', color: '#9A9490', fontWeight: 700, letterSpacing: '.01em' }}>
+                  {spectatorCount}
+                </span>
+              </div>
+              {/* Разделитель */}
+              <span style={{ width: 1, height: 10, background: 'rgba(255,255,255,.15)' }} />
+              {/* Всего просмотров */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 4.5C7 4.5 3 8.5 3 12s4 7.5 9 7.5 9-4 9-7.5-4-7.5-9-7.5z" stroke="rgba(154,148,144,.8)" strokeWidth="1.8" strokeLinecap="round"/>
+                  <path d="M12 8v4l2 2" stroke="rgba(154,148,144,.8)" strokeWidth="1.8" strokeLinecap="round"/>
+                </svg>
+                <span style={{ fontSize: '.62rem', color: '#9A9490', fontWeight: 600, letterSpacing: '.01em' }}>
+                  {viewCount >= 1000 ? `${(viewCount / 1000).toFixed(1)}K` : viewCount}
+                </span>
+              </div>
             </div>
           )}
         </div>
@@ -953,59 +1011,69 @@ export function GamePage() {
         )}
       </div>
 
-      {/* Анимация доната (FloatingCoins) */}
-      {donationFx && (
-        <FloatingCoins amount={donationFx} onDone={() => setDonationFx(null)} />
-      )}
-
-      {/* Share-FAB для публичных батлов — даёт линк на spectate */}
-      {isBattle && session && !session.isPrivate && (
-        <button
-          onClick={() => {
-            const url = `https://t.me/share/url?url=${encodeURIComponent(`https://t.me/ChessCoinBot/app?startapp=spectate_${session.id}`)}&text=${encodeURIComponent('Смотри шахматный батл 🔥 донатируй победителя')}`;
-            window.open(url, '_blank');
-          }}
-          aria-label="Поделиться"
-          style={{
-            position: 'absolute',
-            top: 10,
-            right: 10,
-            zIndex: 15,
-            width: 34, height: 34,
-            borderRadius: '50%',
-            border: '.5px solid rgba(130,207,255,.35)',
-            background: 'rgba(130,207,255,.10)',
-            color: '#82CFFF',
-            cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontFamily: 'inherit',
-            backdropFilter: 'blur(6px)',
-          }}
-        >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-            <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-            <path d="M12 3v13M7 8l5-5 5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
-      )}
-
-      {/* ── Пул доната (между статус-полоской и панелью игрока) ─────────── */}
-      {isBattle && donatePool && BigInt(donatePool) > 0n && (
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          background: 'rgba(212,168,67,.08)',
-          border: '.5px solid rgba(212,168,67,.2)',
-          borderRadius: 10,
-          padding: '6px 14px',
-          margin: '0 10px',
-          flexShrink: 0,
-        }}>
-          {/* Монета */}
-          <CoinIcon size={14} />
-          <span style={{ fontSize: '.68rem', color: '#D4A843', fontWeight: 700, letterSpacing: '.01em' }}>
-            Пул доната: {fmtBalance(donatePool)} ᚙ
-          </span>
-        </div>
+      {/* ── Касса батла (между статус-полоской и панелью игрока) ─────────
+          Private — компактная: банк + «победителю после 10%».
+          Public — с разбивкой: ставки + донаты → итого → победителю. */}
+      {isBattle && hasBet && (
+        isPrivateBattle ? (
+          /* Приватный: только касса, без зрителей/доната */
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+            background: 'rgba(212,168,67,.08)',
+            border: '.5px solid rgba(212,168,67,.22)',
+            borderRadius: 10,
+            padding: '6px 12px',
+            margin: '0 10px',
+            flexShrink: 0,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <CoinIcon size={14} />
+              <span style={{ fontSize: '.62rem', color: '#9A9490', fontWeight: 600, letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                Касса
+              </span>
+              <span style={{ fontSize: '.78rem', color: '#F0C85A', fontWeight: 800 }}>
+                {fmtBalance(bank.toString())} ᚙ
+              </span>
+            </div>
+            <div style={{ fontSize: '.58rem', color: '#6E6A66', fontWeight: 600, letterSpacing: '.02em' }}>
+              победителю <span style={{ color: '#4DDA8A', fontWeight: 800 }}>{fmtBalance(winnerTake.toString())} ᚙ</span>
+              <span style={{ color: '#4A4440' }}> · комиссия 10%</span>
+            </div>
+          </div>
+        ) : (
+          /* Публичный: касса + разбивка (ставки / донаты) + к выплате */
+          <div style={{
+            display: 'flex', flexDirection: 'column', gap: 4,
+            background: 'linear-gradient(135deg, rgba(212,168,67,.10), rgba(212,168,67,.04))',
+            border: '.5px solid rgba(212,168,67,.28)',
+            borderRadius: 12,
+            padding: '7px 12px',
+            margin: '0 10px',
+            flexShrink: 0,
+          }}>
+            {/* Строка 1: Касса + общая сумма */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <CoinIcon size={14} />
+                <span style={{ fontSize: '.62rem', color: '#D4A843', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                  Касса
+                </span>
+              </div>
+              <span style={{ fontSize: '.86rem', color: '#F0C85A', fontWeight: 800, letterSpacing: '.01em' }}>
+                {fmtBalance(bank.toString())} ᚙ
+              </span>
+            </div>
+            {/* Строка 2: разбивка ставки + донаты */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, fontSize: '.56rem', color: '#7A7470', fontWeight: 600 }}>
+              <span>ставки: <span style={{ color: '#A8A29C' }}>{fmtBalance(totalBetPot.toString())}</span></span>
+              <span>донаты: <span style={{ color: donationsBig > 0n ? '#E78F4F' : '#5A5550' }}>{fmtBalance(donationsBig.toString())}</span></span>
+              <span>
+                победителю: <span style={{ color: '#4DDA8A', fontWeight: 800 }}>{fmtBalance(winnerTake.toString())}</span>
+                <span style={{ color: '#4A4440' }}> · стол 10%</span>
+              </span>
+            </div>
+          </div>
+        )
       )}
 
       {/* ── Игрок (снизу, вплотную к доске) ──────────────────────────────── */}
@@ -1015,7 +1083,6 @@ export function GamePage() {
           isWhite={myColor === 'white'} country={myCountry} captured={myCaptured} advantage={myAdv} coins={myCoins}
           timeDisplay={myTimeDisplay} timeSecs={myTimeSecs}
           isActive={isMyTurn && !gameOver} isGameOver={gameOver}
-          onAvatarClick={() => { const pid = mySide?.player?.id; if (pid) navigate(`/profile/${pid}`); }}
         />
       </div>
 
@@ -1024,9 +1091,9 @@ export function GamePage() {
 
       {/* ── Панель действий ──────────────────────────────────────────────── */}
       {isSpectator ? (
-        /* ── Панель зрителя: Выйти | Донат | Зрители ──────────────────── */
+        /* ── Панель зрителя: Выйти | [Донат — только public] | Зрители ── */
         <div style={{
-          display: 'grid', gridTemplateColumns: '1fr 2fr 1fr',
+          display: 'grid', gridTemplateColumns: isPublicBattle ? '1fr 2fr 1fr' : '1fr 1fr',
           height: ACTBAR_H,
           paddingBottom: 'max(0px, env(safe-area-inset-bottom, 0px))',
           borderTop: '.5px solid rgba(255,255,255,.09)',
@@ -1049,27 +1116,52 @@ export function GamePage() {
             Выйти
           </button>
 
-          {/* Донат — открываем модал с ползунком и пресетами (как в CreateBattleModal) */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {/* Донат с выбором суммы — только для публичных батлов */}
+          {isPublicBattle && (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+            {/* Быстрые суммы */}
+            <div style={{ display: 'flex', gap: 4 }}>
+              {[1000, 5000, 10000, 50000].map(amt => (
+                <button
+                  key={amt}
+                  onClick={() => setSelectedDonateAmt(amt)}
+                  style={{
+                    padding: '2px 6px', borderRadius: 6, border: 'none', cursor: 'pointer',
+                    fontFamily: 'inherit', fontSize: '.58rem', fontWeight: 700,
+                    background: selectedDonateAmt === amt ? 'rgba(212,168,67,.25)' : 'rgba(255,255,255,.06)',
+                    color: selectedDonateAmt === amt ? '#F0C85A' : '#5A5248',
+                    transition: 'background .15s, color .15s',
+                  }}
+                >
+                  {amt >= 1000 ? `${amt / 1000}K` : amt}
+                </button>
+              ))}
+            </div>
+            {/* Кнопка доната */}
             <button
               disabled={gameOver}
-              onClick={() => { if (!gameOver) setShowDonateModal(true); }}
+              onClick={() => {
+                if (gameOver) return;
+                getSocket().emit('battle:donate', { sessionId, amount: String(selectedDonateAmt) });
+              }}
               style={{
-                padding: '8px 22px', borderRadius: 12,
+                padding: '5px 18px', borderRadius: 10,
                 background: gameOver ? 'rgba(255,255,255,.04)' : 'linear-gradient(135deg,#2A1E08,#4A3810)',
                 border: `.5px solid ${gameOver ? 'rgba(255,255,255,.08)' : 'rgba(212,168,67,.42)'}`,
                 color: gameOver ? '#3A3028' : '#F0C85A',
-                fontSize: '.82rem', fontWeight: 800,
+                fontSize: '.72rem', fontWeight: 800,
                 cursor: gameOver ? 'default' : 'pointer', fontFamily: 'inherit',
-                display: 'flex', alignItems: 'center', gap: 6,
+                display: 'flex', alignItems: 'center', gap: 5,
               }}
             >
-              <CoinIcon size={14} />
-              Задонатить
+              <CoinIcon size={12} />
+              Задонатить {fmtBalance(String(selectedDonateAmt))} ᚙ
             </button>
           </div>
+          )}
 
-          {/* Зрители */}
+          {/* Зрители (только публичные: лайв + всего) */}
+          {isPublicBattle && (
           <div style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
             gap: 3,
@@ -1079,9 +1171,25 @@ export function GamePage() {
               <circle cx="12" cy="12" r="3" stroke="#9A9490" strokeWidth="1.6"/>
             </svg>
             <span style={{ fontSize: '.62rem', color: '#9A9490', fontWeight: 600 }}>
-              {spectatorCount} зрит.
+              {spectatorCount} лайв
+            </span>
+            <span style={{ fontSize: '.54rem', color: '#6A6460', fontWeight: 600 }}>
+              {viewCount >= 1000 ? `${(viewCount / 1000).toFixed(1)}K` : viewCount} всего
             </span>
           </div>
+          )}
+
+          {/* Зрители приватного батла (компактно, без доната) */}
+          {isPrivateBattle && (
+          <div style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            gap: 3,
+          }}>
+            <span style={{ fontSize: '.62rem', color: '#6A6460', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase' }}>
+              🔒 Приватный
+            </span>
+          </div>
+          )}
         </div>
       ) : (
         /* ── Обычная панель: 4 кнопки ──────────────────────────────────── */
@@ -1191,17 +1299,6 @@ export function GamePage() {
         />
       )}
 
-      {/* ── Модал доната ──────────────────────────────────────────────────── */}
-      {showDonateModal && (
-        <DonateModal
-          currentPool={donatePool}
-          onClose={() => setShowDonateModal(false)}
-          onSubmit={(amount) => {
-            getSocket().emit('battle:donate', { sessionId, amount: String(amount) });
-          }}
-        />
-      )}
-
       {/* ── Bottom sheet результата ────────────────────────────────────────── */}
       {resultType && (
         <ResultSheet
@@ -1210,6 +1307,112 @@ export function GamePage() {
           pieceCoins={session.pieceCoins}
           onRematch={() => navigate('/')}
           onHome={() => navigate('/')}
+        />
+      )}
+
+      {/* Метка хода */}
+      <div style={{ textAlign: 'center', padding: '4px 0 2px', flexShrink: 0 }}>
+        {!isGameOver && (
+          <span style={isMyTurn
+            ? tagStyle('var(--green, #00D68F)', 'rgba(0,214,143,0.10)')
+            : tagStyle('var(--text-secondary, #8B92A8)', 'var(--bg-input, #232840)')}>
+            {isMyTurn ? t.game.yourTurn : t.game.opponentTurn}
+          </span>
+        )}
+      </div>
+
+      {/* Я */}
+      <div style={{ padding: '4px 12px', flexShrink: 0 }}>
+        <PlayerRow player={mySide?.player ?? user as import("@/types").User & { telegramId: string }}
+          timeLeft={mySide?.timeLeft ?? 0}
+          isActive={isMyTurn && !isGameOver} label={t.game.you} isMe />
+      </div>
+
+      {/* Кнопки */}
+      {!isGameOver ? (
+        <div style={{ display: 'flex', gap: 6, padding: '6px 12px', flexShrink: 0 }}>
+          <button onClick={() => navigate('/')} style={actionBtn()}>{t.common.back}</button>
+          <button onClick={() => getSocket().emit('game:offer_draw', { sessionId: session.id })}
+            style={actionBtn()}>{t.game.offerDraw}</button>
+          <button onClick={() => setConfirmSurrender(true)}
+            style={actionBtn('var(--red, #FF4D6A)', 'rgba(255,77,106,0.08)')}>{t.game.surrender}</button>
+        </div>
+      ) : !showResult ? (
+        <div style={{ padding: '6px 12px', flexShrink: 0 }}>
+          <button onClick={handleResultClose} style={{ ...actionBtn(), width: '100%' }}>{t.gameResult.backToMenu}</button>
+        </div>
+      ) : null}
+
+      {/* История ходов */}
+      <div style={{
+        margin: '4px 12px 8px', padding: '8px 12px',
+        background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.07)',
+        borderRadius: 14, flexShrink: 0,
+      }}>
+        <div style={labelStyle}>{t.game.moveHistory}</div>
+        <MoveHistory pgn={session.pgn} />
+      </div>
+
+      <div style={{ height: 82, flexShrink: 0 }} />
+
+      {/* Оффер ничьи */}
+      {drawOfferedBy && drawOfferedBy !== user?.id && (
+        <Overlay>
+          <ModalBox>
+            <div style={modalTitle}>{t.game.drawOffered}</div>
+            <div style={modalSub}>{t.game.drawOffered}. {t.game.acceptDraw}?</div>
+            <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+              <button onClick={() => {
+                getSocket().emit('game:accept_draw', { sessionId: session.id }, () => {});
+                setDrawOffered(null);
+              }} style={btnGold}>{t.game.acceptDraw}</button>
+              <button onClick={() => {
+                setDrawOffered(null);
+                getSocket().emit('game:decline_draw', { sessionId: session.id });
+              }} style={btnSecondary}>{t.game.declineDraw}</button>
+            </div>
+          </ModalBox>
+        </Overlay>
+      )}
+
+      {/* Подтверждение сдачи */}
+      {confirmSurrender && (
+        <Overlay>
+          <ModalBox>
+            <div style={modalTitle}>{t.game.confirmSurrender}</div>
+            <div style={modalSub}>
+              {session.bet ? t.game.surrenderLoss(fmtBalance(session.bet)) : t.game.surrenderDefault}
+            </div>
+            <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+              <button onClick={handleSurrender} style={btnDanger}>{t.game.confirmSurrenderYes}</button>
+              <button onClick={() => setConfirmSurrender(false)} style={btnGold}>{t.common.cancel}</button>
+            </div>
+          </ModalBox>
+        </Overlay>
+      )}
+
+      {/* V3: Победный экран */}
+      {showVictory && resultData && (
+        <VictoryScreen
+          result={resultData.result}
+          opponentName={opSide?.player?.firstName}
+          earned={resultData.earned}
+          onDone={() => setShowVictory(false)}
+        />
+      )}
+
+      {/* Модал результата */}
+      {showResult && resultData && (
+        <GameResultModal
+          result={resultData.result}
+          earned={resultData.earned}
+          commission={resultData.commission}
+          pieceCoins={resultData.pieceCoins}
+          botLevelName={isBotGame && session?.botLevel ? JARVIS_LEVELS[Math.max(0, Math.min(JARVIS_LEVELS.length - 1, (session.botLevel ?? 1) - 1))]?.name : undefined}
+          userTelegramId={(user as import("@/types").User & { telegramId: string })?.telegramId}
+          sessionId={session?.id}
+          onClose={handleResultClose}
+          onRematch={isBotGame ? handleRematch : undefined}
         />
       )}
     </div>

@@ -13,19 +13,17 @@ interface ServerToClient {
   'battles:list': (battles: BattleLobbyItem[]) => void;
   'battles:added': (battle: BattleLobbyItem) => void;
   'battles:removed': (sessionId: string) => void;
-  'battles:live:list': (battles: GameSession[]) => void;
-  'battles:live:added': (battle: GameSession) => void;
-  'battles:live:removed': (sessionId: string) => void;
   'battle:donated': (data: { donorId: string; amount: string; totalPool: string }) => void;
-  'battle:spectators': (data: { sessionId: string; count: number }) => void;
   'pong': () => void;
 }
 
 interface ClientToServer {
   'game:current': (cb: SocketCallback<{ sessions: GameSession[] }>) => void;
   'game:create:bot': (data: { color: 'white' | 'black'; botLevel: number; timeSeconds?: number }, cb: SocketCallback<{ session: GameSession }>) => void;
-  'game:create:battle': (data: { color: 'white' | 'black' | 'random'; duration: number; bet: string; isPrivate?: boolean }, cb: SocketCallback<{ session: GameSession }>) => void;
+  'game:create:battle': (data: { color: 'white' | 'black'; duration: number; bet: string; isPrivate?: boolean }, cb: SocketCallback<{ session: GameSession }>) => void;
   'game:join': (data: { code: string }, cb: SocketCallback<{ session: GameSession }>) => void;
+  // Автоформирование публичных батлов: найти соперника либо создать батл
+  'matchmaking:quick': (data: { duration: number; bet: string }, cb: SocketCallback<{ session: GameSession; matched: boolean }>) => void;
   'game:move': (data: { sessionId: string; from: string; to: string; promotion?: string }, cb: SocketCallback<{ session: GameSession }>) => void;
   'game:surrender': (data: { sessionId: string }, cb: SocketCallback<Record<string, never>>) => void;
   'game:cancel': (data: { sessionId: string }, cb: SocketCallback<Record<string, never>>) => void;
@@ -36,7 +34,7 @@ interface ClientToServer {
   'unspectate': (data: { sessionId: string }) => void;
   'battles:subscribe': () => void;
   'battles:unsubscribe': () => void;
-  'battle:donate': (data: { sessionId: string; amount: string }, cb?: SocketCallback<{ donationPool: string }>) => void;
+  'battle:donate': (data: { sessionId: string; amount: string }, cb: SocketCallback<{ donationPool: string }>) => void;
   'ping': () => void;
 }
 

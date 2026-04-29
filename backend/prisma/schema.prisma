@@ -719,20 +719,26 @@ model TournamentPlayer {
 }
 
 model TournamentMatch {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   tournamentId String
   player1Id    String?
   player2Id    String?
   winnerId     String?
-  round        Int      @default(1)
-  matchOrder   Int      @default(1)
-  sessionId    String?  // связанная игровая сессия
-  status       String   @default("PENDING") // PENDING | IN_PROGRESS | FINISHED
-  createdAt    DateTime @default(now())
+  round        Int       @default(1)
+  matchOrder   Int       @default(1)
+  sessionId    String?   // связанная игровая сессия
+  status       String    @default("PENDING") // PENDING | IN_PROGRESS | FINISHED
+  // Sprint 4: Swiss-system + 24h autoloss
+  deadline     DateTime? // дедлайн матча (now + 24h)
+  points       Float     @default(0) // очки матча (1 win, 0.5 draw, 0 loss)
+  buchholz     Float     @default(0) // Buchholz-тайбрейк (sum of opponents' points)
+  createdAt    DateTime  @default(now())
 
   tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 
   @@index([tournamentId])
+  @@index([sessionId])
+  @@index([deadline])
   @@map("tournament_matches")
 }
 
@@ -1092,4 +1098,14 @@ enum TradeOrderStatus {
   OPEN
   FILLED
   CANCELLED
+}
+
+// Sprint 5 (Floor 2: Learning) — последовательное прохождение уровней-уроков
+model LessonProgress {
+  userId       String     @id
+  currentLevel Int        @default(1)
+  completedAt  DateTime[]
+  updatedAt    DateTime   @updatedAt @default(now())
+
+  @@map("lesson_progress")
 }

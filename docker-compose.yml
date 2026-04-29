@@ -36,6 +36,9 @@ services:
       RESERVE_POOL_SIZE: 5
       AUTH_TYPE: scram-sha-256
     volumes:
+      # :rw — edoburu/pgbouncer entrypoint чинит userlist.txt на старте
+      # (иначе при отсутствии файла Docker создаёт директорию, pgbouncer падает exit 127).
+      # Фикс 2026-04-22: «после reset всё должно работать само».
       - ./pgbouncer-userlist.txt:/etc/pgbouncer/userlist.txt
     depends_on:
       postgres:
@@ -107,6 +110,11 @@ services:
         max-size: "50m"    # M2: ротация логов — максимум 50MB на файл
         max-file: "5"      # хранить 5 файлов = до 250MB
     depends_on:
+      # Backend должен стартовать ТОЛЬКО когда pgbouncer healthy —
+      # иначе на холодном reboot backend зацикливается в Restarting,
+      # пока pgbouncer разбирается с userlist.txt. Фикс 2026-04-22.
+      pgbouncer:
+        condition: service_healthy
       postgres:
         condition: service_healthy
       redis:

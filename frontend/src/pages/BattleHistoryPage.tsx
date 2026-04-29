@@ -5,20 +5,30 @@ import { Avatar } from '@/components/ui/Avatar';
 import { profileApi } from '@/api';
 import { fmtBalance, fmtDate } from '@/utils/format';
 import { PgnReplayModal } from '@/components/profile/PgnReplayModal';
+import { useUserStore } from '@/store/useUserStore';
 import type { UserPublic } from '@/types';
 
-import { CoinIcon } from '@/components/ui/CoinIcon';
+// CoinIcon — золотой конь
+const CoinIcon: React.FC<{ size?: number }> = ({ size = 12 }) => (
+  <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
+    <circle cx="16" cy="16" r="15" fill="url(#hcbg)" stroke="url(#hcbrd)" strokeWidth="1.2"/>
+    <path d="M11 24c0-1 .5-2 1.5-2.5L14 21c-1-1-1.5-2.5-1-4 .3-1 1-2 2-2.5-.5-.8-.5-1.5 0-2 .8-.5 2-.3 2.5.5.5.8.3 2-.5 2.5.5.5 1 1.5.8 2.5l2 1c1 .5 1.7 1.5 1.7 2.5v.5H11z" fill="url(#hckn)"/>
+    <path d="M16.5 12c.5-1 1.5-2 2-3 .3-.5 0-1-.3-1.2-.5-.3-1 0-1.2.5L16 10l-1-.5c-.3-1.5.5-3 2-3.5 1.5-.5 3 .2 3.5 1.5.3.8 0 1.8-.5 2.5l-1 1.5" fill="url(#hckn)" opacity=".9"/>
+    <defs>
+      <radialGradient id="hcbg" cx="38%" cy="30%" r="75%"><stop offset="0%" stopColor="#F0C85A"/><stop offset="55%" stopColor="#D4A843"/><stop offset="100%" stopColor="#8A6020"/></radialGradient>
+      <linearGradient id="hcbrd" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#F0C85A"/><stop offset="50%" stopColor="#A07830"/><stop offset="100%" stopColor="#F0C85A"/></linearGradient>
+      <linearGradient id="hckn" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#120E04"/><stop offset="100%" stopColor="#1E1608"/></linearGradient>
+    </defs>
+  </svg>
+);
 
 interface HistoryGame {
   sessionId: string;
   type: string;
   result: string;
   isWhite: boolean;
-  isPrivate?: boolean;
-  sourceType?: 'TOURNAMENT' | 'WAR' | null;
   winningAmount?: string | null;
   bet?: string | null;
-  totalPool?: string | null;   // ставка × 2 + донаты (для публичных батлов)
   botLevel?: number | null;
   pgn?: string | null;
   finishedAt?: string | null;
@@ -26,9 +36,8 @@ interface HistoryGame {
   hasBot?: boolean;
 }
 
-// Этапы жизни одной партии — это «вызов → сражение → история».
-// Здесь, в «истории», вкладки — это ФОРМАТ уже сыгранной партии: публичный батл, приватный, турнир, война.
-type FilterTab = 'public' | 'private' | 'tournament' | 'war';
+// Бот-игры исключены из истории батлов как «процесс» (это тренировка, а не стат-батл)
+type FilterTab = 'all' | 'battle' | 'friendly';
 type SortKey = 'date' | 'bet' | 'result';
 
 const PAGE_SIZE = 20;
@@ -73,10 +82,9 @@ const HandshakeIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
 );
 
 const FILTER_TABS: { key: FilterTab; label: string }[] = [
-  { key: 'public',     label: 'Публичные' },
-  { key: 'private',    label: 'Приватные' },
-  { key: 'tournament', label: 'Турниры' },
-  { key: 'war',        label: 'Воины' },
+  { key: 'all', label: 'Все' },
+  { key: 'battle', label: 'Батлы' },
+  { key: 'friendly', label: 'Дружеские' },
 ];
 
 export const BattleHistoryPage: React.FC = () => {
@@ -85,11 +93,18 @@ export const BattleHistoryPage: React.FC = () => {
   const [total, setTotal] = useState(0);
   const [offset, setOffset] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [activeFilter, setActiveFilter] = useState<FilterTab>('public');
+  const [activeFilter, setActiveFilter] = useState<FilterTab>('all');
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('date');
   const [showSort, setShowSort] = useState(false);
-  const [replayData, setReplayData] = useState<{ pgn: string; title: string; sessionId: string } | null>(null);
+  const [replayData, setReplayData] = useState<{
+    pgn: string;
+    title: string;
+    sessionId: string;
+    whitePlayer?: UserPublic | null;
+    blackPlayer?: UserPublic | null;
+  } | null>(null);
+  const me = useUserStore((s) => s.user);
 
   const loadGames = useCallback(async (off: number) => {
     setLoading(true);
@@ -109,21 +124,18 @@ export const BattleHistoryPage: React.FC = () => {
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
 
   const filteredGames = games
-    // Подстраховка на случай, если бэк вернёт бота — в историю батлов не пускаем никогда
+    // Бот-игры вычищены из истории батлов: это тренировка, не стат-процесс
     .filter((g) => !g.hasBot)
     .filter((g) => {
-      if (activeFilter === 'tournament') return g.sourceType === 'TOURNAMENT';
-      if (activeFilter === 'war')        return g.sourceType === 'WAR';
-      if (activeFilter === 'private')    return !g.sourceType && (g.isPrivate || g.type === 'FRIENDLY');
-      // public: обычные публичные батлы (не турнир, не война, не приватный)
-      return !g.sourceType && !g.isPrivate && g.type !== 'FRIENDLY';
+      if (activeFilter === 'friendly') return g.type === 'FRIENDLY';
+      if (activeFilter === 'battle') return g.type !== 'FRIENDLY';
+      return true; // 'all'
     })
     .filter((g) => {
       if (!search.trim()) return true;
       const q = search.trim().toLowerCase();
       const name = (g.opponent?.firstName ?? '').toLowerCase();
-      const botName = g.hasBot ? `jarvis lv.${g.botLevel}` : '';
-      return name.includes(q) || botName.includes(q);
+      return name.includes(q);
     })
     .sort((a, b) => {
       if (sortKey === 'date') {
@@ -293,7 +305,7 @@ export const BattleHistoryPage: React.FC = () => {
       {/* Список партий */}
       {!loading && filteredGames.length > 0 && (
         <>
-          {/* Счётчик */}
+          {/* Счётчик — показываем только отфильтрованные (без бот-игр) */}
           <div style={{
             padding: '0 16px 6px',
             fontSize: '.62rem',
@@ -301,7 +313,7 @@ export const BattleHistoryPage: React.FC = () => {
             fontFamily: 'Inter, sans-serif',
             fontWeight: 500,
           }}>
-            {total} партий · стр. {currentPage} из {totalPages}
+            {filteredGames.length} на стр. · стр. {currentPage} из {totalPages}
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '0 14px' }}>
@@ -340,6 +352,9 @@ export const BattleHistoryPage: React.FC = () => {
                     pgn: g.pgn,
                     title: g.opponent?.firstName ? `vs ${g.opponent.firstName}` : (g.hasBot ? `vs J.A.R.V.I.S Lv.${g.botLevel}` : 'Партия'),
                     sessionId: g.sessionId,
+                    // Раскладка по цветам: клик по аватару → профиль игрока
+                    whitePlayer: g.isWhite ? (me as UserPublic | null) : g.opponent,
+                    blackPlayer: g.isWhite ? g.opponent : (me as UserPublic | null),
                   })}
                 >
                   {/* Цветная полоска статуса */}
@@ -404,33 +419,16 @@ export const BattleHistoryPage: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Дата + ставка/касса */}
+                  {/* Дата + ставка */}
                   <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 3 }}>
                     <div style={{ fontSize: '.65rem', color: '#7A7875' }}>
                       {g.finishedAt ? fmtDate(g.finishedAt) : ''}
                     </div>
-                    {/* На публичных батлах показываем ОБЩУЮ КАССУ (ставка × 2 + донаты).
-                        На приватных/турнирах/войнах — просто свою ставку. */}
-                    {(() => {
-                      const isPublicBattle = !g.isPrivate && !g.sourceType && !g.hasBot && g.type === 'BATTLE';
-                      if (isPublicBattle && g.totalPool && BigInt(g.totalPool) > 0n) {
-                        return (
-                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: '.62rem' }}>
-                            <span style={{ color: '#7A6840', fontWeight: 600, fontSize: '.55rem', textTransform: 'uppercase', letterSpacing: '.08em' }}>Касса</span>
-                            <span style={{ color: '#D4A843', fontWeight: 800 }}>{fmtBalance(g.totalPool)}</span>
-                            <CoinIcon size={10} />
-                          </div>
-                        );
-                      }
-                      if (g.bet && BigInt(g.bet) > 0n) {
-                        return (
-                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 2, color: '#5A5248', fontSize: '.62rem' }}>
-                            {fmtBalance(g.bet)} <CoinIcon size={10} />
-                          </div>
-                        );
-                      }
-                      return null;
-                    })()}
+                    {g.bet && BigInt(g.bet) > 0n && (
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 2, color: '#5A5248', fontSize: '.62rem' }}>
+                        {fmtBalance(g.bet)} <CoinIcon size={10} />
+                      </div>
+                    )}
                   </div>
 
                   {/* Результат + выигрыш + просмотр */}
@@ -520,6 +518,8 @@ export const BattleHistoryPage: React.FC = () => {
           pgn={replayData.pgn}
           title={replayData.title}
           sessionId={replayData.sessionId}
+          whitePlayer={replayData.whitePlayer}
+          blackPlayer={replayData.blackPlayer}
           onClose={() => setReplayData(null)}
         />
       )}
