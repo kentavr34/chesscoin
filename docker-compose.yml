@@ -29,17 +29,17 @@ services:
     restart: always
     environment:
       DATABASE_URL: postgresql://chesscoin:${POSTGRES_PASSWORD}@postgres:5432/chesscoin
+      DB_USER: chesscoin
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
       POOL_MODE: transaction
       MAX_CLIENT_CONN: 200
       DEFAULT_POOL_SIZE: 20
       MIN_POOL_SIZE: 5
       RESERVE_POOL_SIZE: 5
-      AUTH_TYPE: scram-sha-256
-    volumes:
-      # :rw — edoburu/pgbouncer entrypoint чинит userlist.txt на старте
-      # (иначе при отсутствии файла Docker создаёт директорию, pgbouncer падает exit 127).
-      # Фикс 2026-04-22: «после reset всё должно работать само».
-      - ./pgbouncer-userlist.txt:/etc/pgbouncer/userlist.txt
+      AUTH_TYPE: md5
+    # Файл userlist.txt НЕ монтируется — edoburu/pgbouncer генерирует его сам
+    # из DB_USER + DB_PASSWORD при старте. Монтирование файла вызывало
+    # создание директории вместо файла после git pull → exit 127 → restarting loop.
     depends_on:
       postgres:
         condition: service_healthy
