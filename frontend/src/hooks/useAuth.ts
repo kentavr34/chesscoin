@@ -1,4 +1,4 @@
-declare global { interface Window { __pendingGameCode?: string; } }
+declare global { interface Window { __pendingGameCode?: string; __pendingSessionId?: string; } }
 
 import { useEffect } from 'react';
 import { authApi } from '@/api';
@@ -19,6 +19,21 @@ export const useAuth = () => {
 
     // Telegram WebApp — получаем initData сразу, чтобы проверить смену аккаунта
     const tg = window.Telegram?.WebApp;
+
+    // ── Фикс мобильного «жёлтого экрана» ─────────────────────────────────────
+    // На телефоне Telegram отдаёт initData с задержкой 100–300мс после монтирования.
+    // Без tg.ready() некоторые клиенты вообще не инжектят initData.
+    // Поэтому: (1) сразу дёргаем ready/expand, (2) ждём до 2сек появления initData.
+    if (tg) {
+      try { tg.ready(); } catch {}
+      try { tg.expand(); } catch {}
+      if (!tg.initData) {
+        for (let i = 0; i < 20 && !tg.initData; i++) {
+          await new Promise((r) => setTimeout(r, 100));
+        }
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
     // ── Фикс 0.1: Кэш профиля при смене аккаунта ────────────────────────────
     // Получаем telegramId из нового initData и сравниваем с сохранённым.
@@ -88,16 +103,33 @@ export const useAuth = () => {
       return;
     }
 
-    tg.ready();
-    tg.expand();
-
-    // Получаем referrer и game deep link из startParam
+    // Получаем referrer и game deep link из startParam.
+    // Поддерживаем три формата:
+    //   ref_<userId>       — реферальная ссылка
+    //   game_<code>        — войти в батл по короткому коду (ожидание соперника)
+    //   match_<sessionId>  — открыть окно конкретной партии сразу после логина
+    //   refmatch_<uid>_<sid> — реферал + сразу окно партии (в одной ссылке)
     const startParam = tg.initDataUnsafe?.start_param ?? '';
-    const referrer = startParam.startsWith('ref_') ? startParam.slice(4) : undefined;
-    const gameCode = startParam.startsWith('game_') ? startParam.slice(5) : undefined;
+    let referrer: string | undefined;
+    let gameCode: string | undefined;
+    let sessionId: string | undefined;
+    if (startParam.startsWith('ref_')) {
+      referrer = startParam.slice(4);
+    } else if (startParam.startsWith('game_')) {
+      gameCode = startParam.slice(5);
+    } else if (startParam.startsWith('match_')) {
+      sessionId = startParam.slice(6);
+    } else if (startParam.startsWith('refmatch_')) {
+      const rest = startParam.slice(9);
+      const sep = rest.indexOf('_');
+      if (sep > 0) {
+        referrer = rest.slice(0, sep);
+        sessionId = rest.slice(sep + 1);
+      }
+    }
 
-    // Сохраняем gameCode для редиректа после логина
-    if (gameCode) sessionStorage.setItem('pendingGameCode', gameCode);
+    if (gameCode)  sessionStorage.setItem('pendingGameCode', gameCode);
+    if (sessionId) sessionStorage.setItem('pendingSessionId', sessionId);
 
     await loginWithInitData(tg.initData, referrer);
   };
@@ -110,12 +142,18 @@ export const useAuth = () => {
       setUser(result.user);
       if (result.user.activeTheme) setActiveTheme(result.user.activeTheme as ThemeKey);
 
-      // Deep link в конкретную игру
+      // Deep link в конкретную игру (по коду)
       const pendingCode = sessionStorage.getItem('pendingGameCode');
       if (pendingCode) {
         sessionStorage.removeItem('pendingGameCode');
-        // Присоединяемся через socket после монтирования
         window.__pendingGameCode = pendingCode;
+      }
+      // Deep link по sessionId — сразу в окно партии (через переход по роутеру)
+      const pendingSid = sessionStorage.getItem('pendingSessionId');
+      if (pendingSid) {
+        sessionStorage.removeItem('pendingSessionId');
+        window.__pendingSessionId = pendingSid;
+        // Приложение подхватит и сделает navigate('/game/' + sid) в App.tsx / Router
       }
     } catch (err) {
       console.error('[Auth] Login failed:', err);
