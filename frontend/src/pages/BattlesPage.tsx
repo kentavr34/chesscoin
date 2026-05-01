@@ -651,7 +651,7 @@ const CoinIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
 );
 
 const IcoDice = () => (
-  <svg width="30" height="30" viewBox="0 0 18 18" fill="none">
+  <svg width="33" height="33" viewBox="0 0 18 18" fill="none">
     <rect x="1.5" y="1.5" width="15" height="15" rx="3" stroke="currentColor" strokeWidth="1.3"/>
     <circle cx="5.5" cy="5.5" r="1.2" fill="currentColor"/>
     <circle cx="12.5" cy="5.5" r="1.2" fill="currentColor"/>
@@ -662,7 +662,7 @@ const IcoDice = () => (
 );
 
 const IcoKingW = () => (
-  <svg width="30" height="30" viewBox="0 0 18 18" fill="none">
+  <svg width="33" height="33" viewBox="0 0 18 18" fill="none">
     <path d="M9 2v3M7.5 3.5h3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
     <rect x="7" y="5" width="4" height="2" rx=".5" fill="currentColor" opacity=".8"/>
     <path d="M5.5 7h7l-1 8H6.5L5.5 7z" fill="currentColor" opacity=".7"/>
@@ -671,7 +671,7 @@ const IcoKingW = () => (
 );
 
 const IcoKingB = () => (
-  <svg width="30" height="30" viewBox="0 0 18 18" fill="none">
+  <svg width="33" height="33" viewBox="0 0 18 18" fill="none">
     <path d="M9 2v3M7.5 3.5h3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
     <rect x="7" y="5" width="4" height="2" rx=".5" fill="currentColor" opacity=".9"/>
     <path d="M5.5 7h7l-1 8H6.5L5.5 7z" fill="currentColor" opacity=".9"/>
@@ -1195,8 +1195,8 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
                     boxShadow: active ? `0 0 12px ${opt.activeBorder}40` : 'none',
                   }}
                 >
-                  <span style={{ color: opt.color, opacity: active ? 1 : 0.35, transition: 'opacity .15s' }}><opt.Icon /></span>
-                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.96rem', fontWeight: 800, color: active ? opt.color : 'rgba(255,255,255,.45)', letterSpacing: '.02em' }}>{opt.label}</span>
+                  <span style={{ color: opt.color, opacity: active ? 1 : 0.35, filter: active ? 'none' : 'grayscale(0.7)', transition: 'opacity .15s, filter .15s' }}><opt.Icon /></span>
+                  <span style={{ fontSize: '0.96rem', fontWeight: 800, color: active ? opt.color : 'rgba(255,255,255,.5)', letterSpacing: '.03em' }}>{opt.label}</span>
                   {active && <div style={{ width: 18, height: 2, borderRadius: 1, background: opt.activeBorder }} />}
                 </button>
               );
