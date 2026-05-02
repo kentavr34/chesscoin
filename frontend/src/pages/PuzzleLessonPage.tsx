@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+﻿import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
@@ -188,7 +188,7 @@ export const PuzzleLessonPage: React.FC = () => {
             color: mode === m ? '#fff' : '#A8B0C8',
             fontWeight: 600, fontSize: 14,
           }}>
-            {m === 'lesson' ? '📖 Learn' : '🎯 Test'}
+            {m === 'lesson' ? 'рџ“– Learn' : 'рџЋЇ Test'}
           </button>
         ))}
       </div>
@@ -203,7 +203,7 @@ export const PuzzleLessonPage: React.FC = () => {
       {/* Reward badge */}
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
         <div style={{ padding: '4px 14px', background: '#1C2030', borderRadius: 20, fontSize: 12, color: '#F5C842', fontWeight: 600 }}>
-          Reward: {Number(lesson.reward).toLocaleString()} ᚙ
+          Reward: {Number(lesson.reward).toLocaleString()} бљ™
         </div>
       </div>
 
@@ -212,7 +212,7 @@ export const PuzzleLessonPage: React.FC = () => {
         {testWrong && (
           <div style={{
             position: 'absolute', inset: 0, borderRadius: 16, border: '3px solid #FF4466',
-            zIndex: "var(--z-base, 10)", pointerEvents: 'none', margin: '0 16px',
+            zIndex: 10, pointerEvents: 'none', margin: '0 16px',
           }} />
         )}
         <Chessboard
@@ -234,13 +234,13 @@ export const PuzzleLessonPage: React.FC = () => {
       {/* Test complete */}
       {testComplete && (
         <div style={{ margin: '16px', padding: '24px 16px', background: 'linear-gradient(135deg, rgba(123,97,255,0.12), rgba(245,200,66,0.08))', border: '1px solid rgba(245,200,66,0.2)', borderRadius: 20, textAlign: 'center' }}>
-          <div style={{ fontSize: 48, marginBottom: 8 }}>🎉</div>
+          <div style={{ fontSize: 48, marginBottom: 8 }}>рџЋ‰</div>
           <div style={{ fontSize: 20, fontWeight: 800, color: '#F5C842', marginBottom: 4 }}>
             {rewarded ? 'Congratulations!' : 'Already completed!'}
           </div>
           {rewarded && (
             <div style={{ fontSize: 18, fontWeight: 700, color: '#00D68F', marginBottom: 8 }}>
-              +{Number(lesson.reward).toLocaleString()} ᚙ
+              +{Number(lesson.reward).toLocaleString()} бљ™
             </div>
           )}
           <div style={{ fontSize: 14, color: '#A8B0C8', marginBottom: 16 }}>
@@ -251,7 +251,7 @@ export const PuzzleLessonPage: React.FC = () => {
               padding: '12px 24px', background: '#7B61FF', color: '#fff',
               border: 'none', borderRadius: 12, fontWeight: 600, cursor: 'pointer', fontSize: 14,
             }}>
-              ← Back to lessons
+              в†ђ Back to lessons
             </button>
             <button onClick={() => navigate('/')} style={{
               padding: '12px 24px', background: '#1C2030', color: '#A8B0C8',
@@ -270,7 +270,7 @@ export const PuzzleLessonPage: React.FC = () => {
             flex: 1, padding: '12px 0', borderRadius: 12, border: 'none', cursor: moveIdx === 0 ? 'not-allowed' : 'pointer',
             background: '#1C2030', color: moveIdx === 0 ? '#6B7494' : '#E8EAF0', fontWeight: 600, fontSize: 14,
           }}>
-            ← Back
+            в†ђ Back
           </button>
           <div style={{ fontSize: 13, color: '#A8B0C8', minWidth: 60, textAlign: 'center' }}>
             {moveIdx}/{moves.length}
@@ -282,7 +282,7 @@ export const PuzzleLessonPage: React.FC = () => {
             color: moveIdx >= moves.length ? '#6B7494' : '#fff',
             fontWeight: 600, fontSize: 14,
           }}>
-            Forward →
+            Forward в†’
           </button>
         </div>
       )}
@@ -294,14 +294,14 @@ export const PuzzleLessonPage: React.FC = () => {
             width: '100%', padding: '12px 0', borderRadius: 12, border: 'none', cursor: 'pointer',
             background: '#1C2030', color: '#A8B0C8', fontWeight: 600, fontSize: 14,
           }}>
-            🔄 Start over
+            рџ”„ Start over
           </button>
         </div>
       )}
 
       {/* Difficulty */}
       <div style={{ textAlign: 'center', paddingBottom: 24, fontSize: 12, color: '#6B7494' }}>
-        Difficulty: {'★'.repeat(Math.min(5, Math.ceil(lesson.difficulty / 20)))}{'☆'.repeat(5 - Math.min(5, Math.ceil(lesson.difficulty / 20)))}
+        Difficulty: {'в…'.repeat(Math.min(5, Math.ceil(lesson.difficulty / 20)))}{'в†'.repeat(5 - Math.min(5, Math.ceil(lesson.difficulty / 20)))}
       </div>
     </PageLayout>
   );

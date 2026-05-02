@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
@@ -134,7 +134,7 @@ export const PuzzleDailyPage: React.FC = () => {
         <button onClick={() => setShowInfo(v => !v)} style={{
           background: 'none', border: 'none', cursor: 'pointer',
           fontSize: 18, color: '#A8B0C8', padding: '4px 8px',
-        }}>ⓘ</button>
+        }}>в“</button>
       }
     >
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
@@ -144,7 +144,7 @@ export const PuzzleDailyPage: React.FC = () => {
         <div style={{ margin: '0 16px 12px', padding: '12px 14px', background: '#1C2030', borderRadius: 12, fontSize: 13, color: '#A8B0C8', lineHeight: 1.5, position: 'relative' }}>
           <button onClick={() => setShowInfo(false)} style={{
             position: 'absolute', top: 8, right: 8, background: 'none', border: 'none', cursor: 'pointer', color: '#6B7494', fontSize: 16,
-          }}>✕</button>
+          }}>вњ•</button>
           {puzzle.description}
         </div>
       )}
@@ -152,10 +152,10 @@ export const PuzzleDailyPage: React.FC = () => {
       {/* Reward and difficulty */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 12 }}>
         <div style={{ padding: '4px 14px', background: '#1C2030', borderRadius: 20, fontSize: 12, color: '#F5C842', fontWeight: 600 }}>
-          Reward: {Number(puzzle.reward).toLocaleString()} ᚙ
+          Reward: {Number(puzzle.reward).toLocaleString()} бљ™
         </div>
         <div style={{ padding: '4px 14px', background: '#1C2030', borderRadius: 20, fontSize: 12, color: '#A8B0C8' }}>
-          {'★'.repeat(Math.min(5, Math.ceil(puzzle.difficulty / 20)))}{'☆'.repeat(5 - Math.min(5, Math.ceil(puzzle.difficulty / 20)))}
+          {'в…'.repeat(Math.min(5, Math.ceil(puzzle.difficulty / 20)))}{'в†'.repeat(5 - Math.min(5, Math.ceil(puzzle.difficulty / 20)))}
         </div>
       </div>
 
@@ -164,7 +164,7 @@ export const PuzzleDailyPage: React.FC = () => {
         {wrong && (
           <div style={{
             position: 'absolute', inset: 0, borderRadius: 16, border: '3px solid #FF4466',
-            zIndex: "var(--z-base, 10)", pointerEvents: 'none', margin: '0 16px',
+            zIndex: 10, pointerEvents: 'none', margin: '0 16px',
           }} />
         )}
         <Chessboard
@@ -188,16 +188,16 @@ export const PuzzleDailyPage: React.FC = () => {
             width: '100%', padding: '12px 0', borderRadius: 12, border: 'none', cursor: 'pointer',
             background: '#1C2030', color: '#A8B0C8', fontWeight: 600, fontSize: 14,
           }}>
-            🔄 Start over
+            рџ”„ Start over
           </button>
         </div>
       )}
 
       {complete && (
         <div style={{ margin: '16px', padding: '20px 16px', background: '#13161E', borderRadius: 16, textAlign: 'center' }}>
-          <div style={{ fontSize: 32 }}>✅</div>
+          <div style={{ fontSize: 32 }}>вњ…</div>
           <div style={{ fontSize: 16, fontWeight: 700, color: '#F5C842', marginTop: 8 }}>
-            {rewarded ? `+${Number(puzzle.reward).toLocaleString()} ᚙ earned!` : 'Puzzle already solved'}
+            {rewarded ? `+${Number(puzzle.reward).toLocaleString()} бљ™ earned!` : 'Puzzle already solved'}
           </div>
           <div style={{ fontSize: 13, color: '#A8B0C8', marginTop: 4 }}>Come back tomorrow for a new puzzle!</div>
           <button onClick={() => navigate(-1)} style={{
