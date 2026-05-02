@@ -140,6 +140,25 @@ const Confetti: React.FC = () => {
   );
 };
 
+// ── Браво-фейерверк ───────────────────────────────────────────────────────────
+const BravoAnimation: React.FC<{ name: string }> = ({ name }) => (
+  <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 220 }}>
+    <Confetti />
+    <div style={{
+      position: 'absolute', top: '28%', left: '50%', transform: 'translateX(-50%)',
+      background: 'rgba(6,4,14,.88)', borderRadius: 20, padding: '14px 28px',
+      border: '1px solid rgba(212,168,67,.45)',
+      boxShadow: '0 0 40px rgba(212,168,67,.2)',
+      textAlign: 'center',
+      animation: 'result-pop .35s cubic-bezier(.2,.9,.3,1.05) both',
+    }}>
+      <div style={{ fontSize: '1.6rem', marginBottom: 6 }}>🎆</div>
+      <div style={{ fontSize: '1rem', fontWeight: 900, color: '#F0C85A', letterSpacing: '.02em' }}>{name}</div>
+      <div style={{ fontSize: '.7rem', color: '#9A9490', marginTop: 4, fontWeight: 700, letterSpacing: '.08em' }}>БРАВО!</div>
+    </div>
+  </div>
+);
+
 // ── Иконка цвета фигур прямо на доске ────────────────────────────────────────
 const BoardKingIcon: React.FC<{ isWhite: boolean; size?: number }> = ({ isWhite, size = 22 }) => (
   <div style={{
@@ -194,14 +213,21 @@ const PlayerPanel: React.FC<PanelProps> = ({
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 10,
-      height: PANEL_H, padding: '0 10px 0 22px', flexShrink: 0,
-      background: isActive ? 'rgba(74,158,255,.03)' : 'transparent',
+      height: PANEL_H, padding: '0 10px 0 14px', flexShrink: 0,
+      background: isActive
+        ? isCritical ? 'rgba(220,50,47,.06)' : 'rgba(212,168,67,.06)'
+        : 'rgba(255,255,255,.015)',
       borderLeft: `3px solid ${
         isCritical ? 'rgba(220,50,47,.85)'
-        : isActive  ? '#4A9EFF'
-        : 'transparent'
+        : isActive  ? '#D4A843'
+        : 'rgba(255,255,255,.06)'
       }`,
-      transition: 'background .3s, border-color .3s',
+      boxShadow: isActive && !isCritical
+        ? 'inset 0 0 0 .5px rgba(212,168,67,.18), 0 0 16px rgba(212,168,67,.08)'
+        : isActive && isCritical
+        ? 'inset 0 0 0 .5px rgba(220,50,47,.25)'
+        : 'none',
+      transition: 'background .3s, border-color .3s, box-shadow .3s',
     }}>
 
       {/* ── Аватар ─────────────────────────────────────────────────────────── */}
@@ -235,7 +261,7 @@ const PlayerPanel: React.FC<PanelProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
           <span style={{
             fontSize: '1rem', fontWeight: 700, lineHeight: 1,
-            color: isActive ? '#EAE2CC' : '#9A9490',
+            color: isActive ? '#F0E8CC' : '#B0A898',
             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
             maxWidth: 80, transition: 'color .3s',
           }}>
@@ -246,7 +272,7 @@ const PlayerPanel: React.FC<PanelProps> = ({
             {flagEmoji(country) ?? '🌐'}
           </span>
         </div>
-        <span style={{ fontSize: '.68rem', color: '#5A5248', fontWeight: 600, lineHeight: 1 }}>
+        <span style={{ fontSize: '.68rem', color: isActive ? '#8A8478' : '#6A6258', fontWeight: 600, lineHeight: 1 }}>
           {elo !== undefined ? `ELO ${elo}` : (isBot ? 'J.A.R.V.I.S' : '')}
         </span>
       </div>
@@ -632,6 +658,8 @@ export function GamePage() {
   const [donatePool,        setDonatePool]        = useState<string | null>(null);
   const [spectatorCount,    setSpectatorCount]    = useState(session?.spectatorCount ?? 0);
   const [selectedDonateAmt, setSelectedDonateAmt] = useState(1000);
+  const [bravoQueue,  setBravoQueue]  = useState<string[]>([]);
+  const [bravoName,   setBravoName]   = useState<string | null>(null);
 
   const mySecsRef   = useRef(0);
   const oppSecsRef  = useRef(0);
@@ -689,12 +717,18 @@ export function GamePage() {
     };
     sock.on('battle:donated', onDonated);
 
+    const onBravo = (data: { name: string }) => {
+      setBravoQueue(q => [...q, data.name]);
+    };
+    sock.on('battle:bravo', onBravo);
+
     if (isSpectator) {
       sock.emit('spectate', { sessionId });
     }
 
     return () => {
       sock.off('battle:donated', onDonated);
+      sock.off('battle:bravo', onBravo);
       if (isSpectator) {
         sock.emit('unspectate', { sessionId });
       }
@@ -784,6 +818,10 @@ export function GamePage() {
   const myCoins  = myCaptured.reduce((s, p) => s + (PIECE_COINS[p] ?? 0), 0);
   const oppCoins = oppCaptured.reduce((s, p) => s + (PIECE_COINS[p] ?? 0), 0);
 
+  // Spectator: показываем обоих реальных игроков (не "Вы")
+  const specWhiteSide = isSpectator ? session.sides.find(s => s.isWhite) ?? session.sides[0] : null;
+  const specBlackSide = isSpectator ? session.sides.find(s => !s.isWhite) ?? (session.sides[1] ?? session.sides[0]) : null;
+
   // Результат
   const resultType: ResultType | null = !gameOver ? null
     : !session?.winnerSideId || session.status === 'DRAW' ? 'draw'
@@ -845,12 +883,30 @@ export function GamePage() {
     getSocket().emit('game:decline_draw', { sessionId });
   }, [sessionId]);
 
+  // Braво-фейерверк: показываем имена по очереди с интервалом 5с
+  useEffect(() => {
+    if (bravoName || bravoQueue.length === 0) return;
+    const [next, ...rest] = bravoQueue;
+    setBravoName(next);
+    setBravoQueue(rest);
+    const t = setTimeout(() => setBravoName(null), 5000);
+    return () => clearTimeout(t);
+  }, [bravoQueue, bravoName]);
+
   // Сохранить / убрать партию
   useEffect(() => {
     if (!sessionId) return;
     api.get<{ saved: boolean }>(`/games/${sessionId}/saved`)
       .then(res => setIsSaved(res.saved))
       .catch(() => {});
+  }, [sessionId]);
+
+  const handleBravo = useCallback(() => {
+    const sock = getSocket();
+    const spectatorName = 'Зритель';
+    sock.emit('battle:bravo', { sessionId, name: spectatorName });
+    // Локальная анимация (сервер отдаст обратно всем через battle:bravo broadcast)
+    setBravoQueue(q => [...q, spectatorName]);
   }, [sessionId]);
 
   const handleToggleSave = useCallback(async () => {
@@ -882,8 +938,6 @@ export function GamePage() {
       </div>
     );
   }
-
-  const opLabel = opSide?.isBot ? 'J.A.R.V.I.S' : (opSide?.player.firstName ?? '?');
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: '#0B0D11', display: 'flex', flexDirection: 'column', fontFamily: 'Inter, sans-serif', overflow: 'hidden' }}>
@@ -921,29 +975,43 @@ export function GamePage() {
       {/* ── Верхний spacer — пустое пространство выравнивается между краем экрана и блоком ── */}
       <div style={{ flex: 1, minHeight: 6 }} />
 
-      {/* ── Соперник (сверху, вплотную к доске) ───────────────────────────── */}
+      {/* ── Соперник / верхний игрок (spectator: чёрный игрок) ───────────── */}
       <div style={{ borderBottom: '.5px solid rgba(255,255,255,.05)', flexShrink: 0 }}>
-        <PlayerPanel
-          name={oppName} elo={oppElo} avatar={oppAvatar} isBot={oppIsBot}
-          isWhite={oppIsWhite} country={oppCountry} captured={oppCaptured} advantage={oppAdv} coins={oppCoins}
-          timeDisplay={oppTimeDisplay} timeSecs={oppTimeSecs}
-          isActive={!isMyTurn && !gameOver} isGameOver={gameOver}
-        />
+        {isSpectator && specBlackSide ? (
+          <PlayerPanel
+            name={specBlackSide.player?.firstName ?? '?'}
+            elo={specBlackSide.player?.elo}
+            avatar={specBlackSide.player?.avatar}
+            isBot={!!specBlackSide.isBot}
+            isWhite={false}
+            country={specBlackSide.player?.country}
+            captured={blackCap} advantage={Math.max(0, bMat - wMat)} coins={0}
+            timeDisplay={oppTimeDisplay} timeSecs={oppTimeSecs}
+            isActive={!isMyTurn && !gameOver} isGameOver={gameOver}
+          />
+        ) : (
+          <PlayerPanel
+            name={oppName} elo={oppElo} avatar={oppAvatar} isBot={oppIsBot}
+            isWhite={oppIsWhite} country={oppCountry} captured={oppCaptured} advantage={oppAdv} coins={oppCoins}
+            timeDisplay={oppTimeDisplay} timeSecs={oppTimeSecs}
+            isActive={!isMyTurn && !gameOver} isGameOver={gameOver}
+          />
+        )}
       </div>
 
       {/* ── Статус-полоска верх: «Думает...» когда ход бота ──────────────── */}
       <div style={{ height: STATUS_GAP, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 4, flexShrink: 0 }}>
         {!isMyTurn && !gameOver && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4DDA8A', animation: 'gp-pulse 1.4s infinite', boxShadow: '0 0 6px #4DDA8A' }} />
-            <span style={{ fontSize: '.72rem', fontWeight: 800, color: '#4DDA8A', letterSpacing: '.02em' }}>Думает...</span>
+            <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#4DDA8A', animation: 'gp-pulse 1.4s infinite', boxShadow: '0 0 7px #4DDA8A' }} />
+            <span style={{ fontSize: '.79rem', fontWeight: 800, color: '#4DDA8A', letterSpacing: '.02em' }}>Думает...</span>
           </div>
         )}
       </div>
 
       {/* ── Доска — точный размер, НЕ flex-центрирование ─────────────────── */}
-      <div style={{ height: boardSize, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'visible' }}>
-        <div style={{ width: boardSize, position: 'relative' }}>
+      <div style={{ height: boardSize, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'visible', padding: '0 6px' }}>
+        <div style={{ width: boardSize - 12, position: 'relative' }}>
           <ChessBoard
             fen={fen}
             orientation={myColor}
@@ -1005,8 +1073,8 @@ export function GamePage() {
       <div style={{ height: STATUS_GAP, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 4, flexShrink: 0 }}>
         {isMyTurn && !gameOver && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#4DDA8A', animation: 'gp-pulse 1.4s infinite', boxShadow: '0 0 8px #4DDA8A' }} />
-            <span style={{ fontSize: '.78rem', fontWeight: 800, color: '#4DDA8A', letterSpacing: '.03em' }}>Ваш ход</span>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4DDA8A', animation: 'gp-pulse 1.4s infinite', boxShadow: '0 0 9px #4DDA8A' }} />
+            <span style={{ fontSize: '.85rem', fontWeight: 800, color: '#4DDA8A', letterSpacing: '.03em' }}>Ваш ход</span>
           </div>
         )}
       </div>
@@ -1076,14 +1144,28 @@ export function GamePage() {
         )
       )}
 
-      {/* ── Игрок (снизу, вплотную к доске) ──────────────────────────────── */}
+      {/* ── Игрок / нижний игрок (spectator: белый игрок) ─────────────────── */}
       <div style={{ borderTop: '.5px solid rgba(255,255,255,.05)', flexShrink: 0 }}>
-        <PlayerPanel
-          name={myName} elo={myElo} avatar={myAvatar} isBot={false}
-          isWhite={myColor === 'white'} country={myCountry} captured={myCaptured} advantage={myAdv} coins={myCoins}
-          timeDisplay={myTimeDisplay} timeSecs={myTimeSecs}
-          isActive={isMyTurn && !gameOver} isGameOver={gameOver}
-        />
+        {isSpectator && specWhiteSide ? (
+          <PlayerPanel
+            name={specWhiteSide.player?.firstName ?? '?'}
+            elo={specWhiteSide.player?.elo}
+            avatar={specWhiteSide.player?.avatar}
+            isBot={!!specWhiteSide.isBot}
+            isWhite={true}
+            country={specWhiteSide.player?.country}
+            captured={whiteCap} advantage={Math.max(0, wMat - bMat)} coins={0}
+            timeDisplay={myTimeDisplay} timeSecs={myTimeSecs}
+            isActive={isMyTurn && !gameOver} isGameOver={gameOver}
+          />
+        ) : (
+          <PlayerPanel
+            name={myName} elo={myElo} avatar={myAvatar} isBot={false}
+            isWhite={myColor === 'white'} country={myCountry} captured={myCaptured} advantage={myAdv} coins={myCoins}
+            timeDisplay={myTimeDisplay} timeSecs={myTimeSecs}
+            isActive={isMyTurn && !gameOver} isGameOver={gameOver}
+          />
+        )}
       </div>
 
       {/* ── Нижний spacer ────────────────────────────────────────────────── */}
@@ -1091,53 +1173,70 @@ export function GamePage() {
 
       {/* ── Панель действий ──────────────────────────────────────────────── */}
       {isSpectator ? (
-        /* ── Панель зрителя: Выйти | [Донат — только public] | Зрители ── */
+        /* ── Панель зрителя: Главная | Сохранить | Браво | Донатить ── */
         <div style={{
-          display: 'grid', gridTemplateColumns: isPublicBattle ? '1fr 2fr 1fr' : '1fr 1fr',
+          display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr',
           height: ACTBAR_H,
           paddingBottom: 'max(0px, env(safe-area-inset-bottom, 0px))',
           borderTop: '.5px solid rgba(255,255,255,.09)',
           flexShrink: 0, background: 'rgba(10,12,18,.6)',
-          gap: 1, alignItems: 'stretch',
+          gap: 1,
         }}>
-          {/* Выйти */}
+          {/* Главная */}
           <button
             onClick={() => navigate('/')}
             style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              gap: 4, background: 'rgba(255,255,255,.05)', border: 'none',
-              color: '#7A7875', cursor: 'pointer', fontFamily: 'inherit',
-              fontSize: '.72rem', fontWeight: 700,
+              gap: 5, background: 'rgba(255,255,255,.03)', border: 'none',
+              color: '#7A8898', cursor: 'pointer', fontFamily: 'inherit',
+              transition: 'background .15s, color .15s',
             }}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M19 12H5M12 5l-7 7 7 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            Выйти
+            <IcoHome />
+            <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Главная</span>
           </button>
 
-          {/* Донат с выбором суммы — только для публичных батлов */}
-          {isPublicBattle && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-            {/* Быстрые суммы */}
-            <div style={{ display: 'flex', gap: 4 }}>
-              {[1000, 5000, 10000, 50000].map(amt => (
-                <button
-                  key={amt}
-                  onClick={() => setSelectedDonateAmt(amt)}
-                  style={{
-                    padding: '2px 6px', borderRadius: 6, border: 'none', cursor: 'pointer',
-                    fontFamily: 'inherit', fontSize: '.58rem', fontWeight: 700,
-                    background: selectedDonateAmt === amt ? 'rgba(212,168,67,.25)' : 'rgba(255,255,255,.06)',
-                    color: selectedDonateAmt === amt ? '#F0C85A' : '#5A5248',
-                    transition: 'background .15s, color .15s',
-                  }}
-                >
-                  {amt >= 1000 ? `${amt / 1000}K` : amt}
-                </button>
-              ))}
-            </div>
-            {/* Кнопка доната */}
+          {/* Сохранить */}
+          <button
+            onClick={handleToggleSave}
+            disabled={isSaving}
+            style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              gap: 5,
+              background: isSaved ? 'rgba(245,200,66,.07)' : 'rgba(255,255,255,.03)',
+              border: 'none',
+              color: isSaved ? '#F5C842' : '#7A8898',
+              cursor: isSaving ? 'wait' : 'pointer',
+              fontFamily: 'inherit',
+              transition: 'background .15s, color .15s',
+            }}
+          >
+            <IcoStarBtn filled={isSaved} />
+            <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>
+              {isSaved ? 'Сохранено' : 'Сохранить'}
+            </span>
+          </button>
+
+          {/* Браво */}
+          <button
+            onClick={handleBravo}
+            style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              gap: 5, background: 'rgba(212,168,67,.05)', border: 'none',
+              color: '#D4A843', cursor: 'pointer', fontFamily: 'inherit',
+              transition: 'background .15s, color .15s',
+            }}
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5L12 2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+              <path d="M18 14l.75 2.25L21 17l-2.25.75L18 20l-.75-2.25L15 17l2.25-.75L18 14z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>
+              <path d="M6 16l.5 1.5L8 18l-1.5.5L6 20l-.5-1.5L4 18l1.5-.5L6 16z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
+            </svg>
+            <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Браво</span>
+          </button>
+
+          {/* Донатить (только публичные батлы) */}
+          {isPublicBattle ? (
             <button
               disabled={gameOver}
               onClick={() => {
@@ -1145,50 +1244,29 @@ export function GamePage() {
                 getSocket().emit('battle:donate', { sessionId, amount: String(selectedDonateAmt) });
               }}
               style={{
-                padding: '5px 18px', borderRadius: 10,
-                background: gameOver ? 'rgba(255,255,255,.04)' : 'linear-gradient(135deg,#2A1E08,#4A3810)',
-                border: `.5px solid ${gameOver ? 'rgba(255,255,255,.08)' : 'rgba(212,168,67,.42)'}`,
-                color: gameOver ? '#3A3028' : '#F0C85A',
-                fontSize: '.72rem', fontWeight: 800,
-                cursor: gameOver ? 'default' : 'pointer', fontFamily: 'inherit',
-                display: 'flex', alignItems: 'center', gap: 5,
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                gap: 5,
+                background: gameOver ? 'rgba(255,255,255,.02)' : 'rgba(212,168,67,.05)',
+                border: 'none',
+                color: gameOver ? '#2A2420' : '#D4A843',
+                cursor: gameOver ? 'default' : 'pointer',
+                fontFamily: 'inherit', transition: 'background .15s, color .15s',
               }}
             >
-              <CoinIcon size={12} />
-              Задонатить {fmtBalance(String(selectedDonateAmt))} ᚙ
+              <CoinIcon size={20} />
+              <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Донатить</span>
             </button>
-          </div>
-          )}
-
-          {/* Зрители (только публичные: лайв + всего) */}
-          {isPublicBattle && (
-          <div style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            gap: 3,
-          }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M1 12S5 5 12 5s11 7 11 7-4 7-11 7S1 12 1 12z" stroke="#9A9490" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-              <circle cx="12" cy="12" r="3" stroke="#9A9490" strokeWidth="1.6"/>
-            </svg>
-            <span style={{ fontSize: '.62rem', color: '#9A9490', fontWeight: 600 }}>
-              {spectatorCount} лайв
-            </span>
-            <span style={{ fontSize: '.54rem', color: '#6A6460', fontWeight: 600 }}>
-              {viewCount >= 1000 ? `${(viewCount / 1000).toFixed(1)}K` : viewCount} всего
-            </span>
-          </div>
-          )}
-
-          {/* Зрители приватного батла (компактно, без доната) */}
-          {isPrivateBattle && (
-          <div style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            gap: 3,
-          }}>
-            <span style={{ fontSize: '.62rem', color: '#6A6460', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase' }}>
-              🔒 Приватный
-            </span>
-          </div>
+          ) : (
+            <div style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              color: '#3A3830', gap: 5,
+            }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" strokeWidth="1.6"/>
+                <path d="M7 11V7a5 5 0 0110 0v4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+              </svg>
+              <span style={{ fontSize: '.62rem', fontWeight: 700 }}>Закрыто</span>
+            </div>
           )}
         </div>
       ) : (
@@ -1310,111 +1388,9 @@ export function GamePage() {
         />
       )}
 
-      {/* Метка хода */}
-      <div style={{ textAlign: 'center', padding: '4px 0 2px', flexShrink: 0 }}>
-        {!isGameOver && (
-          <span style={isMyTurn
-            ? tagStyle('var(--green, #00D68F)', 'rgba(0,214,143,0.10)')
-            : tagStyle('var(--text-secondary, #8B92A8)', 'var(--bg-input, #232840)')}>
-            {isMyTurn ? t.game.yourTurn : t.game.opponentTurn}
-          </span>
-        )}
-      </div>
+      {/* ── Браво-фейерверк ──────────────────────────────────────────────── */}
+      {bravoName && <BravoAnimation name={bravoName} />}
 
-      {/* Я */}
-      <div style={{ padding: '4px 12px', flexShrink: 0 }}>
-        <PlayerRow player={mySide?.player ?? user as import("@/types").User & { telegramId: string }}
-          timeLeft={mySide?.timeLeft ?? 0}
-          isActive={isMyTurn && !isGameOver} label={t.game.you} isMe />
-      </div>
-
-      {/* Кнопки */}
-      {!isGameOver ? (
-        <div style={{ display: 'flex', gap: 6, padding: '6px 12px', flexShrink: 0 }}>
-          <button onClick={() => navigate('/')} style={actionBtn()}>{t.common.back}</button>
-          <button onClick={() => getSocket().emit('game:offer_draw', { sessionId: session.id })}
-            style={actionBtn()}>{t.game.offerDraw}</button>
-          <button onClick={() => setConfirmSurrender(true)}
-            style={actionBtn('var(--red, #FF4D6A)', 'rgba(255,77,106,0.08)')}>{t.game.surrender}</button>
-        </div>
-      ) : !showResult ? (
-        <div style={{ padding: '6px 12px', flexShrink: 0 }}>
-          <button onClick={handleResultClose} style={{ ...actionBtn(), width: '100%' }}>{t.gameResult.backToMenu}</button>
-        </div>
-      ) : null}
-
-      {/* История ходов */}
-      <div style={{
-        margin: '4px 12px 8px', padding: '8px 12px',
-        background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.07)',
-        borderRadius: 14, flexShrink: 0,
-      }}>
-        <div style={labelStyle}>{t.game.moveHistory}</div>
-        <MoveHistory pgn={session.pgn} />
-      </div>
-
-      <div style={{ height: 82, flexShrink: 0 }} />
-
-      {/* Оффер ничьи */}
-      {drawOfferedBy && drawOfferedBy !== user?.id && (
-        <Overlay>
-          <ModalBox>
-            <div style={modalTitle}>{t.game.drawOffered}</div>
-            <div style={modalSub}>{t.game.drawOffered}. {t.game.acceptDraw}?</div>
-            <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-              <button onClick={() => {
-                getSocket().emit('game:accept_draw', { sessionId: session.id }, () => {});
-                setDrawOffered(null);
-              }} style={btnGold}>{t.game.acceptDraw}</button>
-              <button onClick={() => {
-                setDrawOffered(null);
-                getSocket().emit('game:decline_draw', { sessionId: session.id });
-              }} style={btnSecondary}>{t.game.declineDraw}</button>
-            </div>
-          </ModalBox>
-        </Overlay>
-      )}
-
-      {/* Подтверждение сдачи */}
-      {confirmSurrender && (
-        <Overlay>
-          <ModalBox>
-            <div style={modalTitle}>{t.game.confirmSurrender}</div>
-            <div style={modalSub}>
-              {session.bet ? t.game.surrenderLoss(fmtBalance(session.bet)) : t.game.surrenderDefault}
-            </div>
-            <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-              <button onClick={handleSurrender} style={btnDanger}>{t.game.confirmSurrenderYes}</button>
-              <button onClick={() => setConfirmSurrender(false)} style={btnGold}>{t.common.cancel}</button>
-            </div>
-          </ModalBox>
-        </Overlay>
-      )}
-
-      {/* V3: Победный экран */}
-      {showVictory && resultData && (
-        <VictoryScreen
-          result={resultData.result}
-          opponentName={opSide?.player?.firstName}
-          earned={resultData.earned}
-          onDone={() => setShowVictory(false)}
-        />
-      )}
-
-      {/* Модал результата */}
-      {showResult && resultData && (
-        <GameResultModal
-          result={resultData.result}
-          earned={resultData.earned}
-          commission={resultData.commission}
-          pieceCoins={resultData.pieceCoins}
-          botLevelName={isBotGame && session?.botLevel ? JARVIS_LEVELS[Math.max(0, Math.min(JARVIS_LEVELS.length - 1, (session.botLevel ?? 1) - 1))]?.name : undefined}
-          userTelegramId={(user as import("@/types").User & { telegramId: string })?.telegramId}
-          sessionId={session?.id}
-          onClose={handleResultClose}
-          onRematch={isBotGame ? handleRematch : undefined}
-        />
-      )}
     </div>
   );
 };
@@ -1449,112 +1425,3 @@ const MoveHistory: React.FC<{ pgn: string }> = ({ pgn }) => {
   );
 };
 
-// ── PlayerRow — с тикающим таймером (мемоизирован) ───────────────────────────
-const PlayerRow: React.FC<{
-  player?: import("@/types").UserPublic; timeLeft: number; isActive: boolean; label?: string; isMe?: boolean;
-}> = React.memo(({ player, timeLeft, isActive, label, isMe }) => {
-  const [localTime, setLocalTime] = React.useState(timeLeft);
-  const [pulseOn, setPulseOn] = React.useState(false);
-
-  // Синхронизируем с сервером при изменении timeLeft
-  React.useEffect(() => { setLocalTime(timeLeft); }, [timeLeft]);
-
-  // Тикаем локально пока isActive
-  React.useEffect(() => {
-    if (!isActive) return;
-    const t = setInterval(() => setLocalTime((s) => Math.max(0, s - 1)), 1000);
-    return () => clearInterval(t);
-  }, [isActive]);
-
-  const danger = localTime < 10 && isActive;
-
-  // Пульсация при критическом времени
-  React.useEffect(() => {
-    if (!danger) { setPulseOn(false); return; }
-    const t = setInterval(() => setPulseOn(p => !p), 500);
-    return () => clearInterval(t);
-  }, [danger]);
-
-  // Haptic каждые 3 секунды при критическом времени
-  React.useEffect(() => {
-    if (!danger || !isActive) return;
-    if (localTime > 0 && localTime % 3 === 0) {
-      try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium'); } catch {}
-    }
-  }, [localTime, danger, isActive]);
-
-  return (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: 10,
-      padding: '9px 12px', background: 'var(--bg-card, #1C2030)',
-      border: `1px solid ${isActive ? 'var(--accent, #F5C842)' : 'var(--border, rgba(255,255,255,0.07))'}`,
-      boxShadow: isActive ? '0 0 0 1px rgba(245,200,66,0.1)' : undefined,
-      borderRadius: 14, transition: 'border-color .2s',
-    }}>
-      <Avatar user={player} size="s" gold={isMe && isActive} />
-      <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary, #F0F2F8)' }}>
-          {label ?? player?.firstName ?? '?'}
-        </div>
-        <div style={{ fontSize: 10, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>
-          ELO {player?.elo ?? '—'}{isActive ? ' · Move' : ''}
-        </div>
-      </div>
-      <div style={{
-        fontFamily: "'JetBrains Mono',monospace", fontSize: 19, fontWeight: 700,
-        color: danger ? 'var(--red, #FF4D6A)' : isActive ? 'var(--accent, #F5C842)' : 'var(--text-muted, #4A5270)',
-        transition: 'color .25s', minWidth: 42, textAlign: 'right',
-        opacity: danger ? (pulseOn ? 1 : 0.4) : 1,
-      }}>
-        {fmtTime(localTime)}
-      </div>
-    </div>
-  );
-});
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-const Overlay: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div style={{
-    position: 'absolute', inset: 0, zIndex: 100,
-    background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)',
-    WebkitBackdropFilter: 'blur(6px)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
-  }}>{children}</div>
-);
-const ModalBox: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div style={{
-    background: 'var(--bg-card, #161927)', border: '1px solid rgba(255,255,255,0.12)',
-    borderRadius: 20, padding: 20, width: '100%',
-  }}>{children}</div>
-);
-
-const rootStyle: React.CSSProperties = {
-  position: 'absolute', inset: 0,
-  display: 'flex', flexDirection: 'column',
-  background: 'var(--bg, #0B0D11)', overflow: 'hidden',
-};
-const tagStyle = (color: string, bg: string): React.CSSProperties => ({
-  display: 'inline-flex', padding: '3px 9px', background: bg, color,
-  borderRadius: 6, fontSize: 10, fontWeight: 700, letterSpacing: '.05em', textTransform: 'uppercase',
-});
-const actionBtn = (color = 'var(--text-secondary, #8B92A8)', bg = 'transparent'): React.CSSProperties => ({
-  flex: 1, padding: '9px 10px', background: bg, color,
-  border: '1px solid rgba(255,255,255,0.1)', borderRadius: 11,
-  fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-});
-const labelStyle: React.CSSProperties = {
-  fontSize: 9, fontWeight: 700, letterSpacing: '.08em',
-  textTransform: 'uppercase', color: 'var(--text-muted, #4A5270)',
-};
-const modalTitle: React.CSSProperties = { fontSize: 17, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)', marginBottom: 6 };
-const modalSub: React.CSSProperties = { fontSize: 13, color: 'var(--text-secondary, #8B92A8)' };
-const btnGold: React.CSSProperties = {
-  flex: 1, padding: 11, background: 'var(--accent, #F5C842)', color: 'var(--bg, #0B0D11)',
-  border: 'none', borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-};
-const btnSecondary: React.CSSProperties = {
-  ...btnGold, background: 'var(--bg-input, #232840)', color: 'var(--text-primary, #F0F2F8)', border: '1px solid rgba(255,255,255,0.1)',
-};
-const btnDanger: React.CSSProperties = {
-  ...btnGold, background: 'rgba(255,77,106,0.12)', color: 'var(--red, #FF4D6A)', border: '1px solid rgba(255,77,106,0.2)',
-};
