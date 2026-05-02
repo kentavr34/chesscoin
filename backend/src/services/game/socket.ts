@@ -903,6 +903,17 @@ export const setupSocketHandlers = (io: Server) => {
       }
     );
 
+    // ── Браво от зрителя / игрока ────────────────────────
+    socket.on(
+      "battle:bravo",
+      (data: { sessionId: string; name: string }) => {
+        if (!data?.sessionId || !data?.name) return;
+        // Рассылаем всем участникам комнаты и зрителям
+        io.to(data.sessionId).emit("battle:bravo", { name: data.name });
+        io.to(`spectate:${data.sessionId}`).emit("battle:bravo", { name: data.name });
+      }
+    );
+
     // ── Вызов игрока из клана ─────────────────────────────
     socket.on(
       "clan:challenge_player",
