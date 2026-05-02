@@ -145,7 +145,7 @@ export const BattleHistoryPage: React.FC = () => {
         return Number(BigInt(b.bet ?? '0') - BigInt(a.bet ?? '0'));
       }
       if (sortKey === 'result') {
-        const ord = { WON: 0, DRAW: 1, LOST: 2 };
+        const ord = { win: 0, draw: 1, loss: 2 };
         return (ord[a.result as keyof typeof ord] ?? 3) - (ord[b.result as keyof typeof ord] ?? 3);
       }
       return 0;
@@ -318,8 +318,8 @@ export const BattleHistoryPage: React.FC = () => {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '0 14px' }}>
             {filteredGames.map((g) => {
-              const isWon = g.result === 'WON';
-              const isDraw = g.result === 'DRAW';
+              const isWon = g.result === 'win';
+              const isDraw = g.result === 'draw';
 
               const statusColor = isWon ? '#3DBA7A' : isDraw ? '#82CFFF' : '#CC6060';
               const statusLabel = isWon ? 'Победа' : isDraw ? 'Ничья' : 'Поражение';
