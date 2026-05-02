@@ -1,6 +1,6 @@
-// frontend/src/pages/GamePage.tsx
-// АРХИТЕКТУРА: useSocket.ts (App уровень) слушает 'game' события → store.
-// GamePage читает из store. Для ходов/сдачи/ничьи: socket.emit(...).
+﻿// frontend/src/pages/GamePage.tsx
+// РђР РҐРРўР•РљРўРЈР Рђ: useSocket.ts (App СѓСЂРѕРІРµРЅСЊ) СЃР»СѓС€Р°РµС‚ 'game' СЃРѕР±С‹С‚РёСЏ в†’ store.
+// GamePage С‡РёС‚Р°РµС‚ РёР· store. Р”Р»СЏ С…РѕРґРѕРІ/СЃРґР°С‡Рё/РЅРёС‡СЊРё: socket.emit(...).
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -14,17 +14,17 @@ import { ChessBoard } from '@/components/game/ChessBoard';
 import { sound } from '@/lib/sound';
 import { fmtBalance } from '@/utils/format';
 
-// ── Константы ──────────────────────────────────────────────────────────────────
-const PIECE_SYMBOLS: Record<string, string> = { p: '♟', n: '♞', b: '♝', r: '♜', q: '♛' };
+// в”Ђв”Ђ РљРѕРЅСЃС‚Р°РЅС‚С‹ в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+const PIECE_SYMBOLS: Record<string, string> = { p: 'в™џ', n: 'в™ћ', b: 'в™ќ', r: 'в™њ', q: 'в™›' };
 const PIECE_VAL:     Record<string, number>  = { p: 1, n: 3, b: 3, r: 5, q: 9 };
 const PIECE_START:   Record<string, number>  = { p: 8, n: 2, b: 2, r: 2, q: 1 };
 const SORT_ORDER:    Record<string, number>  = { q: 0, r: 1, b: 2, n: 3, p: 4 };
 
-const PANEL_H   = 72;  // высота панели игрока
-const ACTBAR_H  = 64;  // нижняя панель кнопок
-const STATUS_GAP = 28; // полоска между панелью и доской — «Ваш ход» / «Думает...»
+const PANEL_H   = 72;  // РІС‹СЃРѕС‚Р° РїР°РЅРµР»Рё РёРіСЂРѕРєР°
+const ACTBAR_H  = 64;  // РЅРёР¶РЅСЏСЏ РїР°РЅРµР»СЊ РєРЅРѕРїРѕРє
+const STATUS_GAP = 28; // РїРѕР»РѕСЃРєР° РјРµР¶РґСѓ РїР°РЅРµР»СЊСЋ Рё РґРѕСЃРєРѕР№ вЂ” В«Р’Р°С€ С…РѕРґВ» / В«Р”СѓРјР°РµС‚...В»
 
-// ── Хелперы ────────────────────────────────────────────────────────────────────
+// в”Ђв”Ђ РҐРµР»РїРµСЂС‹ в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 function capturedFromFen(fen: string): { white: string[]; black: string[] } {
   const pos = fen.split(' ')[0];
   const cnt: Record<string, number> = {};
@@ -53,7 +53,7 @@ function fmtTime(secs: number): string {
 }
 
 function calcBoardSize(): number {
-  // Панели + статус-полоски + action bar + минимальные spacer-ы (8px сверху/снизу)
+  // РџР°РЅРµР»Рё + СЃС‚Р°С‚СѓСЃ-РїРѕР»РѕСЃРєРё + action bar + РјРёРЅРёРјР°Р»СЊРЅС‹Рµ spacer-С‹ (8px СЃРІРµСЂС…Сѓ/СЃРЅРёР·Сѓ)
   const reserved = PANEL_H * 2 + STATUS_GAP * 2 + ACTBAR_H + 16;
   return Math.floor(Math.min(window.innerWidth, window.innerHeight - reserved));
 }
@@ -69,15 +69,15 @@ function lastMoveFromPgn(pgn: string): { from: string; to: string } | null {
   } catch { return null; }
 }
 
-// ── ChessCoin иконка монеты (золотой конь) ────────────────────────────────────
+// в”Ђв”Ђ ChessCoin РёРєРѕРЅРєР° РјРѕРЅРµС‚С‹ (Р·РѕР»РѕС‚РѕР№ РєРѕРЅСЊ) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 const CoinIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
   <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
     <circle cx="16" cy="16" r="15" fill="url(#coinBg)" stroke="url(#coinBorder)" strokeWidth="1.2"/>
-    {/* Орнаментальное кольцо */}
+    {/* РћСЂРЅР°РјРµРЅС‚Р°Р»СЊРЅРѕРµ РєРѕР»СЊС†Рѕ */}
     <circle cx="16" cy="16" r="12" fill="none" stroke="rgba(180,130,20,.4)" strokeWidth=".6"/>
-    {/* Конь (шахматный конь) */}
+    {/* РљРѕРЅСЊ (С€Р°С…РјР°С‚РЅС‹Р№ РєРѕРЅСЊ) */}
     <path d="M11 24c0-1 .5-2 1.5-2.5L14 21c-1-1-1.5-2.5-1-4 .3-1 1-2 2-2.5-.5-.8-.5-1.5 0-2 .8-.5 2-.3 2.5.5.5.8.3 2-.5 2.5.5.5 1 1.5.8 2.5l2 1c1 .5 1.7 1.5 1.7 2.5v.5H11z" fill="url(#coinKnight)"/>
-    {/* Грива */}
+    {/* Р“СЂРёРІР° */}
     <path d="M16.5 12c.5-1 1.5-2 2-3 .3-.5 0-1-.3-1.2-.5-.3-1 0-1.2.5L16 10l-1-.5c-.3-1.5.5-3 2-3.5 1.5-.5 3 .2 3.5 1.5.3.8 0 1.8-.5 2.5l-1 1.5" fill="url(#coinKnight)" opacity=".9"/>
     <defs>
       <radialGradient id="coinBg" cx="38%" cy="30%" r="75%">
@@ -98,7 +98,7 @@ const CoinIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
   </svg>
 );
 
-// ── J.A.R.V.I.S аватар ────────────────────────────────────────────────────────
+// в”Ђв”Ђ J.A.R.V.I.S Р°РІР°С‚Р°СЂ в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 const JarvisAva: React.FC<{ size: number }> = ({ size }) => (
   <svg width={size} height={size} viewBox="0 0 28 28" fill="none">
     <circle cx="14" cy="10" r="6.5" stroke="#4A9EFF" strokeWidth="1.4"/>
@@ -114,7 +114,7 @@ const JarvisAva: React.FC<{ size: number }> = ({ size }) => (
   </svg>
 );
 
-// ── Конфетти (победа) ──────────────────────────────────────────────────────────
+// в”Ђв”Ђ РљРѕРЅС„РµС‚С‚Рё (РїРѕР±РµРґР°) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 const CONFETTI_COLORS = ['#F4C430', '#4DDA8A', '#82CFFF', '#C084FC', '#FF9F43', '#F472B6'];
 const Confetti: React.FC = () => {
   const pieces = useMemo(() =>
@@ -141,7 +141,7 @@ const Confetti: React.FC = () => {
   );
 };
 
-// ── Браво-фейерверк ───────────────────────────────────────────────────────────
+// в”Ђв”Ђ Р‘СЂР°РІРѕ-С„РµР№РµСЂРІРµСЂРє в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 const BravoAnimation: React.FC<{ name: string }> = ({ name }) => (
   <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 220 }}>
     <Confetti />
@@ -153,14 +153,14 @@ const BravoAnimation: React.FC<{ name: string }> = ({ name }) => (
       textAlign: 'center',
       animation: 'result-pop .35s cubic-bezier(.2,.9,.3,1.05) both',
     }}>
-      <div style={{ fontSize: '1.6rem', marginBottom: 6 }}>🎆</div>
+      <div style={{ fontSize: '1.6rem', marginBottom: 6 }}>рџЋ†</div>
       <div style={{ fontSize: '1rem', fontWeight: 900, color: '#F0C85A', letterSpacing: '.02em' }}>{name}</div>
-      <div style={{ fontSize: '.7rem', color: '#9A9490', marginTop: 4, fontWeight: 700, letterSpacing: '.08em' }}>БРАВО!</div>
+      <div style={{ fontSize: '.7rem', color: '#9A9490', marginTop: 4, fontWeight: 700, letterSpacing: '.08em' }}>Р‘Р РђР’Рћ!</div>
     </div>
   </div>
 );
 
-// ── Иконка цвета фигур прямо на доске ────────────────────────────────────────
+// в”Ђв”Ђ РРєРѕРЅРєР° С†РІРµС‚Р° С„РёРіСѓСЂ РїСЂСЏРјРѕ РЅР° РґРѕСЃРєРµ в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 const BoardKingIcon: React.FC<{ isWhite: boolean; size?: number }> = ({ isWhite, size = 22 }) => (
   <div style={{
     width: size, height: size, borderRadius: 5, flexShrink: 0,
@@ -178,7 +178,7 @@ const BoardKingIcon: React.FC<{ isWhite: boolean; size?: number }> = ({ isWhite,
   </div>
 );
 
-// Флаг страны: 'RU' → '🇷🇺', иначе null
+// Р¤Р»Р°Рі СЃС‚СЂР°РЅС‹: 'RU' в†’ 'рџ‡·рџ‡є', РёРЅР°С‡Рµ null
 const flagEmoji = (code?: string | null): string | null => {
   if (!code || code.length !== 2) return null;
   const a = code.toUpperCase().charCodeAt(0) + 0x1F1A5;
@@ -186,7 +186,7 @@ const flagEmoji = (code?: string | null): string | null => {
   return String.fromCodePoint(a, b);
 };
 
-// ── Панель игрока (по референсу) ──────────────────────────────────────────────
+// в”Ђв”Ђ РџР°РЅРµР»СЊ РёРіСЂРѕРєР° (РїРѕ СЂРµС„РµСЂРµРЅСЃСѓ) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 interface PanelProps {
   name: string;
   elo?: number;
@@ -196,7 +196,7 @@ interface PanelProps {
   country?: string | null;
   captured: string[];
   advantage: number;
-  coins: number;      // монеты за взятые фигуры
+  coins: number;      // РјРѕРЅРµС‚С‹ Р·Р° РІР·СЏС‚С‹Рµ С„РёРіСѓСЂС‹
   timeDisplay: string;
   timeSecs: number;
   isActive: boolean;
@@ -231,7 +231,7 @@ const PlayerPanel: React.FC<PanelProps> = ({
       transition: 'background .3s, border-color .3s, box-shadow .3s',
     }}>
 
-      {/* ── Аватар ─────────────────────────────────────────────────────────── */}
+      {/* в”Ђв”Ђ РђРІР°С‚Р°СЂ в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */}
       <div style={{
         width: AV, height: AV, borderRadius: '50%', flexShrink: 0,
         background: isBot ? 'rgba(74,158,255,.1)' : 'rgba(212,168,67,.07)',
@@ -257,7 +257,7 @@ const PlayerPanel: React.FC<PanelProps> = ({
         }
       </div>
 
-      {/* ── Колонка: имя + флаг/глобус + ELO ───────────────────────────── */}
+      {/* в”Ђв”Ђ РљРѕР»РѕРЅРєР°: РёРјСЏ + С„Р»Р°Рі/РіР»РѕР±СѓСЃ + ELO в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */}
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 4, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
           <span style={{
@@ -266,11 +266,11 @@ const PlayerPanel: React.FC<PanelProps> = ({
             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
             maxWidth: 80, transition: 'color .3s',
           }}>
-            {name.length > 10 ? name.slice(0, 10) + '…' : name}
+            {name.length > 10 ? name.slice(0, 10) + 'вЂ¦' : name}
           </span>
-          {/* Флаг страны или глобус */}
+          {/* Р¤Р»Р°Рі СЃС‚СЂР°РЅС‹ РёР»Рё РіР»РѕР±СѓСЃ */}
           <span style={{ fontSize: 14, lineHeight: 1, flexShrink: 0 }}>
-            {flagEmoji(country) ?? '🌐'}
+            {flagEmoji(country) ?? 'рџЊђ'}
           </span>
         </div>
         <span style={{ fontSize: '.68rem', color: isActive ? '#8A8478' : '#6A6258', fontWeight: 600, lineHeight: 1 }}>
@@ -278,9 +278,9 @@ const PlayerPanel: React.FC<PanelProps> = ({
         </span>
       </div>
 
-      {/* ── Центр: монеты (строка 1) + взятые фигуры (строка 2) ─────────── */}
+      {/* в”Ђв”Ђ Р¦РµРЅС‚СЂ: РјРѕРЅРµС‚С‹ (СЃС‚СЂРѕРєР° 1) + РІР·СЏС‚С‹Рµ С„РёРіСѓСЂС‹ (СЃС‚СЂРѕРєР° 2) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5, minWidth: 0 }}>
-        {/* Строка 1: монеты */}
+        {/* РЎС‚СЂРѕРєР° 1: РјРѕРЅРµС‚С‹ */}
         {coins > 0 ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <CoinIcon size={13} />
@@ -291,7 +291,7 @@ const PlayerPanel: React.FC<PanelProps> = ({
         ) : (
           <div style={{ height: 16 }} />
         )}
-        {/* Строка 2: взятые фигуры + преимущество */}
+        {/* РЎС‚СЂРѕРєР° 2: РІР·СЏС‚С‹Рµ С„РёРіСѓСЂС‹ + РїСЂРµРёРјСѓС‰РµСЃС‚РІРѕ */}
         {sorted.length > 0 ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             {sorted.slice(0, 8).map((p, i) => (
@@ -311,7 +311,7 @@ const PlayerPanel: React.FC<PanelProps> = ({
         )}
       </div>
 
-      {/* ── Таймер ────────────────────────────────────────────────────────── */}
+      {/* в”Ђв”Ђ РўР°Р№РјРµСЂ в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */}
       <div style={{
         background: isCritical
           ? 'rgba(220,50,47,.22)'
@@ -340,7 +340,7 @@ const PlayerPanel: React.FC<PanelProps> = ({
   );
 };
 
-// ── Иконки кнопок панели действий ────────────────────────────────────────────
+// в”Ђв”Ђ РРєРѕРЅРєРё РєРЅРѕРїРѕРє РїР°РЅРµР»Рё РґРµР№СЃС‚РІРёР№ в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 const IcoHome = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
     <path d="M3 9.5L12 3l9 6.5V21a1 1 0 01-1 1H15v-6h-6v6H4a1 1 0 01-1-1V9.5z"
@@ -374,13 +374,13 @@ const IcoStarBtn = ({ filled }: { filled: boolean }) => (
   </svg>
 );
 
-// ── Результирующий bottom sheet ────────────────────────────────────────────────
+// в”Ђв”Ђ Р РµР·СѓР»СЊС‚РёСЂСѓСЋС‰РёР№ bottom sheet в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 type ResultType = 'win' | 'lose' | 'draw';
 
 const RESULT_CFG: Record<ResultType, { accent: string; title: string }> = {
-  win:  { accent: '#5DEDA0', title: 'Победа!' },
-  lose: { accent: '#CC6060', title: 'Поражение' },
-  draw: { accent: '#82CFFF', title: 'Ничья' },
+  win:  { accent: '#5DEDA0', title: 'РџРѕР±РµРґР°!' },
+  lose: { accent: '#CC6060', title: 'РџРѕСЂР°Р¶РµРЅРёРµ' },
+  draw: { accent: '#82CFFF', title: 'РќРёС‡СЊСЏ' },
 };
 
 interface SheetProps {
@@ -470,7 +470,7 @@ const ResultSheet: React.FC<SheetProps> = ({ type, winAmount, pieceCoins, onRema
           display: 'flex', flexDirection: 'column', alignItems: 'center',
           textAlign: 'center',
         }}>
-          {/* Иконка */}
+          {/* РРєРѕРЅРєР° */}
           <div style={{
             width: 96, height: 96, borderRadius: '50%',
             background: circleBg,
@@ -482,7 +482,7 @@ const ResultSheet: React.FC<SheetProps> = ({ type, winAmount, pieceCoins, onRema
             {isWin ? <IcoTrophy /> : isDraw ? <IcoDraw /> : <IcoSkull />}
           </div>
 
-          {/* Заголовок */}
+          {/* Р—Р°РіРѕР»РѕРІРѕРє */}
           <div style={{
             fontSize: '2rem', fontWeight: 900,
             color: cfg.accent,
@@ -493,7 +493,7 @@ const ResultSheet: React.FC<SheetProps> = ({ type, winAmount, pieceCoins, onRema
             {cfg.title}
           </div>
 
-          {/* Монеты */}
+          {/* РњРѕРЅРµС‚С‹ */}
           {coinsDisplay && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 28 }}>
               <CoinIcon size={20} />
@@ -504,19 +504,19 @@ const ResultSheet: React.FC<SheetProps> = ({ type, winAmount, pieceCoins, onRema
           )}
           {!coinsDisplay && type === 'lose' && (
             <div style={{ fontSize: '.78rem', color: '#5A3A3A', marginBottom: 28 }}>
-              Не сдавайся — следующая будет лучше
+              РќРµ СЃРґР°РІР°Р№СЃСЏ вЂ” СЃР»РµРґСѓСЋС‰Р°СЏ Р±СѓРґРµС‚ Р»СѓС‡С€Рµ
             </div>
           )}
           {isDraw && (
             <div style={{ fontSize: '.78rem', color: '#3A5070', marginBottom: 28 }}>
-              Соперники оказались равны
+              РЎРѕРїРµСЂРЅРёРєРё РѕРєР°Р·Р°Р»РёСЃСЊ СЂР°РІРЅС‹
             </div>
           )}
           {isWin && !coinsDisplay && (
             <div style={{ height: 28 }} />
           )}
 
-          {/* Кнопки */}
+          {/* РљРЅРѕРїРєРё */}
           <div style={{ display: 'flex', gap: 10, width: '100%', marginBottom: 10 }}>
             <button onClick={onRematch} style={{
               flex: 1, padding: '14px 0', borderRadius: 14,
@@ -528,7 +528,7 @@ const ResultSheet: React.FC<SheetProps> = ({ type, winAmount, pieceCoins, onRema
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
             }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M20.5 9A9 9 0 005.3 5.3L1 10M23 14l-4.2 4.7A9 9 0 013.5 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              Реванш
+              Р РµРІР°РЅС€
             </button>
             <button disabled style={{
               flex: 1, padding: '14px 0', borderRadius: 14,
@@ -538,7 +538,7 @@ const ResultSheet: React.FC<SheetProps> = ({ type, winAmount, pieceCoins, onRema
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, opacity: 0.5,
             }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 11l3 3L22 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              Анализ
+              РђРЅР°Р»РёР·
             </button>
           </div>
           <button onClick={onHome} style={{
@@ -552,7 +552,7 @@ const ResultSheet: React.FC<SheetProps> = ({ type, winAmount, pieceCoins, onRema
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 9.5L12 3l9 6.5V21a1 1 0 01-1 1H15v-6h-6v6H4a1 1 0 01-1-1V9.5z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            На главную
+            РќР° РіР»Р°РІРЅСѓСЋ
           </button>
         </div>
       </div>
@@ -560,7 +560,7 @@ const ResultSheet: React.FC<SheetProps> = ({ type, winAmount, pieceCoins, onRema
   );
 };
 
-// ── Универсальный диалог (ничья, сдача, подтверждения) ─────────────────────────
+// в”Ђв”Ђ РЈРЅРёРІРµСЂСЃР°Р»СЊРЅС‹Р№ РґРёР°Р»РѕРі (РЅРёС‡СЊСЏ, СЃРґР°С‡Р°, РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 interface DialogProps {
   iconNode: React.ReactNode;
   iconBg: string;
@@ -639,7 +639,7 @@ const GameDialog: React.FC<DialogProps> = ({
   </div>
 );
 
-// ── Основной компонент ─────────────────────────────────────────────────────────
+// в”Ђв”Ђ РћСЃРЅРѕРІРЅРѕР№ РєРѕРјРїРѕРЅРµРЅС‚ в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 export function GamePage() {
   const navigate = useNavigate();
   const { sessionId = '' } = useParams<{ sessionId: string }>();
@@ -649,8 +649,8 @@ export function GamePage() {
   const session = sessions.find(s => s.id === sessionId) ?? null;
 
   const [lastMove,       setLastMove]       = useState<{ from: string; to: string } | null>(null);
-  const [myTimeDisplay,  setMyTimeDisplay]  = useState('—');
-  const [oppTimeDisplay, setOppTimeDisplay] = useState('—');
+  const [myTimeDisplay,  setMyTimeDisplay]  = useState('вЂ”');
+  const [oppTimeDisplay, setOppTimeDisplay] = useState('вЂ”');
   const [myTimeSecs,     setMyTimeSecs]     = useState(0);
   const [oppTimeSecs,    setOppTimeSecs]    = useState(0);
   const [soundPlayed,    setSoundPlayed]    = useState(false);
@@ -679,25 +679,25 @@ export function GamePage() {
   const isPrivateBattle = isBattle && !!session?.isPrivate;
   const isPublicBattle  = isBattle && !session?.isPrivate;
 
-  // ── Касса: ставки обоих игроков + донаты зрителей ─────────────────────────
-  // СИНХРОНИЗАЦИЯ С backend/src/services/game/finish.ts:
-  //   • комиссия 10% берётся ТОЛЬКО со ставок (totalPot = bet*2)
-  //   • донаты зрителей целиком уходят победителю (без комиссии)
-  //   • ничья: каждому возвращается его ставка, донаты распределяются по правилам бэка
+  // в”Ђв”Ђ РљР°СЃСЃР°: СЃС‚Р°РІРєРё РѕР±РѕРёС… РёРіСЂРѕРєРѕРІ + РґРѕРЅР°С‚С‹ Р·СЂРёС‚РµР»РµР№ в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+  // РЎРРќРҐР РћРќРР—РђР¦РРЇ РЎ backend/src/services/game/finish.ts:
+  //   вЂў РєРѕРјРёСЃСЃРёСЏ 10% Р±РµСЂС‘С‚СЃСЏ РўРћР›Р¬РљРћ СЃРѕ СЃС‚Р°РІРѕРє (totalPot = bet*2)
+  //   вЂў РґРѕРЅР°С‚С‹ Р·СЂРёС‚РµР»РµР№ С†РµР»РёРєРѕРј СѓС…РѕРґСЏС‚ РїРѕР±РµРґРёС‚РµР»СЋ (Р±РµР· РєРѕРјРёСЃСЃРёРё)
+  //   вЂў РЅРёС‡СЊСЏ: РєР°Р¶РґРѕРјСѓ РІРѕР·РІСЂР°С‰Р°РµС‚СЃСЏ РµРіРѕ СЃС‚Р°РІРєР°, РґРѕРЅР°С‚С‹ СЂР°СЃРїСЂРµРґРµР»СЏСЋС‚СЃСЏ РїРѕ РїСЂР°РІРёР»Р°Рј Р±СЌРєР°
   const betBig         = session?.bet ? BigInt(session.bet) : 0n;
   const totalBetPot    = betBig * 2n;
   const donationsBig   = donatePool ? BigInt(donatePool) : 0n;
-  const bank           = totalBetPot + donationsBig;        // вся касса (для отображения)
-  const BANK_COMMISSION_PCT = 10n;                          // комиссия стола
-  const bankCommission = (totalBetPot * BANK_COMMISSION_PCT) / 100n; // 10% со ставок
-  const winnerTake     = totalBetPot - bankCommission + donationsBig; // ставки-10% + донаты 100%
-  // viewCount — накопительный счётчик просмотров (backend: sessions.viewCount, опционально)
+  const bank           = totalBetPot + donationsBig;        // РІСЃСЏ РєР°СЃСЃР° (РґР»СЏ РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ)
+  const BANK_COMMISSION_PCT = 10n;                          // РєРѕРјРёСЃСЃРёСЏ СЃС‚РѕР»Р°
+  const bankCommission = (totalBetPot * BANK_COMMISSION_PCT) / 100n; // 10% СЃРѕ СЃС‚Р°РІРѕРє
+  const winnerTake     = totalBetPot - bankCommission + donationsBig; // СЃС‚Р°РІРєРё-10% + РґРѕРЅР°С‚С‹ 100%
+  // viewCount вЂ” РЅР°РєРѕРїРёС‚РµР»СЊРЅС‹Р№ СЃС‡С‘С‚С‡РёРє РїСЂРѕСЃРјРѕС‚СЂРѕРІ (backend: sessions.viewCount, РѕРїС†РёРѕРЅР°Р»СЊРЅРѕ)
   const viewCount      = session?.viewCount ?? 0;
 
   useEffect(() => { isMyTurnRef.current = isMyTurn; },  [isMyTurn]);
   useEffect(() => { gameOverRef.current = gameOver; }, [gameOver]);
 
-  // Звук конца игры
+  // Р—РІСѓРє РєРѕРЅС†Р° РёРіСЂС‹
   useEffect(() => {
     if (!gameOver || soundPlayed || !session) return;
     setSoundPlayed(true);
@@ -714,7 +714,7 @@ export function GamePage() {
     const onDonated = (data: { totalPool: string; amount: string }) => {
       setDonatePool(data.totalPool);
       window.dispatchEvent(new CustomEvent('chesscoin:toast', {
-        detail: { text: `🎁 +${fmtBalance(data.amount)} ᚙ доната`, type: 'info' }
+        detail: { text: `рџЋЃ +${fmtBalance(data.amount)} бљ™ РґРѕРЅР°С‚Р°`, type: 'info' }
       }));
     };
     sock.on('battle:donated', onDonated);
@@ -738,7 +738,7 @@ export function GamePage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isBattle, isSpectator, sessionId]);
 
-  // Синхронизируем таймеры при новом FEN
+  // РЎРёРЅС…СЂРѕРЅРёР·РёСЂСѓРµРј С‚Р°Р№РјРµСЂС‹ РїСЂРё РЅРѕРІРѕРј FEN
   const prevFenRef = useRef('');
   useEffect(() => {
     if (!session) return;
@@ -763,7 +763,7 @@ export function GamePage() {
     if (lm) setLastMove(lm);
   }, [session?.fen]);
 
-  // Тик таймера
+  // РўРёРє С‚Р°Р№РјРµСЂР°
   useEffect(() => {
     const id = setInterval(() => {
       if (gameOverRef.current) return;
@@ -780,7 +780,7 @@ export function GamePage() {
     return () => clearInterval(id);
   }, []);
 
-  // Размер доски
+  // Р Р°Р·РјРµСЂ РґРѕСЃРєРё
   const [boardSize, setBoardSize] = useState(calcBoardSize);
   useEffect(() => {
     const onResize = () => setBoardSize(calcBoardSize());
@@ -788,12 +788,12 @@ export function GamePage() {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  // Данные сессии
+  // Р”Р°РЅРЅС‹Рµ СЃРµСЃСЃРёРё
   const mySide   = session?.sides.find(s => s.id === session?.mySideId);
   const oppSide  = session?.sides.find(s => s.id !== session?.mySideId);
 
   const myColor: 'white' | 'black' = mySide?.isWhite ? 'white' : 'black';
-  const myName    = mySide?.player?.firstName ?? 'Вы';
+  const myName    = mySide?.player?.firstName ?? 'Р’С‹';
   const myAvatar  = mySide?.player?.avatar;
   const myElo     = mySide?.player?.elo;
   const myCountry = mySide?.player?.country;
@@ -815,30 +815,30 @@ export function GamePage() {
   const myAdv  = myColor === 'white' ? Math.max(0, wMat - bMat) : Math.max(0, bMat - wMat);
   const oppAdv = myColor === 'white' ? Math.max(0, bMat - wMat) : Math.max(0, wMat - bMat);
 
-  // Монеты за взятые фигуры
+  // РњРѕРЅРµС‚С‹ Р·Р° РІР·СЏС‚С‹Рµ С„РёРіСѓСЂС‹
   const PIECE_COINS: Record<string, number> = { p: 100, n: 300, b: 300, r: 500, q: 900 };
   const myCoins  = myCaptured.reduce((s, p) => s + (PIECE_COINS[p] ?? 0), 0);
   const oppCoins = oppCaptured.reduce((s, p) => s + (PIECE_COINS[p] ?? 0), 0);
 
-  // Spectator: показываем обоих реальных игроков (не "Вы")
+  // Spectator: РїРѕРєР°Р·С‹РІР°РµРј РѕР±РѕРёС… СЂРµР°Р»СЊРЅС‹С… РёРіСЂРѕРєРѕРІ (РЅРµ "Р’С‹")
   const specWhiteSide = isSpectator ? session.sides.find(s => s.isWhite) ?? session.sides[0] : null;
   const specBlackSide = isSpectator ? session.sides.find(s => !s.isWhite) ?? (session.sides[1] ?? session.sides[0]) : null;
-  // Spectator: чей ход определяем по currentSideId, а не по isMyTurn (у зрителей isMyTurn всегда false)
+  // Spectator: С‡РµР№ С…РѕРґ РѕРїСЂРµРґРµР»СЏРµРј РїРѕ currentSideId, Р° РЅРµ РїРѕ isMyTurn (Сѓ Р·СЂРёС‚РµР»РµР№ isMyTurn РІСЃРµРіРґР° false)
   const isWhiteTurnNow = isSpectator
     ? session.currentSideId === specWhiteSide?.id
     : isMyTurn && (myColor === 'white');
 
-  // Результат
+  // Р РµР·СѓР»СЊС‚Р°С‚
   const resultType: ResultType | null = !gameOver ? null
     : !session?.winnerSideId || session.status === 'DRAW' ? 'draw'
     : session.winnerSideId === session.mySideId ? 'win'
     : 'lose';
 
-  // Ничья от соперника
+  // РќРёС‡СЊСЏ РѕС‚ СЃРѕРїРµСЂРЅРёРєР°
   const drawOfferedByOpp = drawOfferedBy && drawOfferedBy !== session?.mySideId;
   const drawOfferedByMe  = drawOfferedBy === session?.mySideId;
 
-  // Ход игрока
+  // РҐРѕРґ РёРіСЂРѕРєР°
   const currentFenRef = useRef(fen);
   useEffect(() => { currentFenRef.current = fen; }, [fen]);
 
@@ -869,17 +869,17 @@ export function GamePage() {
     } else {
       getSocket().emit('game:offer_draw', { sessionId });
       window.dispatchEvent(new CustomEvent('chesscoin:toast', {
-        detail: { text: 'Предложение ничьи отправлено', type: 'info' }
+        detail: { text: 'РџСЂРµРґР»РѕР¶РµРЅРёРµ РЅРёС‡СЊРё РѕС‚РїСЂР°РІР»РµРЅРѕ', type: 'info' }
       }));
     }
   }, [sessionId, gameOver, drawOfferedByMe, drawOfferedByOpp]);
 
-  // Тост когда соперник отклонил ничью
+  // РўРѕСЃС‚ РєРѕРіРґР° СЃРѕРїРµСЂРЅРёРє РѕС‚РєР»РѕРЅРёР» РЅРёС‡СЊСЋ
   const prevDrawOffMeRef = useRef(false);
   useEffect(() => {
     if (prevDrawOffMeRef.current && !drawOfferedByMe && !gameOver) {
       window.dispatchEvent(new CustomEvent('chesscoin:toast', {
-        detail: { text: 'Соперник отклонил предложение ничьи', type: 'info' }
+        detail: { text: 'РЎРѕРїРµСЂРЅРёРє РѕС‚РєР»РѕРЅРёР» РїСЂРµРґР»РѕР¶РµРЅРёРµ РЅРёС‡СЊРё', type: 'info' }
       }));
     }
     prevDrawOffMeRef.current = drawOfferedByMe;
@@ -889,7 +889,7 @@ export function GamePage() {
     getSocket().emit('game:decline_draw', { sessionId });
   }, [sessionId]);
 
-  // Braво-фейерверк: показываем имена по очереди с интервалом 5с
+  // BraРІРѕ-С„РµР№РµСЂРІРµСЂРє: РїРѕРєР°Р·С‹РІР°РµРј РёРјРµРЅР° РїРѕ РѕС‡РµСЂРµРґРё СЃ РёРЅС‚РµСЂРІР°Р»РѕРј 5СЃ
   useEffect(() => {
     if (bravoName || bravoQueue.length === 0) return;
     const [next, ...rest] = bravoQueue;
@@ -899,7 +899,7 @@ export function GamePage() {
     return () => clearTimeout(t);
   }, [bravoQueue, bravoName]);
 
-  // Сохранить / убрать партию
+  // РЎРѕС…СЂР°РЅРёС‚СЊ / СѓР±СЂР°С‚СЊ РїР°СЂС‚РёСЋ
   useEffect(() => {
     if (!sessionId) return;
     api.get<{ saved: boolean }>(`/games/${sessionId}/saved`)
@@ -909,9 +909,9 @@ export function GamePage() {
 
   const handleBravo = useCallback(() => {
     const sock = getSocket();
-    const spectatorName = user?.firstName ?? 'Зритель';
+    const spectatorName = user?.firstName ?? 'Р—СЂРёС‚РµР»СЊ';
     sock.emit('battle:bravo', { sessionId, name: spectatorName });
-    // Локальная анимация (сервер отдаст обратно всем через battle:bravo broadcast)
+    // Р›РѕРєР°Р»СЊРЅР°СЏ Р°РЅРёРјР°С†РёСЏ (СЃРµСЂРІРµСЂ РѕС‚РґР°СЃС‚ РѕР±СЂР°С‚РЅРѕ РІСЃРµРј С‡РµСЂРµР· battle:bravo broadcast)
     setBravoQueue(q => [...q, spectatorName]);
   }, [sessionId, user?.firstName]);
 
@@ -931,15 +931,15 @@ export function GamePage() {
     }
   }, [sessionId, isSaved, isSaving]);
 
-  // ── Загрузка ────────────────────────────────────────────────────────────────
+  // в”Ђв”Ђ Р—Р°РіСЂСѓР·РєР° в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   if (!session) {
     return (
       <div style={{ position: 'fixed', inset: 0, background: '#0B0D11', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, sans-serif' }}>
         <style>{`@keyframes gp-spin { to { transform: rotate(360deg) } }`}</style>
         <div style={{ textAlign: 'center' }}>
           <div style={{ width: 32, height: 32, borderRadius: '50%', border: '2.5px solid rgba(74,158,255,.18)', borderTopColor: '#4A9EFF', animation: 'gp-spin 1s linear infinite', margin: '0 auto 14px' }} />
-          <div style={{ fontSize: '.72rem', color: '#3A4050', fontWeight: 700 }}>Загрузка партии...</div>
-          <button onClick={() => navigate('/')} style={{ marginTop: 20, padding: '7px 18px', borderRadius: 10, background: 'rgba(255,255,255,.06)', border: '.5px solid rgba(255,255,255,.1)', color: '#4A5060', fontSize: '.7rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>← Назад</button>
+          <div style={{ fontSize: '.72rem', color: '#3A4050', fontWeight: 700 }}>Р—Р°РіСЂСѓР·РєР° РїР°СЂС‚РёРё...</div>
+          <button onClick={() => navigate('/')} style={{ marginTop: 20, padding: '7px 18px', borderRadius: 10, background: 'rgba(255,255,255,.06)', border: '.5px solid rgba(255,255,255,.1)', color: '#4A5060', fontSize: '.7rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>в†ђ РќР°Р·Р°Рґ</button>
         </div>
       </div>
     );
@@ -957,7 +957,7 @@ export function GamePage() {
         @keyframes result-pop{ from{opacity:0;transform:scale(.88)} to{opacity:1;transform:scale(1)} }
       `}</style>
 
-      {/* ── Диалог предложения ничьи (только когда соперник предлагает) ──── */}
+      {/* в”Ђв”Ђ Р”РёР°Р»РѕРі РїСЂРµРґР»РѕР¶РµРЅРёСЏ РЅРёС‡СЊРё (С‚РѕР»СЊРєРѕ РєРѕРіРґР° СЃРѕРїРµСЂРЅРёРє РїСЂРµРґР»Р°РіР°РµС‚) в”Ђв”Ђв”Ђв”Ђ */}
       {drawOfferedByOpp && !drawOfferedByMe && !gameOver && (
         <GameDialog
           iconNode={
@@ -969,19 +969,19 @@ export function GamePage() {
           }
           iconBg="rgba(130,207,255,.09)"
           iconBorder="rgba(130,207,255,.25)"
-          title="Предложение ничьи"
-          subtitle="Соперник предлагает сыграть вничью"
-          primaryLabel="Принять"
-          secondaryLabel="Отклонить"
+          title="РџСЂРµРґР»РѕР¶РµРЅРёРµ РЅРёС‡СЊРё"
+          subtitle="РЎРѕРїРµСЂРЅРёРє РїСЂРµРґР»Р°РіР°РµС‚ СЃС‹РіСЂР°С‚СЊ РІРЅРёС‡СЊСЋ"
+          primaryLabel="РџСЂРёРЅСЏС‚СЊ"
+          secondaryLabel="РћС‚РєР»РѕРЅРёС‚СЊ"
           onPrimary={handleDrawOffer}
           onSecondary={handleDeclineDraw}
         />
       )}
 
-      {/* ── Верхний spacer — пустое пространство выравнивается между краем экрана и блоком ── */}
+      {/* в”Ђв”Ђ Р’РµСЂС…РЅРёР№ spacer вЂ” РїСѓСЃС‚РѕРµ РїСЂРѕСЃС‚СЂР°РЅСЃС‚РІРѕ РІС‹СЂР°РІРЅРёРІР°РµС‚СЃСЏ РјРµР¶РґСѓ РєСЂР°РµРј СЌРєСЂР°РЅР° Рё Р±Р»РѕРєРѕРј в”Ђв”Ђ */}
       <div style={{ flex: 1, minHeight: 6 }} />
 
-      {/* ── Соперник / верхний игрок (spectator: чёрный игрок) ───────────── */}
+      {/* в”Ђв”Ђ РЎРѕРїРµСЂРЅРёРє / РІРµСЂС…РЅРёР№ РёРіСЂРѕРє (spectator: С‡С‘СЂРЅС‹Р№ РёРіСЂРѕРє) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */}
       <div style={{ borderBottom: '.5px solid rgba(255,255,255,.05)', flexShrink: 0 }}>
         {isSpectator && specBlackSide ? (
           <PlayerPanel
@@ -1005,17 +1005,17 @@ export function GamePage() {
         )}
       </div>
 
-      {/* ── Статус-полоска верх: «Думает...» когда ход бота ──────────────── */}
+      {/* в”Ђв”Ђ РЎС‚Р°С‚СѓСЃ-РїРѕР»РѕСЃРєР° РІРµСЂС…: В«Р”СѓРјР°РµС‚...В» РєРѕРіРґР° С…РѕРґ Р±РѕС‚Р° в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */}
       <div style={{ height: STATUS_GAP, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 4, flexShrink: 0 }}>
         {!isMyTurn && !gameOver && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#4DDA8A', animation: 'gp-pulse 1.4s infinite', boxShadow: '0 0 7px #4DDA8A' }} />
-            <span style={{ fontSize: '.79rem', fontWeight: 800, color: '#4DDA8A', letterSpacing: '.02em' }}>Думает...</span>
+            <span style={{ fontSize: '.79rem', fontWeight: 800, color: '#4DDA8A', letterSpacing: '.02em' }}>Р”СѓРјР°РµС‚...</span>
           </div>
         )}
       </div>
 
-      {/* ── Доска — точный размер, НЕ flex-центрирование ─────────────────── */}
+      {/* в”Ђв”Ђ Р”РѕСЃРєР° вЂ” С‚РѕС‡РЅС‹Р№ СЂР°Р·РјРµСЂ, РќР• flex-С†РµРЅС‚СЂРёСЂРѕРІР°РЅРёРµ в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */}
       <div style={{ height: boardSize, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'visible', padding: '0 6px' }}>
         <div style={{ width: boardSize - 12, position: 'relative' }}>
           <ChessBoard
@@ -1028,7 +1028,7 @@ export function GamePage() {
             sessionId={sessionId}
           />
 
-          {/* ── Публичный батл: наблюдатели лайв + всего просмотров (топ-правый угол доски) ── */}
+          {/* в”Ђв”Ђ РџСѓР±Р»РёС‡РЅС‹Р№ Р±Р°С‚Р»: РЅР°Р±Р»СЋРґР°С‚РµР»Рё Р»Р°Р№РІ + РІСЃРµРіРѕ РїСЂРѕСЃРјРѕС‚СЂРѕРІ (С‚РѕРї-РїСЂР°РІС‹Р№ СѓРіРѕР» РґРѕСЃРєРё) в”Ђв”Ђ */}
           {isPublicBattle && (
             <div style={{
               position: 'absolute', top: 6, right: 6,
@@ -1040,7 +1040,7 @@ export function GamePage() {
               pointerEvents: 'none',
               zIndex: 10,
             }}>
-              {/* Лайв-зрители (пульс-индикатор, если > 0) */}
+              {/* Р›Р°Р№РІ-Р·СЂРёС‚РµР»Рё (РїСѓР»СЊСЃ-РёРЅРґРёРєР°С‚РѕСЂ, РµСЃР»Рё > 0) */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 {spectatorCount > 0 && (
                   <span style={{
@@ -1058,9 +1058,9 @@ export function GamePage() {
                   {spectatorCount}
                 </span>
               </div>
-              {/* Разделитель */}
+              {/* Р Р°Р·РґРµР»РёС‚РµР»СЊ */}
               <span style={{ width: 1, height: 10, background: 'rgba(255,255,255,.15)' }} />
-              {/* Всего просмотров */}
+              {/* Р’СЃРµРіРѕ РїСЂРѕСЃРјРѕС‚СЂРѕРІ */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
                   <path d="M12 4.5C7 4.5 3 8.5 3 12s4 7.5 9 7.5 9-4 9-7.5-4-7.5-9-7.5z" stroke="rgba(154,148,144,.8)" strokeWidth="1.8" strokeLinecap="round"/>
@@ -1075,22 +1075,22 @@ export function GamePage() {
         </div>
       </div>
 
-      {/* ── Статус-полоска низ: «Ваш ход» зелёным ───────────────────────── */}
+      {/* в”Ђв”Ђ РЎС‚Р°С‚СѓСЃ-РїРѕР»РѕСЃРєР° РЅРёР·: В«Р’Р°С€ С…РѕРґВ» Р·РµР»С‘РЅС‹Рј в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */}
       <div style={{ height: STATUS_GAP, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 4, flexShrink: 0 }}>
         {isMyTurn && !gameOver && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4DDA8A', animation: 'gp-pulse 1.4s infinite', boxShadow: '0 0 9px #4DDA8A' }} />
-            <span style={{ fontSize: '.85rem', fontWeight: 800, color: '#4DDA8A', letterSpacing: '.03em' }}>Ваш ход</span>
+            <span style={{ fontSize: '.85rem', fontWeight: 800, color: '#4DDA8A', letterSpacing: '.03em' }}>Р’Р°С€ С…РѕРґ</span>
           </div>
         )}
       </div>
 
-      {/* ── Касса батла (между статус-полоской и панелью игрока) ─────────
-          Private — компактная: банк + «победителю после 10%».
-          Public — с разбивкой: ставки + донаты → итого → победителю. */}
+      {/* в”Ђв”Ђ РљР°СЃСЃР° Р±Р°С‚Р»Р° (РјРµР¶РґСѓ СЃС‚Р°С‚СѓСЃ-РїРѕР»РѕСЃРєРѕР№ Рё РїР°РЅРµР»СЊСЋ РёРіСЂРѕРєР°) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+          Private вЂ” РєРѕРјРїР°РєС‚РЅР°СЏ: Р±Р°РЅРє + В«РїРѕР±РµРґРёС‚РµР»СЋ РїРѕСЃР»Рµ 10%В».
+          Public вЂ” СЃ СЂР°Р·Р±РёРІРєРѕР№: СЃС‚Р°РІРєРё + РґРѕРЅР°С‚С‹ в†’ РёС‚РѕРіРѕ в†’ РїРѕР±РµРґРёС‚РµР»СЋ. */}
       {isBattle && hasBet && (
         isPrivateBattle ? (
-          /* Приватный: только касса, без зрителей/доната */
+          /* РџСЂРёРІР°С‚РЅС‹Р№: С‚РѕР»СЊРєРѕ РєР°СЃСЃР°, Р±РµР· Р·СЂРёС‚РµР»РµР№/РґРѕРЅР°С‚Р° */
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
             background: 'rgba(212,168,67,.08)',
@@ -1103,19 +1103,19 @@ export function GamePage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <CoinIcon size={14} />
               <span style={{ fontSize: '.62rem', color: '#9A9490', fontWeight: 600, letterSpacing: '.04em', textTransform: 'uppercase' }}>
-                Касса
+                РљР°СЃСЃР°
               </span>
               <span style={{ fontSize: '.78rem', color: '#F0C85A', fontWeight: 800 }}>
-                {fmtBalance(bank.toString())} ᚙ
+                {fmtBalance(bank.toString())} бљ™
               </span>
             </div>
             <div style={{ fontSize: '.58rem', color: '#6E6A66', fontWeight: 600, letterSpacing: '.02em' }}>
-              победителю <span style={{ color: '#4DDA8A', fontWeight: 800 }}>{fmtBalance(winnerTake.toString())} ᚙ</span>
-              <span style={{ color: '#4A4440' }}> · комиссия 10%</span>
+              РїРѕР±РµРґРёС‚РµР»СЋ <span style={{ color: '#4DDA8A', fontWeight: 800 }}>{fmtBalance(winnerTake.toString())} бљ™</span>
+              <span style={{ color: '#4A4440' }}> В· РєРѕРјРёСЃСЃРёСЏ 10%</span>
             </div>
           </div>
         ) : (
-          /* Публичный: касса + разбивка (ставки / донаты) + к выплате */
+          /* РџСѓР±Р»РёС‡РЅС‹Р№: РєР°СЃСЃР° + СЂР°Р·Р±РёРІРєР° (СЃС‚Р°РІРєРё / РґРѕРЅР°С‚С‹) + Рє РІС‹РїР»Р°С‚Рµ */
           <div style={{
             display: 'flex', flexDirection: 'column', gap: 4,
             background: 'linear-gradient(135deg, rgba(212,168,67,.10), rgba(212,168,67,.04))',
@@ -1125,32 +1125,32 @@ export function GamePage() {
             margin: '0 10px',
             flexShrink: 0,
           }}>
-            {/* Строка 1: Касса + общая сумма */}
+            {/* РЎС‚СЂРѕРєР° 1: РљР°СЃСЃР° + РѕР±С‰Р°СЏ СЃСѓРјРјР° */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <CoinIcon size={14} />
                 <span style={{ fontSize: '.62rem', color: '#D4A843', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase' }}>
-                  Касса
+                  РљР°СЃСЃР°
                 </span>
               </div>
               <span style={{ fontSize: '.86rem', color: '#F0C85A', fontWeight: 800, letterSpacing: '.01em' }}>
-                {fmtBalance(bank.toString())} ᚙ
+                {fmtBalance(bank.toString())} бљ™
               </span>
             </div>
-            {/* Строка 2: разбивка ставки + донаты */}
+            {/* РЎС‚СЂРѕРєР° 2: СЂР°Р·Р±РёРІРєР° СЃС‚Р°РІРєРё + РґРѕРЅР°С‚С‹ */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, fontSize: '.56rem', color: '#7A7470', fontWeight: 600 }}>
-              <span>ставки: <span style={{ color: '#A8A29C' }}>{fmtBalance(totalBetPot.toString())}</span></span>
-              <span>донаты: <span style={{ color: donationsBig > 0n ? '#E78F4F' : '#5A5550' }}>{fmtBalance(donationsBig.toString())}</span></span>
+              <span>СЃС‚Р°РІРєРё: <span style={{ color: '#A8A29C' }}>{fmtBalance(totalBetPot.toString())}</span></span>
+              <span>РґРѕРЅР°С‚С‹: <span style={{ color: donationsBig > 0n ? '#E78F4F' : '#5A5550' }}>{fmtBalance(donationsBig.toString())}</span></span>
               <span>
-                победителю: <span style={{ color: '#4DDA8A', fontWeight: 800 }}>{fmtBalance(winnerTake.toString())}</span>
-                <span style={{ color: '#4A4440' }}> · стол 10%</span>
+                РїРѕР±РµРґРёС‚РµР»СЋ: <span style={{ color: '#4DDA8A', fontWeight: 800 }}>{fmtBalance(winnerTake.toString())}</span>
+                <span style={{ color: '#4A4440' }}> В· СЃС‚РѕР» 10%</span>
               </span>
             </div>
           </div>
         )
       )}
 
-      {/* ── Игрок / нижний игрок (spectator: белый игрок) ─────────────────── */}
+      {/* в”Ђв”Ђ РРіСЂРѕРє / РЅРёР¶РЅРёР№ РёРіСЂРѕРє (spectator: Р±РµР»С‹Р№ РёРіСЂРѕРє) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */}
       <div style={{ borderTop: '.5px solid rgba(255,255,255,.05)', flexShrink: 0 }}>
         {isSpectator && specWhiteSide ? (
           <PlayerPanel
@@ -1174,12 +1174,12 @@ export function GamePage() {
         )}
       </div>
 
-      {/* ── Нижний spacer ────────────────────────────────────────────────── */}
+      {/* в”Ђв”Ђ РќРёР¶РЅРёР№ spacer в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */}
       <div style={{ flex: 1, minHeight: 6 }} />
 
-      {/* ── Панель действий ──────────────────────────────────────────────── */}
+      {/* в”Ђв”Ђ РџР°РЅРµР»СЊ РґРµР№СЃС‚РІРёР№ в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */}
       {isSpectator ? (
-        /* ── Панель зрителя: Главная | Сохранить | Браво | Донатить ── */
+        /* в”Ђв”Ђ РџР°РЅРµР»СЊ Р·СЂРёС‚РµР»СЏ: Р“Р»Р°РІРЅР°СЏ | РЎРѕС…СЂР°РЅРёС‚СЊ | Р‘СЂР°РІРѕ | Р”РѕРЅР°С‚РёС‚СЊ в”Ђв”Ђ */
         <div style={{
           display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr',
           height: ACTBAR_H,
@@ -1188,7 +1188,7 @@ export function GamePage() {
           flexShrink: 0, background: 'rgba(10,12,18,.6)',
           gap: 1,
         }}>
-          {/* Главная */}
+          {/* Р“Р»Р°РІРЅР°СЏ */}
           <button
             onClick={() => navigate('/')}
             style={{
@@ -1199,10 +1199,10 @@ export function GamePage() {
             }}
           >
             <IcoHome />
-            <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Главная</span>
+            <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Р“Р»Р°РІРЅР°СЏ</span>
           </button>
 
-          {/* Сохранить */}
+          {/* РЎРѕС…СЂР°РЅРёС‚СЊ */}
           <button
             onClick={handleToggleSave}
             disabled={isSaving}
@@ -1219,11 +1219,11 @@ export function GamePage() {
           >
             <IcoStarBtn filled={isSaved} />
             <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>
-              {isSaved ? 'Сохранено' : 'Сохранить'}
+              {isSaved ? 'РЎРѕС…СЂР°РЅРµРЅРѕ' : 'РЎРѕС…СЂР°РЅРёС‚СЊ'}
             </span>
           </button>
 
-          {/* Браво */}
+          {/* Р‘СЂР°РІРѕ */}
           <button
             onClick={handleBravo}
             style={{
@@ -1238,10 +1238,10 @@ export function GamePage() {
               <path d="M18 14l.75 2.25L21 17l-2.25.75L18 20l-.75-2.25L15 17l2.25-.75L18 14z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>
               <path d="M6 16l.5 1.5L8 18l-1.5.5L6 20l-.5-1.5L4 18l1.5-.5L6 16z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
             </svg>
-            <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Браво</span>
+            <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Р‘СЂР°РІРѕ</span>
           </button>
 
-          {/* Донатить (только публичные батлы) */}
+          {/* Р”РѕРЅР°С‚РёС‚СЊ (С‚РѕР»СЊРєРѕ РїСѓР±Р»РёС‡РЅС‹Рµ Р±Р°С‚Р»С‹) */}
           {isPublicBattle ? (
             <button
               disabled={gameOver}
@@ -1260,7 +1260,7 @@ export function GamePage() {
               }}
             >
               <CoinIcon size={20} />
-              <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Донатить</span>
+              <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Р”РѕРЅР°С‚РёС‚СЊ</span>
             </button>
           ) : (
             <div style={{
@@ -1271,12 +1271,12 @@ export function GamePage() {
                 <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" strokeWidth="1.6"/>
                 <path d="M7 11V7a5 5 0 0110 0v4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
               </svg>
-              <span style={{ fontSize: '.62rem', fontWeight: 700 }}>Закрыто</span>
+              <span style={{ fontSize: '.62rem', fontWeight: 700 }}>Р—Р°РєСЂС‹С‚Рѕ</span>
             </div>
           )}
         </div>
       ) : (
-        /* ── Обычная панель: 4 кнопки ──────────────────────────────────── */
+        /* в”Ђв”Ђ РћР±С‹С‡РЅР°СЏ РїР°РЅРµР»СЊ: 4 РєРЅРѕРїРєРё в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
         <div style={{
           display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr',
           height: ACTBAR_H,
@@ -1285,7 +1285,7 @@ export function GamePage() {
           flexShrink: 0, background: 'rgba(10,12,18,.6)',
           gap: 1,
         }}>
-          {/* Главная */}
+          {/* Р“Р»Р°РІРЅР°СЏ */}
           <button
             onClick={() => navigate('/')}
             style={{
@@ -1296,10 +1296,10 @@ export function GamePage() {
             }}
           >
             <IcoHome />
-            <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Главная</span>
+            <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Р“Р»Р°РІРЅР°СЏ</span>
           </button>
 
-          {/* Сохранить */}
+          {/* РЎРѕС…СЂР°РЅРёС‚СЊ */}
           <button
             onClick={handleToggleSave}
             disabled={isSaving}
@@ -1316,11 +1316,11 @@ export function GamePage() {
           >
             <IcoStarBtn filled={isSaved} />
             <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>
-              {isSaved ? 'Сохранено' : 'Сохранить'}
+              {isSaved ? 'РЎРѕС…СЂР°РЅРµРЅРѕ' : 'РЎРѕС…СЂР°РЅРёС‚СЊ'}
             </span>
           </button>
 
-          {/* Ничья */}
+          {/* РќРёС‡СЊСЏ */}
           <button
             onClick={handleDrawOffer}
             disabled={gameOver || drawOfferedByMe}
@@ -1338,11 +1338,11 @@ export function GamePage() {
           >
             <IcoHandshake />
             <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>
-              {drawOfferedByOpp ? 'Принять' : drawOfferedByMe ? 'Ждём...' : 'Ничья'}
+              {drawOfferedByOpp ? 'РџСЂРёРЅСЏС‚СЊ' : drawOfferedByMe ? 'Р–РґС‘Рј...' : 'РќРёС‡СЊСЏ'}
             </span>
           </button>
 
-          {/* Сдаться */}
+          {/* РЎРґР°С‚СЊСЃСЏ */}
           <button
             onClick={handleSurrender}
             disabled={gameOver}
@@ -1357,12 +1357,12 @@ export function GamePage() {
             }}
           >
             <IcoFlag />
-            <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Сдаться</span>
+            <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>РЎРґР°С‚СЊСЃСЏ</span>
           </button>
         </div>
       )}
 
-      {/* ── Диалог подтверждения сдачи ──────────────────────────────────── */}
+      {/* в”Ђв”Ђ Р”РёР°Р»РѕРі РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ СЃРґР°С‡Рё в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */}
       {showResignDialog && (
         <GameDialog
           iconNode={
@@ -1373,17 +1373,17 @@ export function GamePage() {
           }
           iconBg="rgba(204,96,96,.09)"
           iconBorder="rgba(204,96,96,.28)"
-          title="Сдаться?"
-          subtitle="Партия будет засчитана как поражение"
-          primaryLabel="Сдаться"
+          title="РЎРґР°С‚СЊСЃСЏ?"
+          subtitle="РџР°СЂС‚РёСЏ Р±СѓРґРµС‚ Р·Р°СЃС‡РёС‚Р°РЅР° РєР°Рє РїРѕСЂР°Р¶РµРЅРёРµ"
+          primaryLabel="РЎРґР°С‚СЊСЃСЏ"
           primaryDanger
-          secondaryLabel="Отмена"
+          secondaryLabel="РћС‚РјРµРЅР°"
           onPrimary={handleResignConfirm}
           onSecondary={() => setShowResignDialog(false)}
         />
       )}
 
-      {/* ── Bottom sheet результата ────────────────────────────────────────── */}
+      {/* в”Ђв”Ђ Bottom sheet СЂРµР·СѓР»СЊС‚Р°С‚Р° в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */}
       {resultType && (
         <ResultSheet
           type={resultType}
@@ -1394,14 +1394,14 @@ export function GamePage() {
         />
       )}
 
-      {/* ── Браво-фейерверк ──────────────────────────────────────────────── */}
+      {/* в”Ђв”Ђ Р‘СЂР°РІРѕ-С„РµР№РµСЂРІРµСЂРє в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */}
       {bravoName && <BravoAnimation name={bravoName} />}
 
     </div>
   );
 };
 
-// ── MoveHistory — ходы парами ────────────────────────────────────────────────
+// в”Ђв”Ђ MoveHistory вЂ” С…РѕРґС‹ РїР°СЂР°РјРё в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 const parsePgnMoves = (pgn: string) => {
   const cleaned = pgn.replace(/\[.*?\]\s*/g, '').trim();
   if (!cleaned) return [];
@@ -1418,13 +1418,13 @@ const MoveHistory: React.FC<{ pgn: string }> = ({ pgn }) => {
   const moves = parsePgnMoves(pgn);
   const last8 = moves.slice(-8);
   if (last8.length === 0) {
-    return <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: 'var(--text-muted, #4A5270)', marginTop: 4 }}>— ♟ —</div>;
+    return <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: '#5A5248', marginTop: 4 }}>вЂ” в™џ вЂ”</div>;
   }
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 12px', marginTop: 4 }}>
       {last8.map((m) => (
         <span key={m.num} style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: '#C8CDE0', whiteSpace: 'nowrap' }}>
-          <span style={{ color: 'var(--text-muted, #4A5270)' }}>{m.num}.</span> {m.white}{m.black ? ` ${m.black}` : ''}
+          <span style={{ color: '#5A5248' }}>{m.num}.</span> {m.white}{m.black ? ` ${m.black}` : ''}
         </span>
       ))}
     </div>
