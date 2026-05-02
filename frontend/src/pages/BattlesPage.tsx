@@ -388,8 +388,8 @@ export const BattlesPage: React.FC = () => {
             </div>
           )}
           {histGames.map((g: any) => {
-            const isWon  = g.result === 'WON';
-            const isDraw = g.result === 'DRAW';
+            const isWon  = g.result === 'win';
+            const isDraw = g.result === 'draw';
             const resultColor = isWon ? '#3DBA7A' : isDraw ? '#D4A843' : '#E05555';
             const resultLabel = isWon ? 'Победа' : isDraw ? 'Ничья' : 'Поражение';
             return (

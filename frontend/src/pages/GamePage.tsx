@@ -9,6 +9,7 @@ import type { Square } from 'chess.js';
 import { getSocket } from '@/api/socket';
 import { api } from '@/api/client';
 import { useGameStore } from '@/store/useGameStore';
+import { useUserStore } from '@/store/useUserStore';
 import { ChessBoard } from '@/components/game/ChessBoard';
 import { sound } from '@/lib/sound';
 import { fmtBalance } from '@/utils/format';
@@ -644,6 +645,7 @@ export function GamePage() {
   const { sessionId = '' } = useParams<{ sessionId: string }>();
 
   const { sessions, drawOfferedBy } = useGameStore();
+  const { user } = useUserStore();
   const session = sessions.find(s => s.id === sessionId) ?? null;
 
   const [lastMove,       setLastMove]       = useState<{ from: string; to: string } | null>(null);
@@ -821,6 +823,10 @@ export function GamePage() {
   // Spectator: показываем обоих реальных игроков (не "Вы")
   const specWhiteSide = isSpectator ? session.sides.find(s => s.isWhite) ?? session.sides[0] : null;
   const specBlackSide = isSpectator ? session.sides.find(s => !s.isWhite) ?? (session.sides[1] ?? session.sides[0]) : null;
+  // Spectator: чей ход определяем по currentSideId, а не по isMyTurn (у зрителей isMyTurn всегда false)
+  const isWhiteTurnNow = isSpectator
+    ? session.currentSideId === specWhiteSide?.id
+    : isMyTurn && (myColor === 'white');
 
   // Результат
   const resultType: ResultType | null = !gameOver ? null
@@ -903,11 +909,11 @@ export function GamePage() {
 
   const handleBravo = useCallback(() => {
     const sock = getSocket();
-    const spectatorName = 'Зритель';
+    const spectatorName = user?.firstName ?? 'Зритель';
     sock.emit('battle:bravo', { sessionId, name: spectatorName });
     // Локальная анимация (сервер отдаст обратно всем через battle:bravo broadcast)
     setBravoQueue(q => [...q, spectatorName]);
-  }, [sessionId]);
+  }, [sessionId, user?.firstName]);
 
   const handleToggleSave = useCallback(async () => {
     if (isSaving) return;
@@ -987,7 +993,7 @@ export function GamePage() {
             country={specBlackSide.player?.country}
             captured={blackCap} advantage={Math.max(0, bMat - wMat)} coins={0}
             timeDisplay={oppTimeDisplay} timeSecs={oppTimeSecs}
-            isActive={!isMyTurn && !gameOver} isGameOver={gameOver}
+            isActive={!isWhiteTurnNow && !gameOver} isGameOver={gameOver}
           />
         ) : (
           <PlayerPanel
@@ -1156,7 +1162,7 @@ export function GamePage() {
             country={specWhiteSide.player?.country}
             captured={whiteCap} advantage={Math.max(0, wMat - bMat)} coins={0}
             timeDisplay={myTimeDisplay} timeSecs={myTimeSecs}
-            isActive={isMyTurn && !gameOver} isGameOver={gameOver}
+            isActive={isWhiteTurnNow && !gameOver} isGameOver={gameOver}
           />
         ) : (
           <PlayerPanel
