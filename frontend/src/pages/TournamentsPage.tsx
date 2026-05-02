@@ -155,7 +155,7 @@ export const TournamentsPage: React.FC = () => {
 
       {/* T7: Tournament finish and prize popup */}
       {tournamentFinish && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: "var(--z-modal, 300)", background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(14px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,.88)', backdropFilter: 'blur(14px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div style={{ width: '100%', maxWidth: 340, background: 'linear-gradient(135deg,#141018,#0F0E18)', borderRadius: 20, padding: 28, border: '.5px solid rgba(245,200,66,0.35)', textAlign: 'center', boxShadow: '0 0 60px rgba(245,200,66,0.12)' }}>
             <div style={{ fontSize: 60, marginBottom: 16 }}>🏆</div>
             <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#F0C85A', marginBottom: 8 }}>
@@ -255,13 +255,13 @@ export const TournamentsPage: React.FC = () => {
       </div>
 
       {loading && (
-        <div style={{ textAlign: 'center', color: '#4A5270', padding: 32, fontSize: '0.82rem' }}>
+        <div style={{ textAlign: 'center', color: '#5A5248', padding: 32, fontSize: '0.82rem' }}>
           {t.common.loading}
         </div>
       )}
 
       {!loading && filtered.length === 0 && (
-        <div style={{ textAlign: 'center', color: '#4A5270', padding: 32, fontSize: '0.82rem' }}>
+        <div style={{ textAlign: 'center', color: '#5A5248', padding: 32, fontSize: '0.82rem' }}>
           {filter === 'joined' ? tt.noJoined : tt.noActive}
         </div>
       )}
@@ -380,7 +380,7 @@ const TournamentCard: React.FC<{
           </div>
           <div style={{ display: 'flex', gap: 14 }}>
             <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#3DBA7A' }}>✓ {tour.myStats.wins}</span>
-            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#FF4D6A' }}>✗ {tour.myStats.losses}</span>
+            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#FF5B5B' }}>✗ {tour.myStats.losses}</span>
             <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#7A7875' }}>= {tour.myStats.draws}</span>
             <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#F0C85A', marginLeft: 'auto' }}>
               Points: {tour.myStats.points.toFixed(1)}
@@ -390,7 +390,7 @@ const TournamentCard: React.FC<{
       )}
 
       {endDate && (
-        <div style={{ fontSize: '0.7rem', color: '#4A5270', padding: '0 16px 4px' }}>
+        <div style={{ fontSize: '0.7rem', color: '#5A5248', padding: '0 16px 4px' }}>
           {tt.ends}: {endDate}
         </div>
       )}
@@ -428,7 +428,7 @@ const TournamentCard: React.FC<{
             onClick={onLeave}
             style={{
               flex: 1, padding: '8px 0', borderRadius: 9,
-              background: 'rgba(255,77,106,0.08)', color: '#FF4D6A',
+              background: 'rgba(255,77,106,0.08)', color: '#FF5B5B',
               border: '.5px solid rgba(255,77,106,.2)',
               fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer',
             }}
@@ -475,13 +475,13 @@ const TournamentDetailModal: React.FC<{ tournamentId: string; onClose: () => voi
           </button>
         </div>
         {!data && (
-          <div style={{ textAlign: 'center', color: '#4A5270', padding: 24, fontSize: '0.82rem' }}>
+          <div style={{ textAlign: 'center', color: '#5A5248', padding: 24, fontSize: '0.82rem' }}>
             {t.common.loading}
           </div>
         )}
         {data?.players?.map((p: TournamentPlayer, i: number) => (
           <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', borderBottom: '.5px solid rgba(255,255,255,0.06)' }}>
-            <div style={{ fontSize: '0.82rem', fontWeight: 800, color: i === 0 ? '#F0C85A' : i === 1 ? '#C0C0C0' : i === 2 ? '#CD7F32' : '#4A5270', width: 24, textAlign: 'center' }}>
+            <div style={{ fontSize: '0.82rem', fontWeight: 800, color: i === 0 ? '#F0C85A' : i === 1 ? '#C0C0C0' : i === 2 ? '#CD7F32' : '#5A5248', width: 24, textAlign: 'center' }}>
               {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
             </div>
             <Avatar user={p.user} size="s" />
@@ -495,7 +495,7 @@ const TournamentDetailModal: React.FC<{ tournamentId: string; onClose: () => voi
           </div>
         ))}
         {!data?.players?.length && data && (
-          <div style={{ textAlign: 'center', color: '#4A5270', padding: 16, fontSize: '0.82rem' }}>
+          <div style={{ textAlign: 'center', color: '#5A5248', padding: 16, fontSize: '0.82rem' }}>
             {tt.noParticipants}
           </div>
         )}
@@ -559,10 +559,10 @@ const DonateModal: React.FC<{ tournamentId: string; onClose: () => void; onSucce
 
 const overlayStyle: React.CSSProperties = {
   position: 'fixed', inset: 0,
-  background: 'rgba(0,0,0,0.75)',
-  backdropFilter: 'blur(10px)',
-  WebkitBackdropFilter: 'blur(10px)',
-  zIndex: "var(--z-modal, 300)" as any,
+  background: 'rgba(0,0,0,.82)',
+  backdropFilter: 'blur(14px)',
+  WebkitBackdropFilter: 'blur(14px)',
+  zIndex: 300,
   display: 'flex', alignItems: 'flex-end',
   // iOS safe-area: не прижимаем боттом-шит к системной панели жестов
   paddingBottom: 'env(safe-area-inset-bottom, 0px)',
