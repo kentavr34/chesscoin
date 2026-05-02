@@ -433,7 +433,7 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
                     {date.toLocaleDateString('en-US')}
                   </div>
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: isIn ? '#3DBA7A' : '#FF4D6A', fontFamily: 'JetBrains Mono, monospace' }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: isIn ? '#3DBA7A' : '#FF5B5B', fontFamily: 'JetBrains Mono, monospace' }}>
                   {isIn ? '+' : '-'}{fmtBalance(amount)} ᚙ
                 </div>
               </div>
