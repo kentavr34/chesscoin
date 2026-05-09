@@ -660,6 +660,7 @@ export function GamePage() {
   const [donatePool,        setDonatePool]        = useState<string | null>(null);
   const [spectatorCount,    setSpectatorCount]    = useState(session?.spectatorCount ?? 0);
   const [selectedDonateAmt, setSelectedDonateAmt] = useState(1000);
+  const [showDonateMenu,    setShowDonateMenu]    = useState(false);
   const [bravoQueue,  setBravoQueue]  = useState<string[]>([]);
   const [bravoName,   setBravoName]   = useState<string | null>(null);
 
@@ -1177,82 +1178,60 @@ export function GamePage() {
       {/* в”Ђв”Ђ РќРёР¶РЅРёР№ spacer в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */}
       <div style={{ flex: 1, minHeight: 6 }} />
 
-      {/* в”Ђв”Ђ РџР°РЅРµР»СЊ РґРµР№СЃС‚РІРёР№ в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */}
-      {isSpectator ? (
-        /* в”Ђв”Ђ РџР°РЅРµР»СЊ Р·СЂРёС‚РµР»СЏ: Р“Р»Р°РІРЅР°СЏ | РЎРѕС…СЂР°РЅРёС‚СЊ | Р‘СЂР°РІРѕ | Р”РѕРЅР°С‚РёС‚СЊ в”Ђв”Ђ */
-        <div style={{
-          display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr',
-          height: ACTBAR_H,
-          paddingBottom: 'max(0px, env(safe-area-inset-bottom, 0px))',
-          borderTop: '.5px solid rgba(255,255,255,.09)',
-          flexShrink: 0, background: 'rgba(10,12,18,.6)',
-          gap: 1,
-        }}>
-          {/* Р“Р»Р°РІРЅР°СЏ */}
-          <button
-            onClick={() => navigate('/')}
-            style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              gap: 5, background: 'rgba(255,255,255,.03)', border: 'none',
-              color: '#7A8898', cursor: 'pointer', fontFamily: 'inherit',
-              transition: 'background .15s, color .15s',
-            }}
-          >
-            <IcoHome />
-            <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Р“Р»Р°РІРЅР°СЏ</span>
-          </button>
+      {/* ── Панель действий — ЕДИНЫЙ layout: 4 слота, меняются только 3-й и 4-й ── */}
+      <div style={{
+        display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr',
+        height: ACTBAR_H,
+        paddingBottom: 'max(0px, env(safe-area-inset-bottom, 0px))',
+        borderTop: '.5px solid rgba(255,255,255,.09)',
+        flexShrink: 0, background: 'rgba(10,12,18,.6)',
+        gap: 1, position: 'relative',
+      }}>
+        {/* Слот 1: Главная (всегда) */}
+        <button
+          onClick={() => navigate('/')}
+          style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            gap: 5, background: 'rgba(255,255,255,.03)', border: 'none',
+            color: '#7A8898', cursor: 'pointer', fontFamily: 'inherit',
+            transition: 'background .15s, color .15s',
+          }}
+        >
+          <IcoHome />
+          <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Главная</span>
+        </button>
 
-          {/* РЎРѕС…СЂР°РЅРёС‚СЊ */}
-          <button
-            onClick={handleToggleSave}
-            disabled={isSaving}
-            style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              gap: 5,
-              background: isSaved ? 'rgba(245,200,66,.07)' : 'rgba(255,255,255,.03)',
-              border: 'none',
-              color: isSaved ? '#F5C842' : '#7A8898',
-              cursor: isSaving ? 'wait' : 'pointer',
-              fontFamily: 'inherit',
-              transition: 'background .15s, color .15s',
-            }}
-          >
-            <IcoStarBtn filled={isSaved} />
-            <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>
-              {isSaved ? 'РЎРѕС…СЂР°РЅРµРЅРѕ' : 'РЎРѕС…СЂР°РЅРёС‚СЊ'}
-            </span>
-          </button>
+        {/* Слот 2: Сохранить (всегда) */}
+        <button
+          onClick={handleToggleSave}
+          disabled={isSaving}
+          style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            gap: 5,
+            background: isSaved ? 'rgba(245,200,66,.07)' : 'rgba(255,255,255,.03)',
+            border: 'none',
+            color: isSaved ? '#F5C842' : '#7A8898',
+            cursor: isSaving ? 'wait' : 'pointer',
+            fontFamily: 'inherit',
+            transition: 'background .15s, color .15s',
+          }}
+        >
+          <IcoStarBtn filled={isSaved} />
+          <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>
+            {isSaved ? 'Сохранено' : 'Сохранить'}
+          </span>
+        </button>
 
-          {/* Р‘СЂР°РІРѕ */}
-          <button
-            onClick={handleBravo}
-            style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              gap: 5, background: 'rgba(212,168,67,.05)', border: 'none',
-              color: '#D4A843', cursor: 'pointer', fontFamily: 'inherit',
-              transition: 'background .15s, color .15s',
-            }}
-          >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5L12 2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-              <path d="M18 14l.75 2.25L21 17l-2.25.75L18 20l-.75-2.25L15 17l2.25-.75L18 14z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>
-              <path d="M6 16l.5 1.5L8 18l-1.5.5L6 20l-.5-1.5L4 18l1.5-.5L6 16z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
-            </svg>
-            <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Р‘СЂР°РІРѕ</span>
-          </button>
-
-          {/* Р”РѕРЅР°С‚РёС‚СЊ (С‚РѕР»СЊРєРѕ РїСѓР±Р»РёС‡РЅС‹Рµ Р±Р°С‚Р»С‹) */}
-          {isPublicBattle ? (
+        {/* Слот 3: игрок=Ничья | зритель=Донат */}
+        {isSpectator ? (
+          isPublicBattle ? (
             <button
               disabled={gameOver}
-              onClick={() => {
-                if (gameOver) return;
-                getSocket().emit('battle:donate', { sessionId, amount: String(selectedDonateAmt) });
-              }}
+              onClick={() => !gameOver && setShowDonateMenu(v => !v)}
               style={{
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                 gap: 5,
-                background: gameOver ? 'rgba(255,255,255,.02)' : 'rgba(212,168,67,.05)',
+                background: showDonateMenu ? 'rgba(212,168,67,.12)' : gameOver ? 'rgba(255,255,255,.02)' : 'rgba(212,168,67,.05)',
                 border: 'none',
                 color: gameOver ? '#2A2420' : '#D4A843',
                 cursor: gameOver ? 'default' : 'pointer',
@@ -1260,7 +1239,7 @@ export function GamePage() {
               }}
             >
               <CoinIcon size={20} />
-              <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Р”РѕРЅР°С‚РёС‚СЊ</span>
+              <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Донат</span>
             </button>
           ) : (
             <div style={{
@@ -1271,56 +1250,10 @@ export function GamePage() {
                 <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" strokeWidth="1.6"/>
                 <path d="M7 11V7a5 5 0 0110 0v4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
               </svg>
-              <span style={{ fontSize: '.62rem', fontWeight: 700 }}>Р—Р°РєСЂС‹С‚Рѕ</span>
+              <span style={{ fontSize: '.62rem', fontWeight: 700 }}>Закрыто</span>
             </div>
-          )}
-        </div>
-      ) : (
-        /* в”Ђв”Ђ РћР±С‹С‡РЅР°СЏ РїР°РЅРµР»СЊ: 4 РєРЅРѕРїРєРё в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
-        <div style={{
-          display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr',
-          height: ACTBAR_H,
-          paddingBottom: 'max(0px, env(safe-area-inset-bottom, 0px))',
-          borderTop: '.5px solid rgba(255,255,255,.09)',
-          flexShrink: 0, background: 'rgba(10,12,18,.6)',
-          gap: 1,
-        }}>
-          {/* Р“Р»Р°РІРЅР°СЏ */}
-          <button
-            onClick={() => navigate('/')}
-            style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              gap: 5, background: 'rgba(255,255,255,.03)', border: 'none',
-              color: '#7A8898', cursor: 'pointer', fontFamily: 'inherit',
-              transition: 'background .15s, color .15s',
-            }}
-          >
-            <IcoHome />
-            <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Р“Р»Р°РІРЅР°СЏ</span>
-          </button>
-
-          {/* РЎРѕС…СЂР°РЅРёС‚СЊ */}
-          <button
-            onClick={handleToggleSave}
-            disabled={isSaving}
-            style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              gap: 5,
-              background: isSaved ? 'rgba(245,200,66,.07)' : 'rgba(255,255,255,.03)',
-              border: 'none',
-              color: isSaved ? '#F5C842' : '#7A8898',
-              cursor: isSaving ? 'wait' : 'pointer',
-              fontFamily: 'inherit',
-              transition: 'background .15s, color .15s',
-            }}
-          >
-            <IcoStarBtn filled={isSaved} />
-            <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>
-              {isSaved ? 'РЎРѕС…СЂР°РЅРµРЅРѕ' : 'РЎРѕС…СЂР°РЅРёС‚СЊ'}
-            </span>
-          </button>
-
-          {/* РќРёС‡СЊСЏ */}
+          )
+        ) : (
           <button
             onClick={handleDrawOffer}
             disabled={gameOver || drawOfferedByMe}
@@ -1338,11 +1271,43 @@ export function GamePage() {
           >
             <IcoHandshake />
             <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>
-              {drawOfferedByOpp ? 'РџСЂРёРЅСЏС‚СЊ' : drawOfferedByMe ? 'Р–РґС‘Рј...' : 'РќРёС‡СЊСЏ'}
+              {drawOfferedByOpp ? 'Принять' : drawOfferedByMe ? 'Ждём...' : 'Ничья'}
             </span>
           </button>
+        )}
 
-          {/* РЎРґР°С‚СЊСЃСЏ */}
+        {/* Слот 4: игрок=Сдаться | зритель=Счётчик зрителей (tap → Браво) */}
+        {isSpectator ? (
+          <button
+            onClick={handleBravo}
+            title="Браво — поддержать игроков"
+            style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              gap: 4,
+              background: 'rgba(155,109,255,.05)', border: 'none',
+              color: '#9B85FF', cursor: 'pointer', fontFamily: 'inherit',
+              transition: 'background .15s, color .15s', position: 'relative',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: "'JetBrains Mono',monospace" }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M1 12S5 5 12 5s11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
+                <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.7"/>
+              </svg>
+              <span style={{ fontSize: '.85rem', fontWeight: 800 }}>{spectatorCount}</span>
+              {spectatorCount > 0 && (
+                <span style={{
+                  width: 5, height: 5, borderRadius: '50%', background: '#E7484F',
+                  animation: 'gp-pulse 1.4s infinite',
+                  marginLeft: -2,
+                }} />
+              )}
+            </div>
+            <span style={{ fontSize: '.62rem', fontWeight: 700, letterSpacing: '.04em', color: '#9B85FF', opacity: .85 }}>
+              {viewCount >= 1000 ? `${(viewCount / 1000).toFixed(1)}K` : viewCount} просмотров
+            </span>
+          </button>
+        ) : (
           <button
             onClick={handleSurrender}
             disabled={gameOver}
@@ -1357,10 +1322,70 @@ export function GamePage() {
             }}
           >
             <IcoFlag />
-            <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>РЎРґР°С‚СЊСЃСЏ</span>
+            <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Сдаться</span>
           </button>
-        </div>
-      )}
+        )}
+
+        {/* Donate-меню — выбор суммы (всплывает над 3-й кнопкой) */}
+        {showDonateMenu && isSpectator && isPublicBattle && (
+          <>
+            <div
+              onClick={() => setShowDonateMenu(false)}
+              style={{
+                position: 'fixed', inset: 0, zIndex: 60,
+                background: 'rgba(0,0,0,.45)', backdropFilter: 'blur(4px)',
+              }}
+            />
+            <div style={{
+              position: 'absolute',
+              bottom: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)',
+              zIndex: 61, width: 280,
+              background: 'linear-gradient(160deg,#141018,#0F0E18)',
+              border: '.5px solid rgba(212,168,67,.35)',
+              borderRadius: 14, padding: 12,
+              boxShadow: '0 8px 32px rgba(0,0,0,.6)',
+            }}>
+              <div style={{ fontSize: '.62rem', color: '#9A9490', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 8, textAlign: 'center' }}>
+                Поддержать партию
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 8 }}>
+                {[100, 1000, 10000, 100000].map((amt) => (
+                  <button
+                    key={amt}
+                    onClick={() => setSelectedDonateAmt(amt)}
+                    style={{
+                      padding: '8px 0', borderRadius: 9, cursor: 'pointer',
+                      border: selectedDonateAmt === amt ? '.5px solid rgba(212,168,67,.5)' : '.5px solid rgba(255,255,255,.08)',
+                      background: selectedDonateAmt === amt ? 'rgba(212,168,67,.12)' : 'rgba(255,255,255,.03)',
+                      color: selectedDonateAmt === amt ? '#F0C85A' : '#9A9490',
+                      fontFamily: "'JetBrains Mono',monospace", fontSize: '.78rem', fontWeight: 800,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                    }}
+                  >
+                    {fmtBalance(String(amt))} <CoinIcon size={11} />
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => {
+                  getSocket().emit('battle:donate', { sessionId, amount: String(selectedDonateAmt) });
+                  setShowDonateMenu(false);
+                }}
+                style={{
+                  width: '100%', padding: '10px 0', borderRadius: 10,
+                  background: 'linear-gradient(135deg,#2A1E08,#4A3810)',
+                  border: '.5px solid rgba(212,168,67,.45)',
+                  color: '#F0C85A', fontSize: '.82rem', fontWeight: 800,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                }}
+              >
+                Отправить {fmtBalance(String(selectedDonateAmt))} <CoinIcon size={13} />
+              </button>
+            </div>
+          </>
+        )}
+      </div>
 
       {/* в”Ђв”Ђ Р”РёР°Р»РѕРі РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ СЃРґР°С‡Рё в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */}
       {showResignDialog && (
