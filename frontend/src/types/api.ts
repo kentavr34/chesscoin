@@ -69,8 +69,10 @@ export interface ActiveMatch {
   round: number;
   status: string;
   sessionId?: string | null;
+  sessionCode?: string | null;
+  tournamentId?: string;
   myUserId?: string;
-  tournament?: { name: string; type: string };
+  tournament?: { id?: string; name: string; type: string };
   player1?: { userId: string; user?: PublicUser };
   player2?: { userId: string; user?: PublicUser };
 }

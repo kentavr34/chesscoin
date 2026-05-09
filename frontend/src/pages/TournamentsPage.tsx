@@ -281,7 +281,7 @@ export const TournamentsPage: React.FC = () => {
               {TYPE_ICONS[type]} {items[0].typeLabel}
             </div>
             {items.map(item => {
-              const activeMatch = myMatches.find(m => m.tournament?.name === item.name || (m as any).tournamentId === item.id);
+              const activeMatch = myMatches.find(m => m.tournamentId === item.id || m.tournament?.id === item.id || m.tournament?.name === item.name);
               return (
                 <TournamentCard
                   key={item.id}
