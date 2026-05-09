@@ -8,14 +8,15 @@ import { useConfirm } from '@/components/ui/ConfirmModal';
 import type { TournamentFull, ActiveMatch, League } from '@/types'; // R1
 import { useNavigate } from 'react-router-dom';
 import { useT } from '@/i18n/useT';
+import {
+  TOURNAMENT_TYPE_ICON, IcoTrophy,
+  IcoLeaderboard, IcoDonate, IcoLock, IcoCheck, IcoSwords, IcoFlag,
+} from '@/components/icons/TournamentIcons';
 
 const showToast = (text: string, type: 'error' | 'info' = 'error') => {
   window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text, type } }));
 };
 
-const TYPE_ICONS: Record<string, string> = {
-  WORLD: '🌍', COUNTRY: '🏴', WEEKLY: '📅', MONTHLY: '🗓️', SEASONAL: '🌸', YEARLY: '🏆',
-};
 const TYPE_COLORS: Record<string, string> = {
   WORLD: '#F0C85A', COUNTRY: '#3DBA7A', WEEKLY: '#D4A843',
   MONTHLY: '#F0C85A', SEASONAL: '#C8A843', YEARLY: '#F0C85A',
@@ -107,13 +108,25 @@ export const TournamentsPage: React.FC = () => {
 
   useEffect(() => { load(); }, []);
 
-  const handleJoin = async (id: string) => {
-    setJoiningId(id);
+  const handleJoin = async (tour: TournamentFull) => {
+    // Подтверждение со ставкой и предупреждением о невозврате
+    const fee = BigInt(tour.entryFee || '0');
+    const message = fee > 0n
+      ? `Взнос: ${fmtBalance(tour.entryFee)} ᚙ\n\nВзнос идёт в призовой фонд и НЕ возвращается при выходе из турнира.`
+      : `Бесплатное участие.\n\nПосле вступления вы не сможете выйти после старта турнира.`;
+    const ok = await confirm({
+      title: `Вступить в "${tour.name}"?`,
+      message,
+      okLabel: fee > 0n ? `Внести ${fmtBalance(tour.entryFee)} ᚙ` : 'Вступить',
+      cancelLabel: 'Отмена',
+    });
+    if (!ok) return;
+
+    setJoiningId(tour.id);
     try {
-      await tournamentsApi.join(id);
+      await tournamentsApi.join(tour.id);
       await load();
     } catch (e: unknown) {
-      // T8: User-friendly message when country is required
       const err = e as Record<string, unknown>;
       if ((err.message as string | undefined)?.includes('COUNTRY_REQUIRED') || err.error === 'COUNTRY_REQUIRED') {
         showToast(tt.countryRequired, 'info');
@@ -153,7 +166,9 @@ export const TournamentsPage: React.FC = () => {
       {tournamentFinish && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,.88)', backdropFilter: 'blur(14px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div style={{ width: '100%', maxWidth: 340, background: 'linear-gradient(135deg,#141018,#0F0E18)', borderRadius: 20, padding: 28, border: '.5px solid rgba(245,200,66,0.35)', textAlign: 'center', boxShadow: '0 0 60px rgba(245,200,66,0.12)' }}>
-            <div style={{ fontSize: 60, marginBottom: 16 }}>🏆</div>
+            <div style={{ color: '#F0C85A', marginBottom: 16, display: 'flex', justifyContent: 'center' }}>
+              <IcoTrophy size={56} />
+            </div>
             <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#F0C85A', marginBottom: 8 }}>
               {tournamentFinish.tournamentName ?? tt.title}
             </div>
@@ -161,8 +176,8 @@ export const TournamentsPage: React.FC = () => {
               +{tournamentFinish.prize ? `${Number(tournamentFinish.prize).toLocaleString()} ᚙ` : '—'}
             </div>
             {tournamentFinish.place && (
-              <div style={{ fontSize: '0.78rem', color: '#7A7875', marginBottom: 24 }}>
-                {tournamentFinish.place === 1 ? '🥇' : tournamentFinish.place === 2 ? '🥈' : '🥉'} {tournamentFinish.place} {t.common.place}
+              <div style={{ fontSize: '0.78rem', color: '#7A7875', marginBottom: 24, fontFamily: "'JetBrains Mono',monospace", fontWeight: 700 }}>
+                {tournamentFinish.place} {t.common.place}
               </div>
             )}
             <button
@@ -194,7 +209,9 @@ export const TournamentsPage: React.FC = () => {
                   borderRadius: 14, padding: '12px 14px', marginBottom: 8,
                 }}
               >
-                <div style={{ fontSize: 20 }}>🏆</div>
+                <div style={{ color: '#F0C85A', flexShrink: 0 }}>
+                  <IcoTrophy size={20} />
+                </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#E8E3DB' }}>
                     {match.tournament?.name} · Round {match.round}
@@ -219,7 +236,7 @@ export const TournamentsPage: React.FC = () => {
                         }
                       }
                     }}
-                    style={{ padding: '7px 14px', borderRadius: 9, border: '.5px solid rgba(212,168,67,.35)', background: 'rgba(212,168,67,.12)', color: '#F0C85A', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
+                    style={{ padding: '7px 14px', borderRadius: 9, border: '.5px solid rgba(212,168,67,.35)', background: 'rgba(212,168,67,.12)', color: '#F0C85A', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
                   >
                     {tt.play}
                   </button>
@@ -265,10 +282,12 @@ export const TournamentsPage: React.FC = () => {
       {typeOrder.map(type => {
         const items = grouped[type];
         if (!items?.length) return null;
+        const SectionIcon = TOURNAMENT_TYPE_ICON[type] ?? IcoTrophy;
         return (
           <div key={type}>
-            <div style={{ ...LABEL_STYLE, padding: '14px 18px 8px', display: 'block', color: TYPE_COLORS[type] ?? '#D4A843' }}>
-              {TYPE_ICONS[type]} {items[0].typeLabel}
+            <div style={{ ...LABEL_STYLE, padding: '14px 18px 8px', display: 'flex', alignItems: 'center', gap: 6, color: TYPE_COLORS[type] ?? '#D4A843' }}>
+              <SectionIcon size={12} />
+              <span>{items[0].typeLabel}</span>
             </div>
             {items.map(item => {
               const activeMatch = myMatches.find(m => m.tournamentId === item.id || m.tournament?.id === item.id || m.tournament?.name === item.name);
@@ -277,7 +296,7 @@ export const TournamentsPage: React.FC = () => {
                   key={item.id}
                   tour={item}
                   activeMatch={activeMatch}
-                  onJoin={() => handleJoin(item.id)}
+                  onJoin={() => handleJoin(item)}
                   onLeave={() => handleLeave(item.id)}
                   onView={() => setSelected(item.id)}
                   onDonate={() => setDonateModal(item.id)}
@@ -317,13 +336,12 @@ const TournamentCard: React.FC<{
   const t = useT();
   const tt = t.tournaments;
   const color = TYPE_COLORS[tour.type] ?? '#F0C85A';
-  const icon = TYPE_ICONS[tour.type] ?? '🏆';
+  const TypeIcon = TOURNAMENT_TYPE_ICON[tour.type] ?? IcoTrophy;
   const endDate = tour.endAt ? new Date(tour.endAt).toLocaleDateString('ru-RU', { day: '2-digit', month: 'short' }) : null;
   const statusCfg = STATUS_CFG[tour.status] ?? STATUS_CFG.REGISTRATION;
   const canJoin = tour.status === 'REGISTRATION';
   const isFinished = tour.status === 'FINISHED';
 
-  // Опонент в активном матче
   const matchOpponent = activeMatch
     ? (activeMatch.player1?.userId === activeMatch.myUserId ? activeMatch.player2?.user : activeMatch.player1?.user)
     : null;
@@ -346,15 +364,15 @@ const TournamentCard: React.FC<{
         borderBottom: '.5px solid rgba(255,255,255,0.06)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {/* Icon */}
+          {/* Type icon */}
           <div style={{
             width: 40, height: 40, borderRadius: 12, flexShrink: 0,
             background: `${color}14`,
             border: `.5px solid ${color}30`,
+            color,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 20,
           }}>
-            {icon}
+            <TypeIcon size={22} />
           </div>
 
           {/* Name + period */}
@@ -371,7 +389,6 @@ const TournamentCard: React.FC<{
 
           {/* Badges: status + joined */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
-            {/* Status pill */}
             <div style={{
               fontSize: '0.55rem', fontWeight: 700, letterSpacing: '.06em',
               color: statusCfg.color, background: statusCfg.bg,
@@ -381,8 +398,8 @@ const TournamentCard: React.FC<{
               {statusCfg.label}
             </div>
             {tour.isJoined && (
-              <div style={{ fontSize: '0.55rem', fontWeight: 700, color: '#3DBA7A', background: 'rgba(61,186,122,.1)', padding: '2px 7px', borderRadius: 6 }}>
-                ✓ Участник
+              <div style={{ fontSize: '0.55rem', fontWeight: 700, color: '#3DBA7A', background: 'rgba(61,186,122,.1)', padding: '2px 7px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
+                <IcoCheck size={9} /> Участник
               </div>
             )}
           </div>
@@ -400,7 +417,7 @@ const TournamentCard: React.FC<{
         <div>
           <div style={{ ...LABEL_STYLE, marginBottom: 3 }}>{tt.entryFeeLabel}</div>
           <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '0.82rem', fontWeight: 700, color: '#F0C85A' }}>
-            {tour.entryFee === '0' ? '🆓' : `${fmtBalance(tour.entryFee)} ᚙ`}
+            {tour.entryFee === '0' ? 'Бесплатно' : `${fmtBalance(tour.entryFee)} ᚙ`}
           </div>
         </div>
         <div>
@@ -421,9 +438,10 @@ const TournamentCard: React.FC<{
             border: 'none', borderBottom: '.5px solid rgba(61,186,122,.2)',
             cursor: 'pointer', fontFamily: 'inherit',
             display: 'flex', alignItems: 'center', gap: 10,
+            color: '#3DBA7A',
           }}
         >
-          <div style={{ fontSize: 18 }}>⚔️</div>
+          <IcoSwords size={20} />
           <div style={{ flex: 1, textAlign: 'left' }}>
             <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#3DBA7A' }}>
               Играть матч — Раунд {activeMatch.round}
@@ -434,7 +452,7 @@ const TournamentCard: React.FC<{
               </div>
             )}
           </div>
-          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#3DBA7A' }}>▶</div>
+          <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#3DBA7A' }}>›</span>
         </button>
       )}
 
@@ -443,9 +461,9 @@ const TournamentCard: React.FC<{
         <div style={{ margin: '8px 12px', background: 'rgba(61,186,122,.05)', border: '.5px solid rgba(61,186,122,.15)', borderRadius: 10, padding: '7px 12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', gap: 12 }}>
-              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#3DBA7A' }}>✓ {tour.myStats.wins}В</span>
-              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#FF5B5B' }}>✗ {tour.myStats.losses}П</span>
-              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#7A7875' }}>= {tour.myStats.draws}Н</span>
+              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#3DBA7A' }}>{tour.myStats.wins}В</span>
+              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#FF5B5B' }}>{tour.myStats.losses}П</span>
+              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#7A7875' }}>{tour.myStats.draws}Н</span>
             </div>
             <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#F0C85A', fontFamily: "'JetBrains Mono',monospace" }}>
               {tour.myStats.points.toFixed(1)} pts
@@ -460,60 +478,43 @@ const TournamentCard: React.FC<{
         </div>
       )}
 
-      {/* Actions */}
-      <div style={{ padding: '10px 12px 12px', display: 'flex', flexDirection: 'column', gap: 7 }}>
-        {/* Row 1: Leaderboard + Donate (equal width) */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7 }}>
-          <button
-            onClick={onView}
-            style={{
-              padding: '8px 10px', borderRadius: 10,
-              border: '.5px solid rgba(255,255,255,.1)', background: 'rgba(255,255,255,.04)',
-              color: '#9A9490', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer',
-              fontFamily: 'inherit',
-            }}
-          >
-            🏅 {tt.leaderboard}
-          </button>
-          <button
-            onClick={onDonate}
-            style={{
-              padding: '8px 10px', borderRadius: 10,
-              background: 'rgba(212,168,67,.07)', color: '#D4A843',
-              border: '.5px solid rgba(212,168,67,.2)', fontSize: '0.72rem', fontWeight: 700,
-              cursor: 'pointer', fontFamily: 'inherit',
-            }}
-          >
-            💸 Донат
-          </button>
-        </div>
-
-        {/* Row 2: Join / Leave / Status */}
+      {/* Actions: главная кнопка (Вступить/Выйти) + 2 иконки справа (Лидеры, Донат) */}
+      <div style={{ padding: '10px 12px 12px', display: 'flex', alignItems: 'stretch', gap: 7 }}>
+        {/* Главная CTA */}
+        <div style={{ flex: 1 }}>
         {!tour.isJoined ? (
           canJoin ? (
             <button
               onClick={onJoin}
               disabled={joining}
               style={{
-                width: '100%', padding: '10px 0', borderRadius: 11,
+                width: '100%', padding: '11px 16px', borderRadius: 11,
                 background: joining ? 'rgba(212,168,67,.08)' : 'linear-gradient(135deg,#2A1E08,#4A3810)',
                 color: '#F0C85A',
                 border: '.5px solid rgba(212,168,67,.4)',
-                fontSize: '0.82rem', fontWeight: 800, cursor: joining ? 'default' : 'pointer',
+                fontSize: '0.85rem', fontWeight: 800, cursor: joining ? 'default' : 'pointer',
                 opacity: joining ? 0.7 : 1, fontFamily: 'inherit',
-                transition: 'all .15s',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                whiteSpace: 'nowrap',
               }}
             >
-              {joining ? '⏳ Вступаем...' : `🏆 ${tt.join}${tour.entryFee !== '0' ? ` · ${fmtBalance(tour.entryFee)} ᚙ` : ' · Бесплатно'}`}
+              {joining ? (
+                <>Вступаем…</>
+              ) : (
+                <>
+                  <IcoTrophy size={16} />
+                  <span>{tt.join}{tour.entryFee !== '0' ? ` · ${fmtBalance(tour.entryFee)} ᚙ` : ''}</span>
+                </>
+              )}
             </button>
           ) : (
             <div style={{
-              padding: '9px 14px', borderRadius: 11,
+              padding: '11px 14px', borderRadius: 11,
               background: 'rgba(90,82,72,.08)', border: '.5px solid rgba(90,82,72,.2)',
-              color: '#5A5248', fontSize: '0.75rem', fontWeight: 600,
-              textAlign: 'center',
+              color: '#5A5248', fontSize: '0.78rem', fontWeight: 600,
+              textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
             }}>
-              {isFinished ? '🏁 Турнир завершён' : '🔒 Регистрация закрыта'}
+              {isFinished ? <><IcoFlag size={13} /> Турнир завершён</> : <><IcoLock size={13} /> Регистрация закрыта</>}
             </div>
           )
         ) : (
@@ -521,26 +522,56 @@ const TournamentCard: React.FC<{
             <button
               onClick={onLeave}
               style={{
-                width: '100%', padding: '10px 0', borderRadius: 11,
+                width: '100%', padding: '11px 16px', borderRadius: 11,
                 background: 'rgba(255,91,91,.07)', color: '#FF5B5B',
                 border: '.5px solid rgba(255,91,91,.2)',
-                fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer',
-                fontFamily: 'inherit',
+                fontSize: '0.82rem', fontWeight: 800, cursor: 'pointer',
+                fontFamily: 'inherit', whiteSpace: 'nowrap',
               }}
             >
-              ✕ {tt.leave}
+              {tt.leave}
             </button>
           ) : (
             <div style={{
-              padding: '9px 14px', borderRadius: 11,
+              padding: '11px 14px', borderRadius: 11,
               background: 'rgba(61,186,122,.06)', border: '.5px solid rgba(61,186,122,.18)',
-              color: '#3DBA7A', fontSize: '0.75rem', fontWeight: 700,
-              textAlign: 'center',
+              color: '#3DBA7A', fontSize: '0.74rem', fontWeight: 700,
+              textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
             }}>
-              {isFinished ? '🏁 Участвовал' : '✓ Участник · матчи назначаются автоматически'}
+              {isFinished ? <><IcoFlag size={13} /> Участвовал</> : <><IcoCheck size={11} /> Матчи назначаются автоматически</>}
             </div>
           )
         )}
+        </div>
+
+        {/* Иконки-кнопки справа: Лидерборд + Донат */}
+        <button
+          onClick={onView}
+          title={tt.leaderboard}
+          style={{
+            width: 44, flexShrink: 0,
+            borderRadius: 11,
+            border: '.5px solid rgba(255,255,255,.1)', background: 'rgba(255,255,255,.04)',
+            color: '#9A9490', cursor: 'pointer', fontFamily: 'inherit',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+        >
+          <IcoLeaderboard size={18} />
+        </button>
+        <button
+          onClick={onDonate}
+          title="Донат в призовой фонд"
+          style={{
+            width: 44, flexShrink: 0,
+            borderRadius: 11,
+            background: 'rgba(212,168,67,.07)', color: '#D4A843',
+            border: '.5px solid rgba(212,168,67,.2)',
+            cursor: 'pointer', fontFamily: 'inherit',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+        >
+          <IcoDonate size={18} />
+        </button>
       </div>
     </div>
   );
@@ -571,13 +602,14 @@ const TournamentDetailModal: React.FC<{ tournamentId: string; onClose: () => voi
       <div style={modalStyle}>
         <div style={{ width: 36, height: 4, background: '#2A2232', borderRadius: 2, margin: '0 auto 16px' }} />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <div style={{ fontSize: '1rem', fontWeight: 800, color: '#E8E3DB' }}>🏆 {tt.leaderboard}</div>
+          <div style={{ fontSize: '1rem', fontWeight: 800, color: '#E8E3DB', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <IcoLeaderboard size={18} /> {tt.leaderboard}
+          </div>
           <button
             onClick={onClose}
-            style={{ width: 30, height: 30, borderRadius: '50%', border: '.5px solid rgba(255,255,255,.12)', background: 'rgba(255,255,255,.06)', color: '#7A7875', fontSize: '0.85rem', cursor: 'pointer' }}
-          >
-            ✕
-          </button>
+            style={{ width: 30, height: 30, borderRadius: '50%', border: '.5px solid rgba(255,255,255,.12)', background: 'rgba(255,255,255,.06)', color: '#7A7875', fontSize: '0.85rem', cursor: 'pointer', fontFamily: 'inherit' }}
+            aria-label="Закрыть"
+          >×</button>
         </div>
         {!data && (
           <div style={{ textAlign: 'center', color: '#5A5248', padding: 24, fontSize: '0.82rem' }}>
@@ -586,8 +618,8 @@ const TournamentDetailModal: React.FC<{ tournamentId: string; onClose: () => voi
         )}
         {data?.players?.map((p: TournamentPlayer, i: number) => (
           <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', borderBottom: '.5px solid rgba(255,255,255,0.06)' }}>
-            <div style={{ fontSize: '0.82rem', fontWeight: 800, color: i === 0 ? '#F0C85A' : i === 1 ? '#C0C0C0' : i === 2 ? '#CD7F32' : '#5A5248', width: 24, textAlign: 'center' }}>
-              {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
+            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '0.82rem', fontWeight: 800, color: i === 0 ? '#F0C85A' : i === 1 ? '#C0C0C0' : i === 2 ? '#CD7F32' : '#5A5248', width: 24, textAlign: 'center' }}>
+              {i + 1}
             </div>
             <Avatar user={p.user} size="s" />
             <div style={{ flex: 1 }}>

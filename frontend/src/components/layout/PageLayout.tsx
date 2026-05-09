@@ -150,21 +150,60 @@ export const InfoPopup: React.FC<InfoPopupProps> = ({ slides, onClose }) => {
 };
 
 // Хук: показать InfoPopup если ещё не видел
+// Сохраняем флаг в Telegram CloudStorage (переживает переустановку Mini App) +
+// fallback в localStorage. После первого закрытия — больше никогда не покажется
+// автоматически. Кнопка "?" в углу страницы вызывает open() — это явный вызов.
+const seenCache = new Set<string>();
+
+const getCloudStorage = (): {
+  getItem: (k: string, cb: (err: unknown, v?: string) => void) => void;
+  setItem: (k: string, v: string, cb?: (err: unknown, ok?: boolean) => void) => void;
+} | null => {
+  try {
+    const cs = (window as any)?.Telegram?.WebApp?.CloudStorage;
+    return cs && typeof cs.getItem === 'function' ? cs : null;
+  } catch { return null; }
+};
+
 export const useInfoPopup = (infoKey: string, slides: InfoSlide[]) => {
   const [show, setShow] = useState(false);
+  const cacheKey = `info_seen_${infoKey}`;
 
   useEffect(() => {
-    const seen = localStorage.getItem(`info_seen_${infoKey}`);
-    if (!seen && slides.length > 0) {
-      // Небольшая задержка чтобы страница успела загрузиться
-      const t = setTimeout(() => setShow(true), 600);
-      return () => clearTimeout(t);
+    if (slides.length === 0) return;
+    if (seenCache.has(cacheKey)) return;
+
+    // Локальный флаг — самый быстрый
+    const localSeen = localStorage.getItem(cacheKey);
+    if (localSeen) {
+      seenCache.add(cacheKey);
+      return;
     }
-    return undefined;
-  }, [infoKey]);
+
+    // Проверяем Telegram CloudStorage — переживает реустановку, общий между устройствами
+    const cs = getCloudStorage();
+    if (cs) {
+      cs.getItem(cacheKey, (_err, v) => {
+        if (v) {
+          // Был раньше прочитан — сохраним и локально, и больше не показываем
+          localStorage.setItem(cacheKey, '1');
+          seenCache.add(cacheKey);
+          return;
+        }
+        // Не видел — показываем после небольшой задержки
+        setTimeout(() => setShow(true), 600);
+      });
+    } else {
+      // Нет TG CloudStorage — простой localStorage путь
+      setTimeout(() => setShow(true), 600);
+    }
+  }, [cacheKey, slides.length]);
 
   const close = () => {
-    localStorage.setItem(`info_seen_${infoKey}`, '1');
+    localStorage.setItem(cacheKey, '1');
+    seenCache.add(cacheKey);
+    const cs = getCloudStorage();
+    cs?.setItem(cacheKey, '1');
     setShow(false);
   };
 
