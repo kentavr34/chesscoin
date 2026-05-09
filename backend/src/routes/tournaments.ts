@@ -62,7 +62,6 @@ function getCurrentPeriod(type: TournamentType): string {
     case 'SEASONAL': return `${year}-Q${quarter}`;
     case 'COUNTRY': return `${year}-${month}`; // COUNTRY = monthly period per country
     case 'WORLD': return `${year}`;
-    case 'COUNTRY': return `${year}-${month}`;
   }
 }
 
