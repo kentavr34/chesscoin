@@ -17,8 +17,14 @@ const TYPE_ICONS: Record<string, string> = {
   WORLD: '🌍', COUNTRY: '🏴', WEEKLY: '📅', MONTHLY: '🗓️', SEASONAL: '🌸', YEARLY: '🏆',
 };
 const TYPE_COLORS: Record<string, string> = {
-  WORLD: '#F5C842', COUNTRY: '#3DBA7A', WEEKLY: '#D4A843',
-  MONTHLY: '#E8B84B', SEASONAL: '#C4A843', YEARLY: '#F5C842',
+  WORLD: '#F0C85A', COUNTRY: '#3DBA7A', WEEKLY: '#D4A843',
+  MONTHLY: '#F0C85A', SEASONAL: '#C8A843', YEARLY: '#F0C85A',
+};
+
+const STATUS_CFG: Record<string, { label: string; color: string; bg: string; border: string }> = {
+  REGISTRATION: { label: 'Регистрация', color: '#3DBA7A', bg: 'rgba(61,186,122,.12)', border: 'rgba(61,186,122,.3)' },
+  IN_PROGRESS:  { label: 'Идёт',        color: '#F0C85A', bg: 'rgba(240,200,90,.12)',  border: 'rgba(240,200,90,.3)' },
+  FINISHED:     { label: 'Завершён',    color: '#5A5248', bg: 'rgba(90,82,72,.12)',    border: 'rgba(90,82,72,.25)' },
 };
 
 type TFilter = 'all' | 'joined';
@@ -274,17 +280,22 @@ export const TournamentsPage: React.FC = () => {
             <div style={{ ...LABEL_STYLE, padding: '14px 18px 8px', display: 'block', color: TYPE_COLORS[type] ?? '#D4A843' }}>
               {TYPE_ICONS[type]} {items[0].typeLabel}
             </div>
-            {items.map(item => (
-              <TournamentCard
-                key={item.id}
-                tour={item}
-                onJoin={() => handleJoin(item.id)}
-                onLeave={() => handleLeave(item.id)}
-                onView={() => setSelected(item.id)}
-                onDonate={() => setDonateModal(item.id)}
-                joining={joiningId === item.id}
-              />
-            ))}
+            {items.map(item => {
+              const activeMatch = myMatches.find(m => m.tournament?.name === item.name || (m as any).tournamentId === item.id);
+              return (
+                <TournamentCard
+                  key={item.id}
+                  tour={item}
+                  activeMatch={activeMatch}
+                  onJoin={() => handleJoin(item.id)}
+                  onLeave={() => handleLeave(item.id)}
+                  onView={() => setSelected(item.id)}
+                  onDonate={() => setDonateModal(item.id)}
+                  onPlayMatch={() => activeMatch?.sessionId && navigate(`/game/${activeMatch.sessionId}`)}
+                  joining={joiningId === item.id}
+                />
+              );
+            })}
           </div>
         );
       })}
@@ -304,137 +315,241 @@ export const TournamentsPage: React.FC = () => {
 };
 
 const TournamentCard: React.FC<{
-  tour: TournamentFull; onJoin: () => void; onLeave: () => void;
-  onView: () => void; onDonate: () => void; joining: boolean;
-}> = ({ tour, onJoin, onLeave, onView, onDonate, joining }) => {
+  tour: TournamentFull;
+  activeMatch?: ActiveMatch;
+  onJoin: () => void;
+  onLeave: () => void;
+  onView: () => void;
+  onDonate: () => void;
+  onPlayMatch: () => void;
+  joining: boolean;
+}> = ({ tour, activeMatch, onJoin, onLeave, onView, onDonate, onPlayMatch, joining }) => {
   const t = useT();
   const tt = t.tournaments;
-  const color = TYPE_COLORS[tour.type] ?? '#F5C842';
+  const color = TYPE_COLORS[tour.type] ?? '#F0C85A';
   const icon = TYPE_ICONS[tour.type] ?? '🏆';
-  const endDate = tour.endAt ? new Date(tour.endAt).toLocaleDateString('en-US') : null;
+  const endDate = tour.endAt ? new Date(tour.endAt).toLocaleDateString('ru-RU', { day: '2-digit', month: 'short' }) : null;
+  const statusCfg = STATUS_CFG[tour.status] ?? STATUS_CFG.REGISTRATION;
+  const canJoin = tour.status === 'REGISTRATION';
+  const isFinished = tour.status === 'FINISHED';
+
+  // Опонент в активном матче
+  const matchOpponent = activeMatch
+    ? (activeMatch.player1?.userId === activeMatch.myUserId ? activeMatch.player2?.user : activeMatch.player1?.user)
+    : null;
 
   return (
     <div style={{
       margin: '0 16px 10px',
-      background: 'linear-gradient(135deg,#141018,#0F0E18)',
-      borderRadius: 16,
-      border: `.5px solid rgba(212,168,67,.18)`,
+      background: 'linear-gradient(160deg,#141018 0%,#0F0E18 100%)',
+      borderRadius: 18,
+      border: tour.isJoined
+        ? `.5px solid rgba(61,186,122,.25)`
+        : `.5px solid rgba(212,168,67,.15)`,
       overflow: 'hidden',
+      opacity: isFinished ? 0.7 : 1,
     }}>
       {/* Header */}
-      <div style={{ padding: '14px 16px 10px', background: `linear-gradient(135deg,${color}10,transparent)`, borderBottom: '.5px solid rgba(255,255,255,0.07)' }}>
+      <div style={{
+        padding: '12px 14px 10px',
+        background: `linear-gradient(135deg,${color}14,transparent)`,
+        borderBottom: '.5px solid rgba(255,255,255,0.06)',
+      }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {/* Icon */}
           <div style={{
-            width: 44, height: 44, borderRadius: '50%',
-            background: `rgba(212,168,67,.08)`,
+            width: 40, height: 40, borderRadius: 12, flexShrink: 0,
+            background: `${color}14`,
+            border: `.5px solid ${color}30`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 22, flexShrink: 0,
+            fontSize: 20,
           }}>
             {icon}
           </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '0.88rem', fontWeight: 800, color }}>
+
+          {/* Name + period */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: '0.85rem', fontWeight: 800, color, lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {tour.name}
             </div>
             {tour.period && (
-              <div style={{ fontSize: '0.72rem', color: '#7A7875', marginTop: 2 }}>
-                {tt.period}: {tour.period}
+              <div style={{ fontSize: '0.65rem', color: '#5A5248', marginTop: 2 }}>
+                {tour.period}
               </div>
             )}
           </div>
-          {tour.isJoined && (
-            <div style={{ fontSize: '0.6rem', fontWeight: 700, color: '#3DBA7A', background: 'rgba(61,186,122,0.1)', padding: '3px 8px', borderRadius: 6 }}>
-              {tt.joined}
+
+          {/* Badges: status + joined */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
+            {/* Status pill */}
+            <div style={{
+              fontSize: '0.55rem', fontWeight: 700, letterSpacing: '.06em',
+              color: statusCfg.color, background: statusCfg.bg,
+              border: `.5px solid ${statusCfg.border}`,
+              padding: '2px 7px', borderRadius: 6, textTransform: 'uppercase',
+            }}>
+              {statusCfg.label}
             </div>
-          )}
+            {tour.isJoined && (
+              <div style={{ fontSize: '0.55rem', fontWeight: 700, color: '#3DBA7A', background: 'rgba(61,186,122,.1)', padding: '2px 7px', borderRadius: 6 }}>
+                ✓ Участник
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Stats row */}
-      <div style={{ display: 'flex', padding: '10px 16px', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', padding: '10px 14px', gap: 8, borderBottom: '.5px solid rgba(255,255,255,.04)' }}>
         <div>
           <div style={{ ...LABEL_STYLE, marginBottom: 3 }}>{tt.playersLabel}</div>
-          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '0.88rem', fontWeight: 700, color: '#E8E3DB' }}>
+          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '0.82rem', fontWeight: 700, color: '#EAE2CC' }}>
             {tour.currentPlayers.toLocaleString()}
           </div>
         </div>
         <div>
           <div style={{ ...LABEL_STYLE, marginBottom: 3 }}>{tt.entryFeeLabel}</div>
-          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '0.88rem', fontWeight: 700, color: '#F0C85A' }}>
-            {fmtBalance(tour.entryFee)} ᚙ
+          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '0.82rem', fontWeight: 700, color: '#F0C85A' }}>
+            {tour.entryFee === '0' ? '🆓' : `${fmtBalance(tour.entryFee)} ᚙ`}
           </div>
         </div>
         <div>
           <div style={{ ...LABEL_STYLE, marginBottom: 3 }}>{tt.prizePool}</div>
-          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '0.88rem', fontWeight: 700, color: '#F0C85A' }}>
+          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '0.82rem', fontWeight: 700, color: '#F0C85A' }}>
             {fmtBalance(tour.totalPool ?? tour.prizePool)} ᚙ
           </div>
         </div>
       </div>
 
-      {/* My stats */}
-      {tour.isJoined && tour.myStats && (
-        <div style={{ margin: '0 14px 10px', background: 'rgba(61,186,122,0.05)', border: '.5px solid rgba(61,186,122,.2)', borderRadius: 10, padding: '8px 12px' }}>
-          <div style={{ ...LABEL_STYLE, marginBottom: 5, display: 'block', color: '#3DBA7A' }}>
-            {tt.myStats}
+      {/* ── Активный матч → PLAY NOW ── */}
+      {tour.isJoined && activeMatch?.sessionId && (
+        <button
+          onClick={onPlayMatch}
+          style={{
+            width: '100%', padding: '11px 16px',
+            background: 'linear-gradient(135deg,rgba(61,186,122,.18),rgba(61,186,122,.08))',
+            border: 'none', borderBottom: '.5px solid rgba(61,186,122,.2)',
+            cursor: 'pointer', fontFamily: 'inherit',
+            display: 'flex', alignItems: 'center', gap: 10,
+          }}
+        >
+          <div style={{ fontSize: 18 }}>⚔️</div>
+          <div style={{ flex: 1, textAlign: 'left' }}>
+            <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#3DBA7A' }}>
+              Играть матч — Раунд {activeMatch.round}
+            </div>
+            {matchOpponent && (
+              <div style={{ fontSize: '0.68rem', color: '#5A9E75', marginTop: 1 }}>
+                vs {matchOpponent.firstName}
+              </div>
+            )}
           </div>
-          <div style={{ display: 'flex', gap: 14 }}>
-            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#3DBA7A' }}>✓ {tour.myStats.wins}</span>
-            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#FF5B5B' }}>✗ {tour.myStats.losses}</span>
-            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#7A7875' }}>= {tour.myStats.draws}</span>
-            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#F0C85A', marginLeft: 'auto' }}>
-              Points: {tour.myStats.points.toFixed(1)}
+          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#3DBA7A' }}>▶</div>
+        </button>
+      )}
+
+      {/* Мои статы (если участник) */}
+      {tour.isJoined && tour.myStats && !activeMatch?.sessionId && (
+        <div style={{ margin: '8px 12px', background: 'rgba(61,186,122,.05)', border: '.5px solid rgba(61,186,122,.15)', borderRadius: 10, padding: '7px 12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#3DBA7A' }}>✓ {tour.myStats.wins}В</span>
+              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#FF5B5B' }}>✗ {tour.myStats.losses}П</span>
+              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#7A7875' }}>= {tour.myStats.draws}Н</span>
+            </div>
+            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#F0C85A', fontFamily: "'JetBrains Mono',monospace" }}>
+              {tour.myStats.points.toFixed(1)} pts
             </span>
           </div>
         </div>
       )}
 
       {endDate && (
-        <div style={{ fontSize: '0.7rem', color: '#5A5248', padding: '0 16px 4px' }}>
-          {tt.ends}: {endDate}
+        <div style={{ fontSize: '0.65rem', color: '#5A5248', padding: '4px 14px 0' }}>
+          До {endDate}
         </div>
       )}
 
       {/* Actions */}
-      <div style={{ display: 'flex', gap: 8, padding: '10px 14px 14px' }}>
-        <button
-          onClick={onView}
-          style={{ padding: '8px 12px', borderRadius: 9, border: '.5px solid rgba(255,255,255,.12)', background: 'rgba(255,255,255,.05)', color: '#C4BFB8', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
-        >
-          {tt.leaderboard}
-        </button>
-        <button
-          onClick={onDonate}
-          style={{ padding: '8px 12px', borderRadius: 9, background: 'rgba(212,168,67,.08)', color: '#D4A843', border: '.5px solid rgba(212,168,67,.22)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
-        >
-          {tt.donateToPrize}
-        </button>
+      <div style={{ padding: '10px 12px 12px', display: 'flex', flexDirection: 'column', gap: 7 }}>
+        {/* Row 1: Leaderboard + Donate (equal width) */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7 }}>
+          <button
+            onClick={onView}
+            style={{
+              padding: '8px 10px', borderRadius: 10,
+              border: '.5px solid rgba(255,255,255,.1)', background: 'rgba(255,255,255,.04)',
+              color: '#9A9490', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            🏅 {tt.leaderboard}
+          </button>
+          <button
+            onClick={onDonate}
+            style={{
+              padding: '8px 10px', borderRadius: 10,
+              background: 'rgba(212,168,67,.07)', color: '#D4A843',
+              border: '.5px solid rgba(212,168,67,.2)', fontSize: '0.72rem', fontWeight: 700,
+              cursor: 'pointer', fontFamily: 'inherit',
+            }}
+          >
+            💸 Донат
+          </button>
+        </div>
+
+        {/* Row 2: Join / Leave / Status */}
         {!tour.isJoined ? (
-          <button
-            onClick={onJoin}
-            disabled={joining}
-            style={{
-              flex: 1, padding: '8px 0', borderRadius: 9,
-              background: 'rgba(212,168,67,.12)', color: '#F0C85A',
-              border: '.5px solid rgba(212,168,67,.35)',
-              fontSize: '0.78rem', fontWeight: 700, cursor: joining ? 'default' : 'pointer',
-              opacity: joining ? 0.6 : 1,
-            }}
-          >
-            {joining ? tt.joining : tt.join}
-          </button>
+          canJoin ? (
+            <button
+              onClick={onJoin}
+              disabled={joining}
+              style={{
+                width: '100%', padding: '10px 0', borderRadius: 11,
+                background: joining ? 'rgba(212,168,67,.08)' : 'linear-gradient(135deg,#2A1E08,#4A3810)',
+                color: '#F0C85A',
+                border: '.5px solid rgba(212,168,67,.4)',
+                fontSize: '0.82rem', fontWeight: 800, cursor: joining ? 'default' : 'pointer',
+                opacity: joining ? 0.7 : 1, fontFamily: 'inherit',
+                transition: 'all .15s',
+              }}
+            >
+              {joining ? '⏳ Вступаем...' : `🏆 ${tt.join}${tour.entryFee !== '0' ? ` · ${fmtBalance(tour.entryFee)} ᚙ` : ' · Бесплатно'}`}
+            </button>
+          ) : (
+            <div style={{
+              padding: '9px 14px', borderRadius: 11,
+              background: 'rgba(90,82,72,.08)', border: '.5px solid rgba(90,82,72,.2)',
+              color: '#5A5248', fontSize: '0.75rem', fontWeight: 600,
+              textAlign: 'center',
+            }}>
+              {isFinished ? '🏁 Турнир завершён' : '🔒 Регистрация закрыта'}
+            </div>
+          )
         ) : (
-          <button
-            onClick={onLeave}
-            style={{
-              flex: 1, padding: '8px 0', borderRadius: 9,
-              background: 'rgba(255,77,106,0.08)', color: '#FF5B5B',
-              border: '.5px solid rgba(255,77,106,.2)',
-              fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer',
-            }}
-          >
-            {tt.leave}
-          </button>
+          tour.status === 'REGISTRATION' ? (
+            <button
+              onClick={onLeave}
+              style={{
+                width: '100%', padding: '10px 0', borderRadius: 11,
+                background: 'rgba(255,91,91,.07)', color: '#FF5B5B',
+                border: '.5px solid rgba(255,91,91,.2)',
+                fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer',
+                fontFamily: 'inherit',
+              }}
+            >
+              ✕ {tt.leave}
+            </button>
+          ) : (
+            <div style={{
+              padding: '9px 14px', borderRadius: 11,
+              background: 'rgba(61,186,122,.06)', border: '.5px solid rgba(61,186,122,.18)',
+              color: '#3DBA7A', fontSize: '0.75rem', fontWeight: 700,
+              textAlign: 'center',
+            }}>
+              {isFinished ? '🏁 Участвовал' : '✓ Участник · матчи назначаются автоматически'}
+            </div>
+          )
         )}
       </div>
     </div>
