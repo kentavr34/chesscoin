@@ -11,7 +11,9 @@ import { profileApi } from '@/api';
 import { fmtBalance, fmtTime } from '@/utils/format';
 import { translations } from '@/i18n/translations';
 import { IcoDice, IcoKingWhite as IcoKingW, IcoKingBlack as IcoKingB } from '@/components/icons/ChessIcons';
-import type { BattleLobbyItem, GameSession } from '@/types';
+import { BattleHistoryCard, type BattleHistoryItem } from '@/components/battle/BattleHistoryCard';
+import { PgnReplayModal } from '@/components/profile/PgnReplayModal';
+import type { BattleLobbyItem, GameSession, UserPublic } from '@/types';
 import { useT } from '@/i18n/useT';
 
 const showToast = (text: string, type: 'error' | 'info' = 'error') => {
@@ -45,6 +47,10 @@ export const BattlesPage: React.FC = () => {
   const [showQuick, setShowQuick] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showAttempts, setShowAttempts] = useState(false);
+  const [replayData, setReplayData] = useState<{
+    pgn: string; title: string; sessionId: string;
+    whitePlayer?: UserPublic | null; blackPlayer?: UserPublic | null;
+  } | null>(null);
 
   const attempts = user?.attempts ?? 3;
   const hasAttempts = attempts > 0;
@@ -406,45 +412,23 @@ export const BattlesPage: React.FC = () => {
               <div style={{ fontSize: '.72rem', color: '#3E3A35' }}>Сыграй первый батл!</div>
             </div>
           )}
-          {histGames.map((g: any) => {
-            const isWon  = g.result === 'win';
-            const isDraw = g.result === 'draw';
-            const resultColor = isWon ? '#3DBA7A' : isDraw ? '#D4A843' : '#E05555';
-            const resultLabel = isWon ? 'Победа' : isDraw ? 'Ничья' : 'Поражение';
-            return (
-              <div key={g.sessionId} style={{
-                margin: '0 .85rem 6px',
-                background: 'linear-gradient(135deg,#141018,#0F0E18)',
-                border: `.5px solid ${isWon ? 'rgba(61,186,122,.25)' : isDraw ? 'rgba(212,168,67,.2)' : 'rgba(224,85,85,.2)'}`,
-                borderRadius: 14, padding: '10px 14px',
-                display: 'flex', alignItems: 'center', gap: 10,
-              }}>
-                <Avatar user={g.opponent ?? { firstName: 'Jarvis' }} size="m" />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '.82rem', fontWeight: 700, color: '#D4C8B0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
-                    {g.hasBot ? `Jarvis Lv.${g.botLevel ?? '?'}` : (g.opponent?.firstName ?? '?')}
-                  </div>
-                  <div style={{ fontSize: '.65rem', color: '#6A6662', marginTop: 2 }}>
-                    {g.finishedAt ? new Date(g.finishedAt).toLocaleDateString('ru-RU', { day: '2-digit', month: 'short' }) : ''}
-                    {g.bet ? <span style={{ marginLeft: 6, color: '#D4A843' }}>&#x2B21; {fmtBalance(g.bet)}</span> : null}
-                  </div>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
-                  <span style={{ fontSize: '.72rem', fontWeight: 800, color: resultColor }}>{resultLabel}</span>
-                  {g.pgn && (
-                    <button
-                      onClick={() => navigate('/battles/history')}
-                      style={{
-                        fontSize: '.6rem', fontWeight: 700, color: '#9A9490',
-                        background: 'rgba(255,255,255,.06)', border: 'none',
-                        borderRadius: 6, padding: '2px 7px', cursor: 'pointer',
-                      }}
-                    >PGN</button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+          {histGames.filter((g: any) => !g.hasBot).map((g: any) => (
+            <BattleHistoryCard
+              key={g.sessionId}
+              game={g as BattleHistoryItem}
+              me={(user as UserPublic | null) ?? null}
+              onView={(game) => {
+                if (!game.pgn) return;
+                setReplayData({
+                  pgn: game.pgn,
+                  title: game.opponent?.firstName ? `vs ${game.opponent.firstName}` : 'Партия',
+                  sessionId: game.sessionId,
+                  whitePlayer: game.isWhite ? (user as UserPublic | null) : (game.opponent ?? null),
+                  blackPlayer: game.isWhite ? (game.opponent ?? null) : (user as UserPublic | null),
+                });
+              }}
+            />
+          ))}
           {histGames.length > 0 && (
             <button
               onClick={() => navigate('/battles/history')}
@@ -509,6 +493,16 @@ export const BattlesPage: React.FC = () => {
       {showCreate && <CreateBattleModal onClose={() => setShowCreate(false)} onBuyAttempts={() => setShowAttempts(true)} />}
       {showQuick && <QuickMatchModal onClose={() => setShowQuick(false)} onBuyAttempts={() => setShowAttempts(true)} />}
       {showAttempts && user && <AttemptsModal user={user} onClose={() => setShowAttempts(false)} />}
+      {replayData && (
+        <PgnReplayModal
+          pgn={replayData.pgn}
+          title={replayData.title}
+          sessionId={replayData.sessionId}
+          whitePlayer={replayData.whitePlayer}
+          blackPlayer={replayData.blackPlayer}
+          onClose={() => setReplayData(null)}
+        />
+      )}
     </PageLayout>
   );
 };
