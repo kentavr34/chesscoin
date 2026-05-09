@@ -67,43 +67,31 @@ export const TournamentsPage: React.FC = () => {
 
   // T2+T7: Socket handler for tournament events
   useEffect(() => {
-    const handler = (e: CustomEvent) => {
-      const data = e.detail;
-      if (!data) return;
+    const sock = getSocket();
 
-      // T2: match assigned
-      if (data.type === 'tournament:match') {
-        load(); // refresh match list
-        window.dispatchEvent(new CustomEvent('chesscoin:toast', {
-          detail: {
-            text: tt.tournamentMatch(data.opponentName),
-            type: 'info',
-            actionLabel: tt.play,
-            onAction: () => {
-              import('react-router-dom').then(({ useNavigate: _ }) => {
-                window.location.hash = '#/battles';
-              });
-            },
+    const onMatch = (d: unknown) => {
+      const data = d as { opponentName?: string; sessionId?: string };
+      load(); // refresh match list
+      window.dispatchEvent(new CustomEvent('chesscoin:toast', {
+        detail: {
+          text: tt.tournamentMatch(data.opponentName ?? ''),
+          type: 'info',
+          actionLabel: tt.play,
+          onAction: () => {
+            if (data.sessionId) navigate(`/game/${data.sessionId}`);
           },
-        }));
-      }
-
-      // T7: tournament finished
-      if (data.type === 'tournament:finished') {
-        setTournamentFinish(data);
-      }
+        },
+      }));
     };
 
-    // Listen via socket store
-    const sock = (window as unknown as Record<string, unknown>).__chesscoinSocket as
-      | { on: (event: string, cb: (d: unknown) => void) => void }
-      | undefined;
-    if (sock) {
-      sock.on('tournament:match', (d: unknown) => handler(new CustomEvent('t', { detail: d })));
-      sock.on('tournament:finished', (d: unknown) => setTournamentFinish(d as { tournamentName?: string; prize?: string; place?: number }));
-    }
+    const onFinished = (d: unknown) => {
+      setTournamentFinish(d as { tournamentName?: string; prize?: string; place?: number });
+    };
 
-    // T7: listen for tournament finish event from useSocket
+    sock.on('tournament:match', onMatch);
+    sock.on('tournament:finished', onFinished);
+
+    // T7: listen for tournament finish event from useSocket (window CustomEvent fallback)
     const finishHandler = (e: Event) => {
       const data = (e as CustomEvent).detail;
       if (data) setTournamentFinish(data);
@@ -111,6 +99,8 @@ export const TournamentsPage: React.FC = () => {
     window.addEventListener('chesscoin:tournament:finished', finishHandler);
 
     return () => {
+      sock.off('tournament:match', onMatch);
+      sock.off('tournament:finished', onFinished);
       window.removeEventListener('chesscoin:tournament:finished', finishHandler);
     };
   }, []);
