@@ -10,8 +10,13 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       # md5 при инициализации — pgbouncer auth_type=md5 не совместим со scram-sha-256
       POSTGRES_INITDB_ARGS: "--auth-host=md5 --auth-local=trust"
-    # password_encryption=md5 — pgbouncer auth_type=md5 не совместим со scram-sha-256
-    command: postgres -c password_encryption=md5
+    # password_encryption=md5 + патч pg_hba.conf при каждом старте — pgbouncer auth_type=md5
+    # не совместим со scram-sha-256; sed патчит существующие тома, INITDB_ARGS — новые
+    command: >
+      sh -c "
+      sed -i 's/scram-sha-256/md5/g' /var/lib/postgresql/data/pg_hba.conf 2>/dev/null || true;
+      exec docker-entrypoint.sh postgres -c password_encryption=md5
+      "
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
