@@ -574,16 +574,24 @@ export function startGameCrons() {
   }, 30000);
 
   // T4: Авто-поражение за неответ — каждый час
-  cron.schedule("0 * * * *", async () => { 
+  cron.schedule("0 * * * *", async () => {
     await checkTournamentForfeits().catch((err) =>
       logError("[Crons/TournamentForfeit] Error:", err)
     );
   });
 
-  // T1: Matchmaking Engine — каждые 15 минут
-  cron.schedule("*/15 * * * *", async () => {
+  // T1: Matchmaking Engine — каждые 2 минуты (быстрее реагируем на новых игроков)
+  cron.schedule("*/2 * * * *", async () => {
     await matchmakeAllTournaments().catch(err =>
       logError("[Crons/TournamentMatchmaker] Error:", err)
+    );
+  });
+
+  // T0: Создание/чистка системных турниров — каждый час
+  // (без этого новый период не появлялся до рестарта backend и копились дубли)
+  cron.schedule("5 * * * *", async () => {
+    await ensureSystemTournaments().catch(err =>
+      logError("[Crons/EnsureTournaments] Error:", err)
     );
   });
 

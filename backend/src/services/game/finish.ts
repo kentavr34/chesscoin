@@ -108,8 +108,89 @@ export const finishSession = async (
   // 8. Обновляем WarBattle если сессия является частью войны между странами
   setImmediate(() => updateWarBattle(sessionId, winnerSideId, isDraw).catch(err => logError("[finish]", err)));
 
+  // 9. Обновляем TournamentMatch если сессия — это турнирный матч
+  //    Без этого points/wins/losses никогда не обновлялись и Swiss-раунды не закрывались
+  setImmediate(() => updateTournamentMatch(sessionId, winnerSideId, isDraw).catch(err => logError("[finish/tournament]", err)));
+
   return finished;
 };
+
+// ─────────────────────────────────────────
+// Обновление турнирного матча после завершения сессии
+// ─────────────────────────────────────────
+async function updateTournamentMatch(sessionId: string, winnerSideId?: string, isDraw: boolean = false) {
+  try {
+    const match = await (prisma.tournamentMatch as any).findUnique({
+      where: { sessionId },
+      include: { tournament: { select: { id: true, name: true, type: true } } },
+    });
+    if (!match) return; // не турнирная партия
+    if (match.status === 'FINISHED') return; // уже обработана
+
+    const session = await prisma.session.findUnique({
+      where: { id: sessionId },
+      include: { sides: true },
+    });
+    if (!session) return;
+
+    // Маппим SessionSide.id → TournamentPlayer.id
+    // tournament_players имеет userId — найдём по этому
+    const userIds = session.sides.map(s => s.playerId);
+    const players = await prisma.tournamentPlayer.findMany({
+      where: { tournamentId: match.tournamentId, userId: { in: userIds } },
+    });
+    const playerByUser = new Map(players.map(p => [p.userId, p]));
+
+    let winnerPlayerId: string | null = null;
+    let loserPlayerId: string | null = null;
+
+    if (!isDraw && winnerSideId) {
+      const winnerSide = session.sides.find(s => s.id === winnerSideId);
+      const loserSide = session.sides.find(s => s.id !== winnerSideId);
+      if (winnerSide) winnerPlayerId = playerByUser.get(winnerSide.playerId)?.id ?? null;
+      if (loserSide) loserPlayerId = playerByUser.get(loserSide.playerId)?.id ?? null;
+    }
+
+    await prisma.$transaction(async (tx) => {
+      // Закрываем матч
+      await (tx.tournamentMatch as any).update({
+        where: { id: match.id },
+        data: {
+          status: 'FINISHED',
+          winnerId: winnerPlayerId,
+          points: isDraw ? 0.5 : 1,
+        },
+      });
+
+      // Обновляем стат-ы игроков
+      if (isDraw) {
+        for (const p of players) {
+          await tx.tournamentPlayer.update({
+            where: { id: p.id },
+            data: { draws: { increment: 1 }, points: { increment: 0.5 } },
+          });
+        }
+      } else {
+        if (winnerPlayerId) {
+          await tx.tournamentPlayer.update({
+            where: { id: winnerPlayerId },
+            data: { wins: { increment: 1 }, points: { increment: 1 } },
+          });
+        }
+        if (loserPlayerId) {
+          await tx.tournamentPlayer.update({
+            where: { id: loserPlayerId },
+            data: { losses: { increment: 1 } },
+          });
+        }
+      }
+    });
+
+    logger.info(`[Tournament] Match ${match.id} finished: winner=${winnerPlayerId ?? 'draw'}, tournament="${match.tournament?.name}"`);
+  } catch (err: unknown) {
+    logError("[updateTournamentMatch]", err);
+  }
+}
 
 // ─────────────────────────────────────────
 // Обновление статуса военной дуэли
