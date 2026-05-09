@@ -547,12 +547,13 @@ export async function runTournamentMatchmaking(
   const sessionCode = nanoid(8).toUpperCase();
 
   const { session, match } = await prisma.$transaction(async (tx: import("@prisma/client").Prisma.TransactionClient) => {
-    // В турнире батл создается с обоими участниками, status = WAITING_FOR_OPPONENT
+    // Турнирный батл — публичный с самого начала, чтобы попадал в лобби
+    // (как обычный вызов). Защита от третьего join'а: уже 2 sides в сессии.
     const session = await tx.session.create({
       data: {
         status: 'WAITING_FOR_OPPONENT',
         type: 'BATTLE',
-        isPrivate: true, // турнирные батлы по умолчанию приватные до старта
+        isPrivate: false, // публичный → виден в лобби как турнирный вызов
         fen: chess.fen(),
         pgn: '',
         code: sessionCode,
@@ -586,6 +587,27 @@ export async function runTournamentMatchmaking(
     sourceType: 'TOURNAMENT',
     sourceMeta: tournamentId
   }), 'EX', 86400 * 30); // 30 дней TTL
+
+  // T-NEW: эмитим в лобби, чтобы ВСЕ увидели турнирный батл в публичных вызовах
+  try {
+    const fullSession = await prisma.session.findUnique({
+      where: { id: session.id },
+      include: { sides: { include: { player: { select: {
+        id: true, firstName: true, lastName: true, username: true,
+        avatar: true, avatarType: true, avatarGradient: true,
+        elo: true, league: true,
+      } } } } },
+    });
+    if (fullSession) {
+      const { formatBattlesList } = await import("@/services/game/format");
+      const item = formatBattlesList([
+        Object.assign(fullSession, { sourceType: 'TOURNAMENT', sourceMeta: tournamentId })
+      ] as any[])[0];
+      getIo().to("lobby").emit("battles:added", item);
+    }
+  } catch (e) {
+    logError('[Tournaments] battles:added emit error:', e);
+  }
 
   const myUser = await prisma.user.findUnique({
     where: { id: userId },
@@ -1000,7 +1022,7 @@ export async function generateSwissRound(tournamentId: string, round: number) {
         data: {
           status: 'WAITING_FOR_OPPONENT',
           type: 'BATTLE',
-          isPrivate: true,
+          isPrivate: false, // публичный → виден в лобби как турнирный вызов
           fen: chess.fen(),
           pgn: '',
           code: sessionCode,
@@ -1032,6 +1054,31 @@ export async function generateSwissRound(tournamentId: string, round: number) {
     });
 
     createdMatches.push({ matchId, sessionId, player1UserId: p1UserId, player2UserId: p2UserId });
+
+    // T-NEW: сохраняем sourceType + эмитим в лобби
+    try {
+      await redis.set(`session:source:${sessionId}`, JSON.stringify({
+        sourceType: 'TOURNAMENT',
+        sourceMeta: tournamentId,
+      }), 'EX', 86400 * 30);
+      const fullSession = await prisma.session.findUnique({
+        where: { id: sessionId },
+        include: { sides: { include: { player: { select: {
+          id: true, firstName: true, lastName: true, username: true,
+          avatar: true, avatarType: true, avatarGradient: true,
+          elo: true, league: true,
+        } } } } },
+      });
+      if (fullSession) {
+        const { formatBattlesList } = await import("@/services/game/format");
+        const item = formatBattlesList([
+          Object.assign(fullSession, { sourceType: 'TOURNAMENT', sourceMeta: tournamentId })
+        ] as any[])[0];
+        getIo().to("lobby").emit("battles:added", item);
+      }
+    } catch (e) {
+      logError('[Tournaments/Swiss] battles:added emit error:', e);
+    }
 
     // socket + AdminNotification
     const [u1, u2] = await Promise.all([
