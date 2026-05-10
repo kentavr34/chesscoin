@@ -64,6 +64,38 @@ function isUserInGameRoom(io: Server, sessionId: string, targetUserId: string): 
   return false;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// КРИТИЧНО: эмитим персонализированный snapshot каждому сокету в комнате.
+// io.to(room).emit("game", formatted) транслирует ОДИН payload — у получателей
+// session.mySideId оказывается чужим, доска переворачивается и цвета путаются.
+// Этот хелпер для каждого сокета формирует свой formatSession(session, userId).
+// extraSession — payload который пойдёт зрителям/спектаторам (mySideId=null).
+// ─────────────────────────────────────────────────────────────────────────────
+async function emitGameToRoom(
+  io: Server,
+  sessionId: string,
+  session: any,
+  extras?:
+    | Record<string, unknown>
+    | ((userId: string | null) => Record<string, unknown> | Promise<Record<string, unknown> | undefined> | undefined),
+) {
+  const room = io.sockets.adapter.rooms.get(sessionId);
+  const apply = async (userId: string | null) => {
+    const base = formatSession(session, userId);
+    const ext = typeof extras === 'function' ? await extras(userId) : extras;
+    return ext ? { ...base, ...ext } : base;
+  };
+  if (room) {
+    for (const socketId of room) {
+      const s = io.sockets.sockets.get(socketId);
+      if (!s) continue;
+      const sUserId = (s as any)?.data?.userId ?? null;
+      s.emit("game", await apply(sUserId));
+    }
+  }
+  io.to(`spectate:${sessionId}`).emit("game", await apply(null));
+}
+
 async function postNewBattleToChannel(
   creatorName: string,
   bet: bigint,
@@ -336,7 +368,7 @@ export const setupSocketHandlers = (io: Server) => {
             const formatted = formatSession(session, userId);
 
             if (callback) callback({ ok: true, matched: true, session: formatted });
-            io.to(session.id).emit("game", formatted);
+            await emitGameToRoom(io, session.id, session);
             io.to(session.id).emit("game:started", { sessionId: session.id });
 
             await setTimer(session.id);
@@ -372,7 +404,7 @@ export const setupSocketHandlers = (io: Server) => {
           const formatted = formatSession(session, userId);
 
           if (callback) callback({ ok: true, session: formatted });
-          io.to(session.id).emit("game", formatted);
+          await emitGameToRoom(io, session.id, session);
           io.to(session.id).emit("game:started", { sessionId: session.id });
 
           await setTimer(session.id);
@@ -493,8 +525,8 @@ export const setupSocketHandlers = (io: Server) => {
           const formatted = formatSession(updatedSession as any, userId);
           
           if (callback) callback({ ok: true, session: formatted });
-          io.to(data.sessionId).emit("game", formatted);
-          
+          await emitGameToRoom(io, data.sessionId, updatedSession);
+
         } catch (err: unknown) {
           if (callback) callback({ ok: false, error: (err as Error).message });
         }
@@ -586,10 +618,13 @@ export const setupSocketHandlers = (io: Server) => {
               isDraw: chess.isDraw() || chess.isStalemate(),
             });
             await stopAllTimers(sessionId);
-            // Включаем pieceCoins в данные для отображения в модале результата
-            const pieceCoinsRaw = await redis.get(`session:${sessionId}:pieceCoins:${userId}`);
-            const formattedFinished = { ...formatSession(finished, userId), pieceCoins: pieceCoinsRaw ?? '0' };
-            io.to(sessionId).emit("game", formattedFinished);
+            // pieceCoins зависит от userId — каждому сокету свой extras
+            const myCoins = await redis.get(`session:${sessionId}:pieceCoins:${userId}`);
+            const formattedFinished = { ...formatSession(finished, userId), pieceCoins: myCoins ?? '0' };
+            await emitGameToRoom(io, sessionId, finished, async (sid: string | null) => {
+              const raw = sid ? await redis.get(`session:${sessionId}:pieceCoins:${sid}`) : null;
+              return { pieceCoins: raw ?? '0' };
+            });
             io.to(sessionId).emit("game:over", { status: finished.status });
             io.to("lobby").emit("battles:live:removed", sessionId);
             cleanupSpectators(sessionId);
@@ -622,7 +657,8 @@ export const setupSocketHandlers = (io: Server) => {
 
           await cacheSession(updatedSession);
           const formatted = formatSession(updatedSession, userId);
-          io.to(sessionId).emit("game", formatted);
+          // КРИТИЧНО: персонализированный emit (иначе доска/цвета путаются)
+          await emitGameToRoom(io, sessionId, updatedSession);
           if (callback) callback({ ok: true, session: formatted });
 
           // 🔔 Уведомление сопернику о ходе — только если он НЕ в комнате игры
@@ -696,7 +732,8 @@ export const setupSocketHandlers = (io: Server) => {
           });
 
           const formatted = formatSession(finished, userId);
-          io.to(data.sessionId).emit("game", formatted);
+          void formatted;
+          await emitGameToRoom(io, data.sessionId, finished);
           io.to(data.sessionId).emit("game:over", { status: "FINISHED", surrender: true });
           cleanupSpectators(data.sessionId);
           if (callback) callback({ ok: true });
@@ -791,8 +828,7 @@ export const setupSocketHandlers = (io: Server) => {
         await redis.del(`draw:offered:${data.sessionId}`);
         await stopAllTimers(data.sessionId);
         const finished = await finishSession(data.sessionId, SessionStatus.DRAW, { isDraw: true });
-        const formatted = formatSession(finished, userId);
-        io.to(data.sessionId).emit("game", formatted);
+        await emitGameToRoom(io, data.sessionId, finished);
         io.to(data.sessionId).emit("game:over", { status: "DRAW" });
         cleanupSpectators(data.sessionId);
         if (callback) callback({ ok: true });
@@ -1025,7 +1061,12 @@ const makeBotMove = async (socket: AuthSocket, io: Server, sessionId: string) =>
       // Включаем pieceCoins в данные для отображения в модале результата
       const pieceCoinsRaw = uid ? await redis.get(`session:${sessionId}:pieceCoins:${uid}`) : null;
       const formattedFinished = { ...formatSession(finished, uid), pieceCoins: pieceCoinsRaw ?? '0' };
-      io.to(sessionId).emit("game", formattedFinished);
+      // Бот-игры: персонализированный emit + pieceCoins по userId сокета
+      await emitGameToRoom(io, sessionId, finished, async (sid: string | null) => {
+        const raw = sid ? await redis.get(`session:${sessionId}:pieceCoins:${sid}`) : null;
+        return { pieceCoins: raw ?? '0' };
+      });
+      void formattedFinished;
       io.to(sessionId).emit("game:over", { status: finished.status });
       cleanupSpectators(sessionId);
       return;
@@ -1057,7 +1098,7 @@ const makeBotMove = async (socket: AuthSocket, io: Server, sessionId: string) =>
       return;
     }
 
-    io.to(sessionId).emit("game", formatSession(updatedSession, humanSide.playerId));
+    await emitGameToRoom(io, sessionId, updatedSession);
   } catch (err: unknown) {
     logger.error("[BotMove] Error:", err);
   }
