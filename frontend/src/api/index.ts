@@ -193,12 +193,14 @@ export const tournamentsApi = {
 export const warsApi = {
   countries: (sort?: 'wins' | 'alpha') =>
     api.get<{ countries: Country[] }>(`/wars/countries${sort ? `?sort=${sort}` : ''}`),
-  country: (id: string) =>
-    api.get<{ country: Country; members: Record<string,unknown>[]; isCommander: boolean }>(`/wars/countries/${id}`),
+  country: (id: string, sort?: 'alpha' | 'auto') =>
+    api.get<{ country: Country; members: import('@/types').CountryMemberFull[]; isCommander: boolean }>(
+      `/wars/countries/${id}${sort === 'alpha' ? '?sort=alpha' : ''}`,
+    ),
   myCountry: () =>
     api.get<{ country: Country | null; membership: Record<string,unknown> | null; isCommander: boolean; activeWar: Record<string,unknown> | null }>('/wars/my-country'),
   join: (countryId: string) =>
-    api.post<{ success: boolean; membership: Record<string,unknown> }>(`/wars/countries/${countryId}/join`),
+    api.post<{ success: boolean; entryFee: string; membership: { id: string; warWins: number; warLosses: number; contribution: string; joinedAt: string } }>(`/wars/countries/${countryId}/join`),
   leave: () =>
     api.post<{ success: boolean }>('/wars/leave'),
   introSeen: () =>
@@ -219,12 +221,16 @@ export const warsApi = {
     api.delete<{ success: boolean }>(`/wars/games/${sessionId}/save`),
   savedGames: () =>
     api.get<{ savedGames: Record<string,unknown>[] }>('/wars/my-saved-games'),
-  donate: (countryId: string, amount: number) =>
-    api.post<{ success: boolean; treasury: string }>(`/wars/countries/${countryId}/donate`, { amount }),
+  donate: (countryId: string, amount: string | number) =>
+    api.post<{ success: boolean; treasury: string; myContribution?: string }>(
+      `/wars/countries/${countryId}/donate`, { amount: String(amount) },
+    ),
   members: (countryId: string) =>
-    api.get<{ members: Record<string,unknown>[] }>(`/wars/countries/${countryId}/members`),
-  contribute: (countryId: string, amount: number) =>
-    api.post<{ success: boolean; treasury: string }>(`/wars/countries/${countryId}/donate`, { amount }),
+    api.get<{ members: import('@/types').CountryMemberFull[] }>(`/wars/countries/${countryId}/members`),
+  contribute: (countryId: string, amount: string | number) =>
+    api.post<{ success: boolean; treasury: string; myContribution?: string }>(
+      `/wars/countries/${countryId}/donate`, { amount: String(amount) },
+    ),
 };
 
 export const puzzlesApi = {

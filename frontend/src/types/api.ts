@@ -86,6 +86,38 @@ export interface Country {
   wins?: number;
   losses?: number;
   memberCount?: number;
+  maxMembers?: number;
+  treasury?: string;        // BigInt-строка
+  entryFee?: string;        // BigInt-строка (10 000)
+  commanderId?: string | null;
+  myMembership?: {
+    warWins: number;
+    warLosses: number;
+    contribution?: string;
+    joinedAt: string;
+  } | null;
+  activeWar?: {
+    id: string;
+    status: string;
+    attackerCountryId: string;
+    defenderCountryId: string;
+    attackerWins: number;
+    defenderWins: number;
+    endAt: string;
+  } | null;
+}
+
+export interface CountryMemberFull {
+  id: string;
+  userId: string;
+  warWins: number;
+  warLosses: number;
+  currentWarWins: number;
+  contribution: string;
+  referralCount: number;
+  joinedAt: string;
+  isCommander: boolean;
+  user: PublicUser & { jarvisLevel?: number; militaryRank?: string };
 }
 
 export interface WarBattle {

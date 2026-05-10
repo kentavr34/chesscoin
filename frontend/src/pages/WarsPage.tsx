@@ -6,6 +6,9 @@ import { warsApi } from '@/api';
 import { useUserStore } from '@/store/useUserStore';
 import { fmtBalance } from '@/utils/format';
 import { useT } from '@/i18n/useT';
+import { useConfirm } from '@/components/ui/ConfirmModal';
+
+const COUNTRY_ENTRY_FEE = 10_000n;
 
 const toast = (text: string, type: 'error' | 'success' | 'info' = 'error') =>
   window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text, type } }));
@@ -178,12 +181,23 @@ const CountryDetailModal: React.FC<{
   const [donateAmt, setDonateAmt] = useState('');
   const [donating, setDonating] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [confirm, ConfirmDialog] = useConfirm();
 
   useEffect(() => {
     warsApi.country(countryId).then(setData).catch(console.error);
   }, [countryId]);
 
   const handleJoin = async () => {
+    const entryFee = data?.country?.entryFee
+      ? BigInt(data.country.entryFee)
+      : COUNTRY_ENTRY_FEE;
+    const ok = await confirm({
+      title: `Вступить в ${data?.country?.nameRu ?? 'страну'}?`,
+      message: `Взнос: ${fmtBalance(entryFee.toString())} ᚙ\n\nВзнос идёт в казну страны и НЕ возвращается при выходе. При победе вашей страны вы получаете долю казны пропорционально победам в войне и вкладу.`,
+      okLabel: `Внести ${fmtBalance(entryFee.toString())} ᚙ`,
+      cancelLabel: 'Отмена',
+    });
+    if (!ok) return;
     setJoining(true);
     try {
       await warsApi.join(countryId);
@@ -191,7 +205,16 @@ const CountryDetailModal: React.FC<{
       onJoined();
       onClose();
     } catch (e: any) {
-      toast(e.message ?? t.common.error);
+      const code = e?.error ?? e?.message ?? '';
+      if (String(code).includes('INSUFFICIENT_BALANCE')) {
+        toast(`Недостаточно монет: нужно ${fmtBalance(entryFee.toString())} ᚙ`);
+      } else if (String(code).includes('COUNTRY_FULL')) {
+        toast('Страна заполнена');
+      } else if (String(code).includes('WAR_IN_PROGRESS')) {
+        toast('Нельзя сменить страну во время войны');
+      } else {
+        toast(e.message ?? t.common.error);
+      }
     } finally {
       setJoining(false);
     }
@@ -201,7 +224,7 @@ const CountryDetailModal: React.FC<{
     if (!donateAmt || isNaN(Number(donateAmt))) return;
     setDonating(true);
     try {
-      await warsApi.donate(countryId, Number(donateAmt));
+      await warsApi.donate(countryId, donateAmt);
       toast(t.wars.btnDonate, 'success');
       setDonateAmt('');
       warsApi.country(countryId).then(setData);
@@ -213,6 +236,17 @@ const CountryDetailModal: React.FC<{
   };
 
   const handleLeave = async () => {
+    const fee = data?.country?.myMembership?.contribution
+      ? BigInt(data.country.myMembership.contribution)
+      : COUNTRY_ENTRY_FEE;
+    const ok = await confirm({
+      title: 'Покинуть страну?',
+      message: `Ваш вклад ${fmtBalance(fee.toString())} ᚙ останется в казне и НЕ вернётся.`,
+      danger: true,
+      okLabel: 'Покинуть',
+      cancelLabel: 'Остаться',
+    });
+    if (!ok) return;
     setLeaving(true);
     try {
       await warsApi.leave();
@@ -229,9 +263,12 @@ const CountryDetailModal: React.FC<{
   const c = data?.country;
   const members = data?.members ?? [];
   const isMine = c?.myMembership != null;
+  const hasActiveWar = !!c?.activeWar;
+  const entryFeeStr = c?.entryFee ?? COUNTRY_ENTRY_FEE.toString();
 
   return (
     <div style={overlayStyle} onClick={(e) => e.target === e.currentTarget && onClose()}>
+      {ConfirmDialog}
       <div style={{ ...bottomSheetStyle, maxHeight: '90vh' }}>
         <div style={handleBar} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
@@ -276,7 +313,7 @@ const CountryDetailModal: React.FC<{
 
         {!isMine && (
           <button onClick={handleJoin} disabled={joining} style={{ ...greenBtnFull, marginBottom: 14, opacity: joining ? 0.6 : 1 }}>
-            {joining ? '...' : t.wars.joinCountryBtn}
+            {joining ? '...' : `${t.wars.joinCountryBtn} · ${fmtBalance(entryFeeStr)} ᚙ`}
           </button>
         )}
         {isMine && (
@@ -319,39 +356,76 @@ const CountryDetailModal: React.FC<{
           </>
         )}
 
-        <div style={{ ...sectionLabelStyle, marginBottom: 10 }}>
-          🏴 {t.wars.fightersLabel} ({members.length})
+        <div style={{ ...sectionLabelStyle, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span>{t.wars.fightersLabel} ({members.length})</span>
+          {hasActiveWar && (
+            <span style={{ fontSize: 9, fontWeight: 700, color: '#FF4D6A', letterSpacing: '.06em' }}>
+              СОРТ: ПОБЕДЫ В ВОЙНЕ
+            </span>
+          )}
         </div>
 
         <div style={{ maxHeight: 320, overflowY: 'auto' }}>
-          {members.map((m, i) => (
+          {members.map((m: any, i: number) => (
             <div key={m.id} style={{
               display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0',
               borderBottom: '.5px solid rgba(154,148,144,.12)',
             }}>
-              {m.isCommander && (
-                <span style={{ fontSize: 16, flexShrink: 0 }}>👑</span>
+              {/* Звание/ранг */}
+              {m.isCommander ? (
+                <div style={{
+                  flexShrink: 0, padding: '2px 5px', borderRadius: 6,
+                  background: 'linear-gradient(135deg,#F0C85A,#D4A843)',
+                  color: '#0D0D12', fontSize: 9, fontWeight: 900, letterSpacing: '.04em',
+                  whiteSpace: 'nowrap',
+                }}>
+                  ГК
+                </div>
+              ) : (
+                <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: '#7A7875', width: 20, textAlign: 'center', flexShrink: 0 }}>
+                  {i + 1}
+                </span>
               )}
-              {!m.isCommander && (
-                <span style={{ fontSize: 13, color: '#7A7875', width: 20, textAlign: 'center', flexShrink: 0 }}>{i + 1}</span>
-              )}
+
               <div
                 onClick={() => { navigate(`/profile/${m.userId}`); onClose(); }}
                 style={{ cursor: 'pointer' }}
               >
                 <Avatar user={m.user} size="s" />
               </div>
+
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div
-                  style={{ fontSize: 13, fontWeight: 600, color: m.isCommander ? '#D4A843' : '#EAE2CC', cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                  style={{
+                    fontSize: 13, fontWeight: 600,
+                    color: m.isCommander ? '#D4A843' : '#EAE2CC',
+                    cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                    display: 'flex', alignItems: 'center', gap: 6,
+                  }}
                   onClick={() => { navigate(`/profile/${m.userId}`); onClose(); }}
                 >
-                  {m.isCommander && <span style={{ fontSize: 10, color: '#D4A843', marginRight: 4 }}>{t.wars.commanderTag}</span>}
-                  {m.user?.firstName} {m.user?.lastName ?? ''}
+                  <span>{m.user?.firstName} {m.user?.lastName ?? ''}</span>
+                  {m.isCommander && (
+                    <span style={{ fontSize: 9, color: '#D4A843', fontWeight: 700 }}>
+                      Главком · {m.referralCount ?? 0} реф.
+                    </span>
+                  )}
                 </div>
-                <div style={{ fontSize: 10, color: '#7A7875' }}>
-                  ELO {m.user?.elo ?? '—'} • {m.warWins}W / {m.warLosses}L
+                <div style={{ fontSize: 10, color: '#7A7875', display: 'flex', gap: 8, marginTop: 1 }}>
+                  <span>ELO {m.user?.elo ?? '—'}</span>
+                  <span style={{ color: '#3DBA7A' }}>{m.warWins}W</span>
+                  <span style={{ color: '#FF4D6A' }}>{m.warLosses}L</span>
+                  {hasActiveWar && (m.currentWarWins ?? 0) > 0 && (
+                    <span style={{ color: '#F0C85A', fontWeight: 700 }}>
+                      ▲ {m.currentWarWins} в войне
+                    </span>
+                  )}
                 </div>
+                {BigInt(m.contribution ?? '0') > 0n && (
+                  <div style={{ fontSize: 9, color: '#D4A843', marginTop: 2, fontFamily: "'JetBrains Mono',monospace" }}>
+                    вклад {fmtBalance(m.contribution)} ᚙ
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -651,7 +725,7 @@ export const WarsPage: React.FC = () => {
     if (!donateAmt || isNaN(Number(donateAmt))) return;
     setDonating(true);
     try {
-      await warsApi.contribute(myCountry.id, Number(donateAmt));
+      await warsApi.contribute(myCountry.id, donateAmt);
       toast(t.wars.btnDonate + '!', 'success');
       setDonateAmt('');
       setShowDonate(false);
