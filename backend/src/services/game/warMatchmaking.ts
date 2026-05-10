@@ -15,6 +15,8 @@ import { getIo } from "@/lib/io";
 import { logger, logError } from "@/lib/logger";
 import { Chess } from "chess.js";
 import { nanoid } from "nanoid";
+import { updateBalance } from "@/services/economy";
+import { TransactionType } from "@prisma/client";
 
 const MAX_CONCURRENT_BATTLES = 10;
 const WAR_MATCHMAKING_LOCK_TTL = 15; // seconds
@@ -238,7 +240,20 @@ export async function onWarBattleComplete(warId: string) {
   }, 2000);
 }
 
-// ─── Завершить войну — определить победителя ────────────────────────────────────
+// ─── Завершить войну — определить победителя + распределить трофеи ──────────────
+//
+// Логика распределения (Кенан):
+//   • Победители: страна с большим числом побед в войне
+//   • Призовой пул = вся казна страны-победителя на момент окончания войны
+//     (включая взносы за вступление + донаты)
+//   • Каждый боец страны-победителя получает долю пропорционально:
+//        weight = wins_in_war * 1000 + contribution
+//     То есть и победы за войну, и личный взнос/донат влияют на долю.
+//     Победы доминируют (*1000), донаты — корректирующий бонус.
+//   • Казна страны-победителя обнуляется → выплачена бойцам.
+//   • Проигравшая страна: казна остаётся (пригодится в следующей войне).
+//   • Ничья: казна обеих стран сохраняется без выплат.
+// ─────────────────────────────────────────────────────────────────────────────
 export async function finishWar(warId: string) {
   const war = await prisma.countryWar.findUnique({ where: { id: warId } });
   if (!war || war.status === "FINISHED") return;
@@ -248,27 +263,100 @@ export async function finishWar(warId: string) {
       ? war.attackerCountryId
       : war.defenderWins > war.attackerWins
         ? war.defenderCountryId
-        : null; // Ничья
+        : null;
 
-  await prisma.countryWar.update({
-    where: { id: warId },
-    data: {
-      status: "FINISHED",
-      finishedAt: new Date(),
-      winnerCountryId,
-    },
+  let totalPayout = 0n;
+  let payoutCount = 0;
+
+  await prisma.$transaction(async (tx) => {
+    // 1. Закрываем войну
+    await tx.countryWar.update({
+      where: { id: warId },
+      data: { status: "FINISHED", finishedAt: new Date(), winnerCountryId },
+    });
+
+    // 2. Если есть победитель — распределяем казну
+    if (winnerCountryId) {
+      const country = await tx.country.findUniqueOrThrow({ where: { id: winnerCountryId } });
+      const pool = country.treasury;
+      if (pool > 0n) {
+        // Победы каждого бойца в этой войне
+        const battles = await tx.warBattle.findMany({
+          where: { warId, status: 'FINISHED', winnerCountryId },
+          select: { winnerId: true },
+        });
+        const winsByUser = new Map<string, number>();
+        for (const b of battles) {
+          if (b.winnerId) winsByUser.set(b.winnerId, (winsByUser.get(b.winnerId) ?? 0) + 1);
+        }
+
+        // Все члены победившей страны (даже без побед — но без вклада не получат)
+        const members = await tx.countryMember.findMany({
+          where: { countryId: winnerCountryId },
+          select: { userId: true, contribution: true },
+        });
+
+        // Веса
+        let totalWeight = 0n;
+        const weights: Array<{ userId: string; weight: bigint }> = [];
+        for (const m of members) {
+          const wins = BigInt(winsByUser.get(m.userId) ?? 0);
+          const w = wins * 1000n + m.contribution;
+          if (w > 0n) {
+            weights.push({ userId: m.userId, weight: w });
+            totalWeight += w;
+          }
+        }
+
+        // Выплаты
+        if (totalWeight > 0n) {
+          let distributed = 0n;
+          for (let i = 0; i < weights.length; i++) {
+            const w = weights[i]!;
+            // Последнему — остаток (защита от потерь на округлении)
+            const share = i === weights.length - 1
+              ? pool - distributed
+              : (pool * w.weight) / totalWeight;
+            if (share > 0n) {
+              await updateBalance(w.userId, share, TransactionType.COUNTRY_WAR_WIN, {
+                warId, countryId: winnerCountryId,
+                weight: w.weight.toString(),
+                totalWeight: totalWeight.toString(),
+              }, { tx });
+              distributed += share;
+              payoutCount++;
+            }
+          }
+          totalPayout = distributed;
+        }
+
+        // 3. Казна → 0 (вся выплачена)
+        await tx.country.update({
+          where: { id: winnerCountryId },
+          data: { treasury: 0n, wins: { increment: 1 } },
+        });
+      }
+
+      // Проигравшей стране — losses++
+      const loserCountryId = winnerCountryId === war.attackerCountryId
+        ? war.defenderCountryId
+        : war.attackerCountryId;
+      await tx.country.update({
+        where: { id: loserCountryId },
+        data: { losses: { increment: 1 } },
+      });
+    }
   });
 
   logger.info(
-    `[WarMatch] War ${warId} finished: ${war.attackerWins}:${war.defenderWins}, winner=${winnerCountryId ?? "DRAW"}`
+    `[WarMatch] War ${warId} finished: ${war.attackerWins}:${war.defenderWins}, ` +
+    `winner=${winnerCountryId ?? "DRAW"}, payout=${totalPayout} to ${payoutCount} fighters`
   );
 
   // Уведомить всех бойцов обеих стран
   const allMembers = await prisma.countryMember.findMany({
-    where: {
-      countryId: { in: [war.attackerCountryId, war.defenderCountryId] },
-    },
-    select: { userId: true },
+    where: { countryId: { in: [war.attackerCountryId, war.defenderCountryId] } },
+    select: { userId: true, countryId: true },
   });
 
   const io = getIo();
@@ -280,6 +368,7 @@ export async function finishWar(warId: string) {
         attackerWins: war.attackerWins,
         defenderWins: war.defenderWins,
         winnerCountryId,
+        isWinner: m.countryId === winnerCountryId,
       });
     } catch {}
   }
