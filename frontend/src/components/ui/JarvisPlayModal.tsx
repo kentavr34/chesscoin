@@ -87,6 +87,15 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
     return () => clearTimeout(id);
   }, [phase, count]);
 
+  // После покупки попыток: если мы залипли в фазе "noattempts" и попытки
+  // появились — автоматически возвращаемся в setup, чтобы игрок продолжил
+  // создание партии, а не видел снова экран "нет попыток".
+  useEffect(() => {
+    if (phase === 'noattempts' && userAttempts > 0) {
+      setPhase('setup');
+    }
+  }, [userAttempts, phase]);
+
   const handlePlay = useCallback(() => {
     if (!canPlay) return;
     // ⭐ Проверка попыток — ГЛАВНЫЙ guard
