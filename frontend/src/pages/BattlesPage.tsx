@@ -529,9 +529,25 @@ const ColorIcon: React.FC<{ isWhite: boolean }> = ({ isWhite }) => (
 );
 
 // Шаблон «Вызов» (Stage 1) — карточка батла в ожидании соперника
-const SOURCE_BADGE: Record<string, { icon: string; label: string; color: string; bg: string; border: string }> = {
-  TOURNAMENT: { icon: '🏆', label: 'Турнир',  color: '#F0C85A', bg: 'rgba(240,200,90,.1)',  border: 'rgba(240,200,90,.3)' },
-  WAR:        { icon: '⚔️', label: 'Война',   color: '#FF8855', bg: 'rgba(255,136,85,.1)',  border: 'rgba(255,136,85,.3)' },
+// Иконки источника: SVG (никаких эмодзи)
+const IcoBadgeTrophy: React.FC<{ color: string }> = ({ color }) => (
+  <svg width="11" height="11" viewBox="0 0 18 18" fill="none">
+    <path d="M5 3h8v3.5a4 4 0 0 1-8 0V3z" stroke={color} strokeWidth="1.4" strokeLinejoin="round"/>
+    <path d="M5 5H3.5C3 5 2.5 5.5 2.5 6.2c0 1.6 1.2 3 3 3.3M13 5h1.5c.5 0 1 .5 1 1.2 0 1.6-1.2 3-3 3.3" stroke={color} strokeWidth="1.4" strokeLinecap="round"/>
+    <path d="M9 11.5V14M6 14.5h6M6.5 16h5" stroke={color} strokeWidth="1.4" strokeLinecap="round"/>
+  </svg>
+);
+const IcoBadgeSwords: React.FC<{ color: string }> = ({ color }) => (
+  <svg width="11" height="11" viewBox="0 0 18 18" fill="none">
+    <path d="M2.5 2.5l8 8M14 4.5L11 7.5M3.5 14.5l3-3M14.5 14.5l-8-8M3 4.5L6 7.5M14.5 2.5l-8 8" stroke={color} strokeWidth="1.4" strokeLinecap="round"/>
+    <circle cx="3.5" cy="3.5" r=".8" fill={color}/>
+    <circle cx="14.5" cy="3.5" r=".8" fill={color}/>
+  </svg>
+);
+
+const SOURCE_BADGE: Record<string, { Icon: React.FC<{ color: string }>; label: string; color: string; bg: string; border: string }> = {
+  TOURNAMENT: { Icon: IcoBadgeTrophy, label: 'Турнир', color: '#F0C85A', bg: 'rgba(240,200,90,.1)', border: 'rgba(240,200,90,.3)' },
+  WAR:        { Icon: IcoBadgeSwords, label: 'Война',  color: '#FF8855', bg: 'rgba(255,136,85,.1)', border: 'rgba(255,136,85,.3)' },
 };
 
 const BattleChallengeCard: React.FC<{
@@ -601,8 +617,12 @@ const BattleChallengeCard: React.FC<{
           cursor: 'pointer', fontFamily: 'inherit',
           boxShadow: '0 2px 12px rgba(61,186,122,.25)',
           whiteSpace: 'nowrap' as const,
+          display: 'inline-flex', alignItems: 'center', gap: 6,
         }}
-      >⚔️ Принять</button>
+      >
+        <IcoBadgeSwords color="#3DBA7A" />
+        Принять
+      </button>
     );
   } else if (src && onSpectate) {
     ctaButton = (
@@ -615,8 +635,15 @@ const BattleChallengeCard: React.FC<{
           color: '#9B85FF', fontSize: '.72rem', fontWeight: 800,
           cursor: 'pointer', fontFamily: 'inherit',
           whiteSpace: 'nowrap' as const,
+          display: 'inline-flex', alignItems: 'center', gap: 6,
         }}
-      >👁 Смотреть</button>
+      >
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+          <path d="M1 12S5 5 12 5s11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
+          <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.7"/>
+        </svg>
+        Смотреть
+      </button>
     );
   } else {
     ctaButton = (
@@ -657,8 +684,10 @@ const BattleChallengeCard: React.FC<{
           border: `.5px solid ${src.border}`,
           padding: '2px 7px', borderRadius: 6,
           textTransform: 'uppercase',
+          display: 'inline-flex', alignItems: 'center', gap: 4,
         }}>
-          {src.icon} {src.label}
+          <src.Icon color={src.color} />
+          {src.label}
         </div>
       )}
 
@@ -891,9 +920,9 @@ const BattleLiveCard: React.FC<{
         <div style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 3 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#3DBA7A', display: 'inline-block', animation: 'pulse 1.5s infinite' }} />
-            <span style={{ fontSize: '.52rem', fontWeight: 900, color: '#3DBA7A', letterSpacing: '.16em' }}>
-              LIVE{sourceType === 'TOURNAMENT' ? ' 🏆' : sourceType === 'WAR' ? ' ⚔️' : ''}
-            </span>
+            <span style={{ fontSize: '.52rem', fontWeight: 900, color: '#3DBA7A', letterSpacing: '.16em' }}>LIVE</span>
+            {sourceType === 'TOURNAMENT' && <IcoBadgeTrophy color="#F0C85A" />}
+            {sourceType === 'WAR' && <IcoBadgeSwords color="#FF8855" />}
           </div>
           <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '1.1rem', fontWeight: 800, color: '#F0F0E8', letterSpacing: '.02em' }}>
             {fmtTime(timeLeft)}
@@ -971,7 +1000,7 @@ const QuickMatchModal: React.FC<{ onClose: () => void; onBuyAttempts: () => void
         upsertSession(res.session);
         if (res.matched) {
           // Соперник найден → сразу в игру
-          showToast('Соперник найден! Удачи ⚔️', 'info');
+          showToast('Соперник найден! Удачи', 'info');
           navigate('/game/' + res.session.id);
         } else {
           // Соперник не найден → батл опубликован, ждём оппонента

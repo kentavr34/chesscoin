@@ -562,8 +562,8 @@ export const HomePage: React.FC = () => {
             <div style={{ marginBottom: '.55rem' }}>
               <IcoTrophy size={52} />
             </div>
-            <div style={{ fontSize: '.86rem', fontWeight: 900, letterSpacing: '.01em', marginBottom: '.12rem', color: '#D4C0FF' }}>Кубки</div>
-            <div style={{ fontSize: '.58rem', lineHeight: 1.35, color: 'rgba(155,109,255,.82)' }}>Турниры · Скоро</div>
+            <div style={{ fontSize: '.86rem', fontWeight: 900, letterSpacing: '.01em', marginBottom: '.12rem', color: '#D4C0FF' }}>Турниры</div>
+            <div style={{ fontSize: '.58rem', lineHeight: 1.35, color: 'rgba(155,109,255,.82)' }}>Чемпионаты · Скоро</div>
           </div>
 
           {/* ВОЙНЫ */}

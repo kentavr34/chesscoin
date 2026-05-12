@@ -10,7 +10,7 @@ export const translations = {
   en: {
     splash: { connecting: 'Connecting...', authorizing: 'Authorizing...', loading: 'Loading...' },
     auth: { openViaBot: 'Open the app via Telegram bot', openBot: 'Open Bot' },
-    nav: { play: 'Play', battles: 'Battles', wars: 'Wars', tournaments: 'Cups', profile: 'Profile' },
+    nav: { play: 'Play', battles: 'Battles', wars: 'Wars', tournaments: 'Tournaments', profile: 'Profile' },
     common: {
       back: 'Back', close: 'Close', confirm: 'Confirm', cancel: 'Cancel',
       error: 'Error', success: 'Success', loading: 'Loading...', save: 'Save',
@@ -272,7 +272,7 @@ export const translations = {
       ],
     },
     tournaments: {
-      title: 'Cups', tabAll: 'All', tabJoined: 'Joined',
+      title: 'Tournaments', tabAll: 'All', tabJoined: 'Joined',
       noActive: 'No active tournaments', noJoined: 'You are not in any tournaments',
       join: 'Join', joining: 'Joining...', leave: 'Leave',
       leaveConfirm: 'Leave tournament? Entry fee is non-refundable!', leaveError: 'Leave error', joinError: 'Failed to join',
@@ -551,7 +551,7 @@ export const translations = {
   ru: {
     splash: { connecting: 'Подключение...', authorizing: 'Авторизация...', loading: 'Загрузка...' },
     auth: { openViaBot: 'Откройте приложение через Telegram бот', openBot: 'Открыть бота' },
-    nav: { play: 'Играть', battles: 'Батлы', wars: 'Войны', tournaments: 'Кубки', profile: 'Профиль' },
+    nav: { play: 'Играть', battles: 'Батлы', wars: 'Войны', tournaments: 'Турниры', profile: 'Профиль' },
     common: {
       back: 'Назад', close: 'Закрыть', confirm: 'Подтвердить', cancel: 'Отмена',
       error: 'Ошибка', success: 'Успешно', loading: 'Загрузка...', save: 'Сохранить',
@@ -597,7 +597,7 @@ export const translations = {
       welcomeBonus: 'Бонус новичка!', youReceived: 'Вы получили',
       attemptsPerDay: '3 попытки в день', attemptRestore: '+1 попытка каждые 8 часов',
       jarvisLabel: 'ДЖАРВИС', rankLabel: 'ЗВАНИЕ', battlesLabel: 'Батлы',
-      sectionBattles: 'Батлы', sectionTournaments: 'Кубки', sectionWars: 'Войны',
+      sectionBattles: 'Батлы', sectionTournaments: 'Турниры', sectionWars: 'Войны',
     },
     battles: {
       title: 'Батлы', tabPublic: '🌍 Публичные', tabPrivate: '🔒 Приватные',
@@ -813,7 +813,7 @@ export const translations = {
       ],
     },
     tournaments: {
-      title: 'Кубки', tabAll: 'Все', tabJoined: 'Мои',
+      title: 'Турниры', tabAll: 'Все', tabJoined: 'Мои',
       noActive: 'Нет активных турниров', noJoined: 'Вы не участвуете в турнирах',
       join: 'Вступить', joining: 'Вступаем...', leave: 'Выйти',
       leaveConfirm: 'Выйти из турнира? Взнос не возвращается!', leaveError: 'Ошибка выхода', joinError: 'Ошибка вступления',
