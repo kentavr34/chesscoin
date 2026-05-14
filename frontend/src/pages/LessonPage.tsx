@@ -356,7 +356,6 @@ export const LessonPage: React.FC = () => {
           )}
           {phase === 'solved' && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-              <div style={{ fontSize: 32 }}>div>
               <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 18, fontWeight: 800, color: '#F0C85A' }}>
                 {t.lesson.solved}
               </div>

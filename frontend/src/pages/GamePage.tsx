@@ -153,7 +153,6 @@ const BravoAnimation: React.FC<{ name: string }> = ({ name }) => (
       textAlign: 'center',
       animation: 'result-pop .35s cubic-bezier(.2,.9,.3,1.05) both',
     }}>
-      <div style={{ fontSize: '1.6rem', marginBottom: 6 }}>div>
       <div style={{ fontSize: '1rem', fontWeight: 900, color: '#F0C85A', letterSpacing: '.02em' }}>{name}</div>
       <div style={{ fontSize: '.7rem', color: '#9A9490', marginTop: 4, fontWeight: 700, letterSpacing: '.08em' }}>БРАВО!</div>
     </div>

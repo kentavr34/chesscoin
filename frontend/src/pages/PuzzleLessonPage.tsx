@@ -234,7 +234,6 @@ export const PuzzleLessonPage: React.FC = () => {
       {/* Test complete */}
       {testComplete && (
         <div style={{ margin: '16px', padding: '24px 16px', background: 'linear-gradient(135deg, rgba(123,97,255,0.12), rgba(245,200,66,0.08))', border: '1px solid rgba(245,200,66,0.2)', borderRadius: 20, textAlign: 'center' }}>
-          <div style={{ fontSize: 48, marginBottom: 8 }}>div>
           <div style={{ fontSize: 20, fontWeight: 800, color: '#F5C842', marginBottom: 4 }}>
             {rewarded ? 'Congratulations!' : 'Already completed!'}
           </div>
