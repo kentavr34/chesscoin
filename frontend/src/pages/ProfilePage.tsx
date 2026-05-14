@@ -4,6 +4,9 @@ import { PageLayout, useInfoPopup, InfoPopup } from '@/components/layout/PageLay
 import { Avatar } from '@/components/ui/Avatar';
 import { AvatarCropModal } from '@/components/ui/AvatarCropModal';
 import { CountryFlag } from '@/components/ui/CountryFlag';
+import { CoinIcon } from '@/components/ui/CoinIcon';
+import { IcoCrown, IcoRobot, IcoUsers, IcoShop, IcoCamera, IcoWallet, IcoMedal, IcoArrowUp, IcoArrowDown, IcoBriefcase, IcoMoneyFly, IcoTon, IcoUnlock, IcoLock, IcoGift, IcoSearch, IcoStats, IcoExchange, IcoCart, IcoPuzzle, IcoHandshake, IcoGamepad, IcoUpload, IcoGlobe } from '@/components/icons/UiIcons';
+import { IcoSwords, IcoTrophy, IcoFlag } from '@/components/icons/TournamentIcons';
 import { useUserStore } from '@/store/useUserStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { useT } from '@/i18n/useT';
@@ -76,7 +79,7 @@ export const ProfilePage: React.FC = () => {
   // Поддерживаем оба способа: /profile/:userId и navigate('/profile', {state:{userId}})
   const viewedUserId: string | undefined = params.userId ?? (location.state as Record<string,unknown>)?.userId as string | undefined;
   const isOwnProfile = !viewedUserId || viewedUserId === user?.id;
-  const profileInfo = useInfoPopup('profile', [{ icon: 'рџЏ…', title: 'Your Profile', desc: 'Your stats, badges and game history. ELO shows your level — the higher, the stronger opponents.' }, { icon: 'рџЋ–пёЏ', title: 'Military Rank', desc: 'Rank grows with referrals. Higher rank — bigger percentage from friends\' wins.' }, { icon: 'рџ’°', title: 'Leagues & Rewards', desc: 'Earn coins to climb leagues: Bronze → Silver → Gold → Diamond → Champion.' }]);
+  const profileInfo = useInfoPopup('profile', [{ icon: '', title: 'Your Profile', desc: 'Your stats, badges and game history. ELO shows your level — the higher, the stronger opponents.' }, { icon: '', title: 'Military Rank', desc: 'Rank grows with referrals. Higher rank — bigger percentage from friends\' wins.' }, { icon: '', title: 'Leagues & Rewards', desc: 'Earn coins to climb leagues: Bronze → Silver → Gold → Diamond → Champion.' }]);
 
   const [tab, setTab] = useState<Tab>('info');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -202,7 +205,7 @@ export const ProfilePage: React.FC = () => {
 
   return (
     <>
-    {isOwnProfile && profileInfo.show && <InfoPopup infoKey="profile" slides={[{ icon: 'рџЏ…', title: 'Your Profile', desc: 'Your stats, badges and game history. ELO shows your level — the higher, the stronger opponents.' }, { icon: 'рџЋ–пёЏ', title: 'Military Rank', desc: 'Rank grows with referrals. Higher rank — bigger percentage from friends\' wins.' }, { icon: 'рџ’°', title: 'Leagues & Rewards', desc: 'Earn coins to climb leagues: Bronze → Silver → Gold → Diamond → Champion.' }]} onClose={profileInfo.close} />}
+    {isOwnProfile && profileInfo.show && <InfoPopup infoKey="profile" slides={[{ icon: '', title: 'Your Profile', desc: 'Your stats, badges and game history. ELO shows your level — the higher, the stronger opponents.' }, { icon: '', title: 'Military Rank', desc: 'Rank grows with referrals. Higher rank — bigger percentage from friends\' wins.' }, { icon: '', title: 'Leagues & Rewards', desc: 'Earn coins to climb leagues: Bronze → Silver → Gold → Diamond → Champion.' }]} onClose={profileInfo.close} />}
     <PageLayout backTo="/" rightAction={rightAction} centered>
       {/* Toast */}
       {toast && (
@@ -233,7 +236,7 @@ export const ProfilePage: React.FC = () => {
                 style={{ position: 'absolute', bottom: -8, right: -8, width: 44, height: 44, borderRadius: '50%', background: '#F0C85A', border: '2px solid #0B0D11', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 16, lineHeight: 1, flexShrink: 0 }}
                 title="Upload avatar"
               >
-                {avatarLoading ? '…' : 'рџ“·'}
+                {avatarLoading ? '…' : <IcoCamera size={14} />}
               </button>
               {user.avatarType === 'UPLOAD' && !avatarLoading && (
                 <button
@@ -269,7 +272,7 @@ export const ProfilePage: React.FC = () => {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 11,
                 }} title={t.profile.buyInShop}>
-                  рџ›Ќ
+                  <IcoShop size={11} />
                 </div>
               )}
               {/* Подсказка с названием предмета */}
@@ -304,21 +307,21 @@ export const ProfilePage: React.FC = () => {
           <span style={tagGold}>{leagueEmoji[user.league]} #1</span>
           <span style={{ display: 'inline-flex', padding: '3px 8px', background: 'rgba(74,158,255,.12)', color: '#82CFFF', borderRadius: 6, fontSize: 10, fontWeight: 700, border: '.5px solid rgba(74,158,255,.3)' }}>ELO {user.elo}</span>
           {user?.countryMember?.isCommander && (
-            <span style={{ ...tagGr, background: 'linear-gradient(135deg, rgba(245,200,66,0.15), rgba(255,215,0,0.08))', color: '#FFD700', borderColor: 'rgba(255,215,0,0.35)', fontWeight: 800 }}>
-              рџ‘‘ {t.profile.commanderBadge}
+            <span style={{ ...tagGr, background: 'linear-gradient(135deg, rgba(245,200,66,0.15), rgba(255,215,0,0.08))', color: '#FFD700', borderColor: 'rgba(255,215,0,0.35)', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <IcoCrown size={11} /> {t.profile.commanderBadge}
             </span>
           )}
           {user?.militaryRank && (
             <span style={{ ...tagGr, background: 'rgba(255,159,67,0.1)', color: '#FF9F43', borderColor: 'rgba(255,159,67,0.2)' }}>
-              {user?.militaryRank.emoji} {user?.militaryRank.label}
+              {user?.militaryRank.label}
               {(user?.referralCount ?? 0) > 0 && (
-                <span style={{ marginLeft: 4, fontSize: 10, opacity: 0.8 }}>
-                  — {(user.referralCount ?? 0).toLocaleString()} {t.profile.fighters ?? 'рџ‘Ґ'}
+                <span style={{ marginLeft: 4, fontSize: 10, opacity: 0.8, display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                  — {(user.referralCount ?? 0).toLocaleString()} <IcoUsers size={10} />
                 </span>
               )}
             </span>
           )}
-          <span style={tagRobot}>рџ¤– {JARVIS_LEVELS[Math.max(0, (user?.jarvisLevel ?? 1) - 1)].name}</span>
+          <span style={{ ...tagRobot, display: 'inline-flex', alignItems: 'center', gap: 4 }}><IcoRobot size={11} /> {JARVIS_LEVELS[Math.max(0, (user?.jarvisLevel ?? 1) - 1)].name}</span>
         </div>
       </div>
 
@@ -331,14 +334,14 @@ export const ProfilePage: React.FC = () => {
               <span style={{ fontFamily: "'Unbounded',sans-serif", fontSize: '1.4rem', fontWeight: 900, color: '#D4A843' }}>
                 {fmtBalance(user.balance)}
               </span>
-              <span style={{ fontSize: 13, color: '#D4A843', opacity: .6 }}>бљ™</span>
+              <span style={{ fontSize: 13, color: '#D4A843', opacity: .6 }}>ᚙ</span>
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
             <div onClick={() => navigate('/transactions')} style={{ fontSize: '.65rem', color: '#4A9EFF', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
-              стория <span>вЂє</span>
+              История ›
             </div>
-            <button onClick={() => navigate('/referrals')} title={t.profile.txHistory} style={{ width: 36, height: 36, padding: 0, background: 'rgba(74,158,255,.08)', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, fontSize: 16, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>рџ‘њ</button>
+            <button onClick={() => navigate('/referrals')} title={t.profile.txHistory} style={{ width: 36, height: 36, padding: 0, background: 'rgba(74,158,255,.08)', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, color: '#82CFFF', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IcoUsers size={18} /></button>
           </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -350,7 +353,7 @@ export const ProfilePage: React.FC = () => {
       {/* Чемпион месяца */}
       {user?.isMonthlyChampion && (
         <div style={{ margin: '8px 18px 0', padding: '12px 14px', background: 'linear-gradient(135deg, rgba(255,215,0,0.1), rgba(74,158,255,0.06))', border: '.5px solid rgba(255,215,0,0.3)', borderRadius: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 24, animation: 'pulse 2s ease-in-out infinite' }}>рџ‘‘</span>
+          <span style={{ color: '#FFD700', animation: 'pulse 2s ease-in-out infinite', display: 'inline-flex' }}><IcoCrown size={24} color="#FFD700" /></span>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: '.8rem', fontWeight: 800, color: '#FFD700' }}>
               {t.profile.monthlyChampion ?? 'Monthly Champion'}
@@ -494,10 +497,16 @@ export const ProfilePage: React.FC = () => {
         </>
       )}
 
-      {/* Games tab — реальные партии + история транзакций */}
+      {/* Games tab — реальные партии + История транзакций */}
       {tab === 'games' && (() => {
-        const typeIcon: Record<string, string> = {
-          BOT: 'рџ¤–', BATTLE: 'вљ”пёЏ', WAR: 'рџЊЌ', TOURNAMENT: 'рџЏ†',
+        const typeIconNode = (type: string) => {
+          switch (type) {
+            case 'BOT': return <IcoRobot size={16} />;
+            case 'BATTLE': return <IcoSwords size={16} />;
+            case 'WAR': return <IcoGlobe size={16} />;
+            case 'TOURNAMENT': return <IcoTrophy size={16} />;
+            default: return null;
+          }
         };
         const typeLabel: Record<string, string> = {
           BOT: 'vs JARVIS', BATTLE: t.profile.typeBattle, WAR: t.profile.typeWar, TOURNAMENT: t.profile.typeTournament,
@@ -534,8 +543,8 @@ export const ProfilePage: React.FC = () => {
                       {oppPlayer ? (
                         <Avatar user={oppPlayer} size="s" />
                       ) : (
-                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
-                          {typeIcon[g.type ?? ''] ?? 'в™џ'}
+                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9A9490' }}>
+                          {typeIconNode(g.type ?? '') ?? <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14 }}>·</span>}
                         </div>
                       )}
 
@@ -546,7 +555,7 @@ export const ProfilePage: React.FC = () => {
                         </div>
                         <div style={{ fontSize: 10, color: '#5A5248', marginTop: 2 }}>
                           {typeLabel[g.type ?? ''] ?? ''} · {g.finishedAt ? fmtDate(g.finishedAt) : ''}
-                          {g.bet && BigInt(g.bet) > 0n ? ` · ${fmtBalance(g.bet)} бљ™` : ''}
+                          {g.bet && BigInt(g.bet) > 0n ? ` · ${fmtBalance(g.bet)} ᚙ` : ''}
                         </div>
                       </div>
 
@@ -554,7 +563,7 @@ export const ProfilePage: React.FC = () => {
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                         <span style={{ fontSize: 10, fontWeight: 800, color: isWon ? '#fff' : isDraw ? '#fff' : '#fff', background: isWon ? 'rgba(0,214,143,.18)' : isDraw ? 'rgba(74,158,255,.18)' : 'rgba(255,77,106,.18)', border: `.5px solid ${isWon ? 'rgba(0,214,143,.35)' : isDraw ? 'rgba(74,158,255,.35)' : 'rgba(255,77,106,.35)'}`, borderRadius: 5, padding: '2px 7px' }}>{statusLabel}</span>
                         {earned && isWon && (
-                          <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono',monospace", color: '#F0C85A' }}>+{earned} бљ™</span>
+                          <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono',monospace", color: '#F0C85A' }}>+{earned} ᚙ</span>
                         )}
                         {g.pgn && (
                           <button
@@ -567,7 +576,7 @@ export const ProfilePage: React.FC = () => {
                               blackPlayer: (g as any).isWhite ? oppPlayer : (user as any),
                             })}
                             style={{ fontSize: 9, padding: '2px 7px', background: 'rgba(245,200,66,0.08)', color: '#F0C85A', border: '1px solid rgba(245,200,66,0.2)', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}
-                          >в™џ Replay</button>
+                          >▷ Replay</button>
                         )}
                       </div>
                     </div>
@@ -576,33 +585,48 @@ export const ProfilePage: React.FC = () => {
               </div>
             )}
 
-            {/* стория транзакций — под играми */}
-            <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem', marginTop: 8 }}>рџ’ё {t.profile.txHistory}</div>
+            {/* История транзакций — под играми */}
+            <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem', marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }}><IcoMoneyFly size={11} /> {t.profile.txHistory}</div>
             {transactions.length === 0 ? (
               <div style={{ textAlign: 'center', color: '#5A5248', padding: 24, fontSize: 13 }}>{t.profile.noTx}</div>
             ) : (
               transactions.map((tx) => {
                 const isPos = BigInt(tx.amount) > 0n;
-                const TX_ICON: Record<string, string> = {
-                  // гровые
-                  BATTLE_WIN: 'рџЏ†', BOT_WIN: 'рџ¤–', FRIENDLY_WIN: 'рџ¤ќ', TOURNAMENT_WIN: 'рџҐ‡',
-                  TASK_REWARD: 'рџ§©', REFERRAL_BONUS: 'рџ‘Ґ', REFERRAL_INCOME: 'рџ’ё',
-                  SUB_REFERRAL_INCOME: 'рџ’°', WELCOME_BONUS: 'рџЋЃ',
-                  BATTLE_BET: 'рџЋЇ', BATTLE_COMMISSION: 'рџ’ј', BATTLE_DONATION: 'рџЋЄ',
-                  COUNTRY_WAR_WIN: 'рџЊЌ', CLAN_CONTRIBUTION: 'рџЏ°', TOURNAMENT_ENTRY: 'рџЋџ',
-                  ITEM_PURCHASE: 'рџ›Ќ', ATTEMPT_PURCHASE: 'рџЋ®',
-                  // TON
-                  TON_DEPOSIT: 'рџ’Ћ', WALLET_UNLOCK: 'рџ”ђ', WITHDRAWAL: 'рџ“¤',
-                  // Биржа
-                  EXCHANGE_SELL: 'рџ’±', EXCHANGE_BUY: 'рџ›’',
-                  EXCHANGE_FREEZE: 'рџ”’', EXCHANGE_UNFREEZE: 'рџ”“',
-                  EXCHANGE_FEE: 'рџ’№',
-                  // Airdrop
-                  REFUND: 'в†©пёЏ',
-                };
+                const txIcon = (() => {
+                  const s = 18;
+                  switch (tx.type) {
+                    case 'BATTLE_WIN':         return <IcoTrophy size={s} />;
+                    case 'BOT_WIN':            return <IcoRobot size={s} />;
+                    case 'FRIENDLY_WIN':       return <IcoHandshake size={s} />;
+                    case 'TOURNAMENT_WIN':     return <IcoMedal size={s} />;
+                    case 'TASK_REWARD':        return <IcoPuzzle size={s} />;
+                    case 'REFERRAL_BONUS':
+                    case 'SUB_REFERRAL_INCOME':
+                    case 'REFERRAL_INCOME':    return <IcoUsers size={s} />;
+                    case 'WELCOME_BONUS':      return <IcoGift size={s} />;
+                    case 'BATTLE_BET':         return <IcoSwords size={s} />;
+                    case 'BATTLE_COMMISSION':  return <IcoBriefcase size={s} />;
+                    case 'BATTLE_DONATION':    return <CoinIcon size={s} />;
+                    case 'COUNTRY_WAR_WIN':    return <IcoGlobe size={s} />;
+                    case 'CLAN_CONTRIBUTION':  return <CoinIcon size={s} />;
+                    case 'TOURNAMENT_ENTRY':   return <IcoTrophy size={s} />;
+                    case 'ITEM_PURCHASE':      return <IcoShop size={s} />;
+                    case 'ATTEMPT_PURCHASE':   return <IcoGamepad size={s} />;
+                    case 'TON_DEPOSIT':        return <IcoTon size={s} />;
+                    case 'WALLET_UNLOCK':      return <IcoUnlock size={s} />;
+                    case 'WITHDRAWAL':         return <IcoUpload size={s} />;
+                    case 'EXCHANGE_SELL':      return <IcoExchange size={s} />;
+                    case 'EXCHANGE_BUY':       return <IcoCart size={s} />;
+                    case 'EXCHANGE_FREEZE':    return <IcoLock size={s} />;
+                    case 'EXCHANGE_UNFREEZE':  return <IcoUnlock size={s} />;
+                    case 'EXCHANGE_FEE':       return <IcoBriefcase size={s} />;
+                    case 'REFUND':             return <IcoMoneyFly size={s} />;
+                    default:                   return isPos ? <IcoArrowUp size={s} /> : <IcoArrowDown size={s} />;
+                  }
+                })();
                 return (
                   <div key={tx.id} style={{ margin: '4px 18px 0', padding: '10px 14px', background: 'linear-gradient(135deg,#141018,#0F0E18)', border: '.5px solid rgba(74,158,255,.18)', borderRadius: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <span style={{ fontSize: 20 }}>{TX_ICON[tx.type] ?? (isPos ? 'рџ“€' : 'рџ“‰')}</span>
+                    <span style={{ color: isPos ? '#3DBA7A' : '#FF8080', display: 'inline-flex', flexShrink: 0 }}>{txIcon}</span>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: '.8rem', fontWeight: 700, color: '#EAE2CC' }}>
                         {
@@ -632,7 +656,7 @@ export const ProfilePage: React.FC = () => {
                       <div style={{ fontSize: '.62rem', color: '#7A7875', marginTop: 2 }}>{fmtDate(tx.createdAt)}</div>
                     </div>
                     <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 700, color: isPos ? '#3DBA7A' : '#FF5B5B' }}>
-                      {isPos ? '+' : ''}{fmtBalance(tx.amount)} бљ™
+                      {isPos ? '+' : ''}{fmtBalance(tx.amount)} ᚙ
                     </span>
                   </div>
                 );
@@ -676,14 +700,14 @@ export const ProfilePage: React.FC = () => {
                         {s?.type ?? ''} · {s?.finishedAt ? fmtDate(s.finishedAt) : ''}
                       </span>
                       {winner && (
-                        <span style={{ fontSize: '.65rem', fontWeight: 700, color: '#3DBA7A' }}>
-                          рџЏ† {winner.player?.firstName ?? 'Unknown'}
+                        <span style={{ fontSize: '.65rem', fontWeight: 700, color: '#3DBA7A', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                          <IcoTrophy size={11} color="#3DBA7A" /> {winner.player?.firstName ?? 'Unknown'}
                         </span>
                       )}
                       <button style={{ fontSize: '.62rem', padding: '2px 7px', background: 'rgba(204,96,96,.1)', color: '#CC6060', border: '.5px solid rgba(204,96,96,.25)', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}
                         onClick={() => s && warsApi.unsaveGame(s.id).then(() => setSavedGames(g => g.filter(x => x.id !== sg.id)))}
                       >
-                        вњ• remove
+                        × remove
                       </button>
                     </div>
                     {s?.pgn && (
@@ -702,7 +726,7 @@ export const ProfilePage: React.FC = () => {
                           });
                         }}
                       >
-                        в™џ Replay game
+                        ▷ Replay game
                       </button>
                     )}
                   </div>
@@ -719,10 +743,10 @@ export const ProfilePage: React.FC = () => {
           {/* Турнирные бейджи */}
           {(user?.tournamentBadges?.length ?? 0) > 0 && (
             <>
-              <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem' }}>рџЏ† Tournament wins</div>
+              <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem', display: 'flex', alignItems: 'center', gap: 6 }}><IcoTrophy size={11} /> Tournament wins</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 18px' }}>
                 {(user?.tournamentBadges as TournamentBadge[] | undefined)?.slice().reverse().map((badge, i: number) => {
-                  const placeEmoji = badge.place === 1 ? 'рџҐ‡' : badge.place === 2 ? 'рџҐ€' : 'рџҐ‰';
+                  const placeLabel = badge.place === 1 ? '1' : badge.place === 2 ? '2' : '3';
                   const placeColor = badge.place === 1 ? '#FFD700' : badge.place === 2 ? '#C0C0C0' : '#CD7F32';
                   return (
                     <div key={i} style={{
@@ -731,7 +755,7 @@ export const ProfilePage: React.FC = () => {
                       border: `.5px solid ${placeColor}40`,
                       borderRadius: 14,
                     }}>
-                      <span style={{ fontSize: 28, flexShrink: 0 }}>{placeEmoji}</span>
+                      <span style={{ flexShrink: 0, display: 'inline-flex', width: 32, height: 32, borderRadius: '50%', alignItems: 'center', justifyContent: 'center', background: badge.place === 1 ? 'rgba(245,200,66,.18)' : badge.place === 2 ? 'rgba(200,200,200,.18)' : 'rgba(205,127,50,.18)', color: badge.place === 1 ? '#F0C85A' : badge.place === 2 ? '#D0D0D0' : '#CD7F32', fontFamily: "'JetBrains Mono',monospace", fontWeight: 900, fontSize: 14 }}>{placeLabel}</span>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: '.8rem', fontWeight: 800, color: '#EAE2CC' }}>
                           {badge.place} place · {badge.tournamentName ?? badge.name}
@@ -741,7 +765,7 @@ export const ProfilePage: React.FC = () => {
                         </div>
                       </div>
                       <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, color: placeColor }}>
-                        +{badge.prize ? (Number(BigInt(badge.prize)) / 1000).toFixed(0) + 'K' : '—'} бљ™
+                        +{badge.prize ? (Number(BigInt(badge.prize)) / 1000).toFixed(0) + 'K' : '—'} ᚙ
                       </div>
                     </div>
                   );
@@ -750,19 +774,19 @@ export const ProfilePage: React.FC = () => {
             </>
           )}
 
-          {/* гровые достижения */}
+          {/* Игровые достижения */}
           {(() => {
-            const ACHS = [
-              { id: 'first_blood',   icon: 'вљ”пёЏ', name: 'First Blood',    desc: 'First game' },
-              { id: 'winner_10',     icon: 'рџЏ†', name: t.profile.achievementWinner10,  desc: t.profile.achievementWinner10Desc },
-              { id: 'winner_100',    icon: 'рџ‘‘', name: t.profile.achievementWinner100, desc: t.profile.achievementWinner100Desc },
-              { id: 'jarvis_hunter', icon: 'рџ¤–', name: 'J.A.R.V.I.S Hunter', desc: 'Max level' },
-              { id: 'recruiter',     icon: 'рџ‘Ґ', name: t.profile.achievementRecruiter,  desc: t.profile.achievementRecruiterDesc },
-              { id: 'millionaire',   icon: 'рџ’°', name: t.profile.achievementMillionaire, desc: t.profile.achievementMillionaireDesc },
-              { id: 'patriot',       icon: 'рџЊЌ', name: t.profile.achievementPatriot,    desc: t.profile.achievementPatriotDesc },
-              { id: 'puzzler',       icon: 'рџ§©', name: t.profile.achievementPuzzler,    desc: t.profile.achievementPuzzlerDesc },
-              { id: 'streak_7',      icon: 'рџ”Ґ', name: t.profile.achievementStreak7,    desc: t.profile.achievementStreak7Desc },
-              { id: 'streak_30',     icon: 'рџ’Ћ', name: t.profile.achievementStreak30,   desc: t.profile.achievementStreak30Desc },
+            const ACHS: { id: string; Icon: React.FC<{ size?: number; color?: string }>; name: string; desc: string }[] = [
+              { id: 'first_blood',   Icon: IcoSwords,    name: 'First Blood',    desc: 'First game' },
+              { id: 'winner_10',     Icon: IcoTrophy,    name: t.profile.achievementWinner10,  desc: t.profile.achievementWinner10Desc },
+              { id: 'winner_100',    Icon: IcoCrown,     name: t.profile.achievementWinner100, desc: t.profile.achievementWinner100Desc },
+              { id: 'jarvis_hunter', Icon: IcoRobot,     name: 'J.A.R.V.I.S Hunter', desc: 'Max level' },
+              { id: 'recruiter',     Icon: IcoUsers,     name: t.profile.achievementRecruiter,  desc: t.profile.achievementRecruiterDesc },
+              { id: 'millionaire',   Icon: CoinIcon,     name: t.profile.achievementMillionaire, desc: t.profile.achievementMillionaireDesc },
+              { id: 'patriot',       Icon: IcoGlobe,     name: t.profile.achievementPatriot,    desc: t.profile.achievementPatriotDesc },
+              { id: 'puzzler',       Icon: IcoPuzzle,    name: t.profile.achievementPuzzler,    desc: t.profile.achievementPuzzlerDesc },
+              { id: 'streak_7',      Icon: IcoMedal,     name: t.profile.achievementStreak7,    desc: t.profile.achievementStreak7Desc },
+              { id: 'streak_30',     Icon: IcoTon,       name: t.profile.achievementStreak30,   desc: t.profile.achievementStreak30Desc },
             ];
             const earned: Record<string, string> = {};
             (user?.achievements ?? []).forEach((a: { id: string; date: string }) => { earned[a.id] = a.date; });
@@ -770,7 +794,7 @@ export const ProfilePage: React.FC = () => {
             return (
               <>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '.58rem', fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: '#7A7875', padding: '.9rem .85rem .45rem' }}>
-                  <span>рџЋ– {t.profile.tabs.achievements}</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><IcoMedal size={11} /> {t.profile.tabs.achievements}</span>
                   <span style={{ color: '#4A9EFF', fontWeight: 700 }}>
                     {earnedCount}/{ACHS.length}
                   </span>
@@ -786,7 +810,7 @@ export const ProfilePage: React.FC = () => {
                         border: `.5px solid ${done ? 'rgba(74,158,255,0.3)' : 'rgba(255,255,255,0.06)'}`,
                         opacity: done ? 1 : 0.45,
                       }}>
-                        <span style={{ fontSize: 22 }}>{a.icon}</span>
+                        <span style={{ color: done ? '#82CFFF' : '#5A5248', display: 'inline-flex' }}><a.Icon size={22} /></span>
                         <span style={{ fontSize: 8, fontWeight: 700, color: done ? '#82CFFF' : '#5A5248', lineHeight: 1.2 }}>
                           {a.name}
                         </span>
@@ -824,15 +848,15 @@ export const ProfilePage: React.FC = () => {
                 return (
                   <div key={i} onClick={() => setSelectedBadge({ name: badgeName, date: dateStr })} style={{ padding: '12px 10px', background: 'linear-gradient(135deg,#141018,#0F0E18)', border: `.5px solid ${color}50`, borderRadius: 14, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer', textAlign: 'center' }}>
                     <div style={{ width: 52, height: 52, borderRadius: 14, background: `${color}18`, border: `2px solid ${color}60`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <span style={{ fontSize: 22 }}>рџ¤–</span>
+                      <span style={{ color }}><IcoRobot size={22} color={color} /></span>
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: '.55rem', letterSpacing: '.1em', textTransform: 'uppercase', color, marginBottom: 3, fontWeight: 700 }}>{t.gameResult.jarvisCert}</div>
                       <div style={{ fontSize: '.95rem', fontWeight: 900, color: '#EAE2CC' }}>{badgeName}</div>
-                      <div style={{ fontSize: '.62rem', color: '#7A7875', marginTop: 2 }}>{t.profile.level} {lvlData?.level ?? '?'} · +{((lvlData?.reward ?? 0) / 1000).toFixed(0)}K бљ™</div>
+                      <div style={{ fontSize: '.62rem', color: '#7A7875', marginTop: 2, display: 'inline-flex', alignItems: 'center', gap: 4 }}>{t.profile.level} {lvlData?.level ?? '?'} · +{((lvlData?.reward ?? 0) / 1000).toFixed(0)}K <CoinIcon size={10} /></div>
                       {dateStr && (
                         <div style={{ fontSize: '.55rem', color: '#5A5248', marginTop: 4 }}>
-                          рџ“… {new Date(dateStr).toLocaleDateString()}
+                          {new Date(dateStr).toLocaleDateString()}
                         </div>
                       )}
                     </div>
@@ -886,7 +910,7 @@ export const ProfilePage: React.FC = () => {
               {/* Вибрация (хаптик) */}
               <div style={{ padding: '12px 14px', background: 'rgba(255,255,255,.03)', border: '.5px solid rgba(255,255,255,.07)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
-                  <div style={{ fontSize: '.8rem', fontWeight: 700, color: '#EAE2CC' }}>рџ“і Вибрация</div>
+                  <div style={{ fontSize: '.8rem', fontWeight: 700, color: '#EAE2CC' }}>Вибрация</div>
                   <div style={{ fontSize: '.62rem', color: '#7A7875', marginTop: 3 }}>Haptic feedback при ходах</div>
                 </div>
                 <button

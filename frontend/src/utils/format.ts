@@ -46,13 +46,25 @@ export const leagueColor: Record<string, string> = {
   STAR:     '#FFD966',
 };
 
+// Текстовые маркеры лиг (без эмодзи). SVG-аналоги:
+// `<IcoLeagueDot color={leagueColor[L]} />` если нужна цветная точка.
 export const leagueEmoji: Record<string, string> = {
-  BRONZE:   '🥉',
-  SILVER:   '🥈',
-  GOLD:     '🥇',
-  DIAMOND:  '💎',
-  CHAMPION: '👑',
-  STAR:     '🌟',
+  BRONZE:   '',
+  SILVER:   '',
+  GOLD:     '',
+  DIAMOND:  '',
+  CHAMPION: '',
+  STAR:     '',
+};
+
+// Backward-compat alias: некоторые места ещё используют это
+export const leagueShort: Record<string, string> = {
+  BRONZE:   'BR',
+  SILVER:   'SI',
+  GOLD:     'GO',
+  DIAMOND:  'DI',
+  CHAMPION: 'CH',
+  STAR:     'ST',
 };
 
 // Тип сессии → метка

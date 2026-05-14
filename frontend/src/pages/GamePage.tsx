@@ -153,7 +153,7 @@ const BravoAnimation: React.FC<{ name: string }> = ({ name }) => (
       textAlign: 'center',
       animation: 'result-pop .35s cubic-bezier(.2,.9,.3,1.05) both',
     }}>
-      <div style={{ fontSize: '1.6rem', marginBottom: 6 }}>рџЋ†</div>
+      <div style={{ fontSize: '1.6rem', marginBottom: 6 }}>div>
       <div style={{ fontSize: '1rem', fontWeight: 900, color: '#F0C85A', letterSpacing: '.02em' }}>{name}</div>
       <div style={{ fontSize: '.7rem', color: '#9A9490', marginTop: 4, fontWeight: 700, letterSpacing: '.08em' }}>БРАВО!</div>
     </div>
@@ -271,7 +271,7 @@ const PlayerPanel: React.FC<PanelProps> = ({
           </span>
           {/* Флаг страны или глобус */}
           <span style={{ fontSize: 14, lineHeight: 1, flexShrink: 0 }}>
-            {flagEmoji(country) ?? 'рџЊђ'}
+            {flagEmoji(country) ?? 'GLOBAL'}
           </span>
         </div>
         <span style={{ fontSize: '.68rem', color: isActive ? '#8A8478' : '#6A6258', fontWeight: 600, lineHeight: 1 }}>
@@ -716,7 +716,7 @@ export function GamePage() {
     const onDonated = (data: { totalPool: string; amount: string }) => {
       setDonatePool(data.totalPool);
       window.dispatchEvent(new CustomEvent('chesscoin:toast', {
-        detail: { text: `рџЋЃ +${fmtBalance(data.amount)} бљ™ доната`, type: 'info' }
+        detail: { text: ` +${fmtBalance(data.amount)} ᚙ доната`, type: 'info' }
       }));
     };
     sock.on('battle:donated', onDonated);
@@ -1108,11 +1108,11 @@ export function GamePage() {
                 Касса
               </span>
               <span style={{ fontSize: '.78rem', color: '#F0C85A', fontWeight: 800 }}>
-                {fmtBalance(bank.toString())} бљ™
+                {fmtBalance(bank.toString())} ᚙ
               </span>
             </div>
             <div style={{ fontSize: '.58rem', color: '#6E6A66', fontWeight: 600, letterSpacing: '.02em' }}>
-              победителю <span style={{ color: '#4DDA8A', fontWeight: 800 }}>{fmtBalance(winnerTake.toString())} бљ™</span>
+              победителю <span style={{ color: '#4DDA8A', fontWeight: 800 }}>{fmtBalance(winnerTake.toString())} ᚙ</span>
               <span style={{ color: '#4A4440' }}> · комиссия 10%</span>
             </div>
           </div>
@@ -1136,7 +1136,7 @@ export function GamePage() {
                 </span>
               </div>
               <span style={{ fontSize: '.86rem', color: '#F0C85A', fontWeight: 800, letterSpacing: '.01em' }}>
-                {fmtBalance(bank.toString())} бљ™
+                {fmtBalance(bank.toString())} ᚙ
               </span>
             </div>
             {/* Строка 2: разбивка ставки + донаты */}

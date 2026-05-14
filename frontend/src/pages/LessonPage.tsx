@@ -254,7 +254,7 @@ export const LessonPage: React.FC = () => {
     }
   };
 
-  const diffLabel: Record<string, string> = { easy: 'рџџў Лёгкая', medium: 'рџџЎ Средняя', hard: 'рџ”ґ Сложная' };
+  const diffLabel: Record<string, string> = { easy: ' Лёгкая', medium: ' Средняя', hard: 'ґ Сложная' };
   const getDiff = (rating: number) =>
     rating < 1200 ? 'easy' : rating < 1700 ? 'medium' : 'hard';
 
@@ -288,10 +288,10 @@ export const LessonPage: React.FC = () => {
         <button onClick={() => navigate(-1)} style={backBtn}>←</button>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 13, fontWeight: 800, color: '#EAE2CC' }}>
-            {puzzle.isDaily ? `рџ“… ${t.lesson.daily}` : `рџ§© ${t.lesson.title}`}
+            {puzzle.isDaily ? `${t.lesson.daily}` : `${t.lesson.title}`}
           </div>
           <div style={{ fontSize: 10, color: '#9A9490', marginTop: 2 }}>
-            {diffLabel[diff]} · Рейтинг {puzzle.rating} · +{fmtBalance(puzzle.reward)} бљ™
+            {diffLabel[diff]} · Рейтинг {puzzle.rating} · +{fmtBalance(puzzle.reward)} ᚙ
           </div>
         </div>
         <div style={{ width: 36 }} />
@@ -356,7 +356,7 @@ export const LessonPage: React.FC = () => {
           )}
           {phase === 'solved' && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-              <div style={{ fontSize: 32 }}>рџЏ†</div>
+              <div style={{ fontSize: 32 }}>div>
               <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 18, fontWeight: 800, color: '#F0C85A' }}>
                 {t.lesson.solved}
               </div>

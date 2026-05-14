@@ -188,7 +188,7 @@ export const PuzzleLessonPage: React.FC = () => {
             color: mode === m ? '#fff' : '#A8B0C8',
             fontWeight: 600, fontSize: 14,
           }}>
-            {m === 'lesson' ? 'рџ“– Learn' : 'рџЋЇ Test'}
+            {m === 'lesson' ? 'Learn' : ' Test'}
           </button>
         ))}
       </div>
@@ -203,7 +203,7 @@ export const PuzzleLessonPage: React.FC = () => {
       {/* Reward badge */}
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
         <div style={{ padding: '4px 14px', background: '#1C2030', borderRadius: 20, fontSize: 12, color: '#F5C842', fontWeight: 600 }}>
-          Reward: {Number(lesson.reward).toLocaleString()} бљ™
+          Reward: {Number(lesson.reward).toLocaleString()} ᚙ
         </div>
       </div>
 
@@ -234,13 +234,13 @@ export const PuzzleLessonPage: React.FC = () => {
       {/* Test complete */}
       {testComplete && (
         <div style={{ margin: '16px', padding: '24px 16px', background: 'linear-gradient(135deg, rgba(123,97,255,0.12), rgba(245,200,66,0.08))', border: '1px solid rgba(245,200,66,0.2)', borderRadius: 20, textAlign: 'center' }}>
-          <div style={{ fontSize: 48, marginBottom: 8 }}>рџЋ‰</div>
+          <div style={{ fontSize: 48, marginBottom: 8 }}>div>
           <div style={{ fontSize: 20, fontWeight: 800, color: '#F5C842', marginBottom: 4 }}>
             {rewarded ? 'Congratulations!' : 'Already completed!'}
           </div>
           {rewarded && (
             <div style={{ fontSize: 18, fontWeight: 700, color: '#00D68F', marginBottom: 8 }}>
-              +{Number(lesson.reward).toLocaleString()} бљ™
+              +{Number(lesson.reward).toLocaleString()} ᚙ
             </div>
           )}
           <div style={{ fontSize: 14, color: '#A8B0C8', marginBottom: 16 }}>
@@ -294,7 +294,7 @@ export const PuzzleLessonPage: React.FC = () => {
             width: '100%', padding: '12px 0', borderRadius: 12, border: 'none', cursor: 'pointer',
             background: '#1C2030', color: '#A8B0C8', fontWeight: 600, fontSize: 14,
           }}>
-            рџ”„ Start over
+            Start over
           </button>
         </div>
       )}

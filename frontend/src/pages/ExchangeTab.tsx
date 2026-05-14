@@ -1,12 +1,12 @@
 ﻿// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
 // ExchangeTab — P2P Exchange ChessCoin v7.0.1
-// Placement: "рџ’± Exchange" tab inside ShopPage
+// Placement: "Exchange" tab inside ShopPage
 //
 // Structure:
 //   [Price indicator + CandleChart (TradingView)]
 //   [Period switcher 1D/7D/30D]
 //   [Order book]
-//   [Sell бљ™ / Buy бљ™ buttons]
+//   [Sell ᚙ / Buy ᚙ buttons]
 //
 // Without TON wallet: locked screen, price visible, operations blocked
 // With TON wallet: full functionality
@@ -121,13 +121,13 @@ const LockedScreen: React.FC<{ currentPrice: number; change24h: number; onConnec
           {currentPrice > 0 ? `${currentPrice.toFixed(5)} TON` : '—'}
         </div>
         <div style={{ fontSize: 12, color: currentPrice > 0 ? (up ? '#3DBA7A' : '#FF5B5B') : '#5A5248', marginTop: 4 }}>
-          {currentPrice > 0 ? `${up ? '+' : ''}${change24h.toFixed(2)}% 24h` : 'per 1,000,000 бљ™'}
+          {currentPrice > 0 ? `${up ? '+' : ''}${change24h.toFixed(2)}% 24h` : 'per 1,000,000 ᚙ'}
         </div>
       </div>
 
       {/* CTA connect wallet */}
       <div style={{ background: 'linear-gradient(135deg,rgba(0,152,234,0.12),rgba(0,152,234,0.06))', border: '1px solid rgba(0,152,234,0.3)', borderRadius: 18, padding: '24px 20px', textAlign: 'center' }}>
-        <div style={{ fontSize: 44, marginBottom: 12 }}>рџ”’</div>
+        <div style={{ fontSize: 44, marginBottom: 12 }}></div>
         <div style={{ fontSize: 16, fontWeight: 800, color: '#EAE2CC', marginBottom: 8 }}>
           Connect TON wallet
         </div>
@@ -136,12 +136,12 @@ const LockedScreen: React.FC<{ currentPrice: number; change24h: number; onConnec
           One-time payment: <b style={{ color: '#0098EA' }}>1 TON</b> — forever.
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12, color: '#9A9490', marginBottom: 20 }}>
-          {['рџ’± Sell бљ™ for TON directly to other players', 'рџ›’ Buy бљ™ at market price', 'рџ’° Platform fee: 0.5%'].map(t => (
+          {['Sell ᚙ for TON directly to other players', 'Buy ᚙ at market price', 'Platform fee: 0.5%'].map(t => (
             <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>{t}</div>
           ))}
         </div>
         <button onClick={onConnect} style={{ width: '100%', padding: '14px', background: 'linear-gradient(90deg,#0098EA,#006FB8)', color: '#fff', border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-          рџ’Ћ Connect TON wallet
+          Ћ Connect TON wallet
         </button>
       </div>
     </div>
@@ -158,7 +158,7 @@ const CreateOrderModal: React.FC<{
   const t = useT();
   const maxCoins = Math.min(Number(BigInt(userBalance)), 100_000_000);
   const [amount, setAmount] = useState(Math.max(10_000, Math.min(100_000, maxCoins)));
-  const [price, setPrice]   = useState(0.001); // TON per 1M бљ™
+  const [price, setPrice]   = useState(0.001); // TON per 1M ᚙ
   const [loading, setLoading] = useState(false);
 
   const totalTon  = (amount / 1_000_000) * price;
@@ -187,14 +187,14 @@ const CreateOrderModal: React.FC<{
       <div style={{ width: '100%', maxWidth: 480, background: '#141018', border: '1px solid rgba(255,255,255,0.1)', borderBottom: 'none', borderRadius: '24px 24px 0 0', padding: '20px 18px', paddingBottom: 'max(24px, env(safe-area-inset-bottom, 24px))' }}>
         <div style={{ width: 36, height: 4, background: 'rgba(154,148,144,.18)', borderRadius: 2, margin: '0 auto 16px' }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <div style={{ fontSize: 16, fontWeight: 800, color: '#EAE2CC' }}>рџ“¤ Sell бљ™</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: '#EAE2CC' }}>Sell ᚙ</div>
           <button onClick={onClose} style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: 'none', color: '#9A9490', cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', flexShrink: 0 }}>вњ•</button>
         </div>
 
-        {/* Amount бљ™ */}
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', color: '#5A5248', marginBottom: 8 }}>AMOUNT бљ™</div>
+        {/* Amount ᚙ */}
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', color: '#5A5248', marginBottom: 8 }}>AMOUNT ᚙ</div>
         <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 800, color: '#F0C85A', textAlign: 'center', marginBottom: 10 }}>
-          {fmtBalance(String(amount))} бљ™
+          {fmtBalance(String(amount))} ᚙ
         </div>
         <input type="range" min={10_000} max={maxCoins} step={10_000} value={amount}
           onChange={e => setAmount(Number(e.target.value))}
@@ -208,7 +208,7 @@ const CreateOrderModal: React.FC<{
         </div>
 
         {/* Price */}
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', color: '#5A5248', marginBottom: 8 }}>PRICE (TON per 1,000,000 бљ™)</div>
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', color: '#5A5248', marginBottom: 8 }}>PRICE (TON per 1,000,000 ᚙ)</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
           <button onClick={() => setPrice(p => Math.max(MIN_PRICE, +(p * 0.9).toFixed(5)))} style={{ width: 44, height: 44, borderRadius: 10, background: '#141018', border: '1px solid rgba(255,255,255,0.07)', color: '#EAE2CC', fontSize: 20, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>в€’</button>
           <input type="number" min={MIN_PRICE} step={0.00001} value={price}
@@ -232,7 +232,7 @@ const CreateOrderModal: React.FC<{
         </div>
 
         <button onClick={handleCreate} disabled={loading || amount < 10_000} style={{ width: '100%', padding: '16px', background: loading ? '#2A2F48' : '#F0C85A', color: loading ? '#5A5248' : '#0B0D11', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 800, cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: loading ? 0.7 : 1 }}>
-          {loading ? 'Creating order...' : 'рџ“¤ Place order'}
+          {loading ? 'Creating order...' : 'Place order'}
         </button>
       </div>
     </div>
@@ -289,10 +289,10 @@ const ExecuteOrderModal: React.FC<{
       <div style={{ width: '100%', maxWidth: 360, background: 'linear-gradient(180deg,#100C18,#0A080E)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, padding: 28, textAlign: 'center' }}>
 
         {step === 'confirm' && (<>
-          <div style={{ fontSize: 44, marginBottom: 12 }}>рџ›’</div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: '#EAE2CC', marginBottom: 8 }}>Buy бљ™</div>
+          <div style={{ fontSize: 44, marginBottom: 12 }}></div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: '#EAE2CC', marginBottom: 8 }}>Buy ᚙ</div>
           <div style={{ fontSize: 24, fontWeight: 800, color: '#F0C85A', marginBottom: 4, fontFamily: "'JetBrains Mono',monospace" }}>
-            {fmtBalance(order.amountCoins)} бљ™
+            {fmtBalance(order.amountCoins)} ᚙ
           </div>
           <div style={{ fontSize: 13, color: '#9A9490', marginBottom: 20 }}>from {order.sellerName} · ELO {order.sellerElo}</div>
           {/* E12: Partial purchase slider */}
@@ -300,19 +300,19 @@ const ExecuteOrderModal: React.FC<{
             <div style={{ marginBottom: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#5A5248', marginBottom: 6 }}>
                 <span>Amount</span>
-                <span style={{ color: '#F0C85A', fontWeight: 700 }}>{partialAmt.toLocaleString()} бљ™ {isPartial ? '(partial)' : '(all)'}</span>
+                <span style={{ color: '#F0C85A', fontWeight: 700 }}>{partialAmt.toLocaleString()} ᚙ {isPartial ? '(partial)' : '(all)'}</span>
               </div>
               <input type="range" min={Math.min(10_000, maxCoins)} max={maxCoins} step={10_000}
                 value={partialAmt} onChange={e => setPartialAmt(Number(e.target.value))}
                 style={{ width: '100%', accentColor: '#F0C85A' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: '#5A5248', marginTop: 3 }}>
-                <span>10K бљ™</span><span>{(maxCoins/1000).toFixed(0)}K бљ™</span>
+                <span>10K ᚙ</span><span>{(maxCoins/1000).toFixed(0)}K ᚙ</span>
               </div>
             </div>
           )}
           <div style={{ background: '#0D0D12', borderRadius: 12, padding: '12px 14px', marginBottom: 20, textAlign: 'left' }}>
             {[
-              ['Price', `${order.priceTon.toFixed(5)} TON/1M бљ™`],
+              ['Price', `${order.priceTon.toFixed(5)} TON/1M ᚙ`],
               ['Total', `${totalTon.toFixed(4)} TON`],
               ['To seller', `${toSeller.toFixed(4)} TON`],
               ['Platform fee', `${feeTon.toFixed(4)} TON`],
@@ -326,7 +326,7 @@ const ExecuteOrderModal: React.FC<{
           <div style={{ display: 'flex', gap: 10 }}>
             <button onClick={onClose} style={{ flex: 1, padding: '13px', background: 'rgba(255,255,255,0.06)', color: '#9A9490', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
             <button onClick={handlePay} style={{ flex: 1, padding: '13px', background: 'rgba(0,152,234,0.15)', color: '#0098EA', border: '1px solid rgba(0,152,234,0.35)', borderRadius: 14, fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>
-              рџ’Ћ Pay {totalTon.toFixed(4)} TON
+              Ћ Pay {totalTon.toFixed(4)} TON
             </button>
           </div>
         </>)}
@@ -338,7 +338,7 @@ const ExecuteOrderModal: React.FC<{
         </>)}
 
         {step === 'verifying' && (<>
-          <div style={{ fontSize: 44, marginBottom: 16 }}>рџ”Ќ</div>
+          <div style={{ fontSize: 44, marginBottom: 16 }}>Ќ</div>
           <div style={{ fontSize: 15, fontWeight: 700, color: '#EAE2CC' }}>{t.exchange.verifying}</div>
           <div style={{ fontSize: 12, color: '#9A9490', marginTop: 8 }}>{t.exchange.checkingBlockchain}</div>
         </>)}
@@ -401,12 +401,12 @@ const CreateBuyOrderModal: React.FC<{
       <div style={{ width: '100%', maxWidth: 480, background: '#141018', border: '1px solid rgba(0,152,234,0.2)', borderBottom: 'none', borderRadius: '24px 24px 0 0', padding: '20px 18px', paddingBottom: 'max(24px, env(safe-area-inset-bottom, 24px))' }}>
         <div style={{ width: 36, height: 4, background: 'rgba(154,148,144,.18)', borderRadius: 2, margin: '0 auto 16px' }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <div style={{ fontSize: 16, fontWeight: 800, color: '#0098EA' }}>рџ›’ Buy бљ™ (BUY)</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: '#0098EA' }}>Buy ᚙ (BUY)</div>
           <button onClick={onClose} style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: 'none', color: '#9A9490', cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', flexShrink: 0 }}>вњ•</button>
         </div>
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', color: '#5A5248', marginBottom: 8 }}>WANT TO BUY бљ™</div>
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', color: '#5A5248', marginBottom: 8 }}>WANT TO BUY ᚙ</div>
         <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 26, fontWeight: 800, color: '#0098EA', textAlign: 'center', marginBottom: 10 }}>
-          {amount.toLocaleString()} бљ™
+          {amount.toLocaleString()} ᚙ
         </div>
         <input type="range" min={10_000} max={10_000_000} step={10_000} value={amount} onChange={e => setAmount(Number(e.target.value))} style={{ width: '100%', marginBottom: 10, accentColor: '#0098EA' }} />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 6, marginBottom: 16 }}>
@@ -416,14 +416,14 @@ const CreateBuyOrderModal: React.FC<{
             </button>
           ))}
         </div>
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', color: '#5A5248', marginBottom: 8 }}>MY PRICE (TON per 1M бљ™)</div>
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', color: '#5A5248', marginBottom: 8 }}>MY PRICE (TON per 1M ᚙ)</div>
         <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
           <button onClick={() => setPrice(p => Math.max(MIN_PRICE, +(p*0.9).toFixed(5)))} style={{ width: 44, height: 44, borderRadius: 10, background: '#141018', border: '1px solid rgba(255,255,255,0.07)', color: '#EAE2CC', fontSize: 20, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>в€’</button>
           <input type="number" min={MIN_PRICE} step={0.00001} value={price} onChange={e => setPrice(Math.max(MIN_PRICE, Number(e.target.value)))} style={{ flex: 1, padding: '10px 12px', background: 'rgba(255,255,255,.05)', border: '1px solid rgba(0,152,234,0.2)', borderRadius: 10, color: '#0098EA', fontSize: 15, fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, textAlign: 'center' as const, outline: 'none' }} />
           <button onClick={() => setPrice(p => +(p*1.1).toFixed(5))} style={{ width: 44, height: 44, borderRadius: 10, background: '#141018', border: '1px solid rgba(255,255,255,0.07)', color: '#EAE2CC', fontSize: 20, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
         </div>
         <div style={{ background: '#0D0D12', borderRadius: 12, padding: '10px 14px', marginBottom: 16 }}>
-          {[['Pay TON', `${totalTon.toFixed(4)} TON`], ['Receive бљ™', `${amount.toLocaleString()} бљ™`]].map(([l,v]) => (
+          {[['Pay TON', `${totalTon.toFixed(4)} TON`], ['Receive ᚙ', `${amount.toLocaleString()} ᚙ`]].map(([l,v]) => (
             <div key={l} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
               <span style={{ color: '#9A9490' }}>{l}</span>
               <span style={{ fontWeight: 700, color: '#0098EA', fontFamily: "'JetBrains Mono',monospace" }}>{v}</span>
@@ -431,7 +431,7 @@ const CreateBuyOrderModal: React.FC<{
           ))}
         </div>
         <button onClick={handleCreate} disabled={loading} style={{ width: '100%', padding: '14px', background: loading ? '#2A2F48' : 'rgba(0,152,234,0.2)', color: '#0098EA', border: '1px solid rgba(0,152,234,0.4)', borderRadius: 14, fontSize: 14, fontWeight: 800, cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
-          {loading ? 'Creating...' : 'рџ›’ Place BUY order'}
+          {loading ? 'Creating...' : 'Place BUY order'}
         </button>
       </div>
     </div>
@@ -456,12 +456,12 @@ const FillBuyOrderModal: React.FC<{
   const buyerWalletAddr = order.buyerWallet ?? order.sellerWallet;
 
   const handleFill = async () => {
-    if (!hasEnough) return showToast('Insufficient бљ™ to fill this order');
+    if (!hasEnough) return showToast('Insufficient ᚙ to fill this order');
     setStep('paying');
     try {
       // Buyer (BUY order creator) pays seller (us) via TonConnect
       const { txHash, boc } = await sendTonPayment({
-        toAddress: sellerWallet,        // бљ™ seller receives TON
+        toAddress: sellerWallet,        // ᚙ seller receives TON
         amount:    order.totalTon,
         comment:   `ChessCoin BUY Order ${order.id}`,
       });
@@ -479,15 +479,15 @@ const FillBuyOrderModal: React.FC<{
     <div onClick={e => e.target === e.currentTarget && onClose()} style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ width: '100%', maxWidth: 360, background: 'linear-gradient(180deg,#100C18,#0A080E)', border: '1px solid rgba(0,214,143,0.25)', borderRadius: 24, padding: 28, textAlign: 'center' }}>
         {step === 'confirm' && (<>
-          <div style={{ fontSize: 44, marginBottom: 12 }}>рџ“¤</div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: '#3DBA7A', marginBottom: 6 }}>Sell бљ™ to buyer</div>
-          <div style={{ fontSize: 24, fontWeight: 800, color: '#F0C85A', marginBottom: 4, fontFamily: "'JetBrains Mono',monospace" }}>{Number(orderCoins).toLocaleString()} бљ™</div>
+          <div style={{ fontSize: 44, marginBottom: 12 }}></div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: '#3DBA7A', marginBottom: 6 }}>Sell ᚙ to buyer</div>
+          <div style={{ fontSize: 24, fontWeight: 800, color: '#F0C85A', marginBottom: 4, fontFamily: "'JetBrains Mono',monospace" }}>{Number(orderCoins).toLocaleString()} ᚙ</div>
           <div style={{ fontSize: 13, color: '#9A9490', marginBottom: 16 }}>
             Buyer: {order.buyerName ?? 'Player'} · ELO {order.buyerElo ?? order.sellerElo}
           </div>
-          {!hasEnough && <div style={{ fontSize: 12, color: '#FF5B5B', marginBottom: 12, padding: '8px 12px', background: 'rgba(255,77,106,0.1)', borderRadius: 10 }}>вљ пёЏ Insufficient бљ™ balance</div>}
+          {!hasEnough && <div style={{ fontSize: 12, color: '#FF5B5B', marginBottom: 12, padding: '8px 12px', background: 'rgba(255,77,106,0.1)', borderRadius: 10 }}>вљ пёЏ Insufficient ᚙ balance</div>}
           <div style={{ background: '#0D0D12', borderRadius: 12, padding: '12px 14px', marginBottom: 20, textAlign: 'left' as const }}>
-            {[['Selling', `${Number(orderCoins).toLocaleString()} бљ™`], ['You receive', `${order.totalTon.toFixed(4)} TON`], ['Price', `${order.priceTon.toFixed(5)} TON/1M бљ™`]].map(([l,v]) => (
+            {[['Selling', `${Number(orderCoins).toLocaleString()} ᚙ`], ['You receive', `${order.totalTon.toFixed(4)} TON`], ['Price', `${order.priceTon.toFixed(5)} TON/1M ᚙ`]].map(([l,v]) => (
               <div key={l} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
                 <span style={{ color: '#9A9490' }}>{l}</span>
                 <span style={{ fontWeight: 700, color: '#EAE2CC', fontFamily: "'JetBrains Mono',monospace" }}>{v}</span>
@@ -502,7 +502,7 @@ const FillBuyOrderModal: React.FC<{
           </div>
         </>)}
         {step === 'paying' && (<><div style={{ fontSize: 44, marginBottom: 12 }}>вЏі</div><div style={{ fontSize: 14, color: '#EAE2CC' }}>{t.exchange.buyerPaying}</div></>)}
-        {step === 'verifying' && (<><div style={{ fontSize: 44, marginBottom: 12 }}>рџ”Ќ</div><div style={{ fontSize: 14, color: '#EAE2CC' }}>{t.exchange.verifying}...</div></>)}
+        {step === 'verifying' && (<><div style={{ fontSize: 44, marginBottom: 12 }}>Ќ</div><div style={{ fontSize: 14, color: '#EAE2CC' }}>{t.exchange.verifying}...</div></>)}
         {step === 'done' && (<><div style={{ fontSize: 56, marginBottom: 12 }}>вњ…</div><div style={{ fontSize: 15, fontWeight: 800, color: '#3DBA7A', marginBottom: 8 }}>{t.exchange.saleSuccess}</div><div style={{ fontSize: 12, color: '#9A9490', marginBottom: 16 }}>{t.exchange.transferred(Number(orderCoins).toLocaleString())}</div><button onClick={onClose} style={{ width: '100%', padding: '13px', background: 'rgba(0,214,143,0.12)', color: '#3DBA7A', border: '1px solid rgba(0,214,143,0.25)', borderRadius: 14, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.common.close}</button></>)}
         {step === 'error' && (<><div style={{ fontSize: 44, marginBottom: 12 }}>вљ пёЏ</div><div style={{ fontSize: 14, fontWeight: 800, color: '#FF5B5B', marginBottom: 8 }}>{t.common.error}</div><div style={{ fontSize: 12, color: '#9A9490', marginBottom: 16 }}>{errMsg}</div><div style={{ display: 'flex', gap: 10 }}><button onClick={onClose} style={{ flex: 1, padding: '12px', background: 'rgba(255,255,255,0.06)', color: '#9A9490', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.common.close}</button><button onClick={handleFill} style={{ flex: 1, padding: '12px', background: 'rgba(0,214,143,0.1)', color: '#3DBA7A', border: '1px solid rgba(0,214,143,0.2)', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.exchange.retry}</button></div></>)}
       </div>
@@ -612,7 +612,7 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
       <div style={{ margin: '0 18px 12px', background: '#141018', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '14px 16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
           <div>
-            <div style={{ fontSize: 10, color: '#5A5248', marginBottom: 4 }}>бљ™ / TON (per 1M бљ™)</div>
+            <div style={{ fontSize: 10, color: '#5A5248', marginBottom: 4 }}>ᚙ / TON (per 1M ᚙ)</div>
             {loadingPrice ? (
               <div style={{ fontSize: 24, fontWeight: 800, color: '#5A5248' }}>—</div>
             ) : (
@@ -659,16 +659,16 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
       {/* ── Action buttons ── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, margin: '0 18px 10px' }}>
         <button onClick={() => setShowCreate(true)} style={{ padding: '12px', background: 'rgba(0,214,143,0.12)', color: '#3DBA7A', border: '1px solid rgba(0,214,143,0.3)', borderRadius: 12, fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>
-          рџ“¤ Sell бљ™
+          Sell ᚙ
         </button>
         <button onClick={() => setShowCreateBuy(true)} style={{ padding: '12px', background: 'rgba(0,152,234,0.12)', color: '#0098EA', border: '1px solid rgba(0,152,234,0.3)', borderRadius: 12, fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>
-          рџ›’ Buy бљ™
+          Buy ᚙ
         </button>
       </div>
 
       {/* ── Order book tabs ── */}
       <div style={{ display: 'flex', margin: '0 18px 10px', background: '#141018', borderRadius: 10, padding: 3, gap: 2 }}>
-        {([['buy','рџ“‰ Selling'],['buybook','рџ“€ Buying'],['sell','рџ“‹ Mine'],['my','рџ“Љ History'],['top','рџЏ† Top']] as ['buy'|'buybook'|'sell'|'my'|'top', string][]).map(([v, l]) => (
+        {([['buy','Selling'],['buybook','Buying'],['sell','Mine'],['my','History'],['top',' Top']] as ['buy'|'buybook'|'sell'|'my'|'top', string][]).map(([v, l]) => (
           <button key={v} onClick={() => setView(v)} style={{ flex: 1, padding: '7px 2px', border: 'none', borderRadius: 8, fontFamily: 'inherit', fontSize: 10, fontWeight: 600, cursor: 'pointer', background: view === v ? 'rgba(255,255,255,.05)' : 'transparent', color: view === v ? '#EAE2CC' : '#9A9490' }}>{l}</button>
         ))}
       </div>
@@ -691,7 +691,7 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
           })()}
           {/* Order book header */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4, padding: '6px 10px', marginBottom: 4 }}>
-            {['Seller', 'Amount бљ™', 'Price TON'].map(h => (
+            {['Seller', 'Amount ᚙ', 'Price TON'].map(h => (
               <div key={h} style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.07em', color: '#5A5248', textTransform: 'uppercase' }}>{h}</div>
             ))}
           </div>
@@ -699,7 +699,7 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
             <div style={{ textAlign: 'center', padding: 32, color: '#5A5248' }}>Loading...</div>
           ) : orders.filter(o => o.status === 'OPEN' && !o.isOwn).length === 0 ? (
             <div style={{ textAlign: 'center', padding: 32 }}>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>рџ“­</div>
+              <div style={{ fontSize: 32, marginBottom: 8 }}></div>
               <div style={{ fontSize: 13, color: '#5A5248' }}>No sell orders yet</div>
               <div style={{ fontSize: 11, color: '#5A5248', marginTop: 4 }}>Be the first — place an order!</div>
             </div>
@@ -710,7 +710,7 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
                 <div style={{ fontSize: 10, color: '#5A5248', marginTop: 1 }}>ELO {order.sellerElo}</div>
               </div>
               <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, color: '#F0C85A' }}>
-                {fmtBalance(order.amountCoins)} бљ™
+                {fmtBalance(order.amountCoins)} ᚙ
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, color: '#0098EA' }}>{order.priceTon.toFixed(5)}</div>
@@ -726,13 +726,13 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
         <div style={{ padding: '0 18px' }}>
           {myOrders.filter(o => o.status === 'OPEN').length === 0 ? (
             <div style={{ textAlign: 'center', padding: 32 }}>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>рџ“¤</div>
+              <div style={{ fontSize: 32, marginBottom: 8 }}></div>
               <div style={{ fontSize: 13, color: '#5A5248' }}>You have no active orders</div>
             </div>
           ) : myOrders.filter(o => o.status === 'OPEN').map(order => (
             <div key={order.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', background: '#141018', border: '1px solid rgba(245,200,66,0.15)', borderRadius: 14, marginBottom: 8 }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: '#F0C85A', fontFamily: "'JetBrains Mono',monospace" }}>{fmtBalance(order.amountCoins)} бљ™</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#F0C85A', fontFamily: "'JetBrains Mono',monospace" }}>{fmtBalance(order.amountCoins)} ᚙ</div>
                 <div style={{ fontSize: 11, color: '#9A9490', marginTop: 2 }}>{order.priceTon.toFixed(5)} TON/1M · total {order.totalTon.toFixed(4)} TON</div>
               </div>
               <button onClick={() => handleCancelOrder(order.id)} style={{ padding: '7px 12px', background: 'rgba(255,77,106,0.1)', color: '#FF5B5B', border: '1px solid rgba(255,77,106,0.2)', borderRadius: 10, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -748,14 +748,14 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
         <div style={{ padding: '0 18px' }}>
           {myOrders.filter(o => o.status !== 'OPEN').length === 0 ? (
             <div style={{ textAlign: 'center', padding: 32 }}>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>рџ“Љ</div>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>Љ</div>
               <div style={{ fontSize: 13, color: '#5A5248' }}>History is empty</div>
             </div>
           ) : myOrders.filter(o => o.status !== 'OPEN').map(order => (
             <div key={order.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: '#141018', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 14, marginBottom: 8 }}>
               <div style={{ fontSize: 24 }}>{order.status === 'EXECUTED' ? 'вњ…' : 'вќЊ'}</div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#EAE2CC' }}>{fmtBalance(order.amountCoins)} бљ™</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#EAE2CC' }}>{fmtBalance(order.amountCoins)} ᚙ</div>
                 <div style={{ fontSize: 10, color: '#5A5248', marginTop: 2 }}>{order.status === 'EXECUTED' ? t.exchange.executed : t.exchange.cancelled} · {order.priceTon.toFixed(5)} TON/1M</div>
               </div>
               <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, color: order.status === 'EXECUTED' ? '#3DBA7A' : '#5A5248' }}>
@@ -771,7 +771,7 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
         <div style={{ padding: '0 18px' }}>
           {buyOrders.filter(o => !o.isOwn).length === 0 ? (
             <div style={{ textAlign: 'center', padding: 32 }}>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>рџ“­</div>
+              <div style={{ fontSize: 32, marginBottom: 8 }}></div>
               <div style={{ fontSize: 13, color: '#5A5248' }}>No buy orders</div>
               <div style={{ fontSize: 11, color: '#5A5248', marginTop: 4 }}>Create a BUY order — set price and amount</div>
             </div>
@@ -779,7 +779,7 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
             <>
               {/* Header */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4, padding: '6px 10px', marginBottom: 4 }}>
-                {['Buyer', 'Amount бљ™', 'Price TON'].map(h => (
+                {['Buyer', 'Amount ᚙ', 'Price TON'].map(h => (
                   <div key={h} style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.07em', color: '#5A5248', textTransform: 'uppercase' as const }}>{h}</div>
                 ))}
               </div>
@@ -790,7 +790,7 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
                     <div style={{ fontSize: 10, color: '#5A5248', marginTop: 1 }}>ELO {(order as BuyP2POrder).buyerElo ?? order.sellerElo}</div>
                   </div>
                   <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, color: '#3DBA7A' }}>
-                    {Number(BigInt(order.amountCoins)).toLocaleString()} бљ™
+                    {Number(BigInt(order.amountCoins)).toLocaleString()} ᚙ
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, color: '#3DBA7A' }}>{order.priceTon.toFixed(5)}</div>
@@ -837,13 +837,13 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
           {/* List */}
           {leaderboard.length === 0 ? (
             <div style={{ textAlign: 'center', padding: 32 }}>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>рџ“Љ</div>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>Љ</div>
               <div style={{ fontSize: 13, color: '#5A5248' }}>No data for this period</div>
             </div>
           ) : leaderboard.map((trader, i) => (
             <div key={trader.name + i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: '#141018', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 14, marginBottom: 6 }}>
               <div style={{ fontSize: i < 3 ? 22 : 14, fontWeight: 800, minWidth: 28, textAlign: 'center', color: i === 0 ? '#F0C85A' : i === 1 ? '#C0C0C0' : i === 2 ? '#CD7F32' : '#5A5248' }}>
-                {i === 0 ? 'рџҐ‡' : i === 1 ? 'рџҐ€' : i === 2 ? 'рџҐ‰' : `${i+1}`}
+                {i === 0 ? '1' : i === 1 ? '2' : i === 2 ? '3' : `${i+1}`}
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#EAE2CC' }}>{trader.name}</div>

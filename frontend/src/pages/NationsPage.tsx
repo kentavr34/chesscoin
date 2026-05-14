@@ -6,6 +6,8 @@ import { nationsApi, clanBattlesApi } from '@/api';
 import { fmtBalance } from '@/utils/format';
 import type { Nation, ClanWar, ClanMemberData, ClanBattle } from '@/types';
 import { useT } from '@/i18n/useT';
+import { CoinIcon } from '@/components/ui/CoinIcon';
+import { IcoCrown } from '@/components/icons/UiIcons';
 
 const showToast = (text: string, type: 'error' | 'info' = 'error') => {
   window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text, type } }));
@@ -127,8 +129,8 @@ export const NationsPage: React.FC = () => {
                   <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 22, fontWeight: 800, color: '#F0E8CC' }}>
                     {activeWar.attackerWins}:{activeWar.defenderWins}
                   </div>
-                  <div style={{ fontSize: 10, color: '#9A9490', marginTop: 2 }}>
-                    рџ’° {fmtBalance(activeWar.prize ?? '0')} бљ™ {t.nations.atStake}
+                  <div style={{ fontSize: 10, color: '#9A9490', marginTop: 2, display: 'inline-flex', alignItems: 'center', gap: 4, justifyContent: 'center' }}>
+                    <CoinIcon size={11} /> {fmtBalance(activeWar.prize ?? '0')} ᚙ {t.nations.atStake}
                   </div>
                 </div>
                 <span style={{ fontSize: 24 }}>{activeWar.defenderClan.flag}</span>
@@ -149,7 +151,7 @@ export const NationsPage: React.FC = () => {
                   <span style={{ fontSize: 22 }}>{ch.attackerClan.flag}</span>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: '#FF5B5B' }}>{t.nations.warChallenge}</div>
-                    <div style={{ fontSize: 11, color: '#9A9490' }}>{ch.attackerClan.name} · {t.nations.treasuryLabel} {fmtBalance(ch.attackerClan.treasury ?? '0')} бљ™</div>
+                    <div style={{ fontSize: 11, color: '#9A9490' }}>{ch.attackerClan.name} · {t.nations.treasuryLabel} {fmtBalance(ch.attackerClan.treasury ?? '0')} ᚙ</div>
                   </div>
                   <button onClick={() => handleAcceptWar(ch.id)} style={acceptWarBtn}>{t.nations.accept}</button>
                 </div>
@@ -205,8 +207,8 @@ export const NationsPage: React.FC = () => {
                   <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 24, fontWeight: 800, color: '#F0E8CC' }}>
                     {war.attackerWins}:{war.defenderWins}
                   </div>
-                  <div style={{ fontSize: 10, color: '#F0C85A', fontWeight: 700 }}>
-                    рџ’° {fmtBalance(war.prize ?? '0')} бљ™
+                  <div style={{ fontSize: 10, color: '#F0C85A', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    <CoinIcon size={11} /> {fmtBalance(war.prize ?? '0')} ᚙ
                   </div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
@@ -284,7 +286,7 @@ export const NationsPage: React.FC = () => {
                   </div>
                   <div style={{ textAlign: 'center', flexShrink: 0 }}>
                     <div style={{ fontSize: 11, color: '#9A9490', marginBottom: 4 }}>vs</div>
-                    <div style={{ fontSize: 10, color: '#F0C85A', fontWeight: 700 }}>рџ’° {fmtBalance(b.pool)} бљ™</div>
+                    <div style={{ fontSize: 10, color: '#F0C85A', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}><CoinIcon size={11} /> {fmtBalance(b.pool)} ᚙ</div>
                     <div style={{ fontSize: 10, color: '#5A5248', marginTop: 4 }}>
                       {b.activeGames}/{b.maxSimultaneous} {t.nations.games}
                     </div>
@@ -340,7 +342,7 @@ export const NationsPage: React.FC = () => {
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: '#F0E8CC' }}>{m.user?.firstName ?? t.nations.player}</div>
                     <div style={{ fontSize: 10, color: '#9A9490' }}>
-                      ELO {m.user?.elo ?? '?'} · {t.nations.contribution}: {fmtBalance(m.pendingContribution ?? '0')} бљ™
+                      ELO {m.user?.elo ?? '?'} · {t.nations.contribution}: {fmtBalance(m.pendingContribution ?? '0')} ᚙ
                     </div>
                   </div>
                   <button onClick={() => handleApprove(m.id, true)} style={approveBtn}>вњ“</button>
@@ -360,10 +362,10 @@ export const NationsPage: React.FC = () => {
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span style={{ fontSize: 13, fontWeight: 600, color: '#F0E8CC' }}>{m.user?.firstName ?? t.nations.player}</span>
-                  {m.role === 'COMMANDER' && <span style={{ fontSize: 10, color: '#F0C85A' }}>рџ‘‘</span>}
+                  {m.role === 'COMMANDER' && <span style={{ color: '#F0C85A', display: 'inline-flex', alignItems: 'center' }}><IcoCrown size={11} /></span>}
                 </div>
                 <div style={{ fontSize: 10, color: '#9A9490', marginTop: 2 }}>
-                  ELO {m.user?.elo ?? '?'} · {m.warWins}W/{m.warLosses}L · {t.nations.contribution} {fmtBalance(m.contribution ?? '0')} бљ™
+                  ELO {m.user?.elo ?? '?'} · {m.warWins}W/{m.warLosses}L · {t.nations.contribution} {fmtBalance(m.contribution ?? '0')} ᚙ
                 </div>
               </div>
               {isLeader && m.userId !== user?.id && !m.isPending && (
@@ -694,7 +696,7 @@ const JoinBattleModal: React.FC<{
           <div style={{ fontSize: 32, marginBottom: 4 }}>{myClan.flag} вљ”пёЏ</div>
           <div style={{ fontSize: 16, fontWeight: 700, color: '#7B61FF' }}>{t.nations.joinBattleTitle}</div>
           <div style={{ fontSize: 11, color: '#9A9490', marginTop: 4 }}>
-            {t.nations.pool}: {fmtBalance(battle.pool)} бљ™ · {battle._count?.contributions ?? 0} {t.nations.participants}
+            {t.nations.pool}: {fmtBalance(battle.pool)} ᚙ · {battle._count?.contributions ?? 0} {t.nations.participants}
           </div>
         </div>
         <div style={{ fontSize: 11, color: '#9A9490', marginBottom: 12 }}>
