@@ -693,7 +693,7 @@ const JoinBattleModal: React.FC<{
       <div style={modalStyle}>
         <div style={handleBar} />
         <div style={{ textAlign: 'center', marginBottom: 16 }}>
-          <div style={{ fontSize: 32, marginBottom: 4 }}>{myClan.flag} вљ”пёЏ</div>
+          <div style={{ fontSize: 32, marginBottom: 4 }}>{myClan.flag} </div>
           <div style={{ fontSize: 16, fontWeight: 700, color: '#7B61FF' }}>{t.nations.joinBattleTitle}</div>
           <div style={{ fontSize: 11, color: '#9A9490', marginTop: 4 }}>
             {t.nations.pool}: {fmtBalance(battle.pool)} ᚙ · {battle._count?.contributions ?? 0} {t.nations.participants}

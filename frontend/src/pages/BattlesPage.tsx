@@ -7,11 +7,9 @@ import { useUserStore } from '@/store/useUserStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { AttemptsModal } from '@/components/ui/AttemptsModal';
 import { getSocket } from '@/api/socket';
-import { profileApi } from '@/api';
 import { fmtBalance, fmtTime } from '@/utils/format';
 import { translations } from '@/i18n/translations';
 import { IcoDice, IcoKingWhite as IcoKingW, IcoKingBlack as IcoKingB } from '@/components/icons/ChessIcons';
-import { BattleHistoryCard, type BattleHistoryItem } from '@/components/battle/BattleHistoryCard';
 import { PgnReplayModal } from '@/components/profile/PgnReplayModal';
 import type { BattleLobbyItem, GameSession, UserPublic } from '@/types';
 import { useT } from '@/i18n/useT';
@@ -32,17 +30,15 @@ const donateToBattle = (sessionId: string, amount: string, cb: (ok: boolean) => 
   socket.emit('battle:donate', { sessionId, amount }, (res: Record<string,unknown>) => cb(res?.ok as boolean));
 };
 
-type Tab = 'challenge' | 'live' | 'history';
+type Tab = 'public' | 'private';
 
 export const BattlesPage: React.FC = () => {
   const t = useT();
   const navigate = useNavigate();
   const { battles, sessions, liveBattles, upsertSession } = useGameStore();
   const { user } = useUserStore();
-  const [tab, setTab] = useState<Tab>('challenge');
-  const [histGames, setHistGames] = useState<any[]>([]);
-  const [histLoading, setHistLoading] = useState(false);
-  const [histLoaded, setHistLoaded] = useState(false);
+  const [tab, setTab] = useState<Tab>('public');
+  // Историю партий показывает отдельная /battles/history (кнопка часов в шапке).
   const [showCreate, setShowCreate] = useState(false);
   const [showQuick, setShowQuick] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
@@ -141,16 +137,7 @@ export const BattlesPage: React.FC = () => {
     >?</button>
   );
 
-  // Загружаем историю при переключении на вкладку
-  useEffect(() => {
-    if (tab === 'history' && !histLoaded) {
-      setHistLoading(true);
-      profileApi.getGames(15, 0).then((r: any) => {
-        setHistGames(r.games ?? []);
-        setHistLoaded(true);
-      }).catch(() => {}).finally(() => setHistLoading(false));
-    }
-  }, [tab, histLoaded]);
+  // История партий — отдельная страница /battles/history (кнопка часов в шапке)
 
   return (
     <PageLayout title={t.battles.title} centered leftAction={leftAction} rightAction={rightAction}>
@@ -159,54 +146,26 @@ export const BattlesPage: React.FC = () => {
         <InfoPopup infoKey="battles" slides={[...t.battles.info] as Parameters<typeof InfoPopup>[0]["slides"]} onClose={info.close} />
       )}
 
-      {/* ── 3 вкладки: ВЫЗОВ / СРАЖЕНИЕ / ИСТОРИЯ ── */}
+      {/* ── 2 вкладки: ПУБЛИЧНЫЕ / ПРИВАТНЫЕ ── */}
       <div style={{ display: 'flex', gap: 6, margin: '4px .85rem 12px', padding: 0 }}>
         {([
           {
-            key: 'challenge' as Tab,
-            label: 'ВЫЗОВ',
-            count: waitingSessions.length + myPrivateSessions.length,
-            icon: (
-              <svg width="12" height="12" viewBox="0 0 20 20" fill="none">
-                <path d="M9 2v3M7.5 3.5h3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-                <rect x="7" y="5" width="6" height="2.5" rx=".8" fill="currentColor" opacity=".8"/>
-                <path d="M6 7.5h8l-1.5 9H7.5L6 7.5z" fill="currentColor" opacity=".6"/>
-                <path d="M4 16.5h12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-              </svg>
-            ),
+            key: 'public' as Tab,
+            label: 'ПУБЛИЧНЫЕ',
+            count: waitingSessions.length + liveSessions.length,
             color: '#F0C85A',
             glow: 'rgba(212,168,67,.15)',
             border: 'rgba(212,168,67,.35)',
           },
           {
-            key: 'live' as Tab,
-            label: 'СРАЖЕНИЕ',
-            count: liveSessions.length,
-            icon: (
-              <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'currentColor', display: 'inline-block', animation: tab === 'live' ? 'pulse 1.5s infinite' : 'none' }} />
-            ),
-            color: '#3DBA7A',
-            glow: 'rgba(61,186,122,.15)',
-            border: 'rgba(61,186,122,.35)',
+            key: 'private' as Tab,
+            label: 'ПРИВАТНЫЕ',
+            count: myPrivateSessions.length,
+            color: '#9B85FF',
+            glow: 'rgba(155,109,255,.15)',
+            border: 'rgba(155,109,255,.35)',
           },
-          {
-            key: 'history' as Tab,
-            label: 'ИСТОРИЯ',
-            count: 0,
-            icon: (
-              <svg width="11" height="11" viewBox="0 0 20 20" fill="none">
-                <rect x="3" y="4" width="14" height="13" rx="2" stroke="currentColor" strokeWidth="1.6"/>
-                <line x1="7" y1="2" x2="7" y2="6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-                <line x1="13" y1="2" x2="13" y2="6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-                <line x1="6" y1="10" x2="14" y2="10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-                <line x1="6" y1="13.5" x2="11" y2="13.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-              </svg>
-            ),
-            color: '#9A9490',
-            glow: 'rgba(154,148,144,.1)',
-            border: 'rgba(154,148,144,.25)',
-          },
-        ] as const).map(({ key, label, count, icon, color, glow, border }) => {
+        ] as const).map(({ key, label, count, color, glow, border }) => {
           const active = tab === key;
           return (
             <button
@@ -224,7 +183,6 @@ export const BattlesPage: React.FC = () => {
                 letterSpacing: '.05em',
               }}
             >
-              {icon}
               {label}
               {count > 0 && (
                 <span style={{
@@ -241,8 +199,8 @@ export const BattlesPage: React.FC = () => {
         })}
       </div>
 
-      {/* ════════ ВЫЗОВ (challenge) ════════ */}
-      {tab === 'challenge' && (
+      {/* ════════ ПУБЛИЧНЫЕ (live + waiting) ════════ */}
+      {tab === 'public' && (
         <>
           {/* LIVE — активные партии */}
           {liveSessions.length > 0 && (
@@ -321,30 +279,7 @@ export const BattlesPage: React.FC = () => {
             </>
           )}
 
-          {/* Приватные вызовы */}
-          {myPrivateSessions.length > 0 && (
-            <>
-              <div style={sectionLabel}>
-                <svg width="10" height="10" viewBox="0 0 20 20" fill="none" style={{ marginRight: 5 }}>
-                  <rect x="3" y="9" width="14" height="9" rx="2" stroke="currentColor" strokeWidth="1.8"/>
-                  <path d="M6.5 9V6.5a3.5 3.5 0 0 1 7 0V9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-                </svg>
-                МОИ ПРИВАТНЫЕ
-                <span style={{ marginLeft: 6, background: 'rgba(212,168,67,.2)', color: '#F0C85A', fontSize: '.6rem', fontWeight: 800, padding: '1px 6px', borderRadius: 8 }}>
-                  {myPrivateSessions.length}
-                </span>
-              </div>
-              {myPrivateSessions.map((s) => {
-                const shareText = `Вызов на шахматный батл! Ставка: ${fmtBalance(s.bet ?? '0')} монет`;
-                const shareUrl  = `https://t.me/share/url?url=https://t.me/ChessCoinBot/app?startapp=battle_${s.id}&text=${encodeURIComponent(shareText)}`;
-                return (
-                  <PrivateBattleCard key={s.id} session={s} onShare={() => window.open(shareUrl, '_blank')} onCancel={() => handleCancel(s.id)} onProfile={(id) => navigate('/profile/' + id)} />
-                );
-              })}
-            </>
-          )}
-
-          {waitingSessions.length === 0 && myPrivateSessions.length === 0 && (
+          {waitingSessions.length === 0 && liveSessions.length === 0 && (
             <div style={{
               textAlign: 'center', padding: '56px 20px',
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
@@ -355,122 +290,43 @@ export const BattlesPage: React.FC = () => {
                 <path d="M6 7.5h8l-1.5 9H7.5L6 7.5z" fill="#D4A843" opacity=".6"/>
                 <path d="M4 16.5h12" stroke="#D4A843" strokeWidth="1.4" strokeLinecap="round"/>
               </svg>
-              <div style={{ fontSize: '.85rem', color: '#7A7875', fontWeight: 600 }}>Нет активных вызовов</div>
+              <div style={{ fontSize: '.85rem', color: '#7A7875', fontWeight: 600 }}>Нет публичных вызовов</div>
               <div style={{ fontSize: '.72rem', color: '#3E3A35' }}>Создай батл и бросай вызов!</div>
             </div>
           )}
         </>
       )}
 
-      {/* ════════ СРАЖЕНИЕ (live) ════════ */}
-      {tab === 'live' && (
+      {/* ════════ ПРИВАТНЫЕ (мои приватные ожидающие) ════════ */}
+      {tab === 'private' && (
         <>
-          {liveSessions.length === 0 && (
+          {myPrivateSessions.length === 0 ? (
             <div style={{
               textAlign: 'center', padding: '56px 20px',
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
             }}>
-              <span style={{ fontSize: '2.4rem', opacity: 0.5 }}>♟</span>
-              <div style={{ fontSize: '.85rem', color: '#7A7875', fontWeight: 600 }}>Нет активных партий</div>
-              <div style={{ fontSize: '.72rem', color: '#3E3A35' }}>Все сражаются в другое время</div>
-            </div>
-          )}
-          {liveSessions.map((s) => {
-            const amParticipant = s.sides.some((sd) => sd.playerId === user?.id);
-            return (
-              <BattleLiveCard
-                key={s.id}
-                session={s}
-                onNavigate={(id) => navigate('/game/' + id + (amParticipant ? '' : '?spectate=1'))}
-                onProfile={(id) => navigate('/profile/' + id)}
-                isSpectator={!amParticipant}
-              />
-            );
-          })}
-        </>
-      )}
-
-      {/* ════════ ИСТОРИЯ (history) ════════ */}
-      {tab === 'history' && (
-        <>
-          {histLoading && (
-            <div style={{ textAlign: 'center', padding: '40px 20px', color: '#7A7875', fontSize: '.85rem' }}>
-              Загрузка...
-            </div>
-          )}
-          {!histLoading && histGames.length === 0 && (
-            <div style={{
-              textAlign: 'center', padding: '56px 20px',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
-            }}>
-              <svg width="44" height="44" viewBox="0 0 40 40" fill="none" style={{ opacity: 0.3 }}>
-                <rect x="8" y="6" width="24" height="28" rx="4" stroke="#D4A843" strokeWidth="1.5" fill="none"/>
-                <line x1="15" y1="13" x2="27" y2="13" stroke="#D4A843" strokeWidth="1.5" strokeLinecap="round"/>
-                <line x1="15" y1="18" x2="27" y2="18" stroke="#D4A843" strokeWidth="1.5" strokeLinecap="round"/>
+              <svg width="44" height="44" viewBox="0 0 20 20" fill="none" style={{ opacity: 0.4 }}>
+                <rect x="3" y="9" width="14" height="9" rx="2" stroke="#9B85FF" strokeWidth="1.8"/>
+                <path d="M6.5 9V6.5a3.5 3.5 0 0 1 7 0V9" stroke="#9B85FF" strokeWidth="1.8" strokeLinecap="round"/>
               </svg>
-              <div style={{ fontSize: '.85rem', color: '#7A7875', fontWeight: 600 }}>История пуста</div>
-              <div style={{ fontSize: '.72rem', color: '#3E3A35' }}>Сыграй первый батл!</div>
+              <div style={{ fontSize: '.85rem', color: '#7A7875', fontWeight: 600 }}>Нет приватных вызовов</div>
+              <div style={{ fontSize: '.72rem', color: '#3E3A35' }}>Создай приватный батл и отправь другу</div>
             </div>
-          )}
-          {histGames.filter((g: any) => !g.hasBot).map((g: any) => (
-            <BattleHistoryCard
-              key={g.sessionId}
-              game={g as BattleHistoryItem}
-              me={(user as UserPublic | null) ?? null}
-              onView={(game) => {
-                if (!game.pgn) return;
-                setReplayData({
-                  pgn: game.pgn,
-                  title: game.opponent?.firstName ? `vs ${game.opponent.firstName}` : 'Партия',
-                  sessionId: game.sessionId,
-                  whitePlayer: game.isWhite ? (user as UserPublic | null) : (game.opponent ?? null),
-                  blackPlayer: game.isWhite ? (game.opponent ?? null) : (user as UserPublic | null),
-                });
-              }}
-            />
-          ))}
-          {histGames.length > 0 && (
-            <button
-              onClick={() => navigate('/battles/history')}
-              style={{
-                width: 'calc(100% - 1.7rem)', margin: '8px .85rem 0',
-                padding: '12px', borderRadius: 12,
-                background: 'rgba(255,255,255,.04)', border: '.5px solid rgba(255,255,255,.1)',
-                color: '#9A9490', fontSize: '.8rem', fontWeight: 700,
-                cursor: 'pointer', fontFamily: 'inherit',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-              }}
-            >
-              <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
-                <rect x="3" y="4" width="14" height="13" rx="2" stroke="currentColor" strokeWidth="1.6"/>
-                <line x1="7" y1="2" x2="7" y2="6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-                <line x1="13" y1="2" x2="13" y2="6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-                <line x1="6" y1="10" x2="14" y2="10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-              </svg>
-              Смотреть всю историю
-            </button>
+          ) : (
+            myPrivateSessions.map((s) => {
+              const shareText = `Вызов на шахматный батл! Ставка: ${fmtBalance(s.bet ?? '0')} монет`;
+              const shareUrl  = `https://t.me/share/url?url=https://t.me/ChessCoinBot/app?startapp=battle_${s.id}&text=${encodeURIComponent(shareText)}`;
+              return (
+                <PrivateBattleCard key={s.id} session={s} onShare={() => window.open(shareUrl, '_blank')} onCancel={() => handleCancel(s.id)} onProfile={(id) => navigate('/profile/' + id)} />
+              );
+            })
           )}
         </>
       )}
 
-      {/* FAB — быстрая игра (автоподбор соперника) */}
-      <button
-        onClick={() => setShowQuick(true)}
-        title="Быстрая игра — найти соперника"
-        style={{
-          position: 'fixed',
-          bottom: 'max(98px, calc(88px + env(safe-area-inset-bottom, 14px)))',
-          right: 86, width: 50, height: 50,
-          borderRadius: '50%',
-          background: 'linear-gradient(135deg,#4A9EFF,#82CFFF)',
-          color: '#06121F',
-          fontSize: 22, fontWeight: 800,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          cursor: 'pointer', border: 'none', zIndex: 49,
-          boxShadow: '0 4px 24px rgba(74,158,255,.45)',
-          fontFamily: 'inherit',
-        }}
-      >⚡</button>
+      {/* История партий — кнопка часов в шапке ведёт на /battles/history */}
+
+      {/* FAB быстрой игры удалён по требованию Кенана 2026-05-15 */}
 
       {/* FAB — создать батл */}
       <button
@@ -1241,25 +1097,7 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
               )}
             </div>
           </div>
-          {canCreate && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 5, marginTop: 7 }}>
-              {QUICK_BETS.map((v) => {
-                const capped = Math.min(v, maxBet);
-                const active = bet === v && v <= maxBet;
-                const unavail = v > maxBet;
-                return (
-                  <button key={v} onClick={() => setBet(capped)} style={{
-                    padding: '6px 4px', borderRadius: 9,
-                    fontFamily: 'Inter, sans-serif', fontSize: '.68rem', fontWeight: 700,
-                    cursor: unavail ? 'default' : 'pointer',
-                    background: active ? 'rgba(212,168,67,.15)' : 'rgba(255,255,255,.04)',
-                    color: unavail ? '#2E2820' : active ? '#F0C85A' : '#7A7875',
-                    border: active ? '.5px solid rgba(212,168,67,.35)' : '.5px solid rgba(255,255,255,.07)',
-                  }}>{fmtBalance(v)}</button>
-                );
-              })}
-            </div>
-          )}
+          {/* Кенан 2026-05-15: убрать quick-bets — мешают */}
         </div>
 
         {/* ── Публичный / Приватный ── */}

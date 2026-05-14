@@ -208,6 +208,19 @@ export const IcoHandshake: React.FC<Props> = ({ size = 14, color = 'currentColor
   <path d="M2 9l3-3 2 1 2-1 2 1 2-1 3 3-3 3-2-1-2 1-2-1-2 1-3-3z" stroke={color} strokeWidth="1.3" fill="none" strokeLinejoin="round"/>
 ));
 
+// Шестерёнка / настройки (⚙️)
+export const IcoSettings: React.FC<Props> = ({ size = 16, color = 'currentColor' }) => baseSvg(size, '0 0 18 18', (
+  <>
+    <circle cx="9" cy="9" r="2.5" stroke={color} strokeWidth="1.3"/>
+    <path d="M9 1.5v2.5M9 14v2.5M1.5 9h2.5M14 9h2.5M3.6 3.6l1.8 1.8M12.6 12.6l1.8 1.8M3.6 14.4l1.8-1.8M12.6 5.4l1.8-1.8" stroke={color} strokeWidth="1.3" strokeLinecap="round"/>
+  </>
+));
+
+// Молния (⚡)
+export const IcoBolt: React.FC<Props> = ({ size = 14, color = 'currentColor' }) => baseSvg(size, '0 0 18 18', (
+  <path d="M11 2L4 10h4l-1 6 7-8h-4l1-6z" fill={color} stroke={color} strokeWidth=".8" strokeLinejoin="round"/>
+));
+
 // Геймпад (🎮)
 export const IcoGamepad: React.FC<Props> = ({ size = 14, color = 'currentColor' }) => baseSvg(size, '0 0 18 18', (
   <>

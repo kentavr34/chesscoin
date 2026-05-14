@@ -5,7 +5,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { AvatarCropModal } from '@/components/ui/AvatarCropModal';
 import { CountryFlag } from '@/components/ui/CountryFlag';
 import { CoinIcon } from '@/components/ui/CoinIcon';
-import { IcoCrown, IcoRobot, IcoUsers, IcoShop, IcoCamera, IcoWallet, IcoMedal, IcoArrowUp, IcoArrowDown, IcoBriefcase, IcoMoneyFly, IcoTon, IcoUnlock, IcoLock, IcoGift, IcoSearch, IcoStats, IcoExchange, IcoCart, IcoPuzzle, IcoHandshake, IcoGamepad, IcoUpload, IcoGlobe } from '@/components/icons/UiIcons';
+import { IcoCrown, IcoRobot, IcoUsers, IcoShop, IcoCamera, IcoMedal, IcoArrowUp, IcoArrowDown, IcoBriefcase, IcoMoneyFly, IcoTon, IcoUnlock, IcoLock, IcoGift, IcoExchange, IcoCart, IcoPuzzle, IcoHandshake, IcoGamepad, IcoUpload, IcoGlobe, IcoSettings } from '@/components/icons/UiIcons';
 import { IcoSwords, IcoTrophy, IcoFlag } from '@/components/icons/TournamentIcons';
 import { useUserStore } from '@/store/useUserStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
@@ -196,7 +196,7 @@ export const ProfilePage: React.FC = () => {
   ];
 
   const rightAction = isOwnProfile ? (
-    <button onClick={() => setShowSettings(true)} style={tbaStyle}>вљ™</button>
+    <button onClick={() => setShowSettings(true)} style={tbaStyle}><IcoSettings size={16} /></button>
   ) : (
     <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#5A8AB0', letterSpacing: '.08em', padding: '3px 8px', background: 'rgba(74,158,255,.08)', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 6 }}>
       ПРОСМОТР
@@ -299,8 +299,8 @@ export const ProfilePage: React.FC = () => {
         <div style={{ marginTop: 3, textAlign: 'center', fontSize: '.72rem', color: '#5A5248' }}>@{user.username ?? 'unknown'}</div>
         {/* 2.3 Кнопка "Сразиться" на чужом профиле */}
         {!isOwnProfile && (
-          <button onClick={() => navigate('/battles', { state: { challengeUserId: viewedUserId } })} style={{ marginTop: 10, padding: '10px 20px', background: 'linear-gradient(135deg,#2A1E08,#4A3810)', border: '.5px solid rgba(212,168,67,.42)', borderRadius: 12, color: '#F0C85A', fontSize: '.85rem', fontWeight: 900, cursor: 'pointer', fontFamily: 'inherit' }}>
-            вљ”пёЏ {t.profile.challengeBtn ?? 'Challenge'}
+          <button onClick={() => navigate('/battles', { state: { challengeUserId: viewedUserId } })} style={{ marginTop: 10, padding: '10px 20px', background: 'linear-gradient(135deg,#2A1E08,#4A3810)', border: '.5px solid rgba(212,168,67,.42)', borderRadius: 12, color: '#F0C85A', fontSize: '.85rem', fontWeight: 900, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <IcoSwords size={16} /> {t.profile.challengeBtn ?? 'Challenge'}
           </button>
         )}
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8, justifyContent: 'center' }}>
@@ -872,7 +872,7 @@ export const ProfilePage: React.FC = () => {
         </>
       )}
 
-      {/* SettingsModal — открывается по вљ™ в топбаре */}
+      {/* SettingsModal — открывается по шестерёнке в топбаре */}
       {showSettings && (
         <div
           onClick={(e) => e.target === e.currentTarget && setShowSettings(false)}
@@ -881,7 +881,7 @@ export const ProfilePage: React.FC = () => {
           <div style={{ width: '100%', maxWidth: 480, background: 'linear-gradient(180deg,#141018,#0F0E18)', border: '.5px solid rgba(74,158,255,.18)', borderRadius: '24px 24px 0 0', padding: '20px 18px', paddingBottom: 'max(20px, env(safe-area-inset-bottom, 20px))' }}>
             <div style={{ width: 36, height: 4, background: 'rgba(255,255,255,.08)', borderRadius: 2, margin: '0 auto 18px' }} />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <span style={{ fontSize: '1rem', fontWeight: 900, color: '#EAE2CC' }}>вљ™ {t.profile.settings.title}</span>
+              <span style={{ fontSize: '1rem', fontWeight: 900, color: '#EAE2CC', display: 'inline-flex', alignItems: 'center', gap: 8 }}><IcoSettings size={16} /> {t.profile.settings.title}</span>
               <button onClick={() => setShowSettings(false)} style={{ width: 36, height: 36, borderRadius: 9, background: 'rgba(255,255,255,.05)', border: '.5px solid rgba(255,255,255,.09)', color: '#7A7875', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>вњ•</button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
