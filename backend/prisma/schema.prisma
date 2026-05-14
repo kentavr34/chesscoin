@@ -4,8 +4,12 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // DIRECT_URL — обход pgbouncer для миграций (advisory locks работают только
+  // на session-pooling; pgbouncer transaction-mode роняет prisma migrate deploy
+  // на таймауте pg_advisory_lock).
+  directUrl = env("DIRECT_URL")
 }
 
 // ─────────────────────────────────────────

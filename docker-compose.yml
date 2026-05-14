@@ -135,6 +135,9 @@ services:
       RUN_CRONS: "true"
       SERVER_PORT: 3000
       DATABASE_URL: postgresql://chesscoin:${POSTGRES_PASSWORD}@pgbouncer:5432/chesscoin?connection_limit=10&pool_timeout=10
+      # Прямое подключение к postgres минуя pgbouncer — для prisma migrate
+      # (advisory locks не работают через transaction-pool).
+      DIRECT_URL: postgresql://chesscoin:${POSTGRES_PASSWORD}@postgres:5432/chesscoin
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD}

@@ -131,15 +131,41 @@
 
 ---
 
+### 2026-05-15 · § 2 A.3 + A.6 · WarsPage: центральный confirm + 9 эмодзи (commit `88d3f14`)
+- Сделано:
+  - `showLeaveConfirm` bottom-sheet (overlayStyle с `alignItems: flex-end`)
+    выброшен. Логика `handleLeave` теперь сама вызывает `pageConfirm({...})`
+    через `useConfirm()` — заголовок, описание, danger-кнопка по центру.
+  - Эмодзи: ⚔️ (×2 заголовка) → `IcoSwords`; 🏴 fallback флага → `CountryFlag`;
+    👁 spectate → новый `IcoEye`; 💾 save → `IcoSave`; 🔍 в placeholder поиска
+    → абсолютный `IcoSearch` слева от input; ⏱ перед таймером (×2) удалён;
+    🕊️ (нет войн) → `IcoHandshake`; 📜 (история пуста) → `IcoStats`;
+    🏆 (победитель ×2) → `IcoTrophy`; 🚪 (выход в шапке) → текст
+    `t.wars.btnLeave`.
+- Проверка:
+  - `grep` по emoji-диапазону: остались только `✕` и `✓` (unicode-крест/чек,
+    не emoji-блоки) — это допустимо.
+  - Деплой: `Container chesscoin_frontend Started`. Bundle `index-yj7zQNaj.js`
+    (новый хеш — JSX собрался).
+- Решение: ✅ закрыто оба пункта (§ A.3 центральный confirm + § A.6 эмодзи).
+- 🟩 ШАБЛОН: «bottom-sheet confirm → центральный confirm» — однострочная
+  замена `setShow…(true)` на `await pageConfirm({title, message, okLabel,
+  cancelLabel, danger: true})`. Удаляется ~30 строк inline-JSX модала.
+  Использовать тот же подход для всех остальных подтверждений в проекте.
+
+---
+
 ## Очередь следующих шагов (по § 2 MASTER_PLAN)
 
-1. **§ 2 A.3 проверка** — `showLeaveConfirm` в WarsPage (выход из страны) —
-   ещё bottom-sheet или уже centered?
-2. **§ 2 C.4** — i18n WarsPage / TournamentsPage: убрать русский хардкод,
-   там где должен быть `t.wars.*` / `t.tournaments.*`.
-3. **reset-safe TransactionType** — оформить идемпотентную Prisma-миграцию
+1. **reset-safe TransactionType** — оформить идемпотентную Prisma-миграцию
    `<date>_transaction_type_sync` с `ALTER TYPE ADD VALUE IF NOT EXISTS` × 5,
    чтобы hard-reboot prod не восстановил неполный enum.
+2. **§ 2 C.4** — i18n WarsPage / TournamentsPage: убрать русский хардкод,
+   там где должен быть `t.wars.*` / `t.tournaments.*`.
+3. **§ 2 B.5** — Социальные таски с бонусами 3K/5K/10K/20K/50K/100K
+   за 3/5/10/20/50/100 рефералов.
+4. **§ 2 A.1** — Splash иконка коня без синего фона (Кенан ругал,
+   что вернулась после фикса useAuth).
 
 > Правило: один пункт = одна запись в журнале сразу после деплоя + визуальной
 > проверки. Если шаблон удачный — `🟩 ШАБЛОН` с инструкцией «как повторить».

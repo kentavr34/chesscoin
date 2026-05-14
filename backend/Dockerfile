@@ -32,4 +32,8 @@ COPY tsconfig.json ./
 
 EXPOSE 3000
 
-CMD ["node", "dist/index.js"]
+# Запуск: сначала применяем все pending Prisma-миграции (идемпотентно — все наши
+# миграции с ADD VALUE / IF NOT EXISTS / DO-EXCEPTION duplicate_object). Если
+# база уже актуальна — `migrate deploy` молча выйдет. Это делает старт
+# reset-safe: hard reboot / новый контейнер не оставит схему отстающей от кода.
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
