@@ -1,4 +1,5 @@
 import { useT } from '@/i18n/useT';
+import { CountryFlag } from '@/components/ui/CountryFlag';
 /**
  * BattleCard.tsx
  * W4/W6: Единая карточка партии — используется везде:
@@ -21,7 +22,8 @@ interface BattleCardPlayer {
   username?: string;
   avatar?: string | null;
   avatarGradient?: string;
-  countryFlag?: string;
+  countryFlag?: string;     // legacy emoji-flag (deprecated — игнорируется)
+  countryCode?: string;     // ISO-2 код, для <CountryFlag />
   elo?: number;
   league?: import('@/types').League;
 }
@@ -88,7 +90,7 @@ export const BattleCard: React.FC<BattleCardProps> = React.memo(({
           style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--gap-xs)', cursor: player1?.id ? 'pointer' : 'default', width: 'var(--battle-card-player-width)', flexShrink: 0 }}
         >
           <Avatar user={player1 as unknown as import('@/types').UserPublic} size="s" />
-          {player1?.countryFlag && <span style={{ fontSize: 'var(--battle-card-flag-size)' }}>{player1.countryFlag}</span>}
+          {player1?.countryCode && <CountryFlag code={player1.countryCode} size={14} />}
           <div style={{ fontSize: 'var(--battle-card-name-size)', color: p1Color, fontWeight: 700, textAlign: 'center', maxWidth: 'var(--battle-card-player-width)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {player1?.firstName ?? '?'}
           </div>
@@ -136,7 +138,7 @@ export const BattleCard: React.FC<BattleCardProps> = React.memo(({
           style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--gap-xs)', cursor: player2?.id ? 'pointer' : 'default', width: 'var(--battle-card-player-width)', flexShrink: 0 }}
         >
           <Avatar user={player2 as unknown as import('@/types').UserPublic} size="s" />
-          {player2?.countryFlag && <span style={{ fontSize: 'var(--battle-card-flag-size)' }}>{player2.countryFlag}</span>}
+          {player2?.countryCode && <CountryFlag code={player2.countryCode} size={14} />}
           <div style={{ fontSize: 'var(--battle-card-name-size)', color: p2Color, fontWeight: 700, textAlign: 'center', maxWidth: 'var(--battle-card-player-width)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {player2?.firstName ?? '?'}
           </div>

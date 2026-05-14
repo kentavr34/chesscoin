@@ -3,6 +3,7 @@ import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { PageLayout, useInfoPopup, InfoPopup } from '@/components/layout/PageLayout';
 import { Avatar } from '@/components/ui/Avatar';
 import { AvatarCropModal } from '@/components/ui/AvatarCropModal';
+import { CountryFlag } from '@/components/ui/CountryFlag';
 import { useUserStore } from '@/store/useUserStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { useT } from '@/i18n/useT';
@@ -287,8 +288,8 @@ export const ProfilePage: React.FC = () => {
         </div>
         <div style={{ textAlign: 'center', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
           {/* 2.1 Флаг страны рядом с именем */}
-          {user?.countryMember?.country?.flag && (
-            <span style={{ fontSize: 20 }}>{user?.countryMember.country.flag}</span>
+          {user?.countryMember?.country?.code && (
+            <CountryFlag code={user.countryMember.country.code} size={22} />
           )}
           <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#EAE2CC' }}>{user.firstName} {user.lastName ?? ''}</span>
         </div>
@@ -865,8 +866,9 @@ export const ProfilePage: React.FC = () => {
                 <span style={{ fontSize: '.8rem', fontWeight: 700, color: '#EAE2CC' }}>{t.profile.settings.language}</span>
                 <div style={{ display: 'flex', gap: 6 }}>
                   {(['en', 'ru'] as Lang[]).map((l) => (
-                    <button key={l} onClick={() => setLang(l)} style={{ padding: '5px 12px', background: lang === l ? 'rgba(74,158,255,.18)' : 'rgba(255,255,255,.04)', color: lang === l ? '#82CFFF' : '#5A5248', border: lang === l ? '.5px solid rgba(74,158,255,.3)' : '.5px solid rgba(255,255,255,.07)', borderRadius: 7, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-                      {l === 'en' ? 'рџ‡¬рџ‡§ EN' : 'рџ‡·рџ‡є RU'}
+                    <button key={l} onClick={() => setLang(l)} style={{ padding: '5px 12px', background: lang === l ? 'rgba(74,158,255,.18)' : 'rgba(255,255,255,.04)', color: lang === l ? '#82CFFF' : '#5A5248', border: lang === l ? '.5px solid rgba(74,158,255,.3)' : '.5px solid rgba(255,255,255,.07)', borderRadius: 7, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                      <CountryFlag code={l === 'en' ? 'GB' : 'RU'} size={14} />
+                      {l === 'en' ? 'EN' : 'RU'}
                     </button>
                   ))}
                 </div>

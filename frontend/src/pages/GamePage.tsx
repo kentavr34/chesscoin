@@ -178,12 +178,13 @@ const BoardKingIcon: React.FC<{ isWhite: boolean; size?: number }> = ({ isWhite,
   </div>
 );
 
-// Флаг страны: 'RU' → 'рџ‡·рџ‡є', иначе null
+// Флаг страны: больше НЕ возвращаем regional-indicator emoji (Telegram WebApp
+// их не рендерит на mobile). Используем компонент <CountryFlag code="RU" />
+// напрямую где нужно. Эта функция оставлена для обратной совместимости —
+// возвращает просто uppercase код, чтобы старые места не падали.
 const flagEmoji = (code?: string | null): string | null => {
   if (!code || code.length !== 2) return null;
-  const a = code.toUpperCase().charCodeAt(0) + 0x1F1A5;
-  const b = code.toUpperCase().charCodeAt(1) + 0x1F1A5;
-  return String.fromCodePoint(a, b);
+  return code.toUpperCase();
 };
 
 // ── Панель игрока (по референсу) ──────────────────────────────────────────────

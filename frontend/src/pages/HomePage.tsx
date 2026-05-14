@@ -6,6 +6,7 @@ import { getSocket } from '@/api/socket';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { JarvisPlayModal } from '@/components/ui/JarvisPlayModal';
 import { AttemptsModal } from '@/components/ui/AttemptsModal';
+import { CountryFlag } from '@/components/ui/CountryFlag';
 import { ActiveSessionsModal } from '@/components/ui/ActiveSessionsModal';
 import { type JarvisLevel } from '@/components/ui/JarvisModal';
 import { useT } from '@/i18n/useT';
@@ -207,7 +208,7 @@ export const HomePage: React.FC = () => {
   const attempts = user.attempts ?? 3;
   const maxAttempts = user.maxAttempts ?? 3;
   const initial = user.firstName?.[0]?.toUpperCase();
-  const countryFlag = user.countryMember?.country?.flag;
+  const countryCode = user.countryMember?.country?.code;
 
   const blkScale = (key: string) => pressedBlk === key ? 'scale(.94)' : 'scale(1)';
 
@@ -341,8 +342,8 @@ export const HomePage: React.FC = () => {
                 }}>
                   {displayName}
                 </div>
-                {countryFlag && (
-                  <span style={{ fontSize: '.9rem', lineHeight: 1, flexShrink: 0 }}>{countryFlag}</span>
+                {countryCode && (
+                  <CountryFlag code={countryCode} size={18} />
                 )}
               </div>
               {/* ELO — жёлтый, +3 единицы */}

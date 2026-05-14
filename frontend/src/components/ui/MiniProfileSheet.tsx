@@ -7,9 +7,18 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar } from '@/components/ui/Avatar';
+import { CountryFlag } from '@/components/ui/CountryFlag';
 import { profileApi } from '@/api';
 import { fmtBalance } from '@/utils/format';
 import { useT } from '@/i18n/useT';
+
+// Корона победителя месяца — SVG вместо эмодзи 👑
+const IcoCrownGold: React.FC<{ size?: number }> = ({ size = 14 }) => (
+  <svg width={size} height={size} viewBox="0 0 18 18" fill="none" aria-label="Monthly Champion">
+    <path d="M3 6l3 3 3-5 3 5 3-3v7H3V6z" fill="#F0C85A" stroke="#A07830" strokeWidth="1" strokeLinejoin="round"/>
+    <line x1="3" y1="14" x2="15" y2="14" stroke="#A07830" strokeWidth="1.2" strokeLinecap="round"/>
+  </svg>
+);
 
 interface Props {
   userId: string;
@@ -85,9 +94,9 @@ export const MiniProfileSheet: React.FC<Props> = ({ userId, onClose }) => {
                   <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>
                     {user.firstName} {user.lastName ?? ''}
                   </span>
-                  {user.isMonthlyChampion && <span title="Monthly Champion">👑</span>}
-                  {user.countryMember?.country?.flag && (
-                    <span style={{ fontSize: 16 }}>{user.countryMember.country.flag}</span>
+                  {user.isMonthlyChampion && <IcoCrownGold />}
+                  {user.countryMember?.country?.code && (
+                    <CountryFlag code={user.countryMember.country.code} size={16} />
                   )}
                 </div>
                 {user.username && (
