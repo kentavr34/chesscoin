@@ -5,7 +5,7 @@ import { useT } from '@/i18n/useT';
 
 // ── InfoPopup ─────────────────────────────────────────────────────────────────
 // Показывается при первом входе на страницу (один раз, затем сохраняется флаг)
-interface InfoSlide { icon: string; title: string; desc: string; }
+interface InfoSlide { icon: React.ReactNode; title: string; desc: string; }
 
 interface InfoPopupProps {
   infoKey: string;                // ключ для localStorage, напр. 'battles' или 'wars'

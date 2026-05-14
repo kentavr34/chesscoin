@@ -6,6 +6,7 @@ import React, { useRef, useEffect } from 'react';
 import { useT } from '@/i18n/useT';
 import { fmtBalance } from '@/utils/format';
 import type { ShopItem } from '@/types';
+import { IcoBolt, IcoCamera, IcoGamepad, IcoMedal, IcoSettings, IcoUsers } from '@/components/icons/UiIcons';
 
 export const RARITY_COLOR: Record<string, string> = {
   COMMON:    'var(--color-text-secondary, #8B92A8)',
@@ -115,12 +116,14 @@ export const ItemCard: React.FC<ItemCardProps> = ({ item, loading, highlighted, 
     if (item.type === 'BOARD_SKIN') { const c = BOARD_KNOWN[item.name] ?? fallbackBoardColors; return <BoardPreview light={c[0]} dark={c[1]} />; }
     if (item.type === 'PIECE_SKIN') return <PiecePreview name={item.name} />;
     if (item.type === 'PIECE_SET')  return <PieceSetPreview name={item.name} />;
-    if (item.type === 'AVATAR_FRAME') return <span style={{ fontSize: 36, opacity: 0.6 }}>🖼</span>;
-    if (item.type === 'MOVE_ANIMATION') return <span style={{ fontSize: 36, opacity: 0.6 }}>✨</span>;
-    if (item.type === 'WIN_ANIMATION') return <span style={{ fontSize: 36, opacity: 0.6 }}>🎉</span>;
-    if (item.type === 'CAPTURE_EFFECT') return <span style={{ fontSize: 36, opacity: 0.6 }}>💥</span>;
-    if (item.type === 'SPECIAL_MOVE') return <span style={{ fontSize: 36, opacity: 0.6 }}>⚡</span>;
-    if (item.type === 'THEME') return <span style={{ fontSize: 36, opacity: 0.6 }}>🎨</span>;
+    const previewIcon = (Icon: React.FC<{ size?: number; color?: string }>) =>
+      <span style={{ opacity: 0.6, color: rarityColor }}><Icon size={36} /></span>;
+    if (item.type === 'AVATAR_FRAME') return previewIcon(IcoCamera);
+    if (item.type === 'MOVE_ANIMATION') return previewIcon(IcoBolt);
+    if (item.type === 'WIN_ANIMATION') return previewIcon(IcoMedal);
+    if (item.type === 'CAPTURE_EFFECT') return previewIcon(IcoBolt);
+    if (item.type === 'SPECIAL_MOVE') return previewIcon(IcoBolt);
+    if (item.type === 'THEME') return previewIcon(IcoSettings);
     if (item.type === 'FONT') {
       const fontMapping: Record<string, string> = {
         'Inter': "'Inter', sans-serif",
@@ -133,7 +136,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({ item, loading, highlighted, 
       const cssFont = fontMapping[item.name] || "'Inter', sans-serif";
       return <span style={{ fontSize: 40, fontFamily: cssFont }}>Aa</span>;
     }
-    return <span style={{ fontSize: 32, opacity: 0.4 }}>🎮</span>;
+    return <span style={{ opacity: 0.4 }}><IcoGamepad size={32} /></span>;
   };
 
   return (
@@ -186,7 +189,7 @@ export const AvatarItemCard: React.FC<AvatarItemCardProps> = ({ item, loading, h
         <div style={{ width: '80%', aspectRatio: '1', borderRadius: '50%', overflow: 'hidden', border: `2px solid ${item.equipped ? 'var(--color-accent, #F5C842)' : `${rarityColor}66`}`, boxShadow: item.equipped ? `0 0 12px ${rarityColor}66` : undefined }}>
           {item.imageUrl && !imgError
             ? <img src={item.imageUrl} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" onError={() => setImgError(true)} />
-            : <div style={{ width: '100%', height: '100%', background: 'var(--shop-card-preview-bg, var(--color-bg-light,#13161E))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, opacity: 0.4 }}>👤</div>
+            : <div style={{ width: '100%', height: '100%', background: 'var(--shop-card-preview-bg, var(--color-bg-light,#13161E))', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.4 }}><IcoUsers size={32} /></div>
           }
         </div>
       </div>
@@ -202,7 +205,7 @@ export const AvatarItemCard: React.FC<AvatarItemCardProps> = ({ item, loading, h
           <button onClick={onUnequip} disabled={loading} style={{ ...btnStyle, background: 'var(--shop-unequip-btn-bg, rgba(255,77,106,0.12))', color: 'var(--color-red, #FF4D6A)', border: '1px solid var(--shop-unequip-btn-border, rgba(255,77,106,0.25))' }}>{loading ? '...' : t.shop.unequip}</button>
         </div>
       ) : item.owned ? (
-        <button onClick={onEquip} disabled={loading} style={{ ...btnStyle, background: 'linear-gradient(135deg,var(--color-purple-dark, #7B61FF),var(--color-purple, #9B85FF))', color: '#fff' }}>{loading ? '...' : `✨ ${t.shop.equip}`}</button>
+        <button onClick={onEquip} disabled={loading} style={{ ...btnStyle, background: 'linear-gradient(135deg,var(--color-purple-dark, #7B61FF),var(--color-purple, #9B85FF))', color: '#fff' }}>{loading ? '...' : t.shop.equip}</button>
       ) : (
         <button onClick={onPurchase} disabled={loading} style={{ ...btnStyle, background: 'var(--color-accent, #F5C842)', color: 'var(--color-bg-dark, #0B0D11)' }}>{loading ? '...' : `${fmtBalance(item.priceCoins)} ᚙ`}</button>
       )}

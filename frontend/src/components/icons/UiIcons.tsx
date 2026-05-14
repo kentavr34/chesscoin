@@ -221,6 +221,26 @@ export const IcoBolt: React.FC<Props> = ({ size = 14, color = 'currentColor' }) 
   <path d="M11 2L4 10h4l-1 6 7-8h-4l1-6z" fill={color} stroke={color} strokeWidth=".8" strokeLinejoin="round"/>
 ));
 
+// Разбитое сердце (💔) — поражение
+export const IcoHeartBroken: React.FC<Props> = ({ size = 14, color = 'currentColor' }) => baseSvg(size, '0 0 18 18', (
+  <>
+    <path d="M9 15.5C9 15.5 2.5 11.5 2.5 6.8c0-2 1.6-3.6 3.6-3.6 1.3 0 2.4.7 3 1.7L7.2 8 9 9.8" stroke={color} strokeWidth="1.4" fill={color} fillOpacity=".18" strokeLinejoin="round" strokeLinecap="round"/>
+    <path d="M9 15.5C9 15.5 15.5 11.5 15.5 6.8c0-2-1.6-3.6-3.6-3.6-1.3 0-2.4.7-3 1.7L10.8 8 9 9.8" stroke={color} strokeWidth="1.4" fill={color} fillOpacity=".18" strokeLinejoin="round" strokeLinecap="round"/>
+    <path d="M9 5l-1 3 1.6 1.4L8 12" stroke={color} strokeWidth=".9" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+  </>
+));
+
+// Дискета (💾) — сохранить
+export const IcoSave: React.FC<Props> = ({ size = 14, color = 'currentColor' }) => baseSvg(size, '0 0 18 18', (
+  <>
+    <path d="M3 3h9l3 3v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" stroke={color} strokeWidth="1.3" fill="none" strokeLinejoin="round"/>
+    <rect x="5" y="3" width="6" height="4" rx="0.4" fill={color} fillOpacity=".6"/>
+    <rect x="5" y="10" width="8" height="5" rx="0.4" stroke={color} strokeWidth="1" fill="none"/>
+    <line x1="6.5" y1="11.6" x2="11.5" y2="11.6" stroke={color} strokeWidth=".7"/>
+    <line x1="6.5" y1="13" x2="11.5" y2="13" stroke={color} strokeWidth=".7"/>
+  </>
+));
+
 // Геймпад (🎮)
 export const IcoGamepad: React.FC<Props> = ({ size = 14, color = 'currentColor' }) => baseSvg(size, '0 0 18 18', (
   <>
