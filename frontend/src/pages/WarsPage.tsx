@@ -9,6 +9,9 @@ import { useT } from '@/i18n/useT';
 import { useConfirm } from '@/components/ui/ConfirmModal';
 import { CoinIcon } from '@/components/ui/CoinIcon';
 import { DonateModal } from '@/components/ui/DonateModal';
+import { CountryFlag } from '@/components/ui/CountryFlag';
+import { IcoSwords, IcoTrophy } from '@/components/icons/TournamentIcons';
+import { IcoEye, IcoHandshake, IcoSave, IcoSearch, IcoStats } from '@/components/icons/UiIcons';
 
 const COUNTRY_ENTRY_FEE = 10_000n;
 
@@ -108,7 +111,7 @@ const DeclareWarModal: React.FC<{
         <div style={handleBar} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
           <div style={{ fontSize: 15, fontWeight: 700, color: '#EAE2CC', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ color: '#3DBA7A' }}>⚔️</span> {t.wars.declareModal.title}
+            <span style={{ color: '#3DBA7A', display: 'inline-flex', verticalAlign: 'middle' }}><IcoSwords size={16} /></span> {t.wars.declareModal.title}
           </div>
           <button onClick={onClose} style={closeBtnStyle}>✕</button>
         </div>
@@ -283,7 +286,7 @@ const CountryDetailModal: React.FC<{
         <div style={handleBar} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 32 }}>{c?.flag ?? '🏴'}</span>
+            <CountryFlag code={c?.code ?? c?.id ?? '??'} size={32} />
             <div>
               <div style={{ fontSize: 16, fontWeight: 800, color: '#EAE2CC' }}>{c?.nameRu ?? '...'}</div>
               <div style={{ fontSize: 10, color: '#7A7875' }}>{c?.nameEn ?? ''}</div>
@@ -356,7 +359,7 @@ const CountryDetailModal: React.FC<{
                   fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s',
                 }}
               >
-                {leaving ? '...' : '🚪'}
+                {leaving ? '...' : t.wars.btnLeave}
               </button>
             </div>
           </>
@@ -489,7 +492,7 @@ const WarDetailModal: React.FC<{ warId: string; onClose: () => void }> = ({ warI
         <div style={handleBar} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
           <div style={{ fontSize: 15, fontWeight: 700, color: '#EAE2CC', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ color: '#3DBA7A' }}>⚔️</span> {t.wars.warDetail}
+            <span style={{ color: '#3DBA7A', display: 'inline-flex', verticalAlign: 'middle' }}><IcoSwords size={16} /></span> {t.wars.warDetail}
           </div>
           <button onClick={onClose} style={closeBtnStyle}>✕</button>
         </div>
@@ -612,9 +615,10 @@ const WarDetailModal: React.FC<{ warId: string; onClose: () => void }> = ({ warI
                           padding: '5px 8px', background: 'rgba(61,186,122,0.07)', color: '#3DBA7A',
                           border: '.5px solid rgba(61,186,122,0.28)', borderRadius: 8, fontSize: 11,
                           cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', transition: 'all .15s',
+                          display: 'inline-flex', alignItems: 'center', gap: 5,
                         }}
                       >
-                        👁 {t.wars.spectateMatch}
+                        <IcoEye size={12} /> {t.wars.spectateMatch}
                       </button>
                     )}
                     {b.session?.pgn && isDone && (
@@ -627,7 +631,7 @@ const WarDetailModal: React.FC<{ warId: string; onClose: () => void }> = ({ warI
                           cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s',
                         }}
                       >
-                        {saving === b.sessionId ? '...' : '💾'}
+                        {saving === b.sessionId ? '...' : <IcoSave size={12} />}
                       </button>
                     )}
                   </div>
@@ -674,8 +678,8 @@ export const WarsPage: React.FC = () => {
   const [showDonate, setShowDonate] = useState(false);
   const [donateAmt, setDonateAmt] = useState('');
   const [donating, setDonating] = useState(false);
-  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [pageConfirm, PageConfirmDialog] = useConfirm();
 
   const loadAll = useCallback(async () => {
     try {
@@ -743,11 +747,18 @@ export const WarsPage: React.FC = () => {
   };
 
   const handleLeave = async () => {
+    const ok = await pageConfirm({
+      title: t.wars.leaveTeam,
+      message: t.wars.leaveTeamDesc(myCountry?.nameRu ?? ''),
+      okLabel: t.wars.btnLeave,
+      cancelLabel: t.common.cancel,
+      danger: true,
+    });
+    if (!ok) return;
     setLeaving(true);
     try {
       await warsApi.leave();
       toast(t.wars.leaveCountry, 'success');
-      setShowLeaveConfirm(false);
       loadAll();
     } catch (e: any) {
       toast(e.message ?? t.common.error);
@@ -839,7 +850,7 @@ export const WarsPage: React.FC = () => {
               {t.wars.btnBattles}
             </button>
             <button
-              onClick={() => setShowLeaveConfirm(true)}
+              onClick={handleLeave}
               style={{ ...actionBtnStyle, color: '#FF4D6A', borderColor: 'rgba(255,77,106,0.3)' }}
             >
               {t.wars.btnLeave}
@@ -866,19 +877,22 @@ export const WarsPage: React.FC = () => {
                   {myActiveWar.attackerWins} : {myActiveWar.defenderWins}
                 </div>
               </div>
-              <div style={{ fontSize: 10, color: '#7A7875', marginTop: 2 }}>⏱ <WarCountdown initialSeconds={myActiveWar.secondsLeft ?? 0} active={true} /></div>
+              <div style={{ fontSize: 10, color: '#7A7875', marginTop: 2 }}><WarCountdown initialSeconds={myActiveWar.secondsLeft ?? 0} active={true} /></div>
             </div>
           )}
         </div>
       )}
 
       {/* Поиск — всегда над табами */}
-      <div style={{ margin: '8px 18px 8px' }}>
+      <div style={{ margin: '8px 18px 8px', position: 'relative' }}>
+        <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#7A7875', pointerEvents: 'none' }}>
+          <IcoSearch size={14} />
+        </span>
         <input
-          placeholder={`🔍 ${t.wars.searchPlaceholder}`}
+          placeholder={t.wars.searchPlaceholder}
           value={searchCountry}
           onChange={e => setSearchCountry(e.target.value)}
-          style={{ ...inputStyle, width: '100%', marginBottom: 0, boxSizing: 'border-box' }}
+          style={{ ...inputStyle, width: '100%', marginBottom: 0, boxSizing: 'border-box', paddingLeft: 34 }}
         />
       </div>
 
@@ -950,7 +964,7 @@ export const WarsPage: React.FC = () => {
         <>
           {activeWars.length === 0 && (
             <div style={{ textAlign: 'center', padding: 40 }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>🕊️</div>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: '#3DBA7A' }}><IcoHandshake size={40} /></div>
               <div style={{ fontSize: 14, fontWeight: 600, color: '#EAE2CC', marginBottom: 6 }}>{t.wars.noWars}</div>
               <div style={{ fontSize: 12, color: '#7A7875' }}>
                 {isCommander ? t.wars.isCommander : t.wars.notCommander}
@@ -974,7 +988,7 @@ export const WarsPage: React.FC = () => {
                     <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 24, fontWeight: 800, color: '#D4A843' }}>
                       {war.attackerWins} : {war.defenderWins}
                     </div>
-                    <div style={{ fontSize: 10, color: '#3DBA7A', marginTop: 2 }}>⏱ <WarCountdown initialSeconds={war.secondsLeft ?? 0} active={war.status === 'IN_PROGRESS'} /></div>
+                    <div style={{ fontSize: 10, color: '#3DBA7A', marginTop: 2 }}><WarCountdown initialSeconds={war.secondsLeft ?? 0} active={war.status === 'IN_PROGRESS'} /></div>
                   </div>
                   <div style={{ textAlign: 'center', flex: 1 }}>
                     <div style={{ fontSize: 28 }}>{war.defenderCountry?.flag}</div>
@@ -1018,7 +1032,7 @@ export const WarsPage: React.FC = () => {
         <>
           {historyWars.length === 0 && (
             <div style={{ textAlign: 'center', padding: 40 }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>📜</div>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: '#7A7875' }}><IcoStats size={40} /></div>
               <div style={{ fontSize: 13, color: '#7A7875' }}>{t.wars.historyEmpty}</div>
             </div>
           )}
@@ -1038,7 +1052,7 @@ export const WarsPage: React.FC = () => {
                       <span style={{ fontSize: 24 }}>{war.attackerCountry?.flag}</span>
                       <div>
                         <div style={{ fontSize: 12, fontWeight: 700, color: attackerWon ? '#D4A843' : '#EAE2CC' }}>
-                          {attackerWon && '🏆 '}{war.attackerCountry?.nameRu}
+                          {attackerWon && <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginRight: 4 }}><IcoTrophy size={12} /></span>}{war.attackerCountry?.nameRu}
                         </div>
                         <div style={{ fontSize: 10, color: '#7A7875' }}>{war.attackerWins} {t.wars.winsCount}</div>
                       </div>
@@ -1049,7 +1063,7 @@ export const WarsPage: React.FC = () => {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }} onClick={() => setSelectedCountryId(war.defenderCountryId)}>
                       <div style={{ textAlign: 'right' }}>
                         <div style={{ fontSize: 12, fontWeight: 700, color: defenderWon ? '#D4A843' : '#EAE2CC' }}>
-                          {defenderWon && '🏆 '}{war.defenderCountry?.nameRu}
+                          {defenderWon && <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginRight: 4 }}><IcoTrophy size={12} /></span>}{war.defenderCountry?.nameRu}
                         </div>
                         <div style={{ fontSize: 10, color: '#7A7875' }}>{war.defenderWins} {t.wars.winsCount}</div>
                       </div>
@@ -1088,42 +1102,8 @@ export const WarsPage: React.FC = () => {
         />
       )}
 
-      {/* Модал подтверждения выхода */}
-      {showLeaveConfirm && (
-        <div style={overlayStyle} onClick={(e) => e.target === e.currentTarget && setShowLeaveConfirm(false)}>
-          <div style={bottomSheetStyle}>
-            <div style={handleBar} />
-            <div style={{ fontSize: 16, fontWeight: 700, color: '#EAE2CC', marginBottom: 12 }}>{t.wars.leaveTeam}</div>
-            <div style={{ fontSize: 13, color: '#7A7875', marginBottom: 22, lineHeight: 1.6 }}>
-              {t.wars.leaveTeamDesc(myCountry?.nameRu ?? '')}
-            </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button
-                onClick={() => setShowLeaveConfirm(false)}
-                style={{
-                  flex: 1, padding: 12, background: 'rgba(255,255,255,0.04)', color: '#7A7875',
-                  border: '.5px solid rgba(154,148,144,.22)', borderRadius: 12, fontSize: 13,
-                  fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s',
-                }}
-              >
-                {t.common.cancel}
-              </button>
-              <button
-                onClick={handleLeave}
-                disabled={leaving}
-                style={{
-                  flex: 1, padding: 12, background: 'rgba(255,77,106,0.08)', color: '#FF4D6A',
-                  border: '.5px solid rgba(255,77,106,0.3)', borderRadius: 12, fontSize: 13,
-                  fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                  opacity: leaving ? 0.6 : 1, transition: 'all .15s',
-                }}
-              >
-                {leaving ? '...' : t.wars.btnLeave}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Подтверждение выхода — центральный модал через useConfirm */}
+      {PageConfirmDialog}
 
       {/* Modals */}
       {showIntro && <WarsIntroModal onClose={handleIntroClose} />}

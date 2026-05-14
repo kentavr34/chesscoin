@@ -221,6 +221,14 @@ export const IcoBolt: React.FC<Props> = ({ size = 14, color = 'currentColor' }) 
   <path d="M11 2L4 10h4l-1 6 7-8h-4l1-6z" fill={color} stroke={color} strokeWidth=".8" strokeLinejoin="round"/>
 ));
 
+// Глаз (👁) — зритель / просмотр
+export const IcoEye: React.FC<Props> = ({ size = 14, color = 'currentColor' }) => baseSvg(size, '0 0 18 18', (
+  <>
+    <path d="M1.5 9C3 5.5 6 4 9 4s6 1.5 7.5 5c-1.5 3.5-4.5 5-7.5 5S3 12.5 1.5 9z" stroke={color} strokeWidth="1.2" fill="none" strokeLinejoin="round"/>
+    <circle cx="9" cy="9" r="2.4" fill={color}/>
+  </>
+));
+
 // Разбитое сердце (💔) — поражение
 export const IcoHeartBroken: React.FC<Props> = ({ size = 14, color = 'currentColor' }) => baseSvg(size, '0 0 18 18', (
   <>

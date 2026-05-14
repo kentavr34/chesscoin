@@ -107,16 +107,37 @@
 
 ---
 
+### 2026-05-15 · § 2 A.6 хвосты · 8 компонентов (commit `7651b74`)
+- Сделано: GameResultModal / VictoryScreen / FloatingCoins / BadgeDetailModal /
+  EventEffects / ShopItemCards / GameSetupModal / ShopPage — декоративные
+  эмодзи (🏆💔🤝⚔️💾🪙🤖📅👑⚡💥🖼✨🎉🎨🎮👤🏅💰🎲🔥🎯ℹ️💎💸🔒📥📤🏦🎭) →
+  SVG-иконки IcoTrophy / IcoHandshake / IcoSave / CoinIcon / IcoRobot /
+  IcoMedal / IcoBolt / IcoCrown / IcoCamera / IcoGamepad / IcoUsers /
+  IcoTon / IcoMoneyFly / IcoLock / IcoArrowDown / IcoArrowUp / IcoBriefcase /
+  IcoShop. В time-кнопках GameSetupModal эмодзи (⚡🔥♟🎯🏆👑) заменены на
+  простое число «1/3/5/15/30/60» (meta-инфо дублируется в подписи).
+  В UiIcons добавлены `IcoHeartBroken` и `IcoSave`. PageLayout.InfoSlide.icon
+  переведён `string → React.ReactNode` (бэк-совместимо, `icon: ''` работает).
+- Проверка:
+  - Деплой: `git pull && docker compose up -d --build frontend` —
+    `Container chesscoin_frontend Started`, ошибок сборки нет.
+  - `curl https://chesscoin.app/ | grep index` → `index-khx6vhow.js` —
+    новый bundle, значит JSX собрался.
+- Решение: ✅ закрыто. Купленные WIN_ANIMATION (премиум-эффект победы)
+  оставлены как есть — это товар, не дефолтный UI.
+- 🟩 ШАБЛОН: «info-popup иконки» — иконка слайда теперь `React.ReactNode`,
+  можно класть `<IcoX size={32} color="..."/>` прямо в массив. Использовать
+  тот же приём для будущих info-strips и legend-блоков.
+
+---
+
 ## Очередь следующих шагов (по § 2 MASTER_PLAN)
 
-1. **§ 2 A.6 хвосты** — GameSetupModal, ShopItemCards, ShopPage,
-   GameResultModal, EventEffects, VictoryScreen, FloatingCoins,
-   BadgeDetailModal — декоративные эмодзи → SVG/удалить.
-3. **§ 2 A.3 проверка** — `showLeaveConfirm` в WarsPage (выход из страны) —
+1. **§ 2 A.3 проверка** — `showLeaveConfirm` в WarsPage (выход из страны) —
    ещё bottom-sheet или уже centered?
-4. **§ 2 C.4** — i18n WarsPage / TournamentsPage: убрать русский хардкод,
+2. **§ 2 C.4** — i18n WarsPage / TournamentsPage: убрать русский хардкод,
    там где должен быть `t.wars.*` / `t.tournaments.*`.
-5. **reset-safe TransactionType** — оформить идемпотентную Prisma-миграцию
+3. **reset-safe TransactionType** — оформить идемпотентную Prisma-миграцию
    `<date>_transaction_type_sync` с `ALTER TYPE ADD VALUE IF NOT EXISTS` × 5,
    чтобы hard-reboot prod не восстановил неполный enum.
 
