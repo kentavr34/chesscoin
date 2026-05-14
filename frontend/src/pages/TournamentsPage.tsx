@@ -5,6 +5,7 @@ import { tournamentsApi } from '@/api';
 import { getSocket } from '@/api/socket';
 import { fmtBalance } from '@/utils/format';
 import { useConfirm } from '@/components/ui/ConfirmModal';
+import { DonateModal as UiDonateModal } from '@/components/ui/DonateModal';
 import type { TournamentFull, ActiveMatch, League } from '@/types'; // R1
 import { useNavigate } from 'react-router-dom';
 import { useT } from '@/i18n/useT';
@@ -641,57 +642,19 @@ const TournamentDetailModal: React.FC<{ tournamentId: string; onClose: () => voi
   );
 };
 
-const DonateModal: React.FC<{ tournamentId: string; onClose: () => void; onSuccess: () => void }> = ({ tournamentId, onClose, onSuccess }) => {
+// Тонкая обёртка над общим components/ui/DonateModal — он рисуется по центру,
+// с пресетами и ползунком. Кенан 2026-05-15: 'модал ниже плинтуса не делать'.
+const DonateModal: React.FC<{ tournamentId: string; onClose: () => void; onSuccess: () => void; currentPool?: string }> = ({ tournamentId, onClose, onSuccess, currentPool }) => {
   const t = useT();
-  const tt = t.tournaments;
-  const [amount, setAmount] = useState('10000');
-  const [loading, setLoading] = useState(false);
-  const handleSubmit = async () => {
-    setLoading(true);
-    try { await tournamentsApi.donate(tournamentId, amount); onSuccess(); }
-    catch (e: unknown) { showToast((e instanceof Error ? e.message : null) ?? t.common.error); }
-    finally { setLoading(false); }
+  const handleSubmit = async (amount: number) => {
+    try {
+      await tournamentsApi.donate(tournamentId, String(amount));
+      onSuccess();
+    } catch (e: unknown) {
+      showToast((e instanceof Error ? e.message : null) ?? t.common.error);
+    }
   };
-  return (
-    <div style={overlayStyle} onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div style={modalStyle}>
-        <div style={{ width: 36, height: 4, background: '#2A2232', borderRadius: 2, margin: '0 auto 14px' }} />
-        <div style={{ fontSize: '1rem', fontWeight: 800, color: '#E8E3DB', marginBottom: 8 }}>{tt.donateToPrize}</div>
-        <div style={{ fontSize: '0.75rem', color: '#7A7875', marginBottom: 16 }}>
-          {tt.allCoinsToWinners}
-        </div>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-          {['10000', '50000', '100000', '500000'].map(v => (
-            <button
-              key={v}
-              onClick={() => setAmount(v)}
-              style={{
-                flex: 1, padding: '9px 0', borderRadius: 9, cursor: 'pointer',
-                border: amount === v ? '.5px solid rgba(212,168,67,.45)' : '.5px solid rgba(255,255,255,.08)',
-                background: amount === v ? 'rgba(212,168,67,.15)' : 'rgba(255,255,255,.04)',
-                color: amount === v ? '#F0C85A' : '#7A7875',
-                fontSize: '0.72rem', fontWeight: 700,
-              }}
-            >
-              {fmtBalance(v)}
-            </button>
-          ))}
-        </div>
-        <button
-          onClick={handleSubmit}
-          disabled={loading}
-          style={{
-            width: '100%', padding: '13px 0', borderRadius: 12,
-            border: '.5px solid rgba(212,168,67,.4)', background: 'linear-gradient(135deg,rgba(212,168,67,.25),rgba(212,168,67,.15))',
-            color: '#F0C85A', fontSize: '0.92rem', fontWeight: 700,
-            cursor: loading ? 'default' : 'pointer', opacity: loading ? 0.7 : 1,
-          }}
-        >
-          {loading ? tt.donateError : `${t.shop.tonTab.buy} ${fmtBalance(amount)} ᚙ`}
-        </button>
-      </div>
-    </div>
-  );
+  return <UiDonateModal onClose={onClose} onSubmit={handleSubmit} currentPool={currentPool} />;
 };
 
 const overlayStyle: React.CSSProperties = {

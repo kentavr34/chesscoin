@@ -7,6 +7,8 @@ import { useUserStore } from '@/store/useUserStore';
 import { fmtBalance } from '@/utils/format';
 import { useT } from '@/i18n/useT';
 import { useConfirm } from '@/components/ui/ConfirmModal';
+import { CoinIcon } from '@/components/ui/CoinIcon';
+import { DonateModal } from '@/components/ui/DonateModal';
 
 const COUNTRY_ENTRY_FEE = 10_000n;
 
@@ -181,6 +183,7 @@ const CountryDetailModal: React.FC<{
   const [donateAmt, setDonateAmt] = useState('');
   const [donating, setDonating] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [showDonateModal, setShowDonateModal] = useState(false);
   const [confirm, ConfirmDialog] = useConfirm();
 
   useEffect(() => {
@@ -220,13 +223,13 @@ const CountryDetailModal: React.FC<{
     }
   };
 
-  const handleDonate = async () => {
-    if (!donateAmt || isNaN(Number(donateAmt))) return;
+  const handleDonate = async (amount: number) => {
     setDonating(true);
     try {
-      await warsApi.donate(countryId, donateAmt);
+      await warsApi.donate(countryId, amount);
       toast(t.wars.btnDonate, 'success');
       setDonateAmt('');
+      setShowDonateModal(false);
       warsApi.country(countryId).then(setData);
     } catch (e: any) {
       toast(e.message ?? t.common.error);
@@ -269,6 +272,13 @@ const CountryDetailModal: React.FC<{
   return (
     <div style={overlayStyle} onClick={(e) => e.target === e.currentTarget && onClose()}>
       {ConfirmDialog}
+      {showDonateModal && (
+        <DonateModal
+          onClose={() => setShowDonateModal(false)}
+          onSubmit={handleDonate}
+          currentPool={c?.treasury}
+        />
+      )}
       <div style={{ ...bottomSheetStyle, maxHeight: '90vh' }}>
         <div style={handleBar} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
@@ -322,23 +332,19 @@ const CountryDetailModal: React.FC<{
               {t.wars.youAreFighter}
             </div>
             <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-              <input
-                placeholder={t.wars.donateAmount}
-                value={donateAmt}
-                onChange={e => setDonateAmt(e.target.value)}
-                type="number"
-                style={{ ...inputStyle, flex: 1, marginBottom: 0 }}
-              />
               <button
-                onClick={handleDonate}
-                disabled={donating || !donateAmt}
+                onClick={() => setShowDonateModal(true)}
+                disabled={donating}
                 style={{
-                  padding: '10px 14px', background: 'linear-gradient(135deg,#2A1E08,#4A3810)',
+                  flex: 1, padding: '12px 14px',
+                  background: 'linear-gradient(135deg,#2A1E08,#4A3810)',
                   color: '#F0C85A', border: '.5px solid rgba(212,168,67,.42)', borderRadius: 12,
-                  fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                  whiteSpace: 'nowrap', transition: 'all .15s',
+                  fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                  opacity: donating ? 0.6 : 1,
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 }}
               >
+                <CoinIcon size={16} />
                 {donating ? '...' : t.wars.btnDonate}
               </button>
               <button
@@ -721,11 +727,10 @@ export const WarsPage: React.FC = () => {
     try { await warsApi.introSeen(); } catch {}
   };
 
-  const handleDonate = async () => {
-    if (!donateAmt || isNaN(Number(donateAmt))) return;
+  const handleDonate = async (amount: number) => {
     setDonating(true);
     try {
-      await warsApi.contribute(myCountry.id, donateAmt);
+      await warsApi.contribute(myCountry.id, amount);
       toast(t.wars.btnDonate + '!', 'success');
       setDonateAmt('');
       setShowDonate(false);
@@ -1074,41 +1079,13 @@ export const WarsPage: React.FC = () => {
         </>
       )}
 
-      {/* Модал доната в казну */}
+      {/* Модал доната в казну — центральный DonateModal */}
       {showDonate && myCountry && (
-        <div style={overlayStyle} onClick={(e) => e.target === e.currentTarget && setShowDonate(false)}>
-          <div style={bottomSheetStyle}>
-            <div style={handleBar} />
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: '#EAE2CC' }}>{t.wars.donateTreasury}</div>
-              <button onClick={() => setShowDonate(false)} style={closeBtnStyle}>✕</button>
-            </div>
-            <div style={{ fontSize: 12, color: '#7A7875', marginBottom: 14 }}>
-              {t.wars.donateTreasuryDesc(myCountry.nameRu)}
-            </div>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
-              <input
-                placeholder={t.wars.donateAmount}
-                value={donateAmt}
-                onChange={e => setDonateAmt(e.target.value)}
-                type="number"
-                style={{ ...inputStyle, flex: 1, marginBottom: 0 }}
-              />
-              <button
-                onClick={handleDonate}
-                disabled={donating || !donateAmt}
-                style={{
-                  padding: '10px 16px', background: 'linear-gradient(135deg,#2A1E08,#4A3810)',
-                  color: '#F0C85A', border: '.5px solid rgba(212,168,67,.42)', borderRadius: 12,
-                  fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                  opacity: donating ? 0.6 : 1, transition: 'all .15s',
-                }}
-              >
-                {donating ? '...' : t.wars.send}
-              </button>
-            </div>
-          </div>
-        </div>
+        <DonateModal
+          onClose={() => setShowDonate(false)}
+          onSubmit={handleDonate}
+          currentPool={myCountry.treasury}
+        />
       )}
 
       {/* Модал подтверждения выхода */}
