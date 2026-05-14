@@ -1,5 +1,5 @@
 ﻿// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
-// ExchangeTab вЂ” P2P Exchange ChessCoin v7.0.1
+// ExchangeTab — P2P Exchange ChessCoin v7.0.1
 // Placement: "рџ’± Exchange" tab inside ShopPage
 //
 // Structure:
@@ -34,7 +34,7 @@ const PERIODS = [
   { label: '30D', hours: 720 as const },
 ] as const;
 
-// в”Ђв”Ђ CandleChart (E14: TradingView lightweight-charts) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+// ── CandleChart (E14: TradingView lightweight-charts) ─────────
 const CandleChart: React.FC<{ candles: PriceCandle[]; up: boolean; height?: number }> = ({ candles, up, height = 120 }) => {
   const t = useT();
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -63,7 +63,7 @@ const CandleChart: React.FC<{ candles: PriceCandle[]; up: boolean; height?: numb
     chartRef.current = chart;
 
     if (candles.length < 2) {
-      // No data вЂ” line chart with placeholder
+      // No data — line chart with placeholder
       const lineSeries = chart.addLineSeries({ color: '#5A5248', lineWidth: 1 });
       lineSeries.setData([{ time: Math.floor(Date.now() / 1000) as Time, value: 0 }]);
     } else {
@@ -109,16 +109,16 @@ const CandleChart: React.FC<{ candles: PriceCandle[]; up: boolean; height?: numb
   );
 };
 
-// в”Ђв”Ђ Locked screen (no wallet) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+// ── Locked screen (no wallet) ───────────────────────────────
 const LockedScreen: React.FC<{ currentPrice: number; change24h: number; onConnect: () => void }> = ({ currentPrice, change24h, onConnect }) => {
   const up = change24h >= 0;
   return (
     <div style={{ padding: '0 18px 24px' }}>
-      {/* Price вЂ” visible to all */}
+      {/* Price — visible to all */}
       <div style={{ background: '#141018', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: 16, marginBottom: 16, textAlign: 'center' }}>
         <div style={{ fontSize: 11, color: '#5A5248', marginBottom: 4 }}>CURRENT PRICE</div>
         <div style={{ fontSize: 26, fontWeight: 800, color: '#F0C85A', fontFamily: "'JetBrains Mono',monospace" }}>
-          {currentPrice > 0 ? `${currentPrice.toFixed(5)} TON` : 'вЂ”'}
+          {currentPrice > 0 ? `${currentPrice.toFixed(5)} TON` : '—'}
         </div>
         <div style={{ fontSize: 12, color: currentPrice > 0 ? (up ? '#3DBA7A' : '#FF5B5B') : '#5A5248', marginTop: 4 }}>
           {currentPrice > 0 ? `${up ? '+' : ''}${change24h.toFixed(2)}% 24h` : 'per 1,000,000 бљ™'}
@@ -133,7 +133,7 @@ const LockedScreen: React.FC<{ currentPrice: number; change24h: number; onConnec
         </div>
         <div style={{ fontSize: 12, color: '#9A9490', lineHeight: 1.6, marginBottom: 20 }}>
           A TON wallet is required for exchange trading.<br />
-          One-time payment: <b style={{ color: '#0098EA' }}>1 TON</b> вЂ” forever.
+          One-time payment: <b style={{ color: '#0098EA' }}>1 TON</b> — forever.
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12, color: '#9A9490', marginBottom: 20 }}>
           {['рџ’± Sell бљ™ for TON directly to other players', 'рџ›’ Buy бљ™ at market price', 'рџ’° Platform fee: 0.5%'].map(t => (
@@ -148,7 +148,7 @@ const LockedScreen: React.FC<{ currentPrice: number; change24h: number; onConnec
   );
 };
 
-// в”Ђв”Ђ Create order modal (E8) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+// ── Create order modal (E8) ────────────────────────────────
 const CreateOrderModal: React.FC<{
   userBalance: string;
   onClose: () => void;
@@ -239,7 +239,7 @@ const CreateOrderModal: React.FC<{
   );
 };
 
-// в”Ђв”Ђ Execute order modal (E9) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+// ── Execute order modal (E9) ──────────────────────────────
 const ExecuteOrderModal: React.FC<{
   order: P2POrder;
   buyerWallet: string;
@@ -294,7 +294,7 @@ const ExecuteOrderModal: React.FC<{
           <div style={{ fontSize: 24, fontWeight: 800, color: '#F0C85A', marginBottom: 4, fontFamily: "'JetBrains Mono',monospace" }}>
             {fmtBalance(order.amountCoins)} бљ™
           </div>
-          <div style={{ fontSize: 13, color: '#9A9490', marginBottom: 20 }}>from {order.sellerName} В· ELO {order.sellerElo}</div>
+          <div style={{ fontSize: 13, color: '#9A9490', marginBottom: 20 }}>from {order.sellerName} · ELO {order.sellerElo}</div>
           {/* E12: Partial purchase slider */}
           {maxCoins > 100_000 && (
             <div style={{ marginBottom: 16 }}>
@@ -370,7 +370,7 @@ const ExecuteOrderModal: React.FC<{
 };
 
 
-// в”Ђв”Ђ E15: CreateBuyOrderModal в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+// ── E15: CreateBuyOrderModal ──────────────────────────────────
 const CreateBuyOrderModal: React.FC<{
   onClose: () => void;
   onCreated: () => void;
@@ -438,7 +438,7 @@ const CreateBuyOrderModal: React.FC<{
   );
 };
 
-// в”Ђв”Ђ E15: FillBuyOrderModal (seller accepts BUY) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+// ── E15: FillBuyOrderModal (seller accepts BUY) ───────────
 const FillBuyOrderModal: React.FC<{
   order: BuyP2POrder;
   sellerWallet: string;
@@ -483,7 +483,7 @@ const FillBuyOrderModal: React.FC<{
           <div style={{ fontSize: 16, fontWeight: 800, color: '#3DBA7A', marginBottom: 6 }}>Sell бљ™ to buyer</div>
           <div style={{ fontSize: 24, fontWeight: 800, color: '#F0C85A', marginBottom: 4, fontFamily: "'JetBrains Mono',monospace" }}>{Number(orderCoins).toLocaleString()} бљ™</div>
           <div style={{ fontSize: 13, color: '#9A9490', marginBottom: 16 }}>
-            Buyer: {order.buyerName ?? 'Player'} В· ELO {order.buyerElo ?? order.sellerElo}
+            Buyer: {order.buyerName ?? 'Player'} · ELO {order.buyerElo ?? order.sellerElo}
           </div>
           {!hasEnough && <div style={{ fontSize: 12, color: '#FF5B5B', marginBottom: 12, padding: '8px 12px', background: 'rgba(255,77,106,0.1)', borderRadius: 10 }}>вљ пёЏ Insufficient бљ™ balance</div>}
           <div style={{ background: '#0D0D12', borderRadius: 12, padding: '12px 14px', marginBottom: 20, textAlign: 'left' as const }}>
@@ -510,7 +510,7 @@ const FillBuyOrderModal: React.FC<{
   );
 };
 
-// в”Ђв”Ђ Main ExchangeTab component (E7) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+// ── Main ExchangeTab component (E7) ────────────────────────
 export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUserRefresh }) => {
   const t = useT();
   const hasWallet = !!user?.tonWalletAddress;
@@ -608,20 +608,20 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
   return (
     <div style={{ paddingBottom: 24 }}>
 
-      {/* в”Ђв”Ђ Price indicator в”Ђв”Ђ */}
+      {/* ── Price indicator ── */}
       <div style={{ margin: '0 18px 12px', background: '#141018', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '14px 16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
           <div>
             <div style={{ fontSize: 10, color: '#5A5248', marginBottom: 4 }}>бљ™ / TON (per 1M бљ™)</div>
             {loadingPrice ? (
-              <div style={{ fontSize: 24, fontWeight: 800, color: '#5A5248' }}>вЂ”</div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: '#5A5248' }}>—</div>
             ) : (
               <div style={{ fontSize: 24, fontWeight: 800, color: '#F0C85A', fontFamily: "'JetBrains Mono',monospace" }}>
-                {(priceData?.currentPrice ?? 0) > 0 ? (priceData!.currentPrice).toFixed(5) : 'вЂ”'}
+                {(priceData?.currentPrice ?? 0) > 0 ? (priceData!.currentPrice).toFixed(5) : '—'}
               </div>
             )}
             <div style={{ fontSize: 11, color: up ? '#3DBA7A' : '#FF5B5B', marginTop: 2 }}>
-              {priceData?.currentPrice ? `${up ? '+' : ''}${priceData.change24h.toFixed(2)}% 24h В· Vol: ${priceData.volume24h.toFixed(2)} TON` : 'No trades'}
+              {priceData?.currentPrice ? `${up ? '+' : ''}${priceData.change24h.toFixed(2)}% 24h · Vol: ${priceData.volume24h.toFixed(2)} TON` : 'No trades'}
             </div>
           </div>
           {/* Period switcher */}
@@ -639,7 +639,7 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
         </div>
       </div>
 
-      {/* в”Ђв”Ђ Exchange stats в”Ђв”Ђ */}
+      {/* ── Exchange stats ── */}
       {stats && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 6, margin: '0 18px 12px' }}>
           {[
@@ -656,7 +656,7 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
         </div>
       )}
 
-      {/* в”Ђв”Ђ Action buttons в”Ђв”Ђ */}
+      {/* ── Action buttons ── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, margin: '0 18px 10px' }}>
         <button onClick={() => setShowCreate(true)} style={{ padding: '12px', background: 'rgba(0,214,143,0.12)', color: '#3DBA7A', border: '1px solid rgba(0,214,143,0.3)', borderRadius: 12, fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>
           рџ“¤ Sell бљ™
@@ -666,14 +666,14 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
         </button>
       </div>
 
-      {/* в”Ђв”Ђ Order book tabs в”Ђв”Ђ */}
+      {/* ── Order book tabs ── */}
       <div style={{ display: 'flex', margin: '0 18px 10px', background: '#141018', borderRadius: 10, padding: 3, gap: 2 }}>
         {([['buy','рџ“‰ Selling'],['buybook','рџ“€ Buying'],['sell','рџ“‹ Mine'],['my','рџ“Љ History'],['top','рџЏ† Top']] as ['buy'|'buybook'|'sell'|'my'|'top', string][]).map(([v, l]) => (
           <button key={v} onClick={() => setView(v)} style={{ flex: 1, padding: '7px 2px', border: 'none', borderRadius: 8, fontFamily: 'inherit', fontSize: 10, fontWeight: 600, cursor: 'pointer', background: view === v ? 'rgba(255,255,255,.05)' : 'transparent', color: view === v ? '#EAE2CC' : '#9A9490' }}>{l}</button>
         ))}
       </div>
 
-      {/* в”Ђв”Ђ Order book (view: Buy) в”Ђв”Ђ */}
+      {/* ── Order book (view: Buy) ── */}
       {view === 'buy' && (
         <div style={{ padding: '0 18px' }}>
           {/* Price range in order book */}
@@ -701,7 +701,7 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
             <div style={{ textAlign: 'center', padding: 32 }}>
               <div style={{ fontSize: 32, marginBottom: 8 }}>рџ“­</div>
               <div style={{ fontSize: 13, color: '#5A5248' }}>No sell orders yet</div>
-              <div style={{ fontSize: 11, color: '#5A5248', marginTop: 4 }}>Be the first вЂ” place an order!</div>
+              <div style={{ fontSize: 11, color: '#5A5248', marginTop: 4 }}>Be the first — place an order!</div>
             </div>
           ) : orders.filter(o => o.status === 'OPEN' && !o.isOwn).sort((a,b) => a.priceTon - b.priceTon).map(order => (
             <div key={order.id} onClick={() => setExecuteOrder(order)} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4, alignItems: 'center', padding: '10px', background: '#141018', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, marginBottom: 6, cursor: 'pointer', transition: 'border-color .15s' }}>
@@ -721,7 +721,7 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
         </div>
       )}
 
-      {/* в”Ђв”Ђ My orders в”Ђв”Ђ */}
+      {/* ── My orders ── */}
       {view === 'sell' && (
         <div style={{ padding: '0 18px' }}>
           {myOrders.filter(o => o.status === 'OPEN').length === 0 ? (
@@ -733,7 +733,7 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
             <div key={order.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', background: '#141018', border: '1px solid rgba(245,200,66,0.15)', borderRadius: 14, marginBottom: 8 }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: '#F0C85A', fontFamily: "'JetBrains Mono',monospace" }}>{fmtBalance(order.amountCoins)} бљ™</div>
-                <div style={{ fontSize: 11, color: '#9A9490', marginTop: 2 }}>{order.priceTon.toFixed(5)} TON/1M В· total {order.totalTon.toFixed(4)} TON</div>
+                <div style={{ fontSize: 11, color: '#9A9490', marginTop: 2 }}>{order.priceTon.toFixed(5)} TON/1M · total {order.totalTon.toFixed(4)} TON</div>
               </div>
               <button onClick={() => handleCancelOrder(order.id)} style={{ padding: '7px 12px', background: 'rgba(255,77,106,0.1)', color: '#FF5B5B', border: '1px solid rgba(255,77,106,0.2)', borderRadius: 10, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
                 Cancel
@@ -743,7 +743,7 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
         </div>
       )}
 
-      {/* в”Ђв”Ђ Executed history в”Ђв”Ђ */}
+      {/* ── Executed history ── */}
       {view === 'my' && (
         <div style={{ padding: '0 18px' }}>
           {myOrders.filter(o => o.status !== 'OPEN').length === 0 ? (
@@ -756,7 +756,7 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
               <div style={{ fontSize: 24 }}>{order.status === 'EXECUTED' ? 'вњ…' : 'вќЊ'}</div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: '#EAE2CC' }}>{fmtBalance(order.amountCoins)} бљ™</div>
-                <div style={{ fontSize: 10, color: '#5A5248', marginTop: 2 }}>{order.status === 'EXECUTED' ? t.exchange.executed : t.exchange.cancelled} В· {order.priceTon.toFixed(5)} TON/1M</div>
+                <div style={{ fontSize: 10, color: '#5A5248', marginTop: 2 }}>{order.status === 'EXECUTED' ? t.exchange.executed : t.exchange.cancelled} · {order.priceTon.toFixed(5)} TON/1M</div>
               </div>
               <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, color: order.status === 'EXECUTED' ? '#3DBA7A' : '#5A5248' }}>
                 {order.totalTon.toFixed(4)} TON
@@ -766,14 +766,14 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
         </div>
       )}
 
-      {/* в”Ђв”Ђ Buyers order book (BUY orders) в”Ђв”Ђ */}
+      {/* ── Buyers order book (BUY orders) ── */}
       {view === 'buybook' && (
         <div style={{ padding: '0 18px' }}>
           {buyOrders.filter(o => !o.isOwn).length === 0 ? (
             <div style={{ textAlign: 'center', padding: 32 }}>
               <div style={{ fontSize: 32, marginBottom: 8 }}>рџ“­</div>
               <div style={{ fontSize: 13, color: '#5A5248' }}>No buy orders</div>
-              <div style={{ fontSize: 11, color: '#5A5248', marginTop: 4 }}>Create a BUY order вЂ” set price and amount</div>
+              <div style={{ fontSize: 11, color: '#5A5248', marginTop: 4 }}>Create a BUY order — set price and amount</div>
             </div>
           ) : (
             <>
@@ -803,7 +803,7 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
         </div>
       )}
 
-      {/* в”Ђв”Ђ Modals в”Ђв”Ђ */}
+      {/* ── Modals ── */}
       {showCreate && user && (
         <CreateOrderModal
           userBalance={user.balance}
@@ -847,7 +847,7 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#EAE2CC' }}>{trader.name}</div>
-                <div style={{ fontSize: 10, color: '#5A5248', marginTop: 2 }}>ELO {trader.elo} В· {trader.trades} trades</div>
+                <div style={{ fontSize: 10, color: '#5A5248', marginTop: 2 }}>ELO {trader.elo} · {trader.trades} trades</div>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 700, color: '#F0C85A' }}>{trader.volumeTon.toFixed(2)} TON</div>

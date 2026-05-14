@@ -94,7 +94,7 @@ export const NationsPage: React.FC = () => {
 
   return (
     <PageLayout title={t.nations.title} backTo="/" centered>
-      {/* РњРѕР№ РєР»Р°РЅ вЂ” С€Р°РїРєР° */}
+      {/* Мой клан — шапка */}
       {myClan && myMembership && (
         <div style={clanHeroStyle}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
@@ -102,7 +102,7 @@ export const NationsPage: React.FC = () => {
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 18, fontWeight: 800, color: '#F0E8CC' }}>{myClan.name}</div>
               <div style={{ fontSize: 11, color: '#9A9490', marginTop: 3 }}>
-                {isLeader ? t.nations.leader : t.nations.fighter} В· {t.nations.fightersCount(myClan._count?.members ?? 0)}
+                {isLeader ? t.nations.leader : t.nations.fighter} · {t.nations.fightersCount(myClan._count?.members ?? 0)}
               </div>
             </div>
             <button onClick={handleLeave} style={leaveBtn}>{t.nations.leave}</button>
@@ -115,7 +115,7 @@ export const NationsPage: React.FC = () => {
             <Stat val={myClan.elo ?? 1000} lbl="ELO" color="#9B85FF" />
           </div>
 
-          {/* РђРєС‚РёРІРЅР°СЏ РІРѕР№РЅР° */}
+          {/* Активная война */}
           {activeWar && !activeWar.isPending && (
             <div style={warBannerStyle}>
               <div style={{ fontSize: 10, fontWeight: 800, color: '#FF5B5B', letterSpacing: '.08em', marginBottom: 8 }}>
@@ -141,7 +141,7 @@ export const NationsPage: React.FC = () => {
             </div>
           )}
 
-          {/* Р’С‹Р·РѕРІС‹ РІРѕР№РЅС‹ (РґР»СЏ Р»РёРґРµСЂР°) */}
+          {/* Вызовы войны (для лидера) */}
           {isLeader && challenges.length > 0 && (
             <div style={{ marginTop: 12 }}>
               {challenges.map(ch => (
@@ -149,7 +149,7 @@ export const NationsPage: React.FC = () => {
                   <span style={{ fontSize: 22 }}>{ch.attackerClan.flag}</span>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: '#FF5B5B' }}>{t.nations.warChallenge}</div>
-                    <div style={{ fontSize: 11, color: '#9A9490' }}>{ch.attackerClan.name} В· {t.nations.treasuryLabel} {fmtBalance(ch.attackerClan.treasury ?? '0')} бљ™</div>
+                    <div style={{ fontSize: 11, color: '#9A9490' }}>{ch.attackerClan.name} · {t.nations.treasuryLabel} {fmtBalance(ch.attackerClan.treasury ?? '0')} бљ™</div>
                   </div>
                   <button onClick={() => handleAcceptWar(ch.id)} style={acceptWarBtn}>{t.nations.accept}</button>
                 </div>
@@ -157,7 +157,7 @@ export const NationsPage: React.FC = () => {
             </div>
           )}
 
-          {/* РљРЅРѕРїРєРё РґРµР№СЃС‚РІРёР№ */}
+          {/* Кнопки действий */}
           <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
             <button onClick={() => setShowContribute(true)} style={secBtn}>{t.nations.contribute}</button>
             {isLeader && !activeWar && (
@@ -176,7 +176,7 @@ export const NationsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Р’РєР»Р°РґРєРё */}
+      {/* Вкладки */}
       <div style={segStyle}>
         {myClan && <button style={segBtn(tab === 'clan')} onClick={() => setTab('clan')}>{t.nations.tabs.clan}</button>}
         <button style={segBtn(tab === 'battles')} onClick={() => setTab('battles')}>{t.nations.tabs.battles}</button>
@@ -185,7 +185,7 @@ export const NationsPage: React.FC = () => {
         <button style={segBtn(tab === 'ranking')} onClick={() => setTab('ranking')}>{t.nations.tabs.ranking}</button>
       </div>
 
-      {/* РЎРїРёСЃРѕРє РІРѕР№РЅ */}
+      {/* Список войн */}
       {tab === 'wars' && (
         <>
           <div style={secStyle}>{t.nations.activeWars}</div>
@@ -224,7 +224,7 @@ export const NationsPage: React.FC = () => {
         </>
       )}
 
-      {/* РљР»Р°РЅРѕРІС‹Рµ СЃСЂР°Р¶РµРЅРёСЏ */}
+      {/* Клановые сражения */}
       {tab === 'battles' && (
         <>
           <div style={{ margin: '0 18px 12px', padding: '12px 14px', background: 'rgba(123,97,255,0.08)', border: '1px solid rgba(123,97,255,0.2)', borderRadius: 14 }}>
@@ -260,11 +260,11 @@ export const NationsPage: React.FC = () => {
             const days  = hours != null ? Math.floor(hours / 24) : null;
             const timeStr = days != null
               ? days > 0 ? `${days}d ${hours! % 24}h` : `${hours}h`
-              : 'вЂ”';
+              : '—';
 
             return (
               <div key={b.id} style={{ margin: '0 18px 12px', background: 'rgba(255,255,255,.04)', border: '1px solid rgba(123,97,255,0.2)', borderRadius: 18, overflow: 'hidden' }}>
-                {/* РЎС‚Р°С‚СѓСЃ */}
+                {/* Статус */}
                 <div style={{ background: 'rgba(123,97,255,0.08)', padding: '8px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: 10, fontWeight: 700, color: b.status === 'IN_PROGRESS' ? '#3DBA7A' : '#FF9F43', letterSpacing: '.07em' }}>
                     {b.status === 'IN_PROGRESS' ? t.nations.inProgress : t.nations.waiting}
@@ -274,7 +274,7 @@ export const NationsPage: React.FC = () => {
                   </span>
                 </div>
 
-                {/* РљР»СѓР±С‹ Рё СЃС‡С‘С‚ */}
+                {/* Клубы и счёт */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 14px 8px' }}>
                   <div style={{ flex: 1, textAlign: 'center' }}>
                     <div style={{ fontSize: 26 }}>{b.challengerClan.flag}</div>
@@ -309,7 +309,7 @@ export const NationsPage: React.FC = () => {
                   </div>
                 )}
 
-                {/* Р”РµР№СЃС‚РІРёРµ */}
+                {/* Действие */}
                 {isParticipant && !isJoined && (
                   <div style={{ padding: '0 14px 14px' }}>
                     <button onClick={() => setShowJoinBattle(b)} style={{ width: '100%', padding: '10px', background: '#7B61FF', color: '#fff', border: 'none', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -319,7 +319,7 @@ export const NationsPage: React.FC = () => {
                 )}
                 {isJoined && (
                   <div style={{ padding: '0 14px 12px', fontSize: 11, color: '#3DBA7A', textAlign: 'center' }}>
-                    {t.nations.participating} В· {t.nations.betAmount(fmtBalance(b.myContribution!.amount))}
+                    {t.nations.participating} · {t.nations.betAmount(fmtBalance(b.myContribution!.amount))}
                   </div>
                 )}
               </div>
@@ -328,7 +328,7 @@ export const NationsPage: React.FC = () => {
         </>
       )}
 
-      {/* РЎРїРёСЃРѕРє СѓС‡Р°СЃС‚РЅРёРєРѕРІ */}
+      {/* Список участников */}
       {tab === 'members' && myClan && (
         <>
           {pendingMembers.length > 0 && isLeader && (
@@ -340,7 +340,7 @@ export const NationsPage: React.FC = () => {
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: '#F0E8CC' }}>{m.user?.firstName ?? t.nations.player}</div>
                     <div style={{ fontSize: 10, color: '#9A9490' }}>
-                      ELO {m.user?.elo ?? '?'} В· {t.nations.contribution}: {fmtBalance(m.pendingContribution ?? '0')} бљ™
+                      ELO {m.user?.elo ?? '?'} · {t.nations.contribution}: {fmtBalance(m.pendingContribution ?? '0')} бљ™
                     </div>
                   </div>
                   <button onClick={() => handleApprove(m.id, true)} style={approveBtn}>вњ“</button>
@@ -363,7 +363,7 @@ export const NationsPage: React.FC = () => {
                   {m.role === 'COMMANDER' && <span style={{ fontSize: 10, color: '#F0C85A' }}>рџ‘‘</span>}
                 </div>
                 <div style={{ fontSize: 10, color: '#9A9490', marginTop: 2 }}>
-                  ELO {m.user?.elo ?? '?'} В· {m.warWins}W/{m.warLosses}L В· {t.nations.contribution} {fmtBalance(m.contribution ?? '0')} бљ™
+                  ELO {m.user?.elo ?? '?'} · {m.warWins}W/{m.warLosses}L · {t.nations.contribution} {fmtBalance(m.contribution ?? '0')} бљ™
                 </div>
               </div>
               {isLeader && m.userId !== user?.id && !m.isPending && (
@@ -374,7 +374,7 @@ export const NationsPage: React.FC = () => {
         </>
       )}
 
-      {/* Р РµР№С‚РёРЅРі */}
+      {/* Рейтинг */}
       {tab === 'ranking' && (
         <>
           <div style={secStyle}>{t.nations.ranking}</div>
@@ -388,7 +388,7 @@ export const NationsPage: React.FC = () => {
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: '#F0E8CC' }}>{n.name}</div>
                 <div style={{ fontSize: 10, color: '#9A9490', marginTop: 2 }}>
-                  {t.nations.fightersCount(n._count?.members ?? n.memberCount ?? 0)} В· ELO {n.elo ?? n.avgElo ?? 1000}
+                  {t.nations.fightersCount(n._count?.members ?? n.memberCount ?? 0)} · ELO {n.elo ?? n.avgElo ?? 1000}
                 </div>
               </div>
               <div style={{ textAlign: 'right' }}>
@@ -404,7 +404,7 @@ export const NationsPage: React.FC = () => {
         </>
       )}
 
-      {/* РњРѕРґР°Р»С‹ */}
+      {/* Модалы */}
       {showContribute && myClan && (
         <ContributeModal
           clanName={myClan.name}
@@ -448,7 +448,7 @@ export const NationsPage: React.FC = () => {
   );
 };
 
-// в”Ђв”Ђв”Ђ Sub-modals в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+// ─── Sub-modals ───────────────────────────────────────────────────────────────
 const ContributeModal: React.FC<{ clanName: string; clanFlag: string; onClose: () => void; onSuccess: () => void }> = ({ clanName, clanFlag, onClose, onSuccess }) => {
   const t = useT();
   const [amount, setAmount] = useState('10000');
@@ -565,7 +565,7 @@ const JoinClanModal: React.FC<{ clanId: string; clan?: Nation; onClose: () => vo
           <div style={{ fontSize: 48 }}>{clan?.flag}</div>
           <div style={{ fontSize: 18, fontWeight: 700, color: '#F0E8CC' }}>{clan?.name}</div>
           <div style={{ fontSize: 11, color: '#9A9490', marginTop: 4 }}>
-            {t.nations.fightersCount(clan?._count?.members ?? 0)} В· ELO {clan?.elo ?? 1000}
+            {t.nations.fightersCount(clan?._count?.members ?? 0)} · ELO {clan?.elo ?? 1000}
           </div>
         </div>
         <div style={{ fontSize: 11, color: '#9A9490', marginBottom: 12 }}>
@@ -694,7 +694,7 @@ const JoinBattleModal: React.FC<{
           <div style={{ fontSize: 32, marginBottom: 4 }}>{myClan.flag} вљ”пёЏ</div>
           <div style={{ fontSize: 16, fontWeight: 700, color: '#7B61FF' }}>{t.nations.joinBattleTitle}</div>
           <div style={{ fontSize: 11, color: '#9A9490', marginTop: 4 }}>
-            {t.nations.pool}: {fmtBalance(battle.pool)} бљ™ В· {battle._count?.contributions ?? 0} {t.nations.participants}
+            {t.nations.pool}: {fmtBalance(battle.pool)} бљ™ · {battle._count?.contributions ?? 0} {t.nations.participants}
           </div>
         </div>
         <div style={{ fontSize: 11, color: '#9A9490', marginBottom: 12 }}>
@@ -720,7 +720,7 @@ const JoinBattleModal: React.FC<{
   );
 };
 
-// в”Ђв”Ђв”Ђ Helpers в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 const Stat: React.FC<{ val: string | number; lbl: string; color: string }> = ({ val, lbl, color }) => (
   <div>
     <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 18, fontWeight: 800, color }}>{val}</div>
@@ -728,7 +728,7 @@ const Stat: React.FC<{ val: string | number; lbl: string; color: string }> = ({ 
   </div>
 );
 
-// в”Ђв”Ђв”Ђ Styles вЂ” Premium Dark (СЃРѕРіР»Р°СЃРѕРІР°РЅ СЃ BattlesPage/GamePage) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+// ─── Styles — Premium Dark (согласован с BattlesPage/GamePage) ────────────────
 const clanHeroStyle: React.CSSProperties = {
   margin: '6px 18px', padding: 18,
   background: 'linear-gradient(135deg,#141018,#0F0E18)',

@@ -1,7 +1,7 @@
 ﻿/**
- * LessonPage вЂ” СЃС‚СЂР°РЅРёС†Р° СЂРµС€РµРЅРёСЏ С€Р°С…РјР°С‚РЅРѕР№ Р·Р°РґР°С‡Рё
- * РњР°СЂС€СЂСѓС‚: /lesson/:puzzleId?difficulty=easy|medium|hard
- * РўР°РєР¶Рµ РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ РґР»СЏ Р—Р°РґР°С‡Рё РґРЅСЏ: /lesson/daily
+ * LessonPage — страница решения шахматной задачи
+ * Маршрут: /lesson/:puzzleId?difficulty=easy|medium|hard
+ * Также используется для Задачи дня: /lesson/daily
  */
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
@@ -15,7 +15,7 @@ import { authApi } from '@/api';
 import { useT } from '@/i18n/useT';
 import { VictoryScreen } from '@/components/game/VictoryScreen';
 
-// UCI С…РѕРґ в†’ human-readable
+// UCI ход → human-readable
 function uciToSan(fen: string, uci: string): string {
   try {
     const chess = new Chess(fen);
@@ -36,7 +36,7 @@ export const LessonPage: React.FC = () => {
   const navigate = useNavigate();
   const { setUser } = useUserStore();
 
-  // Р РµР¶РёРј: "learn" (РїРѕРґСЃРєР°Р·РєРё) РёР»Рё "test" (Р±РµР· РїРѕРґСЃРєР°Р·РѕРє, РЅР°РіСЂР°РґР° Г—1.5)
+  // Режим: "learn" (подсказки) или "test" (без подсказок, награда ×1.5)
   const mode = (searchParams.get('mode') ?? 'learn') as 'learn' | 'test';
   const isTestMode = mode === 'test';
 
@@ -44,8 +44,8 @@ export const LessonPage: React.FC = () => {
   const [phase, setPhase] = useState<Phase>('loading');
   const [chess, setChess] = useState<Chess>(new Chess());
   const [fen, setFen] = useState('');
-  const [playerMoves, setPlayerMoves] = useState<string[]>([]);   // UCI С…РѕРґС‹ РёРіСЂРѕРєР°
-  const [solutionIdx, setSolutionIdx] = useState(0);              // С‚РµРєСѓС‰РёР№ РёРЅРґРµРєСЃ РІ СЂРµС€РµРЅРёРё
+  const [playerMoves, setPlayerMoves] = useState<string[]>([]);   // UCI ходы игрока
+  const [solutionIdx, setSolutionIdx] = useState(0);              // текущий индекс в решении
   const [isPlayerTurn, setIsPlayerTurn] = useState(false);
   const [hint, setHint] = useState<string | null>(null);
   const [wrongSquare, setWrongSquare] = useState<string | null>(null);
@@ -54,7 +54,7 @@ export const LessonPage: React.FC = () => {
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
   const [showFanfare, setShowFanfare] = useState(false);
 
-  // Р—Р°РіСЂСѓР·РєР° Р·Р°РґР°С‡Рё
+  // Загрузка задачи
   useEffect(() => {
     loadPuzzle();
   }, [puzzleId]);
@@ -90,12 +90,12 @@ export const LessonPage: React.FC = () => {
     setPhase('intro');
   };
 
-  // РќР°С‡РёРЅР°РµРј вЂ” РїСЂРѕС‚РёРІРЅРёРє РґРµР»Р°РµС‚ РїРµСЂРІС‹Р№ С…РѕРґ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё
+  // Начинаем — противник делает первый ход автоматически
   const startPuzzle = useCallback(() => {
     if (!puzzle) return;
     setPhase('playing');
 
-    // РџРµСЂРІС‹Р№ С…РѕРґ РІ solution вЂ” С…РѕРґ РїСЂРѕС‚РёРІРЅРёРєР°
+    // Первый ход в solution — ход противника
     if (puzzle.moves.length > 0) {
       setTimeout(() => {
         applyOpponentMove(puzzle, new Chess(puzzle.fen), 0);
@@ -117,12 +117,12 @@ export const LessonPage: React.FC = () => {
     haptic.impact('light');
   };
 
-  // РћР±СЂР°Р±РѕС‚РєР° С…РѕРґР° РёРіСЂРѕРєР°
+  // Обработка хода игрока
   const handleSquareClick = (square: string) => {
     if (!isPlayerTurn || phase !== 'playing') return;
 
     if (selectedSquare) {
-      // РџРѕРїС‹С‚РєР° СЃРґРµР»Р°С‚СЊ С…РѕРґ
+      // Попытка сделать ход
       if (selectedSquare === square) {
         setSelectedSquare(null);
         setOptionSquares({});
@@ -132,7 +132,7 @@ export const LessonPage: React.FC = () => {
       setSelectedSquare(null);
       setOptionSquares({});
     } else {
-      // Р’С‹Р±РѕСЂ С„РёРіСѓСЂС‹
+      // Выбор фигуры
       const piece = chess.get(square as import("chess.js").Square);
       if (!piece || piece.color !== chess.turn()) return;
       setSelectedSquare(square);
@@ -166,7 +166,7 @@ export const LessonPage: React.FC = () => {
     const expectedFrom = expectedUci.slice(0, 2);
     const expectedTo   = expectedUci.slice(2, 4);
 
-    // РџСЂРѕР±СѓРµРј РїСЂРёРјРµРЅРёС‚СЊ С…РѕРґ
+    // Пробуем применить ход
     try {
       const tempChess = new Chess(chess.fen());
       const move = tempChess.move({ from: from as import("chess.js").Square, to: to as import("chess.js").Square, promotion: 'q' });
@@ -175,7 +175,7 @@ export const LessonPage: React.FC = () => {
       const actualUci = move.from + move.to + (move.promotion ?? '');
 
       if (from === expectedFrom && to === expectedTo) {
-        // вњ… РџСЂР°РІРёР»СЊРЅС‹Р№ С…РѕРґ
+        // вњ… Правильный ход
         haptic.impact('medium');
         setChess(tempChess);
         setFen(tempChess.fen());
@@ -185,14 +185,14 @@ export const LessonPage: React.FC = () => {
         setHint(null);
         setWrongSquare(null);
 
-        // РџСЂРѕРІРµСЂСЏРµРј вЂ” РєРѕРЅРµС† СЂРµС€РµРЅРёСЏ?
+        // Проверяем — конец решения?
         if (nextIdx >= puzzle.moves.length) {
           // {t.lesson.solved}
           setIsPlayerTurn(false);
           setPhase('correct');
           submitSolution([...newMoves]);
         } else {
-          // РџСЂРѕС‚РёРІРЅРёРє РѕС‚РІРµС‡Р°РµС‚
+          // Противник отвечает
           setSolutionIdx(nextIdx);
           setIsPlayerTurn(false);
           setTimeout(() => {
@@ -200,7 +200,7 @@ export const LessonPage: React.FC = () => {
           }, 700);
         }
       } else {
-        // вќЊ РќРµРІРµСЂРЅС‹Р№ С…РѕРґ
+        // вќЊ Неверный ход
         haptic.impact('heavy');
         setWrongSquare(to);
         setPhase('wrong');
@@ -208,7 +208,7 @@ export const LessonPage: React.FC = () => {
           setWrongSquare(null);
           setPhase('playing');
         }, 1000);
-        // Р’ СЂРµР¶РёРјРµ С‚РµСЃС‚ вЂ” Р±РµР· РїРѕРґСЃРєР°Р·РѕРє
+        // В режиме тест — без подсказок
         if (!isTestMode) {
           const san = uciToSan(chess.fen(), expectedUci);
           setHint(`${t.lesson.wrong}${san}`);
@@ -254,7 +254,7 @@ export const LessonPage: React.FC = () => {
     }
   };
 
-  const diffLabel: Record<string, string> = { easy: 'рџџў Р›С‘РіРєР°СЏ', medium: 'рџџЎ РЎСЂРµРґРЅСЏСЏ', hard: 'рџ”ґ РЎР»РѕР¶РЅР°СЏ' };
+  const diffLabel: Record<string, string> = { easy: 'рџџў Лёгкая', medium: 'рџџЎ Средняя', hard: 'рџ”ґ Сложная' };
   const getDiff = (rating: number) =>
     rating < 1200 ? 'easy' : rating < 1700 ? 'medium' : 'hard';
 
@@ -262,7 +262,7 @@ export const LessonPage: React.FC = () => {
     return (
       <div style={{ position: 'fixed', inset: 0, background: '#0D0D12', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16 }}>
         <div style={{ width: 40, height: 40, border: '3px solid rgba(123,97,255,0.3)', borderTopColor: '#7B61FF', borderRadius: '50%', animation: 'spin .7s linear infinite' }} />
-        <div style={{ color: '#5A5248', fontSize: 13 }}>Р—Р°РіСЂСѓР¶Р°РµРј Р·Р°РґР°С‡Сѓ...</div>
+        <div style={{ color: '#5A5248', fontSize: 13 }}>Загружаем задачу...</div>
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
     );
@@ -271,8 +271,8 @@ export const LessonPage: React.FC = () => {
   if (!puzzle) {
     return (
       <div style={{ position: 'fixed', inset: 0, background: '#0D0D12', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16, padding: 24 }}>
-        <div style={{ fontSize: 13, color: '#9A9490', textAlign: 'center' }}>Р—Р°РґР°С‡Р° РЅРµ РЅР°Р№РґРµРЅР°</div>
-        <button onClick={() => navigate('/tasks')} style={goldBtn}>в†ђ РќР°Р·Р°Рґ</button>
+        <div style={{ fontSize: 13, color: '#9A9490', textAlign: 'center' }}>Задача не найдена</div>
+        <button onClick={() => navigate('/tasks')} style={goldBtn}>← Назад</button>
       </div>
     );
   }
@@ -283,21 +283,21 @@ export const LessonPage: React.FC = () => {
   return (
     <div style={{ position: 'fixed', inset: 0, background: '#0D0D12', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
-      {/* РўРѕРїР±Р°СЂ */}
+      {/* Топбар */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px 10px', paddingTop: 'max(14px, env(safe-area-inset-top,14px))', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink: 0 }}>
-        <button onClick={() => navigate(-1)} style={backBtn}>в†ђ</button>
+        <button onClick={() => navigate(-1)} style={backBtn}>←</button>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 13, fontWeight: 800, color: '#EAE2CC' }}>
             {puzzle.isDaily ? `рџ“… ${t.lesson.daily}` : `рџ§© ${t.lesson.title}`}
           </div>
           <div style={{ fontSize: 10, color: '#9A9490', marginTop: 2 }}>
-            {diffLabel[diff]} В· Р РµР№С‚РёРЅРі {puzzle.rating} В· +{fmtBalance(puzzle.reward)} бљ™
+            {diffLabel[diff]} · Рейтинг {puzzle.rating} · +{fmtBalance(puzzle.reward)} бљ™
           </div>
         </div>
         <div style={{ width: 36 }} />
       </div>
 
-      {/* РўРµРјР°С‚РёРєРё */}
+      {/* Тематики */}
       {puzzle.themes.length > 0 && (
         <div style={{ display: 'flex', gap: 6, padding: '8px 18px', flexWrap: 'wrap', flexShrink: 0 }}>
           {puzzle.themes.slice(0, 4).map(theme => (
@@ -308,7 +308,7 @@ export const LessonPage: React.FC = () => {
         </div>
       )}
 
-      {/* Р”РѕСЃРєР° */}
+      {/* Доска */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 16px', gap: 16 }}>
         <div style={{ position: 'relative' }}>
           <Chessboard
@@ -329,14 +329,14 @@ export const LessonPage: React.FC = () => {
           />
         </div>
 
-        {/* РЎС‚Р°С‚СѓСЃ */}
+        {/* Статус */}
         <div style={{ textAlign: 'center', minHeight: 52 }}>
           {phase === 'intro' && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
               <div style={{ fontSize: 13, color: '#9A9490' }}>
                 {chess.turn() === 'w' ? t.lesson.whiteToMove : t.lesson.blackToMove}
               </div>
-              <button onClick={startPuzzle} style={goldBtn}>в–¶ РќР°С‡Р°С‚СЊ СЂРµС€РµРЅРёРµ</button>
+              <button onClick={startPuzzle} style={goldBtn}>в–¶ Начать решение</button>
             </div>
           )}
           {phase === 'playing' && (
@@ -346,12 +346,12 @@ export const LessonPage: React.FC = () => {
           )}
           {phase === 'wrong' && (
             <div style={{ fontSize: 13, color: '#FF5B5B', fontWeight: 700, animation: 'shake .3s' }}>
-              вќЊ РќРµРІРµСЂРЅРѕ! {hint}
+              вќЊ Неверно! {hint}
             </div>
           )}
           {phase === 'correct' && (
             <div style={{ fontSize: 13, color: '#3DBA7A', fontWeight: 700 }}>
-              вњ… РџСЂР°РІРёР»СЊРЅРѕ! РџСЂРѕРІРµСЂСЏРµРј...
+              вњ… Правильно! Проверяем...
             </div>
           )}
           {phase === 'solved' && (
@@ -366,10 +366,10 @@ export const LessonPage: React.FC = () => {
                 </div>
               )}
               {puzzle.completed && BigInt(reward || '0') === 0n && (
-                <div style={{ fontSize: 12, color: '#9A9490' }}>РЈР¶Рµ СЂРµС€Р°Р» вЂ” РїРѕРІС‚РѕСЂ Р±РµР· РЅР°РіСЂР°РґС‹</div>
+                <div style={{ fontSize: 12, color: '#9A9490' }}>Уже решал — повтор без награды</div>
               )}
               <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
-                <button onClick={() => navigate('/tasks')} style={ghostBtn}>в†ђ Рљ Р·Р°РґР°РЅРёСЏРј</button>
+                <button onClick={() => navigate('/tasks')} style={ghostBtn}>← К заданиям</button>
                 <button
                   onClick={() => {
                     const diff = getDiff(puzzle.rating);
@@ -377,7 +377,7 @@ export const LessonPage: React.FC = () => {
                   }}
                   style={goldBtn}
                 >
-                  РЎР»РµРґСѓСЋС‰Р°СЏ в–¶
+                  Следующая в–¶
                 </button>
               </div>
             </div>

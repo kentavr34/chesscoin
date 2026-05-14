@@ -251,7 +251,7 @@ export const PuzzleLessonPage: React.FC = () => {
               padding: '12px 24px', background: '#7B61FF', color: '#fff',
               border: 'none', borderRadius: 12, fontWeight: 600, cursor: 'pointer', fontSize: 14,
             }}>
-              в†ђ Back to lessons
+              ← Back to lessons
             </button>
             <button onClick={() => navigate('/')} style={{
               padding: '12px 24px', background: '#1C2030', color: '#A8B0C8',
@@ -270,7 +270,7 @@ export const PuzzleLessonPage: React.FC = () => {
             flex: 1, padding: '12px 0', borderRadius: 12, border: 'none', cursor: moveIdx === 0 ? 'not-allowed' : 'pointer',
             background: '#1C2030', color: moveIdx === 0 ? '#6B7494' : '#E8EAF0', fontWeight: 600, fontSize: 14,
           }}>
-            в†ђ Back
+            ← Back
           </button>
           <div style={{ fontSize: 13, color: '#A8B0C8', minWidth: 60, textAlign: 'center' }}>
             {moveIdx}/{moves.length}
@@ -282,7 +282,7 @@ export const PuzzleLessonPage: React.FC = () => {
             color: moveIdx >= moves.length ? '#6B7494' : '#fff',
             fontWeight: 600, fontSize: 14,
           }}>
-            Forward в†’
+            Forward →
           </button>
         </div>
       )}
