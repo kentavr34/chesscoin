@@ -155,17 +155,48 @@
 
 ---
 
+### 2026-05-15 · § 1.10 reset-safe · Prisma миграция enum + DIRECT_URL (commit `d45c1be`)
+- Сделано:
+  - `backend/prisma/migrations/20260515_transaction_type_sync/migration.sql`
+    — DO-блок с `ALTER TYPE ADD VALUE` × 5 (TOURNAMENT_WIN, BATTLE_DONATION,
+    CLAN_WAR_WIN, TON_DEPOSIT, WALLET_UNLOCK), каждый завернут в
+    `EXCEPTION WHEN duplicate_object THEN null`.
+  - `backend/Dockerfile` CMD: `npx prisma migrate deploy && node dist/index.js`
+    — миграции применяются при каждом старте контейнера.
+  - `backend/prisma/schema.prisma`: добавлен `directUrl = env("DIRECT_URL")`.
+    Без него `migrate deploy` через pgbouncer таймаутит на
+    `pg_advisory_lock` (transaction-mode pgbouncer не поддерживает session
+    locks). С `directUrl` — Prisma идёт напрямую в Postgres только для
+    миграций; рантайм клиент по-прежнему через pgbouncer.
+  - `docker-compose.yml`: backend env `DIRECT_URL=postgres:5432`.
+  - На проде вручную дописаны записи в `_prisma_migrations` для 2026-05-09,
+    2026-05-10, 2026-05-15 (раньше применялись через `ALTER` напрямую).
+  - Убит зависший pid 185489 с advisory lock от прошлой попытки `migrate
+    resolve` через pgbouncer.
+- Проверка:
+  - `docker logs chesscoin_backend --since 30s`: `30 migrations found` →
+    `No pending migrations to apply` → `[DB] Connected` → `[Server] Port
+    3000 · production`. Полный набор cron-ов запущен. 0 ошибок.
+  - Кран `checkTournamentResults` теперь не упадёт — все 5 enum-значений
+    из schema есть в БД.
+- Решение: ✅ закрыто. ChessCoin теперь reset-safe для миграций.
+- 🟩 ШАБЛОН: «Prisma migrate через pgbouncer» — добавить `directUrl` в
+  schema.prisma и `DIRECT_URL` env в compose. Migrate использует
+  directUrl, runtime — pgbouncer. Standard паттерн Prisma для Supabase/
+  PgBouncer; работает идеально для нас. Запомнить.
+
+---
+
 ## Очередь следующих шагов (по § 2 MASTER_PLAN)
 
-1. **reset-safe TransactionType** — оформить идемпотентную Prisma-миграцию
-   `<date>_transaction_type_sync` с `ALTER TYPE ADD VALUE IF NOT EXISTS` × 5,
-   чтобы hard-reboot prod не восстановил неполный enum.
-2. **§ 2 C.4** — i18n WarsPage / TournamentsPage: убрать русский хардкод,
+1. **§ 2 C.4** — i18n WarsPage / TournamentsPage: убрать русский хардкод,
    там где должен быть `t.wars.*` / `t.tournaments.*`.
-3. **§ 2 B.5** — Социальные таски с бонусами 3K/5K/10K/20K/50K/100K
+2. **§ 2 B.5** — Социальные таски с бонусами 3K/5K/10K/20K/50K/100K
    за 3/5/10/20/50/100 рефералов.
-4. **§ 2 A.1** — Splash иконка коня без синего фона (Кенан ругал,
+3. **§ 2 A.1** — Splash иконка коня без синего фона (Кенан ругал,
    что вернулась после фикса useAuth).
+4. **§ 2 B.1** — TonConnect: 1 TON единоразово за подключение кошелька
+   (в коде есть `WALLET_UNLOCK` enum, логика отсутствует).
 
 > Правило: один пункт = одна запись в журнале сразу после деплоя + визуальной
 > проверки. Если шаблон удачный — `🟩 ШАБЛОН` с инструкцией «как повторить».
