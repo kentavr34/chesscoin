@@ -14,6 +14,8 @@ import { CountryFlag } from '@/components/ui/CountryFlag';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar } from '@/components/ui/Avatar';
+import { IcoEye } from '@/components/icons/UiIcons';
+import { IcoSwords } from '@/components/icons/TournamentIcons';
 
 interface BattleCardPlayer {
   id?: string;
@@ -94,19 +96,24 @@ export const BattleCard: React.FC<BattleCardProps> = React.memo(({
           <div style={{ fontSize: 'var(--battle-card-name-size)', color: p1Color, fontWeight: 700, textAlign: 'center', maxWidth: 'var(--battle-card-player-width)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {player1?.firstName ?? '?'}
           </div>
+          {player1?.elo != null && (
+            <div style={{ fontSize: 'var(--battle-card-label-size, 10px)', color: '#9A9490', textAlign: 'center', fontFamily: "'JetBrains Mono',monospace" }}>
+              {player1.elo}
+            </div>
+          )}
         </div>
 
         {/* Центр: статус + VS + кнопки (L2: Responsive) */}
         <div style={{ flex: 1, textAlign: 'center' }}>
-          <div style={{ fontSize: 'var(--battle-card-emoji-size)', marginBottom: 'var(--gap-xs)' }}>⚔️</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--gap-xs)', color: cfg.color }}><IcoSwords size={18} /></div>
           <div style={{ fontSize: 'var(--battle-card-status-size)', color: cfg.color, fontWeight: 700 }}>
             {winner === 'draw' ? t.battleCard.draw : t.battleCard[cfg.textKey as keyof typeof t.battleCard] ?? cfg.textKey}
           </div>
 
           {/* W3: Счётчик зрителей */}
           {spectatorCount !== undefined && spectatorCount > 0 && (
-            <div style={{ fontSize: 'var(--battle-card-label-size)', color: 'var(--color-text-muted, #4A5270)', marginTop: 'var(--gap-xs)' }}>
-              👁 {spectatorCount}
+            <div style={{ fontSize: 'var(--battle-card-label-size)', color: 'var(--color-text-muted, #4A5270)', marginTop: 'var(--gap-xs)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <IcoEye size={11} /> {spectatorCount}
             </div>
           )}
 
@@ -115,9 +122,9 @@ export const BattleCard: React.FC<BattleCardProps> = React.memo(({
             {status === 'IN_PROGRESS' && onSpectate && sessionId && (
               <button
                 onClick={onSpectate}
-                style={{ padding: 'var(--battle-card-button-padding)', background: 'var(--battle-card-spectate-bg, rgba(245,200,66,0.1))', color: 'var(--color-accent, #F5C842)', border: `1px solid var(--battle-card-spectate-border, rgba(245,200,66,0.25))`, borderRadius: 'var(--radius-sm)', fontSize: 'var(--battle-card-status-size)', cursor: 'pointer', fontFamily: 'inherit' }}
+                style={{ padding: 'var(--battle-card-button-padding)', background: 'var(--battle-card-spectate-bg, rgba(245,200,66,0.1))', color: 'var(--color-accent, #F5C842)', border: `1px solid var(--battle-card-spectate-border, rgba(245,200,66,0.25))`, borderRadius: 'var(--radius-sm)', fontSize: 'var(--battle-card-status-size)', cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 5 }}
               >
-                👁 {t.game?.watch ?? 'Watch'}
+                <IcoEye size={12} /> {t.game?.watch ?? 'Watch'}
               </button>
             )}
             {status === 'FINISHED' && onSave && (
@@ -142,6 +149,11 @@ export const BattleCard: React.FC<BattleCardProps> = React.memo(({
           <div style={{ fontSize: 'var(--battle-card-name-size)', color: p2Color, fontWeight: 700, textAlign: 'center', maxWidth: 'var(--battle-card-player-width)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {player2?.firstName ?? '?'}
           </div>
+          {player2?.elo != null && (
+            <div style={{ fontSize: 'var(--battle-card-label-size, 10px)', color: '#9A9490', textAlign: 'center', fontFamily: "'JetBrains Mono',monospace" }}>
+              {player2.elo}
+            </div>
+          )}
         </div>
       </div>
     </div>

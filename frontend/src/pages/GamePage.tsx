@@ -13,6 +13,7 @@ import { useUserStore } from '@/store/useUserStore';
 import { ChessBoard } from '@/components/game/ChessBoard';
 import { sound } from '@/lib/sound';
 import { fmtBalance } from '@/utils/format';
+import { useConfirm } from '@/components/ui/ConfirmModal';
 
 // ── Константы ──────────────────────────────────────────────────────────────────
 const PIECE_SYMBOLS: Record<string, string> = { p: 'в™џ', n: 'в™ћ', b: 'в™ќ', r: 'в™њ', q: 'в™›' };
@@ -642,6 +643,22 @@ const GameDialog: React.FC<DialogProps> = ({
 // ── Основной компонент ─────────────────────────────────────────────────────────
 export function GamePage() {
   const navigate = useNavigate();
+  const [leaveConfirm, LeaveConfirmDialog] = useConfirm();
+  const gameOverRefForLeave = useRef(false);
+
+  // Confirm перед выходом из активной партии (A.4 MASTER_PLAN).
+  // Если игра ещё идёт — спрашиваем, иначе сразу navigate(to).
+  const handleLeavePage = useCallback(async (to: string = '/') => {
+    if (gameOverRefForLeave.current) { navigate(to); return; }
+    const ok = await leaveConfirm({
+      title: 'Покинуть партию?',
+      message: 'Партия ещё идёт. Если уйдёте — будет засчитано поражение и ставка сгорит.',
+      okLabel: 'Покинуть',
+      cancelLabel: 'Остаться',
+      danger: true,
+    });
+    if (ok) navigate(to);
+  }, [leaveConfirm, navigate]);
   const { sessionId = '' } = useParams<{ sessionId: string }>();
 
   const { sessions, drawOfferedBy } = useGameStore();
@@ -673,6 +690,10 @@ export function GamePage() {
   const gameOver = !!session
     && session.status !== 'IN_PROGRESS'
     && session.status !== 'WAITING_FOR_OPPONENT';
+  // Зрителю confirm не нужен — он не теряет ставку и не «бросает партию».
+  useEffect(() => {
+    gameOverRefForLeave.current = gameOver || !session?.mySideId;
+  }, [gameOver, session?.mySideId]);
 
   const isBattle        = session?.type === 'BATTLE';
   const isSpectator     = isBattle && !session?.mySideId;
@@ -940,7 +961,7 @@ export function GamePage() {
         <div style={{ textAlign: 'center' }}>
           <div style={{ width: 32, height: 32, borderRadius: '50%', border: '2.5px solid rgba(74,158,255,.18)', borderTopColor: '#4A9EFF', animation: 'gp-spin 1s linear infinite', margin: '0 auto 14px' }} />
           <div style={{ fontSize: '.72rem', color: '#3A4050', fontWeight: 700 }}>Загрузка партии...</div>
-          <button onClick={() => navigate('/')} style={{ marginTop: 20, padding: '7px 18px', borderRadius: 10, background: 'rgba(255,255,255,.06)', border: '.5px solid rgba(255,255,255,.1)', color: '#4A5060', fontSize: '.7rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>← Назад</button>
+          <button onClick={() => handleLeavePage('/')} style={{ marginTop: 20, padding: '7px 18px', borderRadius: 10, background: 'rgba(255,255,255,.06)', border: '.5px solid rgba(255,255,255,.1)', color: '#4A5060', fontSize: '.7rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>← Назад</button>
         </div>
       </div>
     );
@@ -1187,9 +1208,9 @@ export function GamePage() {
         flexShrink: 0, background: 'rgba(10,12,18,.6)',
         gap: 1, position: 'relative',
       }}>
-        {/* Слот 1: Главная (всегда) */}
+        {/* Слот 1: Главная (всегда) — с confirm если партия активна */}
         <button
-          onClick={() => navigate('/')}
+          onClick={() => handleLeavePage('/')}
           style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
             gap: 5, background: 'rgba(255,255,255,.03)', border: 'none',
@@ -1422,6 +1443,8 @@ export function GamePage() {
       {/* ── Браво-фейерверк ──────────────────────────────────────────────── */}
       {bravoName && <BravoAnimation name={bravoName} />}
 
+      {/* Confirm выхода (A.4 MASTER_PLAN) */}
+      {LeaveConfirmDialog}
     </div>
   );
 };
