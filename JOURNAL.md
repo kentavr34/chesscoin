@@ -187,16 +187,89 @@
 
 ---
 
-## Очередь следующих шагов (по § 2 MASTER_PLAN) — 8 за раз
+### 2026-05-15 · A.1 · Splash без синего фона (commit `e850012`)
+- Сделано: `App.tsx SplashScreen` — `linear-gradient(135deg,#2A1F6A,#1A1540)`
+  + 72×72 синий ящик с ♟-pawn → `<CoinIcon size={144} />` (×2) с золотым
+  `drop-shadow(0 0 24px rgba(245,200,66,.45))`. Без синего фона и border.
+- Проверка: bundle `index-DT-avFsM.js`, deploy ok.
+- Решение: ✅ закрыто.
 
-1. **§ 2 A.1** — Splash иконка коня без синего фона.
-2. **§ 2 A.4** — Confirm перед выходом из активной партии.
-3. **§ 2 A.5** — Кликабельность аватаров и центрирование ELO во всех карточках.
-4. **§ 2 A.7** — ELO под аватаром, единый вид и осветлённый на 1 тон.
-5. **§ 2 A.2** — Модал «Активные сессии» с 3 мини-досками и таймерами.
-6. **§ 2 C.4** — i18n WarsPage / TournamentsPage чистка хардкода.
-7. **§ 2 B.5** — Социальные таски 3k/5k/10k/20k/50k/100k за 3/5/10/20/50/100 рефералов.
-8. **§ 2 B.1** — TonConnect 1 TON unlock + транзакция WALLET_UNLOCK.
+### 2026-05-15 · A.4 · Confirm перед выходом из активной партии (commit `e850012`)
+- Сделано: `GamePage.handleLeavePage(to)` через `useConfirm()`. Reads
+  `gameOverRefForLeave.current` (синхронизируется через `useEffect`).
+  При активной игре и не-зрителе — спрашивает «Покинуть партию? Партия
+  ещё идёт, будет засчитано поражение и ставка сгорит». При gameOver или
+  зрителе — `navigate(to)` без диалога. Заменены 2 точки выхода: кнопка
+  «← Назад» (auth-error overlay) и кнопка «Главная» в action-bar.
+  `LeaveConfirmDialog` подключен в JSX.
+- Проверка: bundle `index-DT-avFsM.js`, deploy ok.
+- Решение: ✅ закрыто.
+
+### 2026-05-15 · A.5 + A.7 · ELO под аватаром в BattleCard (commit `e850012`)
+- Сделано: BattleCard оба игрока — под именем теперь
+  `<div style="JetBrains Mono, #9A9490 (имя выше на тон — #C8C0A8)">
+  {player.elo}</div>`, центрирован. Кликабельность аватаров уже была
+  через `goProfile(player)`. Эмодзи попутно: ⚔️ → `IcoSwords`,
+  👁 (×2: badge + кнопка) → `IcoEye`.
+- Замечание: A.5 «кликабельность во всех карточках» — частично, BattleCard
+  основной, остальные 12 файлов с `<Avatar>` (Wars, Tournaments, Battles,
+  Profile, Leaderboard, Nations, MiniProfileSheet, WaitingForOpponent,
+  PgnReplayModal, BattleHistoryCard) — в большинстве уже кликабельны.
+  Требуется отдельный обход с глазами Кенана для верификации.
+- Решение: ✅ BattleCard закрыто; общий обход — open.
+
+### 2026-05-15 · A.2 · Модал «Активные сессии» — уже реализован
+- Сделано: ничего, проверка.
+- Проверка: `ActiveSessionsModal.tsx` уже содержит `MiniBoard` 72×72,
+  таймер с SVG-часами, «ВАШ ХОД» индикатор, `.slice(0, 3)` — макс 3.
+- Решение: ✅ уже закрыто, требование выполняется.
+
+### 2026-05-15 · B.5 · Социальные таски × 6 milestones (prod data)
+- Сделано: на проде в таблице `tasks` обновлено 3 существующих REFERRAL-
+  таска (`1→3`, `5`, `20` рефералов) с новыми наградами 3K/5K/20K и
+  metadata.category=SOCIAL. Добавлено 3 новых: 10/50/100 → 10K/50K/100K.
+  Итого 6 milestones как требовал Кенан: 3/5/10/20/50/100 → 3K/5K/10K/20K/50K/100K.
+- Проверка: `SELECT title, "winningAmount", metadata->>'referralCount' FROM
+  tasks WHERE "taskType"='REFERRAL'` — 6 строк, отсортированы по rc,
+  суммы и пороги совпадают.
+- Решение: ✅ закрыто. Auto-completion работает через существующий
+  механизм `tasks.ts` (G16 блок) — при достижении порога активный
+  реферал → задача авто-комплитится → `TASK_REWARD` транзакция.
+- 🟩 ШАБЛОН: «новый набор задач» — данные пишутся прямо в `tasks` таблицу
+  (UPDATE для существующих + INSERT для новых). Код не меняется,
+  потому что `taskType='REFERRAL'` уже обрабатывается тaskRouter.
+- TODO: эти UPDATE/INSERT нужно занести в Prisma seed или миграцию,
+  чтобы reset-safe. Сейчас — данные в БД, но не в репо.
+
+### 2026-05-15 · C.4 · i18n хардкод — частично, в очередь
+- Сделано: только аудит. Найдено в WarsPage ~5 хардкод-строк на русском
+  в confirm/toast (handleJoin, handleLeave). В TournamentsPage похожая
+  ситуация.
+- Решение: ⏸ пауза. Требует синхронизации с `i18n/translations.ts`
+  (ru + en). Не «быстро».
+
+### 2026-05-15 · B.1 · TonConnect 1 TON unlock — в очередь (большая фича)
+- Сделано: только аудит. На frontend есть `tonconnect.ts` +
+  `sendVerificationPayment` + UI «Connect TON Wallet». Backend-роут
+  `tonApi.verifyWallet` отсутствует в `backend/src/routes/`. Это
+  означает: фронт уже умеет отправлять платёж, но сервер не верифицирует
+  и не пишет `WALLET_UNLOCK` транзакцию.
+- Решение: ⏸ требует отдельной фазы. Нужно: TON API ключ, верификация
+  BOC через TON Center, idempotency, защита от двойного списания,
+  Wallet model с уникальным address per user.
+
+---
+
+## Очередь следующих шагов (по § 2 MASTER_PLAN)
+
+1. **§ 2 C.4** — i18n: вынести русский хардкод confirm/toast WarsPage и
+   TournamentsPage в `translations.ts` (ru+en).
+2. **B.5 reset-safe** — оформить REFERRAL-таски в Prisma seed/миграцию.
+3. **§ 2 B.1** — TonConnect 1 TON unlock (backend route + Wallet model).
+4. **§ 2 B.2** — Withdraw TON (0.5% комиссия).
+5. **§ 2 B.3** — Approve/reject вступления в страну главкомом.
+6. **§ 2 B.4** — Авто-смена главкома при 7-дневной бездействии.
+7. **§ 2 B.6** — Lesson этаж: open-by-progress (доделать блокировку).
 
 > Правило: один пункт = одна запись в журнале сразу после деплоя + визуальной
 > проверки. Если шаблон удачный — `🟩 ШАБЛОН` с инструкцией «как повторить».
