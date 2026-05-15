@@ -318,6 +318,23 @@ warsRouter.post("/countries/:id/join", authMiddleware, async (req: Request, res:
       data: { countryId: id, userId, contribution: 0n, status: 'PENDING' },
     });
 
+    // B.3 push: уведомляем главкома страны о новой заявке.
+    try {
+      const commanderId = await getCommander(id);
+      if (commanderId && commanderId !== userId) {
+        const applicant = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { firstName: true, elo: true, referralCount: true },
+        });
+        getIo().emit(`user:${commanderId}`, {
+          type: 'country:join-request',
+          countryId: id,
+          memberId: member.id,
+          applicant: applicant ?? null,
+        });
+      }
+    } catch (e) { logError('[Wars/join-notify]', e); }
+
     res.json({
       success: true,
       pending: true,
@@ -401,6 +418,9 @@ warsRouter.post("/pending/:memberId/approve", authMiddleware, async (req: Reques
         data: { status: 'APPROVED', contribution: COUNTRY_ENTRY_FEE },
       });
     });
+    try {
+      getIo().emit(`user:${target.userId}`, { type: 'country:join-approved', countryId: target.countryId });
+    } catch (e) { logError('[Wars/approve-notify]', e); }
     res.json({ success: true, approved: memberId });
   } catch (e: unknown) {
     logError("[Wars/approve]", e);
@@ -422,6 +442,9 @@ warsRouter.post("/pending/:memberId/reject", authMiddleware, async (req: Request
     if (commanderId !== userId) return res.status(403).json({ error: "NOT_COMMANDER" });
 
     await prisma.countryMember.delete({ where: { id: memberId } });
+    try {
+      getIo().emit(`user:${target.userId}`, { type: 'country:join-rejected', countryId: target.countryId });
+    } catch (e) { logError('[Wars/reject-notify]', e); }
     res.json({ success: true, rejected: memberId });
   } catch (e: unknown) {
     logError("[Wars/reject]", e);

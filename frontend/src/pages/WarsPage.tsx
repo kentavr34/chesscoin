@@ -12,6 +12,7 @@ import { DonateModal } from '@/components/ui/DonateModal';
 import { CountryFlag } from '@/components/ui/CountryFlag';
 import { IcoSwords, IcoTrophy } from '@/components/icons/TournamentIcons';
 import { IcoEye, IcoHandshake, IcoSave, IcoSearch, IcoStats } from '@/components/icons/UiIcons';
+import { getSocket } from '@/api/socket';
 
 const COUNTRY_ENTRY_FEE = 10_000n;
 
@@ -201,6 +202,27 @@ const CountryDetailModal: React.FC<{
     if (!data?.isCommander) { setPending([]); return; }
     warsApi.pending().then(r => setPending(r.pending)).catch(() => {});
   }, [data?.isCommander]);
+
+  // B.3 push: слушаем socket-уведомления.
+  // ГК получает `country:join-request` → перезагружаем pending.
+  // Заявитель получает `country:join-approved` / `country:join-rejected` →
+  // перезагружаем myMembership.
+  useEffect(() => {
+    if (!user?.id) return;
+    const sock = getSocket();
+    const channel = `user:${user.id}`;
+    const handler = (payload: any) => {
+      const t = payload?.type;
+      if (t === 'country:join-request' && data?.isCommander) {
+        warsApi.pending().then(r => setPending(r.pending)).catch(() => {});
+      } else if (t === 'country:join-approved' || t === 'country:join-rejected') {
+        warsApi.country(countryId).then(setData).catch(() => {});
+        toast(t === 'country:join-approved' ? '✓' : '✕', t === 'country:join-approved' ? 'success' : 'info');
+      }
+    };
+    sock.on(channel, handler);
+    return () => { sock.off(channel, handler); };
+  }, [user?.id, data?.isCommander, countryId]);
 
   const handleApprove = async (memberId: string) => {
     setPendingBusy(memberId);
