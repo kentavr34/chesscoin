@@ -23,10 +23,11 @@ const TYPE_COLORS: Record<string, string> = {
   MONTHLY: '#F0C85A', SEASONAL: '#C8A843', YEARLY: '#F0C85A',
 };
 
-const STATUS_CFG: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  REGISTRATION: { label: 'Регистрация', color: '#3DBA7A', bg: 'rgba(61,186,122,.12)', border: 'rgba(61,186,122,.3)' },
-  IN_PROGRESS:  { label: 'Идёт',        color: '#F0C85A', bg: 'rgba(240,200,90,.12)',  border: 'rgba(240,200,90,.3)' },
-  FINISHED:     { label: 'Завершён',    color: '#5A5248', bg: 'rgba(90,82,72,.12)',    border: 'rgba(90,82,72,.25)' },
+// C.4 i18n: только визуальные стили, label берётся из t.tournaments.status
+const STATUS_CFG: Record<string, { color: string; bg: string; border: string }> = {
+  REGISTRATION: { color: '#3DBA7A', bg: 'rgba(61,186,122,.12)', border: 'rgba(61,186,122,.3)' },
+  IN_PROGRESS:  { color: '#F0C85A', bg: 'rgba(240,200,90,.12)', border: 'rgba(240,200,90,.3)' },
+  FINISHED:     { color: '#5A5248', bg: 'rgba(90,82,72,.12)',   border: 'rgba(90,82,72,.25)' },
 };
 
 type TFilter = 'all' | 'joined';
@@ -112,14 +113,13 @@ export const TournamentsPage: React.FC = () => {
   const handleJoin = async (tour: TournamentFull) => {
     // Подтверждение со ставкой и предупреждением о невозврате
     const fee = BigInt(tour.entryFee || '0');
-    const message = fee > 0n
-      ? `Взнос: ${fmtBalance(tour.entryFee)} ᚙ\n\nВзнос идёт в призовой фонд и НЕ возвращается при выходе из турнира.`
-      : `Бесплатное участие.\n\nПосле вступления вы не сможете выйти после старта турнира.`;
+    const feeStr = fmtBalance(tour.entryFee);
+    const message = fee > 0n ? t.tournaments.joinFeeDesc(feeStr) : t.tournaments.joinFreeDesc;
     const ok = await confirm({
-      title: `Вступить в "${tour.name}"?`,
+      title: t.tournaments.joinConfirm(tour.name),
       message,
-      okLabel: fee > 0n ? `Внести ${fmtBalance(tour.entryFee)} ᚙ` : 'Вступить',
-      cancelLabel: 'Отмена',
+      okLabel: fee > 0n ? t.tournaments.joinFeeBtn(feeStr) : t.tournaments.joinFreeBtn,
+      cancelLabel: t.tournaments.cancel,
     });
     if (!ok) return;
 
@@ -396,7 +396,7 @@ const TournamentCard: React.FC<{
               border: `.5px solid ${statusCfg.border}`,
               padding: '2px 7px', borderRadius: 6, textTransform: 'uppercase',
             }}>
-              {statusCfg.label}
+              {(t.tournaments.status as Record<string,string>)[tour.status] ?? tour.status}
             </div>
             {tour.isJoined && (
               <div style={{ fontSize: '0.55rem', fontWeight: 700, color: '#3DBA7A', background: 'rgba(61,186,122,.1)', padding: '2px 7px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -418,7 +418,7 @@ const TournamentCard: React.FC<{
         <div>
           <div style={{ ...LABEL_STYLE, marginBottom: 3 }}>{tt.entryFeeLabel}</div>
           <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '0.82rem', fontWeight: 700, color: '#F0C85A' }}>
-            {tour.entryFee === '0' ? 'Бесплатно' : `${fmtBalance(tour.entryFee)} ᚙ`}
+            {tour.entryFee === '0' ? tt.free : `${fmtBalance(tour.entryFee)} ᚙ`}
           </div>
         </div>
         <div>

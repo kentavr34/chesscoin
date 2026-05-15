@@ -260,16 +260,16 @@
 
 ---
 
-## Очередь следующих шагов (по § 2 MASTER_PLAN)
+## Очередь следующих 8 шагов
 
-1. **§ 2 C.4** — i18n: вынести русский хардкод confirm/toast WarsPage и
-   TournamentsPage в `translations.ts` (ru+en).
-2. **B.5 reset-safe** — оформить REFERRAL-таски в Prisma seed/миграцию.
-3. **§ 2 B.1** — TonConnect 1 TON unlock (backend route + Wallet model).
-4. **§ 2 B.2** — Withdraw TON (0.5% комиссия).
-5. **§ 2 B.3** — Approve/reject вступления в страну главкомом.
-6. **§ 2 B.4** — Авто-смена главкома при 7-дневной бездействии.
-7. **§ 2 B.6** — Lesson этаж: open-by-progress (доделать блокировку).
+1. **§ 2 C.4** — i18n WarsPage/TournamentsPage хардкод.
+2. **B.5 reset-safe** — REFERRAL-таски в Prisma миграцию.
+3. **§ 2 B.4** — Авто-смена главкома при 7-дневной бездействии.
+4. **§ 2 B.3** — Approve/reject вступления в страну главкомом.
+5. **§ 2 B.6** — Lesson этаж: open-by-progress.
+6. **§ 2 C.3** — JarvisModal reward 1k..1M синхронизировать с config.
+7. **§ 2 B.1** — TonConnect 1 TON unlock (backend).
+8. **§ 2 B.2** — Withdraw TON (0.5% комиссия).
 
 > Правило: один пункт = одна запись в журнале сразу после деплоя + визуальной
 > проверки. Если шаблон удачный — `🟩 ШАБЛОН` с инструкцией «как повторить».

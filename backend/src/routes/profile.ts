@@ -416,6 +416,13 @@ router.post("/ton-wallet/verify", authMiddleware, async (req: Request, res: Resp
       },
     }).catch(() => {}); // не критично
 
+    // B.1 MASTER_PLAN: транзакция в истории профиля пользователя.
+    // balance не меняем (платёж был в TON, не в монетах) — нужна нулевая
+    // транзакция для отметки события в истории.
+    await updateBalance(userId, 0n, TransactionType.WALLET_UNLOCK, {
+      walletAddress, boc: boc.slice(0, 64), tonAmount: 1.0,
+    }).catch(err => logError("[TON] WALLET_UNLOCK log fail", err));
+
     logger.info(`[TON] Wallet verified for user ${userId}: ${walletAddress}`);
     res.json({ success: true, walletAddress });
   } catch (err: unknown) {

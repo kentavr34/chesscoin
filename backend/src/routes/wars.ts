@@ -34,18 +34,27 @@ const COUNTRY_ENTRY_FEE = 10_000n;
 // Главком — игрок с наибольшим количеством рефералов в стране.
 // При равенстве — кто раньше вступил. (Раньше выбирался по warWins; Кенан:
 // «звание повышается из-за рефералов».)
+// B.4 MASTER_PLAN: главком сменяется автоматически при 7-дневной бездействии.
+// Сортировка по referralCount DESC, joinedAt ASC — но среди активных за 7 дней.
+// Если все неактивны — берём по тому же ranking из всего состава (fallback).
+const COMMANDER_INACTIVITY_MS = 7 * 24 * 60 * 60 * 1000;
 async function getCommander(countryId: string): Promise<string | null> {
   const members = await prisma.countryMember.findMany({
     where: { countryId },
-    include: { user: { select: { id: true, referralCount: true } } },
+    include: { user: { select: { id: true, referralCount: true, updatedAt: true } } },
   });
   if (members.length === 0) return null;
-  members.sort((a, b) => {
+  const cutoff = Date.now() - COMMANDER_INACTIVITY_MS;
+  const sortFn = (a: typeof members[0], b: typeof members[0]) => {
     const refA = a.user.referralCount ?? 0;
     const refB = b.user.referralCount ?? 0;
     if (refA !== refB) return refB - refA;
     return a.joinedAt.getTime() - b.joinedAt.getTime();
-  });
+  };
+  const active = members.filter(m => m.user.updatedAt.getTime() >= cutoff).sort(sortFn);
+  if (active.length > 0) return active[0]!.userId;
+  // fallback — все неактивны, оставляем «старого» по ranking
+  members.sort(sortFn);
   return members[0]!.userId;
 }
 

@@ -197,11 +197,12 @@ const CountryDetailModal: React.FC<{
     const entryFee = data?.country?.entryFee
       ? BigInt(data.country.entryFee)
       : COUNTRY_ENTRY_FEE;
+    const feeStr = fmtBalance(entryFee.toString());
     const ok = await confirm({
-      title: `Вступить в ${data?.country?.nameRu ?? 'страну'}?`,
-      message: `Взнос: ${fmtBalance(entryFee.toString())} ᚙ\n\nВзнос идёт в казну страны и НЕ возвращается при выходе. При победе вашей страны вы получаете долю казны пропорционально победам в войне и вкладу.`,
-      okLabel: `Внести ${fmtBalance(entryFee.toString())} ᚙ`,
-      cancelLabel: 'Отмена',
+      title: t.wars.joinConfirm(data?.country?.nameRu ?? t.common.error),
+      message: t.wars.joinFeeDesc(feeStr),
+      okLabel: t.wars.joinFeeBtn(feeStr),
+      cancelLabel: t.wars.cancel,
     });
     if (!ok) return;
     setJoining(true);
@@ -213,11 +214,11 @@ const CountryDetailModal: React.FC<{
     } catch (e: any) {
       const code = e?.error ?? e?.message ?? '';
       if (String(code).includes('INSUFFICIENT_BALANCE')) {
-        toast(`Недостаточно монет: нужно ${fmtBalance(entryFee.toString())} ᚙ`);
+        toast(t.wars.insufficientFor(fmtBalance(entryFee.toString())));
       } else if (String(code).includes('COUNTRY_FULL')) {
-        toast('Страна заполнена');
+        toast(t.wars.countryFull);
       } else if (String(code).includes('WAR_IN_PROGRESS')) {
-        toast('Нельзя сменить страну во время войны');
+        toast(t.wars.cantSwitchDuringWar);
       } else {
         toast(e.message ?? t.common.error);
       }
@@ -246,11 +247,11 @@ const CountryDetailModal: React.FC<{
       ? BigInt(data.country.myMembership.contribution)
       : COUNTRY_ENTRY_FEE;
     const ok = await confirm({
-      title: 'Покинуть страну?',
-      message: `Ваш вклад ${fmtBalance(fee.toString())} ᚙ останется в казне и НЕ вернётся.`,
+      title: t.wars.leaveCountryConfirm,
+      message: t.wars.leaveContribLost(fmtBalance(fee.toString())),
       danger: true,
-      okLabel: 'Покинуть',
-      cancelLabel: 'Остаться',
+      okLabel: t.wars.leaveBtnConfirm,
+      cancelLabel: t.wars.stayBtn,
     });
     if (!ok) return;
     setLeaving(true);
