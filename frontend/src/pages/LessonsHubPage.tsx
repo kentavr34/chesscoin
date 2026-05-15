@@ -74,7 +74,10 @@ export const LessonsHubPage: React.FC = () => {
               <div
                 key={level}
                 onClick={() => {
-                  if (isCurrent) navigate(`/lesson/random?difficulty=${level < 10 ? 'easy' : level < 25 ? 'medium' : 'hard'}`);
+                  if (isCurrent) {
+                    const difficulty = level < 10 ? 'easy' : level < 25 ? 'medium' : 'hard';
+                    navigate(`/lesson/random?difficulty=${difficulty}&lesson=${level}`);
+                  }
                 }}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 12, padding: '11px 13px',

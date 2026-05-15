@@ -7,7 +7,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
-import { puzzlesApi, type PuzzleItem } from '@/api';
+import { puzzlesApi, tasksApi, type PuzzleItem } from '@/api';
 import { fmtBalance } from '@/utils/format';
 import { haptic } from '@/lib/haptic';
 import { useUserStore } from '@/store/useUserStore';
@@ -245,6 +245,17 @@ export const LessonPage: React.FC = () => {
         setPhase('solved');
         setShowFanfare(true);
         haptic.win?.() ?? haptic.impact('heavy');
+
+        // B.6 MASTER_PLAN: если решали урок из лесенки — поднимаем уровень.
+        // Backend сам валидирует `level === current`, чужой level вернёт ошибку.
+        const lessonParam = searchParams.get('lesson');
+        if (lessonParam) {
+          const lvl = Number(lessonParam);
+          if (Number.isFinite(lvl) && lvl > 0) {
+            tasksApi.completeLesson(lvl).catch(() => {});
+          }
+        }
+
         const updated = await authApi.me();
         setUser(updated);
       }
