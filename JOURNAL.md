@@ -339,13 +339,47 @@ overshoot на `/lessons/:level/complete` (`level === current`), фронт
 
 ---
 
+### 2026-05-15 · Канал связи с Кенаном через @chessgamecoin_bot
+- Сделано:
+  - `.claude/chat/state.json` — chat_id=7730704136, BOT_TOKEN, last_update_id
+    (всё в .gitignore — секрет не уходит в репо).
+  - `.claude/chat/fetch.py` — short-polling `getUpdates?timeout=0&offset=last+1`
+    с retry на HTTP 409 (Telegram lock). Фильтрует по `from.id == Kenan`.
+    Возвращает строки `[id=N] [yyyy-mm-dd hh:mm:ss] <text>` или
+    `[id=N] [...] [PHOTO file_id=...] <caption>`. Атомарно обновляет
+    `last_update_id` в state.json.
+  - `.claude/chat/reply.py` — `sendMessage` с авто-разбиением >4000 символов.
+  - `CronCreate 900b964e` — `3-59/5 * * * *` (minute marks :03,:08,:13...:58).
+    Будит меня каждые 5 минут, prompt-инструкция: fetch → если есть
+    сообщения → обработать (включая фото — скачать через `getFile`,
+    Read как изображение) → reply.py с отчётом. Если задача большая —
+    промежуточный ответ «принято, делаю» + finall report.
+- Проверка:
+  - `getMe` → `ok=true`, бот @chessgamecoin_bot.
+  - `getWebhookInfo` → пустой webhook (polling-конфликта нет).
+  - `python3 fetch.py` → `(no new messages)` — работает.
+  - `python3 reply.py "..."` × 2 — сообщения отправлены Кенану в Telegram.
+- Ограничения:
+  - CronCreate **session-only + 7-дневный auto-expire**. Если REPL Claude
+    завершится, cron умрёт; нужен будет пересоздать (или внешний systemd
+    timer на eVPS — для «без ограничений по времени»). Сейчас живёт.
+  - 409 Conflict — Telegram держит долгий-polling lock 50 сек после
+    первого getUpdates без offset. Retry × 3 с exponential backoff в
+    `fetch.py` обходит.
+- Решение: ✅ канал работает. Жду первое сообщение от Кенана.
+- 🟩 ШАБЛОН: «Two-way чат-bridge между Claude и пользователем» —
+  CronCreate периодический + 2 helper-script (fetch/reply) + state-файл
+  с offset. Можно повторить для любого мессенджера с polling API.
+
+---
+
 ## Очередь следующих шагов
 
 1. **B.6 авто-инкремент**: после правильного решения puzzle на
    `PuzzleLessonPage` вызывать `tasksApi.completeLesson(currentLevel)`,
    чтобы прогресс рос. Сейчас уровень — статичен.
 2. **B.3 уведомления**: socket emit главкому при появлении PENDING-заявки.
-3. Новые требования от Кенана.
+3. Новые требования от Кенана (придут через @chessgamecoin_bot).
 
 > Правило: один пункт = одна запись в журнале сразу после деплоя + визуальной
 > проверки. Если шаблон удачный — `🟩 ШАБЛОН` с инструкцией «как повторить».
