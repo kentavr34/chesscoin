@@ -9,7 +9,7 @@ import { AttemptsModal } from '@/components/ui/AttemptsModal';
 import { getSocket } from '@/api/socket';
 import { fmtBalance, fmtTime } from '@/utils/format';
 import { translations } from '@/i18n/translations';
-import { IcoDice, IcoKingWhite as IcoKingW, IcoKingBlack as IcoKingB } from '@/components/icons/ChessIcons';
+import { IcoStripedQueen, IcoKingWhite as IcoKingW, IcoKingBlack as IcoKingB } from '@/components/icons/ChessIcons';
 import { PgnReplayModal } from '@/components/profile/PgnReplayModal';
 import type { BattleLobbyItem, GameSession, UserPublic } from '@/types';
 import { useT } from '@/i18n/useT';
@@ -1019,7 +1019,7 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
   };
 
   const COLOR_OPTS = [
-    { key: 'random' as const, label: t.battles.colorRandom, Icon: IcoDice,   bg: 'rgba(212,168,67,.1)',   border: 'rgba(212,168,67,.3)', color: '#F0C85A',  activeBg: 'rgba(212,168,67,.18)', activeBorder: '#D4A843' },
+    { key: 'random' as const, label: t.battles.colorRandom, Icon: IcoStripedQueen, bg: 'rgba(212,168,67,.1)', border: 'rgba(212,168,67,.3)', color: '#F0C85A',  activeBg: 'rgba(212,168,67,.18)', activeBorder: '#D4A843' },
     { key: 'white'  as const, label: t.battles.colorWhite,  Icon: IcoKingW,  bg: 'rgba(240,240,240,.08)', border: 'rgba(240,240,240,.18)', color: '#E8E0D0', activeBg: 'rgba(240,240,240,.16)', activeBorder: '#D0C8B8' },
     { key: 'black'  as const, label: t.battles.colorBlack,  Icon: IcoKingB,  bg: 'rgba(74,158,255,.08)',  border: 'rgba(74,158,255,.2)',  color: '#82CFFF',  activeBg: 'rgba(74,158,255,.16)', activeBorder: '#4A9EFF' },
   ];
@@ -1140,6 +1140,9 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
             {COLOR_OPTS.map(opt => {
               const active = color === opt.key;
+              // Белая фигура всегда яркая (по требованию Кенана 2026-05-16).
+              const iconOpacity = opt.key === 'white' ? (active ? 1 : 0.85) : (active ? 1 : 0.35);
+              const iconFilter  = opt.key === 'white' ? 'none' : (active ? 'none' : 'grayscale(0.7)');
               return (
                 <button
                   key={opt.key}
@@ -1148,16 +1151,15 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
                   style={{
                     background: active ? opt.activeBg : opt.bg,
                     border: `.5px solid ${active ? opt.activeBorder : opt.border}`,
-                    borderRadius: 12, padding: '14px 8px',
-                    display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 8,
+                    borderRadius: 12, padding: '10px 6px',
+                    display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 6,
                     cursor: 'pointer', fontFamily: 'inherit',
                     transition: 'all .15s', transform: 'scale(1)',
                     boxShadow: active ? `0 0 12px ${opt.activeBorder}40` : 'none',
                   }}
                 >
-                  <span style={{ color: opt.color, opacity: active ? 1 : 0.35, filter: active ? 'none' : 'grayscale(0.7)', transition: 'opacity .15s, filter .15s' }}><opt.Icon /></span>
-                  <span style={{ fontSize: '0.96rem', fontWeight: 800, color: active ? opt.color : 'rgba(255,255,255,.5)', letterSpacing: '.03em' }}>{opt.label}</span>
-                  {active && <div style={{ width: 18, height: 2, borderRadius: 1, background: opt.activeBorder }} />}
+                  <span style={{ color: opt.color, opacity: iconOpacity, filter: iconFilter, transition: 'opacity .15s, filter .15s' }}><opt.Icon /></span>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 800, color: active ? opt.color : 'rgba(255,255,255,.5)', letterSpacing: '.03em' }}>{opt.label}</span>
                 </button>
               );
             })}
@@ -1187,10 +1189,10 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
                     boxShadow: active ? '0 0 10px rgba(212,168,67,.25)' : 'none',
                   }}
                 >
-                  <div style={{ fontSize: '1.44rem', fontWeight: 900, color: active ? '#F0C85A' : 'rgba(255,255,255,.45)', letterSpacing: '-.01em', lineHeight: 1 }}>
+                  <div style={{ fontSize: '1.32rem', fontWeight: 900, color: active ? '#F0C85A' : 'rgba(255,255,255,.45)', letterSpacing: '-.01em', lineHeight: 1 }}>
                     {mins}
                   </div>
-                  <div style={{ fontSize: '.76rem', fontWeight: 700, color: active ? 'rgba(240,200,90,.65)' : 'rgba(255,255,255,.22)', letterSpacing: '.06em', marginTop: 4 }}>
+                  <div style={{ fontSize: '.68rem', fontWeight: 700, color: active ? 'rgba(240,200,90,.65)' : 'rgba(255,255,255,.22)', letterSpacing: '.06em', marginTop: 4 }}>
                     МИН
                   </div>
                 </button>
