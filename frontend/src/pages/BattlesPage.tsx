@@ -978,14 +978,12 @@ const QuickMatchModal: React.FC<{ onClose: () => void; onBuyAttempts: () => void
   );
 };
 
-const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => void }> = ({ onClose, onBuyAttempts }) => {
+const CreateBattleModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const t = useT();
   const { upsertSession } = useGameStore();
   const { user } = useUserStore();
-  const navigate = useNavigate();
 
-  const userAttempts = user?.attempts ?? 3;
-  const hasAttempts = userAttempts > 0;
+  // Максимальная ставка = баланс пользователя (но не меньше MIN_BET и не больше 5M)
   const userBalance = Number(BigInt(user?.balance ?? '0'));
   const maxBet = Math.max(MIN_BET, Math.min(userBalance, 5_000_000));
   const canCreate = userBalance >= MIN_BET;
@@ -996,21 +994,50 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
   const [isPublic, setIsPublic] = useState(true);
   const [loading, setLoading] = useState(false);
 
-  const TIME_OPTIONS = [1, 3, 5, 15, 30, 60];
+  const DURATIONS = [
+    { label: t.battles.duration1m, value: 60, icon: '⚡' },
+    { label: t.battles.duration3m, value: 180, icon: '🔥' },
+    { label: t.battles.duration5m, value: 300, icon: '♟' },
+    { label: t.battles.duration10m, value: 600, icon: '🎯' },
+    { label: t.battles.duration20m, value: 1200, icon: '🏆' },
+    { label: t.battles.duration30m, value: 1800, icon: '👑' },
+  ];
+
   const QUICK_BETS = [10000, 50000, 100000, 500000];
 
-  const durationMins = duration / 60;
-
   const handleCreate = () => {
-    if (!canCreate) return;
+    if (!canCreate) {
+      showToast(t.battles.insufficientBalance(fmtBalance(MIN_BET)), 'error');
+      return;
+    }
     setLoading(true);
     const socket = getSocket();
     const selectedColor = color === 'random' ? (Math.random() > 0.5 ? 'white' : 'black') : color;
-    socket.emit('game:create:battle', { color: selectedColor, duration, bet: String(bet), isPrivate: !isPublic }, (res: any) => {
+    socket.emit('game:create:battle', {
+      color: selectedColor,
+      duration,
+      bet: String(bet),
+      isPrivate: !isPublic,
+    }, (res: any) => {
       setLoading(false);
       if (res.ok && res.session) {
         upsertSession(res.session);
-        showToast(isPublic ? t.battles.battleCreated : t.battles.privateBattleCreated, 'info');
+        if (!isPublic && res.session.code) {
+          const myRef = user?.referralCode ?? user?.telegramId;
+          const shareText = t.battles.challengeShare(fmtBalance(String(bet)));
+          const botUrl = `https://t.me/chessgamecoin_bot?start=battle_${res.session.code}_ref_${myRef}`;
+          try {
+            navigator.clipboard?.writeText(botUrl).catch(() => {});
+          } catch {}
+          try {
+            window.Telegram?.WebApp?.openTelegramLink?.(
+              `https://t.me/share/url?url=${encodeURIComponent(botUrl)}&text=${encodeURIComponent(shareText)}`
+            );
+          } catch {}
+          showToast(t.battles.privateBattleCreated + ' 📋', 'info');
+        } else {
+          showToast(t.battles.battleCreated, 'info');
+        }
         onClose();
       } else {
         showToast(getErrText(res.error ?? ''), 'error');
@@ -1018,248 +1045,109 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
     });
   };
 
-  const COLOR_OPTS = [
-    { key: 'random' as const, label: t.battles.colorRandom, Icon: IcoDice,   bg: 'rgba(212,168,67,.1)',   border: 'rgba(212,168,67,.3)', color: '#F0C85A',  activeBg: 'rgba(212,168,67,.18)', activeBorder: '#D4A843' },
-    { key: 'white'  as const, label: t.battles.colorWhite,  Icon: IcoKingW,  bg: 'rgba(240,240,240,.08)', border: 'rgba(240,240,240,.18)', color: '#E8E0D0', activeBg: 'rgba(240,240,240,.16)', activeBorder: '#D0C8B8' },
-    { key: 'black'  as const, label: t.battles.colorBlack,  Icon: IcoKingB,  bg: 'rgba(74,158,255,.08)',  border: 'rgba(74,158,255,.2)',  color: '#82CFFF',  activeBg: 'rgba(74,158,255,.16)', activeBorder: '#4A9EFF' },
-  ];
-
   return (
-    <div
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 200,
-        background: 'rgba(4,3,8,.82)',
-        backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
-        display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-        paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))',
-        paddingTop: 16,
-      }}
-    >
-      <style>{`.cbm-col:active{opacity:.7;transform:scale(.93)!important}.cbm-time:active{transform:scale(.91)!important}`}</style>
-      <div style={{
-        width: '100%', maxWidth: 420,
-        background: 'linear-gradient(170deg,#100C18,#0A080E)',
-        border: '.5px solid rgba(212,168,67,.2)',
-        borderRadius: '24px 24px 0 0',
-        padding: '0 0 8px',
-        boxShadow: '0 -16px 48px rgba(0,0,0,.6), 0 -1px 0 rgba(212,168,67,.1)',
-      }}>
-        {/* Drag handle */}
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 0 2px' }}>
-          <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(212,168,67,.2)' }} />
+    <div onClick={(e) => e.target === e.currentTarget && onClose()} style={bmOverlayStyle}>
+      <div style={bmSheetStyle}>
+        {/* Ручка + кнопка закрыть — без заголовка "Создать батл" */}
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
+          <div style={bmHandleStyle} />
+          <button onClick={onClose} style={{ marginLeft: 'auto', width: 44, height: 44, borderRadius: '50%', background: 'var(--border, rgba(255,255,255,0.07))', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-secondary, #8B92A8)', fontSize: 16, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>✕</button>
         </div>
 
-        {/* Заголовок */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 16px 10px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-              <line x1="3" y1="3" x2="14" y2="14" stroke="#D4A843" strokeWidth="2" strokeLinecap="round"/>
-              <line x1="3" y1="6" x2="3" y2="3" stroke="#D4A843" strokeWidth="2.5" strokeLinecap="round"/>
-              <line x1="3" y1="3" x2="6" y2="3" stroke="#D4A843" strokeWidth="2.5" strokeLinecap="round"/>
-              <line x1="14" y1="17" x2="17" y2="17" stroke="#D4A843" strokeWidth="2.5" strokeLinecap="round"/>
-              <line x1="17" y1="14" x2="17" y2="17" stroke="#D4A843" strokeWidth="2.5" strokeLinecap="round"/>
-              <line x1="17" y1="6" x2="6" y2="17" stroke="#D4A843" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '.95rem', fontWeight: 900, color: '#F0E8CC', letterSpacing: '.01em' }}>
-              {t.battles.title}
-            </span>
-          </div>
-          <button onClick={onClose} style={{
-            width: 28, height: 28, borderRadius: 8,
-            background: 'rgba(255,255,255,.05)', border: '.5px solid rgba(255,255,255,.09)',
-            color: '#6A7090', fontSize: '.8rem', cursor: 'pointer', fontFamily: 'inherit',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>✕</button>
+        {/* Ставка */}
+        <div style={bmSectionLbl}>{t.battles.betLabel}</div>
+        <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 30, fontWeight: 800, color: 'var(--accent, #F5C842)', textAlign: 'center', marginBottom: 12 }}>
+          {fmtBalance(bet)} ᚙ
         </div>
 
-        {/* ── Ставка (компактно: метка + сумма на одной строке) ── */}
-        <div style={{ margin: '0 14px 10px' }}>
-          <div style={{ fontSize: '.52rem', fontWeight: 700, color: '#6A5A30', textTransform: 'uppercase' as const, letterSpacing: '.12em', marginBottom: 6 }}>
-            {t.battles.betLabel}
-          </div>
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 10,
-            background: 'linear-gradient(135deg,rgba(212,168,67,.08),rgba(212,168,67,.04))',
-            border: '.5px solid rgba(212,168,67,.25)', borderRadius: 14, padding: '10px 14px',
-          }}>
-            <CoinIcon size={28} />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '1.55rem', fontWeight: 900, color: '#F0C85A', lineHeight: 1 }}>
-                {fmtBalance(bet)}
-              </div>
-              {canCreate && (
-                <input
-                  type="range" min={MIN_BET} max={maxBet} step={1000} value={bet}
-                  onChange={(e) => setBet(Number(e.target.value))}
-                  style={{ width: '100%', marginTop: 6, accentColor: '#D4A843', height: 3 }}
-                />
-              )}
+        {canCreate ? (
+          <>
+            <input
+              type="range" min={MIN_BET} max={maxBet} step={1000} value={bet}
+              onChange={(e) => setBet(Number(e.target.value))}
+              style={{ width: '100%', marginBottom: 12, accentColor: 'var(--accent, #F5C842)' }}
+            />
+            {/* Быстрый выбор — 4 кнопки в один ряд */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 6, marginBottom: 20 }}>
+              {QUICK_BETS.map((v) => {
+                const capped = Math.min(v, maxBet);
+                const active = bet === capped && bet === v;
+                const unavailable = v > maxBet;
+                return (
+                  <button
+                    key={v}
+                    onClick={() => setBet(capped)}
+                    style={{
+                      padding: '8px 4px', borderRadius: 10, fontSize: 11, fontWeight: 700,
+                      cursor: 'pointer', border: '1px solid',
+                      background: active ? 'rgba(245,200,66,0.12)' : 'var(--bg-card, #1C2030)',
+                      color: unavailable ? '#3A3F58' : active ? 'var(--accent, #F5C842)' : 'var(--text-secondary, #8B92A8)',
+                      borderColor: active ? 'rgba(245,200,66,0.3)' : 'var(--border, rgba(255,255,255,0.07))',
+                      fontFamily: 'inherit', textAlign: 'center' as const,
+                    }}
+                  >
+                    {fmtBalance(v)}
+                  </button>
+                );
+              })}
             </div>
+          </>
+        ) : (
+          <div style={{ textAlign: 'center', color: 'var(--red, #FF4D6A)', fontSize: 13, padding: '8px 0 20px', marginBottom: 4 }}>
+            {t.battles.needMin(fmtBalance(MIN_BET))}
           </div>
-          {/* Кенан 2026-05-15: убрать quick-bets — мешают */}
-        </div>
+        )}
 
-        {/* ── Публичный / Приватный ── */}
-        <div style={{ margin: '0 14px 10px' }}>
-          <div style={{ fontSize: '.52rem', fontWeight: 700, color: '#6A5A30', textTransform: 'uppercase' as const, letterSpacing: '.12em', marginBottom: 6 }}>
-            {t.battles.visibility ?? 'Видимость'}
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7 }}>
-            {[
-              { pub: true, label: t.battles.public_,
-                Icon: () => <svg width="13" height="13" viewBox="0 0 20 20" fill="none"><line x1="3" y1="3" x2="14" y2="14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><line x1="3" y1="6" x2="3" y2="3" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/><line x1="3" y1="3" x2="6" y2="3" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/><line x1="14" y1="17" x2="17" y2="17" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/><line x1="17" y1="14" x2="17" y2="17" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/><line x1="17" y1="6" x2="6" y2="17" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg> },
-              { pub: false, label: t.battles.private_,
-                Icon: () => <svg width="12" height="12" viewBox="0 0 20 20" fill="none"><rect x="3" y="9" width="14" height="9" rx="2" stroke="currentColor" strokeWidth="1.8"/><path d="M6.5 9V6.5a3.5 3.5 0 0 1 7 0V9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg> },
-            ].map(({ pub, label, Icon }) => {
-              const active = isPublic === pub;
-              return (
-                <button key={String(pub)} onClick={() => setIsPublic(pub)} style={{
-                  padding: '10px 12px', borderRadius: 11,
-                  background: active ? 'rgba(212,168,67,.14)' : 'rgba(255,255,255,.03)',
-                  border: `.5px solid ${active ? 'rgba(212,168,67,.38)' : 'rgba(255,255,255,.07)'}`,
-                  color: active ? '#F0C85A' : '#9A9490',
-                  fontFamily: 'Inter, sans-serif', fontSize: '.78rem', fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-                  transition: 'all .15s',
-                }}>
-                  <Icon />
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* ── Цвет фигур — по шаблону JarvisPlayModal ── */}
-        <div style={{ margin: '0 14px 10px' }}>
-          <div style={{ fontSize: '.52rem', fontWeight: 700, color: '#6A5A30', textTransform: 'uppercase' as const, letterSpacing: '.12em', marginBottom: 6 }}>
-            {t.battles.colorChoice}
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-            {COLOR_OPTS.map(opt => {
-              const active = color === opt.key;
-              return (
-                <button
-                  key={opt.key}
-                  className="cbm-col"
-                  onClick={() => setColor(opt.key)}
-                  style={{
-                    background: active ? opt.activeBg : opt.bg,
-                    border: `.5px solid ${active ? opt.activeBorder : opt.border}`,
-                    borderRadius: 12, padding: '14px 8px',
-                    display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 8,
-                    cursor: 'pointer', fontFamily: 'inherit',
-                    transition: 'all .15s', transform: 'scale(1)',
-                    boxShadow: active ? `0 0 12px ${opt.activeBorder}40` : 'none',
-                  }}
-                >
-                  <span style={{ color: opt.color, opacity: active ? 1 : 0.35, filter: active ? 'none' : 'grayscale(0.7)', transition: 'opacity .15s, filter .15s' }}><opt.Icon /></span>
-                  <span style={{ fontSize: '0.96rem', fontWeight: 800, color: active ? opt.color : 'rgba(255,255,255,.5)', letterSpacing: '.03em' }}>{opt.label}</span>
-                  {active && <div style={{ width: 18, height: 2, borderRadius: 1, background: opt.activeBorder }} />}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* ── Время партии — по шаблону JarvisPlayModal ── */}
-        <div style={{ margin: '0 14px 12px' }}>
-          <div style={{ fontSize: '.52rem', fontWeight: 700, color: '#6A5A30', textTransform: 'uppercase' as const, letterSpacing: '.12em', marginBottom: 6 }}>
-            {t.battles.timeControl}
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 7 }}>
-            {TIME_OPTIONS.map(mins => {
-              const secs = mins * 60;
-              const active = duration === secs;
-              return (
-                <button
-                  key={mins}
-                  className="cbm-time"
-                  onClick={() => setDuration(secs)}
-                  style={{
-                    background: active ? 'rgba(212,168,67,.16)' : 'rgba(255,255,255,.05)',
-                    border: `.5px solid ${active ? 'rgba(212,168,67,.6)' : 'rgba(255,255,255,.1)'}`,
-                    borderRadius: 10, padding: '14px 6px',
-                    cursor: 'pointer', fontFamily: 'inherit',
-                    transition: 'all .15s', transform: 'scale(1)',
-                    boxShadow: active ? '0 0 10px rgba(212,168,67,.25)' : 'none',
-                  }}
-                >
-                  <div style={{ fontSize: '1.44rem', fontWeight: 900, color: active ? '#F0C85A' : 'rgba(255,255,255,.45)', letterSpacing: '-.01em', lineHeight: 1 }}>
-                    {mins}
-                  </div>
-                  <div style={{ fontSize: '.76rem', fontWeight: 700, color: active ? 'rgba(240,200,90,.65)' : 'rgba(255,255,255,.22)', letterSpacing: '.06em', marginTop: 4 }}>
-                    МИН
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* ── Кнопка создания ── */}
-        <div style={{ margin: '0 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {!hasAttempts ? (
-            <button
-              onClick={onBuyAttempts}
-              style={{
-                width: '100%', padding: '14px',
-                background: 'linear-gradient(135deg,#3A0808,#5A1010)',
-                border: '.5px solid rgba(220,50,47,.4)',
-                borderRadius: 14,
-                fontFamily: 'Inter, sans-serif', fontSize: '.9rem', fontWeight: 900, letterSpacing: '.06em',
-                color: '#FF8080', cursor: 'pointer',
-                boxShadow: '0 4px 20px rgba(220,50,47,.15)',
-              }}
-            >⭐ НЕТ ПОПЫТОК</button>
-          ) : !canCreate ? (
-            <button
-              onClick={() => { onClose(); navigate('/shop'); }}
-              style={{
-                width: '100%', padding: '14px',
-                background: 'linear-gradient(135deg,#3A2A08,#5A4010)',
-                border: '.5px solid rgba(212,168,67,.5)',
-                borderRadius: 14,
-                fontFamily: 'Inter, sans-serif', fontSize: '.9rem', fontWeight: 900, letterSpacing: '.04em',
-                color: '#F0C85A', cursor: 'pointer',
-                boxShadow: '0 4px 20px rgba(212,168,67,.18)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              }}
-            >
-              <CoinIcon size={20} />
-              Пополнить баланс
+        {/* Цвет — 3 колонки как в GameSetupModal */}
+        <div style={bmSectionLbl}>{t.battles.colorChoice}</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 20 }}>
+          {(['random', 'white', 'black'] as const).map((c) => (
+            <button key={c} onClick={() => setColor(c)} style={bmColorBtn(color === c)}>
+              <span style={{ fontSize: 22, display: 'block', marginBottom: 5 }}>
+                {c === 'random' ? '🎲' : c === 'white' ? '♔' : '♚'}
+              </span>
+              <span style={{ fontSize: 11, fontWeight: 700 }}>
+                {c === 'random' ? t.battles.colorRandom : c === 'white' ? t.battles.colorWhite : t.battles.colorBlack}
+              </span>
             </button>
-          ) : (
-            <button
-              onClick={handleCreate}
-              disabled={loading}
-              style={{
-                width: '100%', padding: '14px',
-                background: 'linear-gradient(135deg,#3A2A08,#5A4010)',
-                border: '.5px solid rgba(212,168,67,.5)',
-                borderRadius: 14,
-                fontFamily: 'Inter, sans-serif', fontSize: '.9rem', fontWeight: 900, letterSpacing: '.06em',
-                color: '#F0C85A',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                opacity: loading ? 0.7 : 1,
-                boxShadow: '0 4px 20px rgba(212,168,67,.18)',
-                transition: 'all .15s', position: 'relative', overflow: 'hidden',
-              }}
-            >
-              {!loading && (
-                <div style={{
-                  position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%',
-                  background: 'linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent)',
-                  animation: 'cbm-shine 2.5s ease-in-out infinite',
-                }} />
-              )}
-              <style>{`@keyframes cbm-shine{0%{left:-100%}100%{left:200%}}`}</style>
-              {loading ? t.battles.creating : t.battles.createBtn.toUpperCase()}
-            </button>
-          )}
+          ))}
         </div>
+
+        {/* Время — 3×2 сетка как в GameSetupModal */}
+        <div style={bmSectionLbl}>{t.battles.timeControl}</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 20 }}>
+          {DURATIONS.map((d) => (
+            <button key={d.value} onClick={() => setDuration(d.value)} style={bmTimeBtn(duration === d.value)}>
+              <span style={{ fontSize: 16, display: 'block', marginBottom: 2 }}>{d.icon}</span>
+              {d.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Публичный / Приватный */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 20 }}>
+          <button onClick={() => setIsPublic(true)} style={bmTypeBtn(isPublic)}>{t.battles.public_}</button>
+          <button onClick={() => setIsPublic(false)} style={bmTypeBtn(!isPublic)}>{t.battles.private_}</button>
+        </div>
+
+        {/* Кнопка создания */}
+        <button
+          onClick={handleCreate}
+          disabled={loading || !canCreate}
+          style={{
+            width: '100%', padding: '18px 14px',
+            background: canCreate ? 'var(--accent, #F5C842)' : '#2A2F48',
+            border: 'none', borderRadius: 14,
+            color: canCreate ? 'var(--bg, #0B0D11)' : 'var(--text-muted, #4A5270)',
+            fontSize: 16, fontWeight: 800,
+            cursor: canCreate && !loading ? 'pointer' : 'not-allowed',
+            fontFamily: 'inherit',
+            opacity: loading ? 0.7 : 1,
+            boxShadow: canCreate ? '0 4px 20px rgba(245,200,66,0.25)' : 'none',
+          }}
+        >
+          {loading ? t.battles.creating : t.battles.createBtn}
+        </button>
       </div>
     </div>
   );
