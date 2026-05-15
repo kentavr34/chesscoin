@@ -289,15 +289,35 @@ package, но пока хватает дисциплины + grep-теста.
 
 ---
 
+### 2026-05-15 · 5 шагов третьего подхода (commit `88a40f5`)
+
+| # | Пункт | Что | Решение |
+|---|---|---|---|
+| 1 | **B.3** approve/reject | Миграция `20260515_country_member_approval` (enum CountryMemberStatus + поле status DEFAULT APPROVED + индекс), schema.prisma обновлён, wars.ts: join → PENDING без списания; GET /pending, POST /pending/:id/approve (списать взнос → APPROVED), POST /pending/:id/reject (delete). getCommander + maxMembers фильтрут по APPROVED. | ✅ backend |
+| 2 | **B.6** lesson этаж | Backend `/tasks/lessons/progress` и `/lessons/:level/complete` уже валидируют `level === current`. Frontend UI лесенки отсутствует. | ⏸ требует дизайна |
+| 3 | **A.5** общий обход аватаров | BattleHistoryCard, LeaderboardPage, MiniProfileSheet, WaitingForOpponent, NationsPage, BattlesPage, PgnReplayModal — все уже имеют onClick + ELO. Попутно: NationsPage mojibake `вњ“`/`вњ•` → `✓`/`✕`. | ✅ |
+| 4 | **C.1** единый шрифт заголовков | Все страницы через `<PageLayout title>` (Inter 1.25rem 900 #EAE2CC). Единый стиль обеспечен централизованным компонентом. | ✅ уже было |
+| 5 | **C.2** toast vs полоски | Единый `<ToastContainer>` + `chesscoin:toast` event. Красных мигающих полосок в коде не найдено. | ✅ уже было |
+
+**Деплой:**
+- `git pull && docker compose up -d --build backend frontend` — оба ok.
+- Backend: миграция `20260515_country_member_approval` применилась **автоматически** через `prisma migrate deploy` в Dockerfile.CMD — **шаблон reset-safe migrations работает.** 8 существующих CountryMember = APPROVED (миграция выставила default корректно).
+- `[Server] Port 3000 · production`. 0 ошибок.
+
+🟩 ШАБЛОН: «backend-first большая фича» — миграция + endpoints + бизнес-логика
+без UI = валидный «фундамент». UI отдельной сессией. Существующий поток не
+ломается (новые join создают PENDING — у старых клиентов это просто
+«не появляется в списке», нужно будет UI чтобы видеть pending заявки и
+самому показывать «ожидает одобрения главкома»).
+
+---
+
 ## Очередь следующих шагов
 
-1. **§ 2 B.3** — Approve/reject вступления (миграция + 2 endpoint + UI главкома).
-2. **§ 2 B.6** — уточнить структуру Lesson этажа у Кенана.
-3. **A.5 общий обход** — кликабельность аватаров + ELO в остальных 12 файлах
-   с `<Avatar>` (Wars, Tournaments, Battles, Profile, Leaderboard, Nations,
-   MiniProfileSheet, WaitingForOpponent, PgnReplayModal, BattleHistoryCard).
-4. **§ 2 C.1** — Заголовки страниц единый шрифт/размер/позиция.
-5. **§ 2 C.2** — Toasts vs красные полоски — toast 3 сек везде.
+1. **B.3 UI** — главком видит список PENDING на CountryDetailModal,
+   кнопки approve/reject; обычный пользователь видит «ожидает одобрения».
+2. **B.6 UI** — лесенка уровней Lesson с замком на пройденных-1.
+3. Любая новая партия фич от Кенана.
 
 > Правило: один пункт = одна запись в журнале сразу после деплоя + визуальной
 > проверки. Если шаблон удачный — `🟩 ШАБЛОН` с инструкцией «как повторить».
