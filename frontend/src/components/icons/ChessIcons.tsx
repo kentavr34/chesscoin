@@ -1,8 +1,7 @@
 // Общие иконки для модалок выбора партии (Jarvis + Battle)
-// Один стандарт: 33×33, viewBox 18×18
+// Один стандарт: 33×33, viewBox 18×18 — утверждённый шаблон TPL-002
+// (.claude/archive/templates/v1_current/TPL-002_2026-04-03_JarvisPlayModal.tsx)
 
-// IcoDice сохраняем для обратной совместимости — но в Jarvis/Battle
-// больше не используется. Текущая иконка рандома — IcoShuffle.
 export const IcoDice = () => (
   <svg width="33" height="33" viewBox="0 0 18 18" fill="none">
     <rect x="1.5" y="1.5" width="15" height="15" rx="3" stroke="currentColor" strokeWidth="1.3"/>
@@ -11,50 +10,6 @@ export const IcoDice = () => (
     <circle cx="9" cy="9" r="1.2" fill="currentColor"/>
     <circle cx="5.5" cy="12.5" r="1.2" fill="currentColor"/>
     <circle cx="12.5" cy="12.5" r="1.2" fill="currentColor"/>
-  </svg>
-);
-
-// Shuffle — две скрещенные стрелки. Это стандартная random-иконка в UI.
-// 33×33, viewBox 24×24 (упрощённо для чистой геометрии).
-export const IcoShuffle = () => (
-  <svg width="33" height="33" viewBox="0 0 24 24" fill="none">
-    {/* Верхняя стрелка */}
-    <path
-      d="M3 6h4l10 12h4"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M19 14l2 2-2 2"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    {/* Нижняя стрелка */}
-    <path
-      d="M3 18h4l3-3.6"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M14 9.6L17 6h4"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M19 4l2 2-2 2"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
   </svg>
 );
 
