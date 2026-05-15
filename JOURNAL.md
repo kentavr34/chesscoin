@@ -312,12 +312,40 @@ package, но пока хватает дисциплины + grep-теста.
 
 ---
 
+### 2026-05-15 · B.3 UI + B.6 UI (commit `856c3bb`)
+
+| Пункт | Что | Решение |
+|---|---|---|
+| **B.3 UI** approve/reject | warsApi.pending/approve/reject; CountryDetailModal: список PENDING (только для ГК) с кнопками; isPending бейдж «ваша заявка ждёт одобрения»; toast «Заявка отправлена» вместо «Вы вступили». Backend GET /country возвращает myMembership.status. 6 i18n-ключей. | ✅ |
+| **B.6 UI** лесенка | Новая `LessonsHubPage.tsx` (50 уровней: completed/current/locked, IcoCheck2/IcoLock/число). Загружает прогресс через GET /tasks/lessons/progress. Клик на current → /lesson/random с difficulty по диапазону уровня. Роут `/lessons`. Ссылка из TasksPage. | ✅ |
+
+**Деплой:** оба контейнера ok, миграция уже applied, backend `[Server] Port 3000`, bundle `index-Cz0GpYcQ.js`.
+
+🟩 ШАБЛОН: «conditional secondary list» — `useEffect(()=>{ if (data?.isCommander) load() }, [data?.isCommander])`. Загрузка отдельного списка
+только когда выполнено условие, чтобы лишний раз API не дёргать. Особенно
+важно для админ/гк-функционала.
+
+🟩 ШАБЛОН: «лестница уровней» — flat-список с тремя состояниями
+`level < current` / `=== current` / `> current`. Backend валидирует
+overshoot на `/lessons/:level/complete` (`level === current`), фронт
+показывает корректно. Шаблон для любого «open-by-progress» — лиги,
+ачивки, этажи Tower.
+
+**Что не закрыто:**
+- B.6: auto-complete вызов `tasksApi.completeLesson(level)` после успешного
+  решения puzzle на PuzzleLessonPage — нужен callback. Сейчас уровень
+  не растёт автоматически, нужно отдельной сессией прокинуть.
+- B.3: уведомление главкому когда приходит новая заявка (push/socket).
+
+---
+
 ## Очередь следующих шагов
 
-1. **B.3 UI** — главком видит список PENDING на CountryDetailModal,
-   кнопки approve/reject; обычный пользователь видит «ожидает одобрения».
-2. **B.6 UI** — лесенка уровней Lesson с замком на пройденных-1.
-3. Любая новая партия фич от Кенана.
+1. **B.6 авто-инкремент**: после правильного решения puzzle на
+   `PuzzleLessonPage` вызывать `tasksApi.completeLesson(currentLevel)`,
+   чтобы прогресс рос. Сейчас уровень — статичен.
+2. **B.3 уведомления**: socket emit главкому при появлении PENDING-заявки.
+3. Новые требования от Кенана.
 
 > Правило: один пункт = одна запись в журнале сразу после деплоя + визуальной
 > проверки. Если шаблон удачный — `🟩 ШАБЛОН` с инструкцией «как повторить».
