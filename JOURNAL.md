@@ -260,16 +260,44 @@
 
 ---
 
-## Очередь следующих 8 шагов
+### 2026-05-15 · 8 шагов второго подхода (commit `c74e37f`)
 
-1. **§ 2 C.4** — i18n WarsPage/TournamentsPage хардкод.
-2. **B.5 reset-safe** — REFERRAL-таски в Prisma миграцию.
-3. **§ 2 B.4** — Авто-смена главкома при 7-дневной бездействии.
-4. **§ 2 B.3** — Approve/reject вступления в страну главкомом.
-5. **§ 2 B.6** — Lesson этаж: open-by-progress.
-6. **§ 2 C.3** — JarvisModal reward 1k..1M синхронизировать с config.
-7. **§ 2 B.1** — TonConnect 1 TON unlock (backend).
-8. **§ 2 B.2** — Withdraw TON (0.5% комиссия).
+| # | Пункт | Что | Решение |
+|---|---|---|---|
+| 1 | C.4 | i18n Wars (handleJoin/handleLeave + 3 toast) и Tournaments (STATUS_CFG.label, handleJoin confirm, EntryFee «Бесплатно»). Добавлено 10 ключей в `t.wars.*` + 6 в `t.tournaments.*` для обеих локалей. | ✅ |
+| 2 | B.5 reset-safe | Миграция `20260515_referral_tasks_seed/migration.sql` — идемпотентный сид 6 канонических REFERRAL-задач через NOT EXISTS. На проде помечено applied в `_prisma_migrations`. | ✅ |
+| 3 | B.4 | `wars.getCommander` теперь фильтрует по `user.updatedAt >= now - 7d`. Если все неактивны — fallback на полный список. Без миграций. | ✅ |
+| 4 | B.3 approve/reject | Большая фича: миграция + 2 endpoint + UI главкома. | ⏸ в очередь |
+| 5 | B.6 lesson этаж | Не найден компонент с лесенкой уровней (LessonPage = одна задача-puzzle). | ⏸ требует уточнения |
+| 6 | C.3 | `useJarvisLevels.ts JARVIS_BASE` 4-20 обновлены под backend/config.ts:85-104. На lvl 20 теперь 1 000 000 ᚙ (было 75 000). Добавлен комментарий «править одновременно». | ✅ |
+| 7 | B.1 | `profile.ts /ton-wallet/verify` после TonCenter-верификации теперь дополнительно вызывает `updateBalance(0, WALLET_UNLOCK, {walletAddress, boc, tonAmount: 1.0})` — нулевая запись в истории. | ✅ |
+| 8 | B.2 | Проверено — уже работает: `profile.ts:518` `commission = tonAmount * 0.005` (0.5%), минимум 1M монет, защита от двойного pending. | ✅ уже было |
+
+**Деплой:**
+- `git pull && docker compose up -d --build backend frontend` — оба контейнера ok.
+- Backend: `No pending migrations to apply` (миграция помечена ранее), `[DB] Connected`, все cron'ы стартанули.
+- Frontend bundle: `index-DyXob5e3.js`.
+
+🟩 ШАБЛОН: «авто-rotation через фильтр в getter» — вместо персистентного поля
+«commander» в БД, используется динамический query с filter `updatedAt >= cutoff`.
+Никаких миграций, никаких флагов; естественно «откатывается» когда новый ГК
+становится активен. Использовать для подобных «expiry»-логик.
+
+🟩 ШАБЛОН: «config константы между frontend и backend» — комментарий
+«править одновременно здесь и в config.ts». Идеально было бы tRPC/shared
+package, но пока хватает дисциплины + grep-теста.
+
+---
+
+## Очередь следующих шагов
+
+1. **§ 2 B.3** — Approve/reject вступления (миграция + 2 endpoint + UI главкома).
+2. **§ 2 B.6** — уточнить структуру Lesson этажа у Кенана.
+3. **A.5 общий обход** — кликабельность аватаров + ELO в остальных 12 файлах
+   с `<Avatar>` (Wars, Tournaments, Battles, Profile, Leaderboard, Nations,
+   MiniProfileSheet, WaitingForOpponent, PgnReplayModal, BattleHistoryCard).
+4. **§ 2 C.1** — Заголовки страниц единый шрифт/размер/позиция.
+5. **§ 2 C.2** — Toasts vs красные полоски — toast 3 сек везде.
 
 > Правило: один пункт = одна запись в журнале сразу после деплоя + визуальной
 > проверки. Если шаблон удачный — `🟩 ШАБЛОН` с инструкцией «как повторить».
