@@ -98,16 +98,23 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
 
   const handlePlay = useCallback(() => {
     if (!canPlay) return;
-    // ⭐ Проверка попыток — ГЛАВНЫЙ guard
+    // ⭐ Нет попыток — сразу открываем покупку звёзд (как в CreateBattleModal).
+    // Jarvis-модал остаётся открытым позади; после успешной покупки
+    // userAttempts вырастет → useEffect вернёт phase в 'setup' и кнопка
+    // станет жёлтой «ИГРАТЬ» (Кенан 2026-05-16).
     if (userAttempts <= 0) {
-      setPhase('noattempts');
+      if (onBuyAttempts) {
+        onBuyAttempts();
+      } else {
+        setPhase('noattempts'); // fallback если caller не передал callback
+      }
       return;
     }
     const rc = color === 'random' ? (Math.random() > 0.5 ? 'white' : 'black') : color;
     setResolvedColor(rc);
     setCount(3);
     setPhase('countdown');
-  }, [color, canPlay, userAttempts]);
+  }, [color, canPlay, userAttempts, onBuyAttempts]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && phase === 'setup' && onClose();
