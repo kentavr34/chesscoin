@@ -481,6 +481,11 @@ model CountryMember {
   userId    String @unique  // один игрок — одна страна
   user      User   @relation(fields: [userId], references: [id])
 
+  // B.3 MASTER_PLAN: главком должен одобрять / отклонять вступление.
+  // PENDING — заявка ждёт решения главкома, взнос НЕ списан.
+  // APPROVED — игрок в стране, взнос в казне, может воевать.
+  status    CountryMemberStatus @default(APPROVED)
+
   warWins   Int @default(0)  // победы в войнах за всё время
   warLosses Int @default(0)
 
@@ -492,7 +497,13 @@ model CountryMember {
 
   @@index([countryId, warWins])
   @@index([countryId, contribution])
+  @@index([countryId, status])
   @@map("country_members")
+}
+
+enum CountryMemberStatus {
+  PENDING
+  APPROVED
 }
 
 model CountryWar {

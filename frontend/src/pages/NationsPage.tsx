@@ -345,8 +345,8 @@ export const NationsPage: React.FC = () => {
                       ELO {m.user?.elo ?? '?'} · {t.nations.contribution}: {fmtBalance(m.pendingContribution ?? '0')} ᚙ
                     </div>
                   </div>
-                  <button onClick={() => handleApprove(m.id, true)} style={approveBtn}>вњ“</button>
-                  <button onClick={() => handleApprove(m.id, false)} style={rejectBtn}>вњ•</button>
+                  <button onClick={() => handleApprove(m.id, true)} style={approveBtn}>✓</button>
+                  <button onClick={() => handleApprove(m.id, false)} style={rejectBtn}>✕</button>
                 </div>
               ))}
             </>

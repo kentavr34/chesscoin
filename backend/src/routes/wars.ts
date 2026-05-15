@@ -40,7 +40,7 @@ const COUNTRY_ENTRY_FEE = 10_000n;
 const COMMANDER_INACTIVITY_MS = 7 * 24 * 60 * 60 * 1000;
 async function getCommander(countryId: string): Promise<string | null> {
   const members = await prisma.countryMember.findMany({
-    where: { countryId },
+    where: { countryId, status: 'APPROVED' },
     include: { user: { select: { id: true, referralCount: true, updatedAt: true } } },
   });
   if (members.length === 0) return null;
@@ -281,10 +281,14 @@ warsRouter.post("/countries/:id/join", authMiddleware, async (req: Request, res:
     const userId = req.user!.id;
     const { id } = req.params;
 
-    const country = await prisma.country.findUnique({ where: { id }, include: { _count: { select: { members: true } } } });
+    const country = await prisma.country.findUnique({ where: { id } });
     if (!country) return res.status(404).json({ error: "Country not found" });
 
-    if (country._count.members >= country.maxMembers) {
+    // B.3: лимит maxMembers считаем только по APPROVED (PENDING не занимают слот)
+    const approvedCount = await prisma.countryMember.count({
+      where: { countryId: id, status: 'APPROVED' },
+    });
+    if (approvedCount >= country.maxMembers) {
       return res.status(400).json({ error: "COUNTRY_FULL" });
     }
 
@@ -302,37 +306,125 @@ warsRouter.post("/countries/:id/join", authMiddleware, async (req: Request, res:
       await prisma.countryMember.delete({ where: { userId } });
     }
 
-    // Проверка баланса
+    // Проверка баланса заранее (взнос списывается при approve)
     const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { balance: true } });
     if (user.balance < COUNTRY_ENTRY_FEE) {
       return res.status(400).json({ error: "INSUFFICIENT_BALANCE", required: COUNTRY_ENTRY_FEE.toString() });
     }
 
-    // Атомарно: списываем 10 000 → пополняем казну → создаём membership с contribution = 10 000
-    const member = await prisma.$transaction(async (tx) => {
-      await updateBalance(userId, -COUNTRY_ENTRY_FEE, TransactionType.COUNTRY_ENTRY, {
-        countryId: id, reason: 'country_join_fee',
-      }, { tx });
-      await tx.country.update({
-        where: { id },
-        data: { treasury: { increment: COUNTRY_ENTRY_FEE } },
-      });
-      return tx.countryMember.create({
-        data: { countryId: id, userId, contribution: COUNTRY_ENTRY_FEE },
-      });
+    // B.3 MASTER_PLAN: вступление = заявка PENDING. Взнос НЕ списан до
+    // approve главкомом. При reject — membership удаляется без списания.
+    const member = await prisma.countryMember.create({
+      data: { countryId: id, userId, contribution: 0n, status: 'PENDING' },
     });
 
     res.json({
       success: true,
+      pending: true,
       entryFee: COUNTRY_ENTRY_FEE.toString(),
       membership: {
         id: member.id, warWins: 0, warLosses: 0,
         contribution: member.contribution.toString(),
         joinedAt: member.joinedAt,
+        status: member.status,
       },
     });
   } catch (e: unknown) {
     logError("[Wars]", e);
+    res.status(500).json({ error: (e instanceof Error ? e.message : String(e)) });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// B.3 MASTER_PLAN — approve/reject заявок на вступление главкомом.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// GET /wars/pending — список PENDING-заявок в моей стране (только для ГК).
+warsRouter.get("/pending", authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const myMembership = await prisma.countryMember.findUnique({
+      where: { userId },
+      select: { countryId: true, status: true },
+    });
+    if (!myMembership || myMembership.status !== 'APPROVED') {
+      return res.json({ pending: [] });
+    }
+    const commanderId = await getCommander(myMembership.countryId);
+    if (commanderId !== userId) return res.json({ pending: [] });
+
+    const pending = await prisma.countryMember.findMany({
+      where: { countryId: myMembership.countryId, status: 'PENDING' },
+      orderBy: { joinedAt: 'asc' },
+      include: { user: { select: { id: true, firstName: true, username: true, avatar: true, elo: true, referralCount: true } } },
+    });
+    res.json({ pending: pending.map(p => ({
+      id: p.id, joinedAt: p.joinedAt,
+      user: p.user,
+    })) });
+  } catch (e: unknown) {
+    logError("[Wars/pending]", e);
+    res.status(500).json({ error: (e instanceof Error ? e.message : String(e)) });
+  }
+});
+
+// POST /wars/pending/:memberId/approve — главком одобряет заявку.
+// Списывает COUNTRY_ENTRY_FEE с заявителя в казну страны, status → APPROVED.
+warsRouter.post("/pending/:memberId/approve", authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const { memberId } = req.params;
+    const target = await prisma.countryMember.findUnique({ where: { id: memberId } });
+    if (!target || target.status !== 'PENDING') {
+      return res.status(404).json({ error: "PENDING_NOT_FOUND" });
+    }
+    const commanderId = await getCommander(target.countryId);
+    if (commanderId !== userId) return res.status(403).json({ error: "NOT_COMMANDER" });
+
+    const applicant = await prisma.user.findUnique({ where: { id: target.userId }, select: { balance: true } });
+    if (!applicant || applicant.balance < COUNTRY_ENTRY_FEE) {
+      // Заявитель потратил баланс — отклоняем (удаляем заявку).
+      await prisma.countryMember.delete({ where: { id: memberId } });
+      return res.status(400).json({ error: "APPLICANT_INSUFFICIENT_BALANCE", removed: true });
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await updateBalance(target.userId, -COUNTRY_ENTRY_FEE, TransactionType.COUNTRY_ENTRY, {
+        countryId: target.countryId, reason: 'country_join_approved', approvedBy: userId,
+      }, { tx });
+      await tx.country.update({
+        where: { id: target.countryId },
+        data: { treasury: { increment: COUNTRY_ENTRY_FEE } },
+      });
+      await tx.countryMember.update({
+        where: { id: memberId },
+        data: { status: 'APPROVED', contribution: COUNTRY_ENTRY_FEE },
+      });
+    });
+    res.json({ success: true, approved: memberId });
+  } catch (e: unknown) {
+    logError("[Wars/approve]", e);
+    res.status(500).json({ error: (e instanceof Error ? e.message : String(e)) });
+  }
+});
+
+// POST /wars/pending/:memberId/reject — главком отклоняет заявку.
+// Membership удаляется. Никаких списаний (взнос не был списан).
+warsRouter.post("/pending/:memberId/reject", authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const { memberId } = req.params;
+    const target = await prisma.countryMember.findUnique({ where: { id: memberId } });
+    if (!target || target.status !== 'PENDING') {
+      return res.status(404).json({ error: "PENDING_NOT_FOUND" });
+    }
+    const commanderId = await getCommander(target.countryId);
+    if (commanderId !== userId) return res.status(403).json({ error: "NOT_COMMANDER" });
+
+    await prisma.countryMember.delete({ where: { id: memberId } });
+    res.json({ success: true, rejected: memberId });
+  } catch (e: unknown) {
+    logError("[Wars/reject]", e);
     res.status(500).json({ error: (e instanceof Error ? e.message : String(e)) });
   }
 });
