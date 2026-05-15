@@ -141,41 +141,6 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
   const [localFen, setLocalFen]   = useState(fen);
   const [pendingPromotion, setPendingPromotion] = useState<{ from: Square; to: Square } | null>(null);
 
-  const [isSaved, setIsSaved] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-
-  // Проверяем сохранена ли партия при монтировании
-  useEffect(() => {
-    if (!sessionId) return;
-    import('@/api/client').then(({ api }) => {
-      api.get<{ saved: boolean }>(`/games/${sessionId}/saved`)
-        .then(res => setIsSaved(res.saved))
-        .catch(() => {});
-    });
-  }, [sessionId]);
-
-  const toggleSave = useCallback(async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!sessionId || isSaving) return;
-    setIsSaving(true);
-    try {
-      const { api } = await import('@/api/client');
-      if (isSaved) {
-        await api.delete(`/games/${sessionId}/save`);
-        setIsSaved(false);
-        haptic.impact('light');
-      } else {
-        await api.post(`/games/${sessionId}/save`);
-        setIsSaved(true);
-        haptic.impact('heavy');
-      }
-    } catch {
-      // Игнорируем ошибки сети
-    } finally {
-      setIsSaving(false);
-    }
-  }, [sessionId, isSaved, isSaving]);
-
   // Применяем filter фигур через CSS переменную
   useEffect(() => {
     document.documentElement.style.setProperty('--piece-filter', effectivePieceFilter);
@@ -355,6 +320,8 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
 
   return (
     <>
+      {/* Внешний контейнер — НЕ overflow:hidden, чтобы звёздочка могла выйти за пределы доски */}
+      <div style={{ width: '100%', position: 'relative' }}>
       <div style={{
         width: '100%',
         borderRadius: 12,
@@ -362,34 +329,6 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
         boxShadow: 'var(--chess-board-shadow, 0 4px 24px rgba(0,0,0,0.4))',
         position: 'relative',
       }}>
-        {sessionId && (
-          <button
-            onClick={toggleSave}
-            disabled={isSaving}
-            style={{
-              position: 'absolute',
-              bottom: 8,
-              right: 8,
-              zIndex: "var(--z-base, 10)",
-              background: 'var(--chess-save-btn-bg, rgba(28, 32, 48, 0.85))',
-              border: `1px solid ${isSaved ? 'var(--color-accent, #F5C842)' : 'var(--color-border, rgba(255,255,255,0.1))'}`,
-              borderRadius: '50%',
-              width: 32,
-              height: 32,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: isSaved ? 'var(--color-accent, #F5C842)' : 'var(--color-text-secondary, #8B92A8)',
-              fontSize: 16,
-              cursor: isSaving ? 'wait' : 'pointer',
-              boxShadow: isSaved ? 'var(--chess-save-btn-active-shadow, 0 0 10px rgba(245,200,66,0.3))' : 'var(--chess-save-btn-shadow, 0 2px 8px rgba(0,0,0,0.5))',
-              transition: 'all 0.2s',
-            }}
-            title="Save Game"
-          >
-            {isSaved ? '★' : '☆'}
-          </button>
-        )}
         <Chessboard
           position={localFen}
           boardOrientation={orientation}
@@ -413,7 +352,8 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
           customSquareStyles={mergedSqs}
           animationDuration={moveAnim.duration}
         />
-      </div>
+      </div>{/* конец overflow:hidden div */}
+      </div>{/* конец внешнего position:relative div */}
       {/* V1: Диалог промоции */}
       {pendingPromotion && (
         <PromotionModal
