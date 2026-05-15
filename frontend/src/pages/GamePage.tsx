@@ -1027,13 +1027,40 @@ export function GamePage() {
         )}
       </div>
 
-      {/* ── Статус-полоска верх: «Думает...» когда ход бота ──────────────── */}
+      {/* ── Статус-полоска верх ─────────────────────────────────────────────
+          Игрок: «Думает...» когда не его ход (как было).
+          Зритель публичного батла (2026-05-16, Кенан): слева счётчик
+          лайв-зрителей + всего просмотров зелёными буквами; справа касса
+          и сумма победителю золотом/зелёным. */}
       <div style={{ height: STATUS_GAP, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 4, flexShrink: 0 }}>
-        {!isMyTurn && !gameOver && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#4DDA8A', animation: 'gp-pulse 1.4s infinite', boxShadow: '0 0 7px #4DDA8A' }} />
-            <span style={{ fontSize: '.79rem', fontWeight: 800, color: '#4DDA8A', letterSpacing: '.02em' }}>Думает...</span>
+        {isSpectator && isPublicBattle ? (
+          <div style={{ width: '100%', padding: '0 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: 'Inter, sans-serif' }}>
+            {/* Левая часть — зрители (зелёным) */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '.66rem', fontWeight: 800, color: '#4DDA8A', letterSpacing: '.02em' }}>
+              {spectatorCount > 0 && (
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4DDA8A', animation: 'gp-pulse 1.4s infinite', boxShadow: '0 0 6px #4DDA8A' }} />
+              )}
+              <span>{spectatorCount} в эфире</span>
+              <span style={{ color: '#2E5A3A' }}>·</span>
+              <span style={{ opacity: 0.8 }}>{viewCount >= 1000 ? `${(viewCount / 1000).toFixed(1)}K` : viewCount} всего</span>
+            </div>
+            {/* Правая часть — касса + победителю */}
+            {hasBet && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '.66rem', fontWeight: 800 }}>
+                <span style={{ color: '#9A9490', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase' }}>Касса</span>
+                <span style={{ color: '#F0C85A' }}>{fmtBalance(bank.toString())}</span>
+                <span style={{ color: '#3A3830' }}>→</span>
+                <span style={{ color: '#4DDA8A' }}>{fmtBalance(winnerTake.toString())}</span>
+              </div>
+            )}
           </div>
+        ) : (
+          !isMyTurn && !gameOver && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#4DDA8A', animation: 'gp-pulse 1.4s infinite', boxShadow: '0 0 7px #4DDA8A' }} />
+              <span style={{ fontSize: '.79rem', fontWeight: 800, color: '#4DDA8A', letterSpacing: '.02em' }}>Думает...</span>
+            </div>
+          )
         )}
       </div>
 
@@ -1050,50 +1077,8 @@ export function GamePage() {
             sessionId={sessionId}
           />
 
-          {/* ── Публичный батл: наблюдатели лайв + всего просмотров (топ-правый угол доски) ── */}
-          {isPublicBattle && (
-            <div style={{
-              position: 'absolute', top: 6, right: 6,
-              display: 'flex', alignItems: 'center', gap: 8,
-              background: 'rgba(0,0,0,.6)',
-              border: '.5px solid rgba(255,255,255,.12)',
-              borderRadius: 20,
-              padding: '4px 10px',
-              pointerEvents: 'none',
-              zIndex: 10,
-            }}>
-              {/* Лайв-зрители (пульс-индикатор, если > 0) */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                {spectatorCount > 0 && (
-                  <span style={{
-                    width: 6, height: 6, borderRadius: '50%',
-                    background: '#E7484F',
-                    animation: 'gp-pulse 1.4s infinite',
-                    boxShadow: '0 0 5px #E7484F',
-                  }} />
-                )}
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                  <path d="M1 12S5 5 12 5s11 7 11 7-4 7-11 7S1 12 1 12z" stroke="rgba(154,148,144,.8)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                  <circle cx="12" cy="12" r="3" stroke="rgba(154,148,144,.8)" strokeWidth="1.8"/>
-                </svg>
-                <span style={{ fontSize: '.62rem', color: '#9A9490', fontWeight: 700, letterSpacing: '.01em' }}>
-                  {spectatorCount}
-                </span>
-              </div>
-              {/* Разделитель */}
-              <span style={{ width: 1, height: 10, background: 'rgba(255,255,255,.15)' }} />
-              {/* Всего просмотров */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 4.5C7 4.5 3 8.5 3 12s4 7.5 9 7.5 9-4 9-7.5-4-7.5-9-7.5z" stroke="rgba(154,148,144,.8)" strokeWidth="1.8" strokeLinecap="round"/>
-                  <path d="M12 8v4l2 2" stroke="rgba(154,148,144,.8)" strokeWidth="1.8" strokeLinecap="round"/>
-                </svg>
-                <span style={{ fontSize: '.62rem', color: '#9A9490', fontWeight: 600, letterSpacing: '.01em' }}>
-                  {viewCount >= 1000 ? `${(viewCount / 1000).toFixed(1)}K` : viewCount}
-                </span>
-              </div>
-            </div>
-          )}
+          {/* Бейдж зрителей в углу доски удалён 2026-05-16: переехал в
+              верхнюю статус-полоску. */}
         </div>
       </div>
 
@@ -1260,7 +1245,7 @@ export function GamePage() {
               }}
             >
               <CoinIcon size={20} />
-              <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Донат</span>
+              <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Донаты</span>
             </button>
           ) : (
             <div style={{
@@ -1297,36 +1282,34 @@ export function GamePage() {
           </button>
         )}
 
-        {/* Слот 4: игрок=Сдаться | зритель=Счётчик зрителей (tap → Браво) */}
+        {/* Слот 4: игрок=Сдаться | зритель=Пригласить (Telegram share) */}
         {isSpectator ? (
           <button
-            onClick={handleBravo}
-            title="Браво — поддержать игроков"
+            onClick={() => {
+              const code = session?.code ?? sessionId;
+              const inviteUrl = `https://t.me/chessgamecoin_bot?start=watch_${code}`;
+              const text = `Смотри партию ChessCoin в прямом эфире`;
+              try {
+                window.Telegram?.WebApp?.openTelegramLink?.(
+                  `https://t.me/share/url?url=${encodeURIComponent(inviteUrl)}&text=${encodeURIComponent(text)}`
+                );
+              } catch {}
+            }}
+            title="Пригласить друзей смотреть"
             style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              gap: 4,
+              gap: 5,
               background: 'rgba(155,109,255,.05)', border: 'none',
               color: '#9B85FF', cursor: 'pointer', fontFamily: 'inherit',
-              transition: 'background .15s, color .15s', position: 'relative',
+              transition: 'background .15s, color .15s',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: "'JetBrains Mono',monospace" }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M1 12S5 5 12 5s11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
-                <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.7"/>
-              </svg>
-              <span style={{ fontSize: '.85rem', fontWeight: 800 }}>{spectatorCount}</span>
-              {spectatorCount > 0 && (
-                <span style={{
-                  width: 5, height: 5, borderRadius: '50%', background: '#E7484F',
-                  animation: 'gp-pulse 1.4s infinite',
-                  marginLeft: -2,
-                }} />
-              )}
-            </div>
-            <span style={{ fontSize: '.62rem', fontWeight: 700, letterSpacing: '.04em', color: '#9B85FF', opacity: .85 }}>
-              {viewCount >= 1000 ? `${(viewCount / 1000).toFixed(1)}K` : viewCount} просмотров
-            </span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <circle cx="9" cy="8" r="3.5" stroke="currentColor" strokeWidth="1.6"/>
+              <path d="M3 19c.5-3.2 3-5 6-5s5.5 1.8 6 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+              <path d="M18 6v6M15 9h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+            </svg>
+            <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Пригласить</span>
           </button>
         ) : (
           <button
