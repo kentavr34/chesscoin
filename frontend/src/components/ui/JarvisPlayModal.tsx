@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { getJarvisLevels, JARVIS_LEVELS, type JarvisLevel } from './JarvisModal';
 import { useT } from '@/i18n/useT';
-import { IcoDice, IcoKingWhite, IcoKingBlack } from '@/components/icons/ChessIcons';
+import { IcoShuffle, IcoKingWhite, IcoKingBlack } from '@/components/icons/ChessIcons';
 
 // ── Типы ──────────────────────────────────────────────────────────────────────
 type ColorChoice = 'random' | 'white' | 'black';
@@ -429,7 +429,7 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
           <div style={{ fontSize: '.52rem', fontWeight: 700, color: '#4A6080', textTransform: 'uppercase', letterSpacing: '.12em', marginBottom: 8 }}>Цвет фигур</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
             {([
-              { key: 'random', label: 'Рандом', Icon: IcoDice, bg: 'rgba(212,168,67,.1)', border: 'rgba(212,168,67,.3)', color: '#F0C85A', activeBg: 'rgba(212,168,67,.18)', activeBorder: '#D4A843' },
+              { key: 'random', label: 'Рандом', Icon: IcoShuffle, bg: 'rgba(212,168,67,.1)', border: 'rgba(212,168,67,.3)', color: '#F0C85A', activeBg: 'rgba(212,168,67,.18)', activeBorder: '#D4A843' },
               { key: 'white',  label: 'Белые',  Icon: IcoKingWhite, bg: 'rgba(240,240,240,.08)', border: 'rgba(240,240,240,.18)', color: '#E8E0D0', activeBg: 'rgba(240,240,240,.16)', activeBorder: '#D0C8B8' },
               { key: 'black',  label: 'Чёрные', Icon: IcoKingBlack, bg: 'rgba(74,158,255,.08)', border: 'rgba(74,158,255,.2)', color: '#82CFFF', activeBg: 'rgba(74,158,255,.16)', activeBorder: '#4A9EFF' },
             ] as const).map(opt => {

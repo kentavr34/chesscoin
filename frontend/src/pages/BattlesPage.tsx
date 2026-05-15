@@ -9,7 +9,7 @@ import { AttemptsModal } from '@/components/ui/AttemptsModal';
 import { getSocket } from '@/api/socket';
 import { fmtBalance, fmtTime } from '@/utils/format';
 import { translations } from '@/i18n/translations';
-import { IcoDice, IcoKingWhite as IcoKingW, IcoKingBlack as IcoKingB } from '@/components/icons/ChessIcons';
+import { IcoShuffle, IcoKingWhite as IcoKingW, IcoKingBlack as IcoKingB } from '@/components/icons/ChessIcons';
 import { PgnReplayModal } from '@/components/profile/PgnReplayModal';
 import type { BattleLobbyItem, GameSession, UserPublic } from '@/types';
 import { useT } from '@/i18n/useT';
@@ -1019,7 +1019,7 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
   };
 
   const COLOR_OPTS = [
-    { key: 'random' as const, label: t.battles.colorRandom, Icon: IcoDice,   bg: 'rgba(212,168,67,.1)',   border: 'rgba(212,168,67,.3)', color: '#F0C85A',  activeBg: 'rgba(212,168,67,.18)', activeBorder: '#D4A843' },
+    { key: 'random' as const, label: t.battles.colorRandom, Icon: IcoShuffle, bg: 'rgba(212,168,67,.1)',   border: 'rgba(212,168,67,.3)', color: '#F0C85A',  activeBg: 'rgba(212,168,67,.18)', activeBorder: '#D4A843' },
     { key: 'white'  as const, label: t.battles.colorWhite,  Icon: IcoKingW,  bg: 'rgba(240,240,240,.08)', border: 'rgba(240,240,240,.18)', color: '#E8E0D0', activeBg: 'rgba(240,240,240,.16)', activeBorder: '#D0C8B8' },
     { key: 'black'  as const, label: t.battles.colorBlack,  Icon: IcoKingB,  bg: 'rgba(74,158,255,.08)',  border: 'rgba(74,158,255,.2)',  color: '#82CFFF',  activeBg: 'rgba(74,158,255,.16)', activeBorder: '#4A9EFF' },
   ];
