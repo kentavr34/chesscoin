@@ -373,13 +373,23 @@ overshoot на `/lessons/:level/complete` (`level === current`), фронт
 
 ---
 
+### 2026-05-15 · B.6 авто-инкремент + B.3 push-уведомления (commits `ef237da`, `fb96832`)
+
+| Пункт | Что | Решение |
+|---|---|---|
+| **B.6 авто-инкремент** | LessonsHubPage передаёт `?lesson=<level>` в URL; LessonPage после `r.correct` вызывает `tasksApi.completeLesson(level)`. Backend сам валидирует `level === current`. Цикл solve → reward + level up закрыт. | ✅ `ef237da` |
+| **B.3 push-уведомления** | Backend `wars.ts` emit-ы: `country:join-request` ГК при создании PENDING; `country:join-approved`/`rejected` заявителю при решении. WarsPage CountryDetailModal слушает `user:${myId}` → перезагрузка pending или myMembership + toast. | ✅ `fb96832` |
+
+**Деплой:** backend + frontend ok, bundle `index-DrZF1GRo.js`, 0 ошибок.
+
+🟩 ШАБЛОН: «push через единый event-канал на user» — `io.emit(\`user:${userId}\`, { type, ...payload })`. Уже используется в exchange/nations/tournaments. Frontend слушает один канал, рутится по `payload.type`. Без новых конвенций.
+
+---
+
 ## Очередь следующих шагов
 
-1. **B.6 авто-инкремент**: после правильного решения puzzle на
-   `PuzzleLessonPage` вызывать `tasksApi.completeLesson(currentLevel)`,
-   чтобы прогресс рос. Сейчас уровень — статичен.
-2. **B.3 уведомления**: socket emit главкому при появлении PENDING-заявки.
-3. Новые требования от Кенана (придут через @chessgamecoin_bot).
+1. Любые новые требования от Кенана (через @chessgamecoin_bot или прямо в этом чате).
+2. **TasksPage цикл /lessons работает** — можно проверить пользовательски (Telegram WebApp): открыть Уроки → Решить → завершить → уровень должен подняться.
 
 > Правило: один пункт = одна запись в журнале сразу после деплоя + визуальной
 > проверки. Если шаблон удачный — `🟩 ШАБЛОН` с инструкцией «как повторить».
