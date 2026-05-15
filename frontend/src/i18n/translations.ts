@@ -282,6 +282,13 @@ export const translations = {
       leaveContribLost: (fee: string) => `Your contribution ${fee} ᚙ stays in the treasury and is NOT returned.`,
       leaveBtnConfirm: 'Leave',
       stayBtn: 'Stay',
+      // B.3: approve/reject заявок на вступление
+      joinPendingSent: 'Application sent. Awaiting Commander approval.',
+      pendingRequests: 'Pending requests',
+      noPendingRequests: 'No pending requests',
+      approve: 'Approve',
+      reject: 'Reject',
+      youArePending: 'Your application is awaiting Commander approval',
     },
     tournaments: {
       title: 'Tournaments', tabAll: 'All', tabJoined: 'Joined',
@@ -842,6 +849,13 @@ export const translations = {
       leaveContribLost: (fee: string) => `Ваш вклад ${fee} ᚙ останется в казне и НЕ вернётся.`,
       leaveBtnConfirm: 'Покинуть',
       stayBtn: 'Остаться',
+      // B.3
+      joinPendingSent: 'Заявка отправлена. Ждём одобрения главкома.',
+      pendingRequests: 'Заявки на вступление',
+      noPendingRequests: 'Нет новых заявок',
+      approve: 'Одобрить',
+      reject: 'Отклонить',
+      youArePending: 'Ваша заявка ждёт одобрения главкома',
     },
     tournaments: {
       title: 'Турниры', tabAll: 'Все', tabJoined: 'Мои',

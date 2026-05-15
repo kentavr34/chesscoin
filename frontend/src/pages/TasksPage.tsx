@@ -165,6 +165,36 @@ export const TasksPage: React.FC = () => {
           </div>
         )}
 
+        {/* Lessons hub — B.6 MASTER_PLAN, лесенка уровней */}
+        <div
+          onClick={() => navigate('/lessons')}
+          style={{
+            padding: '12px 14px', borderRadius: 12, cursor: 'pointer',
+            background: 'linear-gradient(135deg,rgba(155,109,255,.08),rgba(155,109,255,.03))',
+            border: '.5px solid rgba(155,109,255,.25)',
+            display: 'flex', alignItems: 'center', gap: 10,
+            marginTop: 8, marginBottom: 4,
+          }}
+        >
+          <div style={{
+            width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+            background: 'rgba(155,109,255,.16)', border: '.5px solid rgba(155,109,255,.32)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontFamily: "'JetBrains Mono',monospace", fontSize: 14, fontWeight: 900, color: '#9B85FF',
+          }}>
+            50
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#EAE2CC' }}>
+              {t.lessons?.title ?? 'Уроки'}
+            </div>
+            <div style={{ fontSize: 11, color: '#9A9490', marginTop: 2 }}>
+              {t.lessons?.openByProgress ?? 'Открываются по мере прохождения'}
+            </div>
+          </div>
+          <div style={{ fontSize: 14, color: '#9B85FF', fontWeight: 800 }}>→</div>
+        </div>
+
         {/* Practice buttons */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginTop: 8, marginBottom: 4 }}>
           {(['easy', 'medium', 'hard'] as const).map((diff) => {

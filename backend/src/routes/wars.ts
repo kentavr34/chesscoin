@@ -209,7 +209,7 @@ warsRouter.get("/countries/:id", authMiddleware, async (req: Request, res: Respo
 
     res.json({
       country: {
-        ...fmtCountry(country, myMembership ? { warWins: myMembership.warWins, warLosses: myMembership.warLosses, joinedAt: myMembership.joinedAt, contribution: myMembership.contribution.toString() } : null, commanderId),
+        ...fmtCountry(country, myMembership ? { warWins: myMembership.warWins, warLosses: myMembership.warLosses, joinedAt: myMembership.joinedAt, contribution: myMembership.contribution.toString(), status: myMembership.status } : null, commanderId),
         activeWar,
         entryFee: COUNTRY_ENTRY_FEE.toString(),
       },

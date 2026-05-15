@@ -30,6 +30,7 @@ const ShopPage        = lazy(() => import('@/pages/ShopPage').then(m => ({ defau
 const ReferralsPage   = lazy(() => import('@/pages/ReferralsPage').then(m => ({ default: m.ReferralsPage })));
 const TournamentsPage = lazy(() => import('@/pages/TournamentsPage').then(m => ({ default: m.TournamentsPage })));
 const LessonPage      = lazy(() => import('@/pages/LessonPage').then(m => ({ default: m.LessonPage })));
+const LessonsHubPage  = lazy(() => import('@/pages/LessonsHubPage').then(m => ({ default: m.LessonsHubPage })));
 const AdminPage        = lazy(() => import('@/pages/AdminPage').then(m => ({ default: m.AdminPage })));
 const SettingsPage     = lazy(() => import('@/pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
 const PuzzleDailyPage  = lazy(() => import('@/pages/PuzzleDailyPage').then(m => ({ default: m.PuzzleDailyPage })));
@@ -109,6 +110,7 @@ const AppInner: React.FC = () => {
       <Route path="/shop" element={<ShopPage />} />
       <Route path="/referrals" element={<ReferralsPage />} />
       <Route path="/tournaments" element={<TournamentsPage />} />
+      <Route path="/lessons" element={<LessonsHubPage />} />
       <Route path="/lesson/:puzzleId" element={<LessonPage />} />
       <Route path="/admin" element={<AdminPage />} />
       <Route path="/settings" element={<SettingsPage />} />

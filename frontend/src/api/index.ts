@@ -161,6 +161,11 @@ export const tasksApi = {
       `/tasks/puzzles/${puzzleId}/complete`,
       { moves }
     ),
+  // B.6 MASTER_PLAN: лесенка уроков (open-by-progress)
+  lessonsProgress: () =>
+    api.get<{ currentLevel: number; completedLevels: number[]; completedAt: string[]; nextReward: string }>('/tasks/lessons/progress'),
+  completeLesson: (level: number) =>
+    api.post<{ success: boolean; level: number; nextLevel: number; reward: string; message: string }>(`/tasks/lessons/${level}/complete`),
 };
 
 // ── SHOP ──────────────────────────────────────────────
@@ -200,9 +205,16 @@ export const warsApi = {
   myCountry: () =>
     api.get<{ country: Country | null; membership: Record<string,unknown> | null; isCommander: boolean; activeWar: Record<string,unknown> | null }>('/wars/my-country'),
   join: (countryId: string) =>
-    api.post<{ success: boolean; entryFee: string; membership: { id: string; warWins: number; warLosses: number; contribution: string; joinedAt: string } }>(`/wars/countries/${countryId}/join`),
+    api.post<{ success: boolean; pending?: boolean; entryFee: string; membership: { id: string; warWins: number; warLosses: number; contribution: string; joinedAt: string; status?: 'PENDING' | 'APPROVED' } }>(`/wars/countries/${countryId}/join`),
   leave: () =>
     api.post<{ success: boolean }>('/wars/leave'),
+  // B.3 MASTER_PLAN: главком видит заявки на вступление и решает.
+  pending: () =>
+    api.get<{ pending: Array<{ id: string; joinedAt: string; user: { id: string; firstName: string; username?: string | null; avatar?: string | null; elo: number; referralCount: number } }> }>('/wars/pending'),
+  approve: (memberId: string) =>
+    api.post<{ success: boolean; approved: string }>(`/wars/pending/${memberId}/approve`),
+  reject: (memberId: string) =>
+    api.post<{ success: boolean; rejected: string }>(`/wars/pending/${memberId}/reject`),
   introSeen: () =>
     api.post<{ success: boolean }>('/wars/intro-seen'),
   active: () =>

@@ -188,10 +188,45 @@ const CountryDetailModal: React.FC<{
   const [leaving, setLeaving] = useState(false);
   const [showDonateModal, setShowDonateModal] = useState(false);
   const [confirm, ConfirmDialog] = useConfirm();
+  // B.3: pending-заявки — главком видит и решает
+  const [pending, setPending] = useState<Array<{ id: string; joinedAt: string; user: { id: string; firstName: string; username?: string | null; avatar?: string | null; elo: number; referralCount: number } }>>([]);
+  const [pendingBusy, setPendingBusy] = useState<string | null>(null);
 
   useEffect(() => {
     warsApi.country(countryId).then(setData).catch(console.error);
   }, [countryId]);
+
+  // Грузим pending только если я ГК этой страны
+  useEffect(() => {
+    if (!data?.isCommander) { setPending([]); return; }
+    warsApi.pending().then(r => setPending(r.pending)).catch(() => {});
+  }, [data?.isCommander]);
+
+  const handleApprove = async (memberId: string) => {
+    setPendingBusy(memberId);
+    try {
+      await warsApi.approve(memberId);
+      toast(t.wars.joined, 'success');
+      setPending(p => p.filter(x => x.id !== memberId));
+      warsApi.country(countryId).then(setData);
+    } catch (e: any) {
+      toast(e.message ?? t.common.error);
+    } finally {
+      setPendingBusy(null);
+    }
+  };
+
+  const handleReject = async (memberId: string) => {
+    setPendingBusy(memberId);
+    try {
+      await warsApi.reject(memberId);
+      setPending(p => p.filter(x => x.id !== memberId));
+    } catch (e: any) {
+      toast(e.message ?? t.common.error);
+    } finally {
+      setPendingBusy(null);
+    }
+  };
 
   const handleJoin = async () => {
     const entryFee = data?.country?.entryFee
@@ -207,8 +242,9 @@ const CountryDetailModal: React.FC<{
     if (!ok) return;
     setJoining(true);
     try {
-      await warsApi.join(countryId);
-      toast(t.wars.joined, 'success');
+      const res = await warsApi.join(countryId);
+      // B.3: теперь join создаёт PENDING-заявку, не сразу APPROVED
+      toast(res.pending ? t.wars.joinPendingSent : t.wars.joined, 'success');
       onJoined();
       onClose();
     } catch (e: any) {
@@ -270,6 +306,9 @@ const CountryDetailModal: React.FC<{
   const c = data?.country;
   const members = data?.members ?? [];
   const isMine = c?.myMembership != null;
+  const myStatus = c?.myMembership?.status ?? 'APPROVED'; // backward compat
+  const isApproved = isMine && myStatus === 'APPROVED';
+  const isPending = isMine && myStatus === 'PENDING';
   const hasActiveWar = !!c?.activeWar;
   const entryFeeStr = c?.entryFee ?? COUNTRY_ENTRY_FEE.toString();
 
@@ -330,7 +369,12 @@ const CountryDetailModal: React.FC<{
             {joining ? '...' : `${t.wars.joinCountryBtn} · ${fmtBalance(entryFeeStr)} ᚙ`}
           </button>
         )}
-        {isMine && (
+        {isPending && (
+          <div style={{ padding: '10px 14px', background: 'rgba(240,200,90,.07)', border: '.5px solid rgba(240,200,90,.28)', borderRadius: 12, marginBottom: 14, fontSize: 12, color: '#F0C85A', fontWeight: 600, textAlign: 'center' }}>
+            {t.wars.youArePending}
+          </div>
+        )}
+        {isApproved && (
           <>
             <div style={{ padding: '8px 12px', background: 'rgba(61,186,122,0.07)', border: '.5px solid rgba(61,186,122,0.28)', borderRadius: 12, marginBottom: 10, fontSize: 12, color: '#3DBA7A', fontWeight: 600 }}>
               {t.wars.youAreFighter}
@@ -364,6 +408,62 @@ const CountryDetailModal: React.FC<{
               </button>
             </div>
           </>
+        )}
+
+        {/* B.3: главком видит список заявок на вступление */}
+        {data?.isCommander && pending.length > 0 && (
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ ...sectionLabelStyle, marginBottom: 8 }}>
+              {t.wars.pendingRequests} ({pending.length})
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {pending.map(p => (
+                <div key={p.id} style={{
+                  display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px',
+                  background: 'rgba(240,200,90,.05)', border: '.5px solid rgba(240,200,90,.22)',
+                  borderRadius: 10,
+                }}>
+                  <div onClick={() => { navigate(`/profile/${p.user.id}`); onClose(); }} style={{ cursor: 'pointer' }}>
+                    <Avatar user={p.user as any} size="s" />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#EAE2CC', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {p.user.firstName}{p.user.username ? ` · @${p.user.username}` : ''}
+                    </div>
+                    <div style={{ fontSize: 10, color: '#7A7875', marginTop: 1 }}>
+                      ELO {p.user.elo} · {p.user.referralCount} реф.
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleApprove(p.id)}
+                    disabled={pendingBusy === p.id}
+                    style={{
+                      padding: '6px 10px', borderRadius: 8,
+                      background: 'rgba(61,186,122,.12)', color: '#3DBA7A',
+                      border: '.5px solid rgba(61,186,122,.32)', fontSize: 11, fontWeight: 700,
+                      cursor: 'pointer', fontFamily: 'inherit',
+                      opacity: pendingBusy === p.id ? 0.5 : 1,
+                    }}
+                  >
+                    {t.wars.approve}
+                  </button>
+                  <button
+                    onClick={() => handleReject(p.id)}
+                    disabled={pendingBusy === p.id}
+                    style={{
+                      padding: '6px 10px', borderRadius: 8,
+                      background: 'rgba(255,77,106,.07)', color: '#FF4D6A',
+                      border: '.5px solid rgba(255,77,106,.28)', fontSize: 11, fontWeight: 700,
+                      cursor: 'pointer', fontFamily: 'inherit',
+                      opacity: pendingBusy === p.id ? 0.5 : 1,
+                    }}
+                  >
+                    {t.wars.reject}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
 
         <div style={{ ...sectionLabelStyle, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
