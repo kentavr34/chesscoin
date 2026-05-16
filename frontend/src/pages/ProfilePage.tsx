@@ -16,8 +16,8 @@ import { fmtBalance, fmtDate, leagueEmoji } from '@/utils/format';
 import type { Transaction, UserPublic } from '@/types';
 import { JARVIS_LEVELS } from '@/components/ui/JarvisModal';
 
-// Local type for Tab
-type Tab = 'info' | 'games' | 'saves' | 'ach';
+// Local type for Tab — 'games' включает сохранённые партии (слиты в 2026-05-16)
+type Tab = 'info' | 'games' | 'ach';
 
 // Game history item — flat format from GET /profile/games
 interface GameHistoryItem {
@@ -163,14 +163,18 @@ export const ProfilePage: React.FC = () => {
       if (isOwnProfile) {
         profileApi.getGames().then((r) => setRecentGames((r.games ?? []) as unknown as GameHistoryItem[])).catch(() => {});
         profileApi.getTransactions().then((r) => setTransactions(r.transactions)).catch(() => {});
+        // Сохранённые — только на собственном профиле
+        warsApi.savedGames().then((r) => setSavedGames(r.savedGames as unknown as SavedGameItem[])).catch(() => {});
       } else if (viewedUserId) {
         profileApi.getUserGames(viewedUserId).then((r) => setRecentGames((r.games ?? []) as unknown as GameHistoryItem[])).catch(() => {});
       }
     }
-    if (tab === 'saves') {
-      warsApi.savedGames().then((r) => setSavedGames(r.savedGames as unknown as SavedGameItem[])).catch(() => {});
-    }
   }, [tab, isOwnProfile, viewedUserId]);
+
+  // Фильтры для вкладки «Игры» (имя героя / тип / дата)
+  const [filterName, setFilterName] = useState('');
+  const [filterType, setFilterType] = useState<'ALL' | 'BOT' | 'BATTLE' | 'WAR' | 'TOURNAMENT'>('ALL');
+  const [filterDate, setFilterDate] = useState<'ALL' | 'TODAY' | 'WEEK' | 'MONTH'>('ALL');
 
   if (!user) return null;
   if (!isOwnProfile && !viewedProfile) return null;
@@ -191,7 +195,6 @@ export const ProfilePage: React.FC = () => {
   const TABS: { id: Tab; label: string }[] = [
     { id: 'info',     label: t.profile.tabs.info },
     { id: 'games',    label: t.profile.tabs.games },
-    { id: 'saves',    label: t.profile.tabs.saves },
     { id: 'ach',      label: t.profile.tabs.achievements },
   ];
 
@@ -529,17 +532,145 @@ export const ProfilePage: React.FC = () => {
         const typeLabel: Record<string, string> = {
           BOT: 'vs JARVIS', BATTLE: t.profile.typeBattle, WAR: t.profile.typeWar, TOURNAMENT: t.profile.typeTournament,
         };
+        // Применяем фильтры
+        const nameQuery = filterName.trim().toLowerCase();
+        const now = Date.now();
+        const dateCut: Record<typeof filterDate, number> = {
+          ALL: 0,
+          TODAY: now - 24 * 60 * 60 * 1000,
+          WEEK: now - 7 * 24 * 60 * 60 * 1000,
+          MONTH: now - 30 * 24 * 60 * 60 * 1000,
+        };
+        const cutMs = dateCut[filterDate];
+        const matches = (type: string | undefined, oppName: string | undefined, dateStr: string | null | undefined) => {
+          if (filterType !== 'ALL' && type !== filterType) return false;
+          if (nameQuery && !(oppName ?? '').toLowerCase().includes(nameQuery)) return false;
+          if (cutMs > 0) {
+            const t = dateStr ? Date.parse(dateStr) : 0;
+            if (!t || t < cutMs) return false;
+          }
+          return true;
+        };
+
+        const filteredGames = recentGames
+          .filter((g) => matches(g.type, g.opponent ? `${g.opponent.firstName} ${(g.opponent as any).lastName ?? ''}` : (g.hasBot ? `JARVIS Lv.${g.botLevel ?? '?'}` : ''), g.finishedAt))
+          .sort((a, b) => (Date.parse(b.finishedAt ?? '') || 0) - (Date.parse(a.finishedAt ?? '') || 0));
+
+        const filteredSaves = savedGames.filter((sg) => {
+          const s = sg.session;
+          const sides = s?.sides ?? [];
+          const names = sides.map((sd) => sd.player?.firstName ?? '').join(' ');
+          return matches(s?.type, names, s?.finishedAt);
+        });
+
         return (
           <>
+            {/* Фильтры */}
+            <div style={{ display: 'flex', gap: 6, padding: '12px 14px 4px', flexWrap: 'wrap' }}>
+              <input
+                value={filterName}
+                onChange={(e) => setFilterName(e.target.value)}
+                placeholder="Имя героя…"
+                style={{ flex: '1 1 140px', minWidth: 0, padding: '8px 10px', background: 'rgba(255,255,255,0.04)', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, color: '#EAE2CC', fontSize: 12, fontFamily: 'inherit', outline: 'none' }}
+              />
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value as any)}
+                style={{ padding: '8px 8px', background: 'rgba(255,255,255,0.04)', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, color: '#EAE2CC', fontSize: 12, fontFamily: 'inherit', outline: 'none' }}
+              >
+                <option value="ALL">Все типы</option>
+                <option value="BOT">vs JARVIS</option>
+                <option value="BATTLE">Баттл</option>
+                <option value="WAR">Война</option>
+                <option value="TOURNAMENT">Турнир</option>
+              </select>
+              <select
+                value={filterDate}
+                onChange={(e) => setFilterDate(e.target.value as any)}
+                style={{ padding: '8px 8px', background: 'rgba(255,255,255,0.04)', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, color: '#EAE2CC', fontSize: 12, fontFamily: 'inherit', outline: 'none' }}
+              >
+                <option value="ALL">Все даты</option>
+                <option value="TODAY">Сегодня</option>
+                <option value="WEEK">Неделя</option>
+                <option value="MONTH">Месяц</option>
+              </select>
+            </div>
+
+            {/* Сохранённые партии — сверху, только на своём профиле */}
+            {isOwnProfile && filteredSaves.length > 0 && (
+              <>
+                <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#F0C85A', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  💾 {t.profile.savedGames}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 14px' }}>
+                  {filteredSaves.map((sg) => {
+                    const s = sg.session;
+                    const sides = s?.sides ?? [];
+                    const p1 = sides[0]?.player;
+                    const p2 = sides[1]?.player;
+                    const winner = sides.find((sd) => sd.status === 'WON');
+                    return (
+                      <div key={sg.id} style={{ padding: '10px 12px', background: 'linear-gradient(135deg,#1A1410,#0F0E18)', border: '.5px solid rgba(240,200,90,.25)', borderRadius: 14 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <Avatar user={p1} size="s" />
+                            <span style={{ fontSize: '.78rem', fontWeight: 800, color: '#EAE2CC' }}>{p1?.firstName ?? '?'}</span>
+                          </div>
+                          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '.65rem', color: '#5A5248' }}>vs</span>
+                          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
+                            <span style={{ fontSize: '.78rem', fontWeight: 800, color: '#EAE2CC', textAlign: 'right' }}>{p2?.firstName ?? '?'}</span>
+                            <Avatar user={p2} size="s" />
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
+                          <span style={{ fontSize: '.62rem', color: '#5A5248' }}>
+                            {s?.type ?? ''} · {s?.finishedAt ? fmtDate(s.finishedAt) : ''}
+                          </span>
+                          {winner && (
+                            <span style={{ fontSize: '.62rem', fontWeight: 700, color: '#3DBA7A', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                              <IcoTrophy size={11} color="#3DBA7A" /> {winner.player?.firstName ?? '?'}
+                            </span>
+                          )}
+                          <div style={{ display: 'flex', gap: 4 }}>
+                            {s?.pgn && (
+                              <button
+                                onClick={() => {
+                                  const ss = (s as any).sides as Array<{ isWhite: boolean; player: any }> | undefined;
+                                  const white = ss?.find(x => x.isWhite)?.player ?? p1;
+                                  const black = ss?.find(x => !x.isWhite)?.player ?? p2;
+                                  setReplayGame({
+                                    pgn: s.pgn!,
+                                    title: `${p1?.firstName ?? '?'} vs ${p2?.firstName ?? '?'}`,
+                                    sessionId: s.id,
+                                    whitePlayer: white,
+                                    blackPlayer: black,
+                                  });
+                                }}
+                                style={{ fontSize: 9, padding: '2px 7px', background: 'rgba(245,200,66,0.1)', color: '#F0C85A', border: '.5px solid rgba(245,200,66,.3)', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700 }}
+                              >▷</button>
+                            )}
+                            <button
+                              onClick={() => s && warsApi.unsaveGame(s.id).then(() => setSavedGames(g => g.filter(x => x.id !== sg.id)))}
+                              style={{ fontSize: 9, padding: '2px 7px', background: 'rgba(204,96,96,.1)', color: '#CC6060', border: '.5px solid rgba(204,96,96,.3)', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700 }}
+                            >×</button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
             {/* Последние партии */}
             <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem' }}>{t.profile.recentGames}</div>
-            {recentGames.length === 0 ? (
+            {filteredGames.length === 0 ? (
               <div style={{ textAlign: 'center', color: '#5A5248', padding: '24px 0', fontSize: 13 }}>
                 {t.profile.noGamesPlayed}
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '0 14px' }}>
-                {recentGames.slice(0, 15).map((g) => {
+                {filteredGames.slice(0, 50).map((g) => {
                   const myResult = g.result;
                   const oppPlayer = g.opponent;
                   const isWon  = myResult === 'WON';
@@ -684,8 +815,8 @@ export const ProfilePage: React.FC = () => {
         );
       })()}
 
-      {/* Saves tab */}
-      {tab === 'saves' && (
+      {/* Saves tab — слита с games (2026-05-16) */}
+      {false && (
         <>
           <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem' }}>{t.profile.savedGames}</div>
           {savedGames.length === 0 ? (
