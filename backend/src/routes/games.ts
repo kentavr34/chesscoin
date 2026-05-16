@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import { authMiddleware, AuthRequest } from "@/middleware/auth";
 import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
+import { getIo } from "@/lib/io";
 
 const router = Router();
 
@@ -92,6 +93,13 @@ router.post("/:sessionId/save", authMiddleware, async (req: Request, res: Respon
       update: { savedAt: new Date() },
     });
 
+    // Broadcast live-обновление счётчика сохранений зрителям (шапка GamePage)
+    try {
+      const count = await prisma.savedGame.count({ where: { sessionId } });
+      getIo().to(sessionId).emit("game:saves-count", { sessionId, count });
+      getIo().to(`spectate:${sessionId}`).emit("game:saves-count", { sessionId, count });
+    } catch {}
+
     res.json({ saved: true });
   } catch (err) {
     logger.error("[games] POST /save error:", (err instanceof Error ? err.message : String(err)));
@@ -106,6 +114,12 @@ router.delete("/:sessionId/save", authMiddleware, async (req: Request, res: Resp
     const { sessionId } = req.params;
 
     await prisma.savedGame.deleteMany({ where: { userId, sessionId } });
+
+    try {
+      const count = await prisma.savedGame.count({ where: { sessionId } });
+      getIo().to(sessionId).emit("game:saves-count", { sessionId, count });
+      getIo().to(`spectate:${sessionId}`).emit("game:saves-count", { sessionId, count });
+    } catch {}
 
     res.json({ saved: false });
   } catch (err) {
@@ -127,6 +141,19 @@ router.get("/:sessionId/saved", authMiddleware, async (req: Request, res: Respon
     res.json({ saved: !!saved });
   } catch (err) {
     logger.error("[games] GET /saved check error:", (err instanceof Error ? err.message : String(err)));
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// GET /games/:sessionId/saves/count — сколько раз партию сохраняли (для шапки
+// зрителя публичного батла, 2026-05-16).
+router.get("/:sessionId/saves/count", async (req: Request, res: Response) => {
+  try {
+    const { sessionId } = req.params;
+    const count = await prisma.savedGame.count({ where: { sessionId } });
+    res.json({ count });
+  } catch (err) {
+    logger.error("[games] GET /saves/count error:", (err instanceof Error ? err.message : String(err)));
     res.status(500).json({ error: "Internal server error" });
   }
 });

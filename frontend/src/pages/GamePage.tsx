@@ -676,6 +676,7 @@ export function GamePage() {
   const [showResignDialog,  setShowResignDialog]  = useState(false);
   const [donatePool,        setDonatePool]        = useState<string | null>(null);
   const [spectatorCount,    setSpectatorCount]    = useState(session?.spectatorCount ?? 0);
+  const [savesCount,        setSavesCount]        = useState(0);
   const [selectedDonateAmt, setSelectedDonateAmt] = useState(1000);
   const [showDonateMenu,    setShowDonateMenu]    = useState(false);
   const [bravoQueue,  setBravoQueue]  = useState<string[]>([]);
@@ -746,6 +747,20 @@ export function GamePage() {
     };
     sock.on('battle:bravo', onBravo);
 
+    // Live-обновление счётчика сохранений (шапка зрителя)
+    const onSavesCount = (data: { sessionId: string; count: number }) => {
+      if (data.sessionId === sessionId) setSavesCount(data.count);
+    };
+    sock.on('game:saves-count', onSavesCount);
+    // Стартовое значение через REST
+    if (sessionId) {
+      import('@/api/client').then(({ api }) => {
+        api.get<{ count: number }>(`/games/${sessionId}/saves/count`)
+          .then(r => setSavesCount(r.count))
+          .catch(() => {});
+      });
+    }
+
     if (isSpectator) {
       sock.emit('spectate', { sessionId });
     }
@@ -753,6 +768,7 @@ export function GamePage() {
     return () => {
       sock.off('battle:donated', onDonated);
       sock.off('battle:bravo', onBravo);
+      sock.off('game:saves-count', onSavesCount);
       if (isSpectator) {
         sock.emit('unspectate', { sessionId });
       }
@@ -1043,6 +1059,8 @@ export function GamePage() {
               <span>{spectatorCount} в эфире</span>
               <span style={{ color: '#2E5A3A' }}>·</span>
               <span style={{ opacity: 0.8 }}>{viewCount >= 1000 ? `${(viewCount / 1000).toFixed(1)}K` : viewCount} всего</span>
+              <span style={{ color: '#2E5A3A' }}>·</span>
+              <span style={{ opacity: 0.8 }}>{savesCount} сохр.</span>
             </div>
             {/* Правая часть — касса + победителю */}
             {hasBet && (
