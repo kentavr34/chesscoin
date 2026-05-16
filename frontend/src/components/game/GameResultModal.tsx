@@ -153,7 +153,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
                   fontFamily: "'JetBrains Mono',monospace",
                   fontSize: 'var(--result-value-size)', fontWeight: 'var(--font-weight-bold)', color: 'var(--color-text-primary, #F0F2F8)',
                 }}>
-                  +{fmtBalance(earnedBig.toString())} ᚙ
+                  +{fmtBalance(earnedBig.toString())}
                 </span>
               </div>
             )}
@@ -166,7 +166,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
                   fontFamily: "'JetBrains Mono',monospace",
                   fontSize: 'var(--result-value-size)', fontWeight: 'var(--font-weight-bold)', color: 'var(--color-text-primary, #F0F2F8)',
                 }}>
-                  +{fmtBalance(pieceBig.toString())} ᚙ
+                  +{fmtBalance(pieceBig.toString())}
                 </span>
               </div>
             )}
@@ -179,7 +179,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
                   fontFamily: "'JetBrains Mono',monospace",
                   fontSize: 'var(--result-value-size)', fontWeight: 'var(--font-weight-bold)', color: 'var(--color-text-primary, #F0F2F8)',
                 }}>
-                  +{fmtBalance(earnedBig.toString())} ᚙ
+                  +{fmtBalance(earnedBig.toString())}
                 </span>
               </div>
             )}
@@ -192,7 +192,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
                   fontFamily: "'JetBrains Mono',monospace",
                   fontSize: 14, fontWeight: 700, color: 'var(--color-red, #FF4D6A)',
                 }}>
-                  −{fmtBalance(commBig.toString())} ᚙ
+                  −{fmtBalance(commBig.toString())}
                 </span>
               </div>
             )}
@@ -211,7 +211,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
                 color: 'var(--color-accent, #F5C842)',
                 textShadow: 'var(--result-total-shadow, 0 0 12px rgba(245,200,66,0.5))',
               }}>
-                +{fmtBalance(netBig.toString())} ᚙ
+                +{fmtBalance(netBig.toString())}
               </span>
             </div>
           </div>
@@ -232,7 +232,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
           <button
             onClick={() => {
               const total = (earnedBig + pieceBig).toString();
-              const shareText = `♟ I beat J.A.R.V.I.S ${botLevelName} in ChessCoin!\nWon ${fmtBalance(total)} ᚙ\nTry it too:`;
+              const shareText = `♟ I beat J.A.R.V.I.S ${botLevelName} in ChessCoin!\nWon ${fmtBalance(total)}\nTry it too:`;
               const botUrl = `https://t.me/chessgamecoin_bot?start=ref_${userTelegramId}`;
               try {
                 window.Telegram?.WebApp?.openTelegramLink?.(

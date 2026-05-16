@@ -361,7 +361,7 @@ const CountryDetailModal: React.FC<{
           <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
             <div style={statBoxStyle}>
               <div style={statLabelStyle}>{t.wars.treasury}</div>
-              <div style={{ ...statValueStyle, color: '#D4A843' }}>{fmtBalance(c.treasury)} ᚙ</div>
+              <div style={{ ...statValueStyle, color: '#D4A843' }}>{fmtBalance(c.treasury)}</div>
             </div>
             <div style={statBoxStyle}>
               <div style={statLabelStyle}>{t.wars.wins}</div>
@@ -388,7 +388,7 @@ const CountryDetailModal: React.FC<{
 
         {!isMine && (
           <button onClick={handleJoin} disabled={joining} style={{ ...greenBtnFull, marginBottom: 14, opacity: joining ? 0.6 : 1 }}>
-            {joining ? '...' : `${t.wars.joinCountryBtn} · ${fmtBalance(entryFeeStr)} ᚙ`}
+            {joining ? '...' : `${t.wars.joinCountryBtn} · ${fmtBalance(entryFeeStr)}`}
           </button>
         )}
         {isPending && (
@@ -555,7 +555,7 @@ const CountryDetailModal: React.FC<{
                 </div>
                 {BigInt(m.contribution ?? '0') > 0n && (
                   <div style={{ fontSize: 9, color: '#D4A843', marginTop: 2, fontFamily: "'JetBrains Mono',monospace" }}>
-                    вклад {fmtBalance(m.contribution)} ᚙ
+                    вклад {fmtBalance(m.contribution)}
                   </div>
                 )}
               </div>

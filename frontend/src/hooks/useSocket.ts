@@ -178,8 +178,8 @@ export const useSocket = () => {
           const coins = Number(BigInt(data.amountCoins ?? '0')).toLocaleString();
           const ton   = data.totalTon?.toFixed(4) ?? '0';
           const msg   = role === 'seller'
-            ? `💱 Order executed! Sold ${coins} ᚙ for ${ton} TON`
-            : `🛒 Bought ${coins} ᚙ for ${ton} TON — credited to balance`;
+            ? `💱 Order executed! Sold ${coins} for ${ton} TON`
+            : `🛒 Bought ${coins} for ${ton} TON — credited to balance`;
           showActionToast(msg, '💱 Exchange', () => navigate('/shop'));
           try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch {}
         }

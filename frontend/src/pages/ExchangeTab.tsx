@@ -6,7 +6,7 @@
 //   [Price indicator + CandleChart (TradingView)]
 //   [Period switcher 1D/7D/30D]
 //   [Order book]
-//   [Sell ᚙ / Buy ᚙ buttons]
+//   [Sell / Buy buttons]
 //
 // Without TON wallet: locked screen, price visible, operations blocked
 // With TON wallet: full functionality
@@ -121,7 +121,7 @@ const LockedScreen: React.FC<{ currentPrice: number; change24h: number; onConnec
           {currentPrice > 0 ? `${currentPrice.toFixed(5)} TON` : '—'}
         </div>
         <div style={{ fontSize: 12, color: currentPrice > 0 ? (up ? '#3DBA7A' : '#FF5B5B') : '#5A5248', marginTop: 4 }}>
-          {currentPrice > 0 ? `${up ? '+' : ''}${change24h.toFixed(2)}% 24h` : 'per 1,000,000 ᚙ'}
+          {currentPrice > 0 ? `${up ? '+' : ''}${change24h.toFixed(2)}% 24h` : 'per 1,000,000'}
         </div>
       </div>
 
@@ -136,7 +136,7 @@ const LockedScreen: React.FC<{ currentPrice: number; change24h: number; onConnec
           One-time payment: <b style={{ color: '#0098EA' }}>1 TON</b> — forever.
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12, color: '#9A9490', marginBottom: 20 }}>
-          {['Sell ᚙ for TON directly to other players', 'Buy ᚙ at market price', 'Platform fee: 0.5%'].map(t => (
+          {['Sell for TON directly to other players', 'Buy at market price', 'Platform fee: 0.5%'].map(t => (
             <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>{t}</div>
           ))}
         </div>
@@ -158,7 +158,7 @@ const CreateOrderModal: React.FC<{
   const t = useT();
   const maxCoins = Math.min(Number(BigInt(userBalance)), 100_000_000);
   const [amount, setAmount] = useState(Math.max(10_000, Math.min(100_000, maxCoins)));
-  const [price, setPrice]   = useState(0.001); // TON per 1M ᚙ
+  const [price, setPrice]   = useState(0.001); // TON per 1M
   const [loading, setLoading] = useState(false);
 
   const totalTon  = (amount / 1_000_000) * price;
@@ -187,14 +187,14 @@ const CreateOrderModal: React.FC<{
       <div style={{ width: '100%', maxWidth: 480, background: '#141018', border: '1px solid rgba(255,255,255,0.1)', borderBottom: 'none', borderRadius: '24px 24px 0 0', padding: '20px 18px', paddingBottom: 'max(24px, env(safe-area-inset-bottom, 24px))' }}>
         <div style={{ width: 36, height: 4, background: 'rgba(154,148,144,.18)', borderRadius: 2, margin: '0 auto 16px' }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <div style={{ fontSize: 16, fontWeight: 800, color: '#EAE2CC' }}>Sell ᚙ</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: '#EAE2CC' }}>Sell</div>
           <button onClick={onClose} style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: 'none', color: '#9A9490', cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', flexShrink: 0 }}>вњ•</button>
         </div>
 
-        {/* Amount ᚙ */}
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', color: '#5A5248', marginBottom: 8 }}>AMOUNT ᚙ</div>
+        {/* Amount */}
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', color: '#5A5248', marginBottom: 8 }}>AMOUNT</div>
         <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 800, color: '#F0C85A', textAlign: 'center', marginBottom: 10 }}>
-          {fmtBalance(String(amount))} ᚙ
+          {fmtBalance(String(amount))}
         </div>
         <input type="range" min={10_000} max={maxCoins} step={10_000} value={amount}
           onChange={e => setAmount(Number(e.target.value))}
@@ -208,7 +208,7 @@ const CreateOrderModal: React.FC<{
         </div>
 
         {/* Price */}
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', color: '#5A5248', marginBottom: 8 }}>PRICE (TON per 1,000,000 ᚙ)</div>
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', color: '#5A5248', marginBottom: 8 }}>PRICE (TON per 1,000,000)</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
           <button onClick={() => setPrice(p => Math.max(MIN_PRICE, +(p * 0.9).toFixed(5)))} style={{ width: 44, height: 44, borderRadius: 10, background: '#141018', border: '1px solid rgba(255,255,255,0.07)', color: '#EAE2CC', fontSize: 20, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>в€’</button>
           <input type="number" min={MIN_PRICE} step={0.00001} value={price}
@@ -290,9 +290,9 @@ const ExecuteOrderModal: React.FC<{
 
         {step === 'confirm' && (<>
           <div style={{ fontSize: 44, marginBottom: 12 }}></div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: '#EAE2CC', marginBottom: 8 }}>Buy ᚙ</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: '#EAE2CC', marginBottom: 8 }}>Buy</div>
           <div style={{ fontSize: 24, fontWeight: 800, color: '#F0C85A', marginBottom: 4, fontFamily: "'JetBrains Mono',monospace" }}>
-            {fmtBalance(order.amountCoins)} ᚙ
+            {fmtBalance(order.amountCoins)}
           </div>
           <div style={{ fontSize: 13, color: '#9A9490', marginBottom: 20 }}>from {order.sellerName} · ELO {order.sellerElo}</div>
           {/* E12: Partial purchase slider */}
@@ -300,19 +300,19 @@ const ExecuteOrderModal: React.FC<{
             <div style={{ marginBottom: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#5A5248', marginBottom: 6 }}>
                 <span>Amount</span>
-                <span style={{ color: '#F0C85A', fontWeight: 700 }}>{partialAmt.toLocaleString()} ᚙ {isPartial ? '(partial)' : '(all)'}</span>
+                <span style={{ color: '#F0C85A', fontWeight: 700 }}>{partialAmt.toLocaleString()} {isPartial ? '(partial)' : '(all)'}</span>
               </div>
               <input type="range" min={Math.min(10_000, maxCoins)} max={maxCoins} step={10_000}
                 value={partialAmt} onChange={e => setPartialAmt(Number(e.target.value))}
                 style={{ width: '100%', accentColor: '#F0C85A' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: '#5A5248', marginTop: 3 }}>
-                <span>10K ᚙ</span><span>{(maxCoins/1000).toFixed(0)}K ᚙ</span>
+                <span>10K</span><span>{(maxCoins/1000).toFixed(0)}K</span>
               </div>
             </div>
           )}
           <div style={{ background: '#0D0D12', borderRadius: 12, padding: '12px 14px', marginBottom: 20, textAlign: 'left' }}>
             {[
-              ['Price', `${order.priceTon.toFixed(5)} TON/1M ᚙ`],
+              ['Price', `${order.priceTon.toFixed(5)} TON/1M`],
               ['Total', `${totalTon.toFixed(4)} TON`],
               ['To seller', `${toSeller.toFixed(4)} TON`],
               ['Platform fee', `${feeTon.toFixed(4)} TON`],
@@ -401,12 +401,12 @@ const CreateBuyOrderModal: React.FC<{
       <div style={{ width: '100%', maxWidth: 480, background: '#141018', border: '1px solid rgba(0,152,234,0.2)', borderBottom: 'none', borderRadius: '24px 24px 0 0', padding: '20px 18px', paddingBottom: 'max(24px, env(safe-area-inset-bottom, 24px))' }}>
         <div style={{ width: 36, height: 4, background: 'rgba(154,148,144,.18)', borderRadius: 2, margin: '0 auto 16px' }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <div style={{ fontSize: 16, fontWeight: 800, color: '#0098EA' }}>Buy ᚙ (BUY)</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: '#0098EA' }}>Buy (BUY)</div>
           <button onClick={onClose} style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: 'none', color: '#9A9490', cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', flexShrink: 0 }}>вњ•</button>
         </div>
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', color: '#5A5248', marginBottom: 8 }}>WANT TO BUY ᚙ</div>
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', color: '#5A5248', marginBottom: 8 }}>WANT TO BUY</div>
         <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 26, fontWeight: 800, color: '#0098EA', textAlign: 'center', marginBottom: 10 }}>
-          {amount.toLocaleString()} ᚙ
+          {amount.toLocaleString()}
         </div>
         <input type="range" min={10_000} max={10_000_000} step={10_000} value={amount} onChange={e => setAmount(Number(e.target.value))} style={{ width: '100%', marginBottom: 10, accentColor: '#0098EA' }} />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 6, marginBottom: 16 }}>
@@ -416,14 +416,14 @@ const CreateBuyOrderModal: React.FC<{
             </button>
           ))}
         </div>
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', color: '#5A5248', marginBottom: 8 }}>MY PRICE (TON per 1M ᚙ)</div>
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', color: '#5A5248', marginBottom: 8 }}>MY PRICE (TON per 1M)</div>
         <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
           <button onClick={() => setPrice(p => Math.max(MIN_PRICE, +(p*0.9).toFixed(5)))} style={{ width: 44, height: 44, borderRadius: 10, background: '#141018', border: '1px solid rgba(255,255,255,0.07)', color: '#EAE2CC', fontSize: 20, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>в€’</button>
           <input type="number" min={MIN_PRICE} step={0.00001} value={price} onChange={e => setPrice(Math.max(MIN_PRICE, Number(e.target.value)))} style={{ flex: 1, padding: '10px 12px', background: 'rgba(255,255,255,.05)', border: '1px solid rgba(0,152,234,0.2)', borderRadius: 10, color: '#0098EA', fontSize: 15, fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, textAlign: 'center' as const, outline: 'none' }} />
           <button onClick={() => setPrice(p => +(p*1.1).toFixed(5))} style={{ width: 44, height: 44, borderRadius: 10, background: '#141018', border: '1px solid rgba(255,255,255,0.07)', color: '#EAE2CC', fontSize: 20, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
         </div>
         <div style={{ background: '#0D0D12', borderRadius: 12, padding: '10px 14px', marginBottom: 16 }}>
-          {[['Pay TON', `${totalTon.toFixed(4)} TON`], ['Receive ᚙ', `${amount.toLocaleString()} ᚙ`]].map(([l,v]) => (
+          {[['Pay TON', `${totalTon.toFixed(4)} TON`], ['Receive', `${amount.toLocaleString()}`]].map(([l,v]) => (
             <div key={l} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
               <span style={{ color: '#9A9490' }}>{l}</span>
               <span style={{ fontWeight: 700, color: '#0098EA', fontFamily: "'JetBrains Mono',monospace" }}>{v}</span>
@@ -456,12 +456,12 @@ const FillBuyOrderModal: React.FC<{
   const buyerWalletAddr = order.buyerWallet ?? order.sellerWallet;
 
   const handleFill = async () => {
-    if (!hasEnough) return showToast('Insufficient ᚙ to fill this order');
+    if (!hasEnough) return showToast('Insufficient to fill this order');
     setStep('paying');
     try {
       // Buyer (BUY order creator) pays seller (us) via TonConnect
       const { txHash, boc } = await sendTonPayment({
-        toAddress: sellerWallet,        // ᚙ seller receives TON
+        toAddress: sellerWallet,        // seller receives TON
         amount:    order.totalTon,
         comment:   `ChessCoin BUY Order ${order.id}`,
       });
@@ -480,14 +480,14 @@ const FillBuyOrderModal: React.FC<{
       <div style={{ width: '100%', maxWidth: 360, background: 'linear-gradient(180deg,#100C18,#0A080E)', border: '1px solid rgba(0,214,143,0.25)', borderRadius: 24, padding: 28, textAlign: 'center' }}>
         {step === 'confirm' && (<>
           <div style={{ fontSize: 44, marginBottom: 12 }}></div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: '#3DBA7A', marginBottom: 6 }}>Sell ᚙ to buyer</div>
-          <div style={{ fontSize: 24, fontWeight: 800, color: '#F0C85A', marginBottom: 4, fontFamily: "'JetBrains Mono',monospace" }}>{Number(orderCoins).toLocaleString()} ᚙ</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: '#3DBA7A', marginBottom: 6 }}>Sell to buyer</div>
+          <div style={{ fontSize: 24, fontWeight: 800, color: '#F0C85A', marginBottom: 4, fontFamily: "'JetBrains Mono',monospace" }}>{Number(orderCoins).toLocaleString()}</div>
           <div style={{ fontSize: 13, color: '#9A9490', marginBottom: 16 }}>
             Buyer: {order.buyerName ?? 'Player'} · ELO {order.buyerElo ?? order.sellerElo}
           </div>
-          {!hasEnough && <div style={{ fontSize: 12, color: '#FF5B5B', marginBottom: 12, padding: '8px 12px', background: 'rgba(255,77,106,0.1)', borderRadius: 10 }}>Insufficient ᚙ balance</div>}
+          {!hasEnough && <div style={{ fontSize: 12, color: '#FF5B5B', marginBottom: 12, padding: '8px 12px', background: 'rgba(255,77,106,0.1)', borderRadius: 10 }}>Insufficient balance</div>}
           <div style={{ background: '#0D0D12', borderRadius: 12, padding: '12px 14px', marginBottom: 20, textAlign: 'left' as const }}>
-            {[['Selling', `${Number(orderCoins).toLocaleString()} ᚙ`], ['You receive', `${order.totalTon.toFixed(4)} TON`], ['Price', `${order.priceTon.toFixed(5)} TON/1M ᚙ`]].map(([l,v]) => (
+            {[['Selling', `${Number(orderCoins).toLocaleString()}`], ['You receive', `${order.totalTon.toFixed(4)} TON`], ['Price', `${order.priceTon.toFixed(5)} TON/1M`]].map(([l,v]) => (
               <div key={l} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
                 <span style={{ color: '#9A9490' }}>{l}</span>
                 <span style={{ fontWeight: 700, color: '#EAE2CC', fontFamily: "'JetBrains Mono',monospace" }}>{v}</span>
@@ -612,7 +612,7 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
       <div style={{ margin: '0 18px 12px', background: '#141018', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '14px 16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
           <div>
-            <div style={{ fontSize: 10, color: '#5A5248', marginBottom: 4 }}>ᚙ / TON (per 1M ᚙ)</div>
+            <div style={{ fontSize: 10, color: '#5A5248', marginBottom: 4 }}> / TON (per 1M)</div>
             {loadingPrice ? (
               <div style={{ fontSize: 24, fontWeight: 800, color: '#5A5248' }}>—</div>
             ) : (
@@ -659,10 +659,10 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
       {/* ── Action buttons ── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, margin: '0 18px 10px' }}>
         <button onClick={() => setShowCreate(true)} style={{ padding: '12px', background: 'rgba(0,214,143,0.12)', color: '#3DBA7A', border: '1px solid rgba(0,214,143,0.3)', borderRadius: 12, fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>
-          Sell ᚙ
+          Sell
         </button>
         <button onClick={() => setShowCreateBuy(true)} style={{ padding: '12px', background: 'rgba(0,152,234,0.12)', color: '#0098EA', border: '1px solid rgba(0,152,234,0.3)', borderRadius: 12, fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>
-          Buy ᚙ
+          Buy
         </button>
       </div>
 
@@ -691,7 +691,7 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
           })()}
           {/* Order book header */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4, padding: '6px 10px', marginBottom: 4 }}>
-            {['Seller', 'Amount ᚙ', 'Price TON'].map(h => (
+            {['Seller', 'Amount', 'Price TON'].map(h => (
               <div key={h} style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.07em', color: '#5A5248', textTransform: 'uppercase' }}>{h}</div>
             ))}
           </div>
@@ -710,7 +710,7 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
                 <div style={{ fontSize: 10, color: '#5A5248', marginTop: 1 }}>ELO {order.sellerElo}</div>
               </div>
               <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, color: '#F0C85A' }}>
-                {fmtBalance(order.amountCoins)} ᚙ
+                {fmtBalance(order.amountCoins)}
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, color: '#0098EA' }}>{order.priceTon.toFixed(5)}</div>
@@ -732,7 +732,7 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
           ) : myOrders.filter(o => o.status === 'OPEN').map(order => (
             <div key={order.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', background: '#141018', border: '1px solid rgba(245,200,66,0.15)', borderRadius: 14, marginBottom: 8 }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: '#F0C85A', fontFamily: "'JetBrains Mono',monospace" }}>{fmtBalance(order.amountCoins)} ᚙ</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#F0C85A', fontFamily: "'JetBrains Mono',monospace" }}>{fmtBalance(order.amountCoins)}</div>
                 <div style={{ fontSize: 11, color: '#9A9490', marginTop: 2 }}>{order.priceTon.toFixed(5)} TON/1M · total {order.totalTon.toFixed(4)} TON</div>
               </div>
               <button onClick={() => handleCancelOrder(order.id)} style={{ padding: '7px 12px', background: 'rgba(255,77,106,0.1)', color: '#FF5B5B', border: '1px solid rgba(255,77,106,0.2)', borderRadius: 10, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -755,7 +755,7 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
             <div key={order.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: '#141018', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 14, marginBottom: 8 }}>
               <div style={{ fontSize: 24 }}>{order.status === 'EXECUTED' ? 'вњ…' : 'вќЊ'}</div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#EAE2CC' }}>{fmtBalance(order.amountCoins)} ᚙ</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#EAE2CC' }}>{fmtBalance(order.amountCoins)}</div>
                 <div style={{ fontSize: 10, color: '#5A5248', marginTop: 2 }}>{order.status === 'EXECUTED' ? t.exchange.executed : t.exchange.cancelled} · {order.priceTon.toFixed(5)} TON/1M</div>
               </div>
               <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, color: order.status === 'EXECUTED' ? '#3DBA7A' : '#5A5248' }}>
@@ -779,7 +779,7 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
             <>
               {/* Header */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4, padding: '6px 10px', marginBottom: 4 }}>
-                {['Buyer', 'Amount ᚙ', 'Price TON'].map(h => (
+                {['Buyer', 'Amount', 'Price TON'].map(h => (
                   <div key={h} style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.07em', color: '#5A5248', textTransform: 'uppercase' as const }}>{h}</div>
                 ))}
               </div>
@@ -790,7 +790,7 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
                     <div style={{ fontSize: 10, color: '#5A5248', marginTop: 1 }}>ELO {(order as BuyP2POrder).buyerElo ?? order.sellerElo}</div>
                   </div>
                   <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, color: '#3DBA7A' }}>
-                    {Number(BigInt(order.amountCoins)).toLocaleString()} ᚙ
+                    {Number(BigInt(order.amountCoins)).toLocaleString()}
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, color: '#3DBA7A' }}>{order.priceTon.toFixed(5)}</div>

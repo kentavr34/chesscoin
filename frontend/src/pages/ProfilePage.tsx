@@ -334,7 +334,7 @@ export const ProfilePage: React.FC = () => {
               <span style={{ fontFamily: "'Unbounded',sans-serif", fontSize: '1.4rem', fontWeight: 900, color: '#D4A843' }}>
                 {fmtBalance(user.balance)}
               </span>
-              <span style={{ fontSize: 13, color: '#D4A843', opacity: .6 }}>ᚙ</span>
+              <span style={{ fontSize: 13, color: '#D4A843', opacity: .6 }}></span>
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
@@ -555,7 +555,7 @@ export const ProfilePage: React.FC = () => {
                         </div>
                         <div style={{ fontSize: 10, color: '#5A5248', marginTop: 2 }}>
                           {typeLabel[g.type ?? ''] ?? ''} · {g.finishedAt ? fmtDate(g.finishedAt) : ''}
-                          {g.bet && BigInt(g.bet) > 0n ? ` · ${fmtBalance(g.bet)} ᚙ` : ''}
+                          {g.bet && BigInt(g.bet) > 0n ? ` · ${fmtBalance(g.bet)}` : ''}
                         </div>
                       </div>
 
@@ -563,7 +563,7 @@ export const ProfilePage: React.FC = () => {
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                         <span style={{ fontSize: 10, fontWeight: 800, color: isWon ? '#fff' : isDraw ? '#fff' : '#fff', background: isWon ? 'rgba(0,214,143,.18)' : isDraw ? 'rgba(74,158,255,.18)' : 'rgba(255,77,106,.18)', border: `.5px solid ${isWon ? 'rgba(0,214,143,.35)' : isDraw ? 'rgba(74,158,255,.35)' : 'rgba(255,77,106,.35)'}`, borderRadius: 5, padding: '2px 7px' }}>{statusLabel}</span>
                         {earned && isWon && (
-                          <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono',monospace", color: '#F0C85A' }}>+{earned} ᚙ</span>
+                          <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono',monospace", color: '#F0C85A' }}>+{earned}</span>
                         )}
                         {g.pgn && (
                           <button
@@ -656,7 +656,7 @@ export const ProfilePage: React.FC = () => {
                       <div style={{ fontSize: '.62rem', color: '#7A7875', marginTop: 2 }}>{fmtDate(tx.createdAt)}</div>
                     </div>
                     <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 700, color: isPos ? '#3DBA7A' : '#FF5B5B' }}>
-                      {isPos ? '+' : ''}{fmtBalance(tx.amount)} ᚙ
+                      {isPos ? '+' : ''}{fmtBalance(tx.amount)}
                     </span>
                   </div>
                 );
@@ -765,7 +765,7 @@ export const ProfilePage: React.FC = () => {
                         </div>
                       </div>
                       <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, color: placeColor }}>
-                        +{badge.prize ? (Number(BigInt(badge.prize)) / 1000).toFixed(0) + 'K' : '—'} ᚙ
+                        +{badge.prize ? (Number(BigInt(badge.prize)) / 1000).toFixed(0) + 'K' : '—'}
                       </div>
                     </div>
                   );

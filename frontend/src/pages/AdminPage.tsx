@@ -264,7 +264,7 @@ export const AdminPage: React.FC = () => {
             [t.admin.activeSessions, stats.activeSessions],
             [t.admin.battlesToday, stats.battlesToday],
             [t.admin.emissionPhase, stats.currentPhase],
-            [t.admin.reserve, `${Number(stats.platformReserve).toLocaleString()} ᚙ`],
+            [t.admin.reserve, `${Number(stats.platformReserve).toLocaleString()}`],
           ].map(([label, val]) => (
             <div key={label as string} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
               <span style={{ fontSize: 13, color: 'var(--text-secondary, #8B92A8)' }}>{label}</span>
@@ -285,7 +285,7 @@ export const AdminPage: React.FC = () => {
             <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: u.isBanned ? 'var(--red, #FF4D6A)' : 'var(--text-primary, #F0F2F8)' }}>{u.firstName} @{u.username ?? '—'}</div>
-                <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>ID: {u.telegramId} · {Number(u.balance).toLocaleString()} ᚙ · ELO {u.elo}</div>
+                <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>ID: {u.telegramId} · {Number(u.balance).toLocaleString()} · ELO {u.elo}</div>
               </div>
               <button onClick={() => banUser(u.id)} style={{ padding: '5px 10px', background: u.isBanned ? 'rgba(0,214,143,0.1)' : 'rgba(255,77,106,0.1)', color: u.isBanned ? 'var(--green, #00D68F)' : 'var(--red, #FF4D6A)', border: '1px solid currentColor', borderRadius: 8, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}>
                 {u.isBanned ? t.admin.unban : t.admin.ban}
@@ -338,7 +338,7 @@ export const AdminPage: React.FC = () => {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
             <div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', marginBottom: 4, textTransform: 'uppercase' as const, letterSpacing: '.06em' }}>Entry fee ᚙ</div>
+              <div style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', marginBottom: 4, textTransform: 'uppercase' as const, letterSpacing: '.06em' }}>Entry fee</div>
               <input value={tourFee} onChange={e => setTourFee(e.target.value)} type="number"
                 style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, color: 'var(--text-primary, #F0F2F8)', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' as const }} />
             </div>
@@ -367,7 +367,7 @@ export const AdminPage: React.FC = () => {
       {/* Airdrop tab */}
       {tab === 'airdrop' && (
         <div style={{ padding: '0 18px 32px' }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 16 }}>🪂 Mass distribution ᚙ</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 16 }}>🪂 Mass distribution</div>
 
           {/* Mode */}
           <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 6, fontWeight: 700 }}>MODE</div>
@@ -380,7 +380,7 @@ export const AdminPage: React.FC = () => {
           {/* Parameters by mode */}
           {airdropMode === 'fixed' && (
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 6 }}>AMOUNT PER USER (ᚙ)</div>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 6 }}>AMOUNT PER USER ()</div>
               <input value={airdropAmount} onChange={e => setAirdropAmount(e.target.value)} placeholder="e.g. 5000" style={{ width: '100%', padding: '10px 12px', background: 'var(--bg-input,#1A1E2E)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'var(--text-primary)', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' }} />
             </div>
           )}
@@ -392,7 +392,7 @@ export const AdminPage: React.FC = () => {
           )}
           {airdropMode === 'proportional' && (
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 6 }}>TOTAL POOL (ᚙ)</div>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 6 }}>TOTAL POOL ()</div>
               <input value={airdropPool} onChange={e => setAirdropPool(e.target.value)} placeholder="e.g. 10000000" style={{ width: '100%', padding: '10px 12px', background: 'var(--bg-input,#1A1E2E)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'var(--text-primary)', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' }} />
             </div>
           )}
@@ -400,7 +400,7 @@ export const AdminPage: React.FC = () => {
           {/* Filter and label */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
             <div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 6 }}>MIN. BALANCE (ᚙ)</div>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 6 }}>MIN. BALANCE ()</div>
               <input value={airdropMinBalance} onChange={e => setAirdropMinBalance(e.target.value)} placeholder="0" style={{ width: '100%', padding: '10px 12px', background: 'var(--bg-input,#1A1E2E)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'var(--text-primary)', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' }} />
             </div>
             <div>
@@ -428,13 +428,13 @@ export const AdminPage: React.FC = () => {
             <button
               disabled={airdropLoading || !airdropPreview}
               onClick={async () => {
-                if (!confirm(`Distribute ${airdropPreview?.totalAirdrop} ᚙ to ${airdropPreview?.participants} players?`)) return;
+                if (!confirm(`Distribute ${airdropPreview?.totalAirdrop} to ${airdropPreview?.participants} players?`)) return;
                 setAirdropLoading(true);
                 try {
                   const body = { mode: airdropMode, dryRun: false, minBalance: airdropMinBalance || '0', label: airdropLabel, fixedAmount: airdropAmount, multiplier: airdropMultiplier, totalPool: airdropPool };
                   const r = await fetch('/api/v1/admin/airdrop/execute', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('access_token')}` }, body: JSON.stringify(body) });
                   const d = await r.json();
-                  alert(`✅ Airdrop completed: ${d.participants} players, ${d.totalAirdrop} ᚙ`);
+                  alert(`✅ Airdrop completed: ${d.participants} players, ${d.totalAirdrop}`);
                   setAirdropPreview(null);
                 } catch (e) { alert('Error') } finally { setAirdropLoading(false); }
               }}
@@ -447,12 +447,12 @@ export const AdminPage: React.FC = () => {
           {airdropPreview && (
             <div style={{ background: 'var(--bg-card,#1C2030)', borderRadius: 14, padding: '14px' }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 10 }}>
-                Participants: {airdropPreview.participants} · Total: {Number(airdropPreview.totalAirdrop).toLocaleString()} ᚙ
+                Participants: {airdropPreview.participants} · Total: {Number(airdropPreview.totalAirdrop).toLocaleString()}
               </div>
               {airdropPreview.preview?.slice(0, 5).map((p: {name:string; amount:string}, i: number) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-secondary)', marginBottom: 4 }}>
                   <span>{p.name}</span>
-                  <span style={{ color: 'var(--accent,#F5C842)' }}>+{Number(p.amount).toLocaleString()} ᚙ</span>
+                  <span style={{ color: 'var(--accent,#F5C842)' }}>+{Number(p.amount).toLocaleString()}</span>
                 </div>
               ))}
               {airdropPreview.participants > 5 && (
@@ -517,13 +517,13 @@ const AdminExchangeTab: React.FC<{ showToast: (msg: string, ok?: boolean) => voi
         <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
           {['SELL', 'BUY'].map((t) => (
             <button key={t} onClick={() => setOrderType(t)} style={{ flex: 1, padding: '8px 4px', borderRadius: 8, border: 'none', fontSize: 11, fontWeight: 700, background: orderType === t ? (t === 'SELL' ? 'rgba(0,214,143,0.15)' : 'rgba(0,152,234,0.15)') : 'rgba(255,255,255,0.05)', color: orderType === t ? (t === 'SELL' ? 'var(--color-green, #00D68F)' : 'var(--color-blue, #0098EA)') : 'var(--text-secondary)', cursor: 'pointer', fontFamily: 'inherit' }}>
-              {t} ᚙ
+              {t}
             </button>
           ))}
         </div>
         <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 4 }}>Amount (ᚙ)</div>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 4 }}>Amount ()</div>
             <input type="number" value={amount} onChange={e => setAmount(e.target.value)} style={{ width: '100%', padding: '8px 10px', background: 'var(--bg-input,#1A1E2E)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--text-primary)', fontSize: 13, boxSizing: 'border-box' }} />
           </div>
           <div style={{ flex: 1 }}>
@@ -546,7 +546,7 @@ const AdminExchangeTab: React.FC<{ showToast: (msg: string, ok?: boolean) => voi
             <div style={{ fontSize: 11, fontWeight: 700, color: o.orderType === 'SELL' ? 'var(--color-green, #00D68F)' : 'var(--color-blue, #0098EA)' }}>
               [{o.orderType}] {o.seller?.firstName || 'System'}
             </div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginTop: 2 }}>{fmtBalance(o.amountCoins)} ᚙ</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginTop: 2 }}>{fmtBalance(o.amountCoins)}</div>
             <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>{o.priceTon} TON/1M · Status: {o.status}</div>
           </div>
           {o.status === 'OPEN' && (
@@ -718,7 +718,7 @@ const UploadTab: React.FC<{
 
       {/* Price */}
       <div>
-        <div style={labelStyle}>Price (ᚙ coins)</div>
+        <div style={labelStyle}>Price ( coins)</div>
         <div style={{ display: 'flex', gap: 6 }}>
           {['500', '1000', '2000', '5000', '10000', '25000'].map((p) => (
             <button
@@ -754,7 +754,7 @@ const UploadTab: React.FC<{
             <div style={{ fontSize: 10, color: RARITY_COLOR[rarity], marginTop: 2 }}>{RARITY_LABEL[rarity]}</div>
           </div>
           <div style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 13, fontWeight: 700, color: 'var(--accent, #F5C842)' }}>
-            {fmtBalance(price)} ᚙ
+            {fmtBalance(price)}
           </div>
         </div>
       )}
@@ -891,7 +891,7 @@ const ListTab: React.FC<{
                 </div>
                 <div style={{ display: 'flex', gap: 8, marginTop: 2, alignItems: 'center' }}>
                   <span style={{ fontSize: 10, color, fontWeight: 600 }}>{RARITY_LABEL[item.rarity]}</span>
-                  <span style={{ fontSize: 10, color: 'var(--accent, #F5C842)', fontFamily: 'JetBrains Mono,monospace' }}>{fmtBalance(item.priceCoins)} ᚙ</span>
+                  <span style={{ fontSize: 10, color: 'var(--accent, #F5C842)', fontFamily: 'JetBrains Mono,monospace' }}>{fmtBalance(item.priceCoins)}</span>
                   <span style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>👤 {item.ownersCount}</span>
                   {!item.isActive && <span style={{ fontSize: 9, color: '#FF4D6A', fontWeight: 700 }}>HIDDEN</span>}
                 </div>
@@ -942,7 +942,7 @@ const ListTab: React.FC<{
                   type="number"
                   value={editData.price}
                   onChange={(e) => setEditData(d => ({ ...d, price: e.target.value }))}
-                  placeholder="Price ᚙ"
+                  placeholder="Price"
                   style={inputStyle}
                 />
                 <div style={{ display: 'flex', gap: 6 }}>

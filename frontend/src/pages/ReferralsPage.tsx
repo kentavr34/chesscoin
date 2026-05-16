@@ -120,7 +120,7 @@ export const ReferralsPage: React.FC = () => {
         {/* Stats — 3 карточки в ряд */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginTop: 16 }}>
           {[
-            { label: r.totalEarned, value: `${fmtBalance(data?.totalIncome ?? '0')} ᚙ`, color: '#3DBA7A' },
+            { label: r.totalEarned, value: `${fmtBalance(data?.totalIncome ?? '0')}`, color: '#3DBA7A' },
             { label: r.referralsCount, value: String(data?.active ?? 0), color: '#3DBA7A' },
             { label: 'Total', value: String(data?.total ?? 0), color: '#3DBA7A' },
           ].map((stat) => (
@@ -213,7 +213,7 @@ export const ReferralsPage: React.FC = () => {
                 </div>
                 {currentRank.bonus > 0 && (
                   <div style={{ fontSize: '0.7rem', color: '#3DBA7A', marginTop: 2 }}>
-                    +{currentRank.bonus.toLocaleString()} ᚙ {r.perReferral} · {currentRank.pct}% {r.ofWinnings}
+                    +{currentRank.bonus.toLocaleString()} {r.perReferral} · {currentRank.pct}% {r.ofWinnings}
                   </div>
                 )}
               </div>
@@ -291,7 +291,7 @@ export const ReferralsPage: React.FC = () => {
                     {rk.bonus > 0 && (
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
                         <div style={{ fontSize: '0.72rem', fontWeight: 800, color: isCurrent ? '#3DBA7A' : unlocked ? '#3DBA7A' : '#6A7A6A' }}>
-                          +{rk.bonus.toLocaleString()} ᚙ
+                          +{rk.bonus.toLocaleString()}
                         </div>
                         <div style={{ fontSize: '0.6rem', color: unlocked ? '#7A7875' : '#5A5A5A', fontWeight: 700 }}>{rk.pct}%</div>
                       </div>
@@ -322,7 +322,7 @@ export const ReferralsPage: React.FC = () => {
         const rules = [
           {
             ico: '🎁',
-            title: `+${firstGameBonus.toLocaleString()} ᚙ`,
+            title: `+${firstGameBonus.toLocaleString()}`,
             sub: r.ruleFirstGame,
           },
           {

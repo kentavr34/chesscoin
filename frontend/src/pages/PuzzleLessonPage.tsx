@@ -203,7 +203,7 @@ export const PuzzleLessonPage: React.FC = () => {
       {/* Reward badge */}
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
         <div style={{ padding: '4px 14px', background: '#1C2030', borderRadius: 20, fontSize: 12, color: '#F5C842', fontWeight: 600 }}>
-          Reward: {Number(lesson.reward).toLocaleString()} ᚙ
+          Reward: {Number(lesson.reward).toLocaleString()}
         </div>
       </div>
 
@@ -239,7 +239,7 @@ export const PuzzleLessonPage: React.FC = () => {
           </div>
           {rewarded && (
             <div style={{ fontSize: 18, fontWeight: 700, color: '#00D68F', marginBottom: 8 }}>
-              +{Number(lesson.reward).toLocaleString()} ᚙ
+              +{Number(lesson.reward).toLocaleString()}
             </div>
           )}
           <div style={{ fontSize: 14, color: '#A8B0C8', marginBottom: 16 }}>

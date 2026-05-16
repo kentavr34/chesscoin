@@ -28,7 +28,7 @@ export const BadgeDetailModal: React.FC<{
         <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--text-muted, #4A5270)', marginBottom: 8 }}>{t.gameResult.jarvisCert}</div>
         <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 22, fontWeight: 800, color, marginBottom: 8 }}>{badgeName}</div>
         <div style={{ fontSize: 13, color: 'var(--color-text-secondary, #8B92A8)', marginBottom: 20 }}>
-          {t.profile.level} {lvlData?.level ?? '?'} · +{(lvlData?.reward ?? 0).toLocaleString()} ᚙ
+          {t.profile.level} {lvlData?.level ?? '?'} · +{(lvlData?.reward ?? 0).toLocaleString()}
         </div>
         {formattedDate && (
           <div style={{ fontSize: 14, color: 'var(--color-text-secondary, #8B92A8)', marginBottom: 8 }}>{formattedDate}</div>

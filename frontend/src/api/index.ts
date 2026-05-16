@@ -305,7 +305,7 @@ export interface P2POrder {
   sellerName:   string;
   sellerElo:    number;
   amountCoins:  string;   // BigInt как строка
-  priceTon:     number;   // TON за 1 000 000 ᚙ
+  priceTon:     number;   // TON за 1 000 000
   totalTon:     number;
   sellerWallet: string;
   status:       'OPEN' | 'EXECUTED' | 'CANCELLED';
@@ -331,7 +331,7 @@ export const exchangeApi = {
   getPriceHistory: (hours: 24 | 168 | 720 = 24) =>
     api.get<{ currentPrice: number; change24h: number; candles: PriceCandle[]; volume24h: number }>(`/exchange/price-history?hours=${hours}`),
 
-  // Создать ордер (продажа ᚙ)
+  // Создать ордер (продажа)
   createOrder: (amountCoins: string, priceTon: number) =>
     api.post<{ order: P2POrder }>('/exchange/orders', { amountCoins, priceTon }),
 
@@ -361,7 +361,7 @@ export const exchangeApi = {
       { txHash, boc }
     ),
 
-  // Исполнить ордер (покупка ᚙ) — после TON-транзакции на фронте
+  // Исполнить ордер (покупка) — после TON-транзакции на фронте
   // E12: partialCoins — купить только часть ордера
   executeOrder: (orderId: string, txHash: string, boc?: string, partialCoins?: string) =>
     api.post<{ success: boolean; amountCoins: string; totalTon: number; feeTon: number; isPartial: boolean }>(

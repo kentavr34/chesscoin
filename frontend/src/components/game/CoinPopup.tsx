@@ -65,7 +65,7 @@ export const CoinPopupLayer: React.FC<CoinPopupLayerProps> = ({ triggerRef }) =>
             whiteSpace: 'nowrap',
           }}
         >
-          +{p.amount} ᚙ
+          +{p.amount}
         </div>
       ))}
     </>

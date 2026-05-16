@@ -749,7 +749,7 @@ export function GamePage() {
     const onDonated = (data: { totalPool: string; amount: string }) => {
       setDonatePool(data.totalPool);
       window.dispatchEvent(new CustomEvent('chesscoin:toast', {
-        detail: { text: ` +${fmtBalance(data.amount)} ᚙ доната`, type: 'info' }
+        detail: { text: ` +${fmtBalance(data.amount)} доната`, type: 'info' }
       }));
     };
     sock.on('battle:donated', onDonated);
@@ -1143,11 +1143,11 @@ export function GamePage() {
                 Касса
               </span>
               <span style={{ fontSize: '.78rem', color: '#F0C85A', fontWeight: 800 }}>
-                {fmtBalance(bank.toString())} ᚙ
+                {fmtBalance(bank.toString())}
               </span>
             </div>
             <div style={{ fontSize: '.58rem', color: '#6E6A66', fontWeight: 600, letterSpacing: '.02em' }}>
-              победителю <span style={{ color: '#4DDA8A', fontWeight: 800 }}>{fmtBalance(winnerTake.toString())} ᚙ</span>
+              победителю <span style={{ color: '#4DDA8A', fontWeight: 800 }}>{fmtBalance(winnerTake.toString())}</span>
               <span style={{ color: '#4A4440' }}> · комиссия 10%</span>
             </div>
           </div>
@@ -1171,7 +1171,7 @@ export function GamePage() {
                 </span>
               </div>
               <span style={{ fontSize: '.86rem', color: '#F0C85A', fontWeight: 800, letterSpacing: '.01em' }}>
-                {fmtBalance(bank.toString())} ᚙ
+                {fmtBalance(bank.toString())}
               </span>
             </div>
             {/* Строка 2: разбивка ставки + донаты */}

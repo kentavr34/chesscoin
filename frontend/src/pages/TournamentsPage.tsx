@@ -174,7 +174,7 @@ export const TournamentsPage: React.FC = () => {
               {tournamentFinish.tournamentName ?? tt.title}
             </div>
             <div style={{ fontSize: 22, fontWeight: 800, color: '#3DBA7A', marginBottom: 6, fontFamily: 'JetBrains Mono, monospace' }}>
-              +{tournamentFinish.prize ? `${Number(tournamentFinish.prize).toLocaleString()} ᚙ` : '—'}
+              +{tournamentFinish.prize ? `${Number(tournamentFinish.prize).toLocaleString()}` : '—'}
             </div>
             {tournamentFinish.place && (
               <div style={{ fontSize: '0.78rem', color: '#7A7875', marginBottom: 24, fontFamily: "'JetBrains Mono',monospace", fontWeight: 700 }}>
@@ -418,13 +418,13 @@ const TournamentCard: React.FC<{
         <div>
           <div style={{ ...LABEL_STYLE, marginBottom: 3 }}>{tt.entryFeeLabel}</div>
           <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '0.82rem', fontWeight: 700, color: '#F0C85A' }}>
-            {tour.entryFee === '0' ? tt.free : `${fmtBalance(tour.entryFee)} ᚙ`}
+            {tour.entryFee === '0' ? tt.free : `${fmtBalance(tour.entryFee)}`}
           </div>
         </div>
         <div>
           <div style={{ ...LABEL_STYLE, marginBottom: 3 }}>{tt.prizePool}</div>
           <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '0.82rem', fontWeight: 700, color: '#F0C85A' }}>
-            {fmtBalance(tour.totalPool ?? tour.prizePool)} ᚙ
+            {fmtBalance(tour.totalPool ?? tour.prizePool)}
           </div>
         </div>
       </div>
@@ -504,7 +504,7 @@ const TournamentCard: React.FC<{
               ) : (
                 <>
                   <IcoTrophy size={16} />
-                  <span>{tt.join}{tour.entryFee !== '0' ? ` · ${fmtBalance(tour.entryFee)} ᚙ` : ''}</span>
+                  <span>{tt.join}{tour.entryFee !== '0' ? ` · ${fmtBalance(tour.entryFee)}` : ''}</span>
                 </>
               )}
             </button>

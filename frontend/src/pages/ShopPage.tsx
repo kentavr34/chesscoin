@@ -194,7 +194,7 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
 
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
             {([
-              { key: 'coin', Ico: () => <CoinIcon size={18} />, text: 'Buy coins with TON or USDT', sub: '1 TON = 1,000,000 ᚙ' },
+              { key: 'coin', Ico: () => <CoinIcon size={18} />, text: 'Buy coins with TON or USDT', sub: '1 TON = 1,000,000' },
               { key: 'fly',  Ico: () => <IcoMoneyFly size={18} color="#0098EA" />, text: 'Withdraw coins to TON', sub: '0.5% fee on all operations' },
               { key: 'lock', Ico: () => <IcoLock size={18} color="#0098EA" />, text: 'One-time unlock payment', sub: '1 TON — forever' },
             ] as const).map(r => (
@@ -241,12 +241,12 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
       {/* Balance row */}
       <div style={{ display: 'flex', gap: 8 }}>
         <div style={{ flex: 1, padding: '12px', ...S.card, borderRadius: 12, textAlign: 'center' }}>
-          <div style={{ ...S.sectionLabel, marginBottom: 4 }}>BALANCE ᚙ</div>
+          <div style={{ ...S.sectionLabel, marginBottom: 4 }}>BALANCE</div>
           <div style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 14, fontWeight: 700, color: '#F5C842' }}>{fmtBalance(user?.balance ?? '0')}</div>
         </div>
         <div style={{ flex: 1, padding: '12px', ...S.card, borderRadius: 12, textAlign: 'center' }}>
           <div style={{ ...S.sectionLabel, marginBottom: 4 }}>RATE</div>
-          <div style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 12, fontWeight: 700, color: '#0098EA' }}>1 TON = {(tonToCoins / 1000).toFixed(0)}K ᚙ</div>
+          <div style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 12, fontWeight: 700, color: '#0098EA' }}>1 TON = {(tonToCoins / 1000).toFixed(0)}K</div>
           <div style={{ fontSize: 9, color: '#7A7875', marginTop: 2 }}>≈ ${tonUsdt.toFixed(2)}</div>
         </div>
       </div>
@@ -287,7 +287,7 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
                   color: '#EAE2CC', fontSize: 10, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s',
                 }}>
                   <div>{opt.label}</div>
-                  <div style={{ color: '#F5C842', marginTop: 2 }}>+{fmtBalance(String(Math.round(c.net)))} ᚙ</div>
+                  <div style={{ color: '#F5C842', marginTop: 2 }}>+{fmtBalance(String(Math.round(c.net)))}</div>
                 </button>
               );
             })}
@@ -307,7 +307,7 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
                 setProcessing(true);
                 try {
                   const r = await tonApi.buy(parseFloat(amount));
-                  showToast(`Credited ${fmtBalance(String(r.coinsReceived))} ᚙ`);
+                  showToast(`Credited ${fmtBalance(String(r.coinsReceived))}`);
                   setAmount('');
                   onUserRefresh();
                 } catch (e: unknown) { showToast((e instanceof Error ? e.message : "Error") || 'Error'); }
@@ -321,8 +321,8 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
           {amount && (
             <div style={{ marginTop: 10, fontSize: 11, color: '#7A7875', lineHeight: 1.8 }}>
               {(() => { const c = calcCoins(amount, true); return <>
-                <div>You receive: <b style={{ color: '#F5C842' }}>{fmtBalance(String(Math.round(c.net)))} ᚙ</b></div>
-                <div>Fee {FEE_PERCENT}%: {fmtBalance(String(Math.round(c.fee)))} ᚙ</div>
+                <div>You receive: <b style={{ color: '#F5C842' }}>{fmtBalance(String(Math.round(c.net)))}</b></div>
+                <div>Fee {FEE_PERCENT}%: {fmtBalance(String(Math.round(c.fee)))}</div>
               </>; })()}
             </div>
           )}
@@ -336,7 +336,7 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
           <div style={{ display: 'flex', gap: 8 }}>
             <input
               type="number"
-              placeholder="Amount ᚙ"
+              placeholder="Amount"
               value={amount}
               onChange={e => setAmount(e.target.value)}
               style={{ ...S.input, flex: 1 }}
@@ -344,7 +344,7 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
             <button
               disabled={processing || !amount}
               onClick={async () => {
-                if (!amount || BigInt(amount.replace(/\D/g,'') || '0') < 1_000_000n) { showToast('Minimum 1,000,000 ᚙ'); return; }
+                if (!amount || BigInt(amount.replace(/\D/g,'') || '0') < 1_000_000n) { showToast('Minimum 1,000,000'); return; }
                 setProcessing(true);
                 try {
                   const r = await tonApi.sell(amount.replace(/\D/g,''));
@@ -378,7 +378,7 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
           <div style={{ display: 'flex', gap: 8 }}>
             <input
               type="number"
-              placeholder="Amount ᚙ"
+              placeholder="Amount"
               value={amount}
               onChange={e => setAmount(e.target.value)}
               style={{ ...S.input, flex: 1 }}
@@ -386,7 +386,7 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
             <button
               disabled={processing || !amount}
               onClick={async () => {
-                if (!amount || BigInt(amount.replace(/\D/g,'') || '0') < 1_000_000n) { showToast('Minimum 1,000,000 ᚙ'); return; }
+                if (!amount || BigInt(amount.replace(/\D/g,'') || '0') < 1_000_000n) { showToast('Minimum 1,000,000'); return; }
                 setProcessing(true);
                 try {
                   const r = await tonApi.withdraw(amount.replace(/\D/g,''));
@@ -439,7 +439,7 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
                   </div>
                 </div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: isIn ? '#3DBA7A' : '#FF5B5B', fontFamily: 'JetBrains Mono, monospace' }}>
-                  {isIn ? '+' : '-'}{fmtBalance(amount)} ᚙ
+                  {isIn ? '+' : '-'}{fmtBalance(amount)}
                 </div>
               </div>
             );
@@ -465,7 +465,7 @@ export const ShopPage: React.FC = () => {
   const [toast, setToast] = useState<string | null>(null);
   const [showTon, setShowTon] = useState(false);
   const shopSlides = [
-    { icon: <IcoShop size={32} color="#F5C842" />, title: t?.shop?.title ?? 'Магазин ChessCoin', desc: 'Покупай аватары, рамки, доски и темы за монеты ᚙ. Подключи TON кошелек для вывода или покупки за TON/USDT.' },
+    { icon: <IcoShop size={32} color="#F5C842" />, title: t?.shop?.title ?? 'Магазин ChessCoin', desc: 'Покупай аватары, рамки, доски и темы за монеты. Подключи TON кошелек для вывода или покупки за TON/USDT.' },
     { icon: <IcoBolt size={32} color="#F5C842" />, title: 'Как использовать предметы', desc: 'Купи предмет, затем нажми "Применить". Он мгновенно появится в твоем профиле и будет виден для других игроков.' },
     { icon: <IcoTon size={32} color="#0098EA" />, title: 'TON Wallet', desc: 'Подключи TON кошелек чтобы выводить заработанные монеты. Курс конвертации обновляется автоматически.' },
   ];
@@ -504,7 +504,7 @@ export const ShopPage: React.FC = () => {
   }, [tab, visualSubType]);
 
   const handleThemePurchase = async (item: ShopItem) => {
-    if (!await confirmPurchase({ title: `Buy "${item.name}"?`, message: `Price: ${fmtBalance(item.priceCoins)} ᚙ`, okLabel: 'Buy' })) return;
+    if (!await confirmPurchase({ title: `Buy "${item.name}"?`, message: `Price: ${fmtBalance(item.priceCoins)}`, okLabel: 'Buy' })) return;
     setActionId(item.id);
     try {
       const res = await shopApi.purchase(item.id);
@@ -531,7 +531,7 @@ export const ShopPage: React.FC = () => {
   useEffect(() => { loadItems(); }, [loadItems]);
 
   const handlePurchase = async (item: ShopItem) => {
-    if (!await confirmPurchase({ title: `Buy "${item.name}"?`, message: `Price: ${fmtBalance(item.priceCoins)} ᚙ`, okLabel: 'Buy' })) return;
+    if (!await confirmPurchase({ title: `Buy "${item.name}"?`, message: `Price: ${fmtBalance(item.priceCoins)}`, okLabel: 'Buy' })) return;
     setActionId(item.id);
     try {
       const res = await shopApi.purchase(item.id);
@@ -624,7 +624,7 @@ export const ShopPage: React.FC = () => {
         <div style={{ margin: '4px 18px 10px', padding: '11px 16px', ...S.card, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ ...S.sectionLabel }}>BALANCE</span>
           <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 14, fontWeight: 700, color: '#F5C842' }}>
-            {fmtBalance(user.balance)} ᚙ
+            {fmtBalance(user.balance)}
           </span>
         </div>
       )}

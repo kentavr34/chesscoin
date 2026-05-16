@@ -1,7 +1,7 @@
 import React from 'react';
 import { CoinIcon } from '@/components/ui/CoinIcon';
 
-// 2026-05-16 Кенан: chess unicode ♚♛♜♝♞♟ и руна ᚙ в Telegram WebView
+// 2026-05-16 Кенан: chess unicode ♚♛♜♝♞♟ и руна в Telegram WebView
 // рендерятся как иероглифы (нет глифов в системном шрифте Android/iOS).
 // Переходим на SVG-фигуры из assets/pieces/ и <CoinIcon /> для валюты.
 

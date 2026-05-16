@@ -302,7 +302,7 @@ export const LessonPage: React.FC = () => {
             {puzzle.isDaily ? `${t.lesson.daily}` : `${t.lesson.title}`}
           </div>
           <div style={{ fontSize: 10, color: '#9A9490', marginTop: 2 }}>
-            {diffLabel[diff]} · Рейтинг {puzzle.rating} · +{fmtBalance(puzzle.reward)} ᚙ
+            {diffLabel[diff]} · Рейтинг {puzzle.rating} · +{fmtBalance(puzzle.reward)}
           </div>
         </div>
         <div style={{ width: 36 }} />

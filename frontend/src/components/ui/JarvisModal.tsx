@@ -126,7 +126,7 @@ export const JarvisModal: React.FC<JarvisModalProps> = ({ currentJarvisLevel, on
                   ) : (
                     <div>
                       <div style={{ fontSize: 'var(--jarvis-reward-size)', fontWeight: 800, color: 'var(--color-accent, #F5C842)', fontFamily: "'JetBrains Mono',monospace" }}>
-                        +{fmtBalance(lvl.reward.toString())} ᚙ
+                        +{fmtBalance(lvl.reward.toString())}
                       </div>
                       <div style={{ fontSize: 'var(--jarvis-reward-label-size)', color: 'var(--color-text-secondary, #8B92A8)', marginTop: 2 }}>{t.jarvis.reward('')}</div>
                     </div>

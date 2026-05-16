@@ -102,7 +102,7 @@ export const WaitingForOpponent: React.FC<Props> = ({ session }) => {
             </div>
             <span style={vsStyle}>VS</span>
             {session.bet && BigInt(session.bet) > 0n && (
-              <span style={betStyle}>{fmtBalance(session.bet)} ᚙ</span>
+              <span style={betStyle}>{fmtBalance(session.bet)}</span>
             )}
           </div>
 

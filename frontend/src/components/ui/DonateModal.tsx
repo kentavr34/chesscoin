@@ -106,7 +106,7 @@ export const DonateModal: React.FC<{
           <div style={{ fontSize: '.6rem', color: '#5A5248', marginTop: 10, lineHeight: 1.4 }}>
             90% от всей кассы получит победитель партии. 10% — комиссия платформы.
             {currentPool && BigInt(currentPool) > 0n && (
-              <> Текущая касса: <span style={{ color: '#D4A843', fontWeight: 700 }}>{fmtBalance(currentPool)} ᚙ</span></>
+              <> Текущая касса: <span style={{ color: '#D4A843', fontWeight: 700 }}>{fmtBalance(currentPool)}</span></>
             )}
           </div>
         </div>
@@ -127,7 +127,7 @@ export const DonateModal: React.FC<{
             }}
           >
             <CoinIcon size={18} />
-            Задонатить {fmtBalance(amount)} ᚙ
+            Задонатить {fmtBalance(amount)}
           </button>
           {!canDonate && (
             <div style={{ fontSize: '.62rem', color: '#7A5248', textAlign: 'center', marginTop: 6 }}>

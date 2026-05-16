@@ -107,7 +107,7 @@ export const TasksPage: React.FC = () => {
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: '#C8C0E0' }}>
-            {completed} / {tasks.length} {tp.completed} · +{fmtBalance(String(totalReward))} ᚙ {tp.remaining}
+            {completed} / {tasks.length} {tp.completed} · +{fmtBalance(String(totalReward))} {tp.remaining}
           </div>
           <div style={{ fontSize: 11, color: '#9A9490', marginTop: 2 }}>{tp.refreshIn} {midnightTimer}</div>
           <div style={{ height: 3, background: 'rgba(155,109,255,.12)', borderRadius: 2, marginTop: 7, overflow: 'hidden' }}>
@@ -152,7 +152,7 @@ export const TasksPage: React.FC = () => {
             </div>
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 700, color: dailyPuzzle.completed ? '#3DBA7A' : '#F0C85A' }}>
-                {dailyPuzzle.completed ? `+${fmtBalance(dailyPuzzle.earnedReward ?? dailyPuzzle.reward)}` : `+${fmtBalance(dailyPuzzle.reward)}`} ᚙ
+                {dailyPuzzle.completed ? `+${fmtBalance(dailyPuzzle.earnedReward ?? dailyPuzzle.reward)}` : `+${fmtBalance(dailyPuzzle.reward)}`}
               </div>
               <div style={{ fontSize: 10, color: '#5A5248', marginTop: 2 }}>
                 {dailyPuzzle.completed ? tp.earned : tp.solve}
@@ -311,7 +311,7 @@ export const TasksPage: React.FC = () => {
                 )}
               </div>
               <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, color: '#F0C85A', whiteSpace: 'nowrap', marginRight: 8 }}>
-                +{fmtBalance(task.reward ?? '0')} ᚙ
+                +{fmtBalance(task.reward ?? '0')}
               </span>
               <div style={{
                 width: 20, height: 20, borderRadius: '50%', flexShrink: 0,

@@ -548,8 +548,8 @@ const BattleChallengeCard: React.FC<{
       )}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        {/* Слева: крупный аватар + имя + ELO */}
-        <div style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'flex-start', gap: 5, flexShrink: 0 }}>
+        {/* Слева: крупный аватар + имя + ELO (центрированы под аватаром) */}
+        <div style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 5, flexShrink: 0 }}>
           <button
             type="button"
             style={{
@@ -562,11 +562,11 @@ const BattleChallengeCard: React.FC<{
           >
             <Avatar user={creatorAsUser as any} size="l" />
           </button>
-          <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 2 }}>
-            <span style={{ fontSize: '.74rem', fontWeight: 700, color: '#D4C8B0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const, maxWidth: 64 }}>
+          <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 2, alignItems: 'center' }}>
+            <span style={{ fontSize: '.74rem', fontWeight: 700, color: '#D4C8B0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const, maxWidth: 64, textAlign: 'center' }}>
               {battle.creator?.firstName ?? '?'}
             </span>
-            <span style={{ fontSize: '.62rem', fontWeight: 600 }}>
+            <span style={{ fontSize: '.62rem', fontWeight: 600, textAlign: 'center' }}>
               <span style={{ color: '#7A7470' }}>ELO </span>
               <span style={{ color: '#F0C85A' }}>{battle.creator?.elo ?? '?'}</span>
             </span>
@@ -596,7 +596,7 @@ const BattleChallengeCard: React.FC<{
 
         {/* Справа: opponent (если турнир/война) ИЛИ кнопка */}
         {opp ? (
-          <div style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'flex-end', gap: 5, flexShrink: 0 }}>
+          <div style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 5, flexShrink: 0 }}>
             <button
               type="button"
               style={{
@@ -609,11 +609,11 @@ const BattleChallengeCard: React.FC<{
             >
               <Avatar user={oppAsUser as any} size="l" />
             </button>
-            <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 2, alignItems: 'flex-end' }}>
-              <span style={{ fontSize: '.74rem', fontWeight: 700, color: '#D4C8B0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const, maxWidth: 64 }}>
+            <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 2, alignItems: 'center' }}>
+              <span style={{ fontSize: '.74rem', fontWeight: 700, color: '#D4C8B0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const, maxWidth: 64, textAlign: 'center' }}>
                 {opp.firstName}
               </span>
-              <span style={{ fontSize: '.62rem', fontWeight: 600 }}>
+              <span style={{ fontSize: '.62rem', fontWeight: 600, textAlign: 'center' }}>
                 <span style={{ color: '#7A7470' }}>ELO </span>
                 <span style={{ color: '#F0C85A' }}>{opp.elo}</span>
               </span>

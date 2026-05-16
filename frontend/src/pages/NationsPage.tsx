@@ -130,7 +130,7 @@ export const NationsPage: React.FC = () => {
                     {activeWar.attackerWins}:{activeWar.defenderWins}
                   </div>
                   <div style={{ fontSize: 10, color: '#9A9490', marginTop: 2, display: 'inline-flex', alignItems: 'center', gap: 4, justifyContent: 'center' }}>
-                    <CoinIcon size={11} /> {fmtBalance(activeWar.prize ?? '0')} ᚙ {t.nations.atStake}
+                    <CoinIcon size={11} /> {fmtBalance(activeWar.prize ?? '0')} {t.nations.atStake}
                   </div>
                 </div>
                 <span style={{ fontSize: 24 }}>{activeWar.defenderClan.flag}</span>
@@ -151,7 +151,7 @@ export const NationsPage: React.FC = () => {
                   <span style={{ fontSize: 22 }}>{ch.attackerClan.flag}</span>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: '#FF5B5B' }}>{t.nations.warChallenge}</div>
-                    <div style={{ fontSize: 11, color: '#9A9490' }}>{ch.attackerClan.name} · {t.nations.treasuryLabel} {fmtBalance(ch.attackerClan.treasury ?? '0')} ᚙ</div>
+                    <div style={{ fontSize: 11, color: '#9A9490' }}>{ch.attackerClan.name} · {t.nations.treasuryLabel} {fmtBalance(ch.attackerClan.treasury ?? '0')}</div>
                   </div>
                   <button onClick={() => handleAcceptWar(ch.id)} style={acceptWarBtn}>{t.nations.accept}</button>
                 </div>
@@ -208,7 +208,7 @@ export const NationsPage: React.FC = () => {
                     {war.attackerWins}:{war.defenderWins}
                   </div>
                   <div style={{ fontSize: 10, color: '#F0C85A', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                    <CoinIcon size={11} /> {fmtBalance(war.prize ?? '0')} ᚙ
+                    <CoinIcon size={11} /> {fmtBalance(war.prize ?? '0')}
                   </div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
@@ -286,7 +286,7 @@ export const NationsPage: React.FC = () => {
                   </div>
                   <div style={{ textAlign: 'center', flexShrink: 0 }}>
                     <div style={{ fontSize: 11, color: '#9A9490', marginBottom: 4 }}>vs</div>
-                    <div style={{ fontSize: 10, color: '#F0C85A', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}><CoinIcon size={11} /> {fmtBalance(b.pool)} ᚙ</div>
+                    <div style={{ fontSize: 10, color: '#F0C85A', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}><CoinIcon size={11} /> {fmtBalance(b.pool)}</div>
                     <div style={{ fontSize: 10, color: '#5A5248', marginTop: 4 }}>
                       {b.activeGames}/{b.maxSimultaneous} {t.nations.games}
                     </div>
@@ -342,7 +342,7 @@ export const NationsPage: React.FC = () => {
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: '#F0E8CC' }}>{m.user?.firstName ?? t.nations.player}</div>
                     <div style={{ fontSize: 10, color: '#9A9490' }}>
-                      ELO {m.user?.elo ?? '?'} · {t.nations.contribution}: {fmtBalance(m.pendingContribution ?? '0')} ᚙ
+                      ELO {m.user?.elo ?? '?'} · {t.nations.contribution}: {fmtBalance(m.pendingContribution ?? '0')}
                     </div>
                   </div>
                   <button onClick={() => handleApprove(m.id, true)} style={approveBtn}>✓</button>
@@ -365,7 +365,7 @@ export const NationsPage: React.FC = () => {
                   {m.role === 'COMMANDER' && <span style={{ color: '#F0C85A', display: 'inline-flex', alignItems: 'center' }}><IcoCrown size={11} /></span>}
                 </div>
                 <div style={{ fontSize: 10, color: '#9A9490', marginTop: 2 }}>
-                  ELO {m.user?.elo ?? '?'} · {m.warWins}W/{m.warLosses}L · {t.nations.contribution} {fmtBalance(m.contribution ?? '0')} ᚙ
+                  ELO {m.user?.elo ?? '?'} · {m.warWins}W/{m.warLosses}L · {t.nations.contribution} {fmtBalance(m.contribution ?? '0')}
                 </div>
               </div>
               {isLeader && m.userId !== user?.id && !m.isPending && (
@@ -696,7 +696,7 @@ const JoinBattleModal: React.FC<{
           <div style={{ fontSize: 32, marginBottom: 4 }}>{myClan.flag} </div>
           <div style={{ fontSize: 16, fontWeight: 700, color: '#7B61FF' }}>{t.nations.joinBattleTitle}</div>
           <div style={{ fontSize: 11, color: '#9A9490', marginTop: 4 }}>
-            {t.nations.pool}: {fmtBalance(battle.pool)} ᚙ · {battle._count?.contributions ?? 0} {t.nations.participants}
+            {t.nations.pool}: {fmtBalance(battle.pool)} · {battle._count?.contributions ?? 0} {t.nations.participants}
           </div>
         </div>
         <div style={{ fontSize: 11, color: '#9A9490', marginBottom: 12 }}>

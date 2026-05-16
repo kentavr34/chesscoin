@@ -109,7 +109,7 @@ export const MiniProfileSheet: React.FC<Props> = ({ userId, onClose }) => {
                     {leagueEmoji[user.league] ?? '🎖'} {user.league}
                   </span>
                   <span style={tagStyle('#9B85FF')}>ELO {user.elo}</span>
-                  <span style={tagStyle('#00D68F')}>{fmtBalance(user.balance)} ᚙ</span>
+                  <span style={tagStyle('#00D68F')}>{fmtBalance(user.balance)}</span>
                 </div>
               </div>
             </div>

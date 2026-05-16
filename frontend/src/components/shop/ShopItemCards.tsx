@@ -154,7 +154,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({ item, loading, highlighted, 
       ) : item.owned ? (
         <button onClick={onEquip} disabled={loading} style={{ ...btnStyle, background: 'var(--color-purple-dark, #7B61FF)', color: '#fff' }}>{loading ? '...' : t.shop.equip}</button>
       ) : (
-        <button onClick={onPurchase} disabled={loading} style={{ ...btnStyle, background: 'var(--color-accent, #F5C842)', color: 'var(--color-bg-dark, #0B0D11)' }}>{loading ? '...' : `${fmtBalance(item.priceCoins)} ᚙ`}</button>
+        <button onClick={onPurchase} disabled={loading} style={{ ...btnStyle, background: 'var(--color-accent, #F5C842)', color: 'var(--color-bg-dark, #0B0D11)' }}>{loading ? '...' : `${fmtBalance(item.priceCoins)}`}</button>
       )}
     </div>
   );
@@ -207,7 +207,7 @@ export const AvatarItemCard: React.FC<AvatarItemCardProps> = ({ item, loading, h
       ) : item.owned ? (
         <button onClick={onEquip} disabled={loading} style={{ ...btnStyle, background: 'linear-gradient(135deg,var(--color-purple-dark, #7B61FF),var(--color-purple, #9B85FF))', color: '#fff' }}>{loading ? '...' : t.shop.equip}</button>
       ) : (
-        <button onClick={onPurchase} disabled={loading} style={{ ...btnStyle, background: 'var(--color-accent, #F5C842)', color: 'var(--color-bg-dark, #0B0D11)' }}>{loading ? '...' : `${fmtBalance(item.priceCoins)} ᚙ`}</button>
+        <button onClick={onPurchase} disabled={loading} style={{ ...btnStyle, background: 'var(--color-accent, #F5C842)', color: 'var(--color-bg-dark, #0B0D11)' }}>{loading ? '...' : `${fmtBalance(item.priceCoins)}`}</button>
       )}
     </div>
   );

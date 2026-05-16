@@ -107,7 +107,7 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({ result, opponentNa
         {/* Заработано */}
         {earned && BigInt(earned) > 0n && (
           <div style={earnedText}>
-            +{Number(BigInt(earned) / 1000n)}K ᚙ
+            +{Number(BigInt(earned) / 1000n)}K
           </div>
         )}
 

@@ -152,7 +152,7 @@ export const PuzzleDailyPage: React.FC = () => {
       {/* Reward and difficulty */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 12 }}>
         <div style={{ padding: '4px 14px', background: '#1C2030', borderRadius: 20, fontSize: 12, color: '#F5C842', fontWeight: 600 }}>
-          Reward: {Number(puzzle.reward).toLocaleString()} ᚙ
+          Reward: {Number(puzzle.reward).toLocaleString()}
         </div>
         <div style={{ padding: '4px 14px', background: '#1C2030', borderRadius: 20, fontSize: 12, color: '#A8B0C8' }}>
           {'в…'.repeat(Math.min(5, Math.ceil(puzzle.difficulty / 20)))}{'в†'.repeat(5 - Math.min(5, Math.ceil(puzzle.difficulty / 20)))}
@@ -197,7 +197,7 @@ export const PuzzleDailyPage: React.FC = () => {
         <div style={{ margin: '16px', padding: '20px 16px', background: '#13161E', borderRadius: 16, textAlign: 'center' }}>
           <div style={{ fontSize: 32 }}>вњ…</div>
           <div style={{ fontSize: 16, fontWeight: 700, color: '#F5C842', marginTop: 8 }}>
-            {rewarded ? `+${Number(puzzle.reward).toLocaleString()} ᚙ earned!` : 'Puzzle already solved'}
+            {rewarded ? `+${Number(puzzle.reward).toLocaleString()} earned!` : 'Puzzle already solved'}
           </div>
           <div style={{ fontSize: 13, color: '#A8B0C8', marginTop: 4 }}>Come back tomorrow for a new puzzle!</div>
           <button onClick={() => navigate(-1)} style={{
