@@ -1071,17 +1071,16 @@ export function GamePage() {
       </div>
 
       {/* ── Статус-полоска верх ─────────────────────────────────────────────
-          Игрок: «Думает...» когда не его ход (как было).
-          Зритель публичного батла (2026-05-16, Кенан): слева счётчик
-          лайв-зрителей + всего просмотров зелёными буквами; справа касса
-          и сумма победителю золотом/зелёным. */}
-      <div style={{ height: STATUS_GAP, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 4, flexShrink: 0 }}>
-        {isSpectator && isPublicBattle ? (
+          Публичный батл (2026-05-16, Кенан): показывается ВСЕМ — игрокам
+          и зрителям. Слева счётчики (в эфире · всего · сохр.) зелёными,
+          справа касса → победителю.
+          Bot / private: «Думает...» когда не мой ход (как было). */}
+      <div style={{ height: STATUS_GAP, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 4, flexShrink: 0 }}>
+        {isPublicBattle ? (
           <div style={{ width: '100%', padding: '0 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: 'Inter, sans-serif' }}>
-            {/* Левая часть — зрители (зелёным) */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '.66rem', fontWeight: 800, color: '#4DDA8A', letterSpacing: '.02em' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '.62rem', fontWeight: 800, color: '#4DDA8A', letterSpacing: '.02em' }}>
               {spectatorCount > 0 && (
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4DDA8A', animation: 'gp-pulse 1.4s infinite', boxShadow: '0 0 6px #4DDA8A' }} />
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#4DDA8A', animation: 'gp-pulse 1.4s infinite', boxShadow: '0 0 5px #4DDA8A' }} />
               )}
               <span>{spectatorCount} в эфире</span>
               <span style={{ color: '#2E5A3A' }}>·</span>
@@ -1089,9 +1088,8 @@ export function GamePage() {
               <span style={{ color: '#2E5A3A' }}>·</span>
               <span style={{ opacity: 0.8 }}>{savesCount} сохр.</span>
             </div>
-            {/* Правая часть — касса + победителю */}
             {hasBet && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '.66rem', fontWeight: 800 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: '.62rem', fontWeight: 800 }}>
                 <span style={{ color: '#9A9490', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase' }}>Касса</span>
                 <span style={{ color: '#F0C85A' }}>{fmtBalance(bank.toString())}</span>
                 <span style={{ color: '#3A3830' }}>→</span>
@@ -1127,8 +1125,11 @@ export function GamePage() {
         </div>
       </div>
 
-      {/* ── Статус-полоска низ: «Ваш ход» зелёным ───────────────────────── */}
-      <div style={{ height: STATUS_GAP, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 4, flexShrink: 0 }}>
+      {/* ── Статус-полоска низ: «Ваш ход» зелёным.
+          Кенан 2026-05-16: «зона активности должна быть чуть ближе к
+          доске, не слипаться с полосой героя». Прибиваем к верху
+          (flex-start + paddingTop). */}
+      <div style={{ height: STATUS_GAP, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 4, flexShrink: 0 }}>
         {isMyTurn && !gameOver && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4DDA8A', animation: 'gp-pulse 1.4s infinite', boxShadow: '0 0 9px #4DDA8A' }} />
@@ -1327,7 +1328,7 @@ export function GamePage() {
           </button>
         )}
 
-        {/* Слот 4: игрок=Сдаться | зритель=Пригласить (Telegram share) */}
+        {/* Слот 4: игрок=Сдаться | зритель=Поделиться (Telegram share) */}
         {isSpectator ? (
           <button
             onClick={() => {
@@ -1340,7 +1341,7 @@ export function GamePage() {
                 );
               } catch {}
             }}
-            title="Пригласить друзей смотреть"
+            title="Поделиться партией"
             style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
               gap: 5,
@@ -1354,7 +1355,7 @@ export function GamePage() {
               <path d="M3 19c.5-3.2 3-5 6-5s5.5 1.8 6 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
               <path d="M18 6v6M15 9h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
             </svg>
-            <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Пригласить</span>
+            <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Поделиться</span>
           </button>
         ) : (
           <button
