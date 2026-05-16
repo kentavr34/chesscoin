@@ -225,6 +225,12 @@ export const ProfilePage: React.FC = () => {
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 18px 0' }}>
         <div style={{ position: 'relative', marginBottom: 12 }}>
           <div style={avatarRingStyle} />
+          {/* Флаг страны рядом с аватаром — бейдж в левом-нижнем углу */}
+          {(displayUser as any)?.countryMember?.country?.code && (
+            <div style={{ position: 'absolute', bottom: -6, left: -6, width: 30, height: 30, borderRadius: '50%', background: '#0B0D11', border: '2px solid #0B0D11', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', zIndex: 3 }}>
+              <CountryFlag code={(displayUser as any).countryMember.country.code} size={22} />
+            </div>
+          )}
 
           {/* Аватар — кликабельный на чужом профиле */}
           {isOwnProfile ? (
@@ -293,10 +299,6 @@ export const ProfilePage: React.FC = () => {
           )}
         </div>
         <div style={{ textAlign: 'center', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
-          {/* 2.1 Флаг страны рядом с именем */}
-          {user?.countryMember?.country?.code && (
-            <CountryFlag code={user.countryMember.country.code} size={22} />
-          )}
           <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#EAE2CC' }}>{user.firstName} {user.lastName ?? ''}</span>
         </div>
         <div style={{ marginTop: 3, textAlign: 'center', fontSize: '.72rem', color: '#5A5248' }}>@{user.username ?? 'unknown'}</div>
@@ -306,25 +308,30 @@ export const ProfilePage: React.FC = () => {
             <IcoSwords size={16} /> {t.profile.challengeBtn ?? 'Challenge'}
           </button>
         )}
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8, justifyContent: 'center' }}>
-          <span style={tagGold}>{leagueEmoji[user.league]} #1</span>
-          <span style={{ display: 'inline-flex', padding: '3px 8px', background: 'rgba(74,158,255,.12)', color: '#82CFFF', borderRadius: 6, fontSize: 10, fontWeight: 700, border: '.5px solid rgba(74,158,255,.3)' }}>ELO {user.elo}</span>
-          {user?.countryMember?.isCommander && (
-            <span style={{ ...tagGr, background: 'linear-gradient(135deg, rgba(245,200,66,0.15), rgba(255,215,0,0.08))', color: '#FFD700', borderColor: 'rgba(255,215,0,0.35)', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-              <IcoCrown size={11} /> {t.profile.commanderBadge}
-            </span>
-          )}
-          {user?.militaryRank && (
-            <span style={{ ...tagGr, background: 'rgba(255,159,67,0.1)', color: '#FF9F43', borderColor: 'rgba(255,159,67,0.2)' }}>
-              {user?.militaryRank.label}
-              {(user?.referralCount ?? 0) > 0 && (
-                <span style={{ marginLeft: 4, fontSize: 10, opacity: 0.8, display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                  — {(user.referralCount ?? 0).toLocaleString()} <IcoUsers size={10} />
-                </span>
-              )}
-            </span>
-          )}
-          <span style={{ ...tagRobot, display: 'inline-flex', alignItems: 'center', gap: 4 }}><IcoRobot size={11} /> {JARVIS_LEVELS[Math.max(0, (user?.jarvisLevel ?? 1) - 1)].name}</span>
+        {/* Достижения — 2 строки */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <span style={tagGold}>{leagueEmoji[user.league]} #1</span>
+            <span style={{ display: 'inline-flex', padding: '3px 8px', background: 'rgba(74,158,255,.12)', color: '#82CFFF', borderRadius: 6, fontSize: 10, fontWeight: 700, border: '.5px solid rgba(74,158,255,.3)' }}>ELO {user.elo}</span>
+            {user?.countryMember?.isCommander && (
+              <span style={{ ...tagGr, background: 'linear-gradient(135deg, rgba(245,200,66,0.15), rgba(255,215,0,0.08))', color: '#FFD700', borderColor: 'rgba(255,215,0,0.35)', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <IcoCrown size={11} /> {t.profile.commanderBadge}
+              </span>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
+            {user?.militaryRank && (
+              <span style={{ ...tagGr, background: 'rgba(255,159,67,0.1)', color: '#FF9F43', borderColor: 'rgba(255,159,67,0.2)' }}>
+                {user?.militaryRank.label}
+                {(user?.referralCount ?? 0) > 0 && (
+                  <span style={{ marginLeft: 4, fontSize: 10, opacity: 0.8 }}>
+                    — {(user.referralCount ?? 0).toLocaleString()}
+                  </span>
+                )}
+              </span>
+            )}
+            <span style={{ ...tagRobot, display: 'inline-flex', alignItems: 'center', gap: 4 }}><IcoRobot size={11} /> {JARVIS_LEVELS[Math.max(0, (user?.jarvisLevel ?? 1) - 1)].name}</span>
+          </div>
         </div>
       </div>
 
@@ -341,15 +348,19 @@ export const ProfilePage: React.FC = () => {
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-            <div onClick={() => navigate('/transactions')} style={{ fontSize: '.65rem', color: '#4A9EFF', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
-              История ›
-            </div>
-            <button onClick={() => navigate('/referrals')} title={t.profile.txHistory} style={{ width: 36, height: 36, padding: 0, background: 'rgba(74,158,255,.08)', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, color: '#82CFFF', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IcoUsers size={18} /></button>
+            <button onClick={() => navigate('/referrals')} title={t.profile.referrals} style={{ width: 36, height: 36, padding: 0, background: 'rgba(74,158,255,.08)', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, color: '#82CFFF', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IcoUsers size={18} /></button>
           </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           <button onClick={() => navigate('/shop')} style={{ padding: '8px 10px', background: 'rgba(74,158,255,.08)', color: '#82CFFF', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.profile.shop}</button>
           <button onClick={() => navigate('/referrals')} style={{ padding: '8px 10px', background: 'rgba(74,158,255,.08)', color: '#82CFFF', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.profile.referrals} →</button>
+        </div>
+        {/* История транзакций — отдельной строкой по центру */}
+        <div
+          onClick={() => navigate('/transactions')}
+          style={{ marginTop: 4, fontSize: 12, fontWeight: 700, color: '#82CFFF', cursor: 'pointer', textAlign: 'center', padding: '6px 8px', borderTop: '.5px solid rgba(74,158,255,.12)' }}
+        >
+          {t.profile.txHistory ?? 'История транзакций'} ›
         </div>
       </div>
 
