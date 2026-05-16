@@ -269,61 +269,75 @@ const PlayerPanel: React.FC<PanelProps> = ({
         }
       </div>
 
-      {/* ── Колонка: имя + флаг/глобус + ELO ───────────────────────────── */}
-      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 4, minWidth: 0 }}>
+      {/* ── ЗОНА 1: герой (имя + флаг + ELO) ───────────────────────────── */}
+      <div style={{
+        display: 'flex', flexDirection: 'column', justifyContent: 'center',
+        gap: 4, width: 96, flexShrink: 0, overflow: 'hidden',
+      }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
           <span style={{
-            fontSize: '1rem', fontWeight: 700, lineHeight: 1,
+            fontSize: '.95rem', fontWeight: 700, lineHeight: 1,
             color: isActive ? '#F0E8CC' : '#B0A898',
             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-            maxWidth: 80, transition: 'color .3s',
+            maxWidth: 74, transition: 'color .3s',
           }}>
             {name.length > 10 ? name.slice(0, 10) + '…' : name}
           </span>
-          {/* Флаг страны (CountryFlag PNG из flagcdn). Если страны нет — ничего. */}
           {country && country.length === 2 && (
             <CountryFlag code={country} size={14} />
           )}
         </div>
-        <span style={{ fontSize: '.68rem', color: isActive ? '#8A8478' : '#6A6258', fontWeight: 600, lineHeight: 1 }}>
+        <span style={{ fontSize: '.66rem', color: isActive ? '#8A8478' : '#6A6258', fontWeight: 600, lineHeight: 1 }}>
           {elo !== undefined ? `ELO ${elo}` : (isBot ? 'J.A.R.V.I.S' : '')}
         </span>
       </div>
 
-      {/* ── Центр: монеты (строка 1) + взятые фигуры (строка 2) ─────────── */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5, minWidth: 0 }}>
+      {/* Разделитель ────────────────────────────────────────────────────── */}
+      <span style={{ width: 1, height: 38, background: 'rgba(255,255,255,.06)', flexShrink: 0 }} />
+
+      {/* ── ЗОНА 2: монеты (стр. 1) + фигуры с переносом (стр. 2-3) ─────── */}
+      <div style={{
+        flex: 1, minWidth: 0, maxHeight: PANEL_H - 10,
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center', gap: 3,
+        overflow: 'hidden',
+      }}>
         {/* Строка 1: монеты */}
         {coins > 0 ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <CoinIcon size={13} />
-            <span style={{ fontSize: '.76rem', fontWeight: 800, color: '#D4A843' }}>
+            <span style={{ fontSize: '.74rem', fontWeight: 800, color: '#D4A843' }}>
               +{coins >= 1000 ? `${(coins/1000).toFixed(1)}K` : coins}
             </span>
           </div>
         ) : (
-          <div style={{ height: 16 }} />
+          <div style={{ height: 14 }} />
         )}
-        {/* Строка 2: взятые фигуры + преимущество */}
+        {/* Строки 2-3: фигуры с переносом, не выходят за зону */}
         {sorted.length > 0 ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {sorted.slice(0, 8).map((p, i) => (
+          <div style={{
+            display: 'flex', flexWrap: 'wrap', justifyContent: 'center',
+            alignItems: 'center', gap: 1, maxWidth: '100%',
+            maxHeight: 32, overflow: 'hidden',
+          }}>
+            {sorted.map((p, i) => (
               PIECE_SVG[p] ? (
-                <img key={i} src={PIECE_SVG[p]} alt={p} width={13} height={13}
+                <img key={i} src={PIECE_SVG[p]} alt={p} width={12} height={12}
                      draggable={false}
-                     style={{ opacity: .82, display: 'inline-block', verticalAlign: 'middle' }} />
+                     style={{ opacity: .82, display: 'inline-block' }} />
               ) : null
             ))}
-            {sorted.length > 8 && (
-              <span style={{ fontSize: '.5rem', color: '#6A5A40', fontWeight: 700 }}>+{sorted.length - 8}</span>
-            )}
             {adv > 0 && (
-              <span style={{ fontSize: '.65rem', fontWeight: 800, color: '#3DBA7A', marginLeft: 3 }}>+{adv}</span>
+              <span style={{ fontSize: '.62rem', fontWeight: 800, color: '#3DBA7A', marginLeft: 3 }}>+{adv}</span>
             )}
           </div>
         ) : (
-          <div style={{ height: 14 }} />
+          <div style={{ height: 12 }} />
         )}
       </div>
+
+      {/* Разделитель ────────────────────────────────────────────────────── */}
+      <span style={{ width: 1, height: 38, background: 'rgba(255,255,255,.06)', flexShrink: 0 }} />
 
       {/* ── Таймер ────────────────────────────────────────────────────────── */}
       <div style={{
