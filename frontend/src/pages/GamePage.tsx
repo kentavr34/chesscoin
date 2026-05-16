@@ -16,7 +16,17 @@ import { fmtBalance } from '@/utils/format';
 import { useConfirm } from '@/components/ui/ConfirmModal';
 
 // ── Константы ──────────────────────────────────────────────────────────────────
-const PIECE_SYMBOLS: Record<string, string> = { p: 'в™џ', n: 'в™ћ', b: 'в™ќ', r: 'в™њ', q: 'в™›' };
+// 2026-05-16: chess unicode не рендерится в Telegram WebView Android/iOS
+// (нет глифов в системном шрифте). Используем SVG-фигуры из assets/pieces/
+// через PIECE_SVG-маппинг ниже.
+const PIECE_SYMBOLS: Record<string, string> = { p: '♟', n: '♞', b: '♝', r: '♜', q: '♛' };
+const PIECE_SVG: Record<string, string> = {
+  p: new URL('../assets/pieces/black-pawn.svg',   import.meta.url).href,
+  n: new URL('../assets/pieces/black-knight.svg', import.meta.url).href,
+  b: new URL('../assets/pieces/black-bishop.svg', import.meta.url).href,
+  r: new URL('../assets/pieces/black-rook.svg',   import.meta.url).href,
+  q: new URL('../assets/pieces/black-queen.svg',  import.meta.url).href,
+};
 const PIECE_VAL:     Record<string, number>  = { p: 1, n: 3, b: 3, r: 5, q: 9 };
 const PIECE_START:   Record<string, number>  = { p: 8, n: 2, b: 2, r: 2, q: 1 };
 const SORT_ORDER:    Record<string, number>  = { q: 0, r: 1, b: 2, n: 3, p: 4 };
@@ -294,11 +304,13 @@ const PlayerPanel: React.FC<PanelProps> = ({
         )}
         {/* Строка 2: взятые фигуры + преимущество */}
         {sorted.length > 0 ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             {sorted.slice(0, 8).map((p, i) => (
-              <span key={i} style={{ fontSize: 12, lineHeight: 1, opacity: .82 }}>
-                {PIECE_SYMBOLS[p] ?? ''}
-              </span>
+              PIECE_SVG[p] ? (
+                <img key={i} src={PIECE_SVG[p]} alt={p} width={13} height={13}
+                     draggable={false}
+                     style={{ opacity: .82, display: 'inline-block', verticalAlign: 'middle' }} />
+              ) : null
             ))}
             {sorted.length > 8 && (
               <span style={{ fontSize: '.5rem', color: '#6A5A40', fontWeight: 700 }}>+{sorted.length - 8}</span>
@@ -1467,7 +1479,7 @@ const MoveHistory: React.FC<{ pgn: string }> = ({ pgn }) => {
   const moves = parsePgnMoves(pgn);
   const last8 = moves.slice(-8);
   if (last8.length === 0) {
-    return <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: '#5A5248', marginTop: 4 }}>— в™џ —</div>;
+    return <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: '#5A5248', marginTop: 4 }}>— ♟ —</div>;
   }
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 12px', marginTop: 4 }}>
