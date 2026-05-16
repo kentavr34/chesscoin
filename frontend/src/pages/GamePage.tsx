@@ -14,6 +14,7 @@ import { ChessBoard } from '@/components/game/ChessBoard';
 import { sound } from '@/lib/sound';
 import { fmtBalance } from '@/utils/format';
 import { useConfirm } from '@/components/ui/ConfirmModal';
+import { CountryFlag } from '@/components/ui/CountryFlag';
 
 // ── Константы ──────────────────────────────────────────────────────────────────
 // 2026-05-16: chess unicode не рендерится в Telegram WebView Android/iOS
@@ -279,10 +280,10 @@ const PlayerPanel: React.FC<PanelProps> = ({
           }}>
             {name.length > 10 ? name.slice(0, 10) + '…' : name}
           </span>
-          {/* Флаг страны или глобус */}
-          <span style={{ fontSize: 14, lineHeight: 1, flexShrink: 0 }}>
-            {flagEmoji(country) ?? 'GLOBAL'}
-          </span>
+          {/* Флаг страны (CountryFlag PNG из flagcdn). Если страны нет — ничего. */}
+          {country && country.length === 2 && (
+            <CountryFlag code={country} size={14} />
+          )}
         </div>
         <span style={{ fontSize: '.68rem', color: isActive ? '#8A8478' : '#6A6258', fontWeight: 600, lineHeight: 1 }}>
           {elo !== undefined ? `ELO ${elo}` : (isBot ? 'J.A.R.V.I.S' : '')}

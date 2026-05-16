@@ -244,7 +244,7 @@ export const ProfilePage: React.FC = () => {
                   style={{ position: 'absolute', top: -8, right: -8, width: 44, height: 44, borderRadius: '50%', background: '#FF5B5B', border: '2px solid #0B0D11', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 14, color: '#fff', flexShrink: 0 }}
                   title="Delete avatar"
                 >
-                  вњ•
+                  ✕
                 </button>
               )}
             </>

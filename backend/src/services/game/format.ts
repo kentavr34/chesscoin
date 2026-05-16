@@ -27,6 +27,9 @@ export const formatSession = (session: SessionWithSides, userId: string | null) 
       avatarGradient: side.player.avatarGradient,
       elo: side.player.elo,
       league: side.player.league,
+      // 2026-05-16: ISO-2 код страны для <CountryFlag> на доске.
+      // Доступно если запрос загрузил `countryMember.country.code`.
+      country: (side.player as any).countryMember?.country?.code ?? null,
     },
   });
 

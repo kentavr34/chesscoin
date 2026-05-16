@@ -242,7 +242,7 @@ export const setupSocketHandlers = (io: Server) => {
                 currentSideId: true, winnerSideId: true, bet: true, botLevel: true,
                 isSurrender: true, duration: true, turnStartedAt: true,
                 startedAt: true, finishedAt: true, createdAt: true, code: true,
-                sides: { include: { player: { select: { id: true, firstName: true, lastName: true, username: true, elo: true, avatar: true, avatarType: true, avatarGradient: true, league: true } } } },
+                sides: { include: { player: { select: { id: true, firstName: true, lastName: true, username: true, elo: true, avatar: true, avatarType: true, avatarGradient: true, league: true, countryMember: { select: { country: { select: { code: true } } } } } } } },
               },
             },
           },
@@ -451,7 +451,7 @@ export const setupSocketHandlers = (io: Server) => {
         try {
           const session = await prisma.session.findUnique({
              where: { id: data.sessionId },
-             include: { sides: { include: { player: { select: { id: true, firstName: true, lastName: true, username: true, elo: true, avatar: true, avatarType: true, avatarGradient: true, league: true } } } } }
+             include: { sides: { include: { player: { select: { id: true, firstName: true, lastName: true, username: true, elo: true, avatar: true, avatarType: true, avatarGradient: true, league: true, countryMember: { select: { country: { select: { code: true } } } } } } } } }
           });
           
           if (!session || session.status !== SessionStatus.WAITING_FOR_OPPONENT) throw new Error("SESSION_NOT_WAITING");
@@ -478,14 +478,14 @@ export const setupSocketHandlers = (io: Server) => {
                      startedAt: new Date(),
                      isPrivate: false, // ТЕПЕРЬ ОНО ПУБЛИЧНОЕ!
                   },
-                  include: { sides: { include: { player: { select: { id: true, firstName: true, lastName: true, username: true, elo: true, avatar: true, avatarType: true, avatarGradient: true, league: true } } } } }
+                  include: { sides: { include: { player: { select: { id: true, firstName: true, lastName: true, username: true, elo: true, avatar: true, avatarType: true, avatarGradient: true, league: true, countryMember: { select: { country: { select: { code: true } } } } } } } } }
                 });
                 
                 const whiteSide = updatedSession.sides.find((s: Record<string,unknown>) => s.isWhite);
                 updatedSession = await prisma.session.update({ 
                   where: { id: data.sessionId }, 
                   data: { currentSideId: whiteSide?.id },
-                  include: { sides: { include: { player: { select: { id: true, firstName: true, lastName: true, username: true, elo: true, avatar: true, avatarType: true, avatarGradient: true, league: true } } } } }
+                  include: { sides: { include: { player: { select: { id: true, firstName: true, lastName: true, username: true, elo: true, avatar: true, avatarType: true, avatarGradient: true, league: true, countryMember: { select: { country: { select: { code: true } } } } } } } } }
                 });
                 
                 await setTimer(data.sessionId);
@@ -507,7 +507,7 @@ export const setupSocketHandlers = (io: Server) => {
              } else {
                 updatedSession = await prisma.session.findUniqueOrThrow({
                    where: { id: data.sessionId },
-                   include: { sides: { include: { player: { select: { id: true, firstName: true, lastName: true, username: true, elo: true, avatar: true, avatarType: true, avatarGradient: true, league: true } } } } }
+                   include: { sides: { include: { player: { select: { id: true, firstName: true, lastName: true, username: true, elo: true, avatar: true, avatarType: true, avatarGradient: true, league: true, countryMember: { select: { country: { select: { code: true } } } } } } } } }
                 });
              }
           }
@@ -558,7 +558,7 @@ export const setupSocketHandlers = (io: Server) => {
             select: {
               id: true, fen: true, pgn: true, status: true, type: true,
               currentSideId: true, bet: true, botLevel: true,
-              sides: { include: { player: { select: { id: true, firstName: true, lastName: true, username: true, elo: true, avatar: true, avatarType: true, avatarGradient: true, league: true } } } },
+              sides: { include: { player: { select: { id: true, firstName: true, lastName: true, username: true, elo: true, avatar: true, avatarType: true, avatarGradient: true, league: true, countryMember: { select: { country: { select: { code: true } } } } } } } },
             },
           });
 
@@ -646,7 +646,7 @@ export const setupSocketHandlers = (io: Server) => {
 
           const updatedSession = await prisma.session.findUnique({
             where: { id: sessionId },
-            include: { sides: { include: { player: { select: { id: true, firstName: true, lastName: true, username: true, elo: true, avatar: true, avatarType: true, avatarGradient: true, league: true } } } } },
+            include: { sides: { include: { player: { select: { id: true, firstName: true, lastName: true, username: true, elo: true, avatar: true, avatarType: true, avatarGradient: true, league: true, countryMember: { select: { country: { select: { code: true } } } } } } } } },
           });
 
           if (!updatedSession) {
@@ -1017,7 +1017,7 @@ const makeBotMove = async (socket: AuthSocket, io: Server, sessionId: string) =>
       where: { id: sessionId },
       select: {
         id: true, fen: true, pgn: true, status: true, botLevel: true, currentSideId: true,
-        sides: { include: { player: { select: { id: true, firstName: true, lastName: true, username: true, elo: true, avatar: true, avatarType: true, avatarGradient: true, league: true } } } },
+        sides: { include: { player: { select: { id: true, firstName: true, lastName: true, username: true, elo: true, avatar: true, avatarType: true, avatarGradient: true, league: true, countryMember: { select: { country: { select: { code: true } } } } } } } },
       },
     });
     if (!session || session.status !== SessionStatus.IN_PROGRESS) return;
@@ -1090,7 +1090,7 @@ const makeBotMove = async (socket: AuthSocket, io: Server, sessionId: string) =>
 
     const updatedSession = await prisma.session.findUnique({
       where: { id: sessionId },
-      include: { sides: { include: { player: { select: { id: true, firstName: true, lastName: true, username: true, elo: true, avatar: true, avatarType: true, avatarGradient: true, league: true } } } } },
+      include: { sides: { include: { player: { select: { id: true, firstName: true, lastName: true, username: true, elo: true, avatar: true, avatarType: true, avatarGradient: true, league: true, countryMember: { select: { country: { select: { code: true } } } } } } } } },
     });
 
     if (!updatedSession) {
