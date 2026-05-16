@@ -249,18 +249,19 @@ export const ProfilePage: React.FC = () => {
               )}
             </>
           ) : (
-            /* Чужой профиль — аватар кликабелен → переход в магазин на конкретный товар */
-            <div style={{ position: 'relative', cursor: 'pointer' }} onClick={() => {
+            /* Чужой профиль: аватар кликабелен ТОЛЬКО при наличии premium-
+               предметов (Кенан 2026-05-16: «если стоит аватар по умолчанию
+               импорт с телеграм — то просто не кликабелен»). */
+            (() => {
               const premiumAvatar = user?.equippedItems?.PREMIUM_AVATAR;
               const frame = user?.equippedItems?.AVATAR_FRAME;
-              if (premiumAvatar) {
-                navigate('/shop', { state: { tab: 'avatars', highlightItemId: premiumAvatar.id } });
-              } else if (frame) {
-                navigate('/shop', { state: { tab: 'frames', highlightItemId: frame.id } });
-              } else {
-                navigate('/shop');
-              }
-            }}>
+              const clickable = !!(premiumAvatar || frame);
+              const handle = clickable ? () => {
+                if (premiumAvatar) navigate('/shop', { state: { tab: 'avatars', highlightItemId: premiumAvatar.id } });
+                else if (frame) navigate('/shop', { state: { tab: 'frames', highlightItemId: frame.id } });
+              } : undefined;
+              return (
+            <div style={{ position: 'relative', cursor: clickable ? 'pointer' : 'default' }} onClick={handle}>
               <Avatar user={user} size="xl" gold />
               {/* конка магазина — видна если есть премиум-аватар или рамка */}
               {(user?.equippedItems?.PREMIUM_AVATAR || user?.equippedItems?.AVATAR_FRAME) && (
@@ -287,6 +288,8 @@ export const ProfilePage: React.FC = () => {
                 </div>
               )}
             </div>
+              );
+            })()
           )}
         </div>
         <div style={{ textAlign: 'center', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
@@ -382,7 +385,11 @@ export const ProfilePage: React.FC = () => {
         const progress = info.next === null ? 100 : range > 0n ? Math.min(100, Number((bal - info.threshold) * 100n / range)) : 100;
         const remaining = info.next ? info.nextThreshold - bal : 0n;
         return (
-          <div style={{ margin: '0 18px 10px', padding: '12px 16px', background: 'linear-gradient(135deg,#141018,#0F0E18)', border: '.5px solid rgba(74,158,255,.18)', borderRadius: 16 }}>
+          <div
+            onClick={() => navigate('/leaderboard')}
+            style={{ margin: '0 18px 10px', padding: '12px 16px', background: 'linear-gradient(135deg,#141018,#0F0E18)', border: '.5px solid rgba(74,158,255,.18)', borderRadius: 16, cursor: 'pointer' }}
+            title="Перейти на страницу рейтингов"
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: '#F0C85A' }}>{leagueEmoji[user.league]} {t.profile.league(user.league)}</div>
               {info.next ? (

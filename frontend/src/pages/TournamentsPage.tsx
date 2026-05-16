@@ -663,17 +663,22 @@ const overlayStyle: React.CSSProperties = {
   backdropFilter: 'blur(14px)',
   WebkitBackdropFilter: 'blur(14px)',
   zIndex: 300,
-  display: 'flex', alignItems: 'flex-end',
-  // iOS safe-area: не прижимаем боттом-шит к системной панели жестов
-  paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+  display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+  // 2026-05-16 Кенан: модал не должен прятаться за BottomNav (≈72px)
+  paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px) + 8px)',
+  paddingTop: 'calc(env(safe-area-inset-top, 0px) + 14px)',
 };
 const modalStyle: React.CSSProperties = {
   width: '100%',
   background: 'linear-gradient(180deg,#100C18,#0A080E)',
   borderRadius: '22px 22px 0 0',
-  // +8px к нижнему паддингу, чтобы кнопки «Донат»/Закрыть не съедались home-indicator'ом
-  padding: '16px 20px calc(28px + env(safe-area-inset-bottom, 0px))',
+  padding: '14px 18px 18px',
   borderTop: '.5px solid rgba(212,168,67,.18)',
-  maxHeight: '85vh',
+  // Высота, занимающая всё доступное окно минус отступы overlay.
+  // Пустые блоки (Таблица лидеров без данных) теперь покажутся в полный
+  // рост, а не на 80px от низа.
+  minHeight: '40vh',
+  maxHeight: 'calc(100vh - 100px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
   overflowY: 'auto',
+  display: 'flex', flexDirection: 'column',
 };

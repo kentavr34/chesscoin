@@ -1291,7 +1291,10 @@ const bottomSheetStyle: React.CSSProperties = {
   padding: '14px 18px 18px',
   border: '1px solid rgba(255,255,255,.09)',
   borderBottom: 'none',
-  // Высота ограничена окном минус верхний и нижний отступы overlay
+  // 2026-05-16: минимум 40vh, чтобы пустые блоки (таблица лидеров без
+  // данных, страна без бойцов) выглядели как полная панель, а не как
+  // тонкая полоска внизу.
+  minHeight: '40vh',
   maxHeight: 'calc(100vh - 90px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
   overflowY: 'auto',
   display: 'flex',
