@@ -61,6 +61,23 @@ export const useSocket = () => {
       });
     }
 
+    // Watch deep-link: открыть партию как зритель по короткому коду.
+    // Работает и для завершённых сессий (на GamePage откроется PGN-replay).
+    const pendingWatch = (window as any).__pendingWatchCode as string | undefined;
+    if (pendingWatch) {
+      delete (window as any).__pendingWatchCode;
+      socket.emit('battles:by-code', { code: pendingWatch }, (res: any) => {
+        if (res?.ok && res.session?.id) {
+          upsertSession(res.session);
+          navigate(`/game/${res.session.id}?spectate=1`);
+        } else {
+          window.dispatchEvent(new CustomEvent('chesscoin:toast', {
+            detail: { text: 'Партия не найдена', type: 'error' },
+          }));
+        }
+      });
+    }
+
     socket.emit('battles:subscribe');
 
     // U2: При переподключении — обновляем список сессий

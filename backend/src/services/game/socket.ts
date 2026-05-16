@@ -855,6 +855,22 @@ export const setupSocketHandlers = (io: Server) => {
       spectatorRooms.get(data.sessionId)!.add(socket.id);
     });
 
+    // 2026-05-16 Кенан: deep-link watch_<code> работает и для завершённых
+    // партий. Здесь просто резолвим code → session.id (без join — клиент
+    // потом сделает navigate /game/:id?spectate=1 и подгрузит).
+    socket.on("battles:by-code", async (data: { code: string }, callback?: Function) => {
+      try {
+        const session = await prisma.session.findFirst({
+          where: { code: data.code },
+          include: { sides: { include: { player: { select: { id: true, firstName: true, lastName: true, username: true, elo: true, avatar: true, avatarType: true, avatarGradient: true, league: true, countryMember: { select: { country: { select: { code: true } } } } } } } } },
+        });
+        if (!session) return callback?.({ ok: false, error: 'NOT_FOUND' });
+        callback?.({ ok: true, session: formatSession(session as any, socket.data.userId) });
+      } catch (e) {
+        callback?.({ ok: false, error: 'INTERNAL' });
+      }
+    });
+
     socket.on("unspectate", (data: { sessionId: string }) => {
       socket.leave(`spectate:${data.sessionId}`);
       spectatorRooms.get(data.sessionId)?.delete(socket.id);

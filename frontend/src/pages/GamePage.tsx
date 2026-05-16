@@ -15,6 +15,7 @@ import { sound } from '@/lib/sound';
 import { fmtBalance } from '@/utils/format';
 import { useConfirm } from '@/components/ui/ConfirmModal';
 import { CountryFlag } from '@/components/ui/CountryFlag';
+import { PgnReplayModal } from '@/components/profile/PgnReplayModal';
 
 // ── Константы ──────────────────────────────────────────────────────────────────
 // 2026-05-16: chess unicode не рендерится в Telegram WebView Android/iOS
@@ -1474,6 +1475,21 @@ export function GamePage() {
 
       {/* Confirm выхода (A.4 MASTER_PLAN) */}
       {LeaveConfirmDialog}
+
+      {/* PGN-replay для завершённой партии при заходе по deep-link / зрителем.
+          Если игрок участвовал — ему показывается ResultSheet (выше), модал
+          replay-а ему не нужен. Зритель или прохожий по watch-ссылке
+          получает PGN-просмотр (Кенан 2026-05-16). */}
+      {gameOver && session?.pgn && isSpectator && session.pgn.length > 0 && (
+        <PgnReplayModal
+          pgn={session.pgn}
+          title={`${specWhiteSide?.player?.firstName ?? 'White'} vs ${specBlackSide?.player?.firstName ?? 'Black'}`}
+          sessionId={session.id}
+          whitePlayer={specWhiteSide?.player as any}
+          blackPlayer={specBlackSide?.player as any}
+          onClose={() => navigate('/')}
+        />
+      )}
     </div>
   );
 };

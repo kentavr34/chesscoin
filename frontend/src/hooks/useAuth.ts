@@ -104,15 +104,18 @@ export const useAuth = () => {
     }
 
     // Получаем referrer и game deep link из startParam.
-    // Поддерживаем три формата:
-    //   ref_<userId>       — реферальная ссылка
-    //   game_<code>        — войти в батл по короткому коду (ожидание соперника)
-    //   match_<sessionId>  — открыть окно конкретной партии сразу после логина
-    //   refmatch_<uid>_<sid> — реферал + сразу окно партии (в одной ссылке)
+    // Поддерживаем форматы:
+    //   ref_<userId>           — реферальная ссылка
+    //   game_<code>            — войти в батл по короткому коду
+    //   match_<sessionId>      — открыть конкретную партию сразу после логина
+    //   refmatch_<uid>_<sid>   — реферал + сразу окно партии
+    //   watch_<code>           — смотреть как зритель публичный батл (2026-05-16)
+    //                            работает и для завершённых партий — открывает PGN-replay
     const startParam = tg.initDataUnsafe?.start_param ?? '';
     let referrer: string | undefined;
     let gameCode: string | undefined;
     let sessionId: string | undefined;
+    let watchCode: string | undefined;
     if (startParam.startsWith('ref_')) {
       referrer = startParam.slice(4);
     } else if (startParam.startsWith('game_')) {
@@ -126,10 +129,13 @@ export const useAuth = () => {
         referrer = rest.slice(0, sep);
         sessionId = rest.slice(sep + 1);
       }
+    } else if (startParam.startsWith('watch_')) {
+      watchCode = startParam.slice(6);
     }
 
     if (gameCode)  sessionStorage.setItem('pendingGameCode', gameCode);
     if (sessionId) sessionStorage.setItem('pendingSessionId', sessionId);
+    if (watchCode) sessionStorage.setItem('pendingWatchCode', watchCode);
 
     await loginWithInitData(tg.initData, referrer);
   };
@@ -154,6 +160,13 @@ export const useAuth = () => {
         sessionStorage.removeItem('pendingSessionId');
         window.__pendingSessionId = pendingSid;
         // Приложение подхватит и сделает navigate('/game/' + sid) в App.tsx / Router
+      }
+      // Watch-deep-link: смотреть партию зрителем по коду
+      // (работает и после завершения — на странице покажется PGN-replay).
+      const pendingWatch = sessionStorage.getItem('pendingWatchCode');
+      if (pendingWatch) {
+        sessionStorage.removeItem('pendingWatchCode');
+        (window as any).__pendingWatchCode = pendingWatch;
       }
     } catch (err) {
       console.error('[Auth] Login failed:', err);
