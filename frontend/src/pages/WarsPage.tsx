@@ -124,22 +124,23 @@ const DeclareWarModal: React.FC<{
           style={inputStyle}
         />
 
-        <div style={{ maxHeight: 200, overflowY: 'auto', marginBottom: 14 }}>
+        {/* Список стран — растягивается на всю свободную высоту */}
+        <div style={{ flex: 1, minHeight: 120, overflowY: 'auto', marginBottom: 10 }}>
           {filtered.map(c => (
             <div
               key={c.id}
               onClick={() => setSelected(c.id)}
               style={{
-                display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px',
-                borderRadius: 12, marginBottom: 4, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px',
+                borderRadius: 10, marginBottom: 4, cursor: 'pointer',
                 transition: 'all .15s',
                 background: selected === c.id ? 'rgba(61,186,122,0.10)' : 'rgba(255,255,255,0.03)',
                 border: `.5px solid ${selected === c.id ? 'rgba(61,186,122,0.38)' : 'rgba(154,148,144,.18)'}`,
               }}
             >
-              <span style={{ fontSize: 22 }}>{c.flag}</span>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: '#EAE2CC' }}>{c.nameRu}</div>
+              <CountryFlag code={c.code ?? c.id} size={26} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#EAE2CC', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.nameRu}</div>
                 <div style={{ fontSize: 10, color: '#7A7875' }}>{t.wars.fighters(c.memberCount)} • {t.common.wins}: {c.wins}</div>
               </div>
               {selected === c.id && <span style={{ color: '#3DBA7A', fontSize: 16 }}>✓</span>}
@@ -147,21 +148,34 @@ const DeclareWarModal: React.FC<{
           ))}
         </div>
 
-        <div style={sectionLabelStyle}>
+        {/* Длительность — компактные кнопки flex:1 */}
+        <div style={{ ...sectionLabelStyle, marginBottom: 6, flexShrink: 0 }}>
           {t.wars.declareModal.duration}
         </div>
-        <div style={{ display: 'flex', gap: 6, marginBottom: 18 }}>
+        <div style={{ display: 'flex', gap: 5, marginBottom: 12, flexShrink: 0 }}>
           {DURATIONS.map(d => (
-            <button key={d.value} onClick={() => setDuration(d.value)} style={chipBtn(duration === d.value)}>
+            <button
+              key={d.value}
+              onClick={() => setDuration(d.value)}
+              style={{
+                flex: 1, padding: '7px 4px', borderRadius: 9, cursor: 'pointer',
+                fontFamily: 'inherit', fontSize: 10, fontWeight: 700,
+                background: duration === d.value ? 'rgba(61,186,122,.12)' : 'rgba(255,255,255,.04)',
+                border: `.5px solid ${duration === d.value ? 'rgba(61,186,122,.4)' : 'rgba(154,148,144,.2)'}`,
+                color: duration === d.value ? '#3DBA7A' : '#9A9490',
+                transition: 'all .15s', whiteSpace: 'nowrap',
+              }}
+            >
               {d.label}
             </button>
           ))}
         </div>
 
+        {/* CTA — фиксирован снизу модала */}
         <button
           onClick={handleDeclare}
           disabled={!selected || loading}
-          style={{ ...greenBtnFull, opacity: !selected || loading ? 0.5 : 1 }}
+          style={{ ...greenBtnFull, opacity: !selected || loading ? 0.5 : 1, flexShrink: 0 }}
         >
           {loading ? t.wars.declareModal.declaring : t.wars.declareModal.btn}
         </button>
@@ -1263,18 +1277,25 @@ function formatTime(seconds: number): string {
 // ─── Styles ──────────────────────────────────────────────────────────────────
 const overlayStyle: React.CSSProperties = {
   position: 'fixed', inset: 0, background: 'rgba(0,0,0,.82)', backdropFilter: 'blur(18px)',
-  zIndex: 300, display: 'flex', alignItems: 'flex-end',
+  zIndex: 300, display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+  // 2026-05-16 Кенан: модал не должен прятаться за BottomNav (≈72px)
+  // и не лип к Telegram статус-бару сверху.
+  paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px) + 8px)',
+  paddingTop: 'calc(env(safe-area-inset-top, 0px) + 14px)',
 };
 
 const bottomSheetStyle: React.CSSProperties = {
   width: '100%',
   background: 'linear-gradient(160deg,#12151E,#0E111A)',
   borderRadius: '24px 24px 0 0',
-  padding: 20,
+  padding: '14px 18px 18px',
   border: '1px solid rgba(255,255,255,.09)',
   borderBottom: 'none',
-  maxHeight: '85vh',
+  // Высота ограничена окном минус верхний и нижний отступы overlay
+  maxHeight: 'calc(100vh - 90px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
   overflowY: 'auto',
+  display: 'flex',
+  flexDirection: 'column',
 };
 
 const modalCardStyle: React.CSSProperties = {
