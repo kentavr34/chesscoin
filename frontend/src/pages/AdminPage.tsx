@@ -19,6 +19,11 @@ import { PageLayout } from '@/components/layout/PageLayout';
 import { useUserStore } from '@/store/useUserStore';
 import { api } from '@/api/client';
 import { fmtBalance } from '@/utils/format';
+// PR-3 (Кенан 2026-05-18): SVG-иконки для зачистки эмодзи в AdminPage.
+import {
+  IcoCheck, IcoClose, IcoLock, IcoCrown, IcoSearch, IcoExchange, IcoTrophy,
+  IcoEye, IcoSettings, IcoUsers, IcoGift,
+} from '@/components/icons/UiIcons';
 
 // ── API helpers ───────────────────────────────────────────────────────────────
 
@@ -129,7 +134,7 @@ export const AdminPage: React.FC = () => {
       const url = isChannel ? '/admin/channel' : '/admin/broadcast';
       const text = isChannel ? channelText : broadcastText;
       const r = await api.post(url, { text, buttonText: broadcastBtn || undefined, buttonUrl: broadcastUrl || undefined });
-      showToast(isChannel ? `✅ Published to channel` : `✅ Sent: ${(r as Record<string,unknown>).sent}, errors: ${(r as Record<string,unknown>).failed}`);
+      showToast(isChannel ? `Published to channel` : `Sent: ${(r as Record<string,unknown>).sent}, errors: ${(r as Record<string,unknown>).failed}`);
       if (!isChannel) { setBroadcastText(''); setBroadcastBtn(''); setBroadcastUrl(''); }
       else setChannelText('');
     } catch (e: unknown) { showToast((e instanceof Error ? e.message : String(e)), false); }
@@ -161,9 +166,9 @@ export const AdminPage: React.FC = () => {
   // ── Access denied ────────────────────────────────────────────────────────────
   if (isAdmin === false) {
     return (
-      <PageLayout title="⛔ Access denied" backTo="/">
+      <PageLayout title="Access denied" backTo="/">
         <div style={{ padding: '60px 24px', textAlign: 'center' }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
+          <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'center', color: '#FF8080' }}><IcoLock size={48} color="#FF8080" /></div>
           <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)', marginBottom: 8 }}>
             Admins only
           </div>
@@ -186,7 +191,7 @@ export const AdminPage: React.FC = () => {
   }
 
   return (
-    <PageLayout title="🛠 Admin Panel" backTo="/" centered>
+    <PageLayout title="Admin Panel" backTo="/" centered>
       {/* Toast */}
       {toast && (
         <div style={{
@@ -203,7 +208,7 @@ export const AdminPage: React.FC = () => {
 
       {/* Header info */}
       <div style={{ margin: '8px 18px 0', padding: '12px 16px', background: 'rgba(245,200,66,0.08)', border: '1px solid rgba(245,200,66,0.2)', borderRadius: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
-        <span style={{ fontSize: 20 }}>👑</span>
+        <span style={{ color: '#F5C842', display: 'inline-flex' }}><IcoCrown size={20} color="#F5C842" /></span>
         <div>
           <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--accent, #F5C842)' }}>Administrator</div>
           <div style={{ fontSize: 11, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>
@@ -214,7 +219,7 @@ export const AdminPage: React.FC = () => {
 
       {/* Tabs */}
       <div style={{ display: 'flex', margin: '12px 18px 16px', background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: 3, gap: 2, overflowX: 'auto' }}>
-        {([['stats', t.admin.stats], ['users', t.admin.users], ['exchange', '💱 Exchange'], ['broadcast', t.admin.broadcast], ['tournament', t.admin.tournament], ['airdrop', '🪂 Airdrop'], ['upload', t.admin.avatars], ['list', t.admin.list]] as const).map(([key, label]) => (
+        {([['stats', t.admin.stats], ['users', t.admin.users], ['exchange', 'Exchange'], ['broadcast', t.admin.broadcast], ['tournament', t.admin.tournament], ['airdrop', 'Airdrop'], ['upload', t.admin.avatars], ['list', t.admin.list]] as const).map(([key, label]) => (
           <button key={key} onClick={() => setTab(key as typeof tab)} style={{
             flex: '0 0 auto', padding: '9px 12px', border: 'none', borderRadius: 8,
             fontFamily: 'inherit', fontSize: 12, fontWeight: 600,
@@ -230,7 +235,7 @@ export const AdminPage: React.FC = () => {
       {tab === 'upload' && (
         <UploadTab
           onSuccess={(item) => {
-            showToast(`✅ Avatar "${item.name}" uploaded!`);
+            showToast(`Avatar "${item.name}" uploaded!`);
             setAvatars(prev => [item, ...prev]);
             setTab('list');
           }}
@@ -279,7 +284,7 @@ export const AdminPage: React.FC = () => {
         <div style={{ margin: '0 18px' }}>
           <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
             <input value={userSearch} onChange={e => setUserSearch(e.target.value)} onKeyDown={e => e.key === 'Enter' && searchUsers()} placeholder={t.admin.searchPlaceholder} style={{ flex: 1, padding: '10px 14px', background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, color: 'var(--text-primary, #F0F2F8)', fontSize: 13, fontFamily: 'inherit' }} />
-            <button onClick={searchUsers} style={{ padding: '10px 16px', background: 'var(--accent, #F5C842)', border: 'none', borderRadius: 12, color: '#0B0D11', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>🔍</button>
+            <button onClick={searchUsers} style={{ padding: '10px 16px', background: 'var(--accent, #F5C842)', border: 'none', borderRadius: 12, color: '#0B0D11', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }} aria-label="Search"><IcoSearch size={14} color="#0B0D11" /></button>
           </div>
           {users.map((u: any) => (
             <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
@@ -298,7 +303,7 @@ export const AdminPage: React.FC = () => {
       {/* A2+A3: Broadcast */}
       {tab === 'broadcast' && (
         <div style={{ margin: '0 18px' }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary, #8B92A8)', marginBottom: 8, textTransform: 'uppercase' as const, letterSpacing: '.06em' }}>📢 Broadcast to all players</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary, #8B92A8)', marginBottom: 8, textTransform: 'uppercase' as const, letterSpacing: '.06em' }}>Broadcast to all players</div>
           <textarea value={broadcastText} onChange={e => setBroadcastText(e.target.value)} placeholder={t.admin.broadcastPlaceholder} rows={4} style={{ width: '100%', padding: 12, background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, color: 'var(--text-primary, #F0F2F8)', fontSize: 13, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' as const }} />
           <input value={broadcastBtn} onChange={e => setBroadcastBtn(e.target.value)} placeholder={t.admin.buttonTextPlaceholder} style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, color: 'var(--text-primary, #F0F2F8)', fontSize: 13, fontFamily: 'inherit', marginTop: 8, boxSizing: 'border-box' as const }} />
           <input value={broadcastUrl} onChange={e => setBroadcastUrl(e.target.value)} placeholder={t.admin.buttonUrlPlaceholder} style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, color: 'var(--text-primary, #F0F2F8)', fontSize: 13, fontFamily: 'inherit', marginTop: 8, boxSizing: 'border-box' as const }} />
@@ -306,7 +311,7 @@ export const AdminPage: React.FC = () => {
             {sending ? t.admin.sending : t.admin.sendBroadcast}
           </button>
 
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary, #8B92A8)', margin: '20px 0 8px', textTransform: 'uppercase' as const, letterSpacing: '.06em' }}>📣 Post to channel</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary, #8B92A8)', margin: '20px 0 8px', textTransform: 'uppercase' as const, letterSpacing: '.06em' }}>Post to channel</div>
           <textarea value={channelText} onChange={e => setChannelText(e.target.value)} placeholder={t.admin.channelPlaceholder} rows={4} style={{ width: '100%', padding: 12, background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, color: 'var(--text-primary, #F0F2F8)', fontSize: 13, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' as const }} />
           <button onClick={() => sendBroadcast(true)} disabled={sending || !channelText} style={{ width: '100%', marginTop: 8, padding: '14px', background: sending ? '#2A2F48' : 'rgba(0,152,234,0.15)', border: '1px solid rgba(0,152,234,0.3)', borderRadius: 14, color: sending ? '#8B92A8' : 'var(--color-blue, #0098EA)', fontWeight: 700, fontSize: 14, cursor: sending ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
             {sending ? t.admin.publishing : t.admin.publish}
@@ -317,7 +322,7 @@ export const AdminPage: React.FC = () => {
       {/* A4 / MINOR-02: Custom tournament creation */}
       {tab === 'tournament' && (
         <div style={{ margin: '0 18px' }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary, #8B92A8)', marginBottom: 12, textTransform: 'uppercase' as const, letterSpacing: '.06em' }}>🏆 Create tournament</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary, #8B92A8)', marginBottom: 12, textTransform: 'uppercase' as const, letterSpacing: '.06em', display: 'flex', alignItems: 'center', gap: 6 }}><IcoTrophy size={12} /> Create tournament</div>
           {[
             { label: t.admin.tourName, val: tourName, set: setTourName, placeholder: 'ChessCoin Championship 2026' },
           ].map(({ label, val, set, placeholder }) => (
@@ -354,7 +359,7 @@ export const AdminPage: React.FC = () => {
               setTourCreating(true);
               try {
                 await api.post('/admin/tournaments', { name: tourName, type: tourType, entryFee: tourFee, durationDays: tourDays });
-                showToast(`✅ Tournament "${tourName}" created!`);
+                showToast(`Tournament "${tourName}" created!`);
                 setTourName('');
               } catch (e: unknown) { showToast((e instanceof Error ? e.message : String(e)), false); }
               setTourCreating(false);
@@ -367,7 +372,7 @@ export const AdminPage: React.FC = () => {
       {/* Airdrop tab */}
       {tab === 'airdrop' && (
         <div style={{ padding: '0 18px 32px' }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 16 }}>🪂 Mass distribution</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }}><IcoGift size={13} /> Mass distribution</div>
 
           {/* Mode */}
           <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 6, fontWeight: 700 }}>MODE</div>
@@ -422,8 +427,8 @@ export const AdminPage: React.FC = () => {
                   setAirdropPreview(d);
                 } catch (e) { alert('Error') } finally { setAirdropLoading(false); }
               }}
-              style={{ flex: 1, padding: '12px', background: 'rgba(255,255,255,0.07)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, fontFamily: 'inherit', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-              👁 Preview
+              style={{ flex: 1, padding: '12px', background: 'rgba(255,255,255,0.07)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, fontFamily: 'inherit', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+              <IcoEye size={12} /> Preview
             </button>
             <button
               disabled={airdropLoading || !airdropPreview}
@@ -434,12 +439,12 @@ export const AdminPage: React.FC = () => {
                   const body = { mode: airdropMode, dryRun: false, minBalance: airdropMinBalance || '0', label: airdropLabel, fixedAmount: airdropAmount, multiplier: airdropMultiplier, totalPool: airdropPool };
                   const r = await fetch('/api/v1/admin/airdrop/execute', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('access_token')}` }, body: JSON.stringify(body) });
                   const d = await r.json();
-                  alert(`✅ Airdrop completed: ${d.participants} players, ${d.totalAirdrop}`);
+                  alert(`Airdrop completed: ${d.participants} players, ${d.totalAirdrop}`);
                   setAirdropPreview(null);
                 } catch (e) { alert('Error') } finally { setAirdropLoading(false); }
               }}
-              style={{ flex: 1, padding: '12px', background: 'rgba(245,200,66,0.15)', color: 'var(--accent,#F5C842)', border: '1px solid rgba(245,200,66,0.3)', borderRadius: 12, fontFamily: 'inherit', fontSize: 12, fontWeight: 700, cursor: airdropPreview ? 'pointer' : 'not-allowed', opacity: airdropPreview ? 1 : 0.5 }}>
-              🪂 Execute
+              style={{ flex: 1, padding: '12px', background: 'rgba(245,200,66,0.15)', color: 'var(--accent,#F5C842)', border: '1px solid rgba(245,200,66,0.3)', borderRadius: 12, fontFamily: 'inherit', fontSize: 12, fontWeight: 700, cursor: airdropPreview ? 'pointer' : 'not-allowed', opacity: airdropPreview ? 1 : 0.5, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+              <IcoGift size={12} /> Execute
             </button>
           </div>
 
@@ -671,7 +676,11 @@ const UploadTab: React.FC<{
           </>
         ) : (
           <>
-            <div style={{ fontSize: 40 }}>🖼</div>
+            <svg width="40" height="40" viewBox="0 0 20 20" fill="none" aria-hidden>
+              <rect x="2.5" y="3" width="15" height="13" rx="2" stroke="currentColor" strokeWidth="1.6"/>
+              <circle cx="7" cy="8" r="1.5" fill="currentColor"/>
+              <path d="M2.5 13l4-3 4 3 3-2 4 3" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/>
+            </svg>
             <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary, #F0F2F8)' }}>
               Drag here or click
             </div>
@@ -850,7 +859,13 @@ const ListTab: React.FC<{
 
   if (avatars.length === 0) return (
     <div style={{ textAlign: 'center', padding: 40 }}>
-      <div style={{ fontSize: 36, marginBottom: 12 }}>🖼</div>
+      <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center', color: '#5A5248' }}>
+        <svg width="36" height="36" viewBox="0 0 20 20" fill="none" aria-hidden>
+          <rect x="2.5" y="3" width="15" height="13" rx="2" stroke="currentColor" strokeWidth="1.6"/>
+          <circle cx="7" cy="8" r="1.5" fill="currentColor"/>
+          <path d="M2.5 13l4-3 4 3 3-2 4 3" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/>
+        </svg>
+      </div>
       <div style={{ fontSize: 13, color: 'var(--text-muted, #4A5270)' }}>
         No avatars yet. Upload your first one!
       </div>
@@ -881,7 +896,7 @@ const ListTab: React.FC<{
               <div style={{ width: 44, height: 44, borderRadius: '50%', overflow: 'hidden', border: `2px solid ${color}`, flexShrink: 0 }}>
                 {item.imageUrl
                   ? <img src={item.imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : <div style={{ width: '100%', height: '100%', background: '#1C2030', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>👤</div>
+                  : <div style={{ width: '100%', height: '100%', background: '#1C2030', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9A9490' }}><IcoUsers size={18} color="#9A9490" /></div>
                 }
               </div>
 
@@ -892,7 +907,7 @@ const ListTab: React.FC<{
                 <div style={{ display: 'flex', gap: 8, marginTop: 2, alignItems: 'center' }}>
                   <span style={{ fontSize: 10, color, fontWeight: 600 }}>{RARITY_LABEL[item.rarity]}</span>
                   <span style={{ fontSize: 10, color: 'var(--accent, #F5C842)', fontFamily: 'JetBrains Mono,monospace' }}>{fmtBalance(item.priceCoins)}</span>
-                  <span style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)' }}>👤 {item.ownersCount}</span>
+                  <span style={{ fontSize: 10, color: 'var(--text-muted, #4A5270)', display: 'inline-flex', alignItems: 'center', gap: 3 }}><IcoUsers size={10} /> {item.ownersCount}</span>
                   {!item.isActive && <span style={{ fontSize: 9, color: '#FF4D6A', fontWeight: 700 }}>HIDDEN</span>}
                 </div>
               </div>
@@ -900,19 +915,26 @@ const ListTab: React.FC<{
               {/* Action buttons */}
               <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
                 {!isEditing && (
-                  <button onClick={() => startEdit(item)} style={iconBtn('#7B61FF')}>✏️</button>
+                  <button onClick={() => startEdit(item)} style={iconBtn('#7B61FF')} aria-label="Edit">
+                    <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M14 3l3 3-9 9H5v-3l9-9z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/></svg>
+                  </button>
                 )}
                 <button
                   onClick={() => handleToggleActive(item)}
                   disabled={busy}
-                  style={iconBtn(item.isActive ? '#FF9F43' : '#00D68F')}>
-                  {item.isActive ? '👁' : '👁‍🗨'}
+                  style={iconBtn(item.isActive ? '#FF9F43' : '#00D68F')}
+                  aria-label={item.isActive ? 'Hide' : 'Show'}>
+                  {item.isActive
+                    ? <IcoEye size={13} />
+                    : <svg width="13" height="13" viewBox="0 0 20 20" fill="none"><path d="M3 3l14 14M5 5C3 7 1 10 1 10s4 7 11 7c2 0 4-.5 6-1.5M9 5c1-.3 2-.5 3-.5 7 0 11 7 11 7s-1 2-3 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+                  }
                 </button>
                 <button
                   onClick={() => handleDelete(item)}
                   disabled={busy}
-                  style={iconBtn('#FF4D6A')}>
-                  🗑
+                  style={iconBtn('#FF4D6A')}
+                  aria-label="Delete">
+                  <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M4 6h12M8 6V4h4v2M6 6l1 11h6l1-11M9 9v6M11 9v6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </button>
               </div>
             </div>
@@ -949,8 +971,8 @@ const ListTab: React.FC<{
                   <button
                     onClick={() => saveEdit(item.id)}
                     disabled={busy}
-                    style={{ flex: 1, padding: '8px', background: 'var(--green, #00D68F)', color: '#000', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-                    {busy ? '...' : '✓ Save'}
+                    style={{ flex: 1, padding: '8px', background: 'var(--green, #00D68F)', color: '#000', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                    {busy ? '...' : (<><IcoCheck size={12} color="#000" /> Save</>)}
                   </button>
                   <button
                     onClick={() => setEditingId(null)}
