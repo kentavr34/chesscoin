@@ -7,6 +7,78 @@ import { redis } from "@/lib/redis";
 
 const router = Router();
 
+// PR-3 hotfix Кенан 2026-05-18: GET /games/public-history — общая лента
+// ВСЕХ завершённых публичных партий (любых юзеров). Используется в
+// BattleHistoryPage вкладка «Публичные» — юзер может листать чужие партии
+// как чтиво/просмотр. Только публичные (isPrivate=false), только финиш.
+router.get("/public-history", async (req: Request, res: Response) => {
+  try {
+    const limit = Math.min(Math.max(parseInt(req.query.limit as string) || 20, 1), 50);
+    const offset = Math.max(parseInt(req.query.offset as string) || 0, 0);
+
+    const sessions = await prisma.session.findMany({
+      where: {
+        type: "BATTLE",
+        isPrivate: false,
+        status: { in: ["FINISHED", "DRAW", "TIME_EXPIRED"] },
+      },
+      orderBy: { finishedAt: "desc" },
+      skip: offset,
+      take: limit,
+      select: {
+        id: true, fen: true, pgn: true, status: true, type: true,
+        bet: true, duration: true, startedAt: true, finishedAt: true,
+        sourceType: true, shareToken: true,
+        sides: {
+          select: {
+            isWhite: true, status: true, isBot: true,
+            winningAmount: true,
+            player: {
+              select: { id: true, firstName: true, lastName: true, username: true, avatar: true, avatarGradient: true, avatarType: true, elo: true },
+            },
+          },
+        },
+      } as any,
+    });
+
+    const total = await prisma.session.count({
+      where: {
+        type: "BATTLE",
+        isPrivate: false,
+        status: { in: ["FINISHED", "DRAW", "TIME_EXPIRED"] },
+      },
+    });
+
+    res.json({
+      total,
+      games: sessions.map((s: any) => {
+        const winnerSide = s.sides.find((x: any) => x.status === 'WON');
+        const loserSide = s.sides.find((x: any) => x.status === 'LOST');
+        return {
+          sessionId: s.id,
+          type: s.type,
+          status: s.status,
+          fen: s.fen,
+          pgn: s.pgn,
+          bet: s.bet?.toString() ?? null,
+          duration: s.duration,
+          startedAt: s.startedAt,
+          finishedAt: s.finishedAt,
+          sourceType: s.sourceType ?? null,
+          shareToken: s.shareToken ?? null,
+          winner: winnerSide?.player ?? null,
+          loser:  loserSide?.player ?? null,
+          isDraw: !winnerSide && !loserSide,
+          payout: winnerSide?.winningAmount?.toString() ?? null,
+        };
+      }),
+    });
+  } catch (err) {
+    logger.error("[games/public-history]", err instanceof Error ? err.message : String(err));
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // PR-3 hotfix Кенан 2026-05-18: GET /games/spectate/:sessionId — зритель
 // публичной партии (клик «СМОТРЕТЬ» на live-карточке). Раньше GamePage
 // получал null из store т.к. user не участник и session не загружена через
