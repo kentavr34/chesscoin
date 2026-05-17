@@ -8,7 +8,7 @@ import { fmtBalance } from '@/utils/format';
 import type { Nation, ClanWar, ClanMemberData, ClanBattle } from '@/types';
 import { useT } from '@/i18n/useT';
 import { CoinIcon } from '@/components/ui/CoinIcon';
-import { IcoCrown } from '@/components/icons/UiIcons';
+import { IcoCrown, IcoCheck, IcoClose } from '@/components/icons/UiIcons';
 
 const showToast = (text: string, type: 'error' | 'info' = 'error') => {
   window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text, type } }));
@@ -352,8 +352,8 @@ export const NationsPage: React.FC = () => {
                       ELO {m.user?.elo ?? '?'} · {t.nations.contribution}: {fmtBalance(m.pendingContribution ?? '0')}
                     </div>
                   </div>
-                  <button onClick={() => handleApprove(m.id, true)} style={approveBtn}>✓</button>
-                  <button onClick={() => handleApprove(m.id, false)} style={rejectBtn}>✕</button>
+                  <button onClick={() => handleApprove(m.id, true)} style={approveBtn} aria-label="Принять"><IcoCheck size={14} /></button>
+                  <button onClick={() => handleApprove(m.id, false)} style={rejectBtn} aria-label="Отклонить"><IcoClose size={12} /></button>
                 </div>
               ))}
             </>
