@@ -1,17 +1,16 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { PageLayout, useInfoPopup, InfoPopup } from '@/components/layout/PageLayout';
 import { Avatar } from '@/components/ui/Avatar';
-import { AvatarCropModal } from '@/components/ui/AvatarCropModal';
 import { CountryFlag } from '@/components/ui/CountryFlag';
 import { CoinIcon } from '@/components/ui/CoinIcon';
-import { IcoCrown, IcoRobot, IcoUsers, IcoShop, IcoCamera, IcoMedal, IcoArrowUp, IcoArrowDown, IcoBriefcase, IcoMoneyFly, IcoTon, IcoUnlock, IcoLock, IcoGift, IcoExchange, IcoCart, IcoPuzzle, IcoHandshake, IcoGamepad, IcoUpload, IcoGlobe, IcoSettings } from '@/components/icons/UiIcons';
+import { IcoCrown, IcoRobot, IcoUsers, IcoShop, IcoMedal, IcoArrowUp, IcoArrowDown, IcoBriefcase, IcoMoneyFly, IcoTon, IcoUnlock, IcoLock, IcoGift, IcoExchange, IcoCart, IcoPuzzle, IcoHandshake, IcoGamepad, IcoUpload, IcoGlobe, IcoSettings } from '@/components/icons/UiIcons';
 import { IcoSwords, IcoTrophy, IcoFlag } from '@/components/icons/TournamentIcons';
 import { useUserStore } from '@/store/useUserStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { useT } from '@/i18n/useT';
 import type { Lang } from '@/i18n/translations';
-import { profileApi, authApi, warsApi } from '@/api';
+import { profileApi, warsApi } from '@/api';
 import { fmtBalance, fmtDate, leagueEmoji } from '@/utils/format';
 import type { Transaction, UserPublic } from '@/types';
 import { JARVIS_LEVELS } from '@/components/ui/JarvisModal';
@@ -71,7 +70,7 @@ import { CircStat, StatCard } from '@/components/profile/StatComponents'; // R3
 
 export const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, setUser } = useUserStore();
+  const { user } = useUserStore();
   const { lang, setLang, soundEnabled, setSoundEnabled } = useSettingsStore();
   const t = useT();
   const location = useLocation();
@@ -94,11 +93,7 @@ export const ProfilePage: React.FC = () => {
     blackPlayer?: import('@/types').UserPublic | null;
   } | null>(null);
   const [selectedBadge, setSelectedBadge] = useState<{ name: string; date?: string } | null>(null);
-  const [avatarLoading, setAvatarLoading] = useState(false);
-  const [cropFile, setCropFile] = useState<File | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
   const [viewedProfile, setViewedProfile] = useState<Record<string, unknown> | null>(null);
 
   useEffect(() => {
@@ -111,45 +106,7 @@ export const ProfilePage: React.FC = () => {
     setTimeout(() => setToast(null), 2500);
   };
 
-  // Открываем AvatarCropModal вместо прямой загрузки
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setCropFile(file);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
-  // После обрезки — загружаем WebP blob
-  const handleCropConfirm = async (blob: Blob) => {
-    setCropFile(null);
-    setAvatarLoading(true);
-    try {
-      const file = new File([blob], 'avatar.webp', { type: 'image/webp' });
-      await profileApi.uploadAvatar(file);
-      const updated = await authApi.me();
-      setUser(updated);
-      showToast(t.profile.avatarUpdated);
-    } catch (err: unknown) {
-      showToast((err instanceof Error ? err.message : String(err)) || t.profile.uploadError);
-    } finally {
-      setAvatarLoading(false);
-    }
-  };
-
-  const handleAvatarDelete = async () => {
-    if (!confirm(t.profile.deleteAvatar)) return;
-    setAvatarLoading(true);
-    try {
-      await profileApi.deleteAvatar();
-      const updated = await authApi.me();
-      setUser(updated);
-      showToast(t.profile.avatarDeleted);
-    } catch (err: unknown) {
-      showToast((err instanceof Error ? err.message : String(err)) || t.common.error);
-    } finally {
-      setAvatarLoading(false);
-    }
-  };
+  // 2026-05-17: upload/crop удалены — только Telegram-импорт или магазин.
 
   useEffect(() => {
     if (tab === 'info') {
@@ -216,14 +173,6 @@ export const ProfilePage: React.FC = () => {
           {toast}
         </div>
       )}
-      {/* Hidden file input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        style={{ display: 'none' }}
-        onChange={handleAvatarUpload}
-      />
       {/* Header */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 18px 0' }}>
         <div style={{ position: 'relative', marginBottom: 12 }}>
@@ -235,28 +184,27 @@ export const ProfilePage: React.FC = () => {
             </div>
           )}
 
-          {/* Аватар — кликабельный на чужом профиле */}
+          {/* Аватар — без upload/crop (Кенан 2026-05-17: только Telegram-импорт или магазин). */}
           {isOwnProfile ? (
-            <>
-              <Avatar user={user} size="xl" gold />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={avatarLoading}
-                style={{ position: 'absolute', bottom: -8, right: -8, width: 44, height: 44, borderRadius: '50%', background: '#F0C85A', border: '2px solid #0B0D11', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 16, lineHeight: 1, flexShrink: 0 }}
-                title="Upload avatar"
-              >
-                {avatarLoading ? '…' : <IcoCamera size={14} />}
-              </button>
-              {user.avatarType === 'UPLOAD' && !avatarLoading && (
-                <button
-                  onClick={handleAvatarDelete}
-                  style={{ position: 'absolute', top: -8, right: -8, width: 44, height: 44, borderRadius: '50%', background: '#FF5B5B', border: '2px solid #0B0D11', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 14, color: '#fff', flexShrink: 0 }}
-                  title="Delete avatar"
-                >
-                  ✕
-                </button>
-              )}
-            </>
+            (() => {
+              const premiumAvatar = user?.equippedItems?.PREMIUM_AVATAR;
+              const frame = user?.equippedItems?.AVATAR_FRAME;
+              const clickable = !!(premiumAvatar || frame);
+              const handle = clickable ? () => {
+                if (premiumAvatar) navigate('/shop', { state: { tab: 'avatars', highlightItemId: premiumAvatar.id } });
+                else if (frame) navigate('/shop', { state: { tab: 'frames', highlightItemId: frame.id } });
+              } : undefined;
+              return (
+                <div style={{ position: 'relative', cursor: clickable ? 'pointer' : 'default' }} onClick={handle}>
+                  <Avatar user={user} size="xl" gold />
+                  {clickable && (
+                    <div style={{ position: 'absolute', bottom: -2, right: -2, width: 22, height: 22, borderRadius: '50%', background: 'rgba(123,97,255,0.9)', border: '1.5px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title={t.profile.buyInShop}>
+                      <IcoShop size={11} />
+                    </div>
+                  )}
+                </div>
+              );
+            })()
           ) : (
             /* Чужой профиль: аватар кликабелен ТОЛЬКО при наличии premium-
                предметов (Кенан 2026-05-16: «если стоит аватар по умолчанию
@@ -350,20 +298,17 @@ export const ProfilePage: React.FC = () => {
               <span style={{ fontSize: 13, color: '#D4A843', opacity: .6 }}></span>
             </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-            <button onClick={() => navigate('/referrals')} title={t.profile.referrals} style={{ width: 36, height: 36, padding: 0, background: 'rgba(74,158,255,.08)', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, color: '#82CFFF', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IcoUsers size={18} /></button>
+          {/* История транзакций — справа над рефералом (Кенан 2026-05-17) */}
+          <div
+            onClick={() => navigate('/transactions')}
+            style={{ fontSize: 12, fontWeight: 700, color: '#82CFFF', cursor: 'pointer', padding: '6px 10px', background: 'rgba(74,158,255,.08)', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, whiteSpace: 'nowrap' }}
+          >
+            {t.profile.txHistory ?? 'История'} ›
           </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           <button onClick={() => navigate('/shop')} style={{ padding: '8px 10px', background: 'rgba(74,158,255,.08)', color: '#82CFFF', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.profile.shop}</button>
           <button onClick={() => navigate('/referrals')} style={{ padding: '8px 10px', background: 'rgba(74,158,255,.08)', color: '#82CFFF', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.profile.referrals} →</button>
-        </div>
-        {/* История транзакций — отдельной строкой по центру */}
-        <div
-          onClick={() => navigate('/transactions')}
-          style={{ marginTop: 4, fontSize: 12, fontWeight: 700, color: '#82CFFF', cursor: 'pointer', textAlign: 'center', padding: '6px 8px', borderTop: '.5px solid rgba(74,158,255,.12)' }}
-        >
-          {t.profile.txHistory ?? 'История транзакций'} ›
         </div>
       </div>
 
@@ -1099,14 +1044,6 @@ export const ProfilePage: React.FC = () => {
         />
       )}
 
-      {/* AvatarCropModal — обрезка аватара */}
-      {cropFile && (
-        <AvatarCropModal
-          file={cropFile}
-          onConfirm={handleCropConfirm}
-          onCancel={() => setCropFile(null)}
-        />
-      )}
     </PageLayout>
     </>
   );

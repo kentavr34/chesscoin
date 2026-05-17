@@ -1,4 +1,5 @@
 ﻿import React, { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Avatar } from '@/components/ui/Avatar';
 import { useUserStore } from '@/store/useUserStore';
@@ -17,7 +18,13 @@ type Tab = 'clan' | 'wars' | 'battles' | 'members' | 'ranking';
 
 export const NationsPage: React.FC = () => {
   const t = useT();
+  const navigate = useNavigate();
   const { user } = useUserStore();
+  // Клик по чужому аватару → его профиль (Кенан 2026-05-17).
+  const goProfile = (uid?: string | null) => {
+    if (!uid || uid === user?.id) return;
+    navigate(`/profile/${uid}`);
+  };
   const [tab, setTab] = useState<Tab>('ranking');
   const [nations, setNations] = useState<Nation[]>([]);
   const [myClan, setMyClan] = useState<any>(null);
@@ -338,7 +345,7 @@ export const NationsPage: React.FC = () => {
               <div style={{ ...secStyle, color: '#FF9F43' }}>{t.nations.pendingApproval(pendingMembers.length)}</div>
               {pendingMembers.map(m => (
                 <div key={m.id} style={memberCardStyle}>
-                  <Avatar user={m.user} size="s" />
+                  <Avatar user={m.user} size="s" onClick={() => goProfile(m.user?.id)} />
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: '#F0E8CC' }}>{m.user?.firstName ?? t.nations.player}</div>
                     <div style={{ fontSize: 10, color: '#9A9490' }}>
@@ -358,7 +365,7 @@ export const NationsPage: React.FC = () => {
               <span style={{ fontSize: 11, color: i < 3 ? '#F0C85A' : '#5A5248', width: 20, flexShrink: 0 }}>
                 {i + 1}
               </span>
-              <Avatar user={m.user} size="s" />
+              <Avatar user={m.user} size="s" onClick={() => goProfile(m.user?.id)} />
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span style={{ fontSize: 13, fontWeight: 600, color: '#F0E8CC' }}>{m.user?.firstName ?? t.nations.player}</span>

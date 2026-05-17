@@ -196,6 +196,8 @@ const CountryDetailModal: React.FC<{
   const t = useT();
   const navigate = useNavigate();
   const { user } = useUserStore();
+  // Клик по чужому аватару → его профиль (Кенан 2026-05-17).
+  const goProfile = (uid?: string | null) => { if (uid && uid !== user?.id) navigate(`/profile/${uid}`); };
   const [data, setData] = useState<{ country: any; members: any[]; isCommander: boolean } | null>(null);
   const [joining, setJoining] = useState(false);
   const [donateAmt, setDonateAmt] = useState('');

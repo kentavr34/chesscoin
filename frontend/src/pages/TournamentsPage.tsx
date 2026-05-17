@@ -622,7 +622,7 @@ const TournamentDetailModal: React.FC<{ tournamentId: string; onClose: () => voi
             <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '0.82rem', fontWeight: 800, color: i === 0 ? '#F0C85A' : i === 1 ? '#C0C0C0' : i === 2 ? '#CD7F32' : '#5A5248', width: 24, textAlign: 'center' }}>
               {i + 1}
             </div>
-            <Avatar user={p.user} size="s" />
+            <Avatar user={p.user} size="s" onClick={() => p.user?.id && navigate(`/profile/${p.user.id}`)} />
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#E8E3DB' }}>{p.user?.firstName}</div>
               <div style={{ fontSize: '0.7rem', color: '#7A7875' }}>{p.wins}W {p.losses}L {p.draws}D</div>
