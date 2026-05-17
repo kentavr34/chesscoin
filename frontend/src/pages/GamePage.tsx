@@ -10,6 +10,7 @@ import { getSocket } from '@/api/socket';
 import { api } from '@/api/client';
 import { useGameStore } from '@/store/useGameStore';
 import { useUserStore } from '@/store/useUserStore';
+import type { GameSession } from '@/types';
 import { ChessBoard } from '@/components/game/ChessBoard';
 import { sound } from '@/lib/sound';
 import { fmtBalance } from '@/utils/format';
@@ -694,9 +695,29 @@ export function GamePage() {
   }, [leaveConfirm, navigate]);
   const { sessionId = '' } = useParams<{ sessionId: string }>();
 
-  const { sessions, drawOfferedBy } = useGameStore();
+  const { sessions, drawOfferedBy, upsertSession } = useGameStore();
   const { user } = useUserStore();
   const session = sessions.find(s => s.id === sessionId) ?? null;
+
+  // PR-3 hotfix Кенан 2026-05-18: если зашли как зритель публичной партии
+  // (нажали «СМОТРЕТЬ» в публичных батлах) — session НЕ в нашем store
+  // (мы не участник, /auth/me её не подгрузил). Раньше из-за этого был
+  // бесконечный лоадер. Подгружаем по REST публичным endpoint /games/spectate/:id
+  // и кладём в store. Авторизация не требуется.
+  useEffect(() => {
+    if (!sessionId || session) return;
+    let cancelled = false;
+    import('@/api/client').then(({ api }) => {
+      api.get<{ session: GameSession }>(`/games/spectate/${sessionId}`)
+        .then((r) => { if (!cancelled && r.session) upsertSession(r.session); })
+        .catch((e) => {
+          // 403 SESSION_PRIVATE / 404 SESSION_NOT_FOUND → оставляем как есть
+          // (лоадер заменим на ошибку через таймаут ниже).
+          console.warn('[GamePage] spectate fetch failed:', e?.message ?? e);
+        });
+    });
+    return () => { cancelled = true; };
+  }, [sessionId, session, upsertSession]);
 
   // PR-3 hotfix Кенан 2026-05-18: безопасная навигация на чужой профиль.
   // Возвращает onClick если id валидный И не равен своему. Иначе undefined

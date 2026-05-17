@@ -7,6 +7,67 @@ import { redis } from "@/lib/redis";
 
 const router = Router();
 
+// PR-3 hotfix Кенан 2026-05-18: GET /games/spectate/:sessionId — зритель
+// публичной партии (клик «СМОТРЕТЬ» на live-карточке). Раньше GamePage
+// получал null из store т.к. user не участник и session не загружена через
+// /auth/me → бесконечный лоадер. Теперь публично достаём по id, проверяем
+// что партия не приватная (приватные смотреть нельзя).
+router.get("/spectate/:sessionId", async (req: Request, res: Response) => {
+  try {
+    const session = await prisma.session.findUnique({
+      where: { id: req.params.sessionId },
+      include: {
+        sides: {
+          include: {
+            player: {
+              select: {
+                id: true, firstName: true, lastName: true, username: true,
+                avatar: true, avatarType: true, avatarGradient: true, elo: true, league: true,
+                countryMember: { select: { country: { select: { code: true } } } },
+              },
+            },
+          },
+        },
+      },
+    });
+    if (!session) return res.status(404).json({ error: "SESSION_NOT_FOUND" });
+    if (session.isPrivate) return res.status(403).json({ error: "SESSION_PRIVATE" });
+
+    // Формируем как formatSession, но без mySide (зритель не участник).
+    const formatSide = (s: any) => ({
+      id: s.id, playerId: s.playerId, isWhite: s.isWhite, isBot: s.isBot,
+      status: s.status, eatenPieces: s.eatenPieces,
+      winningAmount: s.winningAmount?.toString() ?? null, timeLeft: s.timeLeft,
+      player: {
+        id: s.player.id, firstName: s.player.firstName, lastName: s.player.lastName,
+        username: s.player.username, avatar: s.player.avatar,
+        avatarType: s.player.avatarType, avatarGradient: s.player.avatarGradient,
+        elo: s.player.elo, league: s.player.league,
+        country: s.player.countryMember?.country?.code ?? null,
+      },
+    });
+    res.json({
+      session: {
+        id: session.id, code: session.code, type: session.type, status: session.status,
+        fen: session.fen, pgn: session.pgn,
+        bet: session.bet?.toString() ?? null, botLevel: session.botLevel,
+        currentSideId: session.currentSideId, winnerSideId: session.winnerSideId,
+        isPrivate: session.isPrivate,
+        startedAt: session.startedAt, finishedAt: session.finishedAt,
+        sides: session.sides.map(formatSide),
+        isMyTurn: null, mySideId: null, // зритель
+        donationPool: session.donationPool?.toString() ?? "0",
+        duration: (session as any).duration ?? null,
+        sourceType: (session as any).sourceType ?? null,
+        shareToken: (session as any).shareToken ?? null,
+      },
+    });
+  } catch (err) {
+    logger.error("[games/spectate]", err instanceof Error ? err.message : String(err));
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // PR-2: GET /games/by-share/:token — публичная точка просмотра партии.
 // Возвращает сессию любого статуса (WAITING / IN_PROGRESS / FINISHED) с
 // полным PGN, бойцами и метаданными для зрителя. Без auth: deep-link
