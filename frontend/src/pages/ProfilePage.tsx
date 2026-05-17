@@ -77,7 +77,10 @@ export const ProfilePage: React.FC = () => {
   const location = useLocation();
   const params = useParams<{ userId?: string }>();
   // Поддерживаем оба способа: /profile/:userId и navigate('/profile', {state:{userId}})
-  const viewedUserId: string | undefined = params.userId ?? (location.state as Record<string,unknown>)?.userId as string | undefined;
+  // PR-3 hotfix 2026-05-18: phantom-id '/profile/undefined' (строка) — это путь
+  // куда улетал клик если родитель не успел подтянуть m.userId. Фильтруем.
+  const rawViewedId: string | undefined = params.userId ?? (location.state as Record<string,unknown>)?.userId as string | undefined;
+  const viewedUserId: string | undefined = (rawViewedId && rawViewedId !== 'undefined' && rawViewedId !== 'null') ? rawViewedId : undefined;
   const isOwnProfile = !viewedUserId || viewedUserId === user?.id;
   const profileInfo = useInfoPopup('profile', [{ icon: '', title: 'Your Profile', desc: 'Your stats, badges and game history. ELO shows your level — the higher, the stronger opponents.' }, { icon: '', title: 'Military Rank', desc: 'Rank grows with referrals. Higher rank — bigger percentage from friends\' wins.' }, { icon: '', title: 'Leagues & Rewards', desc: 'Earn coins to climb leagues: Bronze → Silver → Gold → Diamond → Champion.' }]);
 
@@ -96,10 +99,22 @@ export const ProfilePage: React.FC = () => {
   const [selectedBadge, setSelectedBadge] = useState<{ name: string; date?: string } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [viewedProfile, setViewedProfile] = useState<Record<string, unknown> | null>(null);
+  const [viewedProfileError, setViewedProfileError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOwnProfile || !viewedUserId) return;
-    profileApi.getUser(viewedUserId).then((data) => setViewedProfile(data as unknown as Record<string, unknown>)).catch(() => navigate('/'));
+    setViewedProfileError(null);
+    setViewedProfile(null);
+    profileApi.getUser(viewedUserId)
+      .then((data) => setViewedProfile(data as unknown as Record<string, unknown>))
+      .catch((e) => {
+        // PR-3 hotfix 2026-05-18: НЕ делаем navigate('/') — это валило
+        // юзера на главную, что выглядело как «клик открыл свой профиль»
+        // (HomePage с собственным аватаром визуально похожа на профиль).
+        // Показываем явную ошибку с кнопкой «назад».
+        const msg = (e instanceof Error ? e.message : String(e)) || 'Профиль недоступен';
+        setViewedProfileError(msg);
+      });
   }, [viewedUserId, isOwnProfile]);
 
   const showToast = (msg: string) => {
@@ -135,7 +150,32 @@ export const ProfilePage: React.FC = () => {
   const [filterDate, setFilterDate] = useState<'ALL' | 'TODAY' | 'WEEK' | 'MONTH'>('ALL');
 
   if (!user) return null;
-  if (!isOwnProfile && !viewedProfile) return null;
+  // PR-3 hotfix 2026-05-18: вместо тихого return null → если есть ошибка
+  // загрузки чужого профиля — показываем явную страницу с кнопкой «Назад».
+  // Раньше при сетевой ошибке делался navigate('/'), что выглядело
+  // как «клик открыл свой профиль» (HomePage похожа на профиль визуально).
+  if (!isOwnProfile && !viewedProfile) {
+    if (viewedProfileError) {
+      return (
+        <PageLayout title="Профиль" backTo="/" centered>
+          <div style={{ padding: 48, textAlign: 'center' }}>
+            <div style={{ fontSize: '.95rem', color: '#FF8080', fontWeight: 700, marginBottom: 12 }}>
+              Профиль недоступен
+            </div>
+            <div style={{ fontSize: '.78rem', color: '#7A7875', marginBottom: 24 }}>
+              {viewedProfileError}
+            </div>
+            <button onClick={() => navigate(-1)} style={{
+              padding: '10px 20px', borderRadius: 12,
+              background: 'rgba(74,158,255,.08)', border: '.5px solid rgba(74,158,255,.3)',
+              color: '#82CFFF', fontSize: '.82rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+            }}>← Назад</button>
+          </div>
+        </PageLayout>
+      );
+    }
+    return null; // ещё загружается
+  }
 
   const displayUser = isOwnProfile ? user : viewedProfile;
   const displayStats = isOwnProfile
