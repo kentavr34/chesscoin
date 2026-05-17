@@ -7,11 +7,13 @@ import type { PuzzleItem } from '@/api';
 import { fmtBalance } from '@/utils/format';
 import type { Task } from '@/types';
 import { useT } from '@/i18n/useT';
+import { IcoBolt, IcoPuzzle, IcoUsers, IcoCheck, IcoGift } from '@/components/icons/UiIcons';
 
-const CATEGORY_ICONS: Record<string, string> = {
-  DAILY: '🌅',
-  LEARN: '📚',
-  SOCIAL: '📢',
+const CategoryIcon: React.FC<{ cat: string; size?: number; color?: string }> = ({ cat, size = 18, color = 'currentColor' }) => {
+  if (cat === 'DAILY') return <IcoBolt size={size} color={color} />;
+  if (cat === 'LEARN') return <IcoPuzzle size={size} color={color} />;
+  if (cat === 'SOCIAL') return <IcoUsers size={size} color={color} />;
+  return <IcoGift size={size} color={color} />;
 };
 
 const groupByCategory = (tasks: Task[]): Record<string, Task[]> => {
@@ -50,7 +52,7 @@ export const TasksPage: React.FC = () => {
   const { user, setUser } = useUserStore();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const tasksInfo = useInfoPopup('tasks', [{ icon: '📋', title: tp.infoTitle, desc: tp.infoDesc }, { icon: '👥', title: tp.infoRefTitle, desc: tp.infoRefDesc }]);
+  const tasksInfo = useInfoPopup('tasks', [{ icon: '', title: tp.infoTitle, desc: tp.infoDesc }, { icon: '', title: tp.infoRefTitle, desc: tp.infoRefDesc }]);
   const [claiming, setClaiming] = useState<string | null>(null);
   const [dailyPuzzle, setDailyPuzzle] = useState<PuzzleItem | null>(null);
   const [puzzleLoading, setPuzzleLoading] = useState(true);
@@ -93,7 +95,7 @@ export const TasksPage: React.FC = () => {
 
   return (
     <>
-    {tasksInfo.show && <InfoPopup infoKey="tasks" slides={[{ icon: '📋', title: tp.infoTitle, desc: tp.infoDesc }, { icon: '👥', title: tp.infoRefTitle, desc: tp.infoRefDesc }]} onClose={tasksInfo.close} />}
+    {tasksInfo.show && <InfoPopup infoKey="tasks" slides={[{ icon: '', title: tp.infoTitle, desc: tp.infoDesc }, { icon: '', title: tp.infoRefTitle, desc: tp.infoRefDesc }]} onClose={tasksInfo.close} />}
     <PageLayout title={t.tasks.title} centered>
       {/* Progress */}
       <div style={progressStrip}>
@@ -140,7 +142,7 @@ export const TasksPage: React.FC = () => {
               border: dailyPuzzle.completed ? '.5px solid rgba(61,186,122,.3)' : '.5px solid rgba(155,109,255,.25)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
             }}>
-              {dailyPuzzle.completed ? '✅' : '♟'}
+              {dailyPuzzle.completed ? <IcoCheck size={22} color="#3DBA7A" /> : <span style={{ color: '#9B85FF' }}>♟</span>}
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: '#EAE2CC' }}>
@@ -289,7 +291,7 @@ export const TasksPage: React.FC = () => {
                 background: task.isCompleted ? 'rgba(61,186,122,.1)' : 'rgba(155,109,255,.12)',
                 border: task.isCompleted ? '.5px solid rgba(61,186,122,.2)' : '.5px solid rgba(155,109,255,.15)',
               }}>
-                {CATEGORY_ICONS[cat] ?? '📋'}
+                <CategoryIcon cat={cat} size={18} color={task.isCompleted ? '#3DBA7A' : '#9B85FF'} />
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: '#EAE2CC' }}>{task.title}</div>
@@ -321,7 +323,7 @@ export const TasksPage: React.FC = () => {
                 color: task.isCompleted ? '#3DBA7A' : '#9B6DFF',
                 fontWeight: 700,
               }}>
-                {task.isCompleted ? '✓' : claiming === task.id ? '…' : ''}
+                {task.isCompleted ? <IcoCheck size={11} color="#3DBA7A" /> : claiming === task.id ? '…' : ''}
               </div>
             </div>
           ))}

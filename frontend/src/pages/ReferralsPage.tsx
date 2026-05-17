@@ -7,6 +7,7 @@ import { fmtBalance, fmtDate } from '@/utils/format';
 import { toast } from '@/components/ui/Toast';
 import { useT } from '@/i18n/useT';
 import { RankBadge, type RankTier } from '@/components/ui/RankBadge';
+import { IcoUsers, IcoCheck, IcoGift, IcoSwords, IcoShare } from '@/components/icons/UiIcons';
 
 const RANK_THRESHOLDS_BASE: Array<{
   rank: string; tier: RankTier; count: number;
@@ -113,7 +114,7 @@ export const ReferralsPage: React.FC = () => {
 
       {/* Hero card */}
       <div style={{ ...CARD_BASE, margin: '8px 16px 0', border: '.5px solid rgba(61,186,122,.28)', padding: '20px 18px 18px', textAlign: 'center' }}>
-        <div style={{ fontSize: 38, marginBottom: 8 }}>👥</div>
+        <div style={{ marginBottom: 8, color: '#3DBA7A', display: 'flex', justifyContent: 'center' }}><IcoUsers size={38} color="#3DBA7A" /></div>
         <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#E8E3DB', marginBottom: 6 }}>{r.title}</div>
         <div style={{ fontSize: '0.78rem', color: '#7A7875', lineHeight: 1.6 }}>{r.subtitle}</div>
 
@@ -297,8 +298,8 @@ export const ReferralsPage: React.FC = () => {
                       </div>
                     )}
                     {isCurrent
-                      ? <span style={{ fontSize: 14, flexShrink: 0 }}>📍</span>
-                      : unlocked ? <span style={{ color: '#3DBA7A', fontSize: 13, flexShrink: 0 }}>✓</span>
+                      ? <span style={{ flexShrink: 0, display: 'inline-flex', color: '#F0C85A' }}><svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="3" fill="#F0C85A"/><circle cx="10" cy="10" r="6" stroke="#F0C85A" strokeWidth="1.5" opacity=".5"/></svg></span>
+                      : unlocked ? <span style={{ color: '#3DBA7A', flexShrink: 0, display: 'inline-flex' }}><IcoCheck size={13} color="#3DBA7A" /></span>
                       : null}
                   </div>
                 );
@@ -321,17 +322,20 @@ export const ReferralsPage: React.FC = () => {
 
         const rules = [
           {
-            ico: '🎁',
+            key: 'first',
+            Icon: IcoGift,
             title: `+${firstGameBonus.toLocaleString()}`,
             sub: r.ruleFirstGame,
           },
           {
-            ico: '⚔️',
+            key: 'l1',
+            Icon: IcoSwords,
             title: l1Percent > 0 ? `${l1Percent}% ${r.ofWinnings}` : `50% ${r.ofWinnings}`,
             sub: r.ruleLevel1,
           },
           {
-            ico: '🔗',
+            key: 'l2',
+            Icon: IcoShare,
             title: r.ruleLevel2Title,
             sub: r.ruleLevel2,
           },
@@ -345,7 +349,7 @@ export const ReferralsPage: React.FC = () => {
             <div style={{ margin: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
               {rules.map((rule) => (
                 <div
-                  key={rule.ico}
+                  key={rule.key}
                   style={{
                     ...CARD_BASE,
                     border: '.5px solid rgba(61,186,122,.18)',
@@ -356,10 +360,11 @@ export const ReferralsPage: React.FC = () => {
                   <div style={{
                     width: 38, height: 38, borderRadius: '50%',
                     background: 'rgba(61,186,122,.1)',
+                    color: '#3DBA7A',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 18, flexShrink: 0,
+                    flexShrink: 0,
                   }}>
-                    {rule.ico}
+                    <rule.Icon size={18} color="#3DBA7A" />
                   </div>
                   <div>
                     <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#3DBA7A', marginBottom: 3 }}>

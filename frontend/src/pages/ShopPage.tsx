@@ -13,7 +13,7 @@ import { useT } from '@/i18n/useT';
 import { ExchangeTab } from './ExchangeTab';
 import { ItemCard, AvatarItemCard, RARITY_COLOR } from '@/components/shop/ShopItemCards';
 import { CoinIcon } from '@/components/ui/CoinIcon';
-import { IcoBolt, IcoBriefcase, IcoExchange, IcoLock, IcoMoneyFly, IcoShop, IcoTon, IcoArrowDown, IcoArrowUp, IcoCheck2 } from '@/components/icons/UiIcons';
+import { IcoBolt, IcoBriefcase, IcoExchange, IcoLock, IcoMoneyFly, IcoShop, IcoTon, IcoArrowDown, IcoArrowUp, IcoCheck2, IcoClose } from '@/components/icons/UiIcons';
 
 // N6: 6 вкладок покупок (объединены Фигуры = pieces+pieceSets+anims) + TON отдельно сверху
 // S1: 6 вкладок в 2 ряда по 3: [Аватары|Рамки|Визуал] / [Темы|Эффекты|Биржа]
@@ -612,7 +612,7 @@ export const ShopPage: React.FC = () => {
           <div style={{ width: '100%', maxWidth: 480, background: 'linear-gradient(160deg,#12151E,#0E111A)', borderRadius: '24px 24px 0 0', border: '1px solid rgba(0,152,234,.22)', borderBottom: 'none', paddingBottom: 'max(20px, env(safe-area-inset-bottom))' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 18px 12px' }}>
               <div style={{ fontSize: 17, fontWeight: 800, color: '#0098EA', display: 'inline-flex', alignItems: 'center', gap: 6 }}><IcoTon size={17} /> TON Wallet</div>
-              <button onClick={() => setShowTon(false)} style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,.07)', border: '.5px solid rgba(154,148,144,.2)', color: '#7A7875', fontSize: 15, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all .15s' }}>✕</button>
+              <button onClick={() => setShowTon(false)} style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,.07)', border: '.5px solid rgba(154,148,144,.2)', color: '#7A7875', fontSize: 15, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all .15s' }}><IcoClose size={12} /></button>
             </div>
             <TonTab user={user} showToast={showToast} onUserRefresh={refreshUser} />
           </div>
@@ -645,7 +645,7 @@ export const ShopPage: React.FC = () => {
         >
           <span style={{ color: '#5BC8F5', display: 'flex' }}><IcoTon size={24} /></span>
           <div style={{ textAlign: 'left', flex: 1 }}>
-            <div style={{ fontSize: 14, fontWeight: 800, color: '#5BC8F5' }}>{t.shop.tonTab.connectWallet.replace('💎 ', '')}</div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#5BC8F5' }}>{t.shop.tonTab.connectWallet.replace(/^[^\w]+/, '')}</div>
             <div style={{ fontSize: 11, color: 'rgba(91,200,245,.7)', marginTop: 1 }}>{t.shop.tonTab.benefits[0].text}</div>
           </div>
           <span style={{ color: 'rgba(91,200,245,.6)', fontSize: 18 }}>→</span>
