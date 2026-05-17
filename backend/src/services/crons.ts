@@ -334,6 +334,13 @@ async function checkTournamentResults() {
         await updateBalance(player.userId, amount, TransactionType.TOURNAMENT_WIN, {
           tournamentId: t.id, place: idx + 1,
         });
+        // PR-3 (Кенан 2026-05-18): бейдж первому месту — week/month/year по типу турнира.
+        if (idx === 0) {
+          try {
+            const { checkTournamentWinnerAchievement } = await import("@/services/achievements");
+            await checkTournamentWinnerAchievement(player.userId, t.type, 1, t.id);
+          } catch (e) { logError("[Cron/Tournament/achievement]", e); }
+        }
         // Уведомляем победителя
         if (player.user.telegramId && BOT_TOKEN()) {
           const amtK = (Number(amount) / 1000).toFixed(1);
@@ -532,6 +539,13 @@ export async function distributeCountryWarPrize(war: { id: string; attackerCount
   logger.info(
     `[Cron/CountryWar/Prize] War ${war.id}: prize=${prize}, commission=${commission}, paid=${totalPaid} to ${userMap.size} fighters`
   );
+
+  // PR-3 (Кенан 2026-05-18): бейджи war_victor (всем бойцам с warWinsCurrent>0)
+  // и war_ace (10+ побед). Не блокирующий — fire-and-forget.
+  try {
+    const { awardWarVictorAchievements } = await import("@/services/achievements");
+    await awardWarVictorAchievements(winnerCountryId, war.id);
+  } catch (e) { logError("[Cron/CountryWar/achievements]", e); }
 }
 
 async function checkCountryWarResults() {

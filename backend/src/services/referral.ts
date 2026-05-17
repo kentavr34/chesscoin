@@ -95,6 +95,12 @@ export const activateReferral = async (userId: string): Promise<void> => {
       },
     },
   });
+
+  // PR-3 (Кенан 2026-05-18): пороговые ачивки рефералов (5/25/100).
+  try {
+    const { checkReferralAchievements } = await import("@/services/achievements");
+    await checkReferralAchievements(user.referrerId);
+  } catch (e) { /* non-fatal */ }
 };
 
 // ─────────────────────────────────────────

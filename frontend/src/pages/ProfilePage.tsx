@@ -892,6 +892,16 @@ export const ProfilePage: React.FC = () => {
               { id: 'puzzler',       Icon: IcoPuzzle,    name: t.profile.achievementPuzzler,    desc: t.profile.achievementPuzzlerDesc },
               { id: 'streak_7',      Icon: IcoMedal,     name: t.profile.achievementStreak7,    desc: t.profile.achievementStreak7Desc },
               { id: 'streak_30',     Icon: IcoTon,       name: t.profile.achievementStreak30,   desc: t.profile.achievementStreak30Desc },
+              // PR-3 (Кенан 2026-05-18): новые типы.
+              { id: 'tournament_winner_week',  Icon: IcoTrophy, name: 'Чемпион Недели',  desc: 'Победа в недельном турнире' },
+              { id: 'tournament_winner_month', Icon: IcoTrophy, name: 'Чемпион Месяца',  desc: 'Победа в месячном турнире' },
+              { id: 'tournament_winner_year',  Icon: IcoTrophy, name: 'Чемпион Года',    desc: 'Победа в годовом/мировом турнире' },
+              { id: 'commander',               Icon: IcoCrown,  name: 'Главнокомандующий', desc: 'Стать командиром страны' },
+              { id: 'war_victor',              Icon: IcoSwords, name: 'Победитель Войны',  desc: 'Страна победила в войне' },
+              { id: 'war_ace',                 Icon: IcoSwords, name: 'Ас Войны',          desc: '10+ побед в одной войне' },
+              { id: 'referral_bronze',         Icon: IcoUsers,  name: 'Бронзовый вербовщик', desc: '5 рефералов' },
+              { id: 'referral_silver',         Icon: IcoUsers,  name: 'Серебряный вербовщик', desc: '25 рефералов' },
+              { id: 'referral_gold',           Icon: IcoUsers,  name: 'Золотой вербовщик',   desc: '100 рефералов' },
             ];
             const earned: Record<string, string> = {};
             (user?.achievements ?? []).forEach((a: { id: string; date: string }) => { earned[a.id] = a.date; });

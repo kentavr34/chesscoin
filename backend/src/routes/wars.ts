@@ -337,6 +337,11 @@ warsRouter.post("/countries/:id/join", authMiddleware, async (req: Request, res:
         });
         return m;
       });
+      // PR-3 (Кенан 2026-05-18): бейдж «Главнокомандующий».
+      try {
+        const { awardCommanderAchievement } = await import("@/services/achievements");
+        await awardCommanderAchievement(userId, id);
+      } catch (e) { /* non-fatal */ }
       // Уведомление «Ты главнокомандующий».
       try {
         getIo().emit(`user:${userId}`, {
