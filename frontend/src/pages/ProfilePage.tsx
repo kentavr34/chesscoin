@@ -178,12 +178,8 @@ export const ProfilePage: React.FC = () => {
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 18px 0' }}>
         <div style={{ position: 'relative', marginBottom: 12 }}>
           <div style={avatarRingStyle} />
-          {/* Флаг страны рядом с аватаром — бейдж в левом-нижнем углу */}
-          {(displayUser as any)?.countryMember?.country?.code && (
-            <div style={{ position: 'absolute', bottom: -6, left: -6, width: 30, height: 30, borderRadius: '50%', background: '#0B0D11', border: '2px solid #0B0D11', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', zIndex: 3 }}>
-              <CountryFlag code={(displayUser as any).countryMember.country.code} size={22} />
-            </div>
-          )}
+          {/* Флаг страны переехал из бейджа на аватаре в строку с именем
+             (Кенан 2026-05-17: «флаг везде после имени»). */}
 
           {/* Аватар — без upload/crop (Кенан 2026-05-17: только Telegram-импорт или магазин). */}
           {isOwnProfile ? (
@@ -252,6 +248,9 @@ export const ProfilePage: React.FC = () => {
         </div>
         <div style={{ textAlign: 'center', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
           <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#EAE2CC' }}>{user.firstName} {user.lastName ?? ''}</span>
+          {(displayUser as any)?.countryMember?.country?.code && (
+            <CountryFlag code={(displayUser as any).countryMember.country.code} size={22} />
+          )}
         </div>
         <div style={{ marginTop: 3, textAlign: 'center', fontSize: '.72rem', color: '#5A5248' }}>@{user.username ?? 'unknown'}</div>
         {/* 2.3 Кнопка "Сразиться" на чужом профиле */}
@@ -287,6 +286,12 @@ export const ProfilePage: React.FC = () => {
         </div>
       </div>
 
+      {/* League progress bar — над балансом (Кенан 2026-05-17:
+         после тегов под аватаром, до карточки баланса). */}
+      <div style={{ marginTop: 12 }}>
+        <LeagueProgressBar league={user.league} balance={user.balance} />
+      </div>
+
       {/* Balance — N7 */}
       <div style={{ margin: '12px 18px 0', padding: '14px 16px', background: 'linear-gradient(135deg,#141018,#0F0E18)', border: '.5px solid rgba(74,158,255,.18)', borderRadius: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -309,13 +314,8 @@ export const ProfilePage: React.FC = () => {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           <button onClick={() => navigate('/shop')} style={{ padding: '8px 10px', background: 'rgba(74,158,255,.08)', color: '#82CFFF', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.profile.shop}</button>
-          <button onClick={() => navigate('/referrals')} style={{ padding: '8px 10px', background: 'rgba(74,158,255,.08)', color: '#82CFFF', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.profile.referrals} →</button>
+          <button onClick={() => navigate('/referrals')} style={{ padding: '8px 10px', background: 'rgba(74,158,255,.08)', color: '#82CFFF', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.profile.referrals}</button>
         </div>
-      </div>
-
-      {/* League progress bar — поднят сразу после Balance (Кенан 2026-05-17) */}
-      <div style={{ marginTop: 10 }}>
-        <LeagueProgressBar league={user.league} balance={user.balance} />
       </div>
 
       {/* Чемпион месяца */}
