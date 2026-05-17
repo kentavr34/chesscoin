@@ -1374,28 +1374,39 @@ export function GamePage() {
         {isSpectator ? (
           <button
             onClick={() => {
-              const code = session?.code ?? sessionId;
-              const inviteUrl = `https://t.me/chessgamecoin_bot?start=watch_${code}`;
+              // PR-3 hotfix Кенан 2026-05-18: используем PR-2 shareToken (универсальная
+              // /share/:token ссылка работает на 3 стадиях — waiting/live/archive).
+              // Fallback на legacy watch_<code> для очень старых сессий без токена.
+              const shareToken = (session as any)?.shareToken as string | undefined;
+              const inviteUrl = shareToken
+                ? `https://t.me/ChessCoinBot/app?startapp=share_${shareToken}`
+                : `https://t.me/chessgamecoin_bot?start=watch_${session?.code ?? sessionId}`;
               const text = `Смотри партию ChessCoin в прямом эфире`;
               try {
-                window.Telegram?.WebApp?.openTelegramLink?.(
-                  `https://t.me/share/url?url=${encodeURIComponent(inviteUrl)}&text=${encodeURIComponent(text)}`
-                );
+                const tg = (window as any).Telegram?.WebApp;
+                if (tg?.openTelegramLink) {
+                  tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(inviteUrl)}&text=${encodeURIComponent(text)}`);
+                  return;
+                }
               } catch {}
+              try {
+                if ((navigator as any).share) { (navigator as any).share({ title: 'ChessCoin', text, url: inviteUrl }); return; }
+              } catch {}
+              try { navigator.clipboard.writeText(inviteUrl); } catch {}
             }}
             title="Поделиться партией"
             style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
               gap: 5,
-              background: 'rgba(155,109,255,.05)', border: 'none',
-              color: '#9B85FF', cursor: 'pointer', fontFamily: 'inherit',
+              background: 'rgba(74,158,255,.06)', border: 'none',
+              color: '#82CFFF', cursor: 'pointer', fontFamily: 'inherit',
               transition: 'background .15s, color .15s',
             }}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <circle cx="9" cy="8" r="3.5" stroke="currentColor" strokeWidth="1.6"/>
-              <path d="M3 19c.5-3.2 3-5 6-5s5.5 1.8 6 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-              <path d="M18 6v6M15 9h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+              <path d="M11 3h6v6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M9 11l8-8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+              <path d="M16 11v5a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
             <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Поделиться</span>
           </button>
