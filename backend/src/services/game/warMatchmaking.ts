@@ -20,7 +20,16 @@ import { TransactionType } from "@prisma/client";
 
 const MAX_CONCURRENT_BATTLES = 10;
 const WAR_MATCHMAKING_LOCK_TTL = 15; // seconds
-const WAR_SESSION_DURATION = 600; // 10 min per side
+// PR-1: 15 минут на сторону (Кенан 2026-05-17). Было 10. Причина: онлайн-связь
+// в Telegram WebView лагает, 10 мин жёстко не хватало при таймауте на ход.
+const WAR_SESSION_DURATION = 900;
+// PR-1: дедлайн «успеть принять и сыграть» — 24ч. Превышение → форфейт через
+// processWarAutoloss (crons.ts): при двойном неответе проигрывает чей был ход.
+const WAR_ACCEPT_DEADLINE_MS = 24 * 60 * 60 * 1000;
+// PR-1: лимит параллельных партий на игрока со ВСЕХ источников
+// (война + турнир + личные вызовы). 1 партия от каждого источника + общий
+// потолок 3, чтобы боец войны не задыхался от десятков параллельных партий.
+const MAX_PARALLEL_SESSIONS_PER_USER = 3;
 
 // ─── Ключевая функция: заполнить слоты войны партиями ─────────────────────────
 export async function scheduleWarMatches(warId: string): Promise<number> {
@@ -75,11 +84,43 @@ export async function scheduleWarMatches(warId: string): Promise<number> {
 
     if (freeAttackers.length === 0 || freeDefenders.length === 0) return 0;
 
+    // PR-1: фильтр «≤3 параллельных партий на игрока со всех источников».
+    // Считаем активные WAITING_FOR_OPPONENT/IN_PROGRESS сессии каждого свободного
+    // бойца — если уже 3, в эту волну его не берём (получит следующий слот).
+    const candidates = [...new Set([...freeAttackers, ...freeDefenders])];
+    const sessionCounts = await prisma.session.groupBy({
+      by: ["currentSideId"], // dummy — нужен лишь where
+      where: {
+        status: { in: ["WAITING_FOR_OPPONENT", "IN_PROGRESS"] },
+        sides: { some: { playerId: { in: candidates } } },
+      },
+      _count: { _all: true },
+    }).catch(() => [] as any[]); // groupBy через relation не работает напрямую — fallback ниже
+
+    // Прямой подсчёт через sides (надёжнее groupBy через relation)
+    const sidesActive = await prisma.sessionSide.findMany({
+      where: {
+        playerId: { in: candidates },
+        session: { status: { in: ["WAITING_FOR_OPPONENT", "IN_PROGRESS"] } },
+      },
+      select: { playerId: true },
+    });
+    const activeCount = new Map<string, number>();
+    for (const s of sidesActive) {
+      activeCount.set(s.playerId, (activeCount.get(s.playerId) ?? 0) + 1);
+    }
+    void sessionCounts;
+
+    const isFree = (uid: string) => (activeCount.get(uid) ?? 0) < MAX_PARALLEL_SESSIONS_PER_USER;
+    const freeAttackersLimited = freeAttackers.filter(isFree);
+    const freeDefendersLimited = freeDefenders.filter(isFree);
+    if (freeAttackersLimited.length === 0 || freeDefendersLimited.length === 0) return 0;
+
     // Ротация: сортируем по количеству сыгранных партий (кто играл меньше — первый)
     const playedCounts = await getPlayedCounts(warId);
 
-    const sortedAttackers = sortByPlayed(freeAttackers, playedCounts);
-    const sortedDefenders = sortByPlayed(freeDefenders, playedCounts);
+    const sortedAttackers = sortByPlayed(freeAttackersLimited, playedCounts);
+    const sortedDefenders = sortByPlayed(freeDefendersLimited, playedCounts);
 
     // Создаём пары
     const matchCount = Math.min(slotsAvailable, sortedAttackers.length, sortedDefenders.length);
@@ -128,8 +169,16 @@ async function createWarMatch(
     async (tx) => {
       const session = await tx.session.create({
         data: {
-          status: "IN_PROGRESS",
+          // PR-1: war-партия стартует в WAITING_FOR_OPPONENT и помечена как
+          // приватная — видна только обоим участникам в их «Приватных» батлах.
+          // В Public LIVE переедет когда оба сделают game:accept_private →
+          // acceptedByAll=true + status=IN_PROGRESS.
+          status: "WAITING_FOR_OPPONENT",
           type: "BATTLE",
+          isPrivate: true,
+          sourceType: "WAR",
+          sourceRefId: war.id,
+          deadlineAt: new Date(Date.now() + WAR_ACCEPT_DEADLINE_MS),
           fen: chess.fen(),
           pgn: "",
           code: sessionCode,
@@ -141,13 +190,13 @@ async function createWarMatch(
               {
                 playerId: attackerUserId,
                 isWhite: attackerIsWhite,
-                status: "IN_PROGRESS",
+                status: "WAITING_FOR_OPPONENT",
                 timeLeft: WAR_SESSION_DURATION,
               },
               {
                 playerId: defenderUserId,
                 isWhite: !attackerIsWhite,
-                status: "IN_PROGRESS",
+                status: "WAITING_FOR_OPPONENT",
                 timeLeft: WAR_SESSION_DURATION,
               },
             ],
@@ -206,14 +255,9 @@ async function createWarMatch(
   io.to(`war:lobby:${war.id}`).emit("war:queue_update", { countryId: war.attackerCountryId, count: await redis.scard(`war:queue:${war.id}:${war.attackerCountryId}`) });
   io.to(`war:lobby:${war.id}`).emit("war:queue_update", { countryId: war.defenderCountryId, count: await redis.scard(`war:queue:${war.id}:${war.defenderCountryId}`) });
 
-  // Установить таймер для белых
-  const whiteSide = session.sides.find(
-    (s: Record<string, unknown>) => s.isWhite
-  );
-  if (whiteSide) {
-    const timerKey = `timer:${whiteSide.id}`;
-    await redis.setex(timerKey, WAR_SESSION_DURATION, "1");
-  }
+  // PR-1: шахматный таймер белых стартует только когда ОБА игрока приняли
+  // партию (game:accept_private обоих → acceptedByAll=true). До этого
+  // действует только дедлайн 24ч (deadlineAt), форфейт-логика — в crons.
 
   return session;
 }

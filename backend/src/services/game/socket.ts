@@ -251,11 +251,17 @@ export const setupSocketHandlers = (io: Server) => {
         const sessionsRaw = currentUser?.activeSessions ?? [];
         for (const s of sessionsRaw) {
           try {
-            const sourceData = await redis.get(`session:source:${s.id}`);
-            if (sourceData) {
-              const parsed = JSON.parse(sourceData);
-              (s as any).sourceType = parsed.sourceType;
-              (s as any).sourceMeta = parsed.sourceMeta;
+            // PR-1: sourceType теперь в БД-поле Session.sourceType (default 'PUBLIC').
+            // Redis-fallback нужен только для legacy-сессий, у которых DB поле
+            // ещё PUBLIC, но реально это турнирная/военная партия (до миграции).
+            // После того как все pre-migration сессии истекут (~30 дней) — выпилить.
+            if (!(s as any).sourceType || (s as any).sourceType === 'PUBLIC') {
+              const sourceData = await redis.get(`session:source:${s.id}`);
+              if (sourceData) {
+                const parsed = JSON.parse(sourceData);
+                (s as any).sourceType = parsed.sourceType;
+                (s as any).sourceRefId = parsed.sourceMeta ?? parsed.sourceRefId;
+              }
             }
           } catch (e) {}
         }
@@ -470,13 +476,16 @@ export const setupSocketHandlers = (io: Server) => {
              const bothAccepted = updatedSides.every(s => s.status === SessionSideStatus.IN_PROGRESS) && updatedSides.length === 2;
 
              if (bothAccepted) {
-                // Прямо сейчас "вылупляется" партия и становится публичной
+                // PR-1: "вылупляется" партия — оба приняли. Снимаем приватность
+                // (виден всем в публичных LIVE), помечаем acceptedByAll=true.
+                // sourceType сохраняется (WAR/TOURNAMENT) — это эмблема LIVE-карточки.
                 updatedSession = await prisma.session.update({
                   where: { id: data.sessionId },
                   data: {
                      status: SessionStatus.IN_PROGRESS,
                      startedAt: new Date(),
-                     isPrivate: false, // ТЕПЕРЬ ОНО ПУБЛИЧНОЕ!
+                     isPrivate: false,
+                     acceptedByAll: true,
                   },
                   include: { sides: { include: { player: { select: { id: true, firstName: true, lastName: true, username: true, elo: true, avatar: true, avatarType: true, avatarGradient: true, league: true, countryMember: { select: { country: { select: { code: true } } } } } } } } }
                 });
@@ -492,13 +501,15 @@ export const setupSocketHandlers = (io: Server) => {
                 
                 io.to(data.sessionId).emit("game:started", { sessionId: data.sessionId });
                 
-                // Добавляем в лобби
+                // PR-1: Redis fallback только если DB-поле пустое (legacy сессии)
                 try {
-                   const sourceData = await redis.get(`session:source:${data.sessionId}`);
-                   if (sourceData) {
-                     const parsed = JSON.parse(sourceData);
-                     (updatedSession as any).sourceType = parsed.sourceType;
-                     (updatedSession as any).sourceMeta = parsed.sourceMeta;
+                   if (!(updatedSession as any).sourceType || (updatedSession as any).sourceType === 'PUBLIC') {
+                     const sourceData = await redis.get(`session:source:${data.sessionId}`);
+                     if (sourceData) {
+                       const parsed = JSON.parse(sourceData);
+                       (updatedSession as any).sourceType = parsed.sourceType;
+                       (updatedSession as any).sourceRefId = parsed.sourceMeta ?? parsed.sourceRefId;
+                     }
                    }
                 } catch (e) {}
 
@@ -513,11 +524,13 @@ export const setupSocketHandlers = (io: Server) => {
           }
 
           try {
-             const sourceData = await redis.get(`session:source:${data.sessionId}`);
-             if (sourceData) {
-               const parsed = JSON.parse(sourceData);
-               (updatedSession as any).sourceType = parsed.sourceType;
-               (updatedSession as any).sourceMeta = parsed.sourceMeta;
+             if (!(updatedSession as any).sourceType || (updatedSession as any).sourceType === 'PUBLIC') {
+               const sourceData = await redis.get(`session:source:${data.sessionId}`);
+               if (sourceData) {
+                 const parsed = JSON.parse(sourceData);
+                 (updatedSession as any).sourceType = parsed.sourceType;
+                 (updatedSession as any).sourceRefId = parsed.sourceMeta ?? parsed.sourceRefId;
+               }
              }
           } catch (e) {}
 

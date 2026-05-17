@@ -135,6 +135,14 @@ export interface GameSession {
   spectatorCount?: number;      // лайв-зрители (публичные батлы)
   viewCount?: number;           // накопительный счётчик просмотров (публичные батлы)
   donationPool?: string | null; // накопленные донаты зрителей (BigInt как строка)
+  // PR-1: метаданные источника партии + дедлайн + share-токен.
+  sourceType?: 'PRIVATE' | 'PUBLIC' | 'TOURNAMENT' | 'WAR' | 'BOT_PRACTICE' | null;
+  sourceRefId?: string | null;
+  sourceMeta?: string | null;   // legacy alias на sourceRefId
+  deadlineAt?: string | null;
+  acceptedByAll?: boolean;
+  shareToken?: string | null;
+  duration?: number | null;
 }
 
 export interface BattleLobbyItem {
@@ -145,8 +153,12 @@ export interface BattleLobbyItem {
   createdAt: string;
   spectatorCount?: number;  // зрители батла
   status?: string;          // WAITING_FOR_OPPONENT | IN_PROGRESS
-  sourceType?: string | null;  // 'TOURNAMENT' | 'WAR' | null
-  sourceMeta?: string | null;  // tournamentId / warBattleId
+  sourceType?: 'PRIVATE' | 'PUBLIC' | 'TOURNAMENT' | 'WAR' | 'BOT_PRACTICE' | null;
+  sourceRefId?: string | null;  // PR-1: tournamentId / warId / challengerUserId
+  sourceMeta?: string | null;   // legacy alias на sourceRefId
+  deadlineAt?: string | null;   // PR-1: дедлайн 24ч (WAR/TOURNAMENT) или 30 дней (PUBLIC/PRIVATE)
+  acceptedByAll?: boolean;      // PR-1: оба игрока приняли вызов
+  shareToken?: string | null;   // PR-1: токен deep-link на партию
   creator: BattleLobbyPlayer | null;
   opponent?: BattleLobbyPlayer | null;  // турнирные вызовы: второй игрок известен заранее
 }

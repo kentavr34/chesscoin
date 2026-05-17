@@ -184,6 +184,20 @@ model Session {
   donationPool      BigInt  @default(0)
   referralCreatorId String?
 
+  // PR-1 (источник партии): откуда пришла session — обычный батл, турнир, война.
+  // sourceRefId — id турнира/войны (для PRIVATE — id вызывающего игрока).
+  // deadlineAt — мягкий дедлайн «успеть сыграть» (24ч для WAR/TOURNAMENT, 30д
+  // для PRIVATE/PUBLIC); по нему отрабатывает форфейт-cron.
+  // acceptedByAll — оба игрока приняли вызов; для war/tour-партий это сигнал
+  // переехать из «Приватных» в «Публичные LIVE». Для PUBLIC всегда true.
+  // shareToken — публичный токен deep-link на партию (waiting/live/archive
+  // одна и та же ссылка). PR-2 повесит на него /share/:token endpoint.
+  sourceType    SessionSource @default(PUBLIC)
+  sourceRefId   String?
+  deadlineAt    DateTime?
+  acceptedByAll Boolean       @default(false)
+  shareToken    String        @unique @default(cuid())
+
   sides SessionSide[] @relation("SessionSides")
 
   // Активные пользователи в этой сессии
@@ -208,7 +222,20 @@ model Session {
   @@index([startedAt])
   @@index([status, type])
   @@index([status, bet])
+  @@index([sourceType, status])
+  @@index([deadlineAt])
   @@map("sessions")
+}
+
+// PR-1: тип источника session — определяет UI-эмблему, политику дедлайна
+// и логику автопроигрыша. WAR/TOURNAMENT партии переезжают из «Приватных» в
+// «LIVE» как только оба игрока приняли (acceptedByAll=true).
+enum SessionSource {
+  PRIVATE       // личный вызов от игрока
+  PUBLIC        // публичный батл из лобби (создатель ждёт любого)
+  TOURNAMENT
+  WAR
+  BOT_PRACTICE
 }
 
 model SessionSide {
@@ -488,6 +515,11 @@ model CountryMember {
 
   warWins   Int @default(0)  // победы в войнах за всё время
   warLosses Int @default(0)
+
+  // PR-1: победы в ТЕКУЩЕЙ войне (сбрасывается в 0 при старте новой через
+  // /wars/declare). Используется для распределения трофеев казны min-prize
+  // между топ-1/2/3 бойцами победившей страны + пропорция по остальным.
+  warWinsCurrent Int @default(0)
 
   // Вклад в казну страны: взнос за вступление (10 000) + добровольные донаты.
   // Влияет на долю в распределении трофеев войны.

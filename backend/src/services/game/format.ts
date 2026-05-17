@@ -54,9 +54,15 @@ export const formatSession = (session: SessionWithSides, userId: string | null) 
     // S3: скины создателя батла (видны обоим игрокам)
     boardSkinUrl: (session as any).boardSkinUrl ?? null,
     pieceSkinUrl: (session as any).pieceSkinUrl ?? null,
-    // G18: метаданные источника (турнир, война, обычный батл)
+    // PR-1: источник партии теперь в БД-поле Session.sourceType. Redis-fallback
+    // (session:source:<id>) ещё работает в socket.ts для существующих сессий
+    // на 30 дней — потом выпилим. sourceMeta — legacy alias на sourceRefId.
     sourceType: (session as any).sourceType ?? null,
-    sourceMeta: (session as any).sourceMeta ?? null,
+    sourceRefId: (session as any).sourceRefId ?? null,
+    sourceMeta: (session as any).sourceRefId ?? (session as any).sourceMeta ?? null,
+    deadlineAt: (session as any).deadlineAt ?? null,
+    acceptedByAll: (session as any).acceptedByAll ?? false,
+    shareToken: (session as any).shareToken ?? null,
     duration: (session as any).duration ?? null,
     pieceCoins: (session as any).pieceCoins ?? null,
   };
@@ -81,8 +87,13 @@ export const formatBattlesList = (sessions: SessionWithSides[], spectatorCounts?
     duration: (s as Record<string, unknown> & typeof s).duration,
     createdAt: (s as Record<string, unknown> & typeof s).createdAt,
     spectatorCount: spectatorCounts?.get(s.id) ?? 0,
+    // PR-1: источник из БД, legacy sourceMeta — alias на sourceRefId.
     sourceType: (s as any).sourceType ?? null,
-    sourceMeta: (s as any).sourceMeta ?? null,
+    sourceRefId: (s as any).sourceRefId ?? null,
+    sourceMeta: (s as any).sourceRefId ?? (s as any).sourceMeta ?? null,
+    deadlineAt: (s as any).deadlineAt ?? null,
+    acceptedByAll: (s as any).acceptedByAll ?? false,
+    shareToken: (s as any).shareToken ?? null,
     creator: s.sides[0] ? formatPlayer(s.sides[0]) : null,
     // Для турнирных вызовов: оба игрока известны заранее
     opponent: s.sides[1] ? formatPlayer(s.sides[1]) : null,

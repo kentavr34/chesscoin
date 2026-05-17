@@ -1302,3 +1302,140 @@ const bmSectionLbl: React.CSSProperties = {
   color: '#7A7875',
   marginBottom: 10,
 };
+
+// ──────────────────────────────────────────────────────────────────────────
+// PR-1: PrivateBattleCard — карточка приватной партии в табе «ПРИВАТНЫЕ».
+// Показывает source-эмблему (Турнир / Война / Личный вызов от X), таймер
+// дедлайна 24ч (для WAR/TOURNAMENT) или 30 дней (для PRIVATE/PUBLIC) и
+// кнопки «Принять» (если другая сторона уже приняла) / «Поделиться» / «Отменить».
+// ──────────────────────────────────────────────────────────────────────────
+const PrivateBattleCard: React.FC<{
+  session: GameSession;
+  onShare: () => void;
+  onCancel: () => void;
+  onProfile: (id: string) => void;
+}> = ({ session, onShare, onCancel, onProfile }) => {
+  const { user } = useUserStore();
+  const mySide = session.sides.find(s => s.playerId === user?.id);
+  const oppSide = session.sides.find(s => s.playerId !== user?.id);
+  const opp = oppSide?.player;
+
+  const srcKey = (session as any).sourceType as string | undefined;
+  const src = srcKey ? SOURCE_BADGE[srcKey] : undefined;
+  // PRIVATE для creator — без эмблемы; для receiver — «вызов от X»
+  const amCreator = mySide && session.sides[0]?.id === mySide.id;
+  const showPrivateLabel = srcKey === 'PRIVATE' && !amCreator && opp?.firstName;
+
+  // Таймер дедлайна
+  const deadlineMs = (session as any).deadlineAt ? new Date((session as any).deadlineAt).getTime() : null;
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    if (!deadlineMs) return;
+    const t = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(t);
+  }, [deadlineMs]);
+  const secsLeft = deadlineMs ? Math.max(0, Math.floor((deadlineMs - now) / 1000)) : 0;
+  const hoursLeft = Math.floor(secsLeft / 3600);
+  const minsLeft = Math.floor((secsLeft % 3600) / 60);
+  const timerText = deadlineMs
+    ? hoursLeft >= 24 ? `${Math.floor(hoursLeft / 24)}д ${hoursLeft % 24}ч`
+    : hoursLeft > 0 ? `${hoursLeft}ч ${minsLeft}м`
+    : `${minsLeft}м`
+    : null;
+
+  // Принял ли уже соперник
+  const oppAccepted = oppSide?.status === 'IN_PROGRESS';
+
+  const borderColor = src?.border ?? 'rgba(155,109,255,.25)';
+  const labelColor = src?.color ?? '#9B85FF';
+
+  return (
+    <div style={{
+      margin: '0 .85rem 8px',
+      background: 'linear-gradient(135deg,#141018,#0F0E18)',
+      border: `.5px solid ${borderColor}`,
+      borderRadius: 16, padding: '12px 14px',
+      position: 'relative',
+    }}>
+      {/* Бейдж источника */}
+      {src && (
+        <div style={{
+          position: 'absolute', top: -7, left: 14,
+          fontSize: '.55rem', fontWeight: 900, letterSpacing: '.08em',
+          background: '#0F0E18', color: src.color,
+          border: `.5px solid ${src.border}`,
+          padding: '2px 7px', borderRadius: 6,
+          textTransform: 'uppercase',
+          display: 'inline-flex', alignItems: 'center', gap: 4,
+        }}>
+          <src.Icon color={src.color} />
+          {src.label}
+        </div>
+      )}
+      {showPrivateLabel && (
+        <div style={{
+          position: 'absolute', top: -7, left: 14,
+          fontSize: '.55rem', fontWeight: 900, letterSpacing: '.08em',
+          background: '#0F0E18', color: '#9B85FF',
+          border: '.5px solid rgba(155,109,255,.3)',
+          padding: '2px 7px', borderRadius: 6,
+          textTransform: 'uppercase',
+        }}>
+          Вызов от {opp?.firstName}
+        </div>
+      )}
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        {/* Аватар соперника (или своя сторона если приватный без оппонента) */}
+        <button
+          type="button"
+          style={{
+            padding: 0, border: 'none', background: 'none',
+            borderRadius: '50%', overflow: 'hidden',
+            width: 48, height: 48, flexShrink: 0,
+            cursor: opp?.id ? 'pointer' : 'default',
+          }}
+          onClick={opp?.id ? () => onProfile(opp.id!) : undefined}
+        >
+          <Avatar user={opp ?? mySide?.player as any} size="l" />
+        </button>
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: '.85rem', fontWeight: 700, color: '#EAE2CC', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {opp?.firstName ?? mySide?.player?.firstName ?? '?'}
+          </div>
+          <div style={{ fontSize: '.65rem', color: '#7A7875', marginTop: 2, display: 'flex', gap: 8 }}>
+            {timerText && (
+              <span style={{ color: secsLeft < 3600 ? '#FF8855' : labelColor, fontWeight: 700 }}>
+                ⏱ {timerText}
+              </span>
+            )}
+            {oppAccepted && (
+              <span style={{ color: '#3DBA7A', fontWeight: 700 }}>СОПЕРНИК ПРИНЯЛ</span>
+            )}
+          </div>
+        </div>
+
+        {/* Действия */}
+        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+          {srcKey === 'PRIVATE' && (
+            <button onClick={onShare} style={privateCardBtnStyle('#82CFFF', 'rgba(74,158,255,.1)', 'rgba(74,158,255,.3)')}>
+              Поделиться
+            </button>
+          )}
+          <button onClick={onCancel} style={privateCardBtnStyle('#FF8080', 'rgba(220,50,47,.08)', 'rgba(220,50,47,.3)')}>
+            Отменить
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const privateCardBtnStyle = (color: string, bg: string, border: string): React.CSSProperties => ({
+  padding: '8px 10px', background: bg,
+  border: `.5px solid ${border}`, borderRadius: 10,
+  color, fontSize: '.65rem', fontWeight: 800,
+  cursor: 'pointer', fontFamily: 'inherit',
+  whiteSpace: 'nowrap' as const,
+});

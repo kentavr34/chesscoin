@@ -18,6 +18,10 @@ import {
 
 const router = Router();
 const MATCH_DEADLINE_MS = 24 * 60 * 60 * 1000; // 24h на матч (Sprint 4)
+// PR-1 (Кенан 2026-05-17): шахматный таймер партии 15 мин на сторону, как в
+// войнах. Было 5 мин (300) — слишком мало для Telegram WebView с лагающей связью.
+const TOURNAMENT_SESSION_DURATION = 900;
+const MAX_PARALLEL_SESSIONS_PER_USER = 3;
 
 // R4: Zod schemas
 const DonateTournamentSchema = z.object({
@@ -574,7 +578,28 @@ export async function runTournamentMatchmaking(
   const available = candidates.filter((p) => !busyPlayerIds.has(p.id));
   if (available.length === 0) return; // нет свободного соперника — ждём
 
-  const opponent = available[Math.floor(Math.random() * available.length)];
+  // PR-1: лимит 3 параллельных партий на игрока со всех источников. Сам
+  // newPlayer/userId уже одну создаёт — оппонент должен иметь <3 активных.
+  // Свой счёт тоже не должен превышать (уже создаваемая партия = +1).
+  const userIdsToCheck = [userId, ...available.map(p => p.userId)];
+  const sidesActive = await prisma.sessionSide.findMany({
+    where: {
+      playerId: { in: userIdsToCheck },
+      session: { status: { in: ['WAITING_FOR_OPPONENT', 'IN_PROGRESS'] } },
+    },
+    select: { playerId: true },
+  });
+  const activeCount = new Map<string, number>();
+  for (const s of sidesActive) activeCount.set(s.playerId, (activeCount.get(s.playerId) ?? 0) + 1);
+
+  if ((activeCount.get(userId) ?? 0) >= MAX_PARALLEL_SESSIONS_PER_USER) {
+    logger.info(`[Tournaments] Skip matchmaking — ${userId} already at ${MAX_PARALLEL_SESSIONS_PER_USER} parallel sessions`);
+    return;
+  }
+  const availableFree = available.filter(p => (activeCount.get(p.userId) ?? 0) < MAX_PARALLEL_SESSIONS_PER_USER);
+  if (availableFree.length === 0) return; // все свободные соперники перегружены
+
+  const opponent = availableFree[Math.floor(Math.random() * availableFree.length)];
 
   const lastMatch = await prisma.tournamentMatch.findFirst({
     where: { tournamentId },
@@ -586,21 +611,25 @@ export async function runTournamentMatchmaking(
   const sessionCode = nanoid(8).toUpperCase();
 
   const { session, match } = await prisma.$transaction(async (tx: import("@prisma/client").Prisma.TransactionClient) => {
-    // Турнирный батл — публичный с самого начала, чтобы попадал в лобби
-    // (как обычный вызов). Защита от третьего join'а: уже 2 sides в сессии.
+    // PR-1: турнирный батл стартует ПРИВАТНЫМ для обоих участников (видна
+    // только им в «Приватных»). После game:accept_private обоих → переедет
+    // в публичные LIVE. isPrivate=true + sourceType=TOURNAMENT + deadline 24ч.
     const session = await tx.session.create({
       data: {
         status: 'WAITING_FOR_OPPONENT',
         type: 'BATTLE',
-        isPrivate: false, // публичный → виден в лобби как турнирный вызов
+        isPrivate: true,
+        sourceType: 'TOURNAMENT',
+        sourceRefId: tournamentId,
+        deadlineAt: new Date(Date.now() + MATCH_DEADLINE_MS),
         fen: chess.fen(),
         pgn: '',
         code: sessionCode,
-        duration: 300,
+        duration: TOURNAMENT_SESSION_DURATION,
         sides: {
           create: [
-            { playerId: userId, status: 'WAITING_FOR_OPPONENT', isWhite: true, timeLeft: 300 },
-            { playerId: opponent.userId, status: 'WAITING_FOR_OPPONENT', isWhite: false, timeLeft: 300 },
+            { playerId: userId, status: 'WAITING_FOR_OPPONENT', isWhite: true,  timeLeft: TOURNAMENT_SESSION_DURATION },
+            { playerId: opponent.userId, status: 'WAITING_FOR_OPPONENT', isWhite: false, timeLeft: TOURNAMENT_SESSION_DURATION },
           ],
         },
         activeUsers: { connect: [{ id: userId }, { id: opponent.userId }] },
@@ -1062,15 +1091,19 @@ export async function generateSwissRound(tournamentId: string, round: number) {
         data: {
           status: 'WAITING_FOR_OPPONENT',
           type: 'BATTLE',
-          isPrivate: false, // публичный → виден в лобби как турнирный вызов
+          // PR-1: приватная до приёма обоими, sourceType=TOURNAMENT, 24ч/15мин.
+          isPrivate: true,
+          sourceType: 'TOURNAMENT',
+          sourceRefId: tournamentId,
+          deadlineAt: deadline,
           fen: chess.fen(),
           pgn: '',
           code: sessionCode,
-          duration: 300,
+          duration: TOURNAMENT_SESSION_DURATION,
           sides: {
             create: [
-              { playerId: p1UserId, status: 'WAITING_FOR_OPPONENT', isWhite: true,  timeLeft: 300 },
-              { playerId: p2UserId, status: 'WAITING_FOR_OPPONENT', isWhite: false, timeLeft: 300 },
+              { playerId: p1UserId, status: 'WAITING_FOR_OPPONENT', isWhite: true,  timeLeft: TOURNAMENT_SESSION_DURATION },
+              { playerId: p2UserId, status: 'WAITING_FOR_OPPONENT', isWhite: false, timeLeft: TOURNAMENT_SESSION_DURATION },
             ],
           },
           activeUsers: { connect: [{ id: p1UserId }, { id: p2UserId }] },
@@ -1387,8 +1420,23 @@ export async function processSwissAutoloss() {
         winnerPlayerId = match.player2Id;
         loserPlayerId = match.player1Id;
       } else {
-        // оба не играли (или оба IN_PROGRESS без ходов на дедлайн) — DRAW
-        isDraw = true;
+        // PR-1 (Кенан 2026-05-17): оба не сделали ходов к дедлайну → проигрывает
+        // тот, чей был ход (по жеребьёвке цветов — белые ходят первыми).
+        // Раньше: DRAW 0.5/0.5. Цель: автоматически ВСЕГДА есть победитель.
+        const whiteSide = sides.find((s: any) => s.isWhite);
+        const blackSide = sides.find((s: any) => !s.isWhite);
+        const whitePlayerId = whiteSide?.playerId === p1User?.userId ? match.player1Id
+          : whiteSide?.playerId === p2User?.userId ? match.player2Id : null;
+        const blackPlayerId = blackSide?.playerId === p1User?.userId ? match.player1Id
+          : blackSide?.playerId === p2User?.userId ? match.player2Id : null;
+        if (whitePlayerId && blackPlayerId) {
+          // Чей ход — тот проигрывает. На старте партии — белые.
+          loserPlayerId = whitePlayerId;
+          winnerPlayerId = blackPlayerId;
+        } else {
+          // Цвета не определены (грязные данные) — fallback на DRAW.
+          isDraw = true;
+        }
       }
 
       await prisma.$transaction(async (tx) => {

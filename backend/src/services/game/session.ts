@@ -8,6 +8,11 @@ import { updateBalance } from "@/services/economy";
 
 const SESSION_CACHE_TTL = 60 * 60 * 24; // 24 часа в Redis
 
+// PR-1: дедлайн жизни вызова. Для обычных батлов 30 дней (как в текущем
+// cleanupStaleBattles cron). Для war/tour — 24ч (см. warMatchmaking +
+// tournaments routes). Для бот-партий не выставляется.
+const BATTLE_DEFAULT_DEADLINE_MS = 30 * 24 * 60 * 60 * 1000;
+
 // ─────────────────────────────────────────
 // Проверки перед созданием сессии
 // ─────────────────────────────────────────
@@ -110,6 +115,9 @@ export const createBotSession = async (
       botLevel,
       boardSkinUrl,
       pieceSkinUrl,
+      // PR-1: бот-партия в UI отдельная — не в списке батлов и не в архиве батлов.
+      sourceType: "BOT_PRACTICE",
+      acceptedByAll: true,
       turnStartedAt: new Date(),
       sides: {
         create: [
@@ -202,6 +210,11 @@ export const createBattleSession = async (
       turnStartedAt: new Date(),
       boardSkinUrl,
       pieceSkinUrl,
+      // PR-1: PRIVATE если создан как приватный (sourceRefId = userId создателя
+      // для будущей пометки «вызов от X»), иначе PUBLIC (видим всем в лобби).
+      sourceType: isPrivate ? "PRIVATE" : "PUBLIC",
+      sourceRefId: isPrivate ? userId : null,
+      deadlineAt: new Date(Date.now() + BATTLE_DEFAULT_DEADLINE_MS),
       sides: {
         create: {
           playerId: userId,
@@ -283,6 +296,11 @@ export const joinBattleSession = async (userId: string, code: string) => {
         status: SessionStatus.IN_PROGRESS,
         startedAt: new Date(),
         isPrivate: false,
+        // PR-1: при join'е оба игрока — на доске → партия публичная LIVE.
+        // sourceType → PUBLIC (даже если создавалась как PRIVATE, после join
+        // приватность сбрасывается — это уже не личный вызов).
+        sourceType: "PUBLIC",
+        acceptedByAll: true,
         sides: {
           create: {
             playerId: userId,

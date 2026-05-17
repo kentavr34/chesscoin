@@ -14,6 +14,7 @@ import { TransactionType } from "@prisma/client";
 import { ensureSystemTournaments, checkTournamentForfeits, matchmakeAllTournaments, processSwissAutoloss } from "@/routes/tournaments";
 import { settleClanBattle } from "@/routes/nations";
 import { verifyTonTransaction } from "@/lib/tonverify";
+import { processWarAutoloss } from "@/services/game/warAutoloss"; // PR-1
 
 type TelegramKeyboard = { inline_keyboard: Array<Array<{ text: string; url?: string; callback_data?: string }>> };
 
@@ -602,6 +603,15 @@ export function startGameCrons() {
     );
   });
 
+  // PR-1: war-autoloss — каждые 5 минут. Партии в WAITING_FOR_OPPONENT
+  // (созданы автоматическим war-матчмейкингом, дедлайн 24ч). Правило:
+  // принял один — он побеждает; не принял никто — проигрывает чей был ход (белые).
+  cron.schedule("*/5 * * * *", async () => {
+    await processWarAutoloss().catch(err =>
+      logError("[Crons/WarAutoloss] Error:", err)
+    );
+  });
+
   // E11: Перепроверка PENDING TON-транзакций — каждые 5 минут
   cron.schedule("*/10 * * * *", async () => { // OPT-9: каждые 10 мин (было: 5)
     await retryPendingTonVerifications().catch((err) =>
@@ -749,6 +759,9 @@ export async function cancelStaleExchangeOrders(): Promise<void> {
 }
 
 // ─── G22: Автоочистка неотвеченных батлов >30 дней ──────────────────────────
+// PR-1: трогает ТОЛЬКО PUBLIC/PRIVATE батлы (обычные вызовы). WAR/TOURNAMENT
+// партии с дедлайном 24ч обрабатывает свой autoloss (processWarAutoloss /
+// processSwissAutoloss) — там логика «есть победитель», не возврат ставки.
 async function cleanupStaleBattles() {
   const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
   const staleSessions = await prisma.session.findMany({
@@ -756,6 +769,7 @@ async function cleanupStaleBattles() {
       status: 'WAITING_FOR_OPPONENT',
       createdAt: { lt: cutoff },
       type: 'BATTLE',
+      sourceType: { in: ['PUBLIC', 'PRIVATE'] },
     },
     include: { sides: { select: { playerId: true } } },
   });
