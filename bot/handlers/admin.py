@@ -708,20 +708,219 @@ async def cmd_stats(message: Message):
 @router.message(Command("broadcast"))
 async def cmd_broadcast(message: Message, bot: Bot):
     if not is_admin(message.from_user.id):
-        return await message.answer("❌ Нет доступа")
+        return  # silent ignore
     text = message.text.removeprefix("/broadcast").strip()
     if not text:
-        return await message.answer("❌ Укажи текст: /broadcast Ваше сообщение")
+        # PR-3: «/broadcast» без текста → запускаем FSM-визард (см. ниже).
+        return await message.answer(
+            "📢 <b>Мастер рассылки</b>\n\n"
+            "Пройди шаги — отправлю всем пользователям/в канал с фото и кнопкой.\n\n"
+            "Альтернатива быстрая: <code>/broadcast Текст сообщения</code> — "
+            "отправит только текст всем юзерам без визарда.",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="📝 Запустить визард", callback_data="bc:start")]
+            ]),
+        )
+    # Legacy одношаговая рассылка (быстрая)
     await message.answer("📤 Рассылка запущена...")
     try:
         async with BackendClient() as client:
-            result = await client.broadcast(text)
+            result = await client.broadcast(text=text, target="users")
         sent = result.get("sent", 0)
         failed = result.get("failed", 0)
         await message.answer(f"✅ Отправлено: {sent}, ошибок: {failed}")
     except Exception as e:
         logger.error(f"Ошибка рассылки: {e}")
         await message.answer(f"❌ Ошибка: {e}")
+
+
+# ─── PR-3: FSM-визард рассылки (Кенан 2026-05-18) ────────────────────────────
+# Шаги:
+#  1) текст сообщения (HTML ок)
+#  2) фото — URL или /skip
+#  3) кнопка? «Да/Нет» → если да: название + URL
+#  4) куда — users / channel / both
+#  5) предпросмотр + подтверждение → POST /bot/broadcast
+class BroadcastForm(StatesGroup):
+    text = State()
+    photo = State()
+    button_yesno = State()
+    button_text = State()
+    button_url = State()
+    target = State()
+    confirm = State()
+
+
+def _bc_target_kb() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="👥 Юзерам в личку", callback_data="bc:tgt:users")],
+        [InlineKeyboardButton(text="📺 В канал", callback_data="bc:tgt:channel")],
+        [InlineKeyboardButton(text="📢 И туда, и туда", callback_data="bc:tgt:both")],
+        [InlineKeyboardButton(text="❌ Отмена", callback_data="bc:cancel")],
+    ])
+
+
+def _bc_yesno_kb() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text="✅ Да", callback_data="bc:btn:yes"),
+            InlineKeyboardButton(text="➖ Нет", callback_data="bc:btn:no"),
+        ],
+        [InlineKeyboardButton(text="❌ Отмена", callback_data="bc:cancel")],
+    ])
+
+
+@router.callback_query(F.data == "bc:start")
+async def cb_bc_start(call: CallbackQuery, state: FSMContext):
+    if not is_admin(call.from_user.id):
+        return await call.answer("❌ Нет доступа", show_alert=True)
+    await state.clear()
+    await state.set_state(BroadcastForm.text)
+    await call.message.edit_text(
+        "📢 <b>Рассылка — шаг 1/5</b>\n\n"
+        "Введи текст сообщения. Можно HTML: <b>жирный</b>, <i>курсив</i>, "
+        "<a href='https://...'>ссылка</a>.\n\n"
+        "Для отмены — /cancel"
+    )
+
+
+@router.message(Command("cancel"), F.text)
+async def cmd_cancel(message: Message, state: FSMContext):
+    cur = await state.get_state()
+    if cur and cur.startswith("BroadcastForm"):
+        await state.clear()
+        await message.answer("❌ Рассылка отменена")
+
+
+@router.callback_query(F.data == "bc:cancel")
+async def cb_bc_cancel(call: CallbackQuery, state: FSMContext):
+    await state.clear()
+    await call.message.edit_text("❌ Рассылка отменена")
+
+
+@router.message(BroadcastForm.text)
+async def bc_step_text(message: Message, state: FSMContext):
+    if not is_admin(message.from_user.id):
+        return
+    await state.update_data(text=message.text)
+    await state.set_state(BroadcastForm.photo)
+    await message.answer(
+        "📢 <b>Шаг 2/5 — Фото</b>\n\n"
+        "Пришли URL картинки (https://...) или /skip без фото.\n"
+        "Поддерживается также file_id если знаешь его."
+    )
+
+
+@router.message(BroadcastForm.photo)
+async def bc_step_photo(message: Message, state: FSMContext):
+    if not is_admin(message.from_user.id):
+        return
+    raw = message.text.strip()
+    photo = None if raw == "/skip" else raw
+    await state.update_data(photo=photo)
+    await state.set_state(BroadcastForm.button_yesno)
+    await message.answer(
+        "📢 <b>Шаг 3/5 — Кнопка</b>\n\nДобавить inline-кнопку под сообщением?",
+        reply_markup=_bc_yesno_kb(),
+    )
+
+
+@router.callback_query(F.data == "bc:btn:no", BroadcastForm.button_yesno)
+async def cb_bc_btn_no(call: CallbackQuery, state: FSMContext):
+    await state.update_data(button=None)
+    await state.set_state(BroadcastForm.target)
+    await call.message.edit_text(
+        "📢 <b>Шаг 4/5 — Куда отправить?</b>",
+        reply_markup=_bc_target_kb(),
+    )
+
+
+@router.callback_query(F.data == "bc:btn:yes", BroadcastForm.button_yesno)
+async def cb_bc_btn_yes(call: CallbackQuery, state: FSMContext):
+    await state.set_state(BroadcastForm.button_text)
+    await call.message.edit_text(
+        "📢 <b>Шаг 3a/5 — Название кнопки</b>\n\n"
+        "Введи текст на кнопке (до 30 символов):"
+    )
+
+
+@router.message(BroadcastForm.button_text)
+async def bc_step_btn_text(message: Message, state: FSMContext):
+    if not is_admin(message.from_user.id):
+        return
+    await state.update_data(btn_text=message.text.strip()[:30])
+    await state.set_state(BroadcastForm.button_url)
+    await message.answer(
+        "📢 <b>Шаг 3b/5 — URL кнопки</b>\n\n"
+        "Введи URL куда поведёт кнопка (https://...):"
+    )
+
+
+@router.message(BroadcastForm.button_url)
+async def bc_step_btn_url(message: Message, state: FSMContext):
+    if not is_admin(message.from_user.id):
+        return
+    url = message.text.strip()
+    if not (url.startswith("http://") or url.startswith("https://") or url.startswith("tg://")):
+        return await message.answer("❌ URL должен начинаться с http://, https:// или tg://")
+    data = await state.get_data()
+    await state.update_data(button={"text": data.get("btn_text", "Открыть"), "url": url})
+    await state.set_state(BroadcastForm.target)
+    await message.answer(
+        "📢 <b>Шаг 4/5 — Куда отправить?</b>",
+        reply_markup=_bc_target_kb(),
+    )
+
+
+@router.callback_query(F.data.startswith("bc:tgt:"), BroadcastForm.target)
+async def cb_bc_target(call: CallbackQuery, state: FSMContext):
+    if not is_admin(call.from_user.id):
+        return await call.answer("❌ Нет доступа", show_alert=True)
+    target = call.data.split(":", 2)[2]  # users / channel / both
+    await state.update_data(target=target)
+    data = await state.get_data()
+    btn = data.get("button")
+    btn_preview = f"\n  Кнопка: <b>{btn['text']}</b> → {btn['url']}" if btn else "\n  Кнопка: —"
+    photo_preview = f"\n  Фото: {data.get('photo')}" if data.get("photo") else "\n  Фото: —"
+    target_label = {"users": "👥 Юзерам", "channel": "📺 В канал", "both": "📢 Юзерам + в канал"}.get(target, target)
+    await state.set_state(BroadcastForm.confirm)
+    await call.message.edit_text(
+        f"📢 <b>Шаг 5/5 — Подтверждение</b>\n\n"
+        f"<b>Цель:</b> {target_label}{photo_preview}{btn_preview}\n\n"
+        f"<b>Текст:</b>\n{data.get('text', '')[:500]}\n\n"
+        f"Отправляем?",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🚀 Отправить", callback_data="bc:send")],
+            [InlineKeyboardButton(text="❌ Отмена", callback_data="bc:cancel")],
+        ]),
+    )
+
+
+@router.callback_query(F.data == "bc:send", BroadcastForm.confirm)
+async def cb_bc_send(call: CallbackQuery, state: FSMContext):
+    if not is_admin(call.from_user.id):
+        return await call.answer("❌ Нет доступа", show_alert=True)
+    data = await state.get_data()
+    await state.clear()
+    await call.message.edit_text("⏳ Рассылка запущена... (это может занять минуты при большой базе)")
+    try:
+        async with BackendClient() as client:
+            result = await client.broadcast(
+                text=data.get("text"),
+                photo=data.get("photo"),
+                button=data.get("button"),
+                target=data.get("target", "users"),
+            )
+        target = data.get("target", "users")
+        lines = ["✅ <b>Рассылка завершена</b>\n"]
+        if target in ("users", "both"):
+            lines.append(f"👥 Юзерам: отправлено <b>{result.get('sent', 0)}</b>, ошибок <b>{result.get('failed', 0)}</b>")
+        if target in ("channel", "both"):
+            lines.append(f"📺 В канал: {'✅ опубликовано' if result.get('channelOk') else '❌ не удалось'}")
+        await call.message.edit_text("\n".join(lines))
+    except Exception as e:
+        logger.error(f"Ошибка визард-рассылки: {e}")
+        await call.message.edit_text(f"❌ Ошибка: {e}")
 
 
 @router.message(Command("ban"))

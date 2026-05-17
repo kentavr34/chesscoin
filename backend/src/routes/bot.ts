@@ -163,50 +163,80 @@ botRouter.get("/stats", async (_req: Request, res: Response) => {
 });
 
 // ─── POST /api/v1/bot/broadcast ───────────────────────────────────────────────
+// PR-3 (Кенан 2026-05-18): расширенная рассылка с поддержкой:
+//   • photo: URL картинки или file_id Telegram (опц.)
+//   • button: { text, url } — inline-кнопка под сообщением (опц.)
+//   • target: 'users' | 'channel' | 'both' (default 'users')
+//   • channelId: id канала (если target включает channel; по умолчанию из ENV)
+//
+// Логика отправки:
+// - Если есть photo → sendPhoto с caption=text. Иначе sendMessage с text.
+// - Reply markup с inline-кнопкой если задано button.
+// - Throttle 30 msg/sec для users-рассылки (Telegram API rate limit).
 botRouter.post("/broadcast", async (req: Request, res: Response) => {
   try {
-    const { text } = req.body;
-    if (!text) return res.status(400).json({ error: "text обязателен" });
+    const { text, photo, button, target, channelId } = req.body as {
+      text?: string;
+      photo?: string;
+      button?: { text: string; url: string };
+      target?: 'users' | 'channel' | 'both';
+      channelId?: string;
+    };
+    if (!text && !photo) return res.status(400).json({ error: "text или photo обязателен" });
 
     const botToken = process.env.BOT_TOKEN;
     if (!botToken) return res.status(500).json({ error: "BOT_TOKEN не задан" });
 
-    // Берём всех не-забаненных пользователей (не-ботов)
-    const users = await prisma.user.findMany({
-      where: { isBot: false, isBanned: false },
-      select: { telegramId: true },
-    });
+    const tgt = target ?? 'users';
+    const resolvedChannelId = channelId ?? process.env.TELEGRAM_CHANNEL_ID ?? '';
+
+    const reply_markup = button?.text && button?.url
+      ? { inline_keyboard: [[{ text: button.text, url: button.url }]] }
+      : undefined;
+
+    async function sendTo(chatId: string): Promise<boolean> {
+      try {
+        const url = photo
+          ? `https://api.telegram.org/bot${botToken}/sendPhoto`
+          : `https://api.telegram.org/bot${botToken}/sendMessage`;
+        const body: Record<string, unknown> = photo
+          ? { chat_id: chatId, photo, caption: text ?? '', parse_mode: "HTML" }
+          : { chat_id: chatId, text: text ?? '', parse_mode: "HTML" };
+        if (reply_markup) body.reply_markup = reply_markup;
+        const r = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const d = await r.json() as Record<string, unknown>;
+        return !!d.ok;
+      } catch { return false; }
+    }
 
     let sent = 0;
     let failed = 0;
+    let channelOk = false;
 
-    // Отправляем по 30 в секунду (лимит Telegram)
-    for (let i = 0; i < users.length; i++) {
-      const { telegramId } = users[i];
-      try {
-        const r = await fetch(
-          `https://api.telegram.org/bot${botToken}/sendMessage`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              chat_id: telegramId,
-              text,
-              parse_mode: "HTML",
-            }),
-          }
-        );
-        const d = await r.json() as Record<string, unknown>;
-        d.ok ? sent++ : failed++;
-      } catch {
-        failed++;
-      }
-
-      // throttle: 30 msg/sec
-      if (i % 30 === 29) await new Promise((r) => setTimeout(r, 1000));
+    // 1) Канал — один send, без throttle.
+    if (tgt === 'channel' || tgt === 'both') {
+      if (!resolvedChannelId) return res.status(400).json({ error: "channelId не задан и TELEGRAM_CHANNEL_ID не настроен в env" });
+      channelOk = await sendTo(resolvedChannelId);
     }
 
-    res.json({ sent, failed });
+    // 2) Users — батч с throttle 30/sec.
+    if (tgt === 'users' || tgt === 'both') {
+      const users = await prisma.user.findMany({
+        where: { isBot: false, isBanned: false },
+        select: { telegramId: true },
+      });
+      for (let i = 0; i < users.length; i++) {
+        const ok = await sendTo(users[i]!.telegramId);
+        ok ? sent++ : failed++;
+        if (i % 30 === 29) await new Promise((r) => setTimeout(r, 1000));
+      }
+    }
+
+    res.json({ sent, failed, channelOk, target: tgt, totalUsers: sent + failed });
   } catch (err: unknown) {
     logger.error("[bot/broadcast]", err);
     res.status(500).json({ error: "Broadcast error" });

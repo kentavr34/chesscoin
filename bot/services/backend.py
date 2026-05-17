@@ -88,8 +88,16 @@ class BackendClient:
 
     # ─── Администрирование ────────────────────────────────────────────────────
 
-    async def broadcast(self, text: str) -> dict:
-        return await self._post("/bot/broadcast", {"text": text})
+    async def broadcast(self, text: str | None = None, photo: str | None = None,
+                        button: dict | None = None, target: str = "users",
+                        channel_id: str | None = None) -> dict:
+        """PR-3 расширение: photo + inline-button + target (users/channel/both)."""
+        payload: dict = {"target": target}
+        if text is not None: payload["text"] = text
+        if photo is not None: payload["photo"] = photo
+        if button is not None: payload["button"] = button
+        if channel_id is not None: payload["channelId"] = channel_id
+        return await self._post("/bot/broadcast", payload)
 
     async def ban_user(self, telegram_id: str) -> dict:
         return await self._post("/bot/ban", {"telegramId": telegram_id})
