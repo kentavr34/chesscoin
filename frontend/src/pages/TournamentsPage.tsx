@@ -532,14 +532,43 @@ const TournamentCard: React.FC<{
             >
               {tt.leave}
             </button>
-          ) : (
+          ) : isFinished ? (
             <div style={{
               padding: '11px 14px', borderRadius: 11,
               background: 'rgba(61,186,122,.06)', border: '.5px solid rgba(61,186,122,.18)',
               color: '#3DBA7A', fontSize: '0.74rem', fontWeight: 700,
               textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
             }}>
-              {isFinished ? <><IcoFlag size={13} /> Участвовал</> : <><IcoCheck size={11} /> Матчи назначаются автоматически</>}
+              <IcoFlag size={13} /> Участвовал
+            </div>
+          ) : (
+            // PR-3 (Кенан 2026-05-18): кнопка «Выйти» теперь доступна и для
+            // IN_PROGRESS-турниров (раньше показывалась только при REGISTRATION,
+            // что блокировало уход из надоевшего турнира). Backend leave-ручка
+            // позволяет покинуть в любом статусе — взнос остаётся в призовом
+            // пуле (предупреждение через ConfirmModal). Сверху подпись «матчи
+            // назначаются автоматически», снизу — компактная кнопка Выйти.
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{
+                padding: '8px 14px', borderRadius: 11,
+                background: 'rgba(61,186,122,.06)', border: '.5px solid rgba(61,186,122,.18)',
+                color: '#3DBA7A', fontSize: '0.7rem', fontWeight: 700,
+                textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              }}>
+                <IcoCheck size={11} /> Матчи назначаются автоматически
+              </div>
+              <button
+                onClick={onLeave}
+                style={{
+                  width: '100%', padding: '8px 14px', borderRadius: 11,
+                  background: 'rgba(255,91,91,.07)', color: '#FF5B5B',
+                  border: '.5px solid rgba(255,91,91,.2)',
+                  fontSize: '0.74rem', fontWeight: 700, cursor: 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                {tt.leave}
+              </button>
             </div>
           )
         )}

@@ -297,12 +297,25 @@ async function checkTournamentResults() {
     });
 
     for (const t of finishedTournaments) {
+      const totalPool = t.prizePool + t.donationPool;
+
+      // PR-3 (Кенан 2026-05-18): если в турнире никто не сыграл (нет
+      // активных игроков с очками) → весь призовой пул уходит в platform
+      // reserve (не возвращается участникам). Это «налог на дезертирство».
       if (t.players.length === 0) {
+        if (totalPool > 0n) {
+          try {
+            await prisma.platformConfig.update({
+              where: { id: "singleton" },
+              data: { platformReserve: { increment: totalPool } },
+            });
+            logger.info(`[Cron/Tournament] ${t.id} "${t.name}": no winners — ${totalPool} → platformReserve`);
+          } catch (e) { logError("[Cron/Tournament/platformReserve]", e); }
+        }
         await prisma.tournament.update({ where: { id: t.id }, data: { status: "FINISHED" } });
         continue;
       }
 
-      const totalPool = t.prizePool + t.donationPool;
       // БАГ #5 fix: WORLD получает 70/20/10%, COUNTRY — 60/30/10%
       const prizes: [bigint, number][] =
         t.type === 'WORLD'
@@ -337,6 +350,25 @@ async function checkTournamentResults() {
             });
           } catch (e) { logError("[Cron/Tournament] notify", e); }
         }
+      }
+
+      // PR-3 (Кенан 2026-05-18): WEEKLY/MONTHLY/SEASONAL выплачивают только
+      // 10/20/30% пула. Остаток пула — в platform reserve (не сжигается, не
+      // возвращается участникам). WORLD/COUNTRY раздают 100% — там нулевой
+      // остаток. Считаем явно чтобы быть устойчивыми к будущим изменениям %.
+      const totalPaid = prizes.reduce((s, [amt, idx]) => {
+        const player = t.players[idx];
+        return player && amt > 0n ? s + amt : s;
+      }, 0n);
+      const leftover = totalPool - totalPaid;
+      if (leftover > 0n) {
+        try {
+          await prisma.platformConfig.update({
+            where: { id: "singleton" },
+            data: { platformReserve: { increment: leftover } },
+          });
+          logger.info(`[Cron/Tournament] ${t.id} "${t.name}": leftover ${leftover} (${totalPool}-${totalPaid}) → platformReserve`);
+        } catch (e) { logError("[Cron/Tournament/platformReserve]", e); }
       }
 
       // Обновляем статус

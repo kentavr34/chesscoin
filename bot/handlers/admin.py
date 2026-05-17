@@ -627,23 +627,79 @@ async def cb_broadcast_hint(call: CallbackQuery):
 
 
 # ─── Существующие команды (/stats, /broadcast, /ban) ──────────────────────────
+
+
+def _fmt_coins(val) -> str:
+    """Форматирует большое число (str/int) с разделителями + краткой суффикс-формой.
+    PR-3 (Кенан 2026-05-18): для удобного чтения админских сумм типа 1.2 млрд."""
+    try:
+        n = int(str(val))
+    except Exception:
+        return str(val)
+    if n >= 1_000_000_000:
+        return f"{n / 1_000_000_000:.2f} млрд ({n:,})".replace(",", " ")
+    if n >= 1_000_000:
+        return f"{n / 1_000_000:.2f} млн ({n:,})".replace(",", " ")
+    if n >= 1_000:
+        return f"{n:,}".replace(",", " ")
+    return str(n)
+
+
+def _pct(part, total) -> str:
+    try:
+        p = int(str(part))
+        t = int(str(total))
+        if t == 0:
+            return "—"
+        return f"{p / t * 100:.1f}%"
+    except Exception:
+        return "—"
+
+
 @router.message(Command("stats"))
 async def cmd_stats(message: Message):
     if not is_admin(message.from_user.id):
-        return await message.answer("❌ Нет доступа")
+        return  # silent ignore для не-админов (по требованию Кенана)
     try:
         async with BackendClient() as client:
             stats = await client.get_stats()
-        await message.answer(
-            f"📊 <b>Статистика ChessCoin</b>\n\n"
-            f"👥 Игроков: <b>{stats.get('totalUsers', '—')}</b>\n"
-            f"🎮 Игр сыграно: <b>{stats.get('totalSessions', '—')}</b>\n"
-            f"⚔️ Батлов: <b>{stats.get('totalBattles', '—')}</b>\n"
-            f"💰 Выдано ᚙ: <b>{stats.get('totalEmitted', '—')}</b>\n"
-            f"🏦 Резерв: <b>{stats.get('platformReserve', '—')}</b>\n"
-            f"📈 Фаза: <b>{stats.get('currentPhase', '—')}</b>\n\n"
-            f"💡 Полная панель: /admin",
+
+        in_circ = stats.get("totalInCirculation", "0")
+        users_bal = stats.get("usersBalance", "0")
+        reserve = stats.get("platformReserve", "0")
+        countries_t = stats.get("countriesTreasury", "0")
+        tour_pool = stats.get("tournamentsPool", "0")
+
+        top10 = stats.get("top10", []) or []
+        top10_lines = "\n".join(
+            f"  {i+1}. <b>{(u.get('firstName') or '—')}</b>"
+            + (f" (@{u['username']})" if u.get("username") else "")
+            + f" — {_fmt_coins(u.get('balance', '0'))}"
+            for i, u in enumerate(top10)
+        ) or "  —"
+
+        text = (
+            f"📊 <b>Экономика ChessCoin</b>\n\n"
+            f"В обороте всего: <b>{_fmt_coins(in_circ)} ᚙ</b>\n"
+            f"  • В кассе платформы: <b>{_fmt_coins(reserve)}</b> ({_pct(reserve, in_circ)})\n"
+            f"  • На балансах юзеров: <b>{_fmt_coins(users_bal)}</b> ({_pct(users_bal, in_circ)})\n"
+            f"  • В казнах стран: <b>{_fmt_coins(countries_t)}</b> ({_pct(countries_t, in_circ)})\n"
+            f"  • В активных турнирах: <b>{_fmt_coins(tour_pool)}</b> ({_pct(tour_pool, in_circ)})\n\n"
+            f"Эмитировано всего: <b>{_fmt_coins(stats.get('totalEmitted', '0'))}</b>\n"
+            f"Фаза эмиссии: <b>{stats.get('currentPhase', '—')}</b>\n\n"
+            f"<b>За 24ч:</b>\n"
+            f"  • Новых юзеров: <b>{stats.get('newUsersToday', '—')}</b>\n"
+            f"  • Активных юзеров: <b>{stats.get('activeUsers24h', '—')}</b>\n"
+            f"  • Покупок в магазине/TON: <b>{stats.get('shopPurchasesToday', '—')}</b>\n"
+            f"  • Призовых выплат: <b>{stats.get('prizePayoutsToday', '—')}</b>\n\n"
+            f"<b>Игры всего:</b>\n"
+            f"  • Сессий: <b>{stats.get('totalSessions', '—')}</b>\n"
+            f"  • Батлов: <b>{stats.get('totalBattles', '—')}</b>\n"
+            f"  • Юзеров: <b>{stats.get('totalUsers', '—')}</b>\n\n"
+            f"<b>Топ-10 балансов:</b>\n{top10_lines}\n\n"
+            f"💡 Полная панель: /admin"
         )
+        await message.answer(text)
     except Exception as e:
         logger.error(f"Ошибка получения статистики: {e}")
         await message.answer(f"❌ Ошибка: {e}")

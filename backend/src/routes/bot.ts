@@ -74,25 +74,87 @@ botRouter.post("/notify", async (req: Request, res: Response) => {
 });
 
 // ─── GET /api/v1/bot/stats ────────────────────────────────────────────────────
+// PR-3 (Кенан 2026-05-18): расширенная сводка экономики для /stats в боте.
+// Дополнительно: суммы балансов юзеров, активность 24ч, топ-10 балансов,
+// призовые выплаты, сделки в магазине, казны стран и пулы турниров.
 botRouter.get("/stats", async (_req: Request, res: Response) => {
   try {
-    const [totalUsers, totalSessions, config] = await Promise.all([
+    const dayAgo = new Date(Date.now() - 86_400_000);
+    const [
+      totalUsers,
+      totalSessions,
+      totalBattles,
+      config,
+      balanceAgg,
+      countryTreasuryAgg,
+      activeTournamentPoolAgg,
+      newUsersToday,
+      activeUsers24h,
+      shopPurchasesToday,
+      prizePayoutsToday,
+      top10,
+    ] = await Promise.all([
       prisma.user.count({ where: { isBot: false } }),
       prisma.session.count(),
+      prisma.session.count({ where: { type: "BATTLE" } }),
       prisma.platformConfig.findUnique({ where: { id: "singleton" } }),
+      prisma.user.aggregate({ _sum: { balance: true }, where: { isBot: false, isBanned: false } }),
+      prisma.country.aggregate({ _sum: { treasury: true } }),
+      prisma.tournament.aggregate({
+        _sum: { prizePool: true, donationPool: true },
+        where: { status: { in: ["REGISTRATION", "IN_PROGRESS"] } },
+      }),
+      prisma.user.count({ where: { isBot: false, createdAt: { gte: dayAgo } } }),
+      prisma.user.count({ where: { isBot: false, updatedAt: { gte: dayAgo } } }),
+      prisma.transaction.count({
+        where: {
+          createdAt: { gte: dayAgo },
+          type: { in: ["ITEM_PURCHASE", "TON_DEPOSIT", "EXCHANGE_BUY", "EXCHANGE_SELL", "TRADE_BUY", "TRADE_SELL"] },
+        },
+      }),
+      prisma.transaction.count({
+        where: {
+          createdAt: { gte: dayAgo },
+          type: { in: ["BATTLE_WIN", "BOT_WIN", "TOURNAMENT_WIN", "COUNTRY_WAR_WIN", "CLAN_WAR_WIN", "FRIENDLY_WIN"] },
+        },
+      }),
+      prisma.user.findMany({
+        where: { isBot: false, isBanned: false },
+        orderBy: { balance: "desc" },
+        take: 10,
+        select: { firstName: true, username: true, telegramId: true, balance: true },
+      }),
     ]);
 
-    const totalBattles = await prisma.session.count({
-      where: { type: "BATTLE" },
-    });
+    const usersBalance = balanceAgg._sum.balance ?? 0n;
+    const countriesTreasury = countryTreasuryAgg._sum.treasury ?? 0n;
+    const tournamentsPool = (activeTournamentPoolAgg._sum.prizePool ?? 0n) + (activeTournamentPoolAgg._sum.donationPool ?? 0n);
+    const platformReserve = config?.platformReserve ?? 0n;
+    const totalEmitted = config?.totalEmitted ?? 0n;
+    const totalInCirculation = usersBalance + countriesTreasury + tournamentsPool + platformReserve;
 
     res.json({
       totalUsers,
       totalSessions,
       totalBattles,
-      totalEmitted: config?.totalEmitted?.toString() ?? "0",
-      platformReserve: config?.platformReserve?.toString() ?? "0",
+      totalEmitted: totalEmitted.toString(),
+      platformReserve: platformReserve.toString(),
       currentPhase: config?.currentPhase ?? 1,
+      // PR-3 новые поля
+      totalInCirculation: totalInCirculation.toString(),
+      usersBalance: usersBalance.toString(),
+      countriesTreasury: countriesTreasury.toString(),
+      tournamentsPool: tournamentsPool.toString(),
+      newUsersToday,
+      activeUsers24h,
+      shopPurchasesToday,
+      prizePayoutsToday,
+      top10: top10.map(u => ({
+        firstName: u.firstName,
+        username: u.username,
+        telegramId: u.telegramId,
+        balance: u.balance.toString(),
+      })),
     });
   } catch (err: unknown) {
     logger.error("[bot/stats]", err);
