@@ -315,9 +315,7 @@ warsRouter.post("/countries/:id/join", authMiddleware, async (req: Request, res:
     // PR-3 (Кенан 2026-05-17): первый зашедший в страну (нет ни одного APPROVED)
     // → автоматически APPROVED и по факту становится главкомом (getCommander
     // отдаст его, т.к. он единственный APPROVED). Иначе PENDING — ждёт одобрения.
-    const approvedCount = await prisma.countryMember.count({
-      where: { countryId: id, status: 'APPROVED' },
-    });
+    // Используем approvedCount, посчитанный выше (для проверки maxMembers).
     const isFirstFighter = approvedCount === 0;
 
     let member;
