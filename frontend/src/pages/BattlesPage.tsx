@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { PageLayout, InfoPopup, useInfoPopup } from '@/components/layout/PageLayout';
 import { Avatar } from '@/components/ui/Avatar';
 import { useGameStore } from '@/store/useGameStore';
@@ -35,11 +35,26 @@ type Tab = 'public' | 'private';
 export const BattlesPage: React.FC = () => {
   const t = useT();
   const navigate = useNavigate();
+  const location = useLocation();
   const { battles, sessions, liveBattles, upsertSession } = useGameStore();
   const { user } = useUserStore();
   const [tab, setTab] = useState<Tab>('public');
   // Историю партий показывает отдельная /battles/history (кнопка часов в шапке).
   const [showCreate, setShowCreate] = useState(false);
+
+  // Вход с чужого профиля по кнопке «Сразиться» → открыть создание приватного батла
+  // (полноценный direct-challenge endpoint появится в PR-1; пока flow: создать
+  // приватный батл → скопировать ссылку → отправить сопернику).
+  useEffect(() => {
+    const challengeUserId = (location.state as Record<string, unknown> | null)?.challengeUserId as string | undefined;
+    if (challengeUserId) {
+      setShowCreate(true);
+      showToast('Создай приватный батл — отправь ссылку игроку через «Поделиться»', 'info');
+      // Чистим state, чтобы при обновлении страницы модал не открывался снова
+      window.history.replaceState({}, '');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [showQuick, setShowQuick] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showAttempts, setShowAttempts] = useState(false);

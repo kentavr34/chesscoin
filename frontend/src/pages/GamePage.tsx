@@ -214,11 +214,12 @@ interface PanelProps {
   timeSecs: number;
   isActive: boolean;
   isGameOver: boolean;
+  onAvatarClick?: () => void; // клик по аватару → профиль соперника
 }
 
 const PlayerPanel: React.FC<PanelProps> = ({
   name, elo, avatar, isBot, isWhite, country, captured, advantage: adv,
-  coins, timeDisplay, timeSecs, isActive, isGameOver,
+  coins, timeDisplay, timeSecs, isActive, isGameOver, onAvatarClick,
 }) => {
   const sorted = useMemo(() => sortCaptured(captured), [captured]);
   const isCritical = isActive && timeSecs > 0 && timeSecs < 15;
@@ -244,22 +245,26 @@ const PlayerPanel: React.FC<PanelProps> = ({
       transition: 'background .3s, border-color .3s, box-shadow .3s',
     }}>
 
-      {/* ── Аватар ─────────────────────────────────────────────────────────── */}
-      <div style={{
-        width: AV, height: AV, borderRadius: '50%', flexShrink: 0,
-        background: isBot ? 'rgba(74,158,255,.1)' : 'rgba(212,168,67,.07)',
-        border: `1.5px solid ${
-          isActive
-            ? isBot ? '#4A9EFF' : 'rgba(61,186,122,.5)'
-            : isBot ? 'rgba(74,158,255,.15)' : 'rgba(212,168,67,.15)'
-        }`,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        overflow: 'hidden',
-        boxShadow: isActive
-          ? `0 0 14px ${isBot ? 'rgba(74,158,255,.3)' : 'rgba(61,186,122,.25)'}`
-          : 'none',
-        transition: 'box-shadow .3s, border-color .3s',
-      }}>
+      {/* ── Аватар (кликабельный → профиль игрока) ───────────────────────── */}
+      <div
+        onClick={onAvatarClick}
+        style={{
+          width: AV, height: AV, borderRadius: '50%', flexShrink: 0,
+          background: isBot ? 'rgba(74,158,255,.1)' : 'rgba(212,168,67,.07)',
+          border: `1.5px solid ${
+            isActive
+              ? isBot ? '#4A9EFF' : 'rgba(61,186,122,.5)'
+              : isBot ? 'rgba(74,158,255,.15)' : 'rgba(212,168,67,.15)'
+          }`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          overflow: 'hidden',
+          boxShadow: isActive
+            ? `0 0 14px ${isBot ? 'rgba(74,158,255,.3)' : 'rgba(61,186,122,.25)'}`
+            : 'none',
+          transition: 'box-shadow .3s, border-color .3s',
+          cursor: onAvatarClick ? 'pointer' : 'default',
+        }}
+      >
         {avatar
           ? <img src={avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           : isBot
@@ -1060,6 +1065,7 @@ export function GamePage() {
             captured={blackCap} advantage={Math.max(0, bMat - wMat)} coins={0}
             timeDisplay={oppTimeDisplay} timeSecs={oppTimeSecs}
             isActive={!isWhiteTurnNow && !gameOver} isGameOver={gameOver}
+            onAvatarClick={specBlackSide.player?.id ? () => navigate(`/profile/${specBlackSide.player!.id}`) : undefined}
           />
         ) : (
           <PlayerPanel
@@ -1067,6 +1073,7 @@ export function GamePage() {
             isWhite={oppIsWhite} country={oppCountry} captured={oppCaptured} advantage={oppAdv} coins={oppCoins}
             timeDisplay={oppTimeDisplay} timeSecs={oppTimeSecs}
             isActive={!isMyTurn && !gameOver} isGameOver={gameOver}
+            onAvatarClick={(!oppIsBot && oppSide?.player?.id) ? () => navigate(`/profile/${oppSide.player!.id}`) : undefined}
           />
         )}
       </div>
@@ -1217,6 +1224,7 @@ export function GamePage() {
             captured={whiteCap} advantage={Math.max(0, wMat - bMat)} coins={0}
             timeDisplay={myTimeDisplay} timeSecs={myTimeSecs}
             isActive={isWhiteTurnNow && !gameOver} isGameOver={gameOver}
+            onAvatarClick={specWhiteSide.player?.id ? () => navigate(`/profile/${specWhiteSide.player!.id}`) : undefined}
           />
         ) : (
           <PlayerPanel
@@ -1224,6 +1232,7 @@ export function GamePage() {
             isWhite={myColor === 'white'} country={myCountry} captured={myCaptured} advantage={myAdv} coins={myCoins}
             timeDisplay={myTimeDisplay} timeSecs={myTimeSecs}
             isActive={isMyTurn && !gameOver} isGameOver={gameOver}
+            onAvatarClick={mySide?.player?.id ? () => navigate(`/profile/${mySide.player!.id}`) : undefined}
           />
         )}
       </div>

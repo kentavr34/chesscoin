@@ -142,12 +142,15 @@ export const MiniProfileSheet: React.FC<Props> = ({ userId, onClose }) => {
                 }}
                 style={btnGold}
               >
-                ⚔️ Challenge
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ marginRight: 6, verticalAlign: 'middle' }} aria-hidden>
+                  <path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M15 5l4-4 2 2-4 4M5 16l3 3-3 3-3-3z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Challenge
               </button>
               <button
                 onClick={() => {
                   onClose();
-                  navigate('/profile', { state: { userId } });
+                  navigate(`/profile/${userId}`);
                 }}
                 style={btnGhost}
               >

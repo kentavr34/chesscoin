@@ -196,8 +196,13 @@ const CountryDetailModal: React.FC<{
   const t = useT();
   const navigate = useNavigate();
   const { user } = useUserStore();
-  // Клик по чужому аватару → его профиль (Кенан 2026-05-17).
-  const goProfile = (uid?: string | null) => { if (uid && uid !== user?.id) navigate(`/profile/${uid}`); };
+  // Клик по чужому аватару/имени бойца → его профиль (с автозакрытием модала страны).
+  // Защита: если uid пустой или это сам пользователь — не переходим.
+  const goProfile = (uid?: string | null) => {
+    if (!uid || uid === user?.id) return;
+    navigate(`/profile/${uid}`);
+    onClose();
+  };
   const [data, setData] = useState<{ country: any; members: any[]; isCommander: boolean } | null>(null);
   const [joining, setJoining] = useState(false);
   const [donateAmt, setDonateAmt] = useState('');
@@ -461,7 +466,7 @@ const CountryDetailModal: React.FC<{
                   background: 'rgba(240,200,90,.05)', border: '.5px solid rgba(240,200,90,.22)',
                   borderRadius: 10,
                 }}>
-                  <div onClick={() => { navigate(`/profile/${p.user.id}`); onClose(); }} style={{ cursor: 'pointer' }}>
+                  <div onClick={() => goProfile(p.user.id)} style={{ cursor: 'pointer' }}>
                     <Avatar user={p.user as any} size="s" />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -536,7 +541,7 @@ const CountryDetailModal: React.FC<{
               )}
 
               <div
-                onClick={() => { navigate(`/profile/${m.userId}`); onClose(); }}
+                onClick={() => goProfile(m.userId ?? m.user?.id)}
                 style={{ cursor: 'pointer' }}
               >
                 <Avatar user={m.user} size="s" />
@@ -550,7 +555,7 @@ const CountryDetailModal: React.FC<{
                     cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                     display: 'flex', alignItems: 'center', gap: 6,
                   }}
-                  onClick={() => { navigate(`/profile/${m.userId}`); onClose(); }}
+                  onClick={() => goProfile(m.userId ?? m.user?.id)}
                 >
                   <span>{m.user?.firstName} {m.user?.lastName ?? ''}</span>
                   {m.isCommander && (
