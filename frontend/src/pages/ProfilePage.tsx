@@ -653,7 +653,10 @@ export const ProfilePage: React.FC = () => {
               <div style={{ textAlign: 'center', color: '#5A5248', padding: 24, fontSize: 13 }}>{t.profile.noTx}</div>
             ) : (
               transactions.map((tx) => {
-                const isPos = BigInt(tx.amount) > 0n;
+                // PR-3 hotfix: guard BigInt(undefined) crash (tx.amount может быть
+                // строкой с '+'/'-' или вовсе пустой для legacy-транзакций).
+                let isPos = false;
+                try { isPos = BigInt(String(tx.amount ?? '0').replace(/[+\-]/g, '')) > 0n && !String(tx.amount ?? '').startsWith('-'); } catch {}
                 const txIcon = (() => {
                   const s = 18;
                   switch (tx.type) {

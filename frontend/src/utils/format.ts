@@ -1,6 +1,15 @@
-// Форматирует bigint-строку в читаемый вид
-export const fmtBalance = (val: string | number | bigint): string => {
-  const n = typeof val === 'bigint' ? val : BigInt(val);
+// Форматирует bigint-строку в читаемый вид.
+// PR-3 hotfix 2026-05-18: guard на undefined/null/'' — иначе BigInt(undefined)
+// крашит LeaderboardPage и любую страницу, где у юзера ещё не загрузился баланс
+// (например частично-загруженный User до /auth/me). Возвращаем '0' для пустого.
+export const fmtBalance = (val: string | number | bigint | null | undefined): string => {
+  if (val === null || val === undefined || val === '') return '0';
+  let n: bigint;
+  try {
+    n = typeof val === 'bigint' ? val : BigInt(val);
+  } catch {
+    return '0';
+  }
   if (n >= 1_000_000n) return (Number(n) / 1_000_000).toFixed(0) + 'M';
   if (n >= 1_000n) return (Number(n) / 1_000).toFixed(0) + 'K';
   return n.toString();
