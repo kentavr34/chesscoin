@@ -738,6 +738,8 @@ router.get("/:userId", authMiddleware, async (req: Request, res: Response) => {
         avatar: true, avatarType: true, avatarGradient: true,
         elo: true, league: true, totalEarned: true, createdAt: true,
         isBanned: true,
+        // PR-3 (Кенан 2026-05-18): achievements для currentTitles на профиле.
+        achievements: true,
         sides: {
           select: { status: true },
           take: 100,
@@ -769,6 +771,25 @@ router.get("/:userId", authMiddleware, async (req: Request, res: Response) => {
       equippedItems[inv.item.type] = inv.item;
     }
 
+    // PR-3 (Кенан 2026-05-18): currentTitles — активные титулы юзера для тегов
+    // на профиле. Активный = выдан в текущем периоде (week/month/year).
+    const achievements: Array<{ id: string; date: string }> = Array.isArray(user.achievements)
+      ? (user.achievements as any[]).filter(a => a && typeof a === 'object' && 'id' in a)
+      : [];
+    const now = Date.now();
+    const W = 7 * 24 * 3600_000;
+    const M = 30 * 24 * 3600_000;
+    const Y = 365 * 24 * 3600_000;
+    const isFresh = (date: string, ttl: number) => {
+      try { return now - new Date(date).getTime() < ttl; } catch { return false; }
+    };
+    const currentTitles: Array<{ type: string; label: string; date: string }> = [];
+    for (const a of achievements) {
+      if (a.id === 'tournament_winner_week'  && isFresh(a.date, W)) currentTitles.push({ type: 'WEEK_CHAMPION',  label: 'Чемпион недели',  date: a.date });
+      if (a.id === 'tournament_winner_month' && isFresh(a.date, M)) currentTitles.push({ type: 'MONTH_CHAMPION', label: 'Чемпион месяца',  date: a.date });
+      if (a.id === 'tournament_winner_year'  && isFresh(a.date, Y)) currentTitles.push({ type: 'YEAR_CHAMPION',  label: 'Чемпион года',    date: a.date });
+    }
+
     res.json({
       id: user.id,
       firstName: user.firstName,
@@ -783,6 +804,8 @@ router.get("/:userId", authMiddleware, async (req: Request, res: Response) => {
       createdAt: user.createdAt,
       stats: { wins, losses, draws, total: user.sides.length },
       equippedItems, // B4: для клика на аватар → магазин с highlightItemId
+      achievements,  // PR-3
+      currentTitles, // PR-3
     });
   } catch (err: unknown) {
     res.status(500).json({ error: (err instanceof Error ? err.message : String(err)) });

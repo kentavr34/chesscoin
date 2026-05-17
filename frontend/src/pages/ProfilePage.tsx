@@ -309,6 +309,20 @@ export const ProfilePage: React.FC = () => {
                 <IcoCrown size={11} /> {t.profile.commanderBadge}
               </span>
             )}
+            {/* PR-3 (Кенан 2026-05-18): динамические титулы — Чемпион недели/месяца/года.
+                currentTitles приходит с backend (/auth/me и /profile/:userId). */}
+            {((displayUser as any)?.currentTitles ?? []).map((tt: { type: string; label: string; date: string }) => (
+              <span key={tt.type} style={{
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+                padding: '3px 8px', borderRadius: 6,
+                background: 'linear-gradient(135deg, rgba(245,200,66,0.20), rgba(255,215,0,0.10))',
+                color: '#FFD700', borderColor: 'rgba(255,215,0,0.45)',
+                border: '.5px solid rgba(255,215,0,0.45)',
+                fontSize: 10, fontWeight: 800, letterSpacing: '.02em',
+              }}>
+                <IcoTrophy size={11} /> {tt.label}
+              </span>
+            ))}
           </div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
             {user?.militaryRank && (

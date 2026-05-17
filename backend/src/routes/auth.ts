@@ -229,10 +229,27 @@ const formatUser = (user: any, isCommander = false, stats?: { wins: number; loss
     role: isCommander ? 'COMMANDER' : 'FIGHTER',
     isCommander,
   } : null,
-  equippedItems: user.inventory.reduce((acc: Record<string, unknown>, ui) => {
+  equippedItems: user.inventory.reduce((acc: Record<string, unknown>, ui: any) => {
     acc[ui.item.type] = { id: ui.item.id, name: ui.item.name, imageUrl: ui.item.imageUrl };
     return acc;
   }, {}),
+  // PR-3 (Кенан 2026-05-18): currentTitles — активные титулы в текущем
+  // периоде (week/month/year). Источник — User.achievements.
+  achievements: Array.isArray(user.achievements) ? user.achievements : [],
+  currentTitles: (() => {
+    const list: Array<{ id: string; date: string }> = Array.isArray(user.achievements)
+      ? (user.achievements as any[]).filter((a: any) => a && a.id && a.date) : [];
+    const now = Date.now();
+    const W = 7 * 24 * 3600_000, M = 30 * 24 * 3600_000, Y = 365 * 24 * 3600_000;
+    const fresh = (date: string, ttl: number) => { try { return now - new Date(date).getTime() < ttl; } catch { return false; } };
+    const titles: Array<{ type: string; label: string; date: string }> = [];
+    for (const a of list) {
+      if (a.id === 'tournament_winner_week'  && fresh(a.date, W)) titles.push({ type: 'WEEK_CHAMPION',  label: 'Чемпион недели',  date: a.date });
+      if (a.id === 'tournament_winner_month' && fresh(a.date, M)) titles.push({ type: 'MONTH_CHAMPION', label: 'Чемпион месяца',  date: a.date });
+      if (a.id === 'tournament_winner_year'  && fresh(a.date, Y)) titles.push({ type: 'YEAR_CHAMPION',  label: 'Чемпион года',    date: a.date });
+    }
+    return titles;
+  })(),
 });
 
 export default router;
