@@ -14,6 +14,7 @@ import { profileApi, warsApi } from '@/api';
 import { fmtBalance, fmtDate, leagueEmoji } from '@/utils/format';
 import type { Transaction, UserPublic } from '@/types';
 import { JARVIS_LEVELS } from '@/components/ui/JarvisModal';
+import { LeagueProgressBar } from '@/components/ui/LeagueProgressBar';
 
 // Local type for Tab — 'games' включает сохранённые партии (слиты в 2026-05-16)
 type Tab = 'info' | 'games' | 'ach';
@@ -177,12 +178,8 @@ export const ProfilePage: React.FC = () => {
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 18px 0' }}>
         <div style={{ position: 'relative', marginBottom: 12 }}>
           <div style={avatarRingStyle} />
-          {/* Флаг страны рядом с аватаром — бейдж в левом-нижнем углу */}
-          {(displayUser as any)?.countryMember?.country?.code && (
-            <div style={{ position: 'absolute', bottom: -6, left: -6, width: 30, height: 30, borderRadius: '50%', background: '#0B0D11', border: '2px solid #0B0D11', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', zIndex: 3 }}>
-              <CountryFlag code={(displayUser as any).countryMember.country.code} size={22} />
-            </div>
-          )}
+          {/* Флаг страны переехал из бейджа на аватаре в строку с именем
+             (Кенан 2026-05-17: «флаг везде после имени»). */}
 
           {/* Аватар — без upload/crop (Кенан 2026-05-17: только Telegram-импорт или магазин). */}
           {isOwnProfile ? (
@@ -251,6 +248,9 @@ export const ProfilePage: React.FC = () => {
         </div>
         <div style={{ textAlign: 'center', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
           <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#EAE2CC' }}>{user.firstName} {user.lastName ?? ''}</span>
+          {(displayUser as any)?.countryMember?.country?.code && (
+            <CountryFlag code={(displayUser as any).countryMember.country.code} size={22} />
+          )}
         </div>
         <div style={{ marginTop: 3, textAlign: 'center', fontSize: '.72rem', color: '#5A5248' }}>@{user.username ?? 'unknown'}</div>
         {/* 2.3 Кнопка "Сразиться" на чужом профиле */}
@@ -286,6 +286,12 @@ export const ProfilePage: React.FC = () => {
         </div>
       </div>
 
+      {/* League progress bar — над балансом (Кенан 2026-05-17:
+         после тегов под аватаром, до карточки баланса). */}
+      <div style={{ marginTop: 12 }}>
+        <LeagueProgressBar league={user.league} balance={user.balance} />
+      </div>
+
       {/* Balance — N7 */}
       <div style={{ margin: '12px 18px 0', padding: '14px 16px', background: 'linear-gradient(135deg,#141018,#0F0E18)', border: '.5px solid rgba(74,158,255,.18)', borderRadius: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -308,7 +314,7 @@ export const ProfilePage: React.FC = () => {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           <button onClick={() => navigate('/shop')} style={{ padding: '8px 10px', background: 'rgba(74,158,255,.08)', color: '#82CFFF', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.profile.shop}</button>
-          <button onClick={() => navigate('/referrals')} style={{ padding: '8px 10px', background: 'rgba(74,158,255,.08)', color: '#82CFFF', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.profile.referrals} →</button>
+          <button onClick={() => navigate('/referrals')} style={{ padding: '8px 10px', background: 'rgba(74,158,255,.08)', color: '#82CFFF', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.profile.referrals}</button>
         </div>
       </div>
 
@@ -326,44 +332,6 @@ export const ProfilePage: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* League progress bar */}
-      {(() => {
-        const LEAGUE_THRESHOLDS: Record<string, { next: string | null; threshold: bigint; nextThreshold: bigint }> = {
-          BRONZE:   { next: 'SILVER',   threshold: 0n,           nextThreshold: 100_000n },
-          SILVER:   { next: 'GOLD',     threshold: 100_000n,     nextThreshold: 1_000_000n },
-          GOLD:     { next: 'DIAMOND',  threshold: 1_000_000n,   nextThreshold: 5_000_000n },
-          DIAMOND:  { next: 'CHAMPION', threshold: 5_000_000n,   nextThreshold: 10_000_000n },
-          CHAMPION: { next: 'STAR',     threshold: 10_000_000n,  nextThreshold: 50_000_000n },
-          STAR:     { next: null,       threshold: 50_000_000n,  nextThreshold: 50_000_000n },
-        };
-        const info = LEAGUE_THRESHOLDS[user.league];
-        if (!info) return null;
-        const bal = BigInt(user.balance ?? '0');
-        const range = info.nextThreshold - info.threshold;
-        const progress = info.next === null ? 100 : range > 0n ? Math.min(100, Number((bal - info.threshold) * 100n / range)) : 100;
-        const remaining = info.next ? info.nextThreshold - bal : 0n;
-        return (
-          <div
-            onClick={() => navigate('/leaderboard')}
-            style={{ margin: '0 18px 10px', padding: '12px 16px', background: 'linear-gradient(135deg,#141018,#0F0E18)', border: '.5px solid rgba(74,158,255,.18)', borderRadius: 16, cursor: 'pointer' }}
-            title="Перейти на страницу рейтингов"
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#F0C85A' }}>{leagueEmoji[user.league]} {t.profile.league(user.league)}</div>
-              {info.next ? (
-                <div style={{ fontSize: 10, color: '#9A9490' }}>{t.profile.toLeague(`${leagueEmoji[info.next]} ${info.next}`, fmtBalance(remaining.toString()))}</div>
-              ) : (
-                <div style={{ fontSize: 10, color: '#3DBA7A', fontWeight: 700 }}>{t.profile.maxLeague}</div>
-              )}
-            </div>
-            <div style={{ height: 5, background: 'linear-gradient(135deg,#141018,#0F0E18)', borderRadius: 3, overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${progress}%`, background: 'linear-gradient(90deg,#F0C85A,#FFD966)', borderRadius: 3, transition: 'width .5s' }} />
-            </div>
-            <div style={{ fontSize: 9, color: '#5A5248', marginTop: 4 }}>{t.profile.leagueProgress(progress)}</div>
-          </div>
-        );
-      })()}
 
       {/* Tabs */}
       <div style={ptabsStyle}>

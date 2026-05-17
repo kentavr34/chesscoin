@@ -120,7 +120,10 @@ export const finishSession = async (
 // ─────────────────────────────────────────
 async function updateTournamentMatch(sessionId: string, winnerSideId?: string, isDraw: boolean = false) {
   try {
-    const match = await (prisma.tournamentMatch as any).findUnique({
+    // sessionId не unique-поле в TournamentMatchWhereUniqueInput — findUnique
+    // ругался PrismaClientValidationError на каждом finish сессии. findFirst
+    // принимает WhereInput и работает с любым полем. См. логи 2026-05-17.
+    const match = await prisma.tournamentMatch.findFirst({
       where: { sessionId },
       include: { tournament: { select: { id: true, name: true, type: true } } },
     });
