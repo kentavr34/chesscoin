@@ -139,6 +139,27 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
   const [selected, setSelected]  = useState<Square | null>(null);
   const [optionSqs, setOptionSqs] = useState<Record<string, React.CSSProperties>>({});
   const [localFen, setLocalFen]   = useState(fen);
+
+  // PR-3 hotfix Кенан 2026-05-18: sanity-check FEN — ловим аномальные
+  // позиции (если бэк прислал некорректную раскладку). Логируем warning
+  // в консоль для дебага. Не блокируем рендер — react-chessboard падать
+  // не будет. Стандартный starting FEN: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR
+  useEffect(() => {
+    if (!fen) return;
+    try {
+      const board = fen.split(' ')[0] || '';
+      const counts: Record<string, number> = {};
+      for (const ch of board) if (/[a-zA-Z]/.test(ch)) counts[ch] = (counts[ch] ?? 0) + 1;
+      // Шахматные лимиты: max 8 пешек, 2 коня/слона/ладьи, 1 ферзь(+промо до 9), 1 король
+      // Допускаем больше ферзей из-за промоций. Жалуемся на >10 пешек/9 коней (после промо).
+      const warn = (k: string, max: number) => {
+        if ((counts[k] ?? 0) > max) console.warn(`[ChessBoard] anomaly: ${k}=${counts[k]} > ${max} in FEN ${fen}`);
+      };
+      warn('P', 8); warn('p', 8);
+      warn('N', 10); warn('n', 10); // обычно 2, +8 max через промоции = 10
+      warn('K', 1); warn('k', 1);
+    } catch {}
+  }, [fen]);
   const [pendingPromotion, setPendingPromotion] = useState<{ from: Square; to: Square } | null>(null);
 
   // Кнопка «звёздочка сохранения» на доске удалена 2026-05-16 (Кенан:
