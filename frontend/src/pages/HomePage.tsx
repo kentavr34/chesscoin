@@ -7,6 +7,7 @@ import { PageLayout } from '@/components/layout/PageLayout';
 import { JarvisPlayModal } from '@/components/ui/JarvisPlayModal';
 import { AttemptsModal } from '@/components/ui/AttemptsModal';
 import { CountryFlag } from '@/components/ui/CountryFlag';
+import { CoinIcon } from '@/components/ui/CoinIcon';
 import { ActiveSessionsModal } from '@/components/ui/ActiveSessionsModal';
 import { LeagueProgressBar } from '@/components/ui/LeagueProgressBar';
 import { type JarvisLevel } from '@/components/ui/JarvisModal';
@@ -361,7 +362,7 @@ export const HomePage: React.FC = () => {
                 {/* лейбл: отступ = icon(20px) + gap(4px) + boxPad(8px) = 32px → точно над текстом */}
                 <div style={{ fontSize: '.37rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.12em', marginBottom: '.22rem', paddingLeft: 32 }}>Звание</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <span style={{ width: 20, height: 20, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', lineHeight: 1 }}>{user.militaryRank?.emoji || '🙂'}</span>
+                  <span style={{ width: 20, height: 20, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', lineHeight: 1 }}>{user.militaryRank?.emoji || '·'}</span>
                   <div style={{ borderRadius: 8, padding: '4px 8px', minWidth: 98, background: 'linear-gradient(135deg,rgba(212,168,67,.14),rgba(212,168,67,.06))', border: '.5px solid rgba(212,168,67,.32)' }}>
                     <span style={{ fontSize: '.76rem', fontWeight: 700, color: '#D4A843', whiteSpace: 'nowrap' }}>{rankLabel}</span>
                   </div>
@@ -549,7 +550,7 @@ export const HomePage: React.FC = () => {
               <IcoBattle size={52} />
             </div>
             <div style={{ fontSize: '.86rem', fontWeight: 900, letterSpacing: '.01em', marginBottom: '.12rem', color: '#F0C85A' }}>Батлы</div>
-            <div style={{ fontSize: '.58rem', lineHeight: 1.35, color: 'rgba(212,168,67,.82)' }}>1 на 1 · до 10 🪙</div>
+            <div style={{ fontSize: '.58rem', lineHeight: 1.35, color: 'rgba(212,168,67,.82)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>1 на 1 · до 10 <CoinIcon size={9} /></div>
           </div>
 
           {/* КУБКИ */}

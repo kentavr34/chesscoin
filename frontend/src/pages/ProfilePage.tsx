@@ -4,7 +4,7 @@ import { PageLayout, useInfoPopup, InfoPopup } from '@/components/layout/PageLay
 import { Avatar } from '@/components/ui/Avatar';
 import { CountryFlag } from '@/components/ui/CountryFlag';
 import { CoinIcon } from '@/components/ui/CoinIcon';
-import { IcoCrown, IcoRobot, IcoUsers, IcoShop, IcoMedal, IcoArrowUp, IcoArrowDown, IcoBriefcase, IcoMoneyFly, IcoTon, IcoUnlock, IcoLock, IcoGift, IcoExchange, IcoCart, IcoPuzzle, IcoHandshake, IcoGamepad, IcoUpload, IcoGlobe, IcoSettings } from '@/components/icons/UiIcons';
+import { IcoCrown, IcoRobot, IcoUsers, IcoShop, IcoMedal, IcoArrowUp, IcoArrowDown, IcoBriefcase, IcoMoneyFly, IcoTon, IcoUnlock, IcoLock, IcoGift, IcoExchange, IcoCart, IcoPuzzle, IcoHandshake, IcoGamepad, IcoUpload, IcoGlobe, IcoSettings, IcoBookmark } from '@/components/icons/UiIcons';
 import { IcoSwords, IcoTrophy, IcoFlag } from '@/components/icons/TournamentIcons';
 import { useUserStore } from '@/store/useUserStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
@@ -553,7 +553,7 @@ export const ProfilePage: React.FC = () => {
             {isOwnProfile && filteredSaves.length > 0 && (
               <>
                 <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#F0C85A', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  💾 {t.profile.savedGames}
+                  <IcoBookmark size={11} /> {t.profile.savedGames}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 14px' }}>
                   {filteredSaves.map((sg) => {
