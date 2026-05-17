@@ -312,32 +312,82 @@ warsRouter.post("/countries/:id/join", authMiddleware, async (req: Request, res:
       return res.status(400).json({ error: "INSUFFICIENT_BALANCE", required: COUNTRY_ENTRY_FEE.toString() });
     }
 
-    // B.3 MASTER_PLAN: вступление = заявка PENDING. Взнос НЕ списан до
-    // approve главкомом. При reject — membership удаляется без списания.
-    const member = await prisma.countryMember.create({
-      data: { countryId: id, userId, contribution: 0n, status: 'PENDING' },
+    // PR-3 (Кенан 2026-05-17): первый зашедший в страну (нет ни одного APPROVED)
+    // → автоматически APPROVED и по факту становится главкомом (getCommander
+    // отдаст его, т.к. он единственный APPROVED). Иначе PENDING — ждёт одобрения.
+    const approvedCount = await prisma.countryMember.count({
+      where: { countryId: id, status: 'APPROVED' },
     });
+    const isFirstFighter = approvedCount === 0;
 
-    // B.3 push: уведомляем главкома страны о новой заявке.
-    try {
-      const commanderId = await getCommander(id);
-      if (commanderId && commanderId !== userId) {
-        const applicant = await prisma.user.findUnique({
-          where: { id: userId },
-          select: { firstName: true, elo: true, referralCount: true },
+    let member;
+    if (isFirstFighter) {
+      // Сразу списываем взнос: ты подтверждаешь вступление сам себе.
+      member = await prisma.$transaction(async (tx) => {
+        const m = await tx.countryMember.create({
+          data: {
+            countryId: id, userId,
+            contribution: COUNTRY_ENTRY_FEE,
+            status: 'APPROVED',
+          },
         });
-        getIo().emit(`user:${commanderId}`, {
-          type: 'country:join-request',
+        await updateBalance(userId, -COUNTRY_ENTRY_FEE, TransactionType.CLAN_CONTRIBUTION,
+          { countryId: id, reason: 'country_join_first_commander' }, { tx });
+        await tx.country.update({
+          where: { id },
+          data: { treasury: { increment: COUNTRY_ENTRY_FEE } },
+        });
+        return m;
+      });
+      // Уведомление «Ты главнокомандующий».
+      try {
+        getIo().emit(`user:${userId}`, {
+          type: 'country:commander-assigned',
           countryId: id,
-          memberId: member.id,
-          applicant: applicant ?? null,
+          message: 'Ты теперь главнокомандующий — собирай бойцов и принимай заявки',
         });
-      }
-    } catch (e) { logError('[Wars/join-notify]', e); }
+        const user = await prisma.user.findUnique({ where: { id: userId }, select: { telegramId: true, firstName: true } });
+        if (user?.telegramId) {
+          await prisma.adminNotification.create({
+            data: {
+              type: 'COUNTRY_COMMANDER_ASSIGNED',
+              payload: {
+                telegramId: user.telegramId,
+                name: user.firstName,
+                countryId: id,
+              },
+            },
+          }).catch(() => {});
+        }
+      } catch (e) { logError('[Wars/commander-notify]', e); }
+    } else {
+      // B.3 MASTER_PLAN: вступление = заявка PENDING. Взнос НЕ списан до
+      // approve главкомом. При reject — membership удаляется без списания.
+      member = await prisma.countryMember.create({
+        data: { countryId: id, userId, contribution: 0n, status: 'PENDING' },
+      });
+      // B.3 push: уведомляем главкома страны о новой заявке.
+      try {
+        const commanderId = await getCommander(id);
+        if (commanderId && commanderId !== userId) {
+          const applicant = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { firstName: true, elo: true, referralCount: true },
+          });
+          getIo().emit(`user:${commanderId}`, {
+            type: 'country:join-request',
+            countryId: id,
+            memberId: member.id,
+            applicant: applicant ?? null,
+          });
+        }
+      } catch (e) { logError('[Wars/join-notify]', e); }
+    }
 
     res.json({
       success: true,
-      pending: true,
+      pending: !isFirstFighter,
+      isCommander: isFirstFighter,
       entryFee: COUNTRY_ENTRY_FEE.toString(),
       membership: {
         id: member.id, warWins: 0, warLosses: 0,
@@ -702,6 +752,14 @@ warsRouter.post("/declare", authMiddleware, validate(DeclareWarSchema), async (r
     if (!defenderCountry) return res.status(404).json({ error: "Defender country not found" });
 
     const endAt = new Date(Date.now() + duration * 1000);
+
+    // PR-3: сброс warWinsCurrent у всех бойцов обеих стран — счётчик побед
+    // в новой войне начинается с нуля. На основе этого поля распределяется
+    // казна войны (топ-1/2/3 + пропорция остальных).
+    await prisma.countryMember.updateMany({
+      where: { countryId: { in: [membership.countryId, defenderCountryId] } },
+      data: { warWinsCurrent: 0 },
+    });
 
     const war = await prisma.countryWar.create({
       data: {

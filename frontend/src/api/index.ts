@@ -213,7 +213,7 @@ export const warsApi = {
   myCountry: () =>
     api.get<{ country: Country | null; membership: Record<string,unknown> | null; isCommander: boolean; activeWar: Record<string,unknown> | null }>('/wars/my-country'),
   join: (countryId: string) =>
-    api.post<{ success: boolean; pending?: boolean; entryFee: string; membership: { id: string; warWins: number; warLosses: number; contribution: string; joinedAt: string; status?: 'PENDING' | 'APPROVED' } }>(`/wars/countries/${countryId}/join`),
+    api.post<{ success: boolean; pending?: boolean; isCommander?: boolean; entryFee: string; membership: { id: string; warWins: number; warLosses: number; contribution: string; joinedAt: string; status?: 'PENDING' | 'APPROVED' } }>(`/wars/countries/${countryId}/join`),
   leave: () =>
     api.post<{ success: boolean }>('/wars/leave'),
   // B.3 MASTER_PLAN: главком видит заявки на вступление и решает.

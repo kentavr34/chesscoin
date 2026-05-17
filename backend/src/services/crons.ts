@@ -379,6 +379,129 @@ async function checkTournamentResults() {
 }
 
 // ─── Hourly: расчёт завершённых войн между странами ─────────────────────────
+// PR-3 (Кенан 2026-05-17): распределение казны win/lose страны по схеме
+// min(treasury_winner, treasury_loser) — победитель забирает у проигравшего
+// сумму, ограниченную меньшей из двух казн. Это значит, нападать на богатую
+// страну выгодно (риск меньше, потолок прибыли = твоя казна).
+// 10% комиссии платформы. 20% / 10% / 5% — топ-1/2/3 бойцам по warWinsCurrent,
+// 65% — пропорционально warWinsCurrent остальным. Ничья — никто никого не списывает.
+export async function distributeCountryWarPrize(war: { id: string; attackerCountryId: string; defenderCountryId: string; attackerWins: number; defenderWins: number }) {
+  // PR-3: idempotency guard — если статус FINISHED, значит уже распределено
+  // (через другой call path: finishWar или checkCountryWarResults).
+  const fresh = await prisma.countryWar.findUnique({ where: { id: war.id }, select: { status: true } });
+  if (fresh?.status === "FINISHED") {
+    logger.info(`[Cron/CountryWar/Prize] War ${war.id} already FINISHED, skipping distribution`);
+    return;
+  }
+  if (war.attackerWins === war.defenderWins) {
+    logger.info(`[Cron/CountryWar/Prize] War ${war.id} draw — no treasury transfer`);
+    return;
+  }
+  const winnerCountryId = war.attackerWins > war.defenderWins ? war.attackerCountryId : war.defenderCountryId;
+  const loserCountryId  = winnerCountryId === war.attackerCountryId ? war.defenderCountryId : war.attackerCountryId;
+
+  const [winner, loser] = await Promise.all([
+    prisma.country.findUnique({ where: { id: winnerCountryId } }),
+    prisma.country.findUnique({ where: { id: loserCountryId } }),
+  ]);
+  if (!winner || !loser) return;
+
+  const prize = loser.treasury < winner.treasury ? loser.treasury : winner.treasury;
+  if (prize <= 0n) {
+    logger.info(`[Cron/CountryWar/Prize] War ${war.id}: prize=0 (one country empty)`);
+    return;
+  }
+
+  // Списываем приз из казны проигравшего.
+  await prisma.country.update({
+    where: { id: loserCountryId },
+    data: { treasury: { decrement: prize } },
+  });
+
+  // 10% комиссии платформы → platformConfig.platformReserve.
+  const commission = prize * 10n / 100n;
+  const netPrize = prize - commission;
+  try {
+    await prisma.platformConfig.update({
+      where: { id: "singleton" },
+      data: { platformReserve: { increment: commission } },
+    });
+  } catch (e) { logError("[Cron/CountryWar/Prize] commission", e); }
+
+  // Распределение netPrize между бойцами победителя.
+  const winnerMembers = await prisma.countryMember.findMany({
+    where: { countryId: winnerCountryId, status: 'APPROVED' as any },
+    select: { userId: true, warWinsCurrent: true as any } as any,
+  });
+  type M = { userId: string; warWinsCurrent: number };
+  const members = (winnerMembers as any as M[])
+    .sort((a, b) => (b.warWinsCurrent ?? 0) - (a.warWinsCurrent ?? 0));
+  if (members.length === 0) {
+    logger.warn(`[Cron/CountryWar/Prize] War ${war.id}: winner has no members — prize stays in country treasury`);
+    await prisma.country.update({
+      where: { id: winnerCountryId },
+      data: { treasury: { increment: netPrize } },
+    });
+    return;
+  }
+
+  const top1 = netPrize * 20n / 100n;
+  const top2 = netPrize * 10n / 100n;
+  const top3 = netPrize * 5n  / 100n;
+  const restPool = netPrize - top1 - top2 - top3; // 65%
+  const totalWins = members.reduce((s, m) => s + (m.warWinsCurrent ?? 0), 0);
+
+  const userMap = new Map<string, bigint>();
+  for (let i = 0; i < members.length; i++) {
+    const m = members[i]!;
+    let amount = 0n;
+    if (i === 0) amount += top1;
+    else if (i === 1) amount += top2;
+    else if (i === 2) amount += top3;
+    if (totalWins > 0 && (m.warWinsCurrent ?? 0) > 0) {
+      amount += restPool * BigInt(m.warWinsCurrent ?? 0) / BigInt(totalWins);
+    }
+    if (amount > 0n) userMap.set(m.userId, (userMap.get(m.userId) ?? 0n) + amount);
+  }
+
+  // Если никто не сделал ни одной победы (totalWins=0 и членов >0) — делим
+  // restPool поровну между всеми (защита от того что top1/2/3 остаются).
+  if (totalWins === 0 && members.length > 0) {
+    const equal = restPool / BigInt(members.length);
+    for (const m of members) {
+      userMap.set(m.userId, (userMap.get(m.userId) ?? 0n) + equal);
+    }
+  }
+
+  // Выплаты + уведомления.
+  let totalPaid = 0n;
+  for (const [uid, amount] of userMap.entries()) {
+    if (amount <= 0n) continue;
+    await updateBalance(uid, amount, TransactionType.COUNTRY_WAR_WIN, {
+      warId: war.id, winnerCountryId, share: amount.toString(),
+    });
+    totalPaid += amount;
+    try {
+      const u = await prisma.user.findUnique({ where: { id: uid }, select: { telegramId: true, firstName: true } });
+      if (u?.telegramId) {
+        await prisma.adminNotification.create({
+          data: {
+            type: "COUNTRY_WAR_PAYOUT",
+            payload: {
+              telegramId: u.telegramId, name: u.firstName,
+              amount: amount.toString(), warId: war.id,
+            },
+          },
+        }).catch(() => {});
+      }
+    } catch {}
+  }
+
+  logger.info(
+    `[Cron/CountryWar/Prize] War ${war.id}: prize=${prize}, commission=${commission}, paid=${totalPaid} to ${userMap.size} fighters`
+  );
+}
+
 async function checkCountryWarResults() {
   try {
     const expiredWars = await prisma.countryWar.findMany({
@@ -393,6 +516,10 @@ async function checkCountryWarResults() {
       const attackerWon = war.attackerWins >= war.defenderWins;
       const winnerCountryId = attackerWon ? war.attackerCountryId : war.defenderCountryId;
       const loserCountryId  = attackerWon ? war.defenderCountryId : war.attackerCountryId;
+
+      // PR-3: сначала распределяем казну min-prize, потом помечаем войну FINISHED.
+      // (Порядок важен: distribute читает war.attackerWins/defenderWins.)
+      await distributeCountryWarPrize(war).catch(e => logError("[Cron/CountryWar] distributePrize", e));
 
       // Завершаем войну
       await prisma.countryWar.update({

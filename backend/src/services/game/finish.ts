@@ -252,11 +252,13 @@ async function updateWarBattle(sessionId: string, winnerSideId?: string, isDraw:
         : { defenderWins: { increment: 1 } },
     });
 
-    // Обновляем warWins/warLosses у бойцов
+    // Обновляем warWins/warLosses у бойцов (PR-3: + warWinsCurrent — счётчик
+    // побед в текущей войне, используется для распределения казны min-prize
+    // между топ-1/2/3 и остальными бойцами победившей страны).
     if (winnerMembership) {
       await prisma.countryMember.update({
         where: { id: winnerMembership.id },
-        data: { warWins: { increment: 1 } },
+        data: { warWins: { increment: 1 }, warWinsCurrent: { increment: 1 } } as any,
       });
     }
     if (loserMembership) {

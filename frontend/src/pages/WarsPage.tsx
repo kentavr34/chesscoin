@@ -239,6 +239,10 @@ const CountryDetailModal: React.FC<{
       } else if (t === 'country:join-approved' || t === 'country:join-rejected') {
         warsApi.country(countryId).then(setData).catch(() => {});
         toast(t === 'country:join-approved' ? '✓' : '✕', t === 'country:join-approved' ? 'success' : 'info');
+      } else if (t === 'country:commander-assigned') {
+        // PR-3: первый зашедший в страну → автоматически главком
+        toast(payload?.message ?? 'Ты теперь главнокомандующий', 'success');
+        warsApi.country(countryId).then(setData).catch(() => {});
       }
     };
     sock.on(channel, handler);
@@ -285,9 +289,14 @@ const CountryDetailModal: React.FC<{
     if (!ok) return;
     setJoining(true);
     try {
-      const res = await warsApi.join(countryId);
-      // B.3: теперь join создаёт PENDING-заявку, не сразу APPROVED
-      toast(res.pending ? t.wars.joinPendingSent : t.wars.joined, 'success');
+      const res = await warsApi.join(countryId) as any;
+      // PR-3: первый зашедший в страну → автоматически главком (APPROVED + взнос
+      // списан сразу). Иначе PENDING-заявка ждёт одобрения главкома.
+      if (res.isCommander) {
+        toast('Ты теперь главнокомандующий!', 'success');
+      } else {
+        toast(res.pending ? t.wars.joinPendingSent : t.wars.joined, 'success');
+      }
       onJoined();
       onClose();
     } catch (e: any) {
