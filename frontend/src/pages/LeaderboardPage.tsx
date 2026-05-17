@@ -90,7 +90,7 @@ export const LeaderboardPage: React.FC = () => {
                 {LEAGUE_LABELS[user.league] ?? user.league}
               </div>
               <div style={{ fontSize: '.78rem', color: '#9A9490', marginTop: 2 }}>
-                {fmtBalance(user.balance)} ᚙ · ELO {user.elo}
+                {fmtBalance(user.balance)} · ELO {user.elo}
               </div>
             </div>
           </div>
@@ -219,7 +219,7 @@ const LbRow: React.FC<{ rank: number; user: import("@/types").UserPublic; balanc
         fontSize: '.78rem', fontWeight: 700, color: '#D4A843',
         flexShrink: 0,
       }}>
-        {fmtBalance(balance)} ᚙ
+        {fmtBalance(balance)}
       </span>
     </div>
   );

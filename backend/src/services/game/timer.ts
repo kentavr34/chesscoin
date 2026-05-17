@@ -7,6 +7,23 @@ import { finishSession } from "./finish";
 import { getIo } from "@/lib/io"; // Q7 fix: no circular dependency
 import { formatSession } from "./format";
 
+// КРИТИЧНО: персонализированный emit "game" каждому сокету в комнате.
+// Общий io.to(room).emit("game", formatSession(s, null)) сбрасывал mySideId
+// для всех получателей → у обоих игроков ориентация доски слетала.
+function emitGameToRoomPersonalized(sessionId: string, session: any) {
+  const io = getIo();
+  const room = io.sockets.adapter.rooms.get(sessionId);
+  if (room) {
+    for (const socketId of room) {
+      const s = io.sockets.sockets.get(socketId);
+      if (!s) continue;
+      const uid = (s as any)?.data?.userId ?? null;
+      s.emit("game", formatSession(session, uid));
+    }
+  }
+  io.to(`spectate:${sessionId}`).emit("game", formatSession(session, null));
+}
+
 // Считает количество очков фигур, взятых данным игроком (чем больше — тем лучше)
 const calcCapturedScore = (fen: string, isWhite: boolean): number => {
   const board = new Chess(fen).board().flat();
@@ -169,7 +186,7 @@ export const startTimerWatcher = () => {
         // Никто не сделал ходов. Отменяем игру, возвращаем ставки как при ничьей
         logger.info(`[Timer] No moves made in session ${session.id}, cancelling`);
         const finished = await finishSession(session.id, SessionStatus.CANCELLED, { isDraw: true });
-        getIo().to(session.id).emit("game", formatSession(finished, null));
+        emitGameToRoomPersonalized(session.id, finished);
         getIo().to(session.id).emit("game:over", { status: "CANCELLED" });
         getIo().to("lobby").emit("battles:live:removed", session.id);
         return;
@@ -188,8 +205,8 @@ export const startTimerWatcher = () => {
         }
       );
 
-      // Уведомляем клиентов
-      getIo().to(session.id).emit("game", formatSession(finished, null));
+      // Уведомляем клиентов (персонализированно — иначе сторона/доска путаются)
+      emitGameToRoomPersonalized(session.id, finished);
       getIo().to(session.id).emit("game:over", {
         status: "TIME_EXPIRED",
         winnerSideId,

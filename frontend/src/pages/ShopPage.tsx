@@ -12,6 +12,8 @@ import type { ThemeKey } from '@/lib/theme';
 import { useT } from '@/i18n/useT';
 import { ExchangeTab } from './ExchangeTab';
 import { ItemCard, AvatarItemCard, RARITY_COLOR } from '@/components/shop/ShopItemCards';
+import { CoinIcon } from '@/components/ui/CoinIcon';
+import { IcoBolt, IcoBriefcase, IcoExchange, IcoLock, IcoMoneyFly, IcoShop, IcoTon, IcoArrowDown, IcoArrowUp, IcoCheck2 } from '@/components/icons/UiIcons';
 
 // N6: 6 вкладок покупок (объединены Фигуры = pieces+pieceSets+anims) + TON отдельно сверху
 // S1: 6 вкладок в 2 ряда по 3: [Аватары|Рамки|Визуал] / [Темы|Эффекты|Биржа]
@@ -136,12 +138,12 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
 
       setWalletAddress(addr);
       setWalletConnected(true);
-      showToast('✅ TON wallet connected!');
+      showToast('TON wallet connected!');
       onUserRefresh();
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Connection error';
       if (msg.includes('not confirmed')) {
-        showToast('⏳ ' + msg + ' — retrying');
+        showToast(msg + ' — retrying');
         setTimeout(async () => {
           try {
             const addr = await getWalletAddress();
@@ -150,7 +152,7 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
             await tonApi.verifyWallet(addr, '');
             setWalletAddress(addr);
             setWalletConnected(true);
-            showToast('✅ TON wallet connected!');
+            showToast('TON wallet connected!');
             onUserRefresh();
           } catch {}
         }, 30_000);
@@ -181,9 +183,9 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
     return (
       <div style={{ padding: '0 18px 24px' }}>
         <div style={{ ...S.card, padding: 20, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
-          {/* Diamond icon */}
-          <div style={{ width: 56, height: 56, borderRadius: 16, background: 'linear-gradient(135deg,rgba(0,152,234,.18),rgba(0,122,194,.08))', border: '.5px solid rgba(0,152,234,.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, marginBottom: 14 }}>
-            💎
+          {/* TON icon */}
+          <div style={{ width: 56, height: 56, borderRadius: 16, background: 'linear-gradient(135deg,rgba(0,152,234,.18),rgba(0,122,194,.08))', border: '.5px solid rgba(0,152,234,.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0098EA', marginBottom: 14 }}>
+            <IcoTon size={28} />
           </div>
           <div style={{ fontSize: 17, fontWeight: 800, color: '#EAE2CC', marginBottom: 6 }}>TON / USDT</div>
           <div style={{ fontSize: 12, color: '#7A7875', textAlign: 'center', lineHeight: 1.6, marginBottom: 20 }}>
@@ -191,13 +193,13 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
           </div>
 
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
-            {[
-              { ico: '🪙', text: 'Buy coins with TON or USDT', sub: '1 TON = 1,000,000 ᚙ' },
-              { ico: '💸', text: 'Withdraw coins to TON', sub: '0.5% fee on all operations' },
-              { ico: '🔒', text: 'One-time unlock payment', sub: '1 TON — forever' },
-            ].map(r => (
-              <div key={r.ico} style={{ display: 'flex', gap: 10, padding: '10px 12px', background: 'rgba(255,255,255,.04)', border: '.5px solid rgba(154,148,144,.14)', borderRadius: 12, alignItems: 'flex-start', transition: 'all .15s' }}>
-                <span style={{ fontSize: 18 }}>{r.ico}</span>
+            {([
+              { key: 'coin', Ico: () => <CoinIcon size={18} />, text: 'Buy coins with TON or USDT', sub: '1 TON = 1,000,000' },
+              { key: 'fly',  Ico: () => <IcoMoneyFly size={18} color="#0098EA" />, text: 'Withdraw coins to TON', sub: '0.5% fee on all operations' },
+              { key: 'lock', Ico: () => <IcoLock size={18} color="#0098EA" />, text: 'One-time unlock payment', sub: '1 TON — forever' },
+            ] as const).map(r => (
+              <div key={r.key} style={{ display: 'flex', gap: 10, padding: '10px 12px', background: 'rgba(255,255,255,.04)', border: '.5px solid rgba(154,148,144,.14)', borderRadius: 12, alignItems: 'flex-start', transition: 'all .15s' }}>
+                <span style={{ display: 'flex', alignItems: 'center' }}><r.Ico /></span>
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 700, color: '#EAE2CC' }}>{r.text}</div>
                   <div style={{ fontSize: 10, color: '#7A7875', marginTop: 2 }}>{r.sub}</div>
@@ -211,10 +213,10 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
             disabled={connectStep !== 'idle'}
             style={{ width: '100%', padding: '14px', background: 'linear-gradient(135deg,#0098EA,#006BBF)', color: '#fff', border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: connectStep === 'idle' ? 'pointer' : 'default', fontFamily: 'inherit', transition: 'all .15s', opacity: connectStep !== 'idle' ? 0.7 : 1 }}
           >
-            {connectStep === 'idle' ? '💎 Connect TON Wallet' :
-             connectStep === 'connecting' ? '🔗 Opening wallet...' :
-             connectStep === 'paying' ? '💸 Awaiting payment...' :
-             '⏳ Verifying...'}
+            {connectStep === 'idle' ? 'Connect TON Wallet' :
+             connectStep === 'connecting' ? 'Opening wallet...' :
+             connectStep === 'paying' ? 'Awaiting payment...' :
+             'Verifying...'}
           </button>
           <div style={{ fontSize: 10, color: '#7A7875', marginTop: 8, textAlign: 'center' }}>
             1 TON payment to unlock
@@ -228,23 +230,23 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
     <div style={{ padding: '0 18px 24px', display: 'flex', flexDirection: 'column', gap: 10 }}>
       {/* Wallet Info */}
       <div style={{ padding: '13px 15px', background: 'linear-gradient(135deg,rgba(0,152,234,.12),rgba(0,122,194,.06))', border: '.5px solid rgba(0,152,234,.28)', borderRadius: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div style={{ fontSize: 22 }}>💎</div>
+        <span style={{ display: 'flex', color: '#0098EA' }}><IcoTon size={22} /></span>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 11, color: '#0098EA', fontWeight: 700, marginBottom: 2 }}>TON wallet connected</div>
           <div style={{ fontSize: 10, color: '#7A7875', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{walletAddress}</div>
         </div>
-        <div style={{ fontSize: 10, color: '#3DBA7A', fontWeight: 700 }}>✓ Active</div>
+        <div style={{ fontSize: 10, color: '#3DBA7A', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 3 }}><IcoCheck2 size={10} color="#3DBA7A" /> Active</div>
       </div>
 
       {/* Balance row */}
       <div style={{ display: 'flex', gap: 8 }}>
         <div style={{ flex: 1, padding: '12px', ...S.card, borderRadius: 12, textAlign: 'center' }}>
-          <div style={{ ...S.sectionLabel, marginBottom: 4 }}>BALANCE ᚙ</div>
+          <div style={{ ...S.sectionLabel, marginBottom: 4 }}>BALANCE</div>
           <div style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 14, fontWeight: 700, color: '#F5C842' }}>{fmtBalance(user?.balance ?? '0')}</div>
         </div>
         <div style={{ flex: 1, padding: '12px', ...S.card, borderRadius: 12, textAlign: 'center' }}>
           <div style={{ ...S.sectionLabel, marginBottom: 4 }}>RATE</div>
-          <div style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 12, fontWeight: 700, color: '#0098EA' }}>1 TON = {(tonToCoins / 1000).toFixed(0)}K ᚙ</div>
+          <div style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 12, fontWeight: 700, color: '#0098EA' }}>1 TON = {(tonToCoins / 1000).toFixed(0)}K</div>
           <div style={{ fontSize: 9, color: '#7A7875', marginTop: 2 }}>≈ ${tonUsdt.toFixed(2)}</div>
         </div>
       </div>
@@ -260,8 +262,9 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
               fontSize: 11, fontWeight: 700, cursor: 'pointer', transition: 'all .15s',
               background: isActive ? `${activeColor}18` : 'rgba(255,255,255,.04)',
               color: isActive ? activeColor : '#7A7875',
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5,
             }}>
-              {a === 'buy' ? '📥 Buy' : a === 'sell' ? '📤 Sell' : '🏦 Withdraw'}
+              {a === 'buy' ? <><IcoArrowDown size={11} /> Buy</> : a === 'sell' ? <><IcoArrowUp size={11} /> Sell</> : <><IcoBriefcase size={11} /> Withdraw</>}
             </button>
           );
         })}
@@ -284,7 +287,7 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
                   color: '#EAE2CC', fontSize: 10, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s',
                 }}>
                   <div>{opt.label}</div>
-                  <div style={{ color: '#F5C842', marginTop: 2 }}>+{fmtBalance(String(Math.round(c.net)))} ᚙ</div>
+                  <div style={{ color: '#F5C842', marginTop: 2 }}>+{fmtBalance(String(Math.round(c.net)))}</div>
                 </button>
               );
             })}
@@ -304,7 +307,7 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
                 setProcessing(true);
                 try {
                   const r = await tonApi.buy(parseFloat(amount));
-                  showToast(`✅ Credited ${fmtBalance(String(r.coinsReceived))} ᚙ`);
+                  showToast(`Credited ${fmtBalance(String(r.coinsReceived))}`);
                   setAmount('');
                   onUserRefresh();
                 } catch (e: unknown) { showToast((e instanceof Error ? e.message : "Error") || 'Error'); }
@@ -318,8 +321,8 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
           {amount && (
             <div style={{ marginTop: 10, fontSize: 11, color: '#7A7875', lineHeight: 1.8 }}>
               {(() => { const c = calcCoins(amount, true); return <>
-                <div>You receive: <b style={{ color: '#F5C842' }}>{fmtBalance(String(Math.round(c.net)))} ᚙ</b></div>
-                <div>Fee {FEE_PERCENT}%: {fmtBalance(String(Math.round(c.fee)))} ᚙ</div>
+                <div>You receive: <b style={{ color: '#F5C842' }}>{fmtBalance(String(Math.round(c.net)))}</b></div>
+                <div>Fee {FEE_PERCENT}%: {fmtBalance(String(Math.round(c.fee)))}</div>
               </>; })()}
             </div>
           )}
@@ -333,7 +336,7 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
           <div style={{ display: 'flex', gap: 8 }}>
             <input
               type="number"
-              placeholder="Amount ᚙ"
+              placeholder="Amount"
               value={amount}
               onChange={e => setAmount(e.target.value)}
               style={{ ...S.input, flex: 1 }}
@@ -341,11 +344,11 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
             <button
               disabled={processing || !amount}
               onClick={async () => {
-                if (!amount || BigInt(amount.replace(/\D/g,'') || '0') < 1_000_000n) { showToast('Minimum 1,000,000 ᚙ'); return; }
+                if (!amount || BigInt(amount.replace(/\D/g,'') || '0') < 1_000_000n) { showToast('Minimum 1,000,000'); return; }
                 setProcessing(true);
                 try {
                   const r = await tonApi.sell(amount.replace(/\D/g,''));
-                  showToast(`✅ Order created: ${r.tonAmount.toFixed(4)} TON`);
+                  showToast(`Order created: ${r.tonAmount.toFixed(4)} TON`);
                   setAmount('');
                   onUserRefresh();
                 } catch (e: unknown) { showToast((e instanceof Error ? e.message : "Error") || 'Error'); }
@@ -375,7 +378,7 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
           <div style={{ display: 'flex', gap: 8 }}>
             <input
               type="number"
-              placeholder="Amount ᚙ"
+              placeholder="Amount"
               value={amount}
               onChange={e => setAmount(e.target.value)}
               style={{ ...S.input, flex: 1 }}
@@ -383,11 +386,11 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
             <button
               disabled={processing || !amount}
               onClick={async () => {
-                if (!amount || BigInt(amount.replace(/\D/g,'') || '0') < 1_000_000n) { showToast('Minimum 1,000,000 ᚙ'); return; }
+                if (!amount || BigInt(amount.replace(/\D/g,'') || '0') < 1_000_000n) { showToast('Minimum 1,000,000'); return; }
                 setProcessing(true);
                 try {
                   const r = await tonApi.withdraw(amount.replace(/\D/g,''));
-                  showToast(`✅ Order created: ${(r as Record<string,unknown> & { netTon?: number }).netTon?.toFixed(4)} TON`);
+                  showToast(`Order created: ${(r as Record<string,unknown> & { netTon?: number }).netTon?.toFixed(4)} TON`);
                   setAmount('');
                   onUserRefresh();
                 } catch (e: unknown) { showToast((e instanceof Error ? e.message : "Error") || 'Error'); }
@@ -427,14 +430,16 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
               <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '.5px solid rgba(154,148,144,.12)' }}>
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 600, color: '#EAE2CC' }}>
-                    {type === 'TON_DEPOSIT' ? '📥 Deposit' : type === 'WITHDRAWAL' ? '📤 Withdrawal' : '🔒 Verification'}
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                      {type === 'TON_DEPOSIT' ? <><IcoArrowDown size={11} /> Deposit</> : type === 'WITHDRAWAL' ? <><IcoArrowUp size={11} /> Withdrawal</> : <><IcoLock size={11} /> Verification</>}
+                    </span>
                   </div>
                   <div style={{ fontSize: 10, color: '#7A7875' }}>
                     {date.toLocaleDateString('en-US')}
                   </div>
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: isIn ? '#3DBA7A' : '#FF4D6A', fontFamily: 'JetBrains Mono, monospace' }}>
-                  {isIn ? '+' : '-'}{fmtBalance(amount)} ᚙ
+                <div style={{ fontSize: 13, fontWeight: 700, color: isIn ? '#3DBA7A' : '#FF5B5B', fontFamily: 'JetBrains Mono, monospace' }}>
+                  {isIn ? '+' : '-'}{fmtBalance(amount)}
                 </div>
               </div>
             );
@@ -460,9 +465,9 @@ export const ShopPage: React.FC = () => {
   const [toast, setToast] = useState<string | null>(null);
   const [showTon, setShowTon] = useState(false);
   const shopSlides = [
-    { icon: '🎭', title: t?.shop?.title ?? 'Магазин ChessCoin', desc: 'Покупай аватары, рамки, доски и темы за монеты ᚙ. Подключи TON кошелек для вывода или покупки за TON/USDT.' },
-    { icon: '✨', title: 'Как использовать предметы', desc: 'Купи предмет, затем нажми "Применить". Он мгновенно появится в твоем профиле и будет виден для других игроков.' },
-    { icon: '💎', title: 'TON Wallet', desc: 'Подключи TON кошелек чтобы выводить заработанные монеты. Курс конвертации обновляется автоматически.' },
+    { icon: <IcoShop size={32} color="#F5C842" />, title: t?.shop?.title ?? 'Магазин ChessCoin', desc: 'Покупай аватары, рамки, доски и темы за монеты. Подключи TON кошелек для вывода или покупки за TON/USDT.' },
+    { icon: <IcoBolt size={32} color="#F5C842" />, title: 'Как использовать предметы', desc: 'Купи предмет, затем нажми "Применить". Он мгновенно появится в твоем профиле и будет виден для других игроков.' },
+    { icon: <IcoTon size={32} color="#0098EA" />, title: 'TON Wallet', desc: 'Подключи TON кошелек чтобы выводить заработанные монеты. Курс конвертации обновляется автоматически.' },
   ];
   const shopInfo = useInfoPopup('shop', shopSlides);
   const [confirmPurchase, ConfirmPurchaseDialog] = useConfirm();
@@ -499,7 +504,7 @@ export const ShopPage: React.FC = () => {
   }, [tab, visualSubType]);
 
   const handleThemePurchase = async (item: ShopItem) => {
-    if (!await confirmPurchase({ title: `Buy "${item.name}"?`, message: `Price: ${fmtBalance(item.priceCoins)} ᚙ`, okLabel: 'Buy' })) return;
+    if (!await confirmPurchase({ title: `Buy "${item.name}"?`, message: `Price: ${fmtBalance(item.priceCoins)}`, okLabel: 'Buy' })) return;
     setActionId(item.id);
     try {
       const res = await shopApi.purchase(item.id);
@@ -508,7 +513,7 @@ export const ShopPage: React.FC = () => {
       const key = THEME_NAME_TO_KEY[item.name] ?? 'default';
       setActiveTheme(key);
       profileApi.saveTheme(key).catch(() => {});
-      showToast(`✅ Theme "${item.name}" purchased and applied!`);
+      showToast(`Theme "${item.name}" purchased and applied!`);
     } catch (e: unknown) {
       showToast((e instanceof Error ? e.message : "Error"));
     } finally {
@@ -526,7 +531,7 @@ export const ShopPage: React.FC = () => {
   useEffect(() => { loadItems(); }, [loadItems]);
 
   const handlePurchase = async (item: ShopItem) => {
-    if (!await confirmPurchase({ title: `Buy "${item.name}"?`, message: `Price: ${fmtBalance(item.priceCoins)} ᚙ`, okLabel: 'Buy' })) return;
+    if (!await confirmPurchase({ title: `Buy "${item.name}"?`, message: `Price: ${fmtBalance(item.priceCoins)}`, okLabel: 'Buy' })) return;
     setActionId(item.id);
     try {
       const res = await shopApi.purchase(item.id);
@@ -606,7 +611,7 @@ export const ShopPage: React.FC = () => {
         >
           <div style={{ width: '100%', maxWidth: 480, background: 'linear-gradient(160deg,#12151E,#0E111A)', borderRadius: '24px 24px 0 0', border: '1px solid rgba(0,152,234,.22)', borderBottom: 'none', paddingBottom: 'max(20px, env(safe-area-inset-bottom))' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 18px 12px' }}>
-              <div style={{ fontSize: 17, fontWeight: 800, color: '#0098EA' }}>💎 TON Wallet</div>
+              <div style={{ fontSize: 17, fontWeight: 800, color: '#0098EA', display: 'inline-flex', alignItems: 'center', gap: 6 }}><IcoTon size={17} /> TON Wallet</div>
               <button onClick={() => setShowTon(false)} style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,.07)', border: '.5px solid rgba(154,148,144,.2)', color: '#7A7875', fontSize: 15, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all .15s' }}>✕</button>
             </div>
             <TonTab user={user} showToast={showToast} onUserRefresh={refreshUser} />
@@ -619,7 +624,7 @@ export const ShopPage: React.FC = () => {
         <div style={{ margin: '4px 18px 10px', padding: '11px 16px', ...S.card, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ ...S.sectionLabel }}>BALANCE</span>
           <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 14, fontWeight: 700, color: '#F5C842' }}>
-            {fmtBalance(user.balance)} ᚙ
+            {fmtBalance(user.balance)}
           </span>
         </div>
       )}
@@ -638,7 +643,7 @@ export const ShopPage: React.FC = () => {
             transition: 'all .15s',
           }}
         >
-          <span style={{ fontSize: 24 }}>💎</span>
+          <span style={{ color: '#5BC8F5', display: 'flex' }}><IcoTon size={24} /></span>
           <div style={{ textAlign: 'left', flex: 1 }}>
             <div style={{ fontSize: 14, fontWeight: 800, color: '#5BC8F5' }}>{t.shop.tonTab.connectWallet.replace('💎 ', '')}</div>
             <div style={{ fontSize: 11, color: 'rgba(91,200,245,.7)', marginTop: 1 }}>{t.shop.tonTab.benefits[0].text}</div>
@@ -678,7 +683,7 @@ export const ShopPage: React.FC = () => {
       {/* Effects tab header */}
       {tab === 'effects' && (
         <div style={{ margin: '0 18px 10px', padding: '12px 14px', ...S.card, background: 'linear-gradient(135deg,rgba(155,133,255,.1),rgba(100,80,220,.06))', border: '.5px solid rgba(155,133,255,.22)' }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#EAE2CC', marginBottom: 3 }}>✨ Move Animations</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#EAE2CC', marginBottom: 3, display: 'inline-flex', alignItems: 'center', gap: 5 }}><IcoBolt size={13} color="#9B85FF" /> Move Animations</div>
           <div style={{ fontSize: 11, color: '#7A7875' }}>Animate your pieces · Trails · Effects</div>
         </div>
       )}

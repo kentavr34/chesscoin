@@ -61,6 +61,23 @@ export const useSocket = () => {
       });
     }
 
+    // Watch deep-link: открыть партию как зритель по короткому коду.
+    // Работает и для завершённых сессий (на GamePage откроется PGN-replay).
+    const pendingWatch = (window as any).__pendingWatchCode as string | undefined;
+    if (pendingWatch) {
+      delete (window as any).__pendingWatchCode;
+      socket.emit('battles:by-code', { code: pendingWatch }, (res: any) => {
+        if (res?.ok && res.session?.id) {
+          upsertSession(res.session);
+          navigate(`/game/${res.session.id}?spectate=1`);
+        } else {
+          window.dispatchEvent(new CustomEvent('chesscoin:toast', {
+            detail: { text: 'Партия не найдена', type: 'error' },
+          }));
+        }
+      });
+    }
+
     socket.emit('battles:subscribe');
 
     // U2: При переподключении — обновляем список сессий
@@ -178,8 +195,8 @@ export const useSocket = () => {
           const coins = Number(BigInt(data.amountCoins ?? '0')).toLocaleString();
           const ton   = data.totalTon?.toFixed(4) ?? '0';
           const msg   = role === 'seller'
-            ? `💱 Order executed! Sold ${coins} ᚙ for ${ton} TON`
-            : `🛒 Bought ${coins} ᚙ for ${ton} TON — credited to balance`;
+            ? `💱 Order executed! Sold ${coins} for ${ton} TON`
+            : `🛒 Bought ${coins} for ${ton} TON — credited to balance`;
           showActionToast(msg, '💱 Exchange', () => navigate('/shop'));
           try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch {}
         }

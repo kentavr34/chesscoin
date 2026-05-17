@@ -1,4 +1,4 @@
-/**
+﻿/**
  * LessonPage — страница решения шахматной задачи
  * Маршрут: /lesson/:puzzleId?difficulty=easy|medium|hard
  * Также используется для Задачи дня: /lesson/daily
@@ -7,7 +7,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
-import { puzzlesApi, type PuzzleItem } from '@/api';
+import { puzzlesApi, tasksApi, type PuzzleItem } from '@/api';
 import { fmtBalance } from '@/utils/format';
 import { haptic } from '@/lib/haptic';
 import { useUserStore } from '@/store/useUserStore';
@@ -175,7 +175,7 @@ export const LessonPage: React.FC = () => {
       const actualUci = move.from + move.to + (move.promotion ?? '');
 
       if (from === expectedFrom && to === expectedTo) {
-        // ✅ Правильный ход
+        // вњ… Правильный ход
         haptic.impact('medium');
         setChess(tempChess);
         setFen(tempChess.fen());
@@ -200,7 +200,7 @@ export const LessonPage: React.FC = () => {
           }, 700);
         }
       } else {
-        // ❌ Неверный ход
+        // вќЊ Неверный ход
         haptic.impact('heavy');
         setWrongSquare(to);
         setPhase('wrong');
@@ -245,6 +245,17 @@ export const LessonPage: React.FC = () => {
         setPhase('solved');
         setShowFanfare(true);
         haptic.win?.() ?? haptic.impact('heavy');
+
+        // B.6 MASTER_PLAN: если решали урок из лесенки — поднимаем уровень.
+        // Backend сам валидирует `level === current`, чужой level вернёт ошибку.
+        const lessonParam = searchParams.get('lesson');
+        if (lessonParam) {
+          const lvl = Number(lessonParam);
+          if (Number.isFinite(lvl) && lvl > 0) {
+            tasksApi.completeLesson(lvl).catch(() => {});
+          }
+        }
+
         const updated = await authApi.me();
         setUser(updated);
       }
@@ -254,15 +265,15 @@ export const LessonPage: React.FC = () => {
     }
   };
 
-  const diffLabel: Record<string, string> = { easy: '🟢 Лёгкая', medium: '🟡 Средняя', hard: '🔴 Сложная' };
+  const diffLabel: Record<string, string> = { easy: ' Лёгкая', medium: ' Средняя', hard: 'ґ Сложная' };
   const getDiff = (rating: number) =>
     rating < 1200 ? 'easy' : rating < 1700 ? 'medium' : 'hard';
 
   if (phase === 'loading') {
     return (
-      <div style={{ position: 'fixed', inset: 0, background: 'var(--bg, #0B0D11)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16 }}>
+      <div style={{ position: 'fixed', inset: 0, background: '#0D0D12', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16 }}>
         <div style={{ width: 40, height: 40, border: '3px solid rgba(123,97,255,0.3)', borderTopColor: '#7B61FF', borderRadius: '50%', animation: 'spin .7s linear infinite' }} />
-        <div style={{ color: 'var(--text-muted, #4A5270)', fontSize: 13 }}>Загружаем задачу...</div>
+        <div style={{ color: '#5A5248', fontSize: 13 }}>Загружаем задачу...</div>
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
     );
@@ -270,8 +281,8 @@ export const LessonPage: React.FC = () => {
 
   if (!puzzle) {
     return (
-      <div style={{ position: 'fixed', inset: 0, background: 'var(--bg, #0B0D11)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16, padding: 24 }}>
-        <div style={{ fontSize: 13, color: 'var(--text-secondary, #8B92A8)', textAlign: 'center' }}>Задача не найдена</div>
+      <div style={{ position: 'fixed', inset: 0, background: '#0D0D12', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16, padding: 24 }}>
+        <div style={{ fontSize: 13, color: '#9A9490', textAlign: 'center' }}>Задача не найдена</div>
         <button onClick={() => navigate('/tasks')} style={goldBtn}>← Назад</button>
       </div>
     );
@@ -281,17 +292,17 @@ export const LessonPage: React.FC = () => {
   const boardSize = Math.min(window.innerWidth - 32, 380);
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'var(--bg, #0B0D11)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div style={{ position: 'fixed', inset: 0, background: '#0D0D12', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
       {/* Топбар */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px 10px', paddingTop: 'max(14px, env(safe-area-inset-top,14px))', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink: 0 }}>
         <button onClick={() => navigate(-1)} style={backBtn}>←</button>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 13, fontWeight: 800, color: 'var(--text-primary, #F0F2F8)' }}>
-            {puzzle.isDaily ? `📅 ${t.lesson.daily}` : `🧩 ${t.lesson.title}`}
+          <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 13, fontWeight: 800, color: '#EAE2CC' }}>
+            {puzzle.isDaily ? `${t.lesson.daily}` : `${t.lesson.title}`}
           </div>
-          <div style={{ fontSize: 10, color: 'var(--text-secondary, #8B92A8)', marginTop: 2 }}>
-            {diffLabel[diff]} · Рейтинг {puzzle.rating} · +{fmtBalance(puzzle.reward)} ᚙ
+          <div style={{ fontSize: 10, color: '#9A9490', marginTop: 2 }}>
+            {diffLabel[diff]} · Рейтинг {puzzle.rating} · +{fmtBalance(puzzle.reward)}
           </div>
         </div>
         <div style={{ width: 36 }} />
@@ -333,40 +344,39 @@ export const LessonPage: React.FC = () => {
         <div style={{ textAlign: 'center', minHeight: 52 }}>
           {phase === 'intro' && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-              <div style={{ fontSize: 13, color: 'var(--text-secondary, #8B92A8)' }}>
+              <div style={{ fontSize: 13, color: '#9A9490' }}>
                 {chess.turn() === 'w' ? t.lesson.whiteToMove : t.lesson.blackToMove}
               </div>
-              <button onClick={startPuzzle} style={goldBtn}>▶ Начать решение</button>
+              <button onClick={startPuzzle} style={goldBtn}>в–¶ Начать решение</button>
             </div>
           )}
           {phase === 'playing' && (
-            <div style={{ fontSize: 13, color: isPlayerTurn ? 'var(--accent, #F5C842)' : 'var(--text-secondary, #8B92A8)', fontWeight: isPlayerTurn ? 700 : 400 }}>
+            <div style={{ fontSize: 13, color: isPlayerTurn ? '#F0C85A' : '#9A9490', fontWeight: isPlayerTurn ? 700 : 400 }}>
               {isPlayerTurn ? t.lesson.yourTurn : t.lesson.opponentThinking}
             </div>
           )}
           {phase === 'wrong' && (
-            <div style={{ fontSize: 13, color: 'var(--red, #FF4D6A)', fontWeight: 700, animation: 'shake .3s' }}>
-              ❌ Неверно! {hint}
+            <div style={{ fontSize: 13, color: '#FF5B5B', fontWeight: 700, animation: 'shake .3s' }}>
+              вќЊ Неверно! {hint}
             </div>
           )}
           {phase === 'correct' && (
-            <div style={{ fontSize: 13, color: 'var(--green, #00D68F)', fontWeight: 700 }}>
-              ✅ Правильно! Проверяем...
+            <div style={{ fontSize: 13, color: '#3DBA7A', fontWeight: 700 }}>
+              вњ… Правильно! Проверяем...
             </div>
           )}
           {phase === 'solved' && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-              <div style={{ fontSize: 32 }}>🏆</div>
-              <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 18, fontWeight: 800, color: 'var(--accent, #F5C842)' }}>
+              <div style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 18, fontWeight: 800, color: '#F0C85A' }}>
                 {t.lesson.solved}
               </div>
               {BigInt(reward || '0') > 0n && (
-                <div style={{ fontSize: 15, color: 'var(--green, #00D68F)', fontWeight: 700 }}>
+                <div style={{ fontSize: 15, color: '#3DBA7A', fontWeight: 700 }}>
                   {t.lesson.reward(fmtBalance(reward))}
                 </div>
               )}
               {puzzle.completed && BigInt(reward || '0') === 0n && (
-                <div style={{ fontSize: 12, color: 'var(--text-secondary, #8B92A8)' }}>Уже решал — повтор без награды</div>
+                <div style={{ fontSize: 12, color: '#9A9490' }}>Уже решал — повтор без награды</div>
               )}
               <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
                 <button onClick={() => navigate('/tasks')} style={ghostBtn}>← К заданиям</button>
@@ -377,7 +387,7 @@ export const LessonPage: React.FC = () => {
                   }}
                   style={goldBtn}
                 >
-                  Следующая ▶
+                  Следующая в–¶
                 </button>
               </div>
             </div>
@@ -407,19 +417,19 @@ export const LessonPage: React.FC = () => {
 
 // Styles
 const goldBtn: React.CSSProperties = {
-  padding: '11px 22px', background: 'var(--accent, #F5C842)', borderRadius: 14,
-  border: 'none', color: 'var(--bg, #0B0D11)', fontSize: 13, fontWeight: 700,
+  padding: '11px 22px', background: '#F0C85A', borderRadius: 14,
+  border: 'none', color: '#0D0D12', fontSize: 13, fontWeight: 700,
   cursor: 'pointer', fontFamily: 'inherit',
 };
 const ghostBtn: React.CSSProperties = {
   padding: '11px 18px', background: 'transparent',
   border: '1px solid rgba(255,255,255,0.15)',
-  borderRadius: 14, color: 'var(--text-secondary, #8B92A8)', fontSize: 13, fontWeight: 600,
+  borderRadius: 14, color: '#9A9490', fontSize: 13, fontWeight: 600,
   cursor: 'pointer', fontFamily: 'inherit',
 };
 const backBtn: React.CSSProperties = {
   width: 36, height: 36, borderRadius: 11,
-  background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.13)',
+  background: 'linear-gradient(135deg,#141018,#0F0E18)', border: '1px solid rgba(255,255,255,0.13)',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
-  fontSize: 18, cursor: 'pointer', color: 'var(--text-secondary, #8B92A8)', fontFamily: 'inherit',
+  fontSize: 18, cursor: 'pointer', color: '#9A9490', fontFamily: 'inherit',
 };

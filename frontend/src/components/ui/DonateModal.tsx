@@ -29,26 +29,20 @@ export const DonateModal: React.FC<{
         position: 'fixed', inset: 0, zIndex: 300,
         background: 'rgba(4,3,8,.82)',
         backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
-        display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-        paddingBottom: 'calc(24px + env(safe-area-inset-bottom, 0px))',
-        paddingTop: 16,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '16px',
       }}
     >
       <div style={{
-        width: '100%', maxWidth: 420,
+        width: '100%', maxWidth: 380,
         background: 'linear-gradient(170deg,#100C18,#0A080E)',
-        border: '.5px solid rgba(212,168,67,.2)',
-        borderRadius: '24px 24px 0 0',
-        padding: '0 0 14px',
-        boxShadow: '0 -16px 48px rgba(0,0,0,.6), 0 -1px 0 rgba(212,168,67,.1)',
+        border: '.5px solid rgba(212,168,67,.25)',
+        borderRadius: 20,
+        padding: '4px 0 14px',
+        boxShadow: '0 24px 64px rgba(0,0,0,.7), 0 0 0 1px rgba(212,168,67,.08)',
       }}>
-        {/* Drag handle */}
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 0 2px' }}>
-          <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(212,168,67,.2)' }} />
-        </div>
-
         {/* Заголовок */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 16px 10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 10px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <CoinIcon size={22} />
             <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '.95rem', fontWeight: 900, color: '#F0E8CC' }}>
@@ -110,9 +104,9 @@ export const DonateModal: React.FC<{
 
           {/* Подсказка куда уйдут деньги */}
           <div style={{ fontSize: '.6rem', color: '#5A5248', marginTop: 10, lineHeight: 1.4 }}>
-            🏆 90% от всей кассы получит победитель партии. 10% — комиссия платформы.
+            90% от всей кассы получит победитель партии. 10% — комиссия платформы.
             {currentPool && BigInt(currentPool) > 0n && (
-              <> Текущая касса: <span style={{ color: '#D4A843', fontWeight: 700 }}>{fmtBalance(currentPool)} ᚙ</span></>
+              <> Текущая касса: <span style={{ color: '#D4A843', fontWeight: 700 }}>{fmtBalance(currentPool)}</span></>
             )}
           </div>
         </div>
@@ -133,7 +127,7 @@ export const DonateModal: React.FC<{
             }}
           >
             <CoinIcon size={18} />
-            Задонатить {fmtBalance(amount)} ᚙ
+            Задонатить {fmtBalance(amount)}
           </button>
           {!canDonate && (
             <div style={{ fontSize: '.62rem', color: '#7A5248', textAlign: 'center', marginTop: 6 }}>

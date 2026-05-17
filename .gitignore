@@ -1,4 +1,5 @@
 # ─── Секреты и конфиги (НИКОГДА не коммитить) ────────────────
+pgbouncer-userlist.txt
 # Локальные настройки Claude Code / Cursor (могут содержать IP, SSH, токены)
 .claude/
 
@@ -51,6 +52,7 @@ docker-compose.override.yml
 coverage/
 .nyc_output/
 .aider*
+*.mojibake-bak
 
 # ─── Runtime data ────────────────────────────────────────────
 bot_inbox/

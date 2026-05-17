@@ -4,8 +4,12 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // DIRECT_URL — обход pgbouncer для миграций (advisory locks работают только
+  // на session-pooling; pgbouncer transaction-mode роняет prisma migrate deploy
+  // на таймауте pg_advisory_lock).
+  directUrl = env("DIRECT_URL")
 }
 
 // ─────────────────────────────────────────
@@ -477,13 +481,29 @@ model CountryMember {
   userId    String @unique  // один игрок — одна страна
   user      User   @relation(fields: [userId], references: [id])
 
-  warWins   Int @default(0)  // победы в войнах (определяет Главнокомандующего)
+  // B.3 MASTER_PLAN: главком должен одобрять / отклонять вступление.
+  // PENDING — заявка ждёт решения главкома, взнос НЕ списан.
+  // APPROVED — игрок в стране, взнос в казне, может воевать.
+  status    CountryMemberStatus @default(APPROVED)
+
+  warWins   Int @default(0)  // победы в войнах за всё время
   warLosses Int @default(0)
+
+  // Вклад в казну страны: взнос за вступление (10 000) + добровольные донаты.
+  // Влияет на долю в распределении трофеев войны.
+  contribution BigInt @default(0)
 
   joinedAt  DateTime @default(now())
 
   @@index([countryId, warWins])
+  @@index([countryId, contribution])
+  @@index([countryId, status])
   @@map("country_members")
+}
+
+enum CountryMemberStatus {
+  PENDING
+  APPROVED
 }
 
 model CountryWar {
@@ -898,6 +918,8 @@ enum TransactionType {
   REFUND             // TAIL-1: возврат ставки при отмене зависшего батла
   CLAN_WAR_WIN       // выигрыш в клановой войне
   COUNTRY_WAR_WIN    // выигрыш в войне между странами
+  COUNTRY_ENTRY      // взнос за вступление в страну (10 000)
+  COUNTRY_DONATION   // донат в казну страны
   TOURNAMENT_WIN     // выигрыш в турнире
   TON_DEPOSIT        // пополнение через TON
   WALLET_UNLOCK      // разовый платёж за подключение кошелька

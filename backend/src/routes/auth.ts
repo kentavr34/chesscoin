@@ -138,7 +138,7 @@ router.get("/me", authMiddleware, async (req: Request, res: Response) => {
         },
         countryMember: {
           include: {
-            country: { select: { id: true, flag: true, nameRu: true, nameEn: true } },
+            country: { select: { id: true, code: true, flag: true, nameRu: true, nameEn: true } },
           },
         },
       },

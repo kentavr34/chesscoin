@@ -10,6 +10,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { sound } from '@/lib/sound';
+import { IcoCrown, IcoBolt } from '@/components/icons/UiIcons';
 
 export type GameEvent = 'checkmate' | 'check' | 'capture' | 'promotion' | null;
 
@@ -80,15 +81,20 @@ export const EventEffects: React.FC<EventEffectsProps> = ({
       ))}
 
       {/* Победная надпись при мате */}
-      {event === 'checkmate' && (
-        <div style={mateBannerContainer}>
-          <div style={mateBanner}>
-            {winAnimStyle === 'lightning' ? '⚡' : winAnimStyle === 'explosion' ? '💥' : '👑'}
-            <span style={mateText}>CHECKMATE!</span>
-            {winAnimStyle === 'lightning' ? '⚡' : winAnimStyle === 'explosion' ? '💥' : '👑'}
+      {event === 'checkmate' && (() => {
+        const Side: React.FC = () =>
+          winAnimStyle === 'lightning' ? <IcoBolt size={24} color="#F5C842" />
+            : <IcoCrown size={24} color="#F5C842" />;
+        return (
+          <div style={mateBannerContainer}>
+            <div style={mateBanner}>
+              <Side />
+              <span style={mateText}>CHECKMATE!</span>
+              <Side />
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 };

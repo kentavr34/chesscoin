@@ -3,6 +3,8 @@ import { fmtBalance } from '@/utils/format';
 import { haptic } from '@/lib/haptic';
 import { sound } from '@/lib/sound';
 import { useT } from '@/i18n/useT';
+import { IcoTrophy, IcoSwords } from '@/components/icons/TournamentIcons';
+import { IcoHandshake, IcoHeartBroken, IcoSave, IcoCheck2 } from '@/components/icons/UiIcons';
 
 type ResultType = 'win' | 'lose' | 'draw';
 
@@ -19,10 +21,17 @@ interface GameResultModalProps {
   isBattle?: boolean;
 }
 
-const RESULT_META = {
-  win:  { emoji: '🏆', titleColor: 'var(--color-accent, #F5C842)', glow: 'var(--result-win-glow, rgba(245,200,66,0.25))', bg: 'var(--result-win-bg, linear-gradient(160deg,#1a1c0f 0%,#0B0D11 60%))', border: 'var(--result-win-border, rgba(245,200,66,0.3))' },
-  lose: { emoji: '💔', titleColor: 'var(--color-red, #FF4D6A)', glow: 'var(--result-lose-glow, rgba(255,77,106,0.2))',  bg: 'var(--result-lose-bg, linear-gradient(160deg,#1a0b0d 0%,#0B0D11 60%))', border: 'var(--result-lose-border, rgba(255,77,106,0.25))' },
-  draw: { emoji: '🤝', titleColor: 'var(--color-text-secondary, #8B92A8)', glow: 'var(--result-draw-glow, rgba(139,146,168,0.15))', bg: 'var(--result-draw-bg, linear-gradient(160deg,#12141c 0%,#0B0D11 60%))', border: 'var(--result-draw-border, rgba(255,255,255,0.12))' },
+const RESULT_META: Record<ResultType, {
+  Icon: React.FC<{ size?: number; color?: string }>;
+  iconColor: string;
+  titleColor: string;
+  glow: string;
+  bg: string;
+  border: string;
+}> = {
+  win:  { Icon: IcoTrophy,      iconColor: '#F5C842', titleColor: 'var(--color-accent, #F5C842)', glow: 'var(--result-win-glow, rgba(245,200,66,0.25))', bg: 'var(--result-win-bg, linear-gradient(160deg,#1a1c0f 0%,#0B0D11 60%))', border: 'var(--result-win-border, rgba(245,200,66,0.3))' },
+  lose: { Icon: IcoHeartBroken, iconColor: '#FF4D6A', titleColor: 'var(--color-red, #FF4D6A)', glow: 'var(--result-lose-glow, rgba(255,77,106,0.2))',  bg: 'var(--result-lose-bg, linear-gradient(160deg,#1a0b0d 0%,#0B0D11 60%))', border: 'var(--result-lose-border, rgba(255,77,106,0.25))' },
+  draw: { Icon: IcoHandshake,   iconColor: '#8B92A8', titleColor: 'var(--color-text-secondary, #8B92A8)', glow: 'var(--result-draw-glow, rgba(139,146,168,0.15))', bg: 'var(--result-draw-bg, linear-gradient(160deg,#12141c 0%,#0B0D11 60%))', border: 'var(--result-draw-border, rgba(255,255,255,0.12))' },
 };
 
 export const GameResultModal: React.FC<GameResultModalProps> = ({
@@ -110,9 +119,9 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
           }}
         >✕</button>
 
-        {/* Эмодзи */}
-        <div style={{ textAlign: 'center', fontSize: 'var(--result-emoji-size)', lineHeight: 1, marginBottom: 'var(--gap-md)' }}>
-          {cfg.emoji}
+        {/* Иконка результата */}
+        <div style={{ textAlign: 'center', lineHeight: 1, marginBottom: 'var(--gap-md)', display: 'flex', justifyContent: 'center' }}>
+          <cfg.Icon size={56} color={cfg.iconColor} />
         </div>
 
         {/* Заголовок */}
@@ -144,7 +153,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
                   fontFamily: "'JetBrains Mono',monospace",
                   fontSize: 'var(--result-value-size)', fontWeight: 'var(--font-weight-bold)', color: 'var(--color-text-primary, #F0F2F8)',
                 }}>
-                  +{fmtBalance(earnedBig.toString())} ᚙ
+                  +{fmtBalance(earnedBig.toString())}
                 </span>
               </div>
             )}
@@ -157,7 +166,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
                   fontFamily: "'JetBrains Mono',monospace",
                   fontSize: 'var(--result-value-size)', fontWeight: 'var(--font-weight-bold)', color: 'var(--color-text-primary, #F0F2F8)',
                 }}>
-                  +{fmtBalance(pieceBig.toString())} ᚙ
+                  +{fmtBalance(pieceBig.toString())}
                 </span>
               </div>
             )}
@@ -170,7 +179,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
                   fontFamily: "'JetBrains Mono',monospace",
                   fontSize: 'var(--result-value-size)', fontWeight: 'var(--font-weight-bold)', color: 'var(--color-text-primary, #F0F2F8)',
                 }}>
-                  +{fmtBalance(earnedBig.toString())} ᚙ
+                  +{fmtBalance(earnedBig.toString())}
                 </span>
               </div>
             )}
@@ -183,7 +192,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
                   fontFamily: "'JetBrains Mono',monospace",
                   fontSize: 14, fontWeight: 700, color: 'var(--color-red, #FF4D6A)',
                 }}>
-                  −{fmtBalance(commBig.toString())} ᚙ
+                  −{fmtBalance(commBig.toString())}
                 </span>
               </div>
             )}
@@ -202,7 +211,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
                 color: 'var(--color-accent, #F5C842)',
                 textShadow: 'var(--result-total-shadow, 0 0 12px rgba(245,200,66,0.5))',
               }}>
-                +{fmtBalance(netBig.toString())} ᚙ
+                +{fmtBalance(netBig.toString())}
               </span>
             </div>
           </div>
@@ -223,7 +232,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
           <button
             onClick={() => {
               const total = (earnedBig + pieceBig).toString();
-              const shareText = `♟ I beat J.A.R.V.I.S ${botLevelName} in ChessCoin!\nWon ${fmtBalance(total)} ᚙ\nTry it too:`;
+              const shareText = `♟ I beat J.A.R.V.I.S ${botLevelName} in ChessCoin!\nWon ${fmtBalance(total)}\nTry it too:`;
               const botUrl = `https://t.me/chessgamecoin_bot?start=ref_${userTelegramId}`;
               try {
                 window.Telegram?.WebApp?.openTelegramLink?.(
@@ -256,9 +265,10 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
               fontSize: 'var(--result-button-size)', fontWeight: 700,
               cursor: 'pointer', fontFamily: 'inherit',
               transition: 'background .15s',
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             }}
           >
-            ⚔️ Rematch
+            <IcoSwords size={16} /> Rematch
           </button>
         )}
 
@@ -282,9 +292,12 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
               fontSize: 'var(--result-button-size)', fontWeight: 600,
               cursor: gameSaved ? 'default' : 'pointer',
               fontFamily: 'inherit',
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             }}
           >
-            {gameSaved ? '✓ Game saved' : '💾 Save game'}
+            {gameSaved
+              ? <><IcoCheck2 size={14} /> Game saved</>
+              : <><IcoSave size={14} /> Save game</>}
           </button>
         )}
 

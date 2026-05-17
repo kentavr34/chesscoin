@@ -161,6 +161,11 @@ export const tasksApi = {
       `/tasks/puzzles/${puzzleId}/complete`,
       { moves }
     ),
+  // B.6 MASTER_PLAN: лесенка уроков (open-by-progress)
+  lessonsProgress: () =>
+    api.get<{ currentLevel: number; completedLevels: number[]; completedAt: string[]; nextReward: string }>('/tasks/lessons/progress'),
+  completeLesson: (level: number) =>
+    api.post<{ success: boolean; level: number; nextLevel: number; reward: string; message: string }>(`/tasks/lessons/${level}/complete`),
 };
 
 // ── SHOP ──────────────────────────────────────────────
@@ -193,14 +198,23 @@ export const tournamentsApi = {
 export const warsApi = {
   countries: (sort?: 'wins' | 'alpha') =>
     api.get<{ countries: Country[] }>(`/wars/countries${sort ? `?sort=${sort}` : ''}`),
-  country: (id: string) =>
-    api.get<{ country: Country; members: Record<string,unknown>[]; isCommander: boolean }>(`/wars/countries/${id}`),
+  country: (id: string, sort?: 'alpha' | 'auto') =>
+    api.get<{ country: Country; members: import('@/types').CountryMemberFull[]; isCommander: boolean }>(
+      `/wars/countries/${id}${sort === 'alpha' ? '?sort=alpha' : ''}`,
+    ),
   myCountry: () =>
     api.get<{ country: Country | null; membership: Record<string,unknown> | null; isCommander: boolean; activeWar: Record<string,unknown> | null }>('/wars/my-country'),
   join: (countryId: string) =>
-    api.post<{ success: boolean; membership: Record<string,unknown> }>(`/wars/countries/${countryId}/join`),
+    api.post<{ success: boolean; pending?: boolean; entryFee: string; membership: { id: string; warWins: number; warLosses: number; contribution: string; joinedAt: string; status?: 'PENDING' | 'APPROVED' } }>(`/wars/countries/${countryId}/join`),
   leave: () =>
     api.post<{ success: boolean }>('/wars/leave'),
+  // B.3 MASTER_PLAN: главком видит заявки на вступление и решает.
+  pending: () =>
+    api.get<{ pending: Array<{ id: string; joinedAt: string; user: { id: string; firstName: string; username?: string | null; avatar?: string | null; elo: number; referralCount: number } }> }>('/wars/pending'),
+  approve: (memberId: string) =>
+    api.post<{ success: boolean; approved: string }>(`/wars/pending/${memberId}/approve`),
+  reject: (memberId: string) =>
+    api.post<{ success: boolean; rejected: string }>(`/wars/pending/${memberId}/reject`),
   introSeen: () =>
     api.post<{ success: boolean }>('/wars/intro-seen'),
   active: () =>
@@ -219,12 +233,16 @@ export const warsApi = {
     api.delete<{ success: boolean }>(`/wars/games/${sessionId}/save`),
   savedGames: () =>
     api.get<{ savedGames: Record<string,unknown>[] }>('/wars/my-saved-games'),
-  donate: (countryId: string, amount: number) =>
-    api.post<{ success: boolean; treasury: string }>(`/wars/countries/${countryId}/donate`, { amount }),
+  donate: (countryId: string, amount: string | number) =>
+    api.post<{ success: boolean; treasury: string; myContribution?: string }>(
+      `/wars/countries/${countryId}/donate`, { amount: String(amount) },
+    ),
   members: (countryId: string) =>
-    api.get<{ members: Record<string,unknown>[] }>(`/wars/countries/${countryId}/members`),
-  contribute: (countryId: string, amount: number) =>
-    api.post<{ success: boolean; treasury: string }>(`/wars/countries/${countryId}/donate`, { amount }),
+    api.get<{ members: import('@/types').CountryMemberFull[] }>(`/wars/countries/${countryId}/members`),
+  contribute: (countryId: string, amount: string | number) =>
+    api.post<{ success: boolean; treasury: string; myContribution?: string }>(
+      `/wars/countries/${countryId}/donate`, { amount: String(amount) },
+    ),
 };
 
 export const puzzlesApi = {
@@ -287,7 +305,7 @@ export interface P2POrder {
   sellerName:   string;
   sellerElo:    number;
   amountCoins:  string;   // BigInt как строка
-  priceTon:     number;   // TON за 1 000 000 ᚙ
+  priceTon:     number;   // TON за 1 000 000
   totalTon:     number;
   sellerWallet: string;
   status:       'OPEN' | 'EXECUTED' | 'CANCELLED';
@@ -313,7 +331,7 @@ export const exchangeApi = {
   getPriceHistory: (hours: 24 | 168 | 720 = 24) =>
     api.get<{ currentPrice: number; change24h: number; candles: PriceCandle[]; volume24h: number }>(`/exchange/price-history?hours=${hours}`),
 
-  // Создать ордер (продажа ᚙ)
+  // Создать ордер (продажа)
   createOrder: (amountCoins: string, priceTon: number) =>
     api.post<{ order: P2POrder }>('/exchange/orders', { amountCoins, priceTon }),
 
@@ -343,7 +361,7 @@ export const exchangeApi = {
       { txHash, boc }
     ),
 
-  // Исполнить ордер (покупка ᚙ) — после TON-транзакции на фронте
+  // Исполнить ордер (покупка) — после TON-транзакции на фронте
   // E12: partialCoins — купить только часть ордера
   executeOrder: (orderId: string, txHash: string, boc?: string, partialCoins?: string) =>
     api.post<{ success: boolean; amountCoins: string; totalTon: number; feeTon: number; isPartial: boolean }>(

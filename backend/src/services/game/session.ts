@@ -237,8 +237,13 @@ export const joinBattleSession = async (userId: string, code: string) => {
     if (session.status !== SessionStatus.WAITING_FOR_OPPONENT) {
       throw new Error("SESSION_NOT_WAITING");
     }
-    if (session.sides.length > 0 && session.sides[0].playerId === userId) {
+    if (session.sides.some((s) => s.playerId === userId)) {
       throw new Error("CANNOT_JOIN_OWN_SESSION");
+    }
+    // Турнирные сессии создаются с двумя sides сразу → защита от чужого join'а.
+    // Эти игроки должны принимать вызов через game:accept_private, а не game:join.
+    if (session.sides.length >= 2) {
+      throw new Error("SESSION_FULL");
     }
 
     const bet = session.bet ?? 0n;

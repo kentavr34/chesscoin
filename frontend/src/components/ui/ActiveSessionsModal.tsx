@@ -121,8 +121,9 @@ const SessionCard: React.FC<{ s: GameSession; onGo: (id: string) => void }> = ({
   const oppAvatar = oppSide?.player?.avatar;
   const oppIsBot  = !!oppSide?.isBot;
 
-  // Тикающий таймер — конвертируем timeLeft в абсолютный timestamp при монтировании
-  const rawTimeLeft = mySide?.timeLeft ?? 0;
+  // Тикающий таймер — показываем время активной стороны (той, чей ход)
+  const activeSide  = isMyTurn ? mySide : oppSide;
+  const rawTimeLeft = activeSide?.timeLeft ?? 0;
   const [targetAt] = useState<number>(() =>
     rawTimeLeft > 0 ? Date.now() + rawTimeLeft * 1000 : 0
   );
@@ -143,11 +144,10 @@ const SessionCard: React.FC<{ s: GameSession; onGo: (id: string) => void }> = ({
       setDisplayTime(`${m}:${String(sec).padStart(2, '0')}`);
     };
     update();
-    // Тикаем только во время моего хода (мои часы идут)
-    if (!isMyTurn) return;
+    // Всегда тикаем — часы идут у активной стороны (чей ход)
     const id = setInterval(update, 1000);
     return () => clearInterval(id);
-  }, [targetAt, isMyTurn]);
+  }, [targetAt]);
 
   const fen = s.fen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 

@@ -136,7 +136,7 @@ const TxRow: React.FC<{ tx: Transaction }> = ({ tx }) => {
         flexShrink: 0,
         letterSpacing: '-.01em',
       }}>
-        {displayAmount} <span style={{ fontFamily: 'inherit', fontSize: '.85em', opacity: .85 }}>ᚙ</span>
+        {displayAmount} <span style={{ fontFamily: 'inherit', fontSize: '.85em', opacity: .85 }}></span>
       </div>
     </div>
   );
@@ -187,7 +187,7 @@ const SummaryHeader: React.FC<{ transactions: Transaction[] }> = ({ transactions
           Приход
         </div>
         <div style={{ fontSize: '.92rem', fontWeight: 900, color: '#3DBA7A', fontFamily: "'JetBrains Mono', monospace" }}>
-          +{fmtBalance(totalIn)} ᚙ
+          +{fmtBalance(totalIn)}
         </div>
       </div>
 
@@ -202,7 +202,7 @@ const SummaryHeader: React.FC<{ transactions: Transaction[] }> = ({ transactions
           Расход
         </div>
         <div style={{ fontSize: '.92rem', fontWeight: 900, color: '#CC6060', fontFamily: "'JetBrains Mono', monospace" }}>
-          −{fmtBalance(totalOut)} ᚙ
+          −{fmtBalance(totalOut)}
         </div>
       </div>
     </div>

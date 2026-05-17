@@ -1,19 +1,23 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { PageLayout, useInfoPopup, InfoPopup } from '@/components/layout/PageLayout';
 import { Avatar } from '@/components/ui/Avatar';
-import { AvatarCropModal } from '@/components/ui/AvatarCropModal';
+import { CountryFlag } from '@/components/ui/CountryFlag';
+import { CoinIcon } from '@/components/ui/CoinIcon';
+import { IcoCrown, IcoRobot, IcoUsers, IcoShop, IcoMedal, IcoArrowUp, IcoArrowDown, IcoBriefcase, IcoMoneyFly, IcoTon, IcoUnlock, IcoLock, IcoGift, IcoExchange, IcoCart, IcoPuzzle, IcoHandshake, IcoGamepad, IcoUpload, IcoGlobe, IcoSettings } from '@/components/icons/UiIcons';
+import { IcoSwords, IcoTrophy, IcoFlag } from '@/components/icons/TournamentIcons';
 import { useUserStore } from '@/store/useUserStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { useT } from '@/i18n/useT';
 import type { Lang } from '@/i18n/translations';
-import { profileApi, authApi, warsApi } from '@/api';
+import { profileApi, warsApi } from '@/api';
 import { fmtBalance, fmtDate, leagueEmoji } from '@/utils/format';
 import type { Transaction, UserPublic } from '@/types';
 import { JARVIS_LEVELS } from '@/components/ui/JarvisModal';
+import { LeagueProgressBar } from '@/components/ui/LeagueProgressBar';
 
-// Local type for Tab
-type Tab = 'info' | 'games' | 'saves' | 'ach';
+// Local type for Tab — 'games' включает сохранённые партии (слиты в 2026-05-16)
+type Tab = 'info' | 'games' | 'ach';
 
 // Game history item — flat format from GET /profile/games
 interface GameHistoryItem {
@@ -67,7 +71,7 @@ import { CircStat, StatCard } from '@/components/profile/StatComponents'; // R3
 
 export const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, setUser } = useUserStore();
+  const { user } = useUserStore();
   const { lang, setLang, soundEnabled, setSoundEnabled } = useSettingsStore();
   const t = useT();
   const location = useLocation();
@@ -75,7 +79,7 @@ export const ProfilePage: React.FC = () => {
   // Поддерживаем оба способа: /profile/:userId и navigate('/profile', {state:{userId}})
   const viewedUserId: string | undefined = params.userId ?? (location.state as Record<string,unknown>)?.userId as string | undefined;
   const isOwnProfile = !viewedUserId || viewedUserId === user?.id;
-  const profileInfo = useInfoPopup('profile', [{ icon: '🏅', title: 'Your Profile', desc: 'Your stats, badges and game history. ELO shows your level — the higher, the stronger opponents.' }, { icon: '🎖️', title: 'Military Rank', desc: 'Rank grows with referrals. Higher rank — bigger percentage from friends\' wins.' }, { icon: '💰', title: 'Leagues & Rewards', desc: 'Earn coins to climb leagues: Bronze → Silver → Gold → Diamond → Champion.' }]);
+  const profileInfo = useInfoPopup('profile', [{ icon: '', title: 'Your Profile', desc: 'Your stats, badges and game history. ELO shows your level — the higher, the stronger opponents.' }, { icon: '', title: 'Military Rank', desc: 'Rank grows with referrals. Higher rank — bigger percentage from friends\' wins.' }, { icon: '', title: 'Leagues & Rewards', desc: 'Earn coins to climb leagues: Bronze → Silver → Gold → Diamond → Champion.' }]);
 
   const [tab, setTab] = useState<Tab>('info');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -90,11 +94,7 @@ export const ProfilePage: React.FC = () => {
     blackPlayer?: import('@/types').UserPublic | null;
   } | null>(null);
   const [selectedBadge, setSelectedBadge] = useState<{ name: string; date?: string } | null>(null);
-  const [avatarLoading, setAvatarLoading] = useState(false);
-  const [cropFile, setCropFile] = useState<File | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
   const [viewedProfile, setViewedProfile] = useState<Record<string, unknown> | null>(null);
 
   useEffect(() => {
@@ -107,45 +107,7 @@ export const ProfilePage: React.FC = () => {
     setTimeout(() => setToast(null), 2500);
   };
 
-  // Открываем AvatarCropModal вместо прямой загрузки
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setCropFile(file);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
-  // После обрезки — загружаем WebP blob
-  const handleCropConfirm = async (blob: Blob) => {
-    setCropFile(null);
-    setAvatarLoading(true);
-    try {
-      const file = new File([blob], 'avatar.webp', { type: 'image/webp' });
-      await profileApi.uploadAvatar(file);
-      const updated = await authApi.me();
-      setUser(updated);
-      showToast(t.profile.avatarUpdated);
-    } catch (err: unknown) {
-      showToast((err instanceof Error ? err.message : String(err)) || t.profile.uploadError);
-    } finally {
-      setAvatarLoading(false);
-    }
-  };
-
-  const handleAvatarDelete = async () => {
-    if (!confirm(t.profile.deleteAvatar)) return;
-    setAvatarLoading(true);
-    try {
-      await profileApi.deleteAvatar();
-      const updated = await authApi.me();
-      setUser(updated);
-      showToast(t.profile.avatarDeleted);
-    } catch (err: unknown) {
-      showToast((err instanceof Error ? err.message : String(err)) || t.common.error);
-    } finally {
-      setAvatarLoading(false);
-    }
-  };
+  // 2026-05-17: upload/crop удалены — только Telegram-импорт или магазин.
 
   useEffect(() => {
     if (tab === 'info') {
@@ -159,14 +121,18 @@ export const ProfilePage: React.FC = () => {
       if (isOwnProfile) {
         profileApi.getGames().then((r) => setRecentGames((r.games ?? []) as unknown as GameHistoryItem[])).catch(() => {});
         profileApi.getTransactions().then((r) => setTransactions(r.transactions)).catch(() => {});
+        // Сохранённые — только на собственном профиле
+        warsApi.savedGames().then((r) => setSavedGames(r.savedGames as unknown as SavedGameItem[])).catch(() => {});
       } else if (viewedUserId) {
         profileApi.getUserGames(viewedUserId).then((r) => setRecentGames((r.games ?? []) as unknown as GameHistoryItem[])).catch(() => {});
       }
     }
-    if (tab === 'saves') {
-      warsApi.savedGames().then((r) => setSavedGames(r.savedGames as unknown as SavedGameItem[])).catch(() => {});
-    }
   }, [tab, isOwnProfile, viewedUserId]);
+
+  // Фильтры для вкладки «Игры» (имя героя / тип / дата)
+  const [filterName, setFilterName] = useState('');
+  const [filterType, setFilterType] = useState<'ALL' | 'BOT' | 'BATTLE' | 'WAR' | 'TOURNAMENT'>('ALL');
+  const [filterDate, setFilterDate] = useState<'ALL' | 'TODAY' | 'WEEK' | 'MONTH'>('ALL');
 
   if (!user) return null;
   if (!isOwnProfile && !viewedProfile) return null;
@@ -187,12 +153,11 @@ export const ProfilePage: React.FC = () => {
   const TABS: { id: Tab; label: string }[] = [
     { id: 'info',     label: t.profile.tabs.info },
     { id: 'games',    label: t.profile.tabs.games },
-    { id: 'saves',    label: t.profile.tabs.saves },
     { id: 'ach',      label: t.profile.tabs.achievements },
   ];
 
   const rightAction = isOwnProfile ? (
-    <button onClick={() => setShowSettings(true)} style={tbaStyle}>⚙</button>
+    <button onClick={() => setShowSettings(true)} style={tbaStyle}><IcoSettings size={16} /></button>
   ) : (
     <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#5A8AB0', letterSpacing: '.08em', padding: '3px 8px', background: 'rgba(74,158,255,.08)', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 6 }}>
       ПРОСМОТР
@@ -201,64 +166,58 @@ export const ProfilePage: React.FC = () => {
 
   return (
     <>
-    {isOwnProfile && profileInfo.show && <InfoPopup infoKey="profile" slides={[{ icon: '🏅', title: 'Your Profile', desc: 'Your stats, badges and game history. ELO shows your level — the higher, the stronger opponents.' }, { icon: '🎖️', title: 'Military Rank', desc: 'Rank grows with referrals. Higher rank — bigger percentage from friends\' wins.' }, { icon: '💰', title: 'Leagues & Rewards', desc: 'Earn coins to climb leagues: Bronze → Silver → Gold → Diamond → Champion.' }]} onClose={profileInfo.close} />}
+    {isOwnProfile && profileInfo.show && <InfoPopup infoKey="profile" slides={[{ icon: '', title: 'Your Profile', desc: 'Your stats, badges and game history. ELO shows your level — the higher, the stronger opponents.' }, { icon: '', title: 'Military Rank', desc: 'Rank grows with referrals. Higher rank — bigger percentage from friends\' wins.' }, { icon: '', title: 'Leagues & Rewards', desc: 'Earn coins to climb leagues: Bronze → Silver → Gold → Diamond → Champion.' }]} onClose={profileInfo.close} />}
     <PageLayout backTo="/" rightAction={rightAction} centered>
       {/* Toast */}
       {toast && (
-        <div style={{ position: 'fixed', top: 60, left: '50%', transform: 'translateX(-50%)', background: 'var(--bg-input, #232840)', border: '1px solid #F5C842', borderRadius: 12, padding: '10px 20px', fontSize: 13, color: 'var(--accent, #F5C842)', zIndex: 9999, fontWeight: 600, whiteSpace: 'nowrap' }}>
+        <div style={{ position: 'fixed', top: 60, left: '50%', transform: 'translateX(-50%)', background: 'rgba(255,255,255,.05)', border: '1px solid #F0C85A', borderRadius: 12, padding: '10px 20px', fontSize: 13, color: '#F0C85A', zIndex: 9999, fontWeight: 600, whiteSpace: 'nowrap' }}>
           {toast}
         </div>
       )}
-      {/* Hidden file input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        style={{ display: 'none' }}
-        onChange={handleAvatarUpload}
-      />
       {/* Header */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 18px 0' }}>
         <div style={{ position: 'relative', marginBottom: 12 }}>
           <div style={avatarRingStyle} />
+          {/* Флаг страны переехал из бейджа на аватаре в строку с именем
+             (Кенан 2026-05-17: «флаг везде после имени»). */}
 
-          {/* Аватар — кликабельный на чужом профиле */}
+          {/* Аватар — без upload/crop (Кенан 2026-05-17: только Telegram-импорт или магазин). */}
           {isOwnProfile ? (
-            <>
-              <Avatar user={user} size="xl" gold />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={avatarLoading}
-                style={{ position: 'absolute', bottom: -8, right: -8, width: 44, height: 44, borderRadius: '50%', background: 'var(--accent, #F5C842)', border: '2px solid #0B0D11', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 16, lineHeight: 1, flexShrink: 0 }}
-                title="Upload avatar"
-              >
-                {avatarLoading ? '…' : '📷'}
-              </button>
-              {user.avatarType === 'UPLOAD' && !avatarLoading && (
-                <button
-                  onClick={handleAvatarDelete}
-                  style={{ position: 'absolute', top: -8, right: -8, width: 44, height: 44, borderRadius: '50%', background: 'var(--red, #FF4D6A)', border: '2px solid #0B0D11', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 14, color: '#fff', flexShrink: 0 }}
-                  title="Delete avatar"
-                >
-                  ✕
-                </button>
-              )}
-            </>
-          ) : (
-            /* Чужой профиль — аватар кликабелен → переход в магазин на конкретный товар */
-            <div style={{ position: 'relative', cursor: 'pointer' }} onClick={() => {
+            (() => {
               const premiumAvatar = user?.equippedItems?.PREMIUM_AVATAR;
               const frame = user?.equippedItems?.AVATAR_FRAME;
-              if (premiumAvatar) {
-                navigate('/shop', { state: { tab: 'avatars', highlightItemId: premiumAvatar.id } });
-              } else if (frame) {
-                navigate('/shop', { state: { tab: 'frames', highlightItemId: frame.id } });
-              } else {
-                navigate('/shop');
-              }
-            }}>
+              const clickable = !!(premiumAvatar || frame);
+              const handle = clickable ? () => {
+                if (premiumAvatar) navigate('/shop', { state: { tab: 'avatars', highlightItemId: premiumAvatar.id } });
+                else if (frame) navigate('/shop', { state: { tab: 'frames', highlightItemId: frame.id } });
+              } : undefined;
+              return (
+                <div style={{ position: 'relative', cursor: clickable ? 'pointer' : 'default' }} onClick={handle}>
+                  <Avatar user={user} size="xl" gold />
+                  {clickable && (
+                    <div style={{ position: 'absolute', bottom: -2, right: -2, width: 22, height: 22, borderRadius: '50%', background: 'rgba(123,97,255,0.9)', border: '1.5px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title={t.profile.buyInShop}>
+                      <IcoShop size={11} />
+                    </div>
+                  )}
+                </div>
+              );
+            })()
+          ) : (
+            /* Чужой профиль: аватар кликабелен ТОЛЬКО при наличии premium-
+               предметов (Кенан 2026-05-16: «если стоит аватар по умолчанию
+               импорт с телеграм — то просто не кликабелен»). */
+            (() => {
+              const premiumAvatar = user?.equippedItems?.PREMIUM_AVATAR;
+              const frame = user?.equippedItems?.AVATAR_FRAME;
+              const clickable = !!(premiumAvatar || frame);
+              const handle = clickable ? () => {
+                if (premiumAvatar) navigate('/shop', { state: { tab: 'avatars', highlightItemId: premiumAvatar.id } });
+                else if (frame) navigate('/shop', { state: { tab: 'frames', highlightItemId: frame.id } });
+              } : undefined;
+              return (
+            <div style={{ position: 'relative', cursor: clickable ? 'pointer' : 'default' }} onClick={handle}>
               <Avatar user={user} size="xl" gold />
-              {/* Иконка магазина — видна если есть премиум-аватар или рамка */}
+              {/* конка магазина — видна если есть премиум-аватар или рамка */}
               {(user?.equippedItems?.PREMIUM_AVATAR || user?.equippedItems?.AVATAR_FRAME) && (
                 <div style={{
                   position: 'absolute', bottom: -2, right: -2,
@@ -268,7 +227,7 @@ export const ProfilePage: React.FC = () => {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 11,
                 }} title={t.profile.buyInShop}>
-                  🛍
+                  <IcoShop size={11} />
                 </div>
               )}
               {/* Подсказка с названием предмета */}
@@ -276,49 +235,61 @@ export const ProfilePage: React.FC = () => {
                 <div style={{
                   position: 'absolute', top: '105%', left: '50%', transform: 'translateX(-50%)',
                   background: 'rgba(0,0,0,0.8)', borderRadius: 6, padding: '2px 8px',
-                  fontSize: 9, color: '#F5C842', whiteSpace: 'nowrap',
+                  fontSize: 9, color: '#F0C85A', whiteSpace: 'nowrap',
                   border: '1px solid rgba(245,200,66,0.3)',
                 }}>
                   {user?.equippedItems?.PREMIUM_AVATAR?.name ?? user?.equippedItems?.AVATAR_FRAME?.name}
                 </div>
               )}
             </div>
+              );
+            })()
           )}
         </div>
         <div style={{ textAlign: 'center', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
-          {/* 2.1 Флаг страны рядом с именем */}
-          {user?.countryMember?.country?.flag && (
-            <span style={{ fontSize: 20 }}>{user?.countryMember.country.flag}</span>
-          )}
           <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#EAE2CC' }}>{user.firstName} {user.lastName ?? ''}</span>
+          {(displayUser as any)?.countryMember?.country?.code && (
+            <CountryFlag code={(displayUser as any).countryMember.country.code} size={22} />
+          )}
         </div>
         <div style={{ marginTop: 3, textAlign: 'center', fontSize: '.72rem', color: '#5A5248' }}>@{user.username ?? 'unknown'}</div>
         {/* 2.3 Кнопка "Сразиться" на чужом профиле */}
         {!isOwnProfile && (
-          <button onClick={() => navigate('/battles', { state: { challengeUserId: viewedUserId } })} style={{ marginTop: 10, padding: '10px 20px', background: 'linear-gradient(135deg,#2A1E08,#4A3810)', border: '.5px solid rgba(212,168,67,.42)', borderRadius: 12, color: '#F0C85A', fontSize: '.85rem', fontWeight: 900, cursor: 'pointer', fontFamily: 'inherit' }}>
-            ⚔️ {t.profile.challengeBtn ?? 'Challenge'}
+          <button onClick={() => navigate('/battles', { state: { challengeUserId: viewedUserId } })} style={{ marginTop: 10, padding: '10px 20px', background: 'linear-gradient(135deg,#2A1E08,#4A3810)', border: '.5px solid rgba(212,168,67,.42)', borderRadius: 12, color: '#F0C85A', fontSize: '.85rem', fontWeight: 900, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <IcoSwords size={16} /> {t.profile.challengeBtn ?? 'Challenge'}
           </button>
         )}
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8, justifyContent: 'center' }}>
-          <span style={tagGold}>{leagueEmoji[user.league]} #1</span>
-          <span style={{ display: 'inline-flex', padding: '3px 8px', background: 'rgba(74,158,255,.12)', color: '#82CFFF', borderRadius: 6, fontSize: 10, fontWeight: 700, border: '.5px solid rgba(74,158,255,.3)' }}>ELO {user.elo}</span>
-          {user?.countryMember?.isCommander && (
-            <span style={{ ...tagGr, background: 'linear-gradient(135deg, rgba(245,200,66,0.15), rgba(255,215,0,0.08))', color: '#FFD700', borderColor: 'rgba(255,215,0,0.35)', fontWeight: 800 }}>
-              👑 {t.profile.commanderBadge}
-            </span>
-          )}
-          {user?.militaryRank && (
-            <span style={{ ...tagGr, background: 'rgba(255,159,67,0.1)', color: '#FF9F43', borderColor: 'rgba(255,159,67,0.2)' }}>
-              {user?.militaryRank.emoji} {user?.militaryRank.label}
-              {(user?.referralCount ?? 0) > 0 && (
-                <span style={{ marginLeft: 4, fontSize: 10, opacity: 0.8 }}>
-                  — {(user.referralCount ?? 0).toLocaleString()} {t.profile.fighters ?? '👥'}
-                </span>
-              )}
-            </span>
-          )}
-          <span style={tagRobot}>🤖 {JARVIS_LEVELS[Math.max(0, (user?.jarvisLevel ?? 1) - 1)].name}</span>
+        {/* Достижения — 2 строки */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <span style={tagGold}>{leagueEmoji[user.league]} #1</span>
+            <span style={{ display: 'inline-flex', padding: '3px 8px', background: 'rgba(74,158,255,.12)', color: '#82CFFF', borderRadius: 6, fontSize: 10, fontWeight: 700, border: '.5px solid rgba(74,158,255,.3)' }}>ELO {user.elo}</span>
+            {user?.countryMember?.isCommander && (
+              <span style={{ ...tagGr, background: 'linear-gradient(135deg, rgba(245,200,66,0.15), rgba(255,215,0,0.08))', color: '#FFD700', borderColor: 'rgba(255,215,0,0.35)', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <IcoCrown size={11} /> {t.profile.commanderBadge}
+              </span>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
+            {user?.militaryRank && (
+              <span style={{ ...tagGr, background: 'rgba(255,159,67,0.1)', color: '#FF9F43', borderColor: 'rgba(255,159,67,0.2)' }}>
+                {user?.militaryRank.label}
+                {(user?.referralCount ?? 0) > 0 && (
+                  <span style={{ marginLeft: 4, fontSize: 10, opacity: 0.8 }}>
+                    — {(user.referralCount ?? 0).toLocaleString()}
+                  </span>
+                )}
+              </span>
+            )}
+            <span style={{ ...tagRobot, display: 'inline-flex', alignItems: 'center', gap: 4 }}><IcoRobot size={11} /> {t.jarvis.levels[Math.max(0, (user?.jarvisLevel ?? 1) - 1)]?.name ?? `Lv ${user?.jarvisLevel ?? 1}`}</span>
+          </div>
         </div>
+      </div>
+
+      {/* League progress bar — над балансом (Кенан 2026-05-17:
+         после тегов под аватаром, до карточки баланса). */}
+      <div style={{ marginTop: 12 }}>
+        <LeagueProgressBar league={user.league} balance={user.balance} />
       </div>
 
       {/* Balance — N7 */}
@@ -330,26 +301,27 @@ export const ProfilePage: React.FC = () => {
               <span style={{ fontFamily: "'Unbounded',sans-serif", fontSize: '1.4rem', fontWeight: 900, color: '#D4A843' }}>
                 {fmtBalance(user.balance)}
               </span>
-              <span style={{ fontSize: 13, color: '#D4A843', opacity: .6 }}>ᚙ</span>
+              <span style={{ fontSize: 13, color: '#D4A843', opacity: .6 }}></span>
             </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-            <div onClick={() => navigate('/transactions')} style={{ fontSize: '.65rem', color: '#4A9EFF', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
-              История <span>›</span>
-            </div>
-            <button onClick={() => navigate('/referrals')} title={t.profile.txHistory} style={{ width: 36, height: 36, padding: 0, background: 'rgba(74,158,255,.08)', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, fontSize: 16, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>👜</button>
+          {/* История транзакций — справа над рефералом (Кенан 2026-05-17) */}
+          <div
+            onClick={() => navigate('/transactions')}
+            style={{ fontSize: 12, fontWeight: 700, color: '#82CFFF', cursor: 'pointer', padding: '6px 10px', background: 'rgba(74,158,255,.08)', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, whiteSpace: 'nowrap' }}
+          >
+            {t.profile.txHistory ?? 'История'} ›
           </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           <button onClick={() => navigate('/shop')} style={{ padding: '8px 10px', background: 'rgba(74,158,255,.08)', color: '#82CFFF', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.profile.shop}</button>
-          <button onClick={() => navigate('/referrals')} style={{ padding: '8px 10px', background: 'rgba(74,158,255,.08)', color: '#82CFFF', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.profile.referrals} →</button>
+          <button onClick={() => navigate('/referrals')} style={{ padding: '8px 10px', background: 'rgba(74,158,255,.08)', color: '#82CFFF', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.profile.referrals}</button>
         </div>
       </div>
 
       {/* Чемпион месяца */}
       {user?.isMonthlyChampion && (
         <div style={{ margin: '8px 18px 0', padding: '12px 14px', background: 'linear-gradient(135deg, rgba(255,215,0,0.1), rgba(74,158,255,0.06))', border: '.5px solid rgba(255,215,0,0.3)', borderRadius: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 24, animation: 'pulse 2s ease-in-out infinite' }}>👑</span>
+          <span style={{ color: '#FFD700', animation: 'pulse 2s ease-in-out infinite', display: 'inline-flex' }}><IcoCrown size={24} color="#FFD700" /></span>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: '.8rem', fontWeight: 800, color: '#FFD700' }}>
               {t.profile.monthlyChampion ?? 'Monthly Champion'}
@@ -360,40 +332,6 @@ export const ProfilePage: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* League progress bar */}
-      {(() => {
-        const LEAGUE_THRESHOLDS: Record<string, { next: string | null; threshold: bigint; nextThreshold: bigint }> = {
-          BRONZE:   { next: 'SILVER',   threshold: 0n,           nextThreshold: 100_000n },
-          SILVER:   { next: 'GOLD',     threshold: 100_000n,     nextThreshold: 1_000_000n },
-          GOLD:     { next: 'DIAMOND',  threshold: 1_000_000n,   nextThreshold: 5_000_000n },
-          DIAMOND:  { next: 'CHAMPION', threshold: 5_000_000n,   nextThreshold: 10_000_000n },
-          CHAMPION: { next: 'STAR',     threshold: 10_000_000n,  nextThreshold: 50_000_000n },
-          STAR:     { next: null,       threshold: 50_000_000n,  nextThreshold: 50_000_000n },
-        };
-        const info = LEAGUE_THRESHOLDS[user.league];
-        if (!info) return null;
-        const bal = BigInt(user.balance ?? '0');
-        const range = info.nextThreshold - info.threshold;
-        const progress = info.next === null ? 100 : range > 0n ? Math.min(100, Number((bal - info.threshold) * 100n / range)) : 100;
-        const remaining = info.next ? info.nextThreshold - bal : 0n;
-        return (
-          <div style={{ margin: '0 18px 10px', padding: '12px 16px', background: 'linear-gradient(135deg,#141018,#0F0E18)', border: '.5px solid rgba(74,158,255,.18)', borderRadius: 16 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent, #F5C842)' }}>{leagueEmoji[user.league]} {t.profile.league(user.league)}</div>
-              {info.next ? (
-                <div style={{ fontSize: 10, color: 'var(--text-secondary, #8B92A8)' }}>{t.profile.toLeague(`${leagueEmoji[info.next]} ${info.next}`, fmtBalance(remaining.toString()))}</div>
-              ) : (
-                <div style={{ fontSize: 10, color: 'var(--green, #00D68F)', fontWeight: 700 }}>{t.profile.maxLeague}</div>
-              )}
-            </div>
-            <div style={{ height: 5, background: 'var(--bg-card, #1C2030)', borderRadius: 3, overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${progress}%`, background: 'linear-gradient(90deg,#F5C842,#FFD966)', borderRadius: 3, transition: 'width .5s' }} />
-            </div>
-            <div style={{ fontSize: 9, color: 'var(--text-muted, #4A5270)', marginTop: 4 }}>{t.profile.leagueProgress(progress)}</div>
-          </div>
-        );
-      })()}
 
       {/* Tabs */}
       <div style={ptabsStyle}>
@@ -409,8 +347,8 @@ export const ProfilePage: React.FC = () => {
         <>
           <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem' }}>{t.profile.stats}</div>
           <div style={{ display: 'flex', justifyContent: 'space-around', padding: '12px 18px' }}>
-            <CircStat value={wins}   pct={winRate}  color="var(--green, #00D68F)" label={t.profile.wins}   />
-            <CircStat value={losses} pct={lossRate} color="var(--red, #FF4D6A)" label={t.profile.losses} />
+            <CircStat value={wins}   pct={winRate}  color="#3DBA7A" label={t.profile.wins}   />
+            <CircStat value={losses} pct={lossRate} color="#FF5B5B" label={t.profile.losses} />
             <CircStat value={draws}  pct={drawRate} color="#9B85FF" label={t.profile.draws}  />
           </div>
 
@@ -436,7 +374,7 @@ export const ProfilePage: React.FC = () => {
               if (eloHistory.length < 2) {
                 return (
                   <div style={{ height: 50, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={{ fontSize: 11, color: 'var(--text-muted,#4A5270)' }}>{t.profile.playGamesForChart}</span>
+                    <span style={{ fontSize: 11, color: '#5A5248' }}>{t.profile.playGamesForChart}</span>
                   </div>
                 );
               }
@@ -450,7 +388,7 @@ export const ProfilePage: React.FC = () => {
               const curElo = eloHistory[eloHistory.length - 1];
               const prevElo = eloHistory[eloHistory.length - 2];
               const trend = curElo > prevElo ? '↑' : curElo < prevElo ? '↓' : '→';
-              const trendColor = curElo > prevElo ? 'var(--green,#00D68F)' : curElo < prevElo ? 'var(--red,#FF4D6A)' : '#9B85FF';
+              const trendColor = curElo > prevElo ? '#3DBA7A' : curElo < prevElo ? '#FF5B5B' : '#9B85FF';
               return (
                 <>
                   <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ width: '100%', height: 50, display: 'block' }}>
@@ -466,7 +404,7 @@ export const ProfilePage: React.FC = () => {
                     <circle cx={toX(eloHistory.length - 1)} cy={toY(user.elo)} r="3.5" fill="#9B85FF" />
                   </svg>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-                    <span style={{ fontSize: 9, color: 'var(--text-muted,#4A5270)' }}>{t.profile.points(games.length + 1)}</span>
+                    <span style={{ fontSize: 9, color: '#5A5248' }}>{t.profile.points(games.length + 1)}</span>
                     <span style={{ fontSize: 10, fontWeight: 700, color: trendColor }}>{trend} {Math.abs(curElo - prevElo)} ELO</span>
                   </div>
                 </>
@@ -477,7 +415,7 @@ export const ProfilePage: React.FC = () => {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, padding: '8px 18px 0' }}>
             <StatCard val={totalGames}       lbl={t.profile.games}  />
             <StatCard val={user.elo}         lbl={t.profile.elo}    color="#9B85FF" />
-            <StatCard val={user.winStreak ?? 0} lbl={t.profile.streak} color="var(--accent, #F5C842)" />
+            <StatCard val={user.winStreak ?? 0} lbl={t.profile.streak} color="#F0C85A" />
           </div>
 
           <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem' }}>{t.profile.refSection}</div>
@@ -493,30 +431,164 @@ export const ProfilePage: React.FC = () => {
         </>
       )}
 
-      {/* Games tab — реальные партии + история транзакций */}
+      {/* Games tab — реальные партии + История транзакций */}
       {tab === 'games' && (() => {
-        const typeIcon: Record<string, string> = {
-          BOT: '🤖', BATTLE: '⚔️', WAR: '🌍', TOURNAMENT: '🏆',
+        const typeIconNode = (type: string) => {
+          switch (type) {
+            case 'BOT': return <IcoRobot size={16} />;
+            case 'BATTLE': return <IcoSwords size={16} />;
+            case 'WAR': return <IcoGlobe size={16} />;
+            case 'TOURNAMENT': return <IcoTrophy size={16} />;
+            default: return null;
+          }
         };
         const typeLabel: Record<string, string> = {
           BOT: 'vs JARVIS', BATTLE: t.profile.typeBattle, WAR: t.profile.typeWar, TOURNAMENT: t.profile.typeTournament,
         };
+        // Применяем фильтры
+        const nameQuery = filterName.trim().toLowerCase();
+        const now = Date.now();
+        const dateCut: Record<typeof filterDate, number> = {
+          ALL: 0,
+          TODAY: now - 24 * 60 * 60 * 1000,
+          WEEK: now - 7 * 24 * 60 * 60 * 1000,
+          MONTH: now - 30 * 24 * 60 * 60 * 1000,
+        };
+        const cutMs = dateCut[filterDate];
+        const matches = (type: string | undefined, oppName: string | undefined, dateStr: string | null | undefined) => {
+          if (filterType !== 'ALL' && type !== filterType) return false;
+          if (nameQuery && !(oppName ?? '').toLowerCase().includes(nameQuery)) return false;
+          if (cutMs > 0) {
+            const t = dateStr ? Date.parse(dateStr) : 0;
+            if (!t || t < cutMs) return false;
+          }
+          return true;
+        };
+
+        const filteredGames = recentGames
+          .filter((g) => matches(g.type, g.opponent ? `${g.opponent.firstName} ${(g.opponent as any).lastName ?? ''}` : (g.hasBot ? `JARVIS Lv.${g.botLevel ?? '?'}` : ''), g.finishedAt))
+          .sort((a, b) => (Date.parse(b.finishedAt ?? '') || 0) - (Date.parse(a.finishedAt ?? '') || 0));
+
+        const filteredSaves = savedGames.filter((sg) => {
+          const s = sg.session;
+          const sides = s?.sides ?? [];
+          const names = sides.map((sd) => sd.player?.firstName ?? '').join(' ');
+          return matches(s?.type, names, s?.finishedAt);
+        });
+
         return (
           <>
+            {/* Фильтры */}
+            <div style={{ display: 'flex', gap: 6, padding: '12px 14px 4px', flexWrap: 'wrap' }}>
+              <input
+                value={filterName}
+                onChange={(e) => setFilterName(e.target.value)}
+                placeholder="Имя героя…"
+                style={{ flex: '1 1 140px', minWidth: 0, padding: '8px 10px', background: 'rgba(255,255,255,0.04)', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, color: '#EAE2CC', fontSize: 12, fontFamily: 'inherit', outline: 'none' }}
+              />
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value as any)}
+                style={{ padding: '8px 8px', background: 'rgba(255,255,255,0.04)', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, color: '#EAE2CC', fontSize: 12, fontFamily: 'inherit', outline: 'none' }}
+              >
+                <option value="ALL">Все типы</option>
+                <option value="BOT">vs JARVIS</option>
+                <option value="BATTLE">Баттл</option>
+                <option value="WAR">Война</option>
+                <option value="TOURNAMENT">Турнир</option>
+              </select>
+              <select
+                value={filterDate}
+                onChange={(e) => setFilterDate(e.target.value as any)}
+                style={{ padding: '8px 8px', background: 'rgba(255,255,255,0.04)', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, color: '#EAE2CC', fontSize: 12, fontFamily: 'inherit', outline: 'none' }}
+              >
+                <option value="ALL">Все даты</option>
+                <option value="TODAY">Сегодня</option>
+                <option value="WEEK">Неделя</option>
+                <option value="MONTH">Месяц</option>
+              </select>
+            </div>
+
+            {/* Сохранённые партии — сверху, только на своём профиле */}
+            {isOwnProfile && filteredSaves.length > 0 && (
+              <>
+                <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#F0C85A', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  💾 {t.profile.savedGames}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 14px' }}>
+                  {filteredSaves.map((sg) => {
+                    const s = sg.session;
+                    const sides = s?.sides ?? [];
+                    const p1 = sides[0]?.player;
+                    const p2 = sides[1]?.player;
+                    const winner = sides.find((sd) => sd.status === 'WON');
+                    return (
+                      <div key={sg.id} style={{ padding: '10px 12px', background: 'linear-gradient(135deg,#1A1410,#0F0E18)', border: '.5px solid rgba(240,200,90,.25)', borderRadius: 14 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <Avatar user={p1} size="s" />
+                            <span style={{ fontSize: '.78rem', fontWeight: 800, color: '#EAE2CC' }}>{p1?.firstName ?? '?'}</span>
+                          </div>
+                          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '.65rem', color: '#5A5248' }}>vs</span>
+                          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
+                            <span style={{ fontSize: '.78rem', fontWeight: 800, color: '#EAE2CC', textAlign: 'right' }}>{p2?.firstName ?? '?'}</span>
+                            <Avatar user={p2} size="s" />
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
+                          <span style={{ fontSize: '.62rem', color: '#5A5248' }}>
+                            {s?.type ?? ''} · {s?.finishedAt ? fmtDate(s.finishedAt) : ''}
+                          </span>
+                          {winner && (
+                            <span style={{ fontSize: '.62rem', fontWeight: 700, color: '#3DBA7A', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                              <IcoTrophy size={11} color="#3DBA7A" /> {winner.player?.firstName ?? '?'}
+                            </span>
+                          )}
+                          <div style={{ display: 'flex', gap: 4 }}>
+                            {s?.pgn && (
+                              <button
+                                onClick={() => {
+                                  const ss = (s as any).sides as Array<{ isWhite: boolean; player: any }> | undefined;
+                                  const white = ss?.find(x => x.isWhite)?.player ?? p1;
+                                  const black = ss?.find(x => !x.isWhite)?.player ?? p2;
+                                  setReplayGame({
+                                    pgn: s.pgn!,
+                                    title: `${p1?.firstName ?? '?'} vs ${p2?.firstName ?? '?'}`,
+                                    sessionId: s.id,
+                                    whitePlayer: white,
+                                    blackPlayer: black,
+                                  });
+                                }}
+                                style={{ fontSize: 9, padding: '2px 7px', background: 'rgba(245,200,66,0.1)', color: '#F0C85A', border: '.5px solid rgba(245,200,66,.3)', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700 }}
+                              >▷</button>
+                            )}
+                            <button
+                              onClick={() => s && warsApi.unsaveGame(s.id).then(() => setSavedGames(g => g.filter(x => x.id !== sg.id)))}
+                              style={{ fontSize: 9, padding: '2px 7px', background: 'rgba(204,96,96,.1)', color: '#CC6060', border: '.5px solid rgba(204,96,96,.3)', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700 }}
+                            >×</button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
             {/* Последние партии */}
             <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem' }}>{t.profile.recentGames}</div>
-            {recentGames.length === 0 ? (
-              <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: '24px 0', fontSize: 13 }}>
+            {filteredGames.length === 0 ? (
+              <div style={{ textAlign: 'center', color: '#5A5248', padding: '24px 0', fontSize: 13 }}>
                 {t.profile.noGamesPlayed}
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '0 14px' }}>
-                {recentGames.slice(0, 15).map((g) => {
+                {filteredGames.slice(0, 50).map((g) => {
                   const myResult = g.result;
                   const oppPlayer = g.opponent;
                   const isWon  = myResult === 'WON';
                   const isDraw = myResult === 'DRAW';
-                  const statusColor = isWon ? 'var(--green,#00D68F)' : isDraw ? '#9B85FF' : 'var(--red,#FF4D6A)';
+                  const statusColor = isWon ? '#3DBA7A' : isDraw ? '#9B85FF' : '#FF5B5B';
                   const statusLabel = isWon ? t.profile.gameWon : isDraw ? t.profile.gameDraw : t.profile.gameLost;
                   const earned = g.winningAmount ? fmtBalance(String(g.winningAmount)) : null;
                   return (
@@ -533,19 +605,19 @@ export const ProfilePage: React.FC = () => {
                       {oppPlayer ? (
                         <Avatar user={oppPlayer} size="s" />
                       ) : (
-                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
-                          {typeIcon[g.type ?? ''] ?? '♟'}
+                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9A9490' }}>
+                          {typeIconNode(g.type ?? '') ?? <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14 }}>·</span>}
                         </div>
                       )}
 
-                      {/* Инфо */}
+                      {/* нфо */}
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary,#F0F2F8)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: '#EAE2CC', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {oppPlayer ? `${oppPlayer.firstName}${(oppPlayer as any).lastName ? ' ' + (oppPlayer as any).lastName : ''}` : g.hasBot ? `J.A.R.V.I.S Lv.${g.botLevel ?? '?'}` : typeLabel[g.type ?? ''] ?? t.profile.gameLabel}
                         </div>
-                        <div style={{ fontSize: 10, color: 'var(--text-muted,#4A5270)', marginTop: 2 }}>
+                        <div style={{ fontSize: 10, color: '#5A5248', marginTop: 2 }}>
                           {typeLabel[g.type ?? ''] ?? ''} · {g.finishedAt ? fmtDate(g.finishedAt) : ''}
-                          {g.bet && BigInt(g.bet) > 0n ? ` · ${fmtBalance(g.bet)} ᚙ` : ''}
+                          {g.bet && BigInt(g.bet) > 0n ? ` · ${fmtBalance(g.bet)}` : ''}
                         </div>
                       </div>
 
@@ -553,7 +625,7 @@ export const ProfilePage: React.FC = () => {
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                         <span style={{ fontSize: 10, fontWeight: 800, color: isWon ? '#fff' : isDraw ? '#fff' : '#fff', background: isWon ? 'rgba(0,214,143,.18)' : isDraw ? 'rgba(74,158,255,.18)' : 'rgba(255,77,106,.18)', border: `.5px solid ${isWon ? 'rgba(0,214,143,.35)' : isDraw ? 'rgba(74,158,255,.35)' : 'rgba(255,77,106,.35)'}`, borderRadius: 5, padding: '2px 7px' }}>{statusLabel}</span>
                         {earned && isWon && (
-                          <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono',monospace", color: 'var(--accent,#F5C842)' }}>+{earned} ᚙ</span>
+                          <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono',monospace", color: '#F0C85A' }}>+{earned}</span>
                         )}
                         {g.pgn && (
                           <button
@@ -565,8 +637,8 @@ export const ProfilePage: React.FC = () => {
                               whitePlayer: (g as any).isWhite ? (user as any) : oppPlayer,
                               blackPlayer: (g as any).isWhite ? oppPlayer : (user as any),
                             })}
-                            style={{ fontSize: 9, padding: '2px 7px', background: 'rgba(245,200,66,0.08)', color: 'var(--accent,#F5C842)', border: '1px solid rgba(245,200,66,0.2)', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}
-                          >♟ Replay</button>
+                            style={{ fontSize: 9, padding: '2px 7px', background: 'rgba(245,200,66,0.08)', color: '#F0C85A', border: '1px solid rgba(245,200,66,0.2)', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}
+                          >▷ Replay</button>
                         )}
                       </div>
                     </div>
@@ -576,32 +648,47 @@ export const ProfilePage: React.FC = () => {
             )}
 
             {/* История транзакций — под играми */}
-            <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem', marginTop: 8 }}>💸 {t.profile.txHistory}</div>
+            <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem', marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }}><IcoMoneyFly size={11} /> {t.profile.txHistory}</div>
             {transactions.length === 0 ? (
-              <div style={{ textAlign: 'center', color: 'var(--text-muted,#4A5270)', padding: 24, fontSize: 13 }}>{t.profile.noTx}</div>
+              <div style={{ textAlign: 'center', color: '#5A5248', padding: 24, fontSize: 13 }}>{t.profile.noTx}</div>
             ) : (
               transactions.map((tx) => {
                 const isPos = BigInt(tx.amount) > 0n;
-                const TX_ICON: Record<string, string> = {
-                  // Игровые
-                  BATTLE_WIN: '🏆', BOT_WIN: '🤖', FRIENDLY_WIN: '🤝', TOURNAMENT_WIN: '🥇',
-                  TASK_REWARD: '🧩', REFERRAL_BONUS: '👥', REFERRAL_INCOME: '💸',
-                  SUB_REFERRAL_INCOME: '💰', WELCOME_BONUS: '🎁',
-                  BATTLE_BET: '🎯', BATTLE_COMMISSION: '💼', BATTLE_DONATION: '🎪',
-                  COUNTRY_WAR_WIN: '🌍', CLAN_CONTRIBUTION: '🏰', TOURNAMENT_ENTRY: '🎟',
-                  ITEM_PURCHASE: '🛍', ATTEMPT_PURCHASE: '🎮',
-                  // TON
-                  TON_DEPOSIT: '💎', WALLET_UNLOCK: '🔐', WITHDRAWAL: '📤',
-                  // Биржа
-                  EXCHANGE_SELL: '💱', EXCHANGE_BUY: '🛒',
-                  EXCHANGE_FREEZE: '🔒', EXCHANGE_UNFREEZE: '🔓',
-                  EXCHANGE_FEE: '💹',
-                  // Airdrop
-                  REFUND: '↩️',
-                };
+                const txIcon = (() => {
+                  const s = 18;
+                  switch (tx.type) {
+                    case 'BATTLE_WIN':         return <IcoTrophy size={s} />;
+                    case 'BOT_WIN':            return <IcoRobot size={s} />;
+                    case 'FRIENDLY_WIN':       return <IcoHandshake size={s} />;
+                    case 'TOURNAMENT_WIN':     return <IcoMedal size={s} />;
+                    case 'TASK_REWARD':        return <IcoPuzzle size={s} />;
+                    case 'REFERRAL_BONUS':
+                    case 'SUB_REFERRAL_INCOME':
+                    case 'REFERRAL_INCOME':    return <IcoUsers size={s} />;
+                    case 'WELCOME_BONUS':      return <IcoGift size={s} />;
+                    case 'BATTLE_BET':         return <IcoSwords size={s} />;
+                    case 'BATTLE_COMMISSION':  return <IcoBriefcase size={s} />;
+                    case 'BATTLE_DONATION':    return <CoinIcon size={s} />;
+                    case 'COUNTRY_WAR_WIN':    return <IcoGlobe size={s} />;
+                    case 'CLAN_CONTRIBUTION':  return <CoinIcon size={s} />;
+                    case 'TOURNAMENT_ENTRY':   return <IcoTrophy size={s} />;
+                    case 'ITEM_PURCHASE':      return <IcoShop size={s} />;
+                    case 'ATTEMPT_PURCHASE':   return <IcoGamepad size={s} />;
+                    case 'TON_DEPOSIT':        return <IcoTon size={s} />;
+                    case 'WALLET_UNLOCK':      return <IcoUnlock size={s} />;
+                    case 'WITHDRAWAL':         return <IcoUpload size={s} />;
+                    case 'EXCHANGE_SELL':      return <IcoExchange size={s} />;
+                    case 'EXCHANGE_BUY':       return <IcoCart size={s} />;
+                    case 'EXCHANGE_FREEZE':    return <IcoLock size={s} />;
+                    case 'EXCHANGE_UNFREEZE':  return <IcoUnlock size={s} />;
+                    case 'EXCHANGE_FEE':       return <IcoBriefcase size={s} />;
+                    case 'REFUND':             return <IcoMoneyFly size={s} />;
+                    default:                   return isPos ? <IcoArrowUp size={s} /> : <IcoArrowDown size={s} />;
+                  }
+                })();
                 return (
                   <div key={tx.id} style={{ margin: '4px 18px 0', padding: '10px 14px', background: 'linear-gradient(135deg,#141018,#0F0E18)', border: '.5px solid rgba(74,158,255,.18)', borderRadius: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <span style={{ fontSize: 20 }}>{TX_ICON[tx.type] ?? (isPos ? '📈' : '📉')}</span>
+                    <span style={{ color: isPos ? '#3DBA7A' : '#FF8080', display: 'inline-flex', flexShrink: 0 }}>{txIcon}</span>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: '.8rem', fontWeight: 700, color: '#EAE2CC' }}>
                         {
@@ -630,8 +717,8 @@ export const ProfilePage: React.FC = () => {
                       </div>
                       <div style={{ fontSize: '.62rem', color: '#7A7875', marginTop: 2 }}>{fmtDate(tx.createdAt)}</div>
                     </div>
-                    <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 700, color: isPos ? '#00D68F' : '#FF4D6A' }}>
-                      {isPos ? '+' : ''}{fmtBalance(tx.amount)} ᚙ
+                    <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 700, color: isPos ? '#3DBA7A' : '#FF5B5B' }}>
+                      {isPos ? '+' : ''}{fmtBalance(tx.amount)}
                     </span>
                   </div>
                 );
@@ -641,12 +728,12 @@ export const ProfilePage: React.FC = () => {
         );
       })()}
 
-      {/* Saves tab */}
-      {tab === 'saves' && (
+      {/* Saves tab — слита с games (2026-05-16) */}
+      {false && (
         <>
           <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem' }}>{t.profile.savedGames}</div>
           {savedGames.length === 0 ? (
-            <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: 32, fontSize: 13 }}>
+            <div style={{ textAlign: 'center', color: '#5A5248', padding: 32, fontSize: 13 }}>
               {t.profile.noSaves}
             </div>
           ) : (
@@ -675,14 +762,14 @@ export const ProfilePage: React.FC = () => {
                         {s?.type ?? ''} · {s?.finishedAt ? fmtDate(s.finishedAt) : ''}
                       </span>
                       {winner && (
-                        <span style={{ fontSize: '.65rem', fontWeight: 700, color: '#00D68F' }}>
-                          🏆 {winner.player?.firstName ?? 'Unknown'}
+                        <span style={{ fontSize: '.65rem', fontWeight: 700, color: '#3DBA7A', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                          <IcoTrophy size={11} color="#3DBA7A" /> {winner.player?.firstName ?? 'Unknown'}
                         </span>
                       )}
                       <button style={{ fontSize: '.62rem', padding: '2px 7px', background: 'rgba(204,96,96,.1)', color: '#CC6060', border: '.5px solid rgba(204,96,96,.25)', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}
                         onClick={() => s && warsApi.unsaveGame(s.id).then(() => setSavedGames(g => g.filter(x => x.id !== sg.id)))}
                       >
-                        ✕ remove
+                        × remove
                       </button>
                     </div>
                     {s?.pgn && (
@@ -701,7 +788,7 @@ export const ProfilePage: React.FC = () => {
                           });
                         }}
                       >
-                        ♟ Replay game
+                        ▷ Replay game
                       </button>
                     )}
                   </div>
@@ -718,10 +805,10 @@ export const ProfilePage: React.FC = () => {
           {/* Турнирные бейджи */}
           {(user?.tournamentBadges?.length ?? 0) > 0 && (
             <>
-              <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem' }}>🏆 Tournament wins</div>
+              <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem', display: 'flex', alignItems: 'center', gap: 6 }}><IcoTrophy size={11} /> Tournament wins</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 18px' }}>
                 {(user?.tournamentBadges as TournamentBadge[] | undefined)?.slice().reverse().map((badge, i: number) => {
-                  const placeEmoji = badge.place === 1 ? '🥇' : badge.place === 2 ? '🥈' : '🥉';
+                  const placeLabel = badge.place === 1 ? '1' : badge.place === 2 ? '2' : '3';
                   const placeColor = badge.place === 1 ? '#FFD700' : badge.place === 2 ? '#C0C0C0' : '#CD7F32';
                   return (
                     <div key={i} style={{
@@ -730,7 +817,7 @@ export const ProfilePage: React.FC = () => {
                       border: `.5px solid ${placeColor}40`,
                       borderRadius: 14,
                     }}>
-                      <span style={{ fontSize: 28, flexShrink: 0 }}>{placeEmoji}</span>
+                      <span style={{ flexShrink: 0, display: 'inline-flex', width: 32, height: 32, borderRadius: '50%', alignItems: 'center', justifyContent: 'center', background: badge.place === 1 ? 'rgba(245,200,66,.18)' : badge.place === 2 ? 'rgba(200,200,200,.18)' : 'rgba(205,127,50,.18)', color: badge.place === 1 ? '#F0C85A' : badge.place === 2 ? '#D0D0D0' : '#CD7F32', fontFamily: "'JetBrains Mono',monospace", fontWeight: 900, fontSize: 14 }}>{placeLabel}</span>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: '.8rem', fontWeight: 800, color: '#EAE2CC' }}>
                           {badge.place} place · {badge.tournamentName ?? badge.name}
@@ -740,7 +827,7 @@ export const ProfilePage: React.FC = () => {
                         </div>
                       </div>
                       <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, color: placeColor }}>
-                        +{badge.prize ? (Number(BigInt(badge.prize)) / 1000).toFixed(0) + 'K' : '—'} ᚙ
+                        +{badge.prize ? (Number(BigInt(badge.prize)) / 1000).toFixed(0) + 'K' : '—'}
                       </div>
                     </div>
                   );
@@ -751,17 +838,17 @@ export const ProfilePage: React.FC = () => {
 
           {/* Игровые достижения */}
           {(() => {
-            const ACHS = [
-              { id: 'first_blood',   icon: '⚔️', name: 'First Blood',    desc: 'First game' },
-              { id: 'winner_10',     icon: '🏆', name: t.profile.achievementWinner10,  desc: t.profile.achievementWinner10Desc },
-              { id: 'winner_100',    icon: '👑', name: t.profile.achievementWinner100, desc: t.profile.achievementWinner100Desc },
-              { id: 'jarvis_hunter', icon: '🤖', name: 'J.A.R.V.I.S Hunter', desc: 'Max level' },
-              { id: 'recruiter',     icon: '👥', name: t.profile.achievementRecruiter,  desc: t.profile.achievementRecruiterDesc },
-              { id: 'millionaire',   icon: '💰', name: t.profile.achievementMillionaire, desc: t.profile.achievementMillionaireDesc },
-              { id: 'patriot',       icon: '🌍', name: t.profile.achievementPatriot,    desc: t.profile.achievementPatriotDesc },
-              { id: 'puzzler',       icon: '🧩', name: t.profile.achievementPuzzler,    desc: t.profile.achievementPuzzlerDesc },
-              { id: 'streak_7',      icon: '🔥', name: t.profile.achievementStreak7,    desc: t.profile.achievementStreak7Desc },
-              { id: 'streak_30',     icon: '💎', name: t.profile.achievementStreak30,   desc: t.profile.achievementStreak30Desc },
+            const ACHS: { id: string; Icon: React.FC<{ size?: number; color?: string }>; name: string; desc: string }[] = [
+              { id: 'first_blood',   Icon: IcoSwords,    name: 'First Blood',    desc: 'First game' },
+              { id: 'winner_10',     Icon: IcoTrophy,    name: t.profile.achievementWinner10,  desc: t.profile.achievementWinner10Desc },
+              { id: 'winner_100',    Icon: IcoCrown,     name: t.profile.achievementWinner100, desc: t.profile.achievementWinner100Desc },
+              { id: 'jarvis_hunter', Icon: IcoRobot,     name: 'J.A.R.V.I.S Hunter', desc: 'Max level' },
+              { id: 'recruiter',     Icon: IcoUsers,     name: t.profile.achievementRecruiter,  desc: t.profile.achievementRecruiterDesc },
+              { id: 'millionaire',   Icon: CoinIcon,     name: t.profile.achievementMillionaire, desc: t.profile.achievementMillionaireDesc },
+              { id: 'patriot',       Icon: IcoGlobe,     name: t.profile.achievementPatriot,    desc: t.profile.achievementPatriotDesc },
+              { id: 'puzzler',       Icon: IcoPuzzle,    name: t.profile.achievementPuzzler,    desc: t.profile.achievementPuzzlerDesc },
+              { id: 'streak_7',      Icon: IcoMedal,     name: t.profile.achievementStreak7,    desc: t.profile.achievementStreak7Desc },
+              { id: 'streak_30',     Icon: IcoTon,       name: t.profile.achievementStreak30,   desc: t.profile.achievementStreak30Desc },
             ];
             const earned: Record<string, string> = {};
             (user?.achievements ?? []).forEach((a: { id: string; date: string }) => { earned[a.id] = a.date; });
@@ -769,7 +856,7 @@ export const ProfilePage: React.FC = () => {
             return (
               <>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '.58rem', fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: '#7A7875', padding: '.9rem .85rem .45rem' }}>
-                  <span>🎖 {t.profile.tabs.achievements}</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><IcoMedal size={11} /> {t.profile.tabs.achievements}</span>
                   <span style={{ color: '#4A9EFF', fontWeight: 700 }}>
                     {earnedCount}/{ACHS.length}
                   </span>
@@ -785,12 +872,12 @@ export const ProfilePage: React.FC = () => {
                         border: `.5px solid ${done ? 'rgba(74,158,255,0.3)' : 'rgba(255,255,255,0.06)'}`,
                         opacity: done ? 1 : 0.45,
                       }}>
-                        <span style={{ fontSize: 22 }}>{a.icon}</span>
+                        <span style={{ color: done ? '#82CFFF' : '#5A5248', display: 'inline-flex' }}><a.Icon size={22} /></span>
                         <span style={{ fontSize: 8, fontWeight: 700, color: done ? '#82CFFF' : '#5A5248', lineHeight: 1.2 }}>
                           {a.name}
                         </span>
                         {done && earned[a.id] && (
-                          <span style={{ fontSize: 7, color: 'var(--text-muted, #4A5270)' }}>
+                          <span style={{ fontSize: 7, color: '#5A5248' }}>
                             {new Date(earned[a.id]).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
                           </span>
                         )}
@@ -805,7 +892,7 @@ export const ProfilePage: React.FC = () => {
           {/* JARVIS бейджи */}
           <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem' }}>{t.profile.jarvisCerts}</div>
           {(user?.jarvisBadges?.length ?? 0) === 0 ? (
-            <div style={{ textAlign: 'center', color: 'var(--text-muted, #4A5270)', padding: 32, fontSize: 13 }}>
+            <div style={{ textAlign: 'center', color: '#5A5248', padding: 32, fontSize: 13 }}>
               {t.profile.noJarvis}
             </div>
           ) : (
@@ -815,28 +902,28 @@ export const ProfilePage: React.FC = () => {
                 const badgeDates = user?.jarvisBadgeDates as Record<string, string> | null;
                 const dateStr = badgeDates?.[badgeName];
                 const colors: Record<string, string> = {
-                  Beginner: 'var(--text-secondary, #8B92A8)', Player: '#00B4D8', Fighter: 'var(--green, #00D68F)',
-                  Warrior: '#4CAF50', Expert: '#9B85FF', Master: 'var(--accent, #F5C842)',
-                  Professional: '#FF9F43', Epic: '#FF6B6B', Legendary: '#E040FB', Mystic: 'var(--accent, #F5C842)',
+                  Beginner: '#9A9490', Player: '#3DBA7A', Fighter: '#3DBA7A',
+                  Warrior: '#4CAF50', Expert: '#9B85FF', Master: '#F0C85A',
+                  Professional: '#FF9F43', Epic: '#FF5B5B', Legendary: '#E040FB', Mystic: '#F0C85A',
                 };
                 const color = colors[badgeName] ?? '#9B85FF';
                 return (
                   <div key={i} onClick={() => setSelectedBadge({ name: badgeName, date: dateStr })} style={{ padding: '12px 10px', background: 'linear-gradient(135deg,#141018,#0F0E18)', border: `.5px solid ${color}50`, borderRadius: 14, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer', textAlign: 'center' }}>
                     <div style={{ width: 52, height: 52, borderRadius: 14, background: `${color}18`, border: `2px solid ${color}60`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <span style={{ fontSize: 22 }}>🤖</span>
+                      <span style={{ color }}><IcoRobot size={22} color={color} /></span>
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: '.55rem', letterSpacing: '.1em', textTransform: 'uppercase', color, marginBottom: 3, fontWeight: 700 }}>{t.gameResult.jarvisCert}</div>
                       <div style={{ fontSize: '.95rem', fontWeight: 900, color: '#EAE2CC' }}>{badgeName}</div>
-                      <div style={{ fontSize: '.62rem', color: '#7A7875', marginTop: 2 }}>{t.profile.level} {lvlData?.level ?? '?'} · +{((lvlData?.reward ?? 0) / 1000).toFixed(0)}K ᚙ</div>
+                      <div style={{ fontSize: '.62rem', color: '#7A7875', marginTop: 2, display: 'inline-flex', alignItems: 'center', gap: 4 }}>{t.profile.level} {lvlData?.level ?? '?'} · +{((lvlData?.reward ?? 0) / 1000).toFixed(0)}K <CoinIcon size={10} /></div>
                       {dateStr && (
                         <div style={{ fontSize: '.55rem', color: '#5A5248', marginTop: 4 }}>
-                          📅 {new Date(dateStr).toLocaleDateString()}
+                          {new Date(dateStr).toLocaleDateString()}
                         </div>
                       )}
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <div style={{ fontSize: 18, color: color }}>✓</div>
+                      <div style={{ fontSize: 18, color: color }}>вњ“</div>
                       <div style={{ fontSize: '.55rem', color: '#5A5248', marginTop: 2 }}>{t.profile.passed}</div>
                     </div>
                   </div>
@@ -847,7 +934,7 @@ export const ProfilePage: React.FC = () => {
         </>
       )}
 
-      {/* SettingsModal — открывается по ⚙ в топбаре */}
+      {/* SettingsModal — открывается по шестерёнке в топбаре */}
       {showSettings && (
         <div
           onClick={(e) => e.target === e.currentTarget && setShowSettings(false)}
@@ -856,8 +943,8 @@ export const ProfilePage: React.FC = () => {
           <div style={{ width: '100%', maxWidth: 480, background: 'linear-gradient(180deg,#141018,#0F0E18)', border: '.5px solid rgba(74,158,255,.18)', borderRadius: '24px 24px 0 0', padding: '20px 18px', paddingBottom: 'max(20px, env(safe-area-inset-bottom, 20px))' }}>
             <div style={{ width: 36, height: 4, background: 'rgba(255,255,255,.08)', borderRadius: 2, margin: '0 auto 18px' }} />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <span style={{ fontSize: '1rem', fontWeight: 900, color: '#EAE2CC' }}>⚙ {t.profile.settings.title}</span>
-              <button onClick={() => setShowSettings(false)} style={{ width: 36, height: 36, borderRadius: 9, background: 'rgba(255,255,255,.05)', border: '.5px solid rgba(255,255,255,.09)', color: '#7A7875', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+              <span style={{ fontSize: '1rem', fontWeight: 900, color: '#EAE2CC', display: 'inline-flex', alignItems: 'center', gap: 8 }}><IcoSettings size={16} /> {t.profile.settings.title}</span>
+              <button onClick={() => setShowSettings(false)} style={{ width: 36, height: 36, borderRadius: 9, background: 'rgba(255,255,255,.05)', border: '.5px solid rgba(255,255,255,.09)', color: '#7A7875', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>вњ•</button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {/* Язык */}
@@ -865,8 +952,9 @@ export const ProfilePage: React.FC = () => {
                 <span style={{ fontSize: '.8rem', fontWeight: 700, color: '#EAE2CC' }}>{t.profile.settings.language}</span>
                 <div style={{ display: 'flex', gap: 6 }}>
                   {(['en', 'ru'] as Lang[]).map((l) => (
-                    <button key={l} onClick={() => setLang(l)} style={{ padding: '5px 12px', background: lang === l ? 'rgba(74,158,255,.18)' : 'rgba(255,255,255,.04)', color: lang === l ? '#82CFFF' : '#5A5248', border: lang === l ? '.5px solid rgba(74,158,255,.3)' : '.5px solid rgba(255,255,255,.07)', borderRadius: 7, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-                      {l === 'en' ? '🇬🇧 EN' : '🇷🇺 RU'}
+                    <button key={l} onClick={() => setLang(l)} style={{ padding: '5px 12px', background: lang === l ? 'rgba(74,158,255,.18)' : 'rgba(255,255,255,.04)', color: lang === l ? '#82CFFF' : '#5A5248', border: lang === l ? '.5px solid rgba(74,158,255,.3)' : '.5px solid rgba(255,255,255,.07)', borderRadius: 7, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                      <CountryFlag code={l === 'en' ? 'GB' : 'RU'} size={14} />
+                      {l === 'en' ? 'EN' : 'RU'}
                     </button>
                   ))}
                 </div>
@@ -884,7 +972,7 @@ export const ProfilePage: React.FC = () => {
               {/* Вибрация (хаптик) */}
               <div style={{ padding: '12px 14px', background: 'rgba(255,255,255,.03)', border: '.5px solid rgba(255,255,255,.07)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
-                  <div style={{ fontSize: '.8rem', fontWeight: 700, color: '#EAE2CC' }}>📳 Вибрация</div>
+                  <div style={{ fontSize: '.8rem', fontWeight: 700, color: '#EAE2CC' }}>Вибрация</div>
                   <div style={{ fontSize: '.62rem', color: '#7A7875', marginTop: 3 }}>Haptic feedback при ходах</div>
                 </div>
                 <button
@@ -924,32 +1012,25 @@ export const ProfilePage: React.FC = () => {
         />
       )}
 
-      {/* AvatarCropModal — обрезка аватара */}
-      {cropFile && (
-        <AvatarCropModal
-          file={cropFile}
-          onConfirm={handleCropConfirm}
-          onCancel={() => setCropFile(null)}
-        />
-      )}
     </PageLayout>
     </>
   );
 };
 
 const secStyle: React.CSSProperties = { fontSize: '.58rem', fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: '#7A7875', padding: '.9rem .85rem .45rem' };
-const microLbl: React.CSSProperties = { fontSize: 9, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--text-muted, #4A5270)', marginBottom: 3 };
-const balCard: React.CSSProperties = { margin: '12px 18px 0', padding: '14px 18px', background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 18, display: 'flex', alignItems: 'center', justifyContent: 'space-between' };
-const ptabsStyle: React.CSSProperties = { display: 'flex', gap: 6, margin: '12px 18px 0', overflowX: 'auto' as React.CSSProperties['overflowX'], paddingBottom: 2 };
-const ptab = (active: boolean): React.CSSProperties => ({ flex: '0 0 auto', textAlign: 'center', padding: '7px 14px', fontSize: 11, fontWeight: 700, color: active ? '#82CFFF' : '#5A5248', cursor: 'pointer', border: active ? '.5px solid rgba(74,158,255,.3)' : '.5px solid rgba(255,255,255,.06)', outline: 'none', background: active ? 'rgba(74,158,255,.12)' : 'rgba(255,255,255,.04)', borderRadius: 8, fontFamily: 'inherit', transition: 'all .2s', whiteSpace: 'nowrap' } as React.CSSProperties);
-const stripStyle: React.CSSProperties = { margin: '4px 18px 0', padding: '13px 16px', background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 18, display: 'flex', alignItems: 'center', gap: 12 };
+const microLbl: React.CSSProperties = { fontSize: 9, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#5A5248', marginBottom: 3 };
+const balCard: React.CSSProperties = { margin: '12px 18px 0', padding: '14px 18px', background: 'linear-gradient(135deg,#141018,#0F0E18)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 18, display: 'flex', alignItems: 'center', justifyContent: 'space-between' };
+// Вкладки: одинаковая ширина, от края до края (Кенан 2026-05-17).
+const ptabsStyle: React.CSSProperties = { display: 'flex', gap: 6, margin: '12px 0 0', padding: '0 18px', paddingBottom: 2 };
+const ptab = (active: boolean): React.CSSProperties => ({ flex: '1 1 0', textAlign: 'center', padding: '8px 6px', fontSize: 11, fontWeight: 700, color: active ? '#82CFFF' : '#5A5248', cursor: 'pointer', border: active ? '.5px solid rgba(74,158,255,.3)' : '.5px solid rgba(255,255,255,.06)', outline: 'none', background: active ? 'rgba(74,158,255,.12)' : 'rgba(255,255,255,.04)', borderRadius: 8, fontFamily: 'inherit', transition: 'all .2s', whiteSpace: 'nowrap' } as React.CSSProperties);
+const stripStyle: React.CSSProperties = { margin: '4px 18px 0', padding: '13px 16px', background: 'linear-gradient(135deg,#141018,#0F0E18)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 18, display: 'flex', alignItems: 'center', gap: 12 };
 const tbaStyle: React.CSSProperties = { width: 36, height: 36, borderRadius: 9, background: 'rgba(255,255,255,.05)', border: '.5px solid rgba(255,255,255,.09)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, cursor: 'pointer', color: '#7A7875' };
-const secBtn: React.CSSProperties = { padding: '8px 14px', background: 'var(--bg-input, #232840)', color: 'var(--text-primary, #F0F2F8)', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' };
-const ghostBtn: React.CSSProperties = { ...secBtn, background: 'transparent', color: 'var(--text-secondary, #8B92A8)' };
-const goldBtn: React.CSSProperties = { padding: '8px 14px', background: 'var(--accent, #F5C842)', color: 'var(--bg, #0B0D11)', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' };
-const tagGold: React.CSSProperties = { display: 'inline-flex', padding: '3px 8px', background: 'rgba(245,200,66,0.12)', color: 'var(--accent, #F5C842)', borderRadius: 6, fontSize: 10, fontWeight: 700 };
+const secBtn: React.CSSProperties = { padding: '8px 14px', background: 'rgba(255,255,255,.05)', color: '#EAE2CC', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' };
+const ghostBtn: React.CSSProperties = { ...secBtn, background: 'transparent', color: '#9A9490' };
+const goldBtn: React.CSSProperties = { padding: '8px 14px', background: '#F0C85A', color: '#0D0D12', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' };
+const tagGold: React.CSSProperties = { display: 'inline-flex', padding: '3px 8px', background: 'rgba(245,200,66,0.12)', color: '#F0C85A', borderRadius: 6, fontSize: 10, fontWeight: 700 };
 const tagVi: React.CSSProperties = { ...tagGold, background: 'rgba(123,97,255,0.12)', color: '#9B85FF' };
-const tagGr: React.CSSProperties = { ...tagGold, background: 'rgba(0,214,143,0.10)', color: 'var(--green, #00D68F)' };
+const tagGr: React.CSSProperties = { ...tagGold, background: 'rgba(0,214,143,0.10)', color: '#3DBA7A' };
 const tagRobot: React.CSSProperties = { ...tagGold, background: 'rgba(123,97,255,0.12)', color: '#9B85FF' };
-const avatarRingStyle: React.CSSProperties = { position: 'absolute', inset: -4, borderRadius: '50%', border: '2px solid #F5C842', opacity: .4, animation: 'ring-pulse 3s ease-in-out infinite' };
-const settingCard: React.CSSProperties = { background: 'var(--bg-card, #1C2030)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 18, padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 };
+const avatarRingStyle: React.CSSProperties = { position: 'absolute', inset: -4, borderRadius: '50%', border: '2px solid #F0C85A', opacity: .4, animation: 'ring-pulse 3s ease-in-out infinite' };
+const settingCard: React.CSSProperties = { background: 'linear-gradient(135deg,#141018,#0F0E18)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 18, padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 };

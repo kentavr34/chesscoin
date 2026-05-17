@@ -13,6 +13,7 @@ import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { useT } from '@/i18n/useT';
 import type { Lang } from '@/i18n/translations';
 import { applyThemeToCss, getActiveTheme, THEMES } from '@/lib/theme';
+import { CoinIcon } from '@/components/ui/CoinIcon';
 
 // Q3: lazy loading — каждая страница загружается отдельным чанком
 import { lazy, Suspense } from 'react';
@@ -29,6 +30,7 @@ const ShopPage        = lazy(() => import('@/pages/ShopPage').then(m => ({ defau
 const ReferralsPage   = lazy(() => import('@/pages/ReferralsPage').then(m => ({ default: m.ReferralsPage })));
 const TournamentsPage = lazy(() => import('@/pages/TournamentsPage').then(m => ({ default: m.TournamentsPage })));
 const LessonPage      = lazy(() => import('@/pages/LessonPage').then(m => ({ default: m.LessonPage })));
+const LessonsHubPage  = lazy(() => import('@/pages/LessonsHubPage').then(m => ({ default: m.LessonsHubPage })));
 const AdminPage        = lazy(() => import('@/pages/AdminPage').then(m => ({ default: m.AdminPage })));
 const SettingsPage     = lazy(() => import('@/pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
 const PuzzleDailyPage  = lazy(() => import('@/pages/PuzzleDailyPage').then(m => ({ default: m.PuzzleDailyPage })));
@@ -108,6 +110,7 @@ const AppInner: React.FC = () => {
       <Route path="/shop" element={<ShopPage />} />
       <Route path="/referrals" element={<ReferralsPage />} />
       <Route path="/tournaments" element={<TournamentsPage />} />
+      <Route path="/lessons" element={<LessonsHubPage />} />
       <Route path="/lesson/:puzzleId" element={<LessonPage />} />
       <Route path="/admin" element={<AdminPage />} />
       <Route path="/settings" element={<SettingsPage />} />
@@ -145,17 +148,15 @@ const SplashScreen: React.FC = () => {
         @keyframes pulse { 0%,100% { opacity: .7; } 50% { opacity: 1; } }
       `}</style>
 
-      {/* Логотип */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+      {/* Логотип — золотой конь без синего фона (A.1 MASTER_PLAN) */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
         <div style={{
-          width: 72, height: 72, borderRadius: 20,
-          background: 'linear-gradient(135deg,#2A1F6A,#1A1540)',
-          border: '2px solid rgba(245,200,66,0.3)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 36,
-          boxShadow: '0 0 40px rgba(123,97,255,0.25)',
+          filter: 'drop-shadow(0 0 24px rgba(245,200,66,.45))',
           animation: 'pulse 2s ease-in-out infinite',
-        }}>♟</div>
+        }}>
+          <CoinIcon size={144} />
+        </div>
         <div style={{
           fontFamily: "'Unbounded',sans-serif",
           fontSize: 22, fontWeight: 800, color: '#F5C842',

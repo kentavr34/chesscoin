@@ -6,6 +6,15 @@ import { warsApi } from '@/api';
 import { useUserStore } from '@/store/useUserStore';
 import { fmtBalance } from '@/utils/format';
 import { useT } from '@/i18n/useT';
+import { useConfirm } from '@/components/ui/ConfirmModal';
+import { CoinIcon } from '@/components/ui/CoinIcon';
+import { DonateModal } from '@/components/ui/DonateModal';
+import { CountryFlag } from '@/components/ui/CountryFlag';
+import { IcoSwords, IcoTrophy } from '@/components/icons/TournamentIcons';
+import { IcoEye, IcoHandshake, IcoSave, IcoSearch, IcoStats } from '@/components/icons/UiIcons';
+import { getSocket } from '@/api/socket';
+
+const COUNTRY_ENTRY_FEE = 10_000n;
 
 const toast = (text: string, type: 'error' | 'success' | 'info' = 'error') =>
   window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text, type } }));
@@ -103,7 +112,7 @@ const DeclareWarModal: React.FC<{
         <div style={handleBar} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
           <div style={{ fontSize: 15, fontWeight: 700, color: '#EAE2CC', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ color: '#3DBA7A' }}>⚔️</span> {t.wars.declareModal.title}
+            <span style={{ color: '#3DBA7A', display: 'inline-flex', verticalAlign: 'middle' }}><IcoSwords size={16} /></span> {t.wars.declareModal.title}
           </div>
           <button onClick={onClose} style={closeBtnStyle}>✕</button>
         </div>
@@ -115,22 +124,23 @@ const DeclareWarModal: React.FC<{
           style={inputStyle}
         />
 
-        <div style={{ maxHeight: 200, overflowY: 'auto', marginBottom: 14 }}>
+        {/* Список стран — растягивается на всю свободную высоту */}
+        <div style={{ flex: 1, minHeight: 120, overflowY: 'auto', marginBottom: 10 }}>
           {filtered.map(c => (
             <div
               key={c.id}
               onClick={() => setSelected(c.id)}
               style={{
-                display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px',
-                borderRadius: 12, marginBottom: 4, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px',
+                borderRadius: 10, marginBottom: 4, cursor: 'pointer',
                 transition: 'all .15s',
                 background: selected === c.id ? 'rgba(61,186,122,0.10)' : 'rgba(255,255,255,0.03)',
                 border: `.5px solid ${selected === c.id ? 'rgba(61,186,122,0.38)' : 'rgba(154,148,144,.18)'}`,
               }}
             >
-              <span style={{ fontSize: 22 }}>{c.flag}</span>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: '#EAE2CC' }}>{c.nameRu}</div>
+              <CountryFlag code={c.code ?? c.id} size={26} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#EAE2CC', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.nameRu}</div>
                 <div style={{ fontSize: 10, color: '#7A7875' }}>{t.wars.fighters(c.memberCount)} • {t.common.wins}: {c.wins}</div>
               </div>
               {selected === c.id && <span style={{ color: '#3DBA7A', fontSize: 16 }}>✓</span>}
@@ -138,21 +148,34 @@ const DeclareWarModal: React.FC<{
           ))}
         </div>
 
-        <div style={sectionLabelStyle}>
+        {/* Длительность — компактные кнопки flex:1 */}
+        <div style={{ ...sectionLabelStyle, marginBottom: 6, flexShrink: 0 }}>
           {t.wars.declareModal.duration}
         </div>
-        <div style={{ display: 'flex', gap: 6, marginBottom: 18 }}>
+        <div style={{ display: 'flex', gap: 5, marginBottom: 12, flexShrink: 0 }}>
           {DURATIONS.map(d => (
-            <button key={d.value} onClick={() => setDuration(d.value)} style={chipBtn(duration === d.value)}>
+            <button
+              key={d.value}
+              onClick={() => setDuration(d.value)}
+              style={{
+                flex: 1, padding: '7px 4px', borderRadius: 9, cursor: 'pointer',
+                fontFamily: 'inherit', fontSize: 10, fontWeight: 700,
+                background: duration === d.value ? 'rgba(61,186,122,.12)' : 'rgba(255,255,255,.04)',
+                border: `.5px solid ${duration === d.value ? 'rgba(61,186,122,.4)' : 'rgba(154,148,144,.2)'}`,
+                color: duration === d.value ? '#3DBA7A' : '#9A9490',
+                transition: 'all .15s', whiteSpace: 'nowrap',
+              }}
+            >
               {d.label}
             </button>
           ))}
         </div>
 
+        {/* CTA — фиксирован снизу модала */}
         <button
           onClick={handleDeclare}
           disabled={!selected || loading}
-          style={{ ...greenBtnFull, opacity: !selected || loading ? 0.5 : 1 }}
+          style={{ ...greenBtnFull, opacity: !selected || loading ? 0.5 : 1, flexShrink: 0 }}
         >
           {loading ? t.wars.declareModal.declaring : t.wars.declareModal.btn}
         </button>
@@ -173,37 +196,118 @@ const CountryDetailModal: React.FC<{
   const t = useT();
   const navigate = useNavigate();
   const { user } = useUserStore();
+  // Клик по чужому аватару → его профиль (Кенан 2026-05-17).
+  const goProfile = (uid?: string | null) => { if (uid && uid !== user?.id) navigate(`/profile/${uid}`); };
   const [data, setData] = useState<{ country: any; members: any[]; isCommander: boolean } | null>(null);
   const [joining, setJoining] = useState(false);
   const [donateAmt, setDonateAmt] = useState('');
   const [donating, setDonating] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [showDonateModal, setShowDonateModal] = useState(false);
+  const [confirm, ConfirmDialog] = useConfirm();
+  // B.3: pending-заявки — главком видит и решает
+  const [pending, setPending] = useState<Array<{ id: string; joinedAt: string; user: { id: string; firstName: string; username?: string | null; avatar?: string | null; elo: number; referralCount: number } }>>([]);
+  const [pendingBusy, setPendingBusy] = useState<string | null>(null);
 
   useEffect(() => {
     warsApi.country(countryId).then(setData).catch(console.error);
   }, [countryId]);
 
+  // Грузим pending только если я ГК этой страны
+  useEffect(() => {
+    if (!data?.isCommander) { setPending([]); return; }
+    warsApi.pending().then(r => setPending(r.pending)).catch(() => {});
+  }, [data?.isCommander]);
+
+  // B.3 push: слушаем socket-уведомления.
+  // ГК получает `country:join-request` → перезагружаем pending.
+  // Заявитель получает `country:join-approved` / `country:join-rejected` →
+  // перезагружаем myMembership.
+  useEffect(() => {
+    if (!user?.id) return;
+    const sock = getSocket();
+    const channel = `user:${user.id}`;
+    const handler = (payload: any) => {
+      const t = payload?.type;
+      if (t === 'country:join-request' && data?.isCommander) {
+        warsApi.pending().then(r => setPending(r.pending)).catch(() => {});
+      } else if (t === 'country:join-approved' || t === 'country:join-rejected') {
+        warsApi.country(countryId).then(setData).catch(() => {});
+        toast(t === 'country:join-approved' ? '✓' : '✕', t === 'country:join-approved' ? 'success' : 'info');
+      }
+    };
+    sock.on(channel, handler);
+    return () => { sock.off(channel, handler); };
+  }, [user?.id, data?.isCommander, countryId]);
+
+  const handleApprove = async (memberId: string) => {
+    setPendingBusy(memberId);
+    try {
+      await warsApi.approve(memberId);
+      toast(t.wars.joined, 'success');
+      setPending(p => p.filter(x => x.id !== memberId));
+      warsApi.country(countryId).then(setData);
+    } catch (e: any) {
+      toast(e.message ?? t.common.error);
+    } finally {
+      setPendingBusy(null);
+    }
+  };
+
+  const handleReject = async (memberId: string) => {
+    setPendingBusy(memberId);
+    try {
+      await warsApi.reject(memberId);
+      setPending(p => p.filter(x => x.id !== memberId));
+    } catch (e: any) {
+      toast(e.message ?? t.common.error);
+    } finally {
+      setPendingBusy(null);
+    }
+  };
+
   const handleJoin = async () => {
+    const entryFee = data?.country?.entryFee
+      ? BigInt(data.country.entryFee)
+      : COUNTRY_ENTRY_FEE;
+    const feeStr = fmtBalance(entryFee.toString());
+    const ok = await confirm({
+      title: t.wars.joinConfirm(data?.country?.nameRu ?? t.common.error),
+      message: t.wars.joinFeeDesc(feeStr),
+      okLabel: t.wars.joinFeeBtn(feeStr),
+      cancelLabel: t.wars.cancel,
+    });
+    if (!ok) return;
     setJoining(true);
     try {
-      await warsApi.join(countryId);
-      toast(t.wars.joined, 'success');
+      const res = await warsApi.join(countryId);
+      // B.3: теперь join создаёт PENDING-заявку, не сразу APPROVED
+      toast(res.pending ? t.wars.joinPendingSent : t.wars.joined, 'success');
       onJoined();
       onClose();
     } catch (e: any) {
-      toast(e.message ?? t.common.error);
+      const code = e?.error ?? e?.message ?? '';
+      if (String(code).includes('INSUFFICIENT_BALANCE')) {
+        toast(t.wars.insufficientFor(fmtBalance(entryFee.toString())));
+      } else if (String(code).includes('COUNTRY_FULL')) {
+        toast(t.wars.countryFull);
+      } else if (String(code).includes('WAR_IN_PROGRESS')) {
+        toast(t.wars.cantSwitchDuringWar);
+      } else {
+        toast(e.message ?? t.common.error);
+      }
     } finally {
       setJoining(false);
     }
   };
 
-  const handleDonate = async () => {
-    if (!donateAmt || isNaN(Number(donateAmt))) return;
+  const handleDonate = async (amount: number) => {
     setDonating(true);
     try {
-      await warsApi.donate(countryId, Number(donateAmt));
+      await warsApi.donate(countryId, amount);
       toast(t.wars.btnDonate, 'success');
       setDonateAmt('');
+      setShowDonateModal(false);
       warsApi.country(countryId).then(setData);
     } catch (e: any) {
       toast(e.message ?? t.common.error);
@@ -213,6 +317,17 @@ const CountryDetailModal: React.FC<{
   };
 
   const handleLeave = async () => {
+    const fee = data?.country?.myMembership?.contribution
+      ? BigInt(data.country.myMembership.contribution)
+      : COUNTRY_ENTRY_FEE;
+    const ok = await confirm({
+      title: t.wars.leaveCountryConfirm,
+      message: t.wars.leaveContribLost(fmtBalance(fee.toString())),
+      danger: true,
+      okLabel: t.wars.leaveBtnConfirm,
+      cancelLabel: t.wars.stayBtn,
+    });
+    if (!ok) return;
     setLeaving(true);
     try {
       await warsApi.leave();
@@ -229,14 +344,27 @@ const CountryDetailModal: React.FC<{
   const c = data?.country;
   const members = data?.members ?? [];
   const isMine = c?.myMembership != null;
+  const myStatus = c?.myMembership?.status ?? 'APPROVED'; // backward compat
+  const isApproved = isMine && myStatus === 'APPROVED';
+  const isPending = isMine && myStatus === 'PENDING';
+  const hasActiveWar = !!c?.activeWar;
+  const entryFeeStr = c?.entryFee ?? COUNTRY_ENTRY_FEE.toString();
 
   return (
     <div style={overlayStyle} onClick={(e) => e.target === e.currentTarget && onClose()}>
+      {ConfirmDialog}
+      {showDonateModal && (
+        <DonateModal
+          onClose={() => setShowDonateModal(false)}
+          onSubmit={handleDonate}
+          currentPool={c?.treasury}
+        />
+      )}
       <div style={{ ...bottomSheetStyle, maxHeight: '90vh' }}>
         <div style={handleBar} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 32 }}>{c?.flag ?? '🏴'}</span>
+            <CountryFlag code={c?.code ?? c?.id ?? '??'} size={32} />
             <div>
               <div style={{ fontSize: 16, fontWeight: 800, color: '#EAE2CC' }}>{c?.nameRu ?? '...'}</div>
               <div style={{ fontSize: 10, color: '#7A7875' }}>{c?.nameEn ?? ''}</div>
@@ -249,7 +377,7 @@ const CountryDetailModal: React.FC<{
           <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
             <div style={statBoxStyle}>
               <div style={statLabelStyle}>{t.wars.treasury}</div>
-              <div style={{ ...statValueStyle, color: '#D4A843' }}>{fmtBalance(c.treasury)} ᚙ</div>
+              <div style={{ ...statValueStyle, color: '#D4A843' }}>{fmtBalance(c.treasury)}</div>
             </div>
             <div style={statBoxStyle}>
               <div style={statLabelStyle}>{t.wars.wins}</div>
@@ -276,32 +404,33 @@ const CountryDetailModal: React.FC<{
 
         {!isMine && (
           <button onClick={handleJoin} disabled={joining} style={{ ...greenBtnFull, marginBottom: 14, opacity: joining ? 0.6 : 1 }}>
-            {joining ? '...' : t.wars.joinCountryBtn}
+            {joining ? '...' : `${t.wars.joinCountryBtn} · ${fmtBalance(entryFeeStr)}`}
           </button>
         )}
-        {isMine && (
+        {isPending && (
+          <div style={{ padding: '10px 14px', background: 'rgba(240,200,90,.07)', border: '.5px solid rgba(240,200,90,.28)', borderRadius: 12, marginBottom: 14, fontSize: 12, color: '#F0C85A', fontWeight: 600, textAlign: 'center' }}>
+            {t.wars.youArePending}
+          </div>
+        )}
+        {isApproved && (
           <>
             <div style={{ padding: '8px 12px', background: 'rgba(61,186,122,0.07)', border: '.5px solid rgba(61,186,122,0.28)', borderRadius: 12, marginBottom: 10, fontSize: 12, color: '#3DBA7A', fontWeight: 600 }}>
               {t.wars.youAreFighter}
             </div>
             <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-              <input
-                placeholder={t.wars.donateAmount}
-                value={donateAmt}
-                onChange={e => setDonateAmt(e.target.value)}
-                type="number"
-                style={{ ...inputStyle, flex: 1, marginBottom: 0 }}
-              />
               <button
-                onClick={handleDonate}
-                disabled={donating || !donateAmt}
+                onClick={() => setShowDonateModal(true)}
+                disabled={donating}
                 style={{
-                  padding: '10px 14px', background: 'linear-gradient(135deg,#2A1E08,#4A3810)',
+                  flex: 1, padding: '12px 14px',
+                  background: 'linear-gradient(135deg,#2A1E08,#4A3810)',
                   color: '#F0C85A', border: '.5px solid rgba(212,168,67,.42)', borderRadius: 12,
-                  fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                  whiteSpace: 'nowrap', transition: 'all .15s',
+                  fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                  opacity: donating ? 0.6 : 1,
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 }}
               >
+                <CoinIcon size={16} />
                 {donating ? '...' : t.wars.btnDonate}
               </button>
               <button
@@ -313,45 +442,138 @@ const CountryDetailModal: React.FC<{
                   fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s',
                 }}
               >
-                {leaving ? '...' : '🚪'}
+                {leaving ? '...' : t.wars.btnLeave}
               </button>
             </div>
           </>
         )}
 
-        <div style={{ ...sectionLabelStyle, marginBottom: 10 }}>
-          🏴 {t.wars.fightersLabel} ({members.length})
+        {/* B.3: главком видит список заявок на вступление */}
+        {data?.isCommander && pending.length > 0 && (
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ ...sectionLabelStyle, marginBottom: 8 }}>
+              {t.wars.pendingRequests} ({pending.length})
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {pending.map(p => (
+                <div key={p.id} style={{
+                  display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px',
+                  background: 'rgba(240,200,90,.05)', border: '.5px solid rgba(240,200,90,.22)',
+                  borderRadius: 10,
+                }}>
+                  <div onClick={() => { navigate(`/profile/${p.user.id}`); onClose(); }} style={{ cursor: 'pointer' }}>
+                    <Avatar user={p.user as any} size="s" />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#EAE2CC', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {p.user.firstName}{p.user.username ? ` · @${p.user.username}` : ''}
+                    </div>
+                    <div style={{ fontSize: 10, color: '#7A7875', marginTop: 1 }}>
+                      ELO {p.user.elo} · {p.user.referralCount} реф.
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleApprove(p.id)}
+                    disabled={pendingBusy === p.id}
+                    style={{
+                      padding: '6px 10px', borderRadius: 8,
+                      background: 'rgba(61,186,122,.12)', color: '#3DBA7A',
+                      border: '.5px solid rgba(61,186,122,.32)', fontSize: 11, fontWeight: 700,
+                      cursor: 'pointer', fontFamily: 'inherit',
+                      opacity: pendingBusy === p.id ? 0.5 : 1,
+                    }}
+                  >
+                    {t.wars.approve}
+                  </button>
+                  <button
+                    onClick={() => handleReject(p.id)}
+                    disabled={pendingBusy === p.id}
+                    style={{
+                      padding: '6px 10px', borderRadius: 8,
+                      background: 'rgba(255,77,106,.07)', color: '#FF4D6A',
+                      border: '.5px solid rgba(255,77,106,.28)', fontSize: 11, fontWeight: 700,
+                      cursor: 'pointer', fontFamily: 'inherit',
+                      opacity: pendingBusy === p.id ? 0.5 : 1,
+                    }}
+                  >
+                    {t.wars.reject}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div style={{ ...sectionLabelStyle, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span>{t.wars.fightersLabel} ({members.length})</span>
+          {hasActiveWar && (
+            <span style={{ fontSize: 9, fontWeight: 700, color: '#FF4D6A', letterSpacing: '.06em' }}>
+              СОРТ: ПОБЕДЫ В ВОЙНЕ
+            </span>
+          )}
         </div>
 
         <div style={{ maxHeight: 320, overflowY: 'auto' }}>
-          {members.map((m, i) => (
+          {members.map((m: any, i: number) => (
             <div key={m.id} style={{
               display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0',
               borderBottom: '.5px solid rgba(154,148,144,.12)',
             }}>
-              {m.isCommander && (
-                <span style={{ fontSize: 16, flexShrink: 0 }}>👑</span>
+              {/* Звание/ранг */}
+              {m.isCommander ? (
+                <div style={{
+                  flexShrink: 0, padding: '2px 5px', borderRadius: 6,
+                  background: 'linear-gradient(135deg,#F0C85A,#D4A843)',
+                  color: '#0D0D12', fontSize: 9, fontWeight: 900, letterSpacing: '.04em',
+                  whiteSpace: 'nowrap',
+                }}>
+                  ГК
+                </div>
+              ) : (
+                <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: '#7A7875', width: 20, textAlign: 'center', flexShrink: 0 }}>
+                  {i + 1}
+                </span>
               )}
-              {!m.isCommander && (
-                <span style={{ fontSize: 13, color: '#7A7875', width: 20, textAlign: 'center', flexShrink: 0 }}>{i + 1}</span>
-              )}
+
               <div
                 onClick={() => { navigate(`/profile/${m.userId}`); onClose(); }}
                 style={{ cursor: 'pointer' }}
               >
                 <Avatar user={m.user} size="s" />
               </div>
+
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div
-                  style={{ fontSize: 13, fontWeight: 600, color: m.isCommander ? '#D4A843' : '#EAE2CC', cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                  style={{
+                    fontSize: 13, fontWeight: 600,
+                    color: m.isCommander ? '#D4A843' : '#EAE2CC',
+                    cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                    display: 'flex', alignItems: 'center', gap: 6,
+                  }}
                   onClick={() => { navigate(`/profile/${m.userId}`); onClose(); }}
                 >
-                  {m.isCommander && <span style={{ fontSize: 10, color: '#D4A843', marginRight: 4 }}>{t.wars.commanderTag}</span>}
-                  {m.user?.firstName} {m.user?.lastName ?? ''}
+                  <span>{m.user?.firstName} {m.user?.lastName ?? ''}</span>
+                  {m.isCommander && (
+                    <span style={{ fontSize: 9, color: '#D4A843', fontWeight: 700 }}>
+                      Главком · {m.referralCount ?? 0} реф.
+                    </span>
+                  )}
                 </div>
-                <div style={{ fontSize: 10, color: '#7A7875' }}>
-                  ELO {m.user?.elo ?? '—'} • {m.warWins}W / {m.warLosses}L
+                <div style={{ fontSize: 10, color: '#7A7875', display: 'flex', gap: 8, marginTop: 1 }}>
+                  <span>ELO {m.user?.elo ?? '—'}</span>
+                  <span style={{ color: '#3DBA7A' }}>{m.warWins}W</span>
+                  <span style={{ color: '#FF4D6A' }}>{m.warLosses}L</span>
+                  {hasActiveWar && (m.currentWarWins ?? 0) > 0 && (
+                    <span style={{ color: '#F0C85A', fontWeight: 700 }}>
+                      ▲ {m.currentWarWins} в войне
+                    </span>
+                  )}
                 </div>
+                {BigInt(m.contribution ?? '0') > 0n && (
+                  <div style={{ fontSize: 9, color: '#D4A843', marginTop: 2, fontFamily: "'JetBrains Mono',monospace" }}>
+                    вклад {fmtBalance(m.contribution)}
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -409,7 +631,7 @@ const WarDetailModal: React.FC<{ warId: string; onClose: () => void }> = ({ warI
         <div style={handleBar} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
           <div style={{ fontSize: 15, fontWeight: 700, color: '#EAE2CC', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ color: '#3DBA7A' }}>⚔️</span> {t.wars.warDetail}
+            <span style={{ color: '#3DBA7A', display: 'inline-flex', verticalAlign: 'middle' }}><IcoSwords size={16} /></span> {t.wars.warDetail}
           </div>
           <button onClick={onClose} style={closeBtnStyle}>✕</button>
         </div>
@@ -532,9 +754,10 @@ const WarDetailModal: React.FC<{ warId: string; onClose: () => void }> = ({ warI
                           padding: '5px 8px', background: 'rgba(61,186,122,0.07)', color: '#3DBA7A',
                           border: '.5px solid rgba(61,186,122,0.28)', borderRadius: 8, fontSize: 11,
                           cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', transition: 'all .15s',
+                          display: 'inline-flex', alignItems: 'center', gap: 5,
                         }}
                       >
-                        👁 {t.wars.spectateMatch}
+                        <IcoEye size={12} /> {t.wars.spectateMatch}
                       </button>
                     )}
                     {b.session?.pgn && isDone && (
@@ -547,7 +770,7 @@ const WarDetailModal: React.FC<{ warId: string; onClose: () => void }> = ({ warI
                           cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s',
                         }}
                       >
-                        {saving === b.sessionId ? '...' : '💾'}
+                        {saving === b.sessionId ? '...' : <IcoSave size={12} />}
                       </button>
                     )}
                   </div>
@@ -594,8 +817,8 @@ export const WarsPage: React.FC = () => {
   const [showDonate, setShowDonate] = useState(false);
   const [donateAmt, setDonateAmt] = useState('');
   const [donating, setDonating] = useState(false);
-  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [pageConfirm, PageConfirmDialog] = useConfirm();
 
   const loadAll = useCallback(async () => {
     try {
@@ -647,11 +870,10 @@ export const WarsPage: React.FC = () => {
     try { await warsApi.introSeen(); } catch {}
   };
 
-  const handleDonate = async () => {
-    if (!donateAmt || isNaN(Number(donateAmt))) return;
+  const handleDonate = async (amount: number) => {
     setDonating(true);
     try {
-      await warsApi.contribute(myCountry.id, Number(donateAmt));
+      await warsApi.contribute(myCountry.id, amount);
       toast(t.wars.btnDonate + '!', 'success');
       setDonateAmt('');
       setShowDonate(false);
@@ -664,11 +886,18 @@ export const WarsPage: React.FC = () => {
   };
 
   const handleLeave = async () => {
+    const ok = await pageConfirm({
+      title: t.wars.leaveTeam,
+      message: t.wars.leaveTeamDesc(myCountry?.nameRu ?? ''),
+      okLabel: t.wars.btnLeave,
+      cancelLabel: t.common.cancel,
+      danger: true,
+    });
+    if (!ok) return;
     setLeaving(true);
     try {
       await warsApi.leave();
       toast(t.wars.leaveCountry, 'success');
-      setShowLeaveConfirm(false);
       loadAll();
     } catch (e: any) {
       toast(e.message ?? t.common.error);
@@ -760,7 +989,7 @@ export const WarsPage: React.FC = () => {
               {t.wars.btnBattles}
             </button>
             <button
-              onClick={() => setShowLeaveConfirm(true)}
+              onClick={handleLeave}
               style={{ ...actionBtnStyle, color: '#FF4D6A', borderColor: 'rgba(255,77,106,0.3)' }}
             >
               {t.wars.btnLeave}
@@ -787,19 +1016,22 @@ export const WarsPage: React.FC = () => {
                   {myActiveWar.attackerWins} : {myActiveWar.defenderWins}
                 </div>
               </div>
-              <div style={{ fontSize: 10, color: '#7A7875', marginTop: 2 }}>⏱ <WarCountdown initialSeconds={myActiveWar.secondsLeft ?? 0} active={true} /></div>
+              <div style={{ fontSize: 10, color: '#7A7875', marginTop: 2 }}><WarCountdown initialSeconds={myActiveWar.secondsLeft ?? 0} active={true} /></div>
             </div>
           )}
         </div>
       )}
 
       {/* Поиск — всегда над табами */}
-      <div style={{ margin: '8px 18px 8px' }}>
+      <div style={{ margin: '8px 18px 8px', position: 'relative' }}>
+        <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#7A7875', pointerEvents: 'none' }}>
+          <IcoSearch size={14} />
+        </span>
         <input
-          placeholder={`🔍 ${t.wars.searchPlaceholder}`}
+          placeholder={t.wars.searchPlaceholder}
           value={searchCountry}
           onChange={e => setSearchCountry(e.target.value)}
-          style={{ ...inputStyle, width: '100%', marginBottom: 0, boxSizing: 'border-box' }}
+          style={{ ...inputStyle, width: '100%', marginBottom: 0, boxSizing: 'border-box', paddingLeft: 34 }}
         />
       </div>
 
@@ -871,7 +1103,7 @@ export const WarsPage: React.FC = () => {
         <>
           {activeWars.length === 0 && (
             <div style={{ textAlign: 'center', padding: 40 }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>🕊️</div>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: '#3DBA7A' }}><IcoHandshake size={40} /></div>
               <div style={{ fontSize: 14, fontWeight: 600, color: '#EAE2CC', marginBottom: 6 }}>{t.wars.noWars}</div>
               <div style={{ fontSize: 12, color: '#7A7875' }}>
                 {isCommander ? t.wars.isCommander : t.wars.notCommander}
@@ -895,7 +1127,7 @@ export const WarsPage: React.FC = () => {
                     <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 24, fontWeight: 800, color: '#D4A843' }}>
                       {war.attackerWins} : {war.defenderWins}
                     </div>
-                    <div style={{ fontSize: 10, color: '#3DBA7A', marginTop: 2 }}>⏱ <WarCountdown initialSeconds={war.secondsLeft ?? 0} active={war.status === 'IN_PROGRESS'} /></div>
+                    <div style={{ fontSize: 10, color: '#3DBA7A', marginTop: 2 }}><WarCountdown initialSeconds={war.secondsLeft ?? 0} active={war.status === 'IN_PROGRESS'} /></div>
                   </div>
                   <div style={{ textAlign: 'center', flex: 1 }}>
                     <div style={{ fontSize: 28 }}>{war.defenderCountry?.flag}</div>
@@ -939,7 +1171,7 @@ export const WarsPage: React.FC = () => {
         <>
           {historyWars.length === 0 && (
             <div style={{ textAlign: 'center', padding: 40 }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>📜</div>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: '#7A7875' }}><IcoStats size={40} /></div>
               <div style={{ fontSize: 13, color: '#7A7875' }}>{t.wars.historyEmpty}</div>
             </div>
           )}
@@ -959,7 +1191,7 @@ export const WarsPage: React.FC = () => {
                       <span style={{ fontSize: 24 }}>{war.attackerCountry?.flag}</span>
                       <div>
                         <div style={{ fontSize: 12, fontWeight: 700, color: attackerWon ? '#D4A843' : '#EAE2CC' }}>
-                          {attackerWon && '🏆 '}{war.attackerCountry?.nameRu}
+                          {attackerWon && <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginRight: 4 }}><IcoTrophy size={12} /></span>}{war.attackerCountry?.nameRu}
                         </div>
                         <div style={{ fontSize: 10, color: '#7A7875' }}>{war.attackerWins} {t.wars.winsCount}</div>
                       </div>
@@ -970,7 +1202,7 @@ export const WarsPage: React.FC = () => {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }} onClick={() => setSelectedCountryId(war.defenderCountryId)}>
                       <div style={{ textAlign: 'right' }}>
                         <div style={{ fontSize: 12, fontWeight: 700, color: defenderWon ? '#D4A843' : '#EAE2CC' }}>
-                          {defenderWon && '🏆 '}{war.defenderCountry?.nameRu}
+                          {defenderWon && <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginRight: 4 }}><IcoTrophy size={12} /></span>}{war.defenderCountry?.nameRu}
                         </div>
                         <div style={{ fontSize: 10, color: '#7A7875' }}>{war.defenderWins} {t.wars.winsCount}</div>
                       </div>
@@ -1000,79 +1232,17 @@ export const WarsPage: React.FC = () => {
         </>
       )}
 
-      {/* Модал доната в казну */}
+      {/* Модал доната в казну — центральный DonateModal */}
       {showDonate && myCountry && (
-        <div style={overlayStyle} onClick={(e) => e.target === e.currentTarget && setShowDonate(false)}>
-          <div style={bottomSheetStyle}>
-            <div style={handleBar} />
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: '#EAE2CC' }}>{t.wars.donateTreasury}</div>
-              <button onClick={() => setShowDonate(false)} style={closeBtnStyle}>✕</button>
-            </div>
-            <div style={{ fontSize: 12, color: '#7A7875', marginBottom: 14 }}>
-              {t.wars.donateTreasuryDesc(myCountry.nameRu)}
-            </div>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
-              <input
-                placeholder={t.wars.donateAmount}
-                value={donateAmt}
-                onChange={e => setDonateAmt(e.target.value)}
-                type="number"
-                style={{ ...inputStyle, flex: 1, marginBottom: 0 }}
-              />
-              <button
-                onClick={handleDonate}
-                disabled={donating || !donateAmt}
-                style={{
-                  padding: '10px 16px', background: 'linear-gradient(135deg,#2A1E08,#4A3810)',
-                  color: '#F0C85A', border: '.5px solid rgba(212,168,67,.42)', borderRadius: 12,
-                  fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                  opacity: donating ? 0.6 : 1, transition: 'all .15s',
-                }}
-              >
-                {donating ? '...' : t.wars.send}
-              </button>
-            </div>
-          </div>
-        </div>
+        <DonateModal
+          onClose={() => setShowDonate(false)}
+          onSubmit={handleDonate}
+          currentPool={myCountry.treasury}
+        />
       )}
 
-      {/* Модал подтверждения выхода */}
-      {showLeaveConfirm && (
-        <div style={overlayStyle} onClick={(e) => e.target === e.currentTarget && setShowLeaveConfirm(false)}>
-          <div style={bottomSheetStyle}>
-            <div style={handleBar} />
-            <div style={{ fontSize: 16, fontWeight: 700, color: '#EAE2CC', marginBottom: 12 }}>{t.wars.leaveTeam}</div>
-            <div style={{ fontSize: 13, color: '#7A7875', marginBottom: 22, lineHeight: 1.6 }}>
-              {t.wars.leaveTeamDesc(myCountry?.nameRu ?? '')}
-            </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button
-                onClick={() => setShowLeaveConfirm(false)}
-                style={{
-                  flex: 1, padding: 12, background: 'rgba(255,255,255,0.04)', color: '#7A7875',
-                  border: '.5px solid rgba(154,148,144,.22)', borderRadius: 12, fontSize: 13,
-                  fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s',
-                }}
-              >
-                {t.common.cancel}
-              </button>
-              <button
-                onClick={handleLeave}
-                disabled={leaving}
-                style={{
-                  flex: 1, padding: 12, background: 'rgba(255,77,106,0.08)', color: '#FF4D6A',
-                  border: '.5px solid rgba(255,77,106,0.3)', borderRadius: 12, fontSize: 13,
-                  fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                  opacity: leaving ? 0.6 : 1, transition: 'all .15s',
-                }}
-              >
-                {leaving ? '...' : t.wars.btnLeave}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Подтверждение выхода — центральный модал через useConfirm */}
+      {PageConfirmDialog}
 
       {/* Modals */}
       {showIntro && <WarsIntroModal onClose={handleIntroClose} />}
@@ -1109,18 +1279,28 @@ function formatTime(seconds: number): string {
 // ─── Styles ──────────────────────────────────────────────────────────────────
 const overlayStyle: React.CSSProperties = {
   position: 'fixed', inset: 0, background: 'rgba(0,0,0,.82)', backdropFilter: 'blur(18px)',
-  zIndex: 300, display: 'flex', alignItems: 'flex-end',
+  zIndex: 300, display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+  // 2026-05-16 Кенан: модал не должен прятаться за BottomNav (≈72px)
+  // и не лип к Telegram статус-бару сверху.
+  paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px) + 8px)',
+  paddingTop: 'calc(env(safe-area-inset-top, 0px) + 14px)',
 };
 
 const bottomSheetStyle: React.CSSProperties = {
   width: '100%',
   background: 'linear-gradient(160deg,#12151E,#0E111A)',
   borderRadius: '24px 24px 0 0',
-  padding: 20,
+  padding: '14px 18px 18px',
   border: '1px solid rgba(255,255,255,.09)',
   borderBottom: 'none',
-  maxHeight: '85vh',
+  // 2026-05-16: минимум 40vh, чтобы пустые блоки (таблица лидеров без
+  // данных, страна без бойцов) выглядели как полная панель, а не как
+  // тонкая полоска внизу.
+  minHeight: '40vh',
+  maxHeight: 'calc(100vh - 90px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
   overflowY: 'auto',
+  display: 'flex',
+  flexDirection: 'column',
 };
 
 const modalCardStyle: React.CSSProperties = {

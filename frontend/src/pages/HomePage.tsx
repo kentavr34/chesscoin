@@ -6,7 +6,9 @@ import { getSocket } from '@/api/socket';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { JarvisPlayModal } from '@/components/ui/JarvisPlayModal';
 import { AttemptsModal } from '@/components/ui/AttemptsModal';
+import { CountryFlag } from '@/components/ui/CountryFlag';
 import { ActiveSessionsModal } from '@/components/ui/ActiveSessionsModal';
+import { LeagueProgressBar } from '@/components/ui/LeagueProgressBar';
 import { type JarvisLevel } from '@/components/ui/JarvisModal';
 import { useT } from '@/i18n/useT';
 
@@ -207,7 +209,7 @@ export const HomePage: React.FC = () => {
   const attempts = user.attempts ?? 3;
   const maxAttempts = user.maxAttempts ?? 3;
   const initial = user.firstName?.[0]?.toUpperCase();
-  const countryFlag = user.countryMember?.country?.flag;
+  const countryCode = user.countryMember?.country?.code;
 
   const blkScale = (key: string) => pressedBlk === key ? 'scale(.94)' : 'scale(1)';
 
@@ -341,8 +343,8 @@ export const HomePage: React.FC = () => {
                 }}>
                   {displayName}
                 </div>
-                {countryFlag && (
-                  <span style={{ fontSize: '.9rem', lineHeight: 1, flexShrink: 0 }}>{countryFlag}</span>
+                {countryCode && (
+                  <CountryFlag code={countryCode} size={18} />
                 )}
               </div>
               {/* ELO — жёлтый, +3 единицы */}
@@ -426,6 +428,13 @@ export const HomePage: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* ══ ЛИГА (под паспортом, до активных сессий) ══ */}
+        <LeagueProgressBar
+          league={user.league}
+          balance={user.balance}
+          margin=".7rem .85rem 0"
+        />
 
         {/* ══ АКТИВНЫЕ СЕССИИ (только если есть) ══ */}
         {activeSessions.length > 0 && (
@@ -562,8 +571,8 @@ export const HomePage: React.FC = () => {
             <div style={{ marginBottom: '.55rem' }}>
               <IcoTrophy size={52} />
             </div>
-            <div style={{ fontSize: '.86rem', fontWeight: 900, letterSpacing: '.01em', marginBottom: '.12rem', color: '#D4C0FF' }}>Кубки</div>
-            <div style={{ fontSize: '.58rem', lineHeight: 1.35, color: 'rgba(155,109,255,.82)' }}>Турниры · Скоро</div>
+            <div style={{ fontSize: '.86rem', fontWeight: 900, letterSpacing: '.01em', marginBottom: '.12rem', color: '#D4C0FF' }}>Турниры</div>
+            <div style={{ fontSize: '.58rem', lineHeight: 1.35, color: 'rgba(155,109,255,.82)' }}>Чемпионаты · Скоро</div>
           </div>
 
           {/* ВОЙНЫ */}

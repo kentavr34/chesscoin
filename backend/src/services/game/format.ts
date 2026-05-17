@@ -27,6 +27,9 @@ export const formatSession = (session: SessionWithSides, userId: string | null) 
       avatarGradient: side.player.avatarGradient,
       elo: side.player.elo,
       league: side.player.league,
+      // 2026-05-16: ISO-2 код страны для <CountryFlag> на доске.
+      // Доступно если запрос загрузил `countryMember.country.code`.
+      country: (side.player as any).countryMember?.country?.code ?? null,
     },
   });
 
@@ -61,6 +64,15 @@ export const formatSession = (session: SessionWithSides, userId: string | null) 
 
 // Форматирует список батлов для лобби
 export const formatBattlesList = (sessions: SessionWithSides[], spectatorCounts?: Map<string, number>) => {
+  const formatPlayer = (side: SessionSideWithPlayer) => ({
+    id: side.player.id,
+    firstName: side.player.firstName,
+    avatar: side.player.avatar,
+    avatarGradient: side.player.avatarGradient,
+    elo: side.player.elo,
+    league: side.player.league,
+    isWhite: side.isWhite,
+  });
   return sessions.map((s) => ({
     id: s.id,
     code: s.code,
@@ -71,16 +83,8 @@ export const formatBattlesList = (sessions: SessionWithSides[], spectatorCounts?
     spectatorCount: spectatorCounts?.get(s.id) ?? 0,
     sourceType: (s as any).sourceType ?? null,
     sourceMeta: (s as any).sourceMeta ?? null,
-    creator: s.sides[0]
-      ? {
-          id: s.sides[0].player.id,       // нужен для навигации на профиль
-          firstName: s.sides[0].player.firstName,
-          avatar: s.sides[0].player.avatar,
-          avatarGradient: s.sides[0].player.avatarGradient,
-          elo: s.sides[0].player.elo,
-          league: s.sides[0].player.league,
-          isWhite: s.sides[0].isWhite,
-        }
-      : null,
+    creator: s.sides[0] ? formatPlayer(s.sides[0]) : null,
+    // Для турнирных вызовов: оба игрока известны заранее
+    opponent: s.sides[1] ? formatPlayer(s.sides[1]) : null,
   }));
 };

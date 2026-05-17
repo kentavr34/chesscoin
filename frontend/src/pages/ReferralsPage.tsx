@@ -6,26 +6,30 @@ import { profileApi } from '@/api';
 import { fmtBalance, fmtDate } from '@/utils/format';
 import { toast } from '@/components/ui/Toast';
 import { useT } from '@/i18n/useT';
+import { RankBadge, type RankTier } from '@/components/ui/RankBadge';
 
-const RANK_THRESHOLDS_BASE = [
-  { rank: 'EMPEROR',      emoji: '👑',     minReferrals: 1_000_000, bonus: 40_000,  pct: 15 },
-  { rank: 'MARSHAL',      emoji: '🏅',     minReferrals: 500_000,   bonus: 35_000,  pct: 14 },
-  { rank: 'COL_GENERAL',  emoji: '🌟🌟🌟', minReferrals: 300_000,   bonus: 30_000,  pct: 13 },
-  { rank: 'LT_GENERAL',   emoji: '🌟🌟',  minReferrals: 200_000,   bonus: 25_000,  pct: 12 },
-  { rank: 'MAJ_GENERAL',  emoji: '🌟',     minReferrals: 100_000,   bonus: 20_000,  pct: 11 },
-  { rank: 'BRIGADIER',    emoji: '🎖️',    minReferrals: 80_000,    bonus: 15_000,  pct: 10 },
-  { rank: 'COLONEL',      emoji: '⭐⭐⭐',  minReferrals: 60_000,    bonus: 14_000,  pct:  9 },
-  { rank: 'LT_COLONEL',   emoji: '⭐⭐',   minReferrals: 40_000,    bonus: 13_000,  pct:  8 },
-  { rank: 'MAJOR',        emoji: '⭐',     minReferrals: 20_000,    bonus: 12_000,  pct:  7 },
-  { rank: 'CAPTAIN',      emoji: '🔵🔵🔵🔵',minReferrals: 10_000,   bonus: 10_000,  pct:  6 },
-  { rank: 'SR_LIEUTENANT',emoji: '🔵🔵🔵', minReferrals: 5_000,    bonus:  9_000,  pct:  5 },
-  { rank: 'LIEUTENANT',   emoji: '🔵🔵',   minReferrals: 3_000,    bonus:  8_000,  pct:  5 },
-  { rank: 'JR_LIEUTENANT',emoji: '🔵',     minReferrals: 1_000,    bonus:  7_000,  pct:  5 },
-  { rank: 'WARRANT',      emoji: '🔶',     minReferrals: 500,       bonus:  6_000,  pct:  4 },
-  { rank: 'SERGEANT',     emoji: '🔷',     minReferrals: 100,       bonus:  5_000,  pct:  3 },
-  { rank: 'CORPORAL',     emoji: '🔹',     minReferrals: 50,        bonus:  4_000,  pct:  2 },
-  { rank: 'PRIVATE',      emoji: '🪖',     minReferrals: 10,        bonus:  3_000,  pct:  1 },
-  { rank: 'RECRUIT',      emoji: '🙂',     minReferrals: 0,         bonus:      0,  pct:  0 },
+const RANK_THRESHOLDS_BASE: Array<{
+  rank: string; tier: RankTier; count: number;
+  minReferrals: number; bonus: number; pct: number;
+}> = [
+  { rank: 'EMPEROR',      tier: 'crown',       count: 1, minReferrals: 1_000_000, bonus: 40_000, pct: 15 },
+  { rank: 'MARSHAL',      tier: 'wreath',      count: 1, minReferrals: 500_000,   bonus: 35_000, pct: 14 },
+  { rank: 'COL_GENERAL',  tier: 'bigStar',     count: 3, minReferrals: 300_000,   bonus: 30_000, pct: 13 },
+  { rank: 'LT_GENERAL',   tier: 'bigStar',     count: 2, minReferrals: 200_000,   bonus: 25_000, pct: 12 },
+  { rank: 'MAJ_GENERAL',  tier: 'bigStar',     count: 1, minReferrals: 100_000,   bonus: 20_000, pct: 11 },
+  { rank: 'BRIGADIER',    tier: 'medal',       count: 1, minReferrals: 80_000,    bonus: 15_000, pct: 10 },
+  { rank: 'COLONEL',      tier: 'midStar',     count: 3, minReferrals: 60_000,    bonus: 14_000, pct:  9 },
+  { rank: 'LT_COLONEL',   tier: 'midStar',     count: 2, minReferrals: 40_000,    bonus: 13_000, pct:  8 },
+  { rank: 'MAJOR',        tier: 'midStar',     count: 1, minReferrals: 20_000,    bonus: 12_000, pct:  7 },
+  { rank: 'CAPTAIN',      tier: 'dot',         count: 4, minReferrals: 10_000,    bonus: 10_000, pct:  6 },
+  { rank: 'SR_LIEUTENANT',tier: 'dot',         count: 3, minReferrals: 5_000,     bonus:  9_000, pct:  5 },
+  { rank: 'LIEUTENANT',   tier: 'dot',         count: 2, minReferrals: 3_000,     bonus:  8_000, pct:  5 },
+  { rank: 'JR_LIEUTENANT',tier: 'dot',         count: 1, minReferrals: 1_000,     bonus:  7_000, pct:  5 },
+  { rank: 'WARRANT',      tier: 'rhombus',     count: 1, minReferrals: 500,       bonus:  6_000, pct:  4 },
+  { rank: 'SERGEANT',     tier: 'rhombusBlue', count: 1, minReferrals: 100,       bonus:  5_000, pct:  3 },
+  { rank: 'CORPORAL',     tier: 'dotBlue',     count: 1, minReferrals: 50,        bonus:  4_000, pct:  2 },
+  { rank: 'PRIVATE',      tier: 'helmet',      count: 1, minReferrals: 10,        bonus:  3_000, pct:  1 },
+  { rank: 'RECRUIT',      tier: 'recruit',     count: 1, minReferrals: 0,         bonus:      0, pct:  0 },
 ];
 
 // Функция для получения локализованных рангов
@@ -116,7 +120,7 @@ export const ReferralsPage: React.FC = () => {
         {/* Stats — 3 карточки в ряд */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginTop: 16 }}>
           {[
-            { label: r.totalEarned, value: `${fmtBalance(data?.totalIncome ?? '0')} ᚙ`, color: '#3DBA7A' },
+            { label: r.totalEarned, value: `${fmtBalance(data?.totalIncome ?? '0')}`, color: '#3DBA7A' },
             { label: r.referralsCount, value: String(data?.active ?? 0), color: '#3DBA7A' },
             { label: 'Total', value: String(data?.total ?? 0), color: '#3DBA7A' },
           ].map((stat) => (
@@ -198,9 +202,9 @@ export const ReferralsPage: React.FC = () => {
                 background: 'rgba(61,186,122,.1)',
                 border: '.5px solid rgba(61,186,122,.3)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 24, flexShrink: 0,
+                flexShrink: 0,
               }}>
-                {currentRank.emoji}
+                <RankBadge tier={currentRank.tier} count={currentRank.count} size={40} />
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#3DBA7A' }}>{currentRank.label}</div>
@@ -209,15 +213,16 @@ export const ReferralsPage: React.FC = () => {
                 </div>
                 {currentRank.bonus > 0 && (
                   <div style={{ fontSize: '0.7rem', color: '#3DBA7A', marginTop: 2 }}>
-                    +{currentRank.bonus.toLocaleString()} ᚙ {r.perReferral} · {currentRank.pct}% {r.ofWinnings}
+                    +{currentRank.bonus.toLocaleString()} {r.perReferral} · {currentRank.pct}% {r.ofWinnings}
                   </div>
                 )}
               </div>
               {nextRank && (
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
                   <div style={{ fontSize: '0.62rem', color: '#7A7875', marginBottom: 2 }}>{r.nextRank}</div>
-                  <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#3DBA7A' }}>
-                    {nextRank.emoji} {nextRank.label}
+                  <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#3DBA7A', display: 'inline-flex', alignItems: 'center', gap: 5, justifyContent: 'flex-end' }}>
+                    <RankBadge tier={nextRank.tier} count={nextRank.count} size={18} />
+                    {nextRank.label}
                   </div>
                   <div style={{ fontSize: '0.65rem', color: '#4A5270' }}>
                     {nextRank.minReferrals.toLocaleString()} {r.ref}
@@ -269,7 +274,9 @@ export const ReferralsPage: React.FC = () => {
                         padding: '2px 6px', borderRadius: '0 0 6px 6px',
                       }}>{r.you}</div>
                     )}
-                    <span style={{ fontSize: 18, minWidth: 50, textAlign: 'center', flexShrink: 0 }}>{rk.emoji}</span>
+                    <span style={{ minWidth: 50, display: 'flex', justifyContent: 'center', flexShrink: 0 }}>
+                      <RankBadge tier={rk.tier} count={rk.count} size={28} />
+                    </span>
                     <div style={{ flex: 1 }}>
                       <div style={{
                         fontSize: '0.78rem', fontWeight: 800,
@@ -284,7 +291,7 @@ export const ReferralsPage: React.FC = () => {
                     {rk.bonus > 0 && (
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
                         <div style={{ fontSize: '0.72rem', fontWeight: 800, color: isCurrent ? '#3DBA7A' : unlocked ? '#3DBA7A' : '#6A7A6A' }}>
-                          +{rk.bonus.toLocaleString()} ᚙ
+                          +{rk.bonus.toLocaleString()}
                         </div>
                         <div style={{ fontSize: '0.6rem', color: unlocked ? '#7A7875' : '#5A5A5A', fontWeight: 700 }}>{rk.pct}%</div>
                       </div>
@@ -315,7 +322,7 @@ export const ReferralsPage: React.FC = () => {
         const rules = [
           {
             ico: '🎁',
-            title: `+${firstGameBonus.toLocaleString()} ᚙ`,
+            title: `+${firstGameBonus.toLocaleString()}`,
             sub: r.ruleFirstGame,
           },
           {

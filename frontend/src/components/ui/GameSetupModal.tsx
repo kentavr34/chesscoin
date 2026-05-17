@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import type { JarvisLevel } from './JarvisModal';
 import { useT } from '@/i18n/useT';
 import { InfoPopup, useInfoPopup } from '@/components/layout/PageLayout';
+import { IcoRobot, IcoMedal } from '@/components/icons/UiIcons';
+import { CoinIcon } from './CoinIcon';
 
 const TIME_OPTIONS = [1, 3, 5, 15, 30, 60];
 type ColorChoice = 'random' | 'white' | 'black';
@@ -13,21 +15,21 @@ interface GameSetupModalProps {
 }
 
 // J4: слайды информационного попапа о Джарвисе
-const getJarvisInfoSlides = (t: any) => [
+const getJarvisInfoSlides = (_t: any) => [
   {
-    icon: '🤖',
+    icon: <IcoRobot size={32} color="#F5C842" />,
     title: 'J.A.R.V.I.S — Искусственный противник',
-    desc: 'Играй против ИИ. Выигрывай, чтобы открыть следующий уровень и заработать ᚙ. Каждый уровень сложнее предыдущего.',
+    desc: 'Играй против ИИ. Выигрывай, чтобы открыть следующий уровень и заработать. Каждый уровень сложнее предыдущего.',
   },
   {
-    icon: '🏅',
+    icon: <IcoMedal size={32} color="#F5C842" />,
     title: '20 уровней мастерства',
     desc: 'От новичка до мистика. Каждый уровень дарует уникальный значок на профиль — так другие видят твой ранг.',
   },
   {
-    icon: '💰',
-    title: 'ᚙ за победу',
-    desc: 'Чем выше уровень — тем больше награда. На уровне мистика получаешь до 75 000 ᚙ за победу! Проигрыш ᚙ не тратит.',
+    icon: <CoinIcon size={32} />,
+    title: ' за победу',
+    desc: 'Чем выше уровень — тем больше награда. На уровне мистика получаешь до 75 000 за победу! Проигрыш не тратит.',
   },
 ];
 
@@ -88,7 +90,7 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
           <div style={{ position: 'relative', width: 100, height: 100, margin: `0 auto var(--gap-xl)` }}>
             <div style={glowRingStyle} />
             <div style={innerCircleStyle}>
-              <span style={{ fontSize: 'var(--icon-size-2xl)' }}>🤖</span>
+              <IcoRobot size={36} color="#F5C842" />
             </div>
           </div>
 
@@ -137,8 +139,8 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--gap-md)', flexShrink: 0, paddingBottom: 'var(--gap-xs)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
           <button onClick={onClose} style={backBtnStyle}>←</button>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 'var(--font-size-md)', fontWeight: 'var(--font-weight-extrabold)', color: 'var(--color-text-primary, #F0F2F8)' }}>
-              🤖 {selectedLevel.name}
+            <div style={{ fontSize: 'var(--font-size-md)', fontWeight: 'var(--font-weight-extrabold)', color: 'var(--color-text-primary, #F0F2F8)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <IcoRobot size={16} /> {selectedLevel.name}
             </div>
             <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-accent, #F5C842)', marginTop: 2 }}>
               Level {selectedLevel.level} / 20
@@ -149,7 +151,7 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
             style={{ ...backBtnStyle, fontSize: 'var(--font-size-base)', color: 'var(--color-text-secondary, #8B92A8)' }}
             title="About J.A.R.V.I.S"
           >
-            ℹ️
+            <span style={{ fontWeight: 800, fontFamily: 'serif' }}>i</span>
           </button>
           <button onClick={onClose} style={backBtnStyle}>✕</button>
         </div>
@@ -176,7 +178,7 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
                     filter: color !== c ? 'grayscale(1)' : 'none',
                     transition: 'opacity .15s, filter .15s',
                   }}>
-                    {c === 'random' ? '🎲' : c === 'white' ? '♔' : '♚'}
+                    {c === 'random' ? '?' : c === 'white' ? '♔' : '♚'}
                   </span>
                   <span style={{ fontSize: '9px', fontWeight: 'var(--font-weight-bold)' }}>
                     {c === 'random' ? t.gameSetup.random.replace('🎲 ','') : c === 'white' ? t.gameSetup.white.replace('☀️ ','') : t.gameSetup.black.replace('🌙 ','')}
@@ -199,14 +201,15 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
                   style={timeBtnStyle(time === opt)}
                 >
                   <span style={{
-                    fontSize: 'var(--font-size-sm)',
+                    fontFamily: "'JetBrains Mono',monospace",
+                    fontSize: 'var(--font-size-md)',
+                    fontWeight: 900,
                     display: 'block',
                     marginBottom: 'var(--gap-xs)',
                     opacity: time === opt ? 1 : 0.5,
-                    filter: time !== opt ? 'grayscale(0.6)' : 'none',
-                    transition: 'opacity .15s, filter .15s',
+                    transition: 'opacity .15s',
                   }}>
-                    {opt === 1 ? '⚡' : opt === 3 ? '🔥' : opt === 5 ? '♟' : opt === 15 ? '🎯' : opt === 30 ? '🏆' : '👑'}
+                    {opt}
                   </span>
                   <span style={{ fontSize: '9px' }}>
                     {getTimeLabel(opt)}

@@ -62,43 +62,81 @@ function getCurrentPeriod(type: TournamentType): string {
     case 'SEASONAL': return `${year}-Q${quarter}`;
     case 'COUNTRY': return `${year}-${month}`; // COUNTRY = monthly period per country
     case 'WORLD': return `${year}`;
-    case 'COUNTRY': return `${year}-${month}`;
   }
 }
 
 // Инициализировать системные турниры (вызывается из cron)
+// Логика:
+//  1. Закрываем устаревшие REGISTRATION-турниры с прошлым period (status=FINISHED если 0 игроков)
+//  2. Если на текущий period нет турнира этого типа — создаём (1 запись на пару (type, period))
+//  3. Дубликаты на тот же period (если уже образовались) — закрываем кроме одного с максимумом игроков
 export async function ensureSystemTournaments() {
   const types: TournamentType[] = ['WEEKLY', 'MONTHLY', 'SEASONAL', 'COUNTRY', 'WORLD'];
   for (const type of types) {
-    const period = getCurrentPeriod(type);
-    const existing = await prisma.tournament.findFirst({
-      where: { type, period, status: { in: ['REGISTRATION', 'IN_PROGRESS'] } },
+    const currentPeriod = getCurrentPeriod(type);
+
+    // 1. Старые REGISTRATION-турниры не текущего периода с 0 активных игроков → закрываем
+    const stale = await prisma.tournament.findMany({
+      where: {
+        type,
+        status: 'REGISTRATION',
+        period: { not: currentPeriod },
+      },
+      include: { _count: { select: { players: { where: { isActive: true } } } } },
     });
-    if (!existing) {
-      const now = new Date();
-      let endAt: Date;
-      switch (type) {
-        case 'WEEKLY': endAt = new Date(now.getTime() + 7 * 86400000); break;
-        case 'MONTHLY': endAt = new Date(now.getFullYear(), now.getMonth() + 1, 1); break;
-        case 'SEASONAL': endAt = new Date(now.getFullYear(), Math.ceil((now.getMonth() + 1) / 3) * 3, 1); break;
-        case 'COUNTRY': endAt = new Date(now.getFullYear(), now.getMonth() + 1, 1); break; // месячный цикл
-        default: endAt = new Date(now.getTime() + 7 * 86400000);
+    for (const s of stale) {
+      if (s._count.players === 0) {
+        await prisma.tournament.update({ where: { id: s.id }, data: { status: 'FINISHED' } });
+        logger.info(`[Tournaments] Closed stale empty tournament ${s.id} (${type}/${s.period})`);
       }
-      await prisma.tournament.create({
-        data: {
-          name: TOURNAMENT_LABELS[type],
-          description: `Системный турнир: ${TOURNAMENT_LABELS[type]}`,
-          entryFee: TOURNAMENT_ENTRY_FEES[type],
-          maxPlayers: 10000,
-          status: 'REGISTRATION',
-          type,
-          period,
-          endAt,
-          startAt: now,
-        },
-      });
-      logger.info(`[Tournaments] Created ${type} for period ${period}`);
     }
+
+    // 2. Дубли на ТЕКУЩИЙ период — оставляем самый "богатый" (по игрокам), остальные закрываем
+    const dupes = await prisma.tournament.findMany({
+      where: { type, period: currentPeriod, status: { in: ['REGISTRATION', 'IN_PROGRESS'] } },
+      include: { _count: { select: { players: { where: { isActive: true } } } } },
+      orderBy: { createdAt: 'asc' },
+    });
+    if (dupes.length > 1) {
+      const keep = dupes.reduce((best, t) => t._count.players > best._count.players ? t : best, dupes[0]);
+      for (const t of dupes) {
+        if (t.id === keep.id) continue;
+        if (t._count.players === 0) {
+          await prisma.tournament.update({ where: { id: t.id }, data: { status: 'FINISHED' } });
+          logger.info(`[Tournaments] Closed duplicate ${t.id} (${type}/${currentPeriod})`);
+        }
+      }
+    }
+
+    // 3. Создаём текущий, если нет
+    const existing = await prisma.tournament.findFirst({
+      where: { type, period: currentPeriod, status: { in: ['REGISTRATION', 'IN_PROGRESS'] } },
+    });
+    if (existing) continue;
+
+    const now = new Date();
+    let endAt: Date;
+    switch (type) {
+      case 'WEEKLY': endAt = new Date(now.getTime() + 7 * 86400000); break;
+      case 'MONTHLY': endAt = new Date(now.getFullYear(), now.getMonth() + 1, 1); break;
+      case 'SEASONAL': endAt = new Date(now.getFullYear(), Math.ceil((now.getMonth() + 1) / 3) * 3, 1); break;
+      case 'COUNTRY': endAt = new Date(now.getFullYear(), now.getMonth() + 1, 1); break;
+      default: endAt = new Date(now.getTime() + 7 * 86400000);
+    }
+    await prisma.tournament.create({
+      data: {
+        name: TOURNAMENT_LABELS[type],
+        description: `Системный турнир: ${TOURNAMENT_LABELS[type]}`,
+        entryFee: TOURNAMENT_ENTRY_FEES[type],
+        maxPlayers: 10000,
+        status: 'REGISTRATION',
+        type,
+        period: currentPeriod,
+        endAt,
+        startAt: now,
+      },
+    });
+    logger.info(`[Tournaments] Created ${type} for period ${currentPeriod}`);
   }
 }
 
@@ -548,12 +586,13 @@ export async function runTournamentMatchmaking(
   const sessionCode = nanoid(8).toUpperCase();
 
   const { session, match } = await prisma.$transaction(async (tx: import("@prisma/client").Prisma.TransactionClient) => {
-    // В турнире батл создается с обоими участниками, status = WAITING_FOR_OPPONENT
+    // Турнирный батл — публичный с самого начала, чтобы попадал в лобби
+    // (как обычный вызов). Защита от третьего join'а: уже 2 sides в сессии.
     const session = await tx.session.create({
       data: {
         status: 'WAITING_FOR_OPPONENT',
         type: 'BATTLE',
-        isPrivate: true, // турнирные батлы по умолчанию приватные до старта
+        isPrivate: false, // публичный → виден в лобби как турнирный вызов
         fen: chess.fen(),
         pgn: '',
         code: sessionCode,
@@ -587,6 +626,27 @@ export async function runTournamentMatchmaking(
     sourceType: 'TOURNAMENT',
     sourceMeta: tournamentId
   }), 'EX', 86400 * 30); // 30 дней TTL
+
+  // T-NEW: эмитим в лобби, чтобы ВСЕ увидели турнирный батл в публичных вызовах
+  try {
+    const fullSession = await prisma.session.findUnique({
+      where: { id: session.id },
+      include: { sides: { include: { player: { select: {
+        id: true, firstName: true, lastName: true, username: true,
+        avatar: true, avatarType: true, avatarGradient: true,
+        elo: true, league: true,
+      } } } } },
+    });
+    if (fullSession) {
+      const { formatBattlesList } = await import("@/services/game/format");
+      const item = formatBattlesList([
+        Object.assign(fullSession, { sourceType: 'TOURNAMENT', sourceMeta: tournamentId })
+      ] as any[])[0];
+      getIo().to("lobby").emit("battles:added", item);
+    }
+  } catch (e) {
+    logError('[Tournaments] battles:added emit error:', e);
+  }
 
   const myUser = await prisma.user.findUnique({
     where: { id: userId },
@@ -635,38 +695,39 @@ export async function runTournamentMatchmaking(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Matchmaker Cron Engine (Парное спаривание свободных игроков во всех турнирах)
+// Matchmaker Cron Engine — пары свободных игроков во всех IN_PROGRESS турнирах
+// + добивание REGISTRATION-турниров: если есть >=2 игроков, переводим в IN_PROGRESS
+//   и сразу ставим первую пару в матч (одиночка ждёт следующего)
 // ─────────────────────────────────────────────────────────────────────────────
 export async function matchmakeAllTournaments() {
   try {
-    const activeTournaments = await prisma.tournament.findMany({
-      where: { status: 'IN_PROGRESS' },
-      select: { id: true },
+    const tournaments = await prisma.tournament.findMany({
+      where: { status: { in: ['REGISTRATION', 'IN_PROGRESS'] } },
+      select: { id: true, status: true },
     });
 
-    for (const { id } of activeTournaments) {
-      // Ищем всех активных участников
+    for (const { id, status } of tournaments) {
       const candidates = await prisma.tournamentPlayer.findMany({
         where: { tournamentId: id, isActive: true },
-        include: { user: { select: { id: true } } }
+        include: { user: { select: { id: true } } },
       });
+      if (candidates.length < 2) continue;
 
-      // Исключаем тех, кто уже в матче
       const activeMatches = await prisma.tournamentMatch.findMany({
-        where: { tournamentId: id, status: 'IN_PROGRESS' },
+        where: { tournamentId: id, status: { in: ['IN_PROGRESS', 'PENDING'] } },
       });
-      const busyIds = new Set(activeMatches.flatMap((m) => [m.player1Id, m.player2Id]));
+      const busyIds = new Set(activeMatches.flatMap((m) => [m.player1Id, m.player2Id]).filter(Boolean) as string[]);
       const available = candidates.filter(c => !busyIds.has(c.id));
 
-      // Разбиваем на пары
+      // Перевод в IN_PROGRESS если нужно
+      if (status === 'REGISTRATION' && available.length >= 2) {
+        await prisma.tournament.update({ where: { id }, data: { status: 'IN_PROGRESS' } });
+      }
+
+      // Парим: [0,1], [2,3], ... — каждый вызов runTournamentMatchmaking
+      // создаёт сессию для пары. Одиночка остаётся ждать.
       for (let i = 0; i + 1 < available.length; i += 2) {
         const p1 = available[i];
-        const p2 = available[i+1];
-        if (!p1 || !p2) continue;
-
-        // Эмулируем запуск как будто p1 присоединился
-        // Примечание: runTournamentMatchmaking ищет ЛЮБОГО соперника, поэтому вызовем напрямую.
-        // Чтобы избежать случайности, лучше бы переписать, но для совместимости оставим вызов
         try {
           await runTournamentMatchmaking(id, p1, p1.userId);
         } catch (e) {
@@ -1001,7 +1062,7 @@ export async function generateSwissRound(tournamentId: string, round: number) {
         data: {
           status: 'WAITING_FOR_OPPONENT',
           type: 'BATTLE',
-          isPrivate: true,
+          isPrivate: false, // публичный → виден в лобби как турнирный вызов
           fen: chess.fen(),
           pgn: '',
           code: sessionCode,
@@ -1033,6 +1094,31 @@ export async function generateSwissRound(tournamentId: string, round: number) {
     });
 
     createdMatches.push({ matchId, sessionId, player1UserId: p1UserId, player2UserId: p2UserId });
+
+    // T-NEW: сохраняем sourceType + эмитим в лобби
+    try {
+      await redis.set(`session:source:${sessionId}`, JSON.stringify({
+        sourceType: 'TOURNAMENT',
+        sourceMeta: tournamentId,
+      }), 'EX', 86400 * 30);
+      const fullSession = await prisma.session.findUnique({
+        where: { id: sessionId },
+        include: { sides: { include: { player: { select: {
+          id: true, firstName: true, lastName: true, username: true,
+          avatar: true, avatarType: true, avatarGradient: true,
+          elo: true, league: true,
+        } } } } },
+      });
+      if (fullSession) {
+        const { formatBattlesList } = await import("@/services/game/format");
+        const item = formatBattlesList([
+          Object.assign(fullSession, { sourceType: 'TOURNAMENT', sourceMeta: tournamentId })
+        ] as any[])[0];
+        getIo().to("lobby").emit("battles:added", item);
+      }
+    } catch (e) {
+      logError('[Tournaments/Swiss] battles:added emit error:', e);
+    }
 
     // socket + AdminNotification
     const [u1, u2] = await Promise.all([

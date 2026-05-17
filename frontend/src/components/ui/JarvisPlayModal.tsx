@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { getJarvisLevels, JARVIS_LEVELS, type JarvisLevel } from './JarvisModal';
 import { useT } from '@/i18n/useT';
+import { IcoStripedQueen, IcoKingWhite, IcoKingBlack } from '@/components/icons/ChessIcons';
 
 // ── Типы ──────────────────────────────────────────────────────────────────────
 type ColorChoice = 'random' | 'white' | 'black';
@@ -18,37 +19,6 @@ interface JarvisPlayModalProps {
 
 const TIME_OPTIONS = [1, 3, 5, 15, 30, 60];
 const JARVIS_NAMES = ['Новичок','Молодой боец','Игрок','Претендент','Боец','Страж','Воин','Рыцарь','Эксперт','Тактик','Мастер','Гроссмейстер','Профессионал','Чемпион','Элита','Эпик','Легендарный','Бессмертный','Божественный','Мистик'];
-
-// ── Иконки ────────────────────────────────────────────────────────────────────
-const IcoDice = () => (
-  <svg width="33" height="33" viewBox="0 0 18 18" fill="none">
-    <rect x="1.5" y="1.5" width="15" height="15" rx="3" stroke="currentColor" strokeWidth="1.3"/>
-    <circle cx="5.5" cy="5.5" r="1.2" fill="currentColor"/>
-    <circle cx="12.5" cy="5.5" r="1.2" fill="currentColor"/>
-    <circle cx="9" cy="9" r="1.2" fill="currentColor"/>
-    <circle cx="5.5" cy="12.5" r="1.2" fill="currentColor"/>
-    <circle cx="12.5" cy="12.5" r="1.2" fill="currentColor"/>
-  </svg>
-);
-
-const IcoKingWhite = () => (
-  <svg width="33" height="33" viewBox="0 0 18 18" fill="none">
-    <path d="M9 2v3M7.5 3.5h3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-    <rect x="7" y="5" width="4" height="2" rx=".5" fill="currentColor" opacity=".8"/>
-    <path d="M5.5 7h7l-1 8H6.5L5.5 7z" fill="currentColor" opacity=".7"/>
-    <path d="M4 15h10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-  </svg>
-);
-
-const IcoKingBlack = () => (
-  <svg width="33" height="33" viewBox="0 0 18 18" fill="none">
-    <path d="M9 2v3M7.5 3.5h3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-    <rect x="7" y="5" width="4" height="2" rx=".5" fill="currentColor" opacity=".9"/>
-    <path d="M5.5 7h7l-1 8H6.5L5.5 7z" fill="currentColor" opacity=".9"/>
-    <path d="M4 15h10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-    <rect x="5" y="6.5" width="8" height="9" rx="1" fill="currentColor" opacity=".15"/>
-  </svg>
-);
 
 const IcoStar = ({ filled }: { filled: boolean }) => (
   <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
@@ -117,18 +87,34 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
     return () => clearTimeout(id);
   }, [phase, count]);
 
+  // После покупки попыток: если мы залипли в фазе "noattempts" и попытки
+  // появились — автоматически возвращаемся в setup, чтобы игрок продолжил
+  // создание партии, а не видел снова экран "нет попыток".
+  useEffect(() => {
+    if (phase === 'noattempts' && userAttempts > 0) {
+      setPhase('setup');
+    }
+  }, [userAttempts, phase]);
+
   const handlePlay = useCallback(() => {
     if (!canPlay) return;
-    // ⭐ Проверка попыток — ГЛАВНЫЙ guard
+    // ⭐ Нет попыток — сразу открываем покупку звёзд (как в CreateBattleModal).
+    // Jarvis-модал остаётся открытым позади; после успешной покупки
+    // userAttempts вырастет → useEffect вернёт phase в 'setup' и кнопка
+    // станет жёлтой «ИГРАТЬ» (Кенан 2026-05-16).
     if (userAttempts <= 0) {
-      setPhase('noattempts');
+      if (onBuyAttempts) {
+        onBuyAttempts();
+      } else {
+        setPhase('noattempts'); // fallback если caller не передал callback
+      }
       return;
     }
     const rc = color === 'random' ? (Math.random() > 0.5 ? 'white' : 'black') : color;
     setResolvedColor(rc);
     setCount(3);
     setPhase('countdown');
-  }, [color, canPlay, userAttempts]);
+  }, [color, canPlay, userAttempts, onBuyAttempts]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && phase === 'setup' && onClose();
@@ -450,11 +436,15 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
           <div style={{ fontSize: '.52rem', fontWeight: 700, color: '#4A6080', textTransform: 'uppercase', letterSpacing: '.12em', marginBottom: 8 }}>Цвет фигур</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
             {([
-              { key: 'random', label: 'Рандом', Icon: IcoDice, bg: 'rgba(212,168,67,.1)', border: 'rgba(212,168,67,.3)', color: '#F0C85A', activeBg: 'rgba(212,168,67,.18)', activeBorder: '#D4A843' },
+              { key: 'random', label: 'Рандом', Icon: IcoStripedQueen, bg: 'rgba(212,168,67,.1)', border: 'rgba(212,168,67,.3)', color: '#F0C85A', activeBg: 'rgba(212,168,67,.18)', activeBorder: '#D4A843' },
               { key: 'white',  label: 'Белые',  Icon: IcoKingWhite, bg: 'rgba(240,240,240,.08)', border: 'rgba(240,240,240,.18)', color: '#E8E0D0', activeBg: 'rgba(240,240,240,.16)', activeBorder: '#D0C8B8' },
               { key: 'black',  label: 'Чёрные', Icon: IcoKingBlack, bg: 'rgba(74,158,255,.08)', border: 'rgba(74,158,255,.2)', color: '#82CFFF', activeBg: 'rgba(74,158,255,.16)', activeBorder: '#4A9EFF' },
             ] as const).map(opt => {
               const active = color === opt.key;
+              // Белая фигура: всегда яркая (по требованию Кенана 2026-05-16),
+              // остальные — тускнеют в не-active как раньше.
+              const iconOpacity = opt.key === 'white' ? (active ? 1 : 0.85) : (active ? 1 : 0.35);
+              const iconFilter  = opt.key === 'white' ? 'none' : (active ? 'none' : 'grayscale(0.7)');
               return (
                 <button
                   key={opt.key}
@@ -463,16 +453,15 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
                   style={{
                     background: active ? opt.activeBg : opt.bg,
                     border: `.5px solid ${active ? opt.activeBorder : opt.border}`,
-                    borderRadius: 12, padding: '14px 8px',
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+                    borderRadius: 12, padding: '10px 6px',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
                     cursor: 'pointer', fontFamily: 'inherit',
                     transition: 'all .15s', transform: 'scale(1)',
                     boxShadow: active ? `0 0 12px ${opt.activeBorder}40` : 'none',
                   }}
                 >
-                  <span style={{ color: opt.color, opacity: active ? 1 : 0.35, filter: active ? 'none' : 'grayscale(0.7)', transition: 'opacity .15s, filter .15s' }}><opt.Icon /></span>
-                  <span style={{ fontSize: '0.96rem', fontWeight: 800, color: active ? opt.color : 'rgba(255,255,255,.5)', letterSpacing: '.03em' }}>{opt.label}</span>
-                  {active && <div style={{ width: 18, height: 2, borderRadius: 1, background: opt.activeBorder }} />}
+                  <span style={{ color: opt.color, opacity: iconOpacity, filter: iconFilter, transition: 'opacity .15s, filter .15s' }}><opt.Icon /></span>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 800, color: active ? opt.color : 'rgba(255,255,255,.5)', letterSpacing: '.03em' }}>{opt.label}</span>
                 </button>
               );
             })}
@@ -499,10 +488,10 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
                     boxShadow: active ? '0 0 10px rgba(212,168,67,.25)' : 'none',
                   }}
                 >
-                  <div style={{ fontSize: '1.44rem', fontWeight: 900, color: active ? '#F0C85A' : 'rgba(255,255,255,.45)', letterSpacing: '-.01em', lineHeight: 1 }}>
+                  <div style={{ fontSize: '1.32rem', fontWeight: 900, color: active ? '#F0C85A' : 'rgba(255,255,255,.45)', letterSpacing: '-.01em', lineHeight: 1 }}>
                     {t < 60 ? t : '60'}
                   </div>
-                  <div style={{ fontSize: '.76rem', fontWeight: 700, color: active ? 'rgba(240,200,90,.65)' : 'rgba(255,255,255,.22)', letterSpacing: '.06em', marginTop: 4 }}>
+                  <div style={{ fontSize: '.68rem', fontWeight: 700, color: active ? 'rgba(240,200,90,.65)' : 'rgba(255,255,255,.22)', letterSpacing: '.06em', marginTop: 4 }}>
                     МИН
                   </div>
                 </button>

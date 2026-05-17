@@ -141,6 +141,10 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
   const [localFen, setLocalFen]   = useState(fen);
   const [pendingPromotion, setPendingPromotion] = useState<{ from: Square; to: Square } | null>(null);
 
+  // Кнопка «звёздочка сохранения» на доске удалена 2026-05-16 (Кенан:
+  // «вторая звезда сохранения прямо на доске - убрать»). Сохранение
+  // партии теперь только из других мест UI (action-bar/история).
+
   // Применяем filter фигур через CSS переменную
   useEffect(() => {
     document.documentElement.style.setProperty('--piece-filter', effectivePieceFilter);
@@ -320,8 +324,6 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
 
   return (
     <>
-      {/* Внешний контейнер — НЕ overflow:hidden, чтобы звёздочка могла выйти за пределы доски */}
-      <div style={{ width: '100%', position: 'relative' }}>
       <div style={{
         width: '100%',
         borderRadius: 12,
@@ -352,8 +354,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
           customSquareStyles={mergedSqs}
           animationDuration={moveAnim.duration}
         />
-      </div>{/* конец overflow:hidden div */}
-      </div>{/* конец внешнего position:relative div */}
+      </div>
       {/* V1: Диалог промоции */}
       {pendingPromotion && (
         <PromotionModal

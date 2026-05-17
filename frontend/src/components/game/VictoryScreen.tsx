@@ -9,6 +9,7 @@ import { haptic } from '@/lib/haptic';
 import { useUserStore } from '@/store/useUserStore';
 import { WIN_ANIMATION_CONFIG } from '@/lib/equippedItems';
 import { useT } from '@/i18n/useT';
+import { IcoTrophy } from '@/components/icons/TournamentIcons';
 
 interface VictoryScreenProps {
   result: 'win' | 'lose' | 'draw';
@@ -72,7 +73,7 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({ result, opponentNa
   if (result === 'lose' || result === 'draw') return null;
 
   const isVisible = phase === 'show';
-  const emoji = winCfg ? winCfg.emoji : '🏆';
+  const customEmoji = winCfg?.emoji ?? null;
 
   return (
     <div style={overlay}>
@@ -88,8 +89,10 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({ result, opponentNa
         opacity: isVisible ? 1 : 0,
         transform: isVisible ? 'scale(1) translateY(0)' : 'scale(0.7) translateY(30px)',
       }}>
-        {/* Большой эмодзи */}
-        <div style={bigEmoji}>{emoji}</div>
+        {/* Большая иконка / купленная анимация */}
+        <div style={bigEmoji}>
+          {customEmoji ?? <IcoTrophy size={80} />}
+        </div>
 
         {/* Заголовок */}
         <div style={victoryTitle}>{t.gameResult.win.toUpperCase()}</div>
@@ -104,7 +107,7 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({ result, opponentNa
         {/* Заработано */}
         {earned && BigInt(earned) > 0n && (
           <div style={earnedText}>
-            +{Number(BigInt(earned) / 1000n)}K ᚙ
+            +{Number(BigInt(earned) / 1000n)}K
           </div>
         )}
 

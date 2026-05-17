@@ -144,15 +144,21 @@ export interface BattleLobbyItem {
   duration: number;
   createdAt: string;
   spectatorCount?: number;  // зрители батла
-  creator: {
-    id: string;
-    firstName: string;
-    avatar?: string | null;
-    avatarGradient?: string | null;
-    elo: number;
-    league: League;
-    isWhite: boolean;
-  } | null;
+  status?: string;          // WAITING_FOR_OPPONENT | IN_PROGRESS
+  sourceType?: string | null;  // 'TOURNAMENT' | 'WAR' | null
+  sourceMeta?: string | null;  // tournamentId / warBattleId
+  creator: BattleLobbyPlayer | null;
+  opponent?: BattleLobbyPlayer | null;  // турнирные вызовы: второй игрок известен заранее
+}
+
+export interface BattleLobbyPlayer {
+  id: string;
+  firstName: string;
+  avatar?: string | null;
+  avatarGradient?: string | null;
+  elo: number;
+  league: League;
+  isWhite: boolean;
 }
 
 // Leaderboard — backend возвращает плоский массив users с balance
@@ -368,4 +374,4 @@ export interface PuzzleItem {
 }
 
 // R1: типы для ответов REST/socket, совместимые с backend — из ./api (без дублирования SessionSide/GameSession из этого файла)
-export type { ActiveMatch, Country, WarBattle, SocketGameEvent } from "./api";
+export type { ActiveMatch, Country, CountryMemberFull, WarBattle, SocketGameEvent } from "./api";
