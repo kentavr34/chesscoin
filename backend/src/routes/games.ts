@@ -3,8 +3,95 @@ import { authMiddleware, AuthRequest } from "@/middleware/auth";
 import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 import { getIo } from "@/lib/io";
+import { redis } from "@/lib/redis";
 
 const router = Router();
+
+// PR-2: GET /games/by-share/:token — публичная точка просмотра партии.
+// Возвращает сессию любого статуса (WAITING / IN_PROGRESS / FINISHED) с
+// полным PGN, бойцами и метаданными для зрителя. Без auth: deep-link
+// должны открывать незарегистрированные посетители тоже. Если IN_PROGRESS,
+// клиент сам подпишется на socket-комнату spectate:<sessionId>.
+router.get("/by-share/:token", async (req: Request, res: Response) => {
+  try {
+    const { token } = req.params;
+    const session = await (prisma.session as any).findUnique({
+      where: { shareToken: token },
+      include: {
+        sides: {
+          include: {
+            player: {
+              select: {
+                id: true, firstName: true, lastName: true, username: true,
+                avatar: true, avatarType: true, avatarGradient: true, elo: true, league: true,
+                countryMember: { select: { country: { select: { code: true, nameRu: true, flag: true } } } },
+              },
+            },
+          },
+        },
+      },
+    });
+    if (!session) return res.status(404).json({ error: "SHARE_TOKEN_NOT_FOUND" });
+
+    // Top-donor по сторонам — Redis sorted-set (заполняется в battle:donate).
+    const donorsBySide: Record<string, { userId: string; amount: string } | null> = {};
+    for (const side of session.sides) {
+      try {
+        const top = await redis.zrevrange(`donors:${session.id}:${side.id}`, 0, 0, "WITHSCORES");
+        if (top.length >= 2) donorsBySide[side.id] = { userId: top[0]!, amount: top[1]! };
+        else donorsBySide[side.id] = null;
+      } catch {
+        donorsBySide[side.id] = null;
+      }
+    }
+
+    res.json({
+      session: {
+        id: session.id,
+        shareToken: session.shareToken,
+        status: session.status,
+        type: session.type,
+        sourceType: session.sourceType,
+        sourceRefId: session.sourceRefId,
+        deadlineAt: session.deadlineAt,
+        acceptedByAll: session.acceptedByAll,
+        fen: session.fen,
+        pgn: session.pgn,
+        bet: session.bet?.toString() ?? null,
+        duration: session.duration,
+        currentSideId: session.currentSideId,
+        winnerSideId: session.winnerSideId,
+        startedAt: session.startedAt,
+        finishedAt: session.finishedAt,
+        donationPool: session.donationPool?.toString() ?? "0",
+        sides: session.sides.map((s: any) => ({
+          id: s.id,
+          isWhite: s.isWhite,
+          isBot: s.isBot,
+          status: s.status,
+          timeLeft: s.timeLeft,
+          winningAmount: s.winningAmount?.toString() ?? null,
+          player: {
+            id: s.player.id,
+            firstName: s.player.firstName,
+            lastName: s.player.lastName,
+            username: s.player.username,
+            avatar: s.player.avatar,
+            avatarType: s.player.avatarType,
+            avatarGradient: s.player.avatarGradient,
+            elo: s.player.elo,
+            league: s.player.league,
+            country: s.player.countryMember?.country ?? null,
+          },
+          topDonor: donorsBySide[s.id],
+        })),
+      },
+    });
+  } catch (err) {
+    logger.error("[games/by-share]", err instanceof Error ? err.message : String(err));
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 // GET /games/saved — сохранённые партии пользователя
 router.get("/saved", authMiddleware, async (req: Request, res: Response) => {

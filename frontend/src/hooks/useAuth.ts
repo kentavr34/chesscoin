@@ -131,6 +131,11 @@ export const useAuth = () => {
       }
     } else if (startParam.startsWith('watch_')) {
       watchCode = startParam.slice(6);
+    } else if (startParam.startsWith('share_')) {
+      // PR-2: deep-link на универсальный SharePage по shareToken.
+      // Сохраняем в sessionStorage — App после auth сделает navigate(`/share/${token}`).
+      const shareToken = startParam.slice(6);
+      sessionStorage.setItem('pendingShareToken', shareToken);
     }
 
     if (gameCode)  sessionStorage.setItem('pendingGameCode', gameCode);
@@ -167,6 +172,12 @@ export const useAuth = () => {
       if (pendingWatch) {
         sessionStorage.removeItem('pendingWatchCode');
         (window as any).__pendingWatchCode = pendingWatch;
+      }
+      // PR-2: Share-deep-link — универсальный SharePage по shareToken.
+      const pendingShare = sessionStorage.getItem('pendingShareToken');
+      if (pendingShare) {
+        sessionStorage.removeItem('pendingShareToken');
+        (window as any).__pendingShareToken = pendingShare;
       }
     } catch (err) {
       console.error('[Auth] Login failed:', err);

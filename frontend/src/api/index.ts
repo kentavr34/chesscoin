@@ -26,10 +26,13 @@ export const authApi = {
 export const profileApi = {
   getUser: (userId: string) =>
     api.get<User>(`/profile/${userId}`),
-  getGames: (limit = 20, offset = 0) =>
-    api.get<{ games: GameSession[] }>(
-      `/profile/games?limit=${limit}&offset=${offset}`
-    ),
+  getGames: (limit = 20, offset = 0, source?: 'BATTLE' | 'WAR' | 'TOURNAMENT') => {
+    const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+    if (source) params.set('source', source);
+    return api.get<{ total: number; games: GameSession[] }>(
+      `/profile/games?${params.toString()}`
+    );
+  },
   getUserGames: (userId: string, limit = 20, offset = 0) =>
     api.get<{ total: number; games: GameSession[] }>(
       `/profile/${userId}/games?limit=${limit}&offset=${offset}`
@@ -55,6 +58,11 @@ export const profileApi = {
     api.delete<{ success: boolean }>('/profile/avatar'),
   saveTheme: (theme: string) =>
     api.post<{ success: boolean; theme: string }>('/profile/theme', { theme }),
+};
+
+// PR-2: публичный просмотр партии по shareToken (deep-link works на всех стадиях)
+export const gamesApi = {
+  byShare: (token: string) => api.get<{ session: any }>(`/games/by-share/${token}`),
 };
 
 export const tonApi = {

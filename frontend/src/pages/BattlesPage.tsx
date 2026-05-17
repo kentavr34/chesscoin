@@ -11,6 +11,7 @@ import { fmtBalance, fmtTime } from '@/utils/format';
 import { translations } from '@/i18n/translations';
 import { IcoStripedQueen, IcoKingWhite as IcoKingW, IcoKingBlack as IcoKingB } from '@/components/icons/ChessIcons';
 import { PgnReplayModal } from '@/components/profile/PgnReplayModal';
+import { ShareSessionButton, buildShareUrl } from '@/components/ui/ShareSessionButton';
 import type { BattleLobbyItem, GameSession, UserPublic } from '@/types';
 import { useT } from '@/i18n/useT';
 
@@ -69,12 +70,17 @@ export const BattlesPage: React.FC = () => {
   const info = useInfoPopup('battles', [...t.battles.info] as Parameters<typeof InfoPopup>[0]["slides"]);
 
   // Live — публичные IN_PROGRESS батлы из лобби (видны всем, не только участникам)
-  // Дополняем личными сессиями на случай, если сервер ещё не прислал событие
+  // Дополняем личными сессиями на случай, если сервер ещё не прислал событие.
+  // PR-2: сортировка по startedAt desc (самые свежие первыми).
   const myLiveSessions = sessions.filter((s) => s.status === 'IN_PROGRESS' && s.type !== 'BOT');
   const liveSessions = [
     ...liveBattles,
     ...myLiveSessions.filter((s) => !liveBattles.some((lb) => lb.id === s.id)),
-  ];
+  ].sort((a, b) => {
+    const ta = (a as any).startedAt ? new Date((a as any).startedAt).getTime() : 0;
+    const tb = (b as any).startedAt ? new Date((b as any).startedAt).getTime() : 0;
+    return tb - ta;
+  });
 
   // Ожидающие — публичные, отсортированные по ставке (desc)
   const waitingSessions = [...battles].sort((a, b) => {
@@ -329,10 +335,23 @@ export const BattlesPage: React.FC = () => {
             </div>
           ) : (
             myPrivateSessions.map((s) => {
-              const shareText = `Вызов на шахматный батл! Ставка: ${fmtBalance(s.bet ?? '0')} монет`;
-              const shareUrl  = `https://t.me/share/url?url=https://t.me/ChessCoinBot/app?startapp=battle_${s.id}&text=${encodeURIComponent(shareText)}`;
+              // PR-2: для PRIVATE/PUBLIC партий используем shareToken (универсальный
+              // SharePage). Старый legacy formatter оставлен для совместимости —
+              // если shareToken отсутствует (старая сессия до миграции), fallback на
+              // share по sessionId (?startapp=battle_<id>).
+              const shareToken = (s as any).shareToken as string | undefined;
+              const fallbackUrl = `https://t.me/share/url?url=${encodeURIComponent(`https://t.me/ChessCoinBot/app?startapp=battle_${s.id}`)}&text=${encodeURIComponent(`Вызов на шахматный батл! Ставка: ${fmtBalance(s.bet ?? '0')} монет`)}`;
               return (
-                <PrivateBattleCard key={s.id} session={s} onShare={() => window.open(shareUrl, '_blank')} onCancel={() => handleCancel(s.id)} onProfile={(id) => navigate('/profile/' + id)} />
+                <PrivateBattleCard
+                  key={s.id}
+                  session={s}
+                  onShare={() => {
+                    if (shareToken) window.open(buildShareUrl(shareToken), '_blank');
+                    else window.open(fallbackUrl, '_blank');
+                  }}
+                  onCancel={() => handleCancel(s.id)}
+                  onProfile={(id) => navigate('/profile/' + id)}
+                />
               );
             })
           )}

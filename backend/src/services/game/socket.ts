@@ -923,16 +923,27 @@ export const setupSocketHandlers = (io: Server) => {
     });
 
     // ── Донат зрителя в батл ─────────────────────────────
+    // PR-2: разрешён на WAITING_FOR_OPPONENT тоже (зритель может поддержать
+    // партию ещё до старта — пока оба не приняли). Опциональный sideId — за
+    // кого болеешь; top-donor по сторонам трекаем в Redis-leaderboard.
     socket.on(
       "battle:donate",
-      async (data: { sessionId: string; amount: string }, callback?: Function) => {
+      async (data: { sessionId: string; amount: string; sideId?: string }, callback?: Function) => {
         try {
           const session = await prisma.session.findUnique({
             where: { id: data.sessionId },
-            select: { id: true, type: true, status: true, donationPool: true },
+            select: { id: true, type: true, status: true, donationPool: true, sides: { select: { id: true, playerId: true } } },
           });
-          if (!session || session.type !== SessionType.BATTLE || session.status !== SessionStatus.IN_PROGRESS) {
+          if (!session || session.type !== SessionType.BATTLE) throw new Error("BATTLE_NOT_FOUND");
+          // PR-2: разрешаем донат на WAITING_FOR_OPPONENT и IN_PROGRESS.
+          if (session.status !== SessionStatus.IN_PROGRESS && session.status !== SessionStatus.WAITING_FOR_OPPONENT) {
             throw new Error("BATTLE_NOT_FOUND");
+          }
+          // Защита от self-donate
+          if (session.sides.some(s => s.playerId === userId)) throw new Error("CANNOT_DONATE_OWN_BATTLE");
+          // Если sideId передан — проверяем что принадлежит этой сессии
+          if (data.sideId && !session.sides.some(s => s.id === data.sideId)) {
+            throw new Error("INVALID_SIDE");
           }
 
           const amountBig = BigInt(data.amount);
@@ -955,12 +966,25 @@ export const setupSocketHandlers = (io: Server) => {
             select: { donationPool: true },
           });
 
-          // Уведомляем всех в комнате
-          io.to(data.sessionId).emit("battle:donated", {
+          // PR-2: Redis-leaderboard «топ-донатор» по сторонам (для UI бейджа).
+          // Sorted set: ключ donors:<sessionId>:<sideId>, score=сумма, member=userId.
+          if (data.sideId) {
+            try {
+              await redis.zincrby(`donors:${data.sessionId}:${data.sideId}`, Number(amountBig), userId);
+              // TTL 30 дней (после финала всё равно архивная); +60 на буфер.
+              await redis.expire(`donors:${data.sessionId}:${data.sideId}`, 60 * 60 * 24 * 31);
+            } catch {}
+          }
+
+          // Уведомляем всех в комнате (+ spectate-room)
+          const payload = {
             donorId: userId,
+            sideId: data.sideId ?? null,
             amount: amountBig.toString(),
             totalPool: updatedSession.donationPool.toString(),
-          });
+          };
+          io.to(data.sessionId).emit("battle:donated", payload);
+          io.to(`spectate:${data.sessionId}`).emit("battle:donated", payload);
           if (callback) callback({ ok: true });
         } catch (err: unknown) {
           if (callback) callback({ ok: false, error: (err as Error).message });

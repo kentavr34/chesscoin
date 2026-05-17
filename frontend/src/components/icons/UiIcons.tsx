@@ -258,3 +258,30 @@ export const IcoGamepad: React.FC<Props> = ({ size = 14, color = 'currentColor' 
     <path d="M4.5 8.5h2M5.5 7.5v2" stroke={color} strokeWidth="1.4" strokeLinecap="round"/>
   </>
 ));
+
+// PR-2: «поделиться» (стрелка из квадрата вверх-вправо) — кнопка ShareSessionButton
+export const IcoShare: React.FC<Props> = ({ size = 14, color = 'currentColor' }) => baseSvg(size, '0 0 20 20', (
+  <>
+    <path d="M11 3h6v6" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M9 11l8-8" stroke={color} strokeWidth="1.6" strokeLinecap="round"/>
+    <path d="M16 11v5a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+  </>
+));
+
+// PR-2: Скрещённые мечи — эмблема Войны (источник партии)
+export const IcoSwords: React.FC<Props> = ({ size = 14, color = 'currentColor' }) => baseSvg(size, '0 0 20 20', (
+  <>
+    <path d="M3 3l8 8M3 7V3h4M11 11l-1.5 1.5L7 10l1.5-1.5L11 11z" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M17 3l-8 8M17 7V3h-4M9 11l1.5 1.5L13 10l-1.5-1.5L9 11z" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M2 18l4-4M14 14l4 4" stroke={color} strokeWidth="1.6" strokeLinecap="round"/>
+  </>
+));
+
+// PR-2: Кубок — эмблема Турнира (источник партии)
+export const IcoTrophy: React.FC<Props> = ({ size = 14, color = 'currentColor' }) => baseSvg(size, '0 0 20 20', (
+  <>
+    <path d="M6 3h8v4a4 4 0 0 1-8 0V3z" stroke={color} strokeWidth="1.6" strokeLinejoin="round"/>
+    <path d="M6 5H4c-.6 0-1 .5-1 1.2 0 1.8 1.4 3.3 3.3 3.6M14 5h2c.6 0 1 .5 1 1.2 0 1.8-1.4 3.3-3.3 3.6" stroke={color} strokeWidth="1.6" strokeLinecap="round"/>
+    <path d="M10 11v3M7 14h6M7.5 17h5" stroke={color} strokeWidth="1.6" strokeLinecap="round"/>
+  </>
+));

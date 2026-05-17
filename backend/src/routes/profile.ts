@@ -38,19 +38,35 @@ const ThemeSchema = z.object({
 // иначе Express поймает слово "transactions" как userId
 
 // GET /profile/games — история завершённых партий
+// PR-2: фильтр ?source=BATTLE|WAR|TOURNAMENT — для архива батлов с вкладками.
+// BATTLE = PRIVATE/PUBLIC (обычные вызовы), WAR = WAR, TOURNAMENT = TOURNAMENT.
 router.get("/games", authMiddleware, async (req: Request, res: Response) => {
   try {
     const userId = (req as AuthRequest).userId;
-    const { limit, offset } = z.object({
+    const { limit, offset, source } = z.object({
       limit:  z.coerce.number().min(1).max(50).default(20),
       offset: z.coerce.number().min(0).default(0),
+      source: z.enum(["BATTLE", "WAR", "TOURNAMENT"]).optional(),
     }).parse(req.query);
+
+    const sourceFilter = source === "BATTLE"
+      ? { sourceType: { in: ["PRIVATE", "PUBLIC"] as any } }
+      : source === "WAR"
+      ? { sourceType: "WAR" as any }
+      : source === "TOURNAMENT"
+      ? { sourceType: "TOURNAMENT" as any }
+      : {};
+
+    const sessionWhere: any = {
+      status: { in: ["FINISHED", "DRAW", "TIME_EXPIRED"] },
+      ...sourceFilter,
+    };
 
     const sides = await prisma.sessionSide.findMany({
       where: {
         playerId: userId,
         isBot: false,
-        session: { status: { in: ["FINISHED", "DRAW", "TIME_EXPIRED"] } },
+        session: sessionWhere,
       },
       orderBy: { updatedAt: "desc" },
       take: limit,
@@ -71,6 +87,10 @@ router.get("/games", authMiddleware, async (req: Request, res: Response) => {
             duration: true,
             startedAt: true,
             finishedAt: true,
+            // PR-2: source + shareToken для архивной карточки и deep-link.
+            sourceType: true,
+            sourceRefId: true,
+            shareToken: true,
             sides: {
               select: {
                 isBot: true,
@@ -79,7 +99,7 @@ router.get("/games", authMiddleware, async (req: Request, res: Response) => {
                 player: { select: { id: true, firstName: true, lastName: true, username: true, avatar: true, avatarGradient: true, avatarType: true } },
               },
             },
-          },
+          } as any,
         },
       },
     });
@@ -88,14 +108,14 @@ router.get("/games", authMiddleware, async (req: Request, res: Response) => {
       where: {
         playerId: userId,
         isBot: false,
-        session: { status: { in: ["FINISHED", "DRAW", "TIME_EXPIRED"] } },
+        session: sessionWhere,
       },
     });
 
     const games = sides.map(side => {
-      const session = side.session;
-      const opponent = session.sides.find(s => s.player.id !== userId && !s.isBot);
-      const botSide = session.sides.find(s => s.isBot);
+      const session = side.session as any;
+      const opponent = session.sides.find((s: any) => s.player.id !== userId && !s.isBot);
+      const botSide = session.sides.find((s: any) => s.isBot);
       return {
         sessionId: session.id,
         type: session.type,
@@ -108,6 +128,10 @@ router.get("/games", authMiddleware, async (req: Request, res: Response) => {
         duration: session.duration,
         startedAt: session.startedAt,
         finishedAt: session.finishedAt,
+        // PR-2: для архивной карточки и deep-link
+        sourceType: session.sourceType ?? null,
+        sourceRefId: session.sourceRefId ?? null,
+        shareToken: session.shareToken ?? null,
         opponent: opponent ? {
           id: opponent.player.id,
           firstName: opponent.player.firstName,

@@ -36,6 +36,7 @@ const SettingsPage     = lazy(() => import('@/pages/SettingsPage').then(m => ({ 
 const PuzzleDailyPage  = lazy(() => import('@/pages/PuzzleDailyPage').then(m => ({ default: m.PuzzleDailyPage })));
 const PuzzleLessonPage = lazy(() => import('@/pages/PuzzleLessonPage').then(m => ({ default: m.PuzzleLessonPage })));
 const TransactionHistoryPage = lazy(() => import('@/pages/TransactionHistoryPage').then(m => ({ default: m.TransactionHistoryPage })));
+const SharePage = lazy(() => import('@/pages/SharePage').then(m => ({ default: m.SharePage })));
 
 const AppInner: React.FC = () => {
   useSocket();
@@ -117,6 +118,9 @@ const AppInner: React.FC = () => {
       <Route path="/puzzle/daily" element={<PuzzleDailyPage />} />
       <Route path="/puzzle/:id" element={<PuzzleLessonPage />} />
       <Route path="/transactions" element={<TransactionHistoryPage />} />
+      {/* PR-2: универсальный просмотр партии по shareToken (waiting/live/archive) */}
+      <Route path="/share/:token" element={<SharePage />} />
+      <Route path="/watch/:token" element={<SharePage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
     </Suspense>

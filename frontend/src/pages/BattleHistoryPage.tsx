@@ -8,8 +8,10 @@ import type { UserPublic } from '@/types';
 
 type HistoryGame = BattleHistoryItem;
 
-// Бот-игры исключены из истории батлов как «процесс» (это тренировка, а не стат-батл)
-type FilterTab = 'all' | 'battle' | 'friendly';
+// PR-2 (Кенан 2026-05-17): убрана вкладка «Дружеские» (бессмысленная). Вместо
+// неё — фильтр по источнику партии: Батлы (PRIVATE/PUBLIC) / Войны / Турниры.
+// Запрос к API передаёт ?source=... и backend фильтрует по Session.sourceType.
+type FilterTab = 'all' | 'battle' | 'war' | 'tournament';
 type SortKey = 'date' | 'bet' | 'result';
 
 const PAGE_SIZE = 20;
@@ -27,7 +29,8 @@ const ScrollIcon: React.FC = () => (
 const FILTER_TABS: { key: FilterTab; label: string }[] = [
   { key: 'all', label: 'Все' },
   { key: 'battle', label: 'Батлы' },
-  { key: 'friendly', label: 'Дружеские' },
+  { key: 'war', label: 'Войны' },
+  { key: 'tournament', label: 'Турниры' },
 ];
 
 export const BattleHistoryPage: React.FC = () => {
@@ -43,15 +46,20 @@ export const BattleHistoryPage: React.FC = () => {
     pgn: string;
     title: string;
     sessionId: string;
+    shareToken?: string | null;
     whitePlayer?: UserPublic | null;
     blackPlayer?: UserPublic | null;
   } | null>(null);
   const me = useUserStore((s) => s.user);
 
-  const loadGames = useCallback(async (off: number) => {
+  const loadGames = useCallback(async (off: number, filter: FilterTab) => {
     setLoading(true);
     try {
-      const r = (await profileApi.getGames(PAGE_SIZE, off)) as any;
+      const source = filter === 'battle' ? 'BATTLE'
+        : filter === 'war' ? 'WAR'
+        : filter === 'tournament' ? 'TOURNAMENT'
+        : undefined;
+      const r = (await profileApi.getGames(PAGE_SIZE, off, source)) as any;
       setGames(r.games as HistoryGame[]);
       setTotal(r.total ?? 0);
       setOffset(off);
@@ -60,7 +68,8 @@ export const BattleHistoryPage: React.FC = () => {
     }
   }, []);
 
-  useEffect(() => { loadGames(0); }, [loadGames]);
+  // PR-2: при смене вкладки перезагружаем с серверным фильтром.
+  useEffect(() => { loadGames(0, activeFilter); }, [loadGames, activeFilter]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
@@ -68,11 +77,8 @@ export const BattleHistoryPage: React.FC = () => {
   const filteredGames = games
     // Бот-игры вычищены из истории батлов: это тренировка, не стат-процесс
     .filter((g) => !g.hasBot)
-    .filter((g) => {
-      if (activeFilter === 'friendly') return g.type === 'FRIENDLY';
-      if (activeFilter === 'battle') return g.type !== 'FRIENDLY';
-      return true; // 'all'
-    })
+    // PR-2: фильтр по источнику применяется на сервере (см. loadGames), здесь
+    // только клиентский поиск/сортировка по имени.
     .filter((g) => {
       if (!search.trim()) return true;
       const q = search.trim().toLowerCase();
@@ -270,6 +276,7 @@ export const BattleHistoryPage: React.FC = () => {
                     pgn: game.pgn,
                     title: game.opponent?.firstName ? `vs ${game.opponent.firstName}` : 'Партия',
                     sessionId: game.sessionId,
+                    shareToken: (game as any).shareToken ?? null,
                     whitePlayer: game.isWhite ? (me as UserPublic | null) : (game.opponent ?? null),
                     blackPlayer: game.isWhite ? (game.opponent ?? null) : (me as UserPublic | null),
                   });
@@ -287,7 +294,7 @@ export const BattleHistoryPage: React.FC = () => {
             }}>
               <button
                 disabled={offset === 0}
-                onClick={() => loadGames(Math.max(0, offset - PAGE_SIZE))}
+                onClick={() => loadGames(Math.max(0, offset - PAGE_SIZE), activeFilter)}
                 style={{ ...pgBtn, opacity: offset === 0 ? 0.3 : 1 }}
               >
                 ← Назад
@@ -304,7 +311,7 @@ export const BattleHistoryPage: React.FC = () => {
               </span>
               <button
                 disabled={offset + PAGE_SIZE >= total}
-                onClick={() => loadGames(offset + PAGE_SIZE)}
+                onClick={() => loadGames(offset + PAGE_SIZE, activeFilter)}
                 style={{ ...pgBtn, opacity: offset + PAGE_SIZE >= total ? 0.3 : 1 }}
               >
                 Вперёд →
@@ -325,6 +332,7 @@ export const BattleHistoryPage: React.FC = () => {
           pgn={replayData.pgn}
           title={replayData.title}
           sessionId={replayData.sessionId}
+          shareToken={replayData.shareToken}
           whitePlayer={replayData.whitePlayer}
           blackPlayer={replayData.blackPlayer}
           onClose={() => setReplayData(null)}

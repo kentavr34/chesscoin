@@ -78,6 +78,13 @@ export const useSocket = () => {
       });
     }
 
+    // PR-2: Share deep-link — универсальный просмотр партии по shareToken.
+    const pendingShare = (window as any).__pendingShareToken as string | undefined;
+    if (pendingShare) {
+      delete (window as any).__pendingShareToken;
+      navigate(`/share/${pendingShare}`);
+    }
+
     socket.emit('battles:subscribe');
 
     // U2: При переподключении — обновляем список сессий

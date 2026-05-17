@@ -3,19 +3,23 @@ import { Chessboard } from 'react-chessboard';
 import { Chess } from 'chess.js';
 import { useNavigate } from 'react-router-dom';
 import { Avatar } from '@/components/ui/Avatar';
+import { ShareSessionButton } from '@/components/ui/ShareSessionButton';
 import type { UserPublic } from '@/types';
 
 interface PgnReplayModalProps {
   pgn: string;
   title?: string;
   sessionId?: string;
+  // PR-2: shareToken для кнопки «Поделиться» в шапке replay-модала.
+  // Партия после финала остаётся доступна по ссылке навсегда.
+  shareToken?: string | null;
   // Игроки — для шапки с кликабельными аватарами (клик → профиль)
   whitePlayer?: UserPublic | null;
   blackPlayer?: UserPublic | null;
   onClose: () => void;
 }
 
-export const PgnReplayModal: React.FC<PgnReplayModalProps> = ({ pgn, title, whitePlayer, blackPlayer, onClose }) => {
+export const PgnReplayModal: React.FC<PgnReplayModalProps> = ({ pgn, title, shareToken, whitePlayer, blackPlayer, onClose }) => {
   const navigate = useNavigate();
   const [moves, setMoves] = useState<string[]>([]);
   const [step, setStep] = useState(0);
@@ -114,13 +118,16 @@ export const PgnReplayModal: React.FC<PgnReplayModalProps> = ({ pgn, title, whit
               {title ?? 'Партия'}
             </span>
           </div>
-          <button onClick={onClose} aria-label="Закрыть" style={{
-            width: 34, height: 34, borderRadius: 10,
-            background: 'rgba(255,255,255,.05)', border: '.5px solid rgba(255,255,255,.1)',
-            color: '#B8B0A4', fontSize: '.9rem', cursor: 'pointer', fontFamily: 'inherit',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0,
-          }}>✕</button>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
+            {/* PR-2: ShareSessionButton — поделиться deep-link на эту партию (по shareToken) */}
+            {shareToken && <ShareSessionButton shareToken={shareToken} compact />}
+            <button onClick={onClose} aria-label="Закрыть" style={{
+              width: 34, height: 34, borderRadius: 10,
+              background: 'rgba(255,255,255,.05)', border: '.5px solid rgba(255,255,255,.1)',
+              color: '#B8B0A4', fontSize: '.9rem', cursor: 'pointer', fontFamily: 'inherit',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>✕</button>
+          </div>
         </div>
 
         {/* Шапка с игроками — кликабельные аватары ведут на страницу профиля */}
