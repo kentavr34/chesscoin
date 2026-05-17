@@ -99,7 +99,7 @@ Modal.Body = ({ children, center = false }: ModalSectionProps) => (
       padding: `var(--space-l) var(--space-l)`,
       overflow: 'auto',
       fontSize: 'var(--font-size-sm)',
-      color: 'var(--color-text-secondary, #8B92A8)',
+      color: 'var(--color-text-primary, #F0F2F8)',
       lineHeight: 'var(--line-height-normal)',
       textAlign: center ? 'center' : 'left',
     }}

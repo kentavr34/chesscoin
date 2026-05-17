@@ -58,7 +58,7 @@ export const useConfirm = (): [
             borderRadius: 14,
             background: 'var(--color-bg-card, #1C2030)',
             border: '1px solid var(--confirm-cancel-btn-border, rgba(255,255,255,0.1))',
-            color: 'var(--color-text-secondary, #8B92A8)',
+            color: 'var(--color-text-primary, #F0F2F8)',
             fontSize: 14,
             fontWeight: 600,
             cursor: 'pointer',
@@ -82,7 +82,7 @@ export const useConfirm = (): [
               : 'none',
             color: opts?.danger
               ? 'var(--color-red, #FF4D6A)'
-              : 'var(--color-bg-dark, #0B0D11)',
+              : '#0B0D11',
             fontSize: 14,
             fontWeight: 700,
             cursor: 'pointer',
