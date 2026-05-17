@@ -11,7 +11,7 @@ import { CoinIcon } from '@/components/ui/CoinIcon';
 import { DonateModal } from '@/components/ui/DonateModal';
 import { CountryFlag } from '@/components/ui/CountryFlag';
 import { IcoSwords, IcoTrophy } from '@/components/icons/TournamentIcons';
-import { IcoEye, IcoHandshake, IcoSave, IcoSearch, IcoStats } from '@/components/icons/UiIcons';
+import { IcoEye, IcoHandshake, IcoSave, IcoSearch, IcoStats, IcoClose, IcoCheck } from '@/components/icons/UiIcons';
 import { getSocket } from '@/api/socket';
 
 const COUNTRY_ENTRY_FEE = 10_000n;
@@ -43,7 +43,7 @@ const WarsIntroModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           <div style={{ fontSize: 20, fontFamily: "'Inter',sans-serif", fontWeight: 800, color: '#EAE2CC', letterSpacing: '-.01em' }}>
             {t.wars.warIntro.title}
           </div>
-          <button onClick={onClose} style={closeBtnStyle}>✕</button>
+          <button onClick={onClose} style={closeBtnStyle}><IcoClose size={14} /></button>
         </div>
         <div style={{ fontSize: 13, color: '#7A7875', lineHeight: 1.75 }}>
           <p style={{ marginBottom: 10 }}>{t.wars.warIntro.p1}</p>
@@ -114,7 +114,7 @@ const DeclareWarModal: React.FC<{
           <div style={{ fontSize: 15, fontWeight: 700, color: '#EAE2CC', display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ color: '#3DBA7A', display: 'inline-flex', verticalAlign: 'middle' }}><IcoSwords size={16} /></span> {t.wars.declareModal.title}
           </div>
-          <button onClick={onClose} style={closeBtnStyle}>✕</button>
+          <button onClick={onClose} style={closeBtnStyle}><IcoClose size={14} /></button>
         </div>
 
         <input
@@ -143,7 +143,7 @@ const DeclareWarModal: React.FC<{
                 <div style={{ fontSize: 13, fontWeight: 600, color: '#EAE2CC', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.nameRu}</div>
                 <div style={{ fontSize: 10, color: '#7A7875' }}>{t.wars.fighters(c.memberCount)} • {t.common.wins}: {c.wins}</div>
               </div>
-              {selected === c.id && <span style={{ color: '#3DBA7A', fontSize: 16 }}>✓</span>}
+              {selected === c.id && <span style={{ color: '#3DBA7A', display: 'inline-flex', alignItems: 'center' }}><IcoCheck size={16} color="#3DBA7A" /></span>}
             </div>
           ))}
         </div>
@@ -238,7 +238,7 @@ const CountryDetailModal: React.FC<{
         warsApi.pending().then(r => setPending(r.pending)).catch(() => {});
       } else if (t === 'country:join-approved' || t === 'country:join-rejected') {
         warsApi.country(countryId).then(setData).catch(() => {});
-        toast(t === 'country:join-approved' ? '✓' : '✕', t === 'country:join-approved' ? 'success' : 'info');
+        toast(t === 'country:join-approved' ? 'Заявка одобрена' : 'Заявка отклонена', t === 'country:join-approved' ? 'success' : 'info');
       } else if (t === 'country:commander-assigned') {
         // PR-3: первый зашедший в страну → автоматически главком
         toast(payload?.message ?? 'Ты теперь главнокомандующий', 'success');
@@ -384,7 +384,7 @@ const CountryDetailModal: React.FC<{
               <div style={{ fontSize: 10, color: '#7A7875' }}>{c?.nameEn ?? ''}</div>
             </div>
           </div>
-          <button onClick={onClose} style={closeBtnStyle}>✕</button>
+          <button onClick={onClose} style={closeBtnStyle}><IcoClose size={14} /></button>
         </div>
 
         {c && (
@@ -647,7 +647,7 @@ const WarDetailModal: React.FC<{ warId: string; onClose: () => void }> = ({ warI
           <div style={{ fontSize: 15, fontWeight: 700, color: '#EAE2CC', display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ color: '#3DBA7A', display: 'inline-flex', verticalAlign: 'middle' }}><IcoSwords size={16} /></span> {t.wars.warDetail}
           </div>
-          <button onClick={onClose} style={closeBtnStyle}>✕</button>
+          <button onClick={onClose} style={closeBtnStyle}><IcoClose size={14} /></button>
         </div>
 
         {!war && <div style={{ textAlign: 'center', color: '#7A7875', padding: 32 }}>{t.common.loading}</div>}
