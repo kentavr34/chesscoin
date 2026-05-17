@@ -13,6 +13,7 @@ import {
   TOURNAMENT_TYPE_ICON, IcoTrophy,
   IcoLeaderboard, IcoDonate, IcoLock, IcoCheck, IcoSwords, IcoFlag,
 } from '@/components/icons/TournamentIcons';
+import { IcoCalendar } from '@/components/icons/UiIcons';
 
 const showToast = (text: string, type: 'error' | 'info' = 'error') => {
   window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text, type } }));
@@ -338,7 +339,12 @@ const TournamentCard: React.FC<{
   const tt = t.tournaments;
   const color = TYPE_COLORS[tour.type] ?? '#F0C85A';
   const TypeIcon = TOURNAMENT_TYPE_ICON[tour.type] ?? IcoTrophy;
-  const endDate = tour.endAt ? new Date(tour.endAt).toLocaleDateString('ru-RU', { day: '2-digit', month: 'short' }) : null;
+  // PR-3 (Кенан 2026-05-18): дата + время завершения, читаемая полоска по центру.
+  const endDate = tour.endAt
+    ? new Date(tour.endAt).toLocaleString('ru-RU', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+    : null;
+  const msUntilEnd = tour.endAt ? new Date(tour.endAt).getTime() - Date.now() : 0;
+  const isSoonEnding = msUntilEnd > 0 && msUntilEnd < 24 * 3600_000; // <24h
   const statusCfg = STATUS_CFG[tour.status] ?? STATUS_CFG.REGISTRATION;
   const canJoin = tour.status === 'REGISTRATION';
   const isFinished = tour.status === 'FINISHED';
@@ -473,9 +479,22 @@ const TournamentCard: React.FC<{
         </div>
       )}
 
-      {endDate && (
-        <div style={{ fontSize: '0.65rem', color: '#5A5248', padding: '4px 14px 0' }}>
-          До {endDate}
+      {endDate && !isFinished && (
+        <div style={{
+          margin: '6px 12px 0',
+          padding: '6px 12px', borderRadius: 8,
+          background: isSoonEnding ? 'rgba(255,136,85,.08)' : 'rgba(255,255,255,.04)',
+          border: `.5px solid ${isSoonEnding ? 'rgba(255,136,85,.32)' : 'rgba(255,255,255,.08)'}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+        }}>
+          <IcoCalendar size={11} color={isSoonEnding ? '#FF8855' : '#9A9490'} />
+          <span style={{
+            fontSize: '0.68rem', fontWeight: 700,
+            color: isSoonEnding ? '#FF8855' : '#9A9490',
+            letterSpacing: '.02em',
+          }}>
+            До {endDate}{isSoonEnding ? ' · скоро финал' : ''}
+          </span>
         </div>
       )}
 
