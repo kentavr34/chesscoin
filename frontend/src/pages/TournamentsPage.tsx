@@ -479,60 +479,18 @@ const TournamentCard: React.FC<{
         </div>
       )}
 
-      {/* Actions: главная кнопка (Вступить/Выйти) + 2 иконки справа (Лидеры, Донат) */}
+      {/* Actions: TOGGLE-кнопка «Вступить»/«Участник» + 2 иконки справа (Лидеры, Донат) */}
       <div style={{ padding: '10px 12px 12px', display: 'flex', alignItems: 'stretch', gap: 7 }}>
-        {/* Главная CTA */}
+        {/* PR-3 (Кенан 2026-05-18): одна toggle-кнопка вместо двух.
+            - Не зарегистрирован + регистрация открыта → зелёная «Вступить · 50K»
+            - Зарегистрирован → приглушённая с галочкой «Участник», клик → confirm
+              «выйти из турнира потеряв взнос?» → leave.
+            - Турнир завершён + я участвовал → «Участвовал» (статус только).
+            - Турнир завершён, я не вступал / регистрация закрыта → серый бейдж.
+        */}
         <div style={{ flex: 1 }}>
-        {!tour.isJoined ? (
-          canJoin ? (
-            <button
-              onClick={onJoin}
-              disabled={joining}
-              style={{
-                width: '100%', padding: '11px 16px', borderRadius: 11,
-                background: joining ? 'rgba(212,168,67,.08)' : 'linear-gradient(135deg,#2A1E08,#4A3810)',
-                color: '#F0C85A',
-                border: '.5px solid rgba(212,168,67,.4)',
-                fontSize: '0.85rem', fontWeight: 800, cursor: joining ? 'default' : 'pointer',
-                opacity: joining ? 0.7 : 1, fontFamily: 'inherit',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {joining ? (
-                <>Вступаем…</>
-              ) : (
-                <>
-                  <IcoTrophy size={16} />
-                  <span>{tt.join}{tour.entryFee !== '0' ? ` · ${fmtBalance(tour.entryFee)}` : ''}</span>
-                </>
-              )}
-            </button>
-          ) : (
-            <div style={{
-              padding: '11px 14px', borderRadius: 11,
-              background: 'rgba(90,82,72,.08)', border: '.5px solid rgba(90,82,72,.2)',
-              color: '#5A5248', fontSize: '0.78rem', fontWeight: 600,
-              textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-            }}>
-              {isFinished ? <><IcoFlag size={13} /> Турнир завершён</> : <><IcoLock size={13} /> Регистрация закрыта</>}
-            </div>
-          )
-        ) : (
-          tour.status === 'REGISTRATION' ? (
-            <button
-              onClick={onLeave}
-              style={{
-                width: '100%', padding: '11px 16px', borderRadius: 11,
-                background: 'rgba(255,91,91,.07)', color: '#FF5B5B',
-                border: '.5px solid rgba(255,91,91,.2)',
-                fontSize: '0.82rem', fontWeight: 800, cursor: 'pointer',
-                fontFamily: 'inherit', whiteSpace: 'nowrap',
-              }}
-            >
-              {tt.leave}
-            </button>
-          ) : isFinished ? (
+        {tour.isJoined ? (
+          isFinished ? (
             <div style={{
               padding: '11px 14px', borderRadius: 11,
               background: 'rgba(61,186,122,.06)', border: '.5px solid rgba(61,186,122,.18)',
@@ -542,35 +500,57 @@ const TournamentCard: React.FC<{
               <IcoFlag size={13} /> Участвовал
             </div>
           ) : (
-            // PR-3 (Кенан 2026-05-18): кнопка «Выйти» теперь доступна и для
-            // IN_PROGRESS-турниров (раньше показывалась только при REGISTRATION,
-            // что блокировало уход из надоевшего турнира). Backend leave-ручка
-            // позволяет покинуть в любом статусе — взнос остаётся в призовом
-            // пуле (предупреждение через ConfirmModal). Сверху подпись «матчи
-            // назначаются автоматически», снизу — компактная кнопка Выйти.
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <div style={{
-                padding: '8px 14px', borderRadius: 11,
-                background: 'rgba(61,186,122,.06)', border: '.5px solid rgba(61,186,122,.18)',
-                color: '#3DBA7A', fontSize: '0.7rem', fontWeight: 700,
-                textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-              }}>
-                <IcoCheck size={11} /> Матчи назначаются автоматически
-              </div>
-              <button
-                onClick={onLeave}
-                style={{
-                  width: '100%', padding: '8px 14px', borderRadius: 11,
-                  background: 'rgba(255,91,91,.07)', color: '#FF5B5B',
-                  border: '.5px solid rgba(255,91,91,.2)',
-                  fontSize: '0.74rem', fontWeight: 700, cursor: 'pointer',
-                  fontFamily: 'inherit',
-                }}
-              >
-                {tt.leave}
-              </button>
-            </div>
+            <button
+              onClick={onLeave}
+              style={{
+                width: '100%', padding: '11px 16px', borderRadius: 11,
+                background: 'rgba(61,186,122,.07)',
+                color: '#3DBA7A',
+                border: '.5px solid rgba(61,186,122,.32)',
+                fontSize: '0.82rem', fontWeight: 800, cursor: 'pointer',
+                fontFamily: 'inherit', whiteSpace: 'nowrap',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                transition: 'opacity .15s',
+              }}
+              title="Клик — выйти из турнира"
+            >
+              <IcoCheck size={13} />
+              <span>Участник{tour.status === 'IN_PROGRESS' ? ' · идёт' : ''}</span>
+            </button>
           )
+        ) : canJoin ? (
+          <button
+            onClick={onJoin}
+            disabled={joining}
+            style={{
+              width: '100%', padding: '11px 16px', borderRadius: 11,
+              background: joining ? 'rgba(212,168,67,.08)' : 'linear-gradient(135deg,#2A1E08,#4A3810)',
+              color: '#F0C85A',
+              border: '.5px solid rgba(212,168,67,.4)',
+              fontSize: '0.85rem', fontWeight: 800, cursor: joining ? 'default' : 'pointer',
+              opacity: joining ? 0.7 : 1, fontFamily: 'inherit',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {joining ? (
+              <>Вступаем…</>
+            ) : (
+              <>
+                <IcoTrophy size={16} />
+                <span>{tt.join}{tour.entryFee !== '0' ? ` · ${fmtBalance(tour.entryFee)}` : ''}</span>
+              </>
+            )}
+          </button>
+        ) : (
+          <div style={{
+            padding: '11px 14px', borderRadius: 11,
+            background: 'rgba(90,82,72,.08)', border: '.5px solid rgba(90,82,72,.2)',
+            color: '#5A5248', fontSize: '0.78rem', fontWeight: 600,
+            textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+          }}>
+            {isFinished ? <><IcoFlag size={13} /> Турнир завершён</> : <><IcoLock size={13} /> Регистрация закрыта</>}
+          </div>
         )}
         </div>
 
