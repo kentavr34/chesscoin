@@ -698,6 +698,19 @@ export function GamePage() {
   const { user } = useUserStore();
   const session = sessions.find(s => s.id === sessionId) ?? null;
 
+  // PR-3 hotfix Кенан 2026-05-18: безопасная навигация на чужой профиль.
+  // Возвращает onClick если id валидный И не равен своему. Иначе undefined
+  // (PlayerPanel не сделает курсор pointer + не сработает navigate).
+  // Корень бага: если бэк прислал session с player.id=undefined, старый код
+  // делал navigate('/profile/undefined') → ProfilePage фильтровал строку
+  // 'undefined' → isOwnProfile=true → показывал свой профиль. Теперь явная
+  // проверка ДО navigate.
+  const openProfileSafe = (id: string | undefined | null) => {
+    if (!id || typeof id !== 'string' || id === 'undefined' || id === 'null') return undefined;
+    if (user?.id && id === user.id) return undefined; // свой профиль — не открываем
+    return () => navigate(`/profile/${id}`);
+  };
+
   const [lastMove,       setLastMove]       = useState<{ from: string; to: string } | null>(null);
   const [myTimeDisplay,  setMyTimeDisplay]  = useState('—');
   const [oppTimeDisplay, setOppTimeDisplay] = useState('—');
@@ -1065,7 +1078,7 @@ export function GamePage() {
             captured={blackCap} advantage={Math.max(0, bMat - wMat)} coins={0}
             timeDisplay={oppTimeDisplay} timeSecs={oppTimeSecs}
             isActive={!isWhiteTurnNow && !gameOver} isGameOver={gameOver}
-            onAvatarClick={specBlackSide.player?.id ? () => navigate(`/profile/${specBlackSide.player!.id}`) : undefined}
+            onAvatarClick={openProfileSafe(specBlackSide.player?.id)}
           />
         ) : (
           <PlayerPanel
@@ -1073,7 +1086,7 @@ export function GamePage() {
             isWhite={oppIsWhite} country={oppCountry} captured={oppCaptured} advantage={oppAdv} coins={oppCoins}
             timeDisplay={oppTimeDisplay} timeSecs={oppTimeSecs}
             isActive={!isMyTurn && !gameOver} isGameOver={gameOver}
-            onAvatarClick={(!oppIsBot && oppSide?.player?.id) ? () => navigate(`/profile/${oppSide.player!.id}`) : undefined}
+            onAvatarClick={oppIsBot ? undefined : openProfileSafe(oppSide?.player?.id)}
           />
         )}
       </div>
@@ -1224,7 +1237,7 @@ export function GamePage() {
             captured={whiteCap} advantage={Math.max(0, wMat - bMat)} coins={0}
             timeDisplay={myTimeDisplay} timeSecs={myTimeSecs}
             isActive={isWhiteTurnNow && !gameOver} isGameOver={gameOver}
-            onAvatarClick={specWhiteSide.player?.id ? () => navigate(`/profile/${specWhiteSide.player!.id}`) : undefined}
+            onAvatarClick={openProfileSafe(specWhiteSide.player?.id)}
           />
         ) : (
           <PlayerPanel
@@ -1232,7 +1245,10 @@ export function GamePage() {
             isWhite={myColor === 'white'} country={myCountry} captured={myCaptured} advantage={myAdv} coins={myCoins}
             timeDisplay={myTimeDisplay} timeSecs={myTimeSecs}
             isActive={isMyTurn && !gameOver} isGameOver={gameOver}
-            onAvatarClick={mySide?.player?.id ? () => navigate(`/profile/${mySide.player!.id}`) : undefined}
+            // PR-3 hotfix Кенан 2026-05-18: клик на СВОЙ аватар во время игры
+            // не делает navigate — раньше открывал /profile/<my-id>, что юзер
+            // считал багом «открылся свой профиль» при попытке посмотреть оппонента.
+            onAvatarClick={undefined}
           />
         )}
       </div>
