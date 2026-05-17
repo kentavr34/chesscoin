@@ -285,3 +285,67 @@ export const IcoTrophy: React.FC<Props> = ({ size = 14, color = 'currentColor' }
     <path d="M10 11v3M7 14h6M7.5 17h5" stroke={color} strokeWidth="1.6" strokeLinecap="round"/>
   </>
 ));
+
+// PR-3 hotfix 2026-05-18: набор для тотальной зачистки эмодзи в UI.
+// Стиль: viewBox 20×20, currentColor stroke, strokeWidth 1.6.
+
+// ✕ — закрытие модала
+export const IcoClose: React.FC<Props> = ({ size = 14, color = 'currentColor' }) => baseSvg(size, '0 0 20 20', (
+  <path d="M5 5l10 10M15 5l-10 10" stroke={color} strokeWidth="1.6" strokeLinecap="round"/>
+));
+
+// ✓ — галка/подтверждение
+export const IcoCheck: React.FC<Props> = ({ size = 14, color = 'currentColor' }) => baseSvg(size, '0 0 20 20', (
+  <path d="M4 11l4 4L16 6" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+));
+
+// ✗ — крест/поражение
+export const IcoCross: React.FC<Props> = ({ size = 14, color = 'currentColor' }) => baseSvg(size, '0 0 20 20', (
+  <path d="M5 5l10 10M15 5l-10 10" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+));
+
+// 🚪 — выход из страны/турнира (дверь со стрелкой)
+export const IcoExit: React.FC<Props> = ({ size = 14, color = 'currentColor' }) => baseSvg(size, '0 0 20 20', (
+  <>
+    <path d="M9 4H4v12h5" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M12 7l3 3-3 3M7 10h8" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+  </>
+));
+
+// 📅 — календарь
+export const IcoCalendar: React.FC<Props> = ({ size = 14, color = 'currentColor' }) => baseSvg(size, '0 0 20 20', (
+  <>
+    <rect x="3" y="5" width="14" height="12" rx="2" stroke={color} strokeWidth="1.6"/>
+    <path d="M3 8h14M7 3v4M13 3v4" stroke={color} strokeWidth="1.6" strokeLinecap="round"/>
+  </>
+));
+
+// 🏴 — generic флаг (без кода страны; CountryFlag юзайте если код есть)
+export const IcoFlag: React.FC<Props> = ({ size = 14, color = 'currentColor' }) => baseSvg(size, '0 0 20 20', (
+  <>
+    <path d="M5 3v14" stroke={color} strokeWidth="1.6" strokeLinecap="round"/>
+    <path d="M5 4h10l-2 3 2 3H5" stroke={color} strokeWidth="1.6" strokeLinejoin="round" fill={color === 'currentColor' ? 'currentColor' : color} fillOpacity=".15"/>
+  </>
+));
+
+// 💾 — сохранить (дискета/закладка); алиас IcoBookmark для семантики
+export const IcoBookmark: React.FC<Props> = ({ size = 14, color = 'currentColor' }) => baseSvg(size, '0 0 20 20', (
+  <path d="M5 4a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v13l-5-3-5 3V4z" stroke={color} strokeWidth="1.6" strokeLinejoin="round"/>
+));
+
+// 🥇🥈🥉 — медаль с цветом по месту. Цвета: gold/silver/bronze.
+const MEDAL_COLORS: Record<1 | 2 | 3, { ring: string; fill: string }> = {
+  1: { ring: '#F0C85A', fill: '#F0C85A' },
+  2: { ring: '#C0C8D0', fill: '#C0C8D0' },
+  3: { ring: '#CD7F32', fill: '#CD7F32' },
+};
+export const IcoMedalPlace: React.FC<{ place: 1 | 2 | 3; size?: number }> = ({ place, size = 16 }) => {
+  const c = MEDAL_COLORS[place];
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" style={{ verticalAlign: 'middle' }}>
+      <path d="M6 2h8l-2 5h-4z" stroke={c.ring} strokeWidth="1.4" fill={c.fill} fillOpacity=".25" strokeLinejoin="round"/>
+      <circle cx="10" cy="13" r="5" stroke={c.ring} strokeWidth="1.6" fill={c.fill} fillOpacity=".18"/>
+      <text x="10" y="15.4" textAnchor="middle" fontSize="6" fontWeight="900" fill={c.ring} fontFamily="'JetBrains Mono', monospace">{place}</text>
+    </svg>
+  );
+};
