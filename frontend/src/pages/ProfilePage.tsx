@@ -281,7 +281,7 @@ export const ProfilePage: React.FC = () => {
                 )}
               </span>
             )}
-            <span style={{ ...tagRobot, display: 'inline-flex', alignItems: 'center', gap: 4 }}><IcoRobot size={11} /> {JARVIS_LEVELS[Math.max(0, (user?.jarvisLevel ?? 1) - 1)].name}</span>
+            <span style={{ ...tagRobot, display: 'inline-flex', alignItems: 'center', gap: 4 }}><IcoRobot size={11} /> {t.jarvis.levels[Math.max(0, (user?.jarvisLevel ?? 1) - 1)]?.name ?? `Lv ${user?.jarvisLevel ?? 1}`}</span>
           </div>
         </div>
       </div>
@@ -1052,8 +1052,9 @@ export const ProfilePage: React.FC = () => {
 const secStyle: React.CSSProperties = { fontSize: '.58rem', fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: '#7A7875', padding: '.9rem .85rem .45rem' };
 const microLbl: React.CSSProperties = { fontSize: 9, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#5A5248', marginBottom: 3 };
 const balCard: React.CSSProperties = { margin: '12px 18px 0', padding: '14px 18px', background: 'linear-gradient(135deg,#141018,#0F0E18)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 18, display: 'flex', alignItems: 'center', justifyContent: 'space-between' };
-const ptabsStyle: React.CSSProperties = { display: 'flex', gap: 6, margin: '12px 18px 0', overflowX: 'auto' as React.CSSProperties['overflowX'], paddingBottom: 2 };
-const ptab = (active: boolean): React.CSSProperties => ({ flex: '0 0 auto', textAlign: 'center', padding: '7px 14px', fontSize: 11, fontWeight: 700, color: active ? '#82CFFF' : '#5A5248', cursor: 'pointer', border: active ? '.5px solid rgba(74,158,255,.3)' : '.5px solid rgba(255,255,255,.06)', outline: 'none', background: active ? 'rgba(74,158,255,.12)' : 'rgba(255,255,255,.04)', borderRadius: 8, fontFamily: 'inherit', transition: 'all .2s', whiteSpace: 'nowrap' } as React.CSSProperties);
+// Вкладки: одинаковая ширина, от края до края (Кенан 2026-05-17).
+const ptabsStyle: React.CSSProperties = { display: 'flex', gap: 6, margin: '12px 0 0', padding: '0 18px', paddingBottom: 2 };
+const ptab = (active: boolean): React.CSSProperties => ({ flex: '1 1 0', textAlign: 'center', padding: '8px 6px', fontSize: 11, fontWeight: 700, color: active ? '#82CFFF' : '#5A5248', cursor: 'pointer', border: active ? '.5px solid rgba(74,158,255,.3)' : '.5px solid rgba(255,255,255,.06)', outline: 'none', background: active ? 'rgba(74,158,255,.12)' : 'rgba(255,255,255,.04)', borderRadius: 8, fontFamily: 'inherit', transition: 'all .2s', whiteSpace: 'nowrap' } as React.CSSProperties);
 const stripStyle: React.CSSProperties = { margin: '4px 18px 0', padding: '13px 16px', background: 'linear-gradient(135deg,#141018,#0F0E18)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 18, display: 'flex', alignItems: 'center', gap: 12 };
 const tbaStyle: React.CSSProperties = { width: 36, height: 36, borderRadius: 9, background: 'rgba(255,255,255,.05)', border: '.5px solid rgba(255,255,255,.09)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, cursor: 'pointer', color: '#7A7875' };
 const secBtn: React.CSSProperties = { padding: '8px 14px', background: 'rgba(255,255,255,.05)', color: '#EAE2CC', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' };

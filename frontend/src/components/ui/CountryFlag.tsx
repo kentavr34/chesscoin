@@ -1,12 +1,16 @@
 /**
- * CountryFlag — настоящий флаг страны (PNG из flagcdn.com).
+ * CountryFlag — флаг страны (PNG из Twemoji CDN).
  *
- * 2026-05-16 Кенан: «флаг» — должен быть реальный флаг страны.
- * Раньше показывали текст-код «AT» в плашке; теперь — флаг через CDN
- * https://flagcdn.com (свободный SVG/PNG dataset ISO-3166-1 alpha-2).
+ * 2026-05-17 Кенан: flagcdn.com грузился ненадёжно в Telegram WebView и
+ * показывал текстовый fallback «AZ». Перешли на Twemoji через cdnjs —
+ * универсальный CDN, который сборка Cloudflare уже использует для других
+ * ассетов, отдаёт PNG по codepoint regional-indicator.
  *
- * При ошибке загрузки (CDN недоступен, неверный код) — fallback
- * на стилизованную текстовую плашку с кодом страны, чтобы UI не ломался.
+ * Алгоритм: ISO-2 «AZ» → regional indicator codepoints 1F1E6-1F1FF →
+ * https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f1e6-1f1ff.png
+ *
+ * Fallback: при ошибке загрузки PNG — нативный emoji через
+ * String.fromCodePoint (на Android/iOS системный шрифт рендерит флаг).
  */
 import React, { useState } from 'react';
 
@@ -21,10 +25,11 @@ export const CountryFlag: React.FC<Props> = ({ code, size = 18 }) => {
   const [failed, setFailed] = useState(false);
   if (!code || code.length !== 2) return null;
   const upper = code.toUpperCase();
-  const lower = upper.toLowerCase();
-  // Ширина w<size> у flagcdn возвращает PNG; для retina берём ×2
-  const w = Math.max(40, Math.round(size * 2));
-  const url = `https://flagcdn.com/w${w}/${lower}.png`;
+  // Regional indicator codepoints: A=0x41 → 0x1F1E6 (127462).
+  const codepoints = [...upper]
+    .map((c) => (c.charCodeAt(0) - 65 + 0x1f1e6).toString(16))
+    .join('-');
+  const url = `https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/${codepoints}.png`;
 
   if (!failed) {
     return (
@@ -36,10 +41,6 @@ export const CountryFlag: React.FC<Props> = ({ code, size = 18 }) => {
           justifyContent: 'center',
           width: size,
           height: size,
-          borderRadius: size / 6,
-          overflow: 'hidden',
-          background: 'rgba(255,255,255,.04)',
-          border: '.5px solid rgba(255,255,255,.12)',
           flexShrink: 0,
         }}
       >
@@ -48,16 +49,18 @@ export const CountryFlag: React.FC<Props> = ({ code, size = 18 }) => {
           alt={upper}
           width={size}
           height={size}
-          loading="lazy"
           draggable={false}
           onError={() => setFailed(true)}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
         />
       </span>
     );
   }
 
-  // Fallback — текстовая плашка
+  // Fallback — нативный emoji
+  const emoji = String.fromCodePoint(
+    ...[...upper].map((c) => c.charCodeAt(0) - 65 + 0x1f1e6),
+  );
   return (
     <span
       title={upper}
@@ -67,19 +70,14 @@ export const CountryFlag: React.FC<Props> = ({ code, size = 18 }) => {
         justifyContent: 'center',
         width: size,
         height: size,
-        borderRadius: size / 4,
-        background: 'rgba(212,168,67,.14)',
-        color: '#F0C85A',
-        border: '.5px solid rgba(240,200,90,.22)',
-        fontSize: size * 0.45,
-        fontWeight: 800,
-        fontFamily: "'JetBrains Mono', monospace",
+        fontSize: size * 0.95,
         lineHeight: 1,
-        verticalAlign: 'middle',
+        fontFamily:
+          "'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif",
         flexShrink: 0,
       }}
     >
-      {upper}
+      {emoji}
     </span>
   );
 };
