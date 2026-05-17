@@ -49,6 +49,9 @@ export const useConfirm = (): [
         <Modal.Body center>{opts.message}</Modal.Body>
       )}
       <Modal.Footer>
+        {/* PR-3 hotfix 2026-05-18: все цвета — хардкод тёмные, никаких CSS vars
+            (см. Modal.tsx — корень бага был в light-media-query, который
+            переписывал переменные даже в dark-теме приложения). */}
         <button
           aria-label={opts?.cancelLabel ?? 'Cancel'}
           onClick={() => handle(false)}
@@ -56,9 +59,9 @@ export const useConfirm = (): [
             flex: 1,
             padding: '13px',
             borderRadius: 14,
-            background: 'var(--color-bg-card, #1C2030)',
-            border: '1px solid var(--confirm-cancel-btn-border, rgba(255,255,255,0.1))',
-            color: 'var(--color-text-primary, #F0F2F8)',
+            background: '#1C2030',
+            border: '1px solid rgba(255,255,255,0.10)',
+            color: '#F0F2F8',
             fontSize: 14,
             fontWeight: 600,
             cursor: 'pointer',
@@ -75,13 +78,13 @@ export const useConfirm = (): [
             padding: '13px',
             borderRadius: 14,
             background: opts?.danger
-              ? 'var(--confirm-danger-btn-bg, rgba(255,77,106,0.15))'
-              : 'var(--color-accent, #F5C842)',
+              ? 'rgba(255,77,106,0.18)'
+              : '#F5C842',
             border: opts?.danger
-              ? '1px solid var(--confirm-danger-btn-border, rgba(255,77,106,0.4))'
+              ? '1px solid rgba(255,77,106,0.45)'
               : 'none',
             color: opts?.danger
-              ? 'var(--color-red, #FF4D6A)'
+              ? '#FF8090'
               : '#0B0D11',
             fontSize: 14,
             fontWeight: 700,

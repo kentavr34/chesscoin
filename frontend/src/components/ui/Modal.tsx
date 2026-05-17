@@ -2,18 +2,34 @@
  * Modal.tsx
  * Base modal component — standardizes position, z-index, padding, backdrop across all modals
  *
- * Usage:
- *   <Modal isOpen={isOpen} onClose={onClose}>
- *     <Modal.Header>Title</Modal.Header>
- *     <Modal.Body>Content</Modal.Body>
- *     <Modal.Footer>
- *       <button onClick={onClose}>Cancel</button>
- *       <button onClick={onConfirm}>OK</button>
- *     </Modal.Footer>
- *   </Modal>
+ * PR-3 hotfix 2026-05-18 (Кенан, скрин «Вступить в Чемпион Мира?»):
+ * Все цвета — ХАРДКОД тёмные. НИКАКИХ CSS-vars зависимых от темы. Корень
+ * прошлого бага: @media (prefers-color-scheme: light) в index.css
+ * переписывал --color-bg-modal в #FAFAFA даже при data-theme="dark" на
+ * <html>, потому что media query на телефоне юзера срабатывал автоматически
+ * (его iOS Settings в light-режиме). Получался белый модал с белым текстом.
+ *
+ * Также не доверяем Telegram WebApp themeParams (secondary_bg_color) —
+ * Telegram передаёт системную тему. Приложение всегда тёмное.
+ *
+ * Палитра модала (фикс на все темы):
+ *   bg:         #161927  (тёмный навёрстный)
+ *   border:     rgba(255,255,255,0.10)
+ *   text-pri:   #F0F2F8  (заголовки)
+ *   text-sec:   #B8C0D0  (body)
+ *   overlay:    rgba(0,0,0,0.75) + blur
  */
 
 import React, { ReactNode } from 'react';
+
+// PR-3 hotfix: хардкодные цвета модала. Любая страница может оверрайдить.
+const MODAL_BG          = '#161927';
+const MODAL_BORDER      = 'rgba(255,255,255,0.10)';
+const MODAL_TEXT_PRI    = '#F0F2F8';
+const MODAL_TEXT_SEC    = '#B8C0D0';
+const MODAL_OVERLAY     = 'rgba(0,0,0,0.75)';
+const MODAL_DIVIDER     = 'rgba(255,255,255,0.06)';
+const MODAL_SHADOW      = '0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04) inset';
 
 interface ModalProps {
   isOpen: boolean;
@@ -43,8 +59,8 @@ const Modal: React.FC<ModalProps> & {
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 'var(--z-modal, 300)',
-        background: 'var(--modal-overlay-bg, rgba(0,0,0,0.75))',
+        zIndex: 300,
+        background: MODAL_OVERLAY,
         backdropFilter: 'blur(10px)',
         WebkitBackdropFilter: 'blur(10px)',
         display: 'flex',
@@ -59,14 +75,18 @@ const Modal: React.FC<ModalProps> & {
         style={{
           width: '100%',
           maxWidth: typeof maxWidth === 'string' ? maxWidth : `${maxWidth}px`,
-          background: 'var(--color-bg-modal, #161927)',
-          border: '1px solid var(--modal-border, rgba(255,255,255,0.1))',
-          borderRadius: 'var(--radius-xl)',
-          boxShadow: 'var(--modal-shadow, 0 20px 60px rgba(0,0,0,0.5))',
+          // PR-3 hotfix: ХАРДКОД тёмного фона — иначе light-media-query
+          // переписывал --color-bg-modal в #FAFAFA даже в dark-теме app.
+          background: MODAL_BG,
+          border: `1px solid ${MODAL_BORDER}`,
+          borderRadius: 18,
+          boxShadow: MODAL_SHADOW,
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
           maxHeight: '90vh',
+          // Защита от наследования системного color-scheme из Telegram WebView.
+          colorScheme: 'dark',
         }}
       >
         {children}
@@ -78,13 +98,13 @@ const Modal: React.FC<ModalProps> & {
 Modal.Header = ({ children, center = true }: ModalSectionProps) => (
   <div
     style={{
-      padding: `var(--space-xl) var(--space-l) var(--space-s)`,
-      borderBottom: '1px solid var(--modal-divider, rgba(255,255,255,0.05))',
-      fontSize: 'var(--font-size-lg)',
-      fontWeight: 'var(--font-weight-extrabold)',
-      color: 'var(--color-text-primary, #F0F2F8)',
+      padding: '22px 20px 12px',
+      borderBottom: `1px solid ${MODAL_DIVIDER}`,
+      fontSize: 17,
+      fontWeight: 800,
+      color: MODAL_TEXT_PRI,
       fontFamily: "'Unbounded', sans-serif",
-      lineHeight: 'var(--line-height-tight)',
+      lineHeight: 1.25,
       textAlign: center ? 'center' : 'left',
     }}
   >
@@ -96,11 +116,11 @@ Modal.Body = ({ children, center = false }: ModalSectionProps) => (
   <div
     style={{
       flex: 1,
-      padding: `var(--space-l) var(--space-l)`,
+      padding: '14px 20px',
       overflow: 'auto',
-      fontSize: 'var(--font-size-sm)',
-      color: 'var(--color-text-primary, #F0F2F8)',
-      lineHeight: 'var(--line-height-normal)',
+      fontSize: 14,
+      color: MODAL_TEXT_SEC,
+      lineHeight: 1.5,
       textAlign: center ? 'center' : 'left',
     }}
   >
@@ -111,10 +131,10 @@ Modal.Body = ({ children, center = false }: ModalSectionProps) => (
 Modal.Footer = ({ children }: { children: ReactNode }) => (
   <div
     style={{
-      padding: `var(--space-l) var(--space-l) calc(var(--space-l) + 6px)`,
-      borderTop: '1px solid var(--modal-divider, rgba(255,255,255,0.05))',
+      padding: '16px 20px 18px',
+      borderTop: `1px solid ${MODAL_DIVIDER}`,
       display: 'flex',
-      gap: 'var(--gap-sm)',
+      gap: 8,
       justifyContent: 'flex-end',
     }}
   >

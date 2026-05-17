@@ -50,7 +50,7 @@ export const WarChallengePopup: React.FC<Props> = ({ data, onAccept, onDecline }
       <div style={{
         width: '100%',
         maxWidth: 'clamp(260px, 90vw, 340px)',
-        background: 'linear-gradient(135deg, var(--color-bg-modal, #161927), var(--color-bg-card, #1C2030))',
+        background: 'linear-gradient(135deg, #161927, #1C2030)',
         border: '1px solid var(--war-challenge-modal-border, rgba(255, 77, 106, 0.3))',
         borderRadius: 28,
         padding: 'clamp(20px, 5vw, 32px) clamp(16px, 4vw, 24px)',
