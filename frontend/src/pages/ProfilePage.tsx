@@ -14,6 +14,7 @@ import { profileApi, warsApi } from '@/api';
 import { fmtBalance, fmtDate, leagueEmoji } from '@/utils/format';
 import type { Transaction, UserPublic } from '@/types';
 import { JARVIS_LEVELS } from '@/components/ui/JarvisModal';
+import { LeagueProgressBar } from '@/components/ui/LeagueProgressBar';
 
 // Local type for Tab — 'games' включает сохранённые партии (слиты в 2026-05-16)
 type Tab = 'info' | 'games' | 'ach';
@@ -312,6 +313,11 @@ export const ProfilePage: React.FC = () => {
         </div>
       </div>
 
+      {/* League progress bar — поднят сразу после Balance (Кенан 2026-05-17) */}
+      <div style={{ marginTop: 10 }}>
+        <LeagueProgressBar league={user.league} balance={user.balance} />
+      </div>
+
       {/* Чемпион месяца */}
       {user?.isMonthlyChampion && (
         <div style={{ margin: '8px 18px 0', padding: '12px 14px', background: 'linear-gradient(135deg, rgba(255,215,0,0.1), rgba(74,158,255,0.06))', border: '.5px solid rgba(255,215,0,0.3)', borderRadius: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -326,44 +332,6 @@ export const ProfilePage: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* League progress bar */}
-      {(() => {
-        const LEAGUE_THRESHOLDS: Record<string, { next: string | null; threshold: bigint; nextThreshold: bigint }> = {
-          BRONZE:   { next: 'SILVER',   threshold: 0n,           nextThreshold: 100_000n },
-          SILVER:   { next: 'GOLD',     threshold: 100_000n,     nextThreshold: 1_000_000n },
-          GOLD:     { next: 'DIAMOND',  threshold: 1_000_000n,   nextThreshold: 5_000_000n },
-          DIAMOND:  { next: 'CHAMPION', threshold: 5_000_000n,   nextThreshold: 10_000_000n },
-          CHAMPION: { next: 'STAR',     threshold: 10_000_000n,  nextThreshold: 50_000_000n },
-          STAR:     { next: null,       threshold: 50_000_000n,  nextThreshold: 50_000_000n },
-        };
-        const info = LEAGUE_THRESHOLDS[user.league];
-        if (!info) return null;
-        const bal = BigInt(user.balance ?? '0');
-        const range = info.nextThreshold - info.threshold;
-        const progress = info.next === null ? 100 : range > 0n ? Math.min(100, Number((bal - info.threshold) * 100n / range)) : 100;
-        const remaining = info.next ? info.nextThreshold - bal : 0n;
-        return (
-          <div
-            onClick={() => navigate('/leaderboard')}
-            style={{ margin: '0 18px 10px', padding: '12px 16px', background: 'linear-gradient(135deg,#141018,#0F0E18)', border: '.5px solid rgba(74,158,255,.18)', borderRadius: 16, cursor: 'pointer' }}
-            title="Перейти на страницу рейтингов"
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#F0C85A' }}>{leagueEmoji[user.league]} {t.profile.league(user.league)}</div>
-              {info.next ? (
-                <div style={{ fontSize: 10, color: '#9A9490' }}>{t.profile.toLeague(`${leagueEmoji[info.next]} ${info.next}`, fmtBalance(remaining.toString()))}</div>
-              ) : (
-                <div style={{ fontSize: 10, color: '#3DBA7A', fontWeight: 700 }}>{t.profile.maxLeague}</div>
-              )}
-            </div>
-            <div style={{ height: 5, background: 'linear-gradient(135deg,#141018,#0F0E18)', borderRadius: 3, overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${progress}%`, background: 'linear-gradient(90deg,#F0C85A,#FFD966)', borderRadius: 3, transition: 'width .5s' }} />
-            </div>
-            <div style={{ fontSize: 9, color: '#5A5248', marginTop: 4 }}>{t.profile.leagueProgress(progress)}</div>
-          </div>
-        );
-      })()}
 
       {/* Tabs */}
       <div style={ptabsStyle}>

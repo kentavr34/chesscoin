@@ -8,6 +8,7 @@ import { JarvisPlayModal } from '@/components/ui/JarvisPlayModal';
 import { AttemptsModal } from '@/components/ui/AttemptsModal';
 import { CountryFlag } from '@/components/ui/CountryFlag';
 import { ActiveSessionsModal } from '@/components/ui/ActiveSessionsModal';
+import { LeagueProgressBar } from '@/components/ui/LeagueProgressBar';
 import { type JarvisLevel } from '@/components/ui/JarvisModal';
 import { useT } from '@/i18n/useT';
 
@@ -427,6 +428,13 @@ export const HomePage: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* ══ ЛИГА (под паспортом, до активных сессий) ══ */}
+        <LeagueProgressBar
+          league={user.league}
+          balance={user.balance}
+          margin=".7rem .85rem 0"
+        />
 
         {/* ══ АКТИВНЫЕ СЕССИИ (только если есть) ══ */}
         {activeSessions.length > 0 && (
