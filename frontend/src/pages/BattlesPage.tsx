@@ -10,6 +10,7 @@ import { getSocket } from '@/api/socket';
 import { fmtBalance, fmtTime } from '@/utils/format';
 import { translations } from '@/i18n/translations';
 import { IcoStripedQueen, IcoKingWhite as IcoKingW, IcoKingBlack as IcoKingB } from '@/components/icons/ChessIcons';
+import { IcoBolt, IcoClose } from '@/components/icons/UiIcons';
 import { PgnReplayModal } from '@/components/profile/PgnReplayModal';
 import { ShareSessionButton, buildShareUrl } from '@/components/ui/ShareSessionButton';
 import type { BattleLobbyItem, GameSession, UserPublic } from '@/types';
@@ -928,7 +929,7 @@ const QuickMatchModal: React.FC<{ onClose: () => void; onBuyAttempts: () => void
         </div>
 
         <div style={{ padding: '6px 20px 4px', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 22 }}>⚡</span>
+          <span style={{ color: '#82CFFF', display: 'inline-flex' }}><IcoBolt size={22} color="#82CFFF" /></span>
           <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '1.02rem', fontWeight: 900, color: '#E8F2FF', letterSpacing: '.01em' }}>
             Быстрая игра
           </span>
@@ -1004,7 +1005,11 @@ const QuickMatchModal: React.FC<{ onClose: () => void; onBuyAttempts: () => void
               boxShadow: canStart && !loading ? '0 4px 20px rgba(74,158,255,.35)' : 'none',
             }}
           >
-            {loading ? 'Поиск…' : !hasAttempts ? 'Купить попытки' : userBalance < bet ? 'Недостаточно монет' : '⚡ Найти соперника'}
+            {loading ? 'Поиск…' : !hasAttempts ? 'Купить попытки' : userBalance < bet ? 'Недостаточно монет' : (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <IcoBolt size={14} /> Найти соперника
+              </span>
+            )}
           </button>
         </div>
       </div>
@@ -1104,7 +1109,7 @@ const CreateBattleModal: React.FC<{ onClose: () => void; onBuyAttempts: () => vo
             background: 'rgba(255,255,255,.05)', border: '.5px solid rgba(255,255,255,.09)',
             color: '#6A7090', fontSize: '.8rem', cursor: 'pointer', fontFamily: 'inherit',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>✕</button>
+          }}><IcoClose size={12} /></button>
         </div>
 
         {/* ── Ставка (компактно: метка + сумма на одной строке) ── */}
