@@ -10,6 +10,7 @@ import { getSocket } from '@/api/socket';
 import { api } from '@/api/client';
 import { useGameStore } from '@/store/useGameStore';
 import { useUserStore } from '@/store/useUserStore';
+import { BottomNav } from '@/components/layout/BottomNav';
 import type { GameSession } from '@/types';
 import { ChessBoard } from '@/components/game/ChessBoard';
 import { sound } from '@/lib/sound';
@@ -66,9 +67,13 @@ function fmtTime(secs: number): string {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 }
 
-function calcBoardSize(): number {
-  // Панели + статус-полоски + action bar + минимальные spacer-ы (8px сверху/снизу)
-  const reserved = PANEL_H * 2 + STATUS_GAP * 2 + ACTBAR_H + 16;
+function calcBoardSize(isSpectator = false, hasMeta = false): number {
+  // Панели + статус-полоски + action bar + spacer-ы (8px сверху/снизу).
+  // PR-3 hotfix Кенан 2026-05-18: для зрителя добавляем 82px на BottomNav.
+  // Если есть meta-полоска (касса) — +28px (1 строка + margins).
+  const navSpace = isSpectator ? 82 : 0;
+  const metaSpace = hasMeta ? 28 : 0;
+  const reserved = PANEL_H * 2 + STATUS_GAP * 2 + ACTBAR_H + 16 + navSpace + metaSpace;
   return Math.floor(Math.min(window.innerWidth, window.innerHeight - reserved));
 }
 
@@ -885,13 +890,15 @@ export function GamePage() {
     return () => clearInterval(id);
   }, []);
 
-  // Размер доски
-  const [boardSize, setBoardSize] = useState(calcBoardSize);
+  // Размер доски — PR-3 hotfix Кенан 2026-05-18: учитываем bottom-nav и meta-полоску.
+  // Объявление `hasMeta` ниже зависит от isBattle/hasBet — те объявлены до этого блока.
+  const [boardSize, setBoardSize] = useState(() => calcBoardSize());
   useEffect(() => {
-    const onResize = () => setBoardSize(calcBoardSize());
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
+    const recalc = () => setBoardSize(calcBoardSize(isSpectator, isBattle && hasBet));
+    recalc();
+    window.addEventListener('resize', recalc);
+    return () => window.removeEventListener('resize', recalc);
+  }, [isSpectator, isBattle, hasBet]);
 
   // Данные сессии
   const mySide   = session?.sides.find(s => s.id === session?.mySideId);
@@ -1086,87 +1093,6 @@ export function GamePage() {
       {/* ── Верхний spacer — пустое пространство выравнивается между краем экрана и блоком ── */}
       <div style={{ flex: 1, minHeight: 6 }} />
 
-      {/* ── PR-3 hotfix (Кенан 2026-05-18): инфополоска для зрителей перенесена
-          сюда — НАД панелью соперника. Раньше она была под доской, мешала
-          игроку (дублировала информацию: касса + донаты + комиссия). Теперь:
-          - сверху эта мета-полоска (только если публичный батл + есть ставка)
-          - под ней панель соперника
-          - доска
-          - «Ваш ход»
-          - моя панель
-          - кнопки. ────────────────────────────────────────────────────────── */}
-      {isBattle && hasBet && (
-        isPrivateBattle ? (
-          /* Приватный: только касса, без зрителей/доната */
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
-            background: 'rgba(212,168,67,.08)',
-            border: '.5px solid rgba(212,168,67,.22)',
-            borderRadius: 10,
-            padding: '6px 12px',
-            margin: '0 10px 6px',
-            flexShrink: 0,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <CoinIcon size={14} />
-              <span style={{ fontSize: '.62rem', color: '#9A9490', fontWeight: 600, letterSpacing: '.04em', textTransform: 'uppercase' }}>
-                Касса
-              </span>
-              <span style={{ fontSize: '.78rem', color: '#F0C85A', fontWeight: 800 }}>
-                {fmtBalance(bank.toString())}
-              </span>
-            </div>
-            <div style={{ fontSize: '.58rem', color: '#6E6A66', fontWeight: 600, letterSpacing: '.02em' }}>
-              победителю <span style={{ color: '#4DDA8A', fontWeight: 800 }}>{fmtBalance(winnerTake.toString())}</span>
-              <span style={{ color: '#4A4440' }}> · комиссия 10%</span>
-            </div>
-          </div>
-        ) : (
-          /* Публичный: счётчик зрителей + касса + разбивка (ставки / донаты) + к выплате */
-          <div style={{
-            display: 'flex', flexDirection: 'column', gap: 4,
-            background: 'linear-gradient(135deg, rgba(212,168,67,.10), rgba(212,168,67,.04))',
-            border: '.5px solid rgba(212,168,67,.28)',
-            borderRadius: 12,
-            padding: '7px 12px',
-            margin: '0 10px 6px',
-            flexShrink: 0,
-          }}>
-            {/* Строка 0: счётчик зрителей (был отдельной верхней полоской) */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '.55rem', fontWeight: 800, color: '#4DDA8A', letterSpacing: '.02em' }}>
-              {spectatorCount > 0 && (
-                <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#4DDA8A', animation: 'gp-pulse 1.4s infinite', boxShadow: '0 0 5px #4DDA8A' }} />
-              )}
-              <span>{spectatorCount} в эфире</span>
-              <span style={{ color: '#2E5A3A' }}>·</span>
-              <span style={{ opacity: 0.8 }}>{viewCount >= 1000 ? `${(viewCount / 1000).toFixed(1)}K` : viewCount} всего</span>
-              <span style={{ color: '#2E5A3A' }}>·</span>
-              <span style={{ opacity: 0.8 }}>{savesCount} сохр.</span>
-            </div>
-            {/* Строка 1: Касса + общая сумма */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <CoinIcon size={14} />
-                <span style={{ fontSize: '.62rem', color: '#D4A843', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase' }}>
-                  Касса
-                </span>
-              </div>
-              <span style={{ fontSize: '.86rem', color: '#F0C85A', fontWeight: 800, letterSpacing: '.01em' }}>
-                {fmtBalance(bank.toString())}
-              </span>
-            </div>
-            {/* Строка 2: разбивка ставки + донаты */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, fontSize: '.56rem', color: '#7A7470', fontWeight: 600 }}>
-              <span>ставки: <span style={{ color: '#A8A29C' }}>{fmtBalance(totalBetPot.toString())}</span></span>
-              <span>донаты: <span style={{ color: donationsBig > 0n ? '#E78F4F' : '#5A5550' }}>{fmtBalance(donationsBig.toString())}</span></span>
-              <span>
-                победителю: <span style={{ color: '#4DDA8A', fontWeight: 800 }}>{fmtBalance(winnerTake.toString())}</span>
-                <span style={{ color: '#4A4440' }}> · стол 10%</span>
-              </span>
-            </div>
-          </div>
-        )
-      )}
 
       {/* ── Соперник / верхний игрок (spectator: чёрный игрок) ───────────── */}
       <div style={{ borderBottom: '.5px solid rgba(255,255,255,.05)', flexShrink: 0 }}>
@@ -1194,9 +1120,55 @@ export function GamePage() {
         )}
       </div>
 
+      {/* PR-3 hotfix (Кенан 2026-05-18, перенос #2): мета-полоска компактная
+          в ОДНУ СТРОКУ. Между панелью соперника и доской. Высота ~22-26px.
+          Формат: «N эфир · M просм · K сохр · касса 20K → 18K» (или для
+          приватных только «касса 20K → 18K · стол 10%»). */}
+      {isBattle && hasBet && (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+          padding: '4px 12px',
+          margin: '4px 10px 2px',
+          background: 'rgba(212,168,67,.06)',
+          border: '.5px solid rgba(212,168,67,.18)',
+          borderRadius: 8,
+          fontSize: '.62rem', fontWeight: 600, fontFamily: 'Inter, sans-serif',
+          color: '#7A7470', letterSpacing: '.01em',
+          whiteSpace: 'nowrap',
+          overflowX: 'auto', scrollbarWidth: 'none',
+          flexShrink: 0,
+        }}>
+          {isPublicBattle && (
+            <>
+              <span style={{ color: '#4DDA8A', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                {spectatorCount > 0 && <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#4DDA8A' }} />}
+                {spectatorCount} эфир
+              </span>
+              <span style={{ color: '#3A3830' }}>·</span>
+              <span>{viewCount >= 1000 ? `${(viewCount / 1000).toFixed(1)}K` : viewCount} просм</span>
+              <span style={{ color: '#3A3830' }}>·</span>
+              <span>{savesCount} сохр</span>
+              <span style={{ color: '#3A3830' }}>·</span>
+            </>
+          )}
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+            <CoinIcon size={10} />
+            <span style={{ color: '#D4A843', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '.04em' }}>касса</span>
+            <span style={{ color: '#F0C85A', fontWeight: 800 }}>{fmtBalance(bank.toString())}</span>
+          </span>
+          <span style={{ color: '#3A3830' }}>→</span>
+          <span style={{ color: '#4DDA8A', fontWeight: 800 }}>{fmtBalance(winnerTake.toString())}</span>
+          {isPublicBattle && donationsBig > 0n && (
+            <>
+              <span style={{ color: '#3A3830' }}>·</span>
+              <span style={{ color: '#E78F4F' }}>донаты {fmtBalance(donationsBig.toString())}</span>
+            </>
+          )}
+        </div>
+      )}
+
       {/* ── Статус-полоска верх (между панелью соперника и доской): только
-          «Думает...» для НЕ-публичных партий. Для публичных вся meta уже
-          вынесена в верхнюю инфополоску над панелью соперника. */}
+          «Думает...» для НЕ-публичных партий. */}
       <div style={{ height: STATUS_GAP, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 4, flexShrink: 0 }}>
         {!isPublicBattle && !isMyTurn && !gameOver && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -1490,6 +1462,12 @@ export function GamePage() {
         )}
       </div>
 
+      {/* PR-3 hotfix Кенан 2026-05-18: spacer под action-bar для зрителя,
+          чтобы fixed BottomNav (~82px высота) не перекрывал action-кнопки. */}
+      {isSpectator && (
+        <div style={{ height: 82, flexShrink: 0 }} />
+      )}
+
       {/* ── Диалог подтверждения сдачи ──────────────────────────────────── */}
       {showResignDialog && (
         <GameDialog
@@ -1542,6 +1520,13 @@ export function GamePage() {
           onClose={() => navigate('/')}
         />
       )}
+
+      {/* PR-3 hotfix Кенан 2026-05-18: в режиме зрителя — bottom-nav виден
+          (юзер не играет, ему нужна навигация на другие вкладки). Action-bar
+          выше остаётся (Главная/Сохранить/Донаты/Поделиться) — это локальные
+          действия с этой партией. В playing-режиме nav скрыт чтобы освободить
+          место для action-buttons (Ничья/Сдаться). */}
+      {isSpectator && <BottomNav />}
     </div>
   );
 };
