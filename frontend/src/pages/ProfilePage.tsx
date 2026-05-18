@@ -243,56 +243,56 @@ export const ProfilePage: React.FC = () => {
               );
             })()
           ) : (
-            /* Чужой профиль: аватар кликабелен ТОЛЬКО при наличии premium-
-               предметов (Кенан 2026-05-16: «если стоит аватар по умолчанию
-               импорт с телеграм — то просто не кликабелен»). */
+            /* Чужой профиль: аватар показывает ВЫБРАННОГО юзера (не себя)
+               и кликабелен ТОЛЬКО при наличии premium-предметов
+               (Кенан 2026-05-18: «если стоит аватар по умолчанию импорт с
+               телеграм — то просто не кликабелен»). */
             (() => {
-              const premiumAvatar = user?.equippedItems?.PREMIUM_AVATAR;
-              const frame = user?.equippedItems?.AVATAR_FRAME;
+              const vp = displayUser as any;
+              const premiumAvatar = vp?.equippedItems?.PREMIUM_AVATAR;
+              const frame = vp?.equippedItems?.AVATAR_FRAME;
               const clickable = !!(premiumAvatar || frame);
               const handle = clickable ? () => {
+                console.log('[profileNav] foreign-avatar click', { premiumAvatar: premiumAvatar?.id, frame: frame?.id });
                 if (premiumAvatar) navigate('/shop', { state: { tab: 'avatars', highlightItemId: premiumAvatar.id } });
                 else if (frame) navigate('/shop', { state: { tab: 'frames', highlightItemId: frame.id } });
               } : undefined;
               return (
-            <div style={{ position: 'relative', cursor: clickable ? 'pointer' : 'default' }} onClick={handle}>
-              <Avatar user={user} size="xl" gold />
-              {/* конка магазина — видна если есть премиум-аватар или рамка */}
-              {(user?.equippedItems?.PREMIUM_AVATAR || user?.equippedItems?.AVATAR_FRAME) && (
-                <div style={{
-                  position: 'absolute', bottom: -2, right: -2,
-                  width: 22, height: 22, borderRadius: '50%',
-                  background: 'rgba(123,97,255,0.9)',
-                  border: '1.5px solid rgba(255,255,255,0.2)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 11,
-                }} title={t.profile.buyInShop}>
-                  <IcoShop size={11} />
+                <div style={{ position: 'relative', cursor: clickable ? 'pointer' : 'default' }} onClick={handle}>
+                  <Avatar user={vp as UserPublic} size="xl" gold />
+                  {clickable && (
+                    <div style={{
+                      position: 'absolute', bottom: -2, right: -2,
+                      width: 22, height: 22, borderRadius: '50%',
+                      background: 'rgba(123,97,255,0.9)',
+                      border: '1.5px solid rgba(255,255,255,0.2)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }} title={t.profile.buyInShop}>
+                      <IcoShop size={11} />
+                    </div>
+                  )}
+                  {clickable && (
+                    <div style={{
+                      position: 'absolute', top: '105%', left: '50%', transform: 'translateX(-50%)',
+                      background: 'rgba(0,0,0,0.8)', borderRadius: 6, padding: '2px 8px',
+                      fontSize: 9, color: '#F0C85A', whiteSpace: 'nowrap',
+                      border: '1px solid rgba(245,200,66,0.3)',
+                    }}>
+                      {premiumAvatar?.name ?? frame?.name}
+                    </div>
+                  )}
                 </div>
-              )}
-              {/* Подсказка с названием предмета */}
-              {(user?.equippedItems?.PREMIUM_AVATAR || user?.equippedItems?.AVATAR_FRAME) && (
-                <div style={{
-                  position: 'absolute', top: '105%', left: '50%', transform: 'translateX(-50%)',
-                  background: 'rgba(0,0,0,0.8)', borderRadius: 6, padding: '2px 8px',
-                  fontSize: 9, color: '#F0C85A', whiteSpace: 'nowrap',
-                  border: '1px solid rgba(245,200,66,0.3)',
-                }}>
-                  {user?.equippedItems?.PREMIUM_AVATAR?.name ?? user?.equippedItems?.AVATAR_FRAME?.name}
-                </div>
-              )}
-            </div>
               );
             })()
           )}
         </div>
         <div style={{ textAlign: 'center', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
-          <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#EAE2CC' }}>{user.firstName} {user.lastName ?? ''}</span>
+          <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#EAE2CC' }}>{(displayUser as any)?.firstName ?? ''} {(displayUser as any)?.lastName ?? ''}</span>
           {(displayUser as any)?.countryMember?.country?.code && (
             <CountryFlag code={(displayUser as any).countryMember.country.code} size={22} />
           )}
         </div>
-        <div style={{ marginTop: 3, textAlign: 'center', fontSize: '.72rem', color: '#5A5248' }}>@{user.username ?? 'unknown'}</div>
+        <div style={{ marginTop: 3, textAlign: 'center', fontSize: '.72rem', color: '#5A5248' }}>@{(displayUser as any)?.username ?? 'unknown'}</div>
         {/* 2.3 Кнопка "Сразиться" на чужом профиле */}
         {!isOwnProfile && (
           <button onClick={() => navigate('/battles', { state: { challengeUserId: viewedUserId } })} style={{ marginTop: 10, padding: '10px 20px', background: 'linear-gradient(135deg,#2A1E08,#4A3810)', border: '.5px solid rgba(212,168,67,.42)', borderRadius: 12, color: '#F0C85A', fontSize: '.85rem', fontWeight: 900, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 8 }}>

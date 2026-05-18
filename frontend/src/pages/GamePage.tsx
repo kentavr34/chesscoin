@@ -732,9 +732,18 @@ export function GamePage() {
   // 'undefined' → isOwnProfile=true → показывал свой профиль. Теперь явная
   // проверка ДО navigate.
   const openProfileSafe = (id: string | undefined | null) => {
-    if (!id || typeof id !== 'string' || id === 'undefined' || id === 'null') return undefined;
-    if (user?.id && id === user.id) return undefined; // свой профиль — не открываем
-    return () => navigate(`/profile/${id}`);
+    if (!id || typeof id !== 'string' || id === 'undefined' || id === 'null') {
+      console.log('[profileNav] GamePage openProfileSafe — REJECTED', { id, reason: 'invalid id' });
+      return undefined;
+    }
+    if (user?.id && id === user.id) {
+      console.log('[profileNav] GamePage openProfileSafe — REJECTED', { id, reason: 'self' });
+      return undefined;
+    }
+    return () => {
+      console.log('[profileNav] GamePage avatar click → /profile/' + id, { currentUserId: user?.id });
+      navigate(`/profile/${id}`);
+    };
   };
 
   const [lastMove,       setLastMove]       = useState<{ from: string; to: string } | null>(null);

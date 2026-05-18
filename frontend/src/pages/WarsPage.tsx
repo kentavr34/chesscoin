@@ -199,7 +199,11 @@ const CountryDetailModal: React.FC<{
   // Клик по чужому аватару/имени бойца → его профиль (с автозакрытием модала страны).
   // Защита: если uid пустой или это сам пользователь — не переходим.
   const goProfile = (uid?: string | null) => {
-    if (!uid || uid === user?.id) return;
+    console.log('[profileNav] Wars CountryDetailModal click', { uid, currentUserId: user?.id });
+    if (!uid || uid === user?.id) {
+      console.log('[profileNav] Wars — REJECTED', { uid, reason: !uid ? 'no id' : 'self' });
+      return;
+    }
     navigate(`/profile/${uid}`);
     onClose();
   };
