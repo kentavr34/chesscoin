@@ -4,6 +4,7 @@ import { Chess } from 'chess.js';
 import { useNavigate } from 'react-router-dom';
 import { Avatar } from '@/components/ui/Avatar';
 import { ShareSessionButton } from '@/components/ui/ShareSessionButton';
+import { gamesApi } from '@/api';
 import type { UserPublic } from '@/types';
 
 interface PgnReplayModalProps {
@@ -19,11 +20,36 @@ interface PgnReplayModalProps {
   onClose: () => void;
 }
 
-export const PgnReplayModal: React.FC<PgnReplayModalProps> = ({ pgn, title, shareToken, whitePlayer, blackPlayer, onClose }) => {
+export const PgnReplayModal: React.FC<PgnReplayModalProps> = ({ pgn, title, sessionId, shareToken, whitePlayer, blackPlayer, onClose }) => {
   const navigate = useNavigate();
   const [moves, setMoves] = useState<string[]>([]);
   const [step, setStep] = useState(0);
   const [fens, setFens] = useState<string[]>([]);
+  // Состояние «сохранено в избранное». null — ещё не загружено / нет sessionId.
+  const [isSaved, setIsSaved] = useState<boolean | null>(null);
+  const [saveBusy, setSaveBusy] = useState(false);
+
+  useEffect(() => {
+    if (!sessionId) { setIsSaved(null); return; }
+    let cancelled = false;
+    gamesApi.isSaved(sessionId)
+      .then(r => { if (!cancelled) setIsSaved(!!r.saved); })
+      .catch(() => { if (!cancelled) setIsSaved(false); });
+    return () => { cancelled = true; };
+  }, [sessionId]);
+
+  const toggleSave = async () => {
+    if (!sessionId || saveBusy) return;
+    setSaveBusy(true);
+    try {
+      if (isSaved) { await gamesApi.unsave(sessionId); setIsSaved(false); }
+      else         { await gamesApi.save(sessionId);   setIsSaved(true);  }
+    } catch (e) {
+      console.error('[pgn-replay] save toggle failed', e);
+    } finally {
+      setSaveBusy(false);
+    }
+  };
 
   useEffect(() => {
     try {
@@ -119,6 +145,27 @@ export const PgnReplayModal: React.FC<PgnReplayModalProps> = ({ pgn, title, shar
             </span>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
+            {/* Сохранить / убрать из сохранённых. Доступно если знаем sessionId. */}
+            {sessionId && (
+              <button
+                onClick={toggleSave}
+                disabled={saveBusy || isSaved === null}
+                aria-label={isSaved ? 'Убрать из сохранённых' : 'Сохранить партию'}
+                title={isSaved ? 'Убрать из сохранённых' : 'Сохранить партию'}
+                style={{
+                  width: 34, height: 34, borderRadius: 10,
+                  background: isSaved ? 'rgba(212,168,67,.18)' : 'rgba(255,255,255,.05)',
+                  border: `.5px solid ${isSaved ? 'rgba(212,168,67,.5)' : 'rgba(255,255,255,.1)'}`,
+                  color: isSaved ? '#F0C85A' : '#B8B0A4',
+                  fontSize: '1rem', cursor: saveBusy ? 'wait' : 'pointer', fontFamily: 'inherit',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'background .15s, color .15s, border-color .15s',
+                  opacity: isSaved === null ? .55 : 1,
+                }}
+              >
+                {isSaved ? '★' : '☆'}
+              </button>
+            )}
             {/* PR-2: ShareSessionButton — поделиться deep-link на эту партию (по shareToken) */}
             {shareToken && <ShareSessionButton shareToken={shareToken} compact />}
             <button onClick={onClose} aria-label="Закрыть" style={{

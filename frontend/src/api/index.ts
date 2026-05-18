@@ -63,6 +63,10 @@ export const profileApi = {
 // PR-2: публичный просмотр партии по shareToken (deep-link works на всех стадиях)
 export const gamesApi = {
   byShare: (token: string) => api.get<{ session: any }>(`/games/by-share/${token}`),
+  // Сохранить/убрать партию из избранного (любая партия, не только своя).
+  save:   (sessionId: string) => api.post<{ saved: true }>(`/games/${sessionId}/save`),
+  unsave: (sessionId: string) => api.delete<{ saved: false }>(`/games/${sessionId}/save`),
+  isSaved: (sessionId: string) => api.get<{ saved: boolean }>(`/games/${sessionId}/saved`),
 };
 
 export const tonApi = {

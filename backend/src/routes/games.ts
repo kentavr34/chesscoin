@@ -288,6 +288,9 @@ router.get("/saved", authMiddleware, async (req: Request, res: Response) => {
 });
 
 // POST /games/:sessionId/save — сохранить партию
+// 2026-05-19 (Кенан): сохранять можно ЛЮБУЮ партию (свою и чужую) после её
+// окончания. Раньше требовалось быть участником, из-за чего нельзя было
+// добавить в избранное чужой матч из PGN-просмотра/архива.
 router.post("/:sessionId/save", authMiddleware, async (req: Request, res: Response) => {
   try {
     const userId = (req as AuthRequest).userId;
@@ -295,16 +298,11 @@ router.post("/:sessionId/save", authMiddleware, async (req: Request, res: Respon
 
     const session = await prisma.session.findUnique({
       where: { id: sessionId },
-      select: { id: true, sides: { select: { playerId: true } } },
+      select: { id: true },
     });
 
     if (!session) {
       return res.status(404).json({ error: "Session not found" });
-    }
-
-    const isParticipant = session.sides.some((s: any) => s.playerId === userId);
-    if (!isParticipant) {
-      return res.status(403).json({ error: "Not a participant" });
     }
 
     await prisma.savedGame.upsert({
