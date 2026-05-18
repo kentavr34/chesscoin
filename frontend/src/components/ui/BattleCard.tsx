@@ -58,7 +58,9 @@ export const BattleCard: React.FC<BattleCardProps> = React.memo(({
   const navigate = useNavigate();
 
   const goProfile = (player?: BattleCardPlayer | null) => {
+    console.log('[profileNav] BattleCard click', { playerId: player?.id, name: player?.firstName });
     if (player?.id) navigate(`/profile/${player.id}`);
+    else console.log('[profileNav] BattleCard — REJECTED (no id)');
   };
 
   const cfg = STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]

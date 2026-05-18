@@ -22,7 +22,11 @@ export const NationsPage: React.FC = () => {
   const { user } = useUserStore();
   // Клик по чужому аватару → его профиль (Кенан 2026-05-17).
   const goProfile = (uid?: string | null) => {
-    if (!uid || uid === user?.id) return;
+    console.log('[profileNav] Nations click', { uid, currentUserId: user?.id });
+    if (!uid || uid === user?.id) {
+      console.log('[profileNav] Nations — REJECTED', { uid, reason: !uid ? 'no id' : 'self' });
+      return;
+    }
     navigate(`/profile/${uid}`);
   };
   const [tab, setTab] = useState<Tab>('ranking');

@@ -43,7 +43,11 @@ export const LeaderboardPage: React.FC = () => {
   // ведёт сразу в полный профиль /profile/:userId (а не открывает урезанный
   // bottom-sheet с минимальной инфой). Защита: не открываем свой профиль.
   const openProfile = (id: string) => {
-    if (!id || id === user?.id) return;
+    console.log('[profileNav] Leaderboard click', { id, currentUserId: user?.id });
+    if (!id || id === user?.id) {
+      console.log('[profileNav] Leaderboard — REJECTED', { id, reason: !id ? 'no id' : 'self' });
+      return;
+    }
     navigate(`/profile/${id}`);
   };
 
