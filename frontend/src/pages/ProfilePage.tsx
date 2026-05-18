@@ -299,18 +299,21 @@ export const ProfilePage: React.FC = () => {
             <IcoSwords size={16} /> {t.profile.challengeBtn ?? 'Challenge'}
           </button>
         )}
-        {/* Достижения — 2 строки */}
+        {/* Достижения — 2 строки.
+            PR-3 hotfix Кенан 2026-05-18: все теги читают из displayUser (= user
+            на своём профиле, = viewedProfile на чужом). Раньше теги читались
+            из `user` (свой) — на чужом профиле показывалась чужая аватарка,
+            но СВОИ лига/ELO/звание. Теперь данные корректные. */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8, alignItems: 'center' }}>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
-            <span style={tagGold}>{leagueEmoji[user.league]} #1</span>
-            <span style={{ display: 'inline-flex', padding: '3px 8px', background: 'rgba(74,158,255,.12)', color: '#82CFFF', borderRadius: 6, fontSize: 10, fontWeight: 700, border: '.5px solid rgba(74,158,255,.3)' }}>ELO {user.elo}</span>
-            {user?.countryMember?.isCommander && (
+            <span style={tagGold}>{leagueEmoji[(displayUser as any)?.league ?? 'BRONZE']} #1</span>
+            <span style={{ display: 'inline-flex', padding: '3px 8px', background: 'rgba(74,158,255,.12)', color: '#82CFFF', borderRadius: 6, fontSize: 10, fontWeight: 700, border: '.5px solid rgba(74,158,255,.3)' }}>ELO {(displayUser as any)?.elo ?? '—'}</span>
+            {((displayUser as any)?.countryMember?.isCommander || (displayUser as any)?.isCommander) && (
               <span style={{ ...tagGr, background: 'linear-gradient(135deg, rgba(245,200,66,0.15), rgba(255,215,0,0.08))', color: '#FFD700', borderColor: 'rgba(255,215,0,0.35)', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                 <IcoCrown size={11} /> {t.profile.commanderBadge}
               </span>
             )}
-            {/* PR-3 (Кенан 2026-05-18): динамические титулы — Чемпион недели/месяца/года.
-                currentTitles приходит с backend (/auth/me и /profile/:userId). */}
+            {/* Динамические титулы — Чемпион недели/месяца/года из currentTitles. */}
             {((displayUser as any)?.currentTitles ?? []).map((tt: { type: string; label: string; date: string }) => (
               <span key={tt.type} style={{
                 display: 'inline-flex', alignItems: 'center', gap: 4,
@@ -325,17 +328,17 @@ export const ProfilePage: React.FC = () => {
             ))}
           </div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
-            {user?.militaryRank && (
+            {(displayUser as any)?.militaryRank && (
               <span style={{ ...tagGr, background: 'rgba(255,159,67,0.1)', color: '#FF9F43', borderColor: 'rgba(255,159,67,0.2)' }}>
-                {user?.militaryRank.label}
-                {(user?.referralCount ?? 0) > 0 && (
+                {(displayUser as any).militaryRank.label}
+                {((displayUser as any)?.referralCount ?? 0) > 0 && (
                   <span style={{ marginLeft: 4, fontSize: 10, opacity: 0.8 }}>
-                    — {(user.referralCount ?? 0).toLocaleString()}
+                    — {((displayUser as any).referralCount ?? 0).toLocaleString()}
                   </span>
                 )}
               </span>
             )}
-            <span style={{ ...tagRobot, display: 'inline-flex', alignItems: 'center', gap: 4 }}><IcoRobot size={11} /> {t.jarvis.levels[Math.max(0, (user?.jarvisLevel ?? 1) - 1)]?.name ?? `Lv ${user?.jarvisLevel ?? 1}`}</span>
+            <span style={{ ...tagRobot, display: 'inline-flex', alignItems: 'center', gap: 4 }}><IcoRobot size={11} /> {t.jarvis.levels[Math.max(0, ((displayUser as any)?.jarvisLevel ?? 1) - 1)]?.name ?? `Lv ${(displayUser as any)?.jarvisLevel ?? 1}`}</span>
           </div>
         </div>
       </div>

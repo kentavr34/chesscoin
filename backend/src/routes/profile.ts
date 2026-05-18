@@ -738,8 +738,16 @@ router.get("/:userId", authMiddleware, async (req: Request, res: Response) => {
         avatar: true, avatarType: true, avatarGradient: true,
         elo: true, league: true, totalEarned: true, createdAt: true,
         isBanned: true,
-        // PR-3 (Кенан 2026-05-18): achievements для currentTitles на профиле.
+        // PR-3 (Кенан 2026-05-18): achievements для currentTitles + теги.
         achievements: true,
+        referralCount: true,
+        militaryRank: true,
+        jarvisLevel: true,
+        isMonthlyChampion: true,
+        monthlyChampionAt: true,
+        countryMember: {
+          include: { country: { select: { id: true, code: true, flag: true, nameRu: true, nameEn: true } } },
+        },
         sides: {
           select: { status: true },
           take: 100,
@@ -790,6 +798,31 @@ router.get("/:userId", authMiddleware, async (req: Request, res: Response) => {
       if (a.id === 'tournament_winner_year'  && isFresh(a.date, Y)) currentTitles.push({ type: 'YEAR_CHAMPION',  label: 'Чемпион года',    date: a.date });
     }
 
+    // PR-3 hotfix: проверка isCommander для чужого профиля.
+    let isCountryCommander = false;
+    if (user.countryMember?.countryId) {
+      // Главком — топ-1 по referralCount среди APPROVED-членов страны.
+      const top = await prisma.countryMember.findFirst({
+        where: { countryId: user.countryMember.countryId, status: 'APPROVED' as any },
+        include: { user: { select: { id: true, referralCount: true } } },
+        orderBy: [{ joinedAt: 'asc' }],
+      });
+      // Сортируем во фронте: тот у кого больше referralCount.
+      const all = await prisma.countryMember.findMany({
+        where: { countryId: user.countryMember.countryId, status: 'APPROVED' as any },
+        include: { user: { select: { id: true, referralCount: true } } },
+      });
+      all.sort((a, b) => (b.user.referralCount ?? 0) - (a.user.referralCount ?? 0));
+      isCountryCommander = all[0]?.userId === user.id;
+      void top;
+    }
+
+    // PR-3: military rank данные (структура как в /auth/me)
+    const { getMilitaryRank, getRankBonuses } = await import('@/utils/militaryRank');
+    const refCount = user.referralCount ?? 0;
+    const rankInfo = getMilitaryRank(refCount);
+    const bonuses = getRankBonuses(refCount);
+
     res.json({
       id: user.id,
       firstName: user.firstName,
@@ -803,9 +836,27 @@ router.get("/:userId", authMiddleware, async (req: Request, res: Response) => {
       totalEarned: user.totalEarned.toString(),
       createdAt: user.createdAt,
       stats: { wins, losses, draws, total: user.sides.length },
-      equippedItems, // B4: для клика на аватар → магазин с highlightItemId
-      achievements,  // PR-3
-      currentTitles, // PR-3
+      equippedItems,
+      achievements,
+      currentTitles,
+      // PR-3 hotfix: поля для отображения тегов на чужом профиле.
+      referralCount: refCount,
+      jarvisLevel: user.jarvisLevel ?? 1,
+      isMonthlyChampion: user.isMonthlyChampion ?? false,
+      monthlyChampionAt: user.monthlyChampionAt,
+      militaryRank: {
+        rank: rankInfo.rank,
+        label: rankInfo.label,
+        emoji: rankInfo.emoji,
+        minMembers: rankInfo.minMembers,
+        activationBonus: bonuses.activationBonus.toString(),
+        l1Percent: bonuses.l1Percent,
+      },
+      countryMember: user.countryMember ? {
+        country: user.countryMember.country,
+        role: isCountryCommander ? 'COMMANDER' : 'FIGHTER',
+        isCommander: isCountryCommander,
+      } : null,
     });
   } catch (err: unknown) {
     res.status(500).json({ error: (err instanceof Error ? err.message : String(err)) });

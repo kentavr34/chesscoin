@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Avatar } from '@/components/ui/Avatar';
-import { MiniProfileSheet } from '@/components/ui/MiniProfileSheet';
 import { useUserStore } from '@/store/useUserStore';
 import { leaderboardApi } from '@/api';
 import { fmtBalance, leagueEmoji } from '@/utils/format';
@@ -32,13 +31,21 @@ const SECTION_LABEL_STYLE: React.CSSProperties = {
 
 export const LeaderboardPage: React.FC = () => {
   const t = useT();
+  const navigate = useNavigate();
   const { user } = useUserStore();
   const [league, setLeague] = useState<string>('DIAMOND');
   const [period, setPeriod] = useState<'all' | 'week' | 'month'>('all');
   const [items, setItems] = useState<LeaderboardUser[]>([]);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
-  const [miniProfileId, setMiniProfileId] = useState<string | null>(null);
+
+  // PR-3 hotfix Кенан 2026-05-18: убрали MiniProfileSheet — клик на игрока
+  // ведёт сразу в полный профиль /profile/:userId (а не открывает урезанный
+  // bottom-sheet с минимальной инфой). Защита: не открываем свой профиль.
+  const openProfile = (id: string) => {
+    if (!id || id === user?.id) return;
+    navigate(`/profile/${id}`);
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -159,16 +166,13 @@ export const LeaderboardPage: React.FC = () => {
               rank={idx + 1}
               user={u}
               balance={u.balance ?? '0'}
-              onClick={() => setMiniProfileId(u.id)}
+              onClick={() => openProfile(u.id)}
             />
           ))}
         </div>
 
       </div>
 
-      {miniProfileId && (
-        <MiniProfileSheet userId={miniProfileId} onClose={() => setMiniProfileId(null)} />
-      )}
     </PageLayout>
   );
 };
