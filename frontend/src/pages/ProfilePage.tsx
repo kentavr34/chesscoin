@@ -345,22 +345,14 @@ export const ProfilePage: React.FC = () => {
         </div>
       </div>
 
-      {/* League progress bar — над балансом (Кенан 2026-05-17:
-         после тегов под аватаром, до карточки баланса).
-         На чужом профиле balance приватен — показываем только лигу без прогресса. */}
+      {/* League progress bar — над балансом. Баланс — публичный (рейтинг
+         по балансу уже виден в Leaderboard), показываем прогресс везде. */}
       <div style={{ marginTop: 12 }}>
-        {isOwnProfile
-          ? <LeagueProgressBar league={profile.league} balance={profile.balance} />
-          : <div style={{ margin: '0 18px', padding: '12px 16px', background: 'linear-gradient(135deg,#141018,#0F0E18)', border: '.5px solid rgba(74,158,255,.18)', borderRadius: 16 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#F0C85A' }}>
-                {leagueEmoji[profile?.league ?? 'BRONZE']} {t.profile.league(profile?.league ?? 'BRONZE')}
-              </div>
-            </div>
-        }
+        <LeagueProgressBar league={profile.league} balance={profile.balance} />
       </div>
 
-      {/* Balance — финансовая приватность: ТОЛЬКО на своём профиле */}
-      {isOwnProfile && (
+      {/* Balance — карточка видна везде; на чужом профиле — только сумма,
+         без личных кнопок «История транзакций / Магазин / Рефералы». */}
       <div style={{ margin: '12px 18px 0', padding: '14px 16px', background: 'linear-gradient(135deg,#141018,#0F0E18)', border: '.5px solid rgba(74,158,255,.18)', borderRadius: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
@@ -372,20 +364,24 @@ export const ProfilePage: React.FC = () => {
               <span style={{ fontSize: 13, color: '#D4A843', opacity: .6 }}></span>
             </div>
           </div>
-          {/* История транзакций — справа над рефералом (Кенан 2026-05-17) */}
-          <div
-            onClick={() => navigate('/transactions')}
-            style={{ fontSize: 12, fontWeight: 700, color: '#82CFFF', cursor: 'pointer', padding: '6px 10px', background: 'rgba(74,158,255,.08)', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, whiteSpace: 'nowrap' }}
-          >
-            {t.profile.txHistory ?? 'История'} ›
+          {/* История транзакций — финансовая приватность: только на своём */}
+          {isOwnProfile && (
+            <div
+              onClick={() => navigate('/transactions')}
+              style={{ fontSize: 12, fontWeight: 700, color: '#82CFFF', cursor: 'pointer', padding: '6px 10px', background: 'rgba(74,158,255,.08)', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, whiteSpace: 'nowrap' }}
+            >
+              {t.profile.txHistory ?? 'История'} ›
+            </div>
+          )}
+        </div>
+        {/* Магазин / Рефералы — личные действия, только на своём */}
+        {isOwnProfile && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <button onClick={() => navigate('/shop')} style={{ padding: '8px 10px', background: 'rgba(74,158,255,.08)', color: '#82CFFF', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.profile.shop}</button>
+            <button onClick={() => navigate('/referrals')} style={{ padding: '8px 10px', background: 'rgba(74,158,255,.08)', color: '#82CFFF', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.profile.referrals}</button>
           </div>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          <button onClick={() => navigate('/shop')} style={{ padding: '8px 10px', background: 'rgba(74,158,255,.08)', color: '#82CFFF', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.profile.shop}</button>
-          <button onClick={() => navigate('/referrals')} style={{ padding: '8px 10px', background: 'rgba(74,158,255,.08)', color: '#82CFFF', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.profile.referrals}</button>
-        </div>
+        )}
       </div>
-      )}
 
       {/* Чемпион месяца */}
       {profile?.isMonthlyChampion && (

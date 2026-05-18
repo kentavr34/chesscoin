@@ -736,7 +736,7 @@ router.get("/:userId", authMiddleware, async (req: Request, res: Response) => {
       select: {
         id: true, firstName: true, lastName: true, username: true,
         avatar: true, avatarType: true, avatarGradient: true,
-        elo: true, league: true, totalEarned: true, createdAt: true,
+        elo: true, league: true, balance: true, totalEarned: true, createdAt: true,
         isBanned: true,
         // PR-3 + текущий фикс: публичные поля для unified `profile` на фронте.
         achievements: true,
@@ -836,6 +836,9 @@ router.get("/:userId", authMiddleware, async (req: Request, res: Response) => {
       avatarGradient: user.avatarGradient,
       elo: user.elo,
       league: user.league,
+      // Balance публичный: рейтинг строится по балансу (Leaderboard уже
+      // показывает балансы), это нормально для внутриигровой монеты.
+      balance: user.balance.toString(),
       totalEarned: user.totalEarned.toString(),
       createdAt: user.createdAt,
       stats: { wins, losses, draws, total: user.sides.length },
