@@ -1098,7 +1098,10 @@ export function GamePage() {
       <div style={{ borderBottom: '.5px solid rgba(255,255,255,.05)', flexShrink: 0 }}>
         {isSpectator && specBlackSide ? (
           <PlayerPanel
-            name={specBlackSide.player?.firstName ?? '?'}
+            // PR-3 hotfix Кенан 2026-05-19: явные fallback'и если backend не
+            // отдал player.firstName/elo (например session с одной стороной
+            // или старый формат). Раньше показывалось «...» + 0:00.
+            name={specBlackSide.player?.firstName ?? (specBlackSide.isBot ? 'J.A.R.V.I.S' : 'Соперник')}
             elo={specBlackSide.player?.elo}
             avatar={specBlackSide.player?.avatar}
             isBot={!!specBlackSide.isBot}
@@ -1120,50 +1123,73 @@ export function GamePage() {
         )}
       </div>
 
-      {/* PR-3 hotfix (Кенан 2026-05-18, перенос #2): мета-полоска компактная
-          в ОДНУ СТРОКУ. Между панелью соперника и доской. Высота ~22-26px.
-          Формат: «N эфир · M просм · K сохр · касса 20K → 18K» (или для
-          приватных только «касса 20K → 18K · стол 10%»). */}
+      {/* PR-3 hotfix (Кенан 2026-05-19): info-panel в 3 секции —
+          LEFT (live/views/saves иконки + цифры), CENTER (статус игры),
+          RIGHT (КАССА). Без «→ выплата» — это для финал-модала.
+          Тёмный фон под игроцкие панели, отступ сверху/снизу. */}
       {isBattle && hasBet && (
         <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-          padding: '4px 12px',
-          margin: '4px 10px 2px',
-          background: 'rgba(212,168,67,.06)',
-          border: '.5px solid rgba(212,168,67,.18)',
-          borderRadius: 8,
-          fontSize: '.62rem', fontWeight: 600, fontFamily: 'Inter, sans-serif',
-          color: '#7A7470', letterSpacing: '.01em',
-          whiteSpace: 'nowrap',
-          overflowX: 'auto', scrollbarWidth: 'none',
+          display: 'grid',
+          gridTemplateColumns: '1fr auto 1fr',
+          alignItems: 'center', gap: 8,
+          padding: '8px 12px',
+          margin: '8px 10px 6px',
+          background: '#1F2233',
+          border: '.5px solid rgba(255,255,255,.08)',
+          borderRadius: 10,
+          fontFamily: 'Inter, sans-serif',
           flexShrink: 0,
         }}>
-          {isPublicBattle && (
-            <>
-              <span style={{ color: '#4DDA8A', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                {spectatorCount > 0 && <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#4DDA8A' }} />}
-                {spectatorCount} эфир
-              </span>
-              <span style={{ color: '#3A3830' }}>·</span>
-              <span>{viewCount >= 1000 ? `${(viewCount / 1000).toFixed(1)}K` : viewCount} просм</span>
-              <span style={{ color: '#3A3830' }}>·</span>
-              <span>{savesCount} сохр</span>
-              <span style={{ color: '#3A3830' }}>·</span>
-            </>
-          )}
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-            <CoinIcon size={10} />
-            <span style={{ color: '#D4A843', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '.04em' }}>касса</span>
-            <span style={{ color: '#F0C85A', fontWeight: 800 }}>{fmtBalance(bank.toString())}</span>
-          </span>
-          <span style={{ color: '#3A3830' }}>→</span>
-          <span style={{ color: '#4DDA8A', fontWeight: 800 }}>{fmtBalance(winnerTake.toString())}</span>
-          {isPublicBattle && donationsBig > 0n && (
-            <>
-              <span style={{ color: '#3A3830' }}>·</span>
-              <span style={{ color: '#E78F4F' }}>донаты {fmtBalance(donationsBig.toString())}</span>
-            </>
-          )}
+          {/* LEFT: live / просмотры / сохранения (иконки крупные ~14pt) */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, fontWeight: 700, justifySelf: 'start' }}>
+            {isPublicBattle ? (
+              <>
+                {/* Live (eye+pulse) */}
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: spectatorCount > 0 ? '#4DDA8A' : '#5A6066' }}>
+                  <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+                    <path d="M1 10S4 4 10 4s9 6 9 6-3 6-9 6-9-6-9-6z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                    <circle cx="10" cy="10" r="2.5" fill="currentColor"/>
+                  </svg>
+                  {spectatorCount}
+                </span>
+                {/* Просмотры (users) */}
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#82CFFF' }}>
+                  <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+                    <circle cx="10" cy="7" r="3" stroke="currentColor" strokeWidth="1.6"/>
+                    <path d="M3 17c1-3 3.5-5 7-5s6 2 7 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                  </svg>
+                  {viewCount >= 1000 ? `${(viewCount / 1000).toFixed(1)}K` : viewCount}
+                </span>
+                {/* Сохранения (bookmark) */}
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#9B85FF' }}>
+                  <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+                    <path d="M5 4a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v13l-5-3-5 3V4z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/>
+                  </svg>
+                  {savesCount}
+                </span>
+              </>
+            ) : null}
+          </div>
+
+          {/* CENTER: состояние игры. Резервируем место даже если пусто. */}
+          <div style={{
+            fontSize: 11, fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase' as const,
+            color: gameOver ? '#9A9490' : (isWhiteTurnNow ? '#E8E4DC' : '#A8A29C'),
+            minWidth: 90, textAlign: 'center',
+          }}>
+            {gameOver
+              ? 'Партия завершена'
+              : isSpectator
+                ? (isWhiteTurnNow ? 'Ход белых' : 'Ход чёрных')
+                : (isMyTurn ? 'Ваш ход' : 'Думает...')}
+          </div>
+
+          {/* RIGHT: КАССА (без «→ выплата») */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, fontWeight: 800, justifySelf: 'end' }}>
+            <CoinIcon size={14} />
+            <span style={{ color: '#D4A843', fontWeight: 700, fontSize: 11, textTransform: 'uppercase' as const, letterSpacing: '.05em' }}>касса</span>
+            <span style={{ color: '#F0C85A' }}>{fmtBalance(bank.toString())}</span>
+          </div>
         </div>
       )}
 
@@ -1216,7 +1242,8 @@ export function GamePage() {
       <div style={{ borderTop: '.5px solid rgba(255,255,255,.05)', flexShrink: 0 }}>
         {isSpectator && specWhiteSide ? (
           <PlayerPanel
-            name={specWhiteSide.player?.firstName ?? '?'}
+            // PR-3 hotfix Кенан 2026-05-19: fallback'и как для верхней панели.
+            name={specWhiteSide.player?.firstName ?? (specWhiteSide.isBot ? 'J.A.R.V.I.S' : 'Игрок')}
             elo={specWhiteSide.player?.elo}
             avatar={specWhiteSide.player?.avatar}
             isBot={!!specWhiteSide.isBot}
