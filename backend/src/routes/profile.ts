@@ -738,11 +738,14 @@ router.get("/:userId", authMiddleware, async (req: Request, res: Response) => {
         avatar: true, avatarType: true, avatarGradient: true,
         elo: true, league: true, totalEarned: true, createdAt: true,
         isBanned: true,
-        // PR-3 (Кенан 2026-05-18): achievements для currentTitles + теги.
+        // PR-3 + текущий фикс: публичные поля для unified `profile` на фронте.
         achievements: true,
+        tournamentBadges: true,
         referralCount: true,
         militaryRank: true,
         jarvisLevel: true,
+        jarvisBadges: true,
+        jarvisBadgeDates: true,
         isMonthlyChampion: true,
         monthlyChampionAt: true,
         countryMember: {
@@ -836,12 +839,20 @@ router.get("/:userId", authMiddleware, async (req: Request, res: Response) => {
       totalEarned: user.totalEarned.toString(),
       createdAt: user.createdAt,
       stats: { wins, losses, draws, total: user.sides.length },
+      // Плоские поля для совместимости с frontend `profile.X` (используется
+      // в Info-вкладке: CircStat, StatCard, ELO chart):
+      totalGames: wins + losses + draws,
+      wins, losses, draws,
+      winStreak: 0, // Поле отсутствует в Prisma-схеме (как в auth/me — всегда 0)
       equippedItems,
       achievements,
       currentTitles,
-      // PR-3 hotfix: поля для отображения тегов на чужом профиле.
+      // Публичные поля для отображения тегов и достижений на чужом профиле:
       referralCount: refCount,
       jarvisLevel: user.jarvisLevel ?? 1,
+      jarvisBadges: user.jarvisBadges ?? [],
+      jarvisBadgeDates: user.jarvisBadgeDates ?? {},
+      tournamentBadges: user.tournamentBadges ?? [],
       isMonthlyChampion: user.isMonthlyChampion ?? false,
       monthlyChampionAt: user.monthlyChampionAt,
       militaryRank: {

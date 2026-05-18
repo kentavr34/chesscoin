@@ -98,7 +98,7 @@ export const ProfilePage: React.FC = () => {
   } | null>(null);
   const [selectedBadge, setSelectedBadge] = useState<{ name: string; date?: string } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-  const [viewedProfile, setViewedProfile] = useState<Record<string, unknown> | null>(null);
+  const [viewedProfile, setViewedProfile] = useState<import('@/types').User | null>(null);
   const [viewedProfileError, setViewedProfileError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -106,7 +106,7 @@ export const ProfilePage: React.FC = () => {
     setViewedProfileError(null);
     setViewedProfile(null);
     profileApi.getUser(viewedUserId)
-      .then((data) => setViewedProfile(data as unknown as Record<string, unknown>))
+      .then((data) => setViewedProfile(data as unknown as import('@/types').User))
       .catch((e) => {
         // PR-3 hotfix 2026-05-18: НЕ делаем navigate('/') — это валило
         // юзера на главную, что выглядело как «клик открыл свой профиль»
@@ -177,15 +177,19 @@ export const ProfilePage: React.FC = () => {
     return null; // ещё загружается
   }
 
-  const displayUser = isOwnProfile ? user : viewedProfile;
-  const displayStats = isOwnProfile
-    ? { totalGames: user.totalGames ?? 0, wins: user.wins ?? 0, losses: user.losses ?? 0, draws: user.draws ?? 0 }
-    : { totalGames: (viewedProfile?.stats as any)?.total ?? 0, wins: (viewedProfile?.stats as any)?.wins ?? 0, losses: (viewedProfile?.stats as any)?.losses ?? 0, draws: (viewedProfile?.stats as any)?.draws ?? 0 };
+  // ЕДИНЫЙ источник user-specific данных:
+  //  own profile  → store (`user`),
+  //  foreign      → данные с `/profile/:userId` (`viewedProfile`).
+  // ВСЁ что касается отображаемого юзера — читать ТОЛЬКО через `profile`.
+  // Никаких `user.X` для имени/баланса/лиги/ELO/звания/флага/бейджей.
+  const profile = (isOwnProfile ? user : viewedProfile) as import('@/types').User;
+  // displayUser оставлен для обратной совместимости — = profile.
+  const displayUser = profile;
 
-  const totalGames = displayStats.totalGames;
-  const wins = displayStats.wins;
-  const losses = displayStats.losses;
-  const draws = displayStats.draws;
+  const totalGames = profile.totalGames ?? ((profile as any)?.stats?.total ?? 0);
+  const wins   = profile.wins   ?? ((profile as any)?.stats?.wins   ?? 0);
+  const losses = profile.losses ?? ((profile as any)?.stats?.losses ?? 0);
+  const draws  = profile.draws  ?? ((profile as any)?.stats?.draws  ?? 0);
   const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
   const lossRate = totalGames > 0 ? Math.round((losses / totalGames) * 100) : 0;
   const drawRate = 100 - winRate - lossRate;
@@ -224,8 +228,8 @@ export const ProfilePage: React.FC = () => {
           {/* Аватар — без upload/crop (Кенан 2026-05-17: только Telegram-импорт или магазин). */}
           {isOwnProfile ? (
             (() => {
-              const premiumAvatar = user?.equippedItems?.PREMIUM_AVATAR;
-              const frame = user?.equippedItems?.AVATAR_FRAME;
+              const premiumAvatar = profile?.equippedItems?.PREMIUM_AVATAR;
+              const frame = profile?.equippedItems?.AVATAR_FRAME;
               const clickable = !!(premiumAvatar || frame);
               const handle = clickable ? () => {
                 if (premiumAvatar) navigate('/shop', { state: { tab: 'avatars', highlightItemId: premiumAvatar.id } });
@@ -233,7 +237,7 @@ export const ProfilePage: React.FC = () => {
               } : undefined;
               return (
                 <div style={{ position: 'relative', cursor: clickable ? 'pointer' : 'default' }} onClick={handle}>
-                  <Avatar user={user} size="xl" gold />
+                  <Avatar user={profile} size="xl" gold />
                   {clickable && (
                     <div style={{ position: 'absolute', bottom: -2, right: -2, width: 22, height: 22, borderRadius: '50%', background: 'rgba(123,97,255,0.9)', border: '1.5px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title={t.profile.buyInShop}>
                       <IcoShop size={11} />
@@ -248,18 +252,16 @@ export const ProfilePage: React.FC = () => {
                (Кенан 2026-05-18: «если стоит аватар по умолчанию импорт с
                телеграм — то просто не кликабелен»). */
             (() => {
-              const vp = displayUser as any;
-              const premiumAvatar = vp?.equippedItems?.PREMIUM_AVATAR;
-              const frame = vp?.equippedItems?.AVATAR_FRAME;
+              const premiumAvatar = profile?.equippedItems?.PREMIUM_AVATAR;
+              const frame = profile?.equippedItems?.AVATAR_FRAME;
               const clickable = !!(premiumAvatar || frame);
               const handle = clickable ? () => {
-                console.log('[profileNav] foreign-avatar click', { premiumAvatar: premiumAvatar?.id, frame: frame?.id });
                 if (premiumAvatar) navigate('/shop', { state: { tab: 'avatars', highlightItemId: premiumAvatar.id } });
                 else if (frame) navigate('/shop', { state: { tab: 'frames', highlightItemId: frame.id } });
               } : undefined;
               return (
                 <div style={{ position: 'relative', cursor: clickable ? 'pointer' : 'default' }} onClick={handle}>
-                  <Avatar user={vp as UserPublic} size="xl" gold />
+                  <Avatar user={profile as UserPublic} size="xl" gold />
                   {clickable && (
                     <div style={{
                       position: 'absolute', bottom: -2, right: -2,
@@ -344,19 +346,28 @@ export const ProfilePage: React.FC = () => {
       </div>
 
       {/* League progress bar — над балансом (Кенан 2026-05-17:
-         после тегов под аватаром, до карточки баланса). */}
+         после тегов под аватаром, до карточки баланса).
+         На чужом профиле balance приватен — показываем только лигу без прогресса. */}
       <div style={{ marginTop: 12 }}>
-        <LeagueProgressBar league={user.league} balance={user.balance} />
+        {isOwnProfile
+          ? <LeagueProgressBar league={profile.league} balance={profile.balance} />
+          : <div style={{ margin: '0 18px', padding: '12px 16px', background: 'linear-gradient(135deg,#141018,#0F0E18)', border: '.5px solid rgba(74,158,255,.18)', borderRadius: 16 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#F0C85A' }}>
+                {leagueEmoji[profile?.league ?? 'BRONZE']} {t.profile.league(profile?.league ?? 'BRONZE')}
+              </div>
+            </div>
+        }
       </div>
 
-      {/* Balance — N7 */}
+      {/* Balance — финансовая приватность: ТОЛЬКО на своём профиле */}
+      {isOwnProfile && (
       <div style={{ margin: '12px 18px 0', padding: '14px 16px', background: 'linear-gradient(135deg,#141018,#0F0E18)', border: '.5px solid rgba(74,158,255,.18)', borderRadius: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase' as const, letterSpacing: '.14em', marginBottom: 4 }}>{t.profile.balance}</div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
               <span style={{ fontFamily: "'Unbounded',sans-serif", fontSize: '1.4rem', fontWeight: 900, color: '#D4A843' }}>
-                {fmtBalance(user.balance)}
+                {fmtBalance(profile.balance)}
               </span>
               <span style={{ fontSize: 13, color: '#D4A843', opacity: .6 }}></span>
             </div>
@@ -374,9 +385,10 @@ export const ProfilePage: React.FC = () => {
           <button onClick={() => navigate('/referrals')} style={{ padding: '8px 10px', background: 'rgba(74,158,255,.08)', color: '#82CFFF', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.profile.referrals}</button>
         </div>
       </div>
+      )}
 
       {/* Чемпион месяца */}
-      {user?.isMonthlyChampion && (
+      {profile?.isMonthlyChampion && (
         <div style={{ margin: '8px 18px 0', padding: '12px 14px', background: 'linear-gradient(135deg, rgba(255,215,0,0.1), rgba(74,158,255,0.06))', border: '.5px solid rgba(255,215,0,0.3)', borderRadius: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ color: '#FFD700', animation: 'pulse 2s ease-in-out infinite', display: 'inline-flex' }}><IcoCrown size={24} color="#FFD700" /></span>
           <div style={{ flex: 1 }}>
@@ -384,7 +396,7 @@ export const ProfilePage: React.FC = () => {
               {t.profile.monthlyChampion ?? 'Monthly Champion'}
             </div>
             <div style={{ fontSize: '.65rem', color: '#7A7875', marginTop: 2 }}>
-              ELO rating {user?.monthlyChampionAt ? `· ${new Date(user?.monthlyChampionAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}` : ''}
+              ELO rating {profile?.monthlyChampionAt ? `· ${new Date(profile.monthlyChampionAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}` : ''}
             </div>
           </div>
         </div>
@@ -413,13 +425,13 @@ export const ProfilePage: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
               <div style={microLbl}>{t.profile.eloChart}</div>
               <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono',monospace", color: '#9B85FF', fontWeight: 700 }}>
-                {user.elo} ELO
+                {profile.elo} ELO
               </div>
             </div>
             {(() => {
               // Строим ELO-динамику из последних партий (обратный порядок → хронологический)
               const eloHistory: number[] = [];
-              let elo = user.elo;
+              let elo = profile.elo;
               const games = [...recentGames].reverse().slice(-10);
               // Аппроксимируем: +16 победа, -16 поражение, 0 ничья (K=32/2)
               for (const g of games) {
@@ -427,7 +439,7 @@ export const ProfilePage: React.FC = () => {
                 if (g.result === 'WON') elo = Math.max(100, elo - 16);
                 else if (g.result === 'LOST') elo = elo + 16;
               }
-              eloHistory.push(user.elo); // текущее
+              eloHistory.push(profile.elo); // текущее
               if (eloHistory.length < 2) {
                 return (
                   <div style={{ height: 50, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -458,7 +470,7 @@ export const ProfilePage: React.FC = () => {
                     <path d={`M${pts}`} fill="none" stroke="#9B85FF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                     <path d={`M${fill}`} fill="url(#eg2)" />
                     {/* Текущая точка */}
-                    <circle cx={toX(eloHistory.length - 1)} cy={toY(user.elo)} r="3.5" fill="#9B85FF" />
+                    <circle cx={toX(eloHistory.length - 1)} cy={toY(profile.elo)} r="3.5" fill="#9B85FF" />
                   </svg>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
                     <span style={{ fontSize: 9, color: '#5A5248' }}>{t.profile.points(games.length + 1)}</span>
@@ -470,21 +482,26 @@ export const ProfilePage: React.FC = () => {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, padding: '8px 18px 0' }}>
-            <StatCard val={totalGames}       lbl={t.profile.games}  />
-            <StatCard val={user.elo}         lbl={t.profile.elo}    color="#9B85FF" />
-            <StatCard val={user.winStreak ?? 0} lbl={t.profile.streak} color="#F0C85A" />
+            <StatCard val={totalGames}            lbl={t.profile.games}  />
+            <StatCard val={profile.elo}           lbl={t.profile.elo}    color="#9B85FF" />
+            <StatCard val={profile.winStreak ?? 0} lbl={t.profile.streak} color="#F0C85A" />
           </div>
 
-          <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem' }}>{t.profile.refSection}</div>
-          <div style={{ margin: '0 18px', padding: '12px 14px', background: 'linear-gradient(135deg,#141018,#0F0E18)', border: '.5px solid rgba(74,158,255,.18)', borderRadius: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: '.75rem', fontWeight: 800, color: '#EAE2CC' }}>{t.profile.refLink}</div>
-              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '.62rem', color: '#5A5248', marginTop: 5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                t.me/chessgamecoin_bot?start=ref_{user.telegramId}
+          {/* Реферальная ссылка с telegramId — приватно, только на своём профиле. */}
+          {isOwnProfile && (
+            <>
+              <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem' }}>{t.profile.refSection}</div>
+              <div style={{ margin: '0 18px', padding: '12px 14px', background: 'linear-gradient(135deg,#141018,#0F0E18)', border: '.5px solid rgba(74,158,255,.18)', borderRadius: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '.75rem', fontWeight: 800, color: '#EAE2CC' }}>{t.profile.refLink}</div>
+                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '.62rem', color: '#5A5248', marginTop: 5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    t.me/chessgamecoin_bot?start=ref_{profile.telegramId}
+                  </div>
+                </div>
+                <button onClick={() => {}} style={{ padding: '7px 14px', background: 'rgba(74,158,255,.15)', color: '#82CFFF', border: '.5px solid rgba(74,158,255,.35)', borderRadius: 9, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>{t.profile.invite}</button>
               </div>
-            </div>
-            <button onClick={() => {}} style={{ padding: '7px 14px', background: 'rgba(74,158,255,.15)', color: '#82CFFF', border: '.5px solid rgba(74,158,255,.35)', borderRadius: 9, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>{t.profile.invite}</button>
-          </div>
+            </>
+          )}
         </>
       )}
 
@@ -690,9 +707,10 @@ export const ProfilePage: React.FC = () => {
                               pgn: g.pgn!,
                               title: oppPlayer ? `vs ${oppPlayer.firstName}` : t.profile.gameLabel,
                               sessionId: g.sessionId,
-                              // Раскладка по цветам: клик по аватару → профиль игрока
-                              whitePlayer: (g as any).isWhite ? (user as any) : oppPlayer,
-                              blackPlayer: (g as any).isWhite ? oppPlayer : (user as any),
+                              // Раскладка по цветам: клик по аватару → профиль игрока.
+                              // `profile` — это юзер, чьи партии мы листаем (own или foreign).
+                              whitePlayer: (g as any).isWhite ? (profile as any) : oppPlayer,
+                              blackPlayer: (g as any).isWhite ? oppPlayer : (profile as any),
                             })}
                             style={{ fontSize: 9, padding: '2px 7px', background: 'rgba(245,200,66,0.08)', color: '#F0C85A', border: '1px solid rgba(245,200,66,0.2)', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}
                           >▷ Replay</button>
@@ -704,9 +722,11 @@ export const ProfilePage: React.FC = () => {
               </div>
             )}
 
-            {/* История транзакций — под играми */}
+            {/* История транзакций — финансовая приватность: ТОЛЬКО на своём профиле */}
+            {isOwnProfile && (
             <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem', marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }}><IcoMoneyFly size={11} /> {t.profile.txHistory}</div>
-            {transactions.length === 0 ? (
+            )}
+            {isOwnProfile && (transactions.length === 0 ? (
               <div style={{ textAlign: 'center', color: '#5A5248', padding: 24, fontSize: 13 }}>{t.profile.noTx}</div>
             ) : (
               transactions.map((tx) => {
@@ -783,7 +803,7 @@ export const ProfilePage: React.FC = () => {
                   </div>
                 );
               })
-            )}
+            ))}
           </>
         );
       })()}
@@ -863,11 +883,11 @@ export const ProfilePage: React.FC = () => {
       {tab === 'ach' && (
         <>
           {/* Турнирные бейджи */}
-          {(user?.tournamentBadges?.length ?? 0) > 0 && (
+          {(profile?.tournamentBadges?.length ?? 0) > 0 && (
             <>
               <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem', display: 'flex', alignItems: 'center', gap: 6 }}><IcoTrophy size={11} /> Tournament wins</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 18px' }}>
-                {(user?.tournamentBadges as TournamentBadge[] | undefined)?.slice().reverse().map((badge, i: number) => {
+                {(profile?.tournamentBadges as TournamentBadge[] | undefined)?.slice().reverse().map((badge, i: number) => {
                   const placeLabel = badge.place === 1 ? '1' : badge.place === 2 ? '2' : '3';
                   const placeColor = badge.place === 1 ? '#FFD700' : badge.place === 2 ? '#C0C0C0' : '#CD7F32';
                   return (
@@ -921,7 +941,7 @@ export const ProfilePage: React.FC = () => {
               { id: 'referral_gold',           Icon: IcoUsers,  name: 'Золотой вербовщик',   desc: '100 рефералов' },
             ];
             const earned: Record<string, string> = {};
-            (user?.achievements ?? []).forEach((a: { id: string; date: string }) => { earned[a.id] = a.date; });
+            (profile?.achievements ?? []).forEach((a: { id: string; date: string }) => { earned[a.id] = a.date; });
             const earnedCount = Object.keys(earned).length;
             return (
               <>
@@ -961,15 +981,15 @@ export const ProfilePage: React.FC = () => {
 
           {/* JARVIS бейджи */}
           <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem' }}>{t.profile.jarvisCerts}</div>
-          {(user?.jarvisBadges?.length ?? 0) === 0 ? (
+          {(profile?.jarvisBadges?.length ?? 0) === 0 ? (
             <div style={{ textAlign: 'center', color: '#5A5248', padding: 32, fontSize: 13 }}>
               {t.profile.noJarvis}
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '0 18px' }}>
-              {[...(user?.jarvisBadges ?? [])].reverse().map((badgeName: string, i: number) => {
+              {[...(profile?.jarvisBadges ?? [])].reverse().map((badgeName: string, i: number) => {
                 const lvlData = JARVIS_LEVELS.find(l => l.name === badgeName);
-                const badgeDates = user?.jarvisBadgeDates as Record<string, string> | null;
+                const badgeDates = profile?.jarvisBadgeDates as Record<string, string> | null;
                 const dateStr = badgeDates?.[badgeName];
                 const colors: Record<string, string> = {
                   Beginner: '#9A9490', Player: '#3DBA7A', Fighter: '#3DBA7A',
