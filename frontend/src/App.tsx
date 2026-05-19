@@ -68,6 +68,19 @@ const AppInner: React.FC = () => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
+  // A4 (Кенан 2026-05-19): применяем equippedItems.THEME из магазина.
+  // Имя темы в магазине должно совпадать с ThemeKey (default | dark | light | gold | mystic).
+  // Если совпадение есть — применяем CSS-токены через applyThemeToCss.
+  // Если нет — не делаем ничего (никакого падения, just no-op).
+  React.useEffect(() => {
+    const themeItem = user?.equippedItems?.THEME?.name;
+    if (!themeItem) return;
+    // Совпадение по нижнему регистру с ThemeKey
+    const key = themeItem.toLowerCase().replace(/\s+/g, '') as keyof typeof THEMES;
+    const tokens = THEMES[key];
+    if (tokens) applyThemeToCss(tokens);
+  }, [user?.equippedItems?.THEME?.name]);
+
   const handleAccept = () => {
     if (!warChallenge) return;
     const socket = getSocket();
