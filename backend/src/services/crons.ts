@@ -15,6 +15,7 @@ import { ensureSystemTournaments, checkTournamentForfeits, matchmakeAllTournamen
 import { settleClanBattle } from "@/routes/nations";
 import { verifyTonTransaction } from "@/lib/tonverify";
 import { processWarAutoloss } from "@/services/game/warAutoloss"; // PR-1
+import { processTonWithdrawals } from "@/services/tonWithdrawalWorker"; // A5
 
 type TelegramKeyboard = { inline_keyboard: Array<Array<{ text: string; url?: string; callback_data?: string }>> };
 
@@ -789,6 +790,15 @@ export function startGameCrons() {
   cron.schedule("*/10 * * * *", async () => { // OPT-9: каждые 10 мин (было: 5)
     await retryPendingTonVerifications().catch((err) =>
       logError("[Crons/TonVerify] Error:", err)
+    );
+  });
+
+  // A5 (Кенан 2026-05-19): obрабатываем PENDING WithdrawalRequest каждые 5 мин.
+  // По умолчанию заглушка-no-op (HOT_WALLET_ENABLED!=true) — реальные выплаты
+  // активируются только при явном включении env (см. tonWithdrawalWorker.ts).
+  cron.schedule("*/5 * * * *", async () => {
+    await processTonWithdrawals().catch((err) =>
+      logError("[Crons/TonWithdraw] Error:", err)
     );
   });
 
