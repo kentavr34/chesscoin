@@ -30,6 +30,14 @@ class TaskCreateForm(StatesGroup):
     metadata = State()
 
 
+# ─── FSM: Загрузка premium-аватара (A2 Кенан 2026-05-19) ──────────────────────
+class AvatarCreateForm(StatesGroup):
+    image = State()       # photo или document с картинкой
+    name = State()
+    price = State()
+    rarity = State()
+
+
 # ─── Клавиатуры ────────────────────────────────────────────────────────────────
 def main_menu_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
@@ -38,9 +46,26 @@ def main_menu_kb() -> InlineKeyboardMarkup:
             InlineKeyboardButton(text="📋 Задания", callback_data="admin:tasks_menu"),
         ],
         [
+            InlineKeyboardButton(text="🖼️ Add Avatar", callback_data="avatar:create_start"),
             InlineKeyboardButton(text="🗑️ Очистка БД", callback_data="admin:cleanup_menu"),
+        ],
+        [
             InlineKeyboardButton(text="⚙️ Система", callback_data="admin:system_menu"),
         ],
+    ])
+
+
+def avatar_rarity_kb() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text="COMMON", callback_data="avatar:rarity:COMMON"),
+            InlineKeyboardButton(text="RARE", callback_data="avatar:rarity:RARE"),
+        ],
+        [
+            InlineKeyboardButton(text="EPIC", callback_data="avatar:rarity:EPIC"),
+            InlineKeyboardButton(text="LEGENDARY", callback_data="avatar:rarity:LEGENDARY"),
+        ],
+        [InlineKeyboardButton(text="❌ Отмена", callback_data="avatar:cancel")],
     ])
 
 
@@ -937,3 +962,155 @@ async def cmd_ban(message: Message):
         await message.answer(f"✅ Пользователь {tg_id} заблокирован")
     except Exception as e:
         await message.answer(f"❌ Ошибка: {e}")
+
+
+# ─── A2: FSM Add Premium Avatar (Кенан 2026-05-19) ────────────────────────────
+# Flow: /admin → 🖼️ Add Avatar →
+#   image (photo or doc) → name → price → rarity → POST /bot/items/avatar
+import os as _os
+
+AVATAR_STORAGE_DIR = _os.environ.get(
+    "AVATAR_STORAGE_DIR", "/var/lib/chesscoin/avatars"
+)
+PUBLIC_AVATAR_BASE_URL = _os.environ.get(
+    "PUBLIC_AVATAR_BASE_URL",
+    "https://chesscoin.app/static/avatars",
+)
+
+
+@router.callback_query(F.data == "avatar:create_start")
+async def cb_avatar_create_start(call: CallbackQuery, state: FSMContext):
+    if not is_admin(call.from_user.id):
+        return await call.answer("❌ Нет доступа", show_alert=True)
+    await state.clear()
+    await state.set_state(AvatarCreateForm.image)
+    await call.message.edit_text(
+        "🖼️ <b>Добавление premium-аватара</b>\n\n"
+        "Шаг 1/4: пришли картинку фото-сообщением или документом (.png/.jpg/.svg).\n\n"
+        "/cancel для отмены",
+        reply_markup=back_kb("admin:main"),
+    )
+
+
+@router.callback_query(F.data == "avatar:cancel")
+async def cb_avatar_cancel(call: CallbackQuery, state: FSMContext):
+    await state.clear()
+    await call.message.edit_text(
+        "❌ Загрузка отменена.\n\n🛡️ Панель администратора:",
+        reply_markup=main_menu_kb(),
+    )
+
+
+@router.message(AvatarCreateForm.image, F.photo | F.document)
+async def fsm_avatar_image(message: Message, state: FSMContext, bot: Bot):
+    if not is_admin(message.from_user.id):
+        return
+    # Получаем file_id из photo (последняя — наибольшее разрешение) или document
+    file_id = None
+    suffix = ".png"
+    if message.photo:
+        file_id = message.photo[-1].file_id
+        suffix = ".jpg"
+    elif message.document:
+        file_id = message.document.file_id
+        mt = (message.document.mime_type or "").lower()
+        if "svg" in mt:
+            suffix = ".svg"
+        elif "png" in mt:
+            suffix = ".png"
+        elif "jpeg" in mt or "jpg" in mt:
+            suffix = ".jpg"
+        elif "webp" in mt:
+            suffix = ".webp"
+    if not file_id:
+        return await message.answer("❌ Нужно фото или картинка-документ")
+
+    try:
+        _os.makedirs(AVATAR_STORAGE_DIR, exist_ok=True)
+    except Exception:
+        pass
+
+    file = await bot.get_file(file_id)
+    # имя файла = file_unique_id для дедупликации
+    fname = f"{file.file_unique_id}{suffix}"
+    dest = _os.path.join(AVATAR_STORAGE_DIR, fname)
+    try:
+        await bot.download_file(file.file_path, destination=dest)
+        image_url = f"{PUBLIC_AVATAR_BASE_URL.rstrip('/')}/{fname}"
+    except Exception as e:
+        return await message.answer(f"❌ Ошибка сохранения файла: {e}")
+
+    await state.update_data(image_url=image_url, image_path=dest)
+    await state.set_state(AvatarCreateForm.name)
+    await message.answer(
+        "✅ Картинка сохранена.\n\n"
+        f"<code>{image_url}</code>\n\n"
+        "Шаг 2/4: пришли <b>название</b> аватара (например: «Dragon Knight»)"
+    )
+
+
+@router.message(AvatarCreateForm.image)
+async def fsm_avatar_image_invalid(message: Message):
+    await message.answer("❌ Нужно прислать фото или картинка-документ (.png/.jpg/.svg)")
+
+
+@router.message(AvatarCreateForm.name, F.text)
+async def fsm_avatar_name(message: Message, state: FSMContext):
+    name = (message.text or "").strip()
+    if not name or len(name) > 80:
+        return await message.answer("❌ Название от 1 до 80 символов")
+    await state.update_data(name=name)
+    await state.set_state(AvatarCreateForm.price)
+    await message.answer(
+        "Шаг 3/4: пришли <b>цену в монетах</b> (число, например: 500)"
+    )
+
+
+@router.message(AvatarCreateForm.price, F.text)
+async def fsm_avatar_price(message: Message, state: FSMContext):
+    txt = (message.text or "").strip()
+    if not txt.isdigit() or int(txt) <= 0:
+        return await message.answer("❌ Цена — положительное целое число")
+    price = int(txt)
+    if price > 10_000_000:
+        return await message.answer("❌ Цена слишком большая (макс. 10_000_000)")
+    await state.update_data(price=price)
+    await state.set_state(AvatarCreateForm.rarity)
+    await message.answer(
+        f"Шаг 4/4: выбери редкость (цена: {price}):",
+        reply_markup=avatar_rarity_kb(),
+    )
+
+
+@router.callback_query(F.data.startswith("avatar:rarity:"), AvatarCreateForm.rarity)
+async def cb_avatar_rarity(call: CallbackQuery, state: FSMContext):
+    if not is_admin(call.from_user.id):
+        return await call.answer("❌ Нет доступа", show_alert=True)
+    rarity = call.data.split(":")[-1]
+    data = await state.get_data()
+    await state.clear()
+    payload = {
+        "name": data.get("name"),
+        "description": "Premium avatar (admin upload)",
+        "priceCoins": data.get("price"),
+        "imageUrl": data.get("image_url"),
+        "rarity": rarity,
+    }
+    try:
+        async with BackendClient() as client:
+            result = await client.create_avatar_item(payload)
+        await call.message.edit_text(
+            "✅ <b>Premium-аватар создан</b>\n\n"
+            f"Имя: <b>{result.get('name')}</b>\n"
+            f"Цена: {result.get('priceCoins')} монет\n"
+            f"Редкость: {result.get('rarity')}\n"
+            f"URL: <code>{data.get('image_url')}</code>\n\n"
+            "Теперь он виден всем игрокам в магазине → вкладка Avatars.",
+            reply_markup=main_menu_kb(),
+        )
+    except Exception as e:
+        logger.exception("[admin avatar create]")
+        await call.message.edit_text(
+            f"❌ Ошибка создания: {e}\n\n🛡️ Панель администратора:",
+            reply_markup=main_menu_kb(),
+        )

@@ -151,7 +151,60 @@ async function main() {
     { name: "Comic Sans MS",     description: "The ultimate legendary troll font",                     type: "FONT" as const, category: "SEASONAL" as const, rarity: "LEGENDARY" as const, priceCoins: BigInt(100_000),   sortOrder: 64, imageUrl: null, previewUrl: null },
   ];
 
-  const allItems = [...avatarFrames, ...boardSkins, ...pieceSkins, ...moveAnimations, ...pieceSets, ...fonts];
+  // ─── Shop Items — Premium Avatars (A2 Кенан 2026-05-19) ─────────────────
+  // 100 placeholder PREMIUM_AVATAR. Картинка — data:URI SVG (круг с
+  // градиентом и инициалом). До тех пор пока админ не загрузит реальные
+  // через /admin FSM в боте, эти служат placeholder-ами и доступны к покупке.
+  const PREMIUM_AVATAR_PALETTE = [
+    ['#7B61FF', '#3B2D9A'], ['#F0C85A', '#8A6020'], ['#3DBA7A', '#1F5A3A'],
+    ['#4A9EFF', '#1E4D8A'], ['#FF6B6B', '#8A2E2E'], ['#FFA94D', '#8A4F18'],
+    ['#9B85FF', '#4D3DA0'], ['#00C2A8', '#005C50'], ['#FF6BCB', '#8A2E66'],
+    ['#FFD93D', '#8A6F18'],
+  ];
+  const PREMIUM_AVATAR_TIERS: Array<{ price: number; rarity: 'COMMON' | 'RARE' | 'EPIC' | 'LEGENDARY'; count: number }> = [
+    { price: 50,    rarity: 'COMMON',    count: 20 },
+    { price: 100,   rarity: 'COMMON',    count: 20 },
+    { price: 200,   rarity: 'RARE',      count: 20 },
+    { price: 500,   rarity: 'RARE',      count: 15 },
+    { price: 1000,  rarity: 'EPIC',      count: 12 },
+    { price: 2000,  rarity: 'EPIC',      count: 8 },
+    { price: 5000,  rarity: 'LEGENDARY', count: 5 },
+  ];
+  const premiumAvatars: Array<{
+    name: string; description: string; type: 'PREMIUM_AVATAR'; category: 'PREMIUM';
+    rarity: 'COMMON' | 'RARE' | 'EPIC' | 'LEGENDARY'; priceCoins: bigint; sortOrder: number;
+    imageUrl: string; previewUrl: string;
+  }> = [];
+  let avIdx = 0;
+  for (const tier of PREMIUM_AVATAR_TIERS) {
+    for (let i = 0; i < tier.count; i++) {
+      avIdx += 1;
+      const [c1, c2] = PREMIUM_AVATAR_PALETTE[avIdx % PREMIUM_AVATAR_PALETTE.length];
+      const initial = String.fromCharCode(65 + ((avIdx - 1) % 26));
+      const svg =
+        `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'>` +
+          `<defs><linearGradient id='g${avIdx}' x1='0%' y1='0%' x2='100%' y2='100%'>` +
+            `<stop offset='0%' stop-color='${c1}'/><stop offset='100%' stop-color='${c2}'/>` +
+          `</linearGradient></defs>` +
+          `<circle cx='64' cy='64' r='62' fill='url(#g${avIdx})'/>` +
+          `<text x='64' y='86' font-family='Inter,Arial,sans-serif' font-size='72' font-weight='800' text-anchor='middle' fill='#fff' fill-opacity='0.85'>${initial}</text>` +
+        `</svg>`;
+      const dataUri = `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
+      premiumAvatars.push({
+        name: `Avatar #${String(avIdx).padStart(3, '0')}`,
+        description: `Premium avatar (placeholder ${tier.rarity.toLowerCase()})`,
+        type: 'PREMIUM_AVATAR',
+        category: 'PREMIUM',
+        rarity: tier.rarity,
+        priceCoins: BigInt(tier.price),
+        sortOrder: 100 + avIdx,
+        imageUrl: dataUri,
+        previewUrl: dataUri,
+      });
+    }
+  }
+
+  const allItems = [...avatarFrames, ...boardSkins, ...pieceSkins, ...moveAnimations, ...pieceSets, ...fonts, ...premiumAvatars];
 
   // Mapping old Russian names → new English names for data migration
   const nameMapping: Record<string, string> = {

@@ -153,6 +153,12 @@ class BackendClient:
         """Создать новое социальное задание."""
         return await self._post("/bot/tasks/create", payload)
 
+    async def create_avatar_item(self, payload: dict) -> dict:
+        """A2: создать premium-аватар (PREMIUM_AVATAR item).
+        payload: { name, description?, priceCoins, imageUrl, rarity? }
+        """
+        return await self._post("/bot/items/avatar", payload)
+
     async def toggle_task(self, task_id: str) -> dict:
         """Переключить статус задания ACTIVE ↔ ARCHIVED."""
         async with self._session.put(self._url(f"/bot/tasks/{task_id}/toggle")) as resp:

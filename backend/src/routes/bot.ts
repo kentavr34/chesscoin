@@ -581,3 +581,36 @@ botRouter.get("/user-exists", async (req: Request, res: Response) => {
     res.status(500).json({ error: "Internal error" });
   }
 });
+
+// ── POST /api/v1/bot/items/avatar — создать premium-аватар (A2) ─────────────
+// Используется FSM admin-командой /admin → Add Avatar в боте.
+// Принимает: name (str), description (str), priceCoins (int|str), imageUrl (str — S3 url или data:URI),
+//            rarity ('COMMON'|'RARE'|'EPIC'|'LEGENDARY').
+botRouter.post("/items/avatar", async (req: Request, res: Response) => {
+  try {
+    const { name, description, priceCoins, imageUrl, rarity } = req.body ?? {};
+    if (!name || !imageUrl || priceCoins == null) {
+      return res.status(400).json({ error: "Required fields: name, imageUrl, priceCoins" });
+    }
+    const allowedRarity = ["COMMON", "RARE", "EPIC", "LEGENDARY"] as const;
+    const rar = allowedRarity.includes(rarity) ? rarity : "RARE";
+    const item = await prisma.item.create({
+      data: {
+        name: String(name),
+        description: description ? String(description) : "Premium avatar (admin upload)",
+        type: "PREMIUM_AVATAR",
+        category: "PREMIUM",
+        rarity: rar,
+        priceCoins: BigInt(priceCoins),
+        sortOrder: 1000,
+        imageUrl: String(imageUrl),
+        previewUrl: String(imageUrl),
+        isActive: true,
+      },
+    });
+    res.json({ id: item.id, name: item.name, priceCoins: item.priceCoins.toString(), rarity: item.rarity });
+  } catch (err: unknown) {
+    logger.error("[bot/items/avatar]", err);
+    res.status(500).json({ error: "Failed to create avatar item" });
+  }
+});
