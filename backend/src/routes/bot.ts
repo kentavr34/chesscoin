@@ -592,19 +592,38 @@ botRouter.post("/items/avatar", async (req: Request, res: Response) => {
     if (!name || !imageUrl || priceCoins == null) {
       return res.status(400).json({ error: "Required fields: name, imageUrl, priceCoins" });
     }
+    // A2 audit-fix: валидируем priceCoins ДО BigInt() — раньше любой невалидный
+    // ввод от админа (например 'abc') кидал SyntaxError из BigInt() → 500.
+    // Принимаем целое >=0 в строке или числе.
+    const priceStr = typeof priceCoins === "number" ? String(Math.floor(priceCoins)) : String(priceCoins).trim();
+    if (!/^\d+$/.test(priceStr)) {
+      return res.status(400).json({ error: "priceCoins must be a non-negative integer" });
+    }
+    const priceBig = BigInt(priceStr);
+    if (priceBig < 0n || priceBig > 10_000_000n) {
+      return res.status(400).json({ error: "priceCoins out of range (0 ≤ x ≤ 10_000_000)" });
+    }
+    const nameStr = String(name).trim();
+    if (nameStr.length === 0 || nameStr.length > 120) {
+      return res.status(400).json({ error: "name must be 1..120 chars" });
+    }
+    const imageStr = String(imageUrl).trim();
+    if (imageStr.length === 0 || imageStr.length > 4096) {
+      return res.status(400).json({ error: "imageUrl required (≤4096 chars)" });
+    }
     const allowedRarity = ["COMMON", "RARE", "EPIC", "LEGENDARY"] as const;
-    const rar = allowedRarity.includes(rarity) ? rarity : "RARE";
+    const rar = (allowedRarity as readonly string[]).includes(rarity) ? rarity : "RARE";
     const item = await prisma.item.create({
       data: {
-        name: String(name),
-        description: description ? String(description) : "Premium avatar (admin upload)",
+        name: nameStr,
+        description: description ? String(description).slice(0, 500) : "Premium avatar (admin upload)",
         type: "PREMIUM_AVATAR",
         category: "PREMIUM",
         rarity: rar,
-        priceCoins: BigInt(priceCoins),
+        priceCoins: priceBig,
         sortOrder: 1000,
-        imageUrl: String(imageUrl),
-        previewUrl: String(imageUrl),
+        imageUrl: imageStr,
+        previewUrl: imageStr,
         isActive: true,
       },
     });
