@@ -898,29 +898,60 @@ export const WarsPage: React.FC = () => {
   }, [tab, loadActive, loadAll]);
 
   // P0 Кенан 2026-05-19: автоматическое присоединение к очереди матчмейкинга
-  // войны. Если юзер — член воюющей страны и есть активная война, шлём
-  // `war:queue_join` на сокет (sticky pres, Redis TTL 1ч). Без этого
-  // backend-cron `scheduleWarMatches` не видит свободных бойцов и не
-  // создаёт war_battles → партии войн физически не запускались.
-  // Refresh каждые 10 минут (TTL очереди — 1ч), и leave при unmount/смене страны.
+  // войны. Если юзер — член воюющей страны и есть активная война в IN_PROGRESS,
+  // шлём `war:queue_join` на сокет (sticky pres, Redis TTL 1ч). Без этого
+  // backend-cron `scheduleWarMatches` не видит свободных бойцов и не создаёт
+  // war_battles → партии войн физически не запускались.
+  //
+  // Audit v1 (T2 review) blockers — учтены здесь:
+  //  · status !== 'IN_PROGRESS'  → не паримся в финишированной/отменённой войне
+  //  · sock.connected guard      → emit на disconnected сокете молча провалится
+  //  · переподключение           → подписка на 'connect' → re-emit join
+  //  · catch пишет console.warn  → пустой catch скрывает диагностику
+  //  · refresh раз в 10 мин      → Redis TTL очереди 3600s, запас 6×
   useEffect(() => {
     if (!myActiveWar || !myCountry?.id) return;
+    if (myActiveWar.status !== 'IN_PROGRESS') return;
     const warId = myActiveWar.id;
     const countryId = myCountry.id;
     if (myActiveWar.attackerCountryId !== countryId && myActiveWar.defenderCountryId !== countryId) return;
 
-    const sock = getSocket();
-    const join = () => {
-      try { sock.emit('war:queue_join', { warId, countryId }); } catch {}
+    let sock: ReturnType<typeof getSocket> | null = null;
+    try { sock = getSocket(); } catch (e) { console.warn('[wars] getSocket failed', e); return; }
+    if (!sock) return;
+
+    const safeEmit = (event: string) => {
+      try {
+        if (!sock || !sock.connected) {
+          // Если ещё не подключён — отложенно дойдёт через onConnect ниже.
+          return;
+        }
+        sock.emit(event, { warId, countryId });
+      } catch (e) {
+        console.warn('[wars] emit', event, 'failed', e);
+      }
     };
+    const join = () => safeEmit('war:queue_join');
+
+    // Сразу join + re-emit на каждое восстановление соединения.
     join();
+    const onConnect = () => join();
+    sock.on('connect', onConnect);
+
     const refresh = setInterval(join, 10 * 60 * 1000); // обновляем TTL раз в 10 мин
 
     return () => {
       clearInterval(refresh);
-      try { sock.emit('war:queue_leave', { warId, countryId }); } catch {}
+      try { sock?.off('connect', onConnect); } catch (e) { console.warn('[wars] off connect failed', e); }
+      safeEmit('war:queue_leave');
     };
-  }, [myActiveWar?.id, myCountry?.id, myActiveWar?.attackerCountryId, myActiveWar?.defenderCountryId]);
+  }, [
+    myActiveWar?.id,
+    myActiveWar?.status,
+    myCountry?.id,
+    myActiveWar?.attackerCountryId,
+    myActiveWar?.defenderCountryId,
+  ]);
 
   const handleIntroClose = async () => {
     setShowIntro(false);
