@@ -70,14 +70,18 @@ const AppInner: React.FC = () => {
 
   // A4 (Кенан 2026-05-19): применяем equippedItems.THEME из магазина.
   // Имя темы в магазине должно совпадать с ThemeKey (default | dark | light | gold | mystic).
-  // Если совпадение есть — применяем CSS-токены через applyThemeToCss.
-  // Если нет — не делаем ничего (никакого падения, just no-op).
+  // Audit fix: при unequipped/logout/неизвестном имени откатываемся к
+  // localStorage-теме (getActiveTheme) — иначе остаются последние применённые
+  // токены и палитра «застревает».
   React.useEffect(() => {
     const themeItem = user?.equippedItems?.THEME?.name;
-    if (!themeItem) return;
-    // Совпадение по нижнему регистру с ThemeKey
-    const key = themeItem.toLowerCase().replace(/\s+/g, '') as keyof typeof THEMES;
-    const tokens = THEMES[key];
+    let tokens = null as (typeof THEMES)[keyof typeof THEMES] | null;
+    if (themeItem) {
+      const key = themeItem.toLowerCase().replace(/\s+/g, '') as keyof typeof THEMES;
+      tokens = THEMES[key] ?? null;
+    }
+    // Fallback: пользовательский выбор из настроек (localStorage), default — 'default'.
+    if (!tokens) tokens = THEMES[getActiveTheme()] ?? THEMES.default;
     if (tokens) applyThemeToCss(tokens);
   }, [user?.equippedItems?.THEME?.name]);
 
