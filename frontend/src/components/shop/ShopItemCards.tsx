@@ -139,22 +139,29 @@ export const ItemCard: React.FC<ItemCardProps> = ({ item, loading, highlighted, 
     return <span style={{ opacity: 0.4 }}><IcoGamepad size={32} /></span>;
   };
 
+  // A3 (Кенан 2026-05-19): фон карточек захардкожен на гарантированно
+  // тёмный градиент (раньше зависело от --color-bg-card, который в light-режиме
+  // или при дефолте оказывался почти белым → товары «исчезали» на фоне).
+  // То же для preview-area: гарантированно тёмная подложка.
+  const cardBg = 'linear-gradient(135deg, #141018 0%, #0F0E18 100%)';
+  const previewBg = '#0B0D11';
+
   return (
-    <div ref={cardRef} style={{ background: 'var(--shop-card-bg, var(--color-bg-card, #1C2030))', border: `${item.equipped || highlighted ? '2px' : '1px'} solid ${highlighted ? 'var(--color-green, #00D68F)' : item.equipped ? 'var(--color-accent, #F5C842)' : `${rarityColor}33`}`, borderRadius: 18, padding: 12, display: 'flex', flexDirection: 'column', gap: 8, position: 'relative', overflow: 'hidden', animation: highlighted ? 'highlightPulse 1.5s ease-in-out 2' : undefined }}>
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${rarityColor}, transparent)`, opacity: 0.6 }} />
-      <div style={{ width: '100%', aspectRatio: '1', borderRadius: 12, overflow: 'hidden', background: 'var(--shop-card-preview-bg, var(--color-bg-light, #13161E))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div ref={cardRef} style={{ background: cardBg, border: `${item.equipped || highlighted ? '2px' : '1px'} solid ${highlighted ? '#3DBA7A' : item.equipped ? '#F0C85A' : `${rarityColor}66`}`, borderRadius: 18, padding: 12, display: 'flex', flexDirection: 'column', gap: 8, position: 'relative', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.35)', animation: highlighted ? 'highlightPulse 1.5s ease-in-out 2' : undefined }}>
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${rarityColor}, transparent)`, opacity: 0.7 }} />
+      <div style={{ width: '100%', aspectRatio: '1', borderRadius: 12, overflow: 'hidden', background: previewBg, border: '1px solid rgba(154,148,144,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {renderPreview()}
       </div>
       <div>
-        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-primary, #F0F2F8)', lineHeight: 1.3 }}>{item.name}</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: '#EAE2CC', lineHeight: 1.3 }}>{item.name}</div>
         <div style={{ fontSize: 10, color: rarityColor, marginTop: 2, fontWeight: 600 }}>{(t.shop.rarity as Record<string,string>)[item.rarity] ?? item.rarity}</div>
       </div>
       {item.equipped ? (
-        <div style={{ fontSize: 11, color: 'var(--color-green, #00D68F)', fontWeight: 700, textAlign: 'center', padding: '5px 8px', background: 'var(--shop-equipped-badge-bg, rgba(0,214,143,0.08))', borderRadius: 8, border: '1px solid var(--shop-equipped-badge-border, rgba(0,214,143,0.2))' }}>✓ {t.shop.equipped ?? 'Equipped'}</div>
+        <div style={{ fontSize: 11, color: '#3DBA7A', fontWeight: 700, textAlign: 'center', padding: '5px 8px', background: 'rgba(61,186,122,0.10)', borderRadius: 8, border: '1px solid rgba(61,186,122,0.30)' }}>✓ {t.shop.equipped ?? 'Equipped'}</div>
       ) : item.owned ? (
-        <button onClick={onEquip} disabled={loading} style={{ ...btnStyle, background: 'var(--color-purple-dark, #7B61FF)', color: '#fff' }}>{loading ? '...' : t.shop.equip}</button>
+        <button onClick={onEquip} disabled={loading} style={{ ...btnStyle, background: 'linear-gradient(135deg,#7B61FF,#9B85FF)', color: '#fff' }}>{loading ? '...' : t.shop.equip}</button>
       ) : (
-        <button onClick={onPurchase} disabled={loading} style={{ ...btnStyle, background: 'var(--color-accent, #F5C842)', color: 'var(--color-bg-dark, #0B0D11)' }}>{loading ? '...' : `${fmtBalance(item.priceCoins)}`}</button>
+        <button onClick={onPurchase} disabled={loading} style={{ ...btnStyle, background: 'linear-gradient(135deg,#F0C85A,#D4A843)', color: '#1A1208' }}>{loading ? '...' : `${fmtBalance(item.priceCoins)}`}</button>
       )}
     </div>
   );
@@ -182,32 +189,32 @@ export const AvatarItemCard: React.FC<AvatarItemCardProps> = ({ item, loading, h
   }, [highlighted]);
 
   return (
-    <div ref={cardRef} style={{ background: 'var(--shop-card-bg, var(--color-bg-card, #1C2030))', border: `${item.equipped || highlighted ? '2px' : '1px'} solid ${highlighted ? 'var(--color-green, #00D68F)' : item.equipped ? 'var(--color-accent, #F5C842)' : `${rarityColor}44`}`, borderRadius: 18, padding: 12, display: 'flex', flexDirection: 'column', gap: 8, position: 'relative', overflow: 'hidden', animation: highlighted ? 'highlightPulse 1.5s ease-in-out 2' : undefined }}>
+    <div ref={cardRef} style={{ background: 'linear-gradient(135deg, #141018 0%, #0F0E18 100%)', border: `${item.equipped || highlighted ? '2px' : '1px'} solid ${highlighted ? '#3DBA7A' : item.equipped ? '#F0C85A' : `${rarityColor}66`}`, borderRadius: 18, padding: 12, display: 'flex', flexDirection: 'column', gap: 8, position: 'relative', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.35)', animation: highlighted ? 'highlightPulse 1.5s ease-in-out 2' : undefined }}>
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${rarityColor}, transparent)`, opacity: 0.7 }} />
-      {item.equipped && <div style={{ position: 'absolute', top: 8, right: 8, background: 'var(--color-accent, #F5C842)', color: '#000', fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 6 }}>ACTIVE</div>}
+      {item.equipped && <div style={{ position: 'absolute', top: 8, right: 8, background: '#F0C85A', color: '#1A1208', fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 6 }}>ACTIVE</div>}
       <div style={{ width: '100%', aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 8 }}>
-        <div style={{ width: '80%', aspectRatio: '1', borderRadius: '50%', overflow: 'hidden', border: `2px solid ${item.equipped ? 'var(--color-accent, #F5C842)' : `${rarityColor}66`}`, boxShadow: item.equipped ? `0 0 12px ${rarityColor}66` : undefined }}>
+        <div style={{ width: '80%', aspectRatio: '1', borderRadius: '50%', overflow: 'hidden', border: `2px solid ${item.equipped ? '#F0C85A' : `${rarityColor}66`}`, boxShadow: item.equipped ? `0 0 12px ${rarityColor}66` : undefined }}>
           {item.imageUrl && !imgError
             ? <img src={item.imageUrl} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" onError={() => setImgError(true)} />
-            : <div style={{ width: '100%', height: '100%', background: 'var(--shop-card-preview-bg, var(--color-bg-light,#13161E))', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.4 }}><IcoUsers size={32} /></div>
+            : <div style={{ width: '100%', height: '100%', background: '#0B0D11', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5A5248' }}><IcoUsers size={32} /></div>
           }
         </div>
       </div>
       <div>
-        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-primary, #F0F2F8)', lineHeight: 1.3 }}>{item.name}</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: '#EAE2CC', lineHeight: 1.3 }}>{item.name}</div>
         <div style={{ fontSize: 10, color: rarityColor, marginTop: 2, fontWeight: 600 }}>
           {(t.shop.rarity as Record<string,string>)[item.rarity] ?? item.rarity}
         </div>
       </div>
       {item.equipped ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <div style={{ fontSize: 11, color: 'var(--color-green, #00D68F)', fontWeight: 700, textAlign: 'center', padding: '3px 0' }}>✓ {t.shop.equipped ?? 'Equipped'}</div>
-          <button onClick={onUnequip} disabled={loading} style={{ ...btnStyle, background: 'var(--shop-unequip-btn-bg, rgba(255,77,106,0.12))', color: 'var(--color-red, #FF4D6A)', border: '1px solid var(--shop-unequip-btn-border, rgba(255,77,106,0.25))' }}>{loading ? '...' : t.shop.unequip}</button>
+          <div style={{ fontSize: 11, color: '#3DBA7A', fontWeight: 700, textAlign: 'center', padding: '3px 0' }}>✓ {t.shop.equipped ?? 'Equipped'}</div>
+          <button onClick={onUnequip} disabled={loading} style={{ ...btnStyle, background: 'rgba(255,77,106,0.14)', color: '#FF4D6A', border: '1px solid rgba(255,77,106,0.35)' }}>{loading ? '...' : t.shop.unequip}</button>
         </div>
       ) : item.owned ? (
-        <button onClick={onEquip} disabled={loading} style={{ ...btnStyle, background: 'linear-gradient(135deg,var(--color-purple-dark, #7B61FF),var(--color-purple, #9B85FF))', color: '#fff' }}>{loading ? '...' : t.shop.equip}</button>
+        <button onClick={onEquip} disabled={loading} style={{ ...btnStyle, background: 'linear-gradient(135deg,#7B61FF,#9B85FF)', color: '#fff' }}>{loading ? '...' : t.shop.equip}</button>
       ) : (
-        <button onClick={onPurchase} disabled={loading} style={{ ...btnStyle, background: 'var(--color-accent, #F5C842)', color: 'var(--color-bg-dark, #0B0D11)' }}>{loading ? '...' : `${fmtBalance(item.priceCoins)}`}</button>
+        <button onClick={onPurchase} disabled={loading} style={{ ...btnStyle, background: 'linear-gradient(135deg,#F0C85A,#D4A843)', color: '#1A1208' }}>{loading ? '...' : `${fmtBalance(item.priceCoins)}`}</button>
       )}
     </div>
   );
