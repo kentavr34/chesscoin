@@ -56,8 +56,27 @@ async function sendTonPayout(_address: string, _amountTon: number): Promise<stri
   throw new Error("hot_wallet_send_not_implemented");
 }
 
+// Stale PROCESSING-recovery: если воркер упал между mark PROCESSING и завершением,
+// заявка может застрять навсегда. Перед каждым тиком возвращаем PROCESSING
+// старше 30 минут обратно в PENDING чтобы они попали в обычный цикл.
+const STALE_PROCESSING_MS = 30 * 60 * 1000;
+
+async function recoverStaleProcessing(): Promise<void> {
+  const cutoff = new Date(Date.now() - STALE_PROCESSING_MS);
+  const res = await prisma.withdrawalRequest.updateMany({
+    where: { status: "PROCESSING", processedAt: { lt: cutoff } },
+    data: { status: "PENDING", processedAt: null },
+  });
+  if (res.count > 0) {
+    logger.warn(`[TonWithdraw] recovered ${res.count} stale PROCESSING → PENDING`);
+  }
+}
+
 export async function processTonWithdrawals(): Promise<void> {
   try {
+    // 1. Возвращаем зависшие в PROCESSING заявки
+    await recoverStaleProcessing();
+
     const pending = await prisma.withdrawalRequest.findMany({
       where: { status: "PENDING" },
       orderBy: { createdAt: "asc" },
@@ -80,11 +99,18 @@ export async function processTonWithdrawals(): Promise<void> {
 
     for (const w of pending) {
       try {
-        // Помечаем как PROCESSING чтобы не взять повторно при следующем тике
-        await prisma.withdrawalRequest.update({
-          where: { id: w.id },
-          data: { status: "PROCESSING" },
+        // Атомарный PENDING→PROCESSING claim через updateMany с WHERE status=PENDING.
+        // Если другой инстанс уже занял заявку, count=0 — пропускаем без двойной
+        // выплаты. processedAt=now() служит «timestamp claim» — recoverStaleProcessing
+        // вернёт PROCESSING обратно в PENDING если воркер крашнется до COMPLETED.
+        const claim = await prisma.withdrawalRequest.updateMany({
+          where: { id: w.id, status: "PENDING" },
+          data: { status: "PROCESSING", processedAt: new Date() },
         });
+        if (claim.count === 0) {
+          // Кто-то другой взял эту заявку (или статус уже изменился) — skip.
+          continue;
+        }
 
         // Сумма к выплате: переводим монеты в TON по фиксированному rate
         // (1_000_000 монет = 1 TON). Комиссия уже была удержана при создании
