@@ -582,8 +582,12 @@ const CountryDetailModal: React.FC<{
                   <span style={{ color: '#3DBA7A' }}>{m.warWins}W</span>
                   <span style={{ color: '#FF4D6A' }}>{m.warLosses}L</span>
                   {hasActiveWar && (m.currentWarWins ?? 0) > 0 && (
-                    <span style={{ color: '#F0C85A', fontWeight: 700 }}>
-                      ▲ {m.currentWarWins} в войне
+                    <span style={{ color: '#F0C85A', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                      {/* Inline-SVG up-triangle (заменяет ▲ — без юникод-символов в UI) */}
+                      <svg width="8" height="8" viewBox="0 0 10 10" fill="currentColor" style={{ flexShrink: 0 }}>
+                        <polygon points="5,1 9,9 1,9"/>
+                      </svg>
+                      {m.currentWarWins} в войне
                     </span>
                   )}
                 </div>
@@ -672,8 +676,18 @@ const WarDetailModal: React.FC<{ warId: string; onClose: () => void }> = ({ warI
                 <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 800, color: '#D4A843' }}>
                   {war.attackerWins} : {war.defenderWins}
                 </div>
-                <div style={{ fontSize: 10, color: war.status === 'IN_PROGRESS' ? '#3DBA7A' : '#7A7875', marginTop: 2 }}>
-                  {war.status === 'IN_PROGRESS' ? `⏱ ${formatTime(countdown)}` : t.wars.warFinished}
+                <div style={{ fontSize: 10, color: war.status === 'IN_PROGRESS' ? '#3DBA7A' : '#7A7875', marginTop: 2, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  {war.status === 'IN_PROGRESS' ? (
+                    <>
+                      {/* Inline-SVG таймер (заменяет ⏱ — правило UI без эмодзи) */}
+                      <svg width="11" height="11" viewBox="0 0 20 20" fill="none" style={{ flexShrink: 0 }}>
+                        <circle cx="10" cy="11" r="6.5" stroke="currentColor" strokeWidth="1.6"/>
+                        <path d="M10 7v4l2.5 1.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                        <path d="M8 2.5h4M10 2.5v2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                      </svg>
+                      {formatTime(countdown)}
+                    </>
+                  ) : t.wars.warFinished}
                 </div>
               </div>
               <div style={{ textAlign: 'center', flex: 1 }}>
@@ -882,6 +896,31 @@ export const WarsPage: React.FC = () => {
     }, 30000);
     return () => clearInterval(interval);
   }, [tab, loadActive, loadAll]);
+
+  // P0 Кенан 2026-05-19: автоматическое присоединение к очереди матчмейкинга
+  // войны. Если юзер — член воюющей страны и есть активная война, шлём
+  // `war:queue_join` на сокет (sticky pres, Redis TTL 1ч). Без этого
+  // backend-cron `scheduleWarMatches` не видит свободных бойцов и не
+  // создаёт war_battles → партии войн физически не запускались.
+  // Refresh каждые 10 минут (TTL очереди — 1ч), и leave при unmount/смене страны.
+  useEffect(() => {
+    if (!myActiveWar || !myCountry?.id) return;
+    const warId = myActiveWar.id;
+    const countryId = myCountry.id;
+    if (myActiveWar.attackerCountryId !== countryId && myActiveWar.defenderCountryId !== countryId) return;
+
+    const sock = getSocket();
+    const join = () => {
+      try { sock.emit('war:queue_join', { warId, countryId }); } catch {}
+    };
+    join();
+    const refresh = setInterval(join, 10 * 60 * 1000); // обновляем TTL раз в 10 мин
+
+    return () => {
+      clearInterval(refresh);
+      try { sock.emit('war:queue_leave', { warId, countryId }); } catch {}
+    };
+  }, [myActiveWar?.id, myCountry?.id, myActiveWar?.attackerCountryId, myActiveWar?.defenderCountryId]);
 
   const handleIntroClose = async () => {
     setShowIntro(false);
