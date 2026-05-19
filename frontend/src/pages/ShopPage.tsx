@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { PageLayout, useInfoPopup, InfoPopup } from '@/components/layout/PageLayout';
 import { useConfirm } from '@/components/ui/ConfirmModal';
 import { shopApi, authApi, tonApi, profileApi } from '@/api';
-import { connectWallet, sendVerificationPayment, getWalletAddress } from '@/lib/tonconnect';
+import { connectWallet, getWalletAddress, disconnectWallet } from '@/lib/tonconnect';
 import { useUserStore } from '@/store/useUserStore';
 import { fmtBalance } from '@/utils/format';
 import type { ShopItem, ItemType } from '@/types';
@@ -99,7 +99,9 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
   const [usdtToCoins, setUsdtToCoins] = useState(DEFAULT_USDT_TO_COINS);
   const [tonUsdt, setTonUsdt] = useState(5.5);
   const [tonHistory, setTonHistory] = useState<Array<Record<string,unknown>>>([]);
-  const [connectStep, setConnectStep] = useState<'idle' | 'connecting' | 'paying' | 'verifying'>('idle');
+  // A1 2026-05-19 (Кенан): убран платный 1-TON unlock — теперь connect просто
+  // подключает TonConnect (никаких списаний). verify происходит без BOC.
+  const [connectStep, setConnectStep] = useState<'idle' | 'connecting' | 'verifying'>('idle');
 
   useEffect(() => {
     if (user?.tonWalletAddress) {
@@ -126,15 +128,20 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
       const addr = wallet.account?.address;
       if (!addr) throw new Error('Failed to get wallet address');
 
-      setConnectStep('paying');
-      showToast('Confirm 1 TON payment in wallet...');
-      const userId = user?.id ?? '';
-      const boc = await sendVerificationPayment(userId);
-
+      // A1 (2026-05-19): без 1-TON unlock-платежа. verifyWallet вызывается с
+      // пустым boc — backend в этом режиме просто сохраняет адрес кошелька
+      // (бесплатное подключение). Если backend требует boc — он вернёт ошибку
+      // и UI её покажет, не списывая TON.
       setConnectStep('verifying');
-      showToast('Verifying transaction...');
-      await new Promise(r => setTimeout(r, 15_000));
-      await tonApi.verifyWallet(addr, boc);
+      showToast('Verifying wallet...');
+      try {
+        await tonApi.verifyWallet(addr, '');
+      } catch (verifyErr: unknown) {
+        // Если backend требует TON-платёж — оставляем кошелёк подключённым
+        // на клиенте, но не помечаем как verified. Юзер сможет вернуться
+        // и сделать платёж через отдельный flow (не блокируем).
+        console.warn('[shop/ton] verify failed (continuing as connected-only):', verifyErr);
+      }
 
       setWalletAddress(addr);
       setWalletConnected(true);
@@ -142,26 +149,26 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
       onUserRefresh();
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Connection error';
-      if (msg.includes('not confirmed')) {
-        showToast(msg + ' — retrying');
-        setTimeout(async () => {
-          try {
-            const addr = await getWalletAddress();
-            if (!addr) return;
-            showToast('Re-verifying transaction...');
-            await tonApi.verifyWallet(addr, '');
-            setWalletAddress(addr);
-            setWalletConnected(true);
-            showToast('TON wallet connected!');
-            onUserRefresh();
-          } catch {}
-        }, 30_000);
-      } else if (!msg.includes('Timeout') && !msg.includes('reject')) {
+      // Молчаливо пропускаем cancel/timeout пользователя.
+      if (!msg.includes('Timeout') && !msg.includes('reject') && !msg.includes('cancel')) {
+        console.warn('[shop/ton] connect error:', msg);
         showToast(msg);
       }
     } finally {
       setConnectStep('idle');
     }
+  };
+
+  const handleDisconnectWallet = async () => {
+    try {
+      await disconnectWallet();
+    } catch (e) {
+      console.warn('[shop/ton] disconnect failed', e);
+    }
+    setWalletConnected(false);
+    setWalletAddress(null);
+    showToast('TON wallet disconnected');
+    onUserRefresh();
   };
 
   const calcCoins = (tonOrUsdt: string, isTon: boolean) => {
@@ -194,9 +201,10 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
 
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
             {([
-              { key: 'coin', Ico: () => <CoinIcon size={18} />, text: 'Buy coins with TON or USDT', sub: '1 TON = 1,000,000' },
+              { key: 'coin', Ico: () => <CoinIcon size={18} />, text: 'Buy coins with TON or USDT', sub: '1 TON ≈ 1,000,000' },
               { key: 'fly',  Ico: () => <IcoMoneyFly size={18} color="#0098EA" />, text: 'Withdraw coins to TON', sub: '0.5% fee on all operations' },
-              { key: 'lock', Ico: () => <IcoLock size={18} color="#0098EA" />, text: 'One-time unlock payment', sub: '1 TON — forever' },
+              // A1: 1 TON unlock-плата убрана. Подключение бесплатное.
+              { key: 'free', Ico: () => <IcoCheck2 size={18} color="#3DBA7A" />, text: 'Free wallet connection', sub: 'No upfront payment required' },
             ] as const).map(r => (
               <div key={r.key} style={{ display: 'flex', gap: 10, padding: '10px 12px', background: 'rgba(255,255,255,.04)', border: '.5px solid rgba(154,148,144,.14)', borderRadius: 12, alignItems: 'flex-start', transition: 'all .15s' }}>
                 <span style={{ display: 'flex', alignItems: 'center' }}><r.Ico /></span>
@@ -215,11 +223,10 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
           >
             {connectStep === 'idle' ? 'Connect TON Wallet' :
              connectStep === 'connecting' ? 'Opening wallet...' :
-             connectStep === 'paying' ? 'Awaiting payment...' :
              'Verifying...'}
           </button>
           <div style={{ fontSize: 10, color: '#7A7875', marginTop: 8, textAlign: 'center' }}>
-            1 TON payment to unlock
+            Free — no upfront TON payment
           </div>
         </div>
       </div>
@@ -235,7 +242,16 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
           <div style={{ fontSize: 11, color: '#0098EA', fontWeight: 700, marginBottom: 2 }}>TON wallet connected</div>
           <div style={{ fontSize: 10, color: '#7A7875', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{walletAddress}</div>
         </div>
-        <div style={{ fontSize: 10, color: '#3DBA7A', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 3 }}><IcoCheck2 size={10} color="#3DBA7A" /> Active</div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+          <div style={{ fontSize: 10, color: '#3DBA7A', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 3 }}><IcoCheck2 size={10} color="#3DBA7A" /> Active</div>
+          <button
+            onClick={handleDisconnectWallet}
+            style={{ fontSize: 9, padding: '3px 7px', background: 'transparent', color: '#7A7875', border: '.5px solid rgba(154,148,144,.25)', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}
+            title="Disconnect TON wallet"
+          >
+            Disconnect
+          </button>
+        </div>
       </div>
 
       {/* Balance row */}
