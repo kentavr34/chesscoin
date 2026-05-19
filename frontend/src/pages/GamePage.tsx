@@ -68,12 +68,13 @@ function fmtTime(secs: number): string {
 }
 
 function calcBoardSize(isSpectator = false, hasMeta = false): number {
-  // Панели + статус-полоски + action bar + spacer-ы (8px сверху/снизу).
-  // PR-3 hotfix Кенан 2026-05-18: для зрителя добавляем 82px на BottomNav.
-  // Если есть meta-полоска (касса) — +28px (1 строка + margins).
-  const navSpace = isSpectator ? 82 : 0;
+  // 2026-05-19 (Кенан): BottomNav убран в spectator-режиме (action-row уже
+  // играет роль нижней панели). В spectator статус-полоски «Ваш ход» /
+  // «Думает...» не показываются → их высоту в reserved не учитываем.
+  const statusReserve = isSpectator ? 0 : STATUS_GAP * 2;
   const metaSpace = hasMeta ? 28 : 0;
-  const reserved = PANEL_H * 2 + STATUS_GAP * 2 + ACTBAR_H + 16 + navSpace + metaSpace;
+  // 12px = 6px top spacer + 6px bottom spacer (плотный layout без «пустот»).
+  const reserved = PANEL_H * 2 + statusReserve + ACTBAR_H + 12 + metaSpace;
   return Math.floor(Math.min(window.innerWidth, window.innerHeight - reserved));
 }
 
@@ -1099,8 +1100,10 @@ export function GamePage() {
         />
       )}
 
-      {/* ── Верхний spacer — пустое пространство выравнивается между краем экрана и блоком ── */}
-      <div style={{ flex: 1, minHeight: 6 }} />
+      {/* ── Верхний spacer. В playing-режиме растягивается (flex:1) чтобы
+            центрировать доску по вертикали. В spectator-режиме фиксирован
+            на 6px — иначе flex:1 раскидывает блоки и появляются «пустоты». */}
+      <div style={isSpectator ? { height: 6, flexShrink: 0 } : { flex: 1, minHeight: 6 }} />
 
 
       {/* ── Соперник / верхний игрок (spectator: чёрный игрок) ───────────── */}
@@ -1141,8 +1144,8 @@ export function GamePage() {
           display: 'grid',
           gridTemplateColumns: '1fr auto 1fr',
           alignItems: 'center', gap: 8,
-          padding: '8px 12px',
-          margin: '8px 10px 6px',
+          padding: '6px 12px',
+          margin: '6px 10px',
           background: '#1F2233',
           border: '.5px solid rgba(255,255,255,.08)',
           borderRadius: 10,
@@ -1203,15 +1206,18 @@ export function GamePage() {
       )}
 
       {/* ── Статус-полоска верх (между панелью соперника и доской): только
-          «Думает...» для НЕ-публичных партий. */}
-      <div style={{ height: STATUS_GAP, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 4, flexShrink: 0 }}>
-        {!isPublicBattle && !isMyTurn && !gameOver && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#4DDA8A', animation: 'gp-pulse 1.4s infinite', boxShadow: '0 0 7px #4DDA8A' }} />
-            <span style={{ fontSize: '.79rem', fontWeight: 800, color: '#4DDA8A', letterSpacing: '.02em' }}>Думает...</span>
-          </div>
-        )}
-      </div>
+          «Думает...» для НЕ-публичных партий. В spectator её не показываем
+          вообще — статус игры уже отображается в info-strip выше. */}
+      {!isSpectator && (
+        <div style={{ height: STATUS_GAP, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 4, flexShrink: 0 }}>
+          {!isPublicBattle && !isMyTurn && !gameOver && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#4DDA8A', animation: 'gp-pulse 1.4s infinite', boxShadow: '0 0 7px #4DDA8A' }} />
+              <span style={{ fontSize: '.79rem', fontWeight: 800, color: '#4DDA8A', letterSpacing: '.02em' }}>Думает...</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Доска — точный размер, НЕ flex-центрирование ─────────────────── */}
       <div style={{ height: boardSize, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'visible', padding: '0 6px' }}>
@@ -1231,18 +1237,19 @@ export function GamePage() {
         </div>
       </div>
 
-      {/* ── Статус-полоска низ: «Ваш ход» зелёным.
-          Кенан 2026-05-16: «зона активности должна быть чуть ближе к
-          доске, не слипаться с полосой героя». Прибиваем к верху
-          (flex-start + paddingTop). */}
-      <div style={{ height: STATUS_GAP, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 4, flexShrink: 0 }}>
-        {isMyTurn && !gameOver && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4DDA8A', animation: 'gp-pulse 1.4s infinite', boxShadow: '0 0 9px #4DDA8A' }} />
-            <span style={{ fontSize: '.85rem', fontWeight: 800, color: '#4DDA8A', letterSpacing: '.03em' }}>Ваш ход</span>
-          </div>
-        )}
-      </div>
+      {/* ── Статус-полоска низ: «Ваш ход» зелёным. У зрителя её роль играет
+          info-strip над доской, поэтому в spectator-режиме полоска
+          не рендерится (иначе пустые 28px). */}
+      {!isSpectator && (
+        <div style={{ height: STATUS_GAP, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 4, flexShrink: 0 }}>
+          {isMyTurn && !gameOver && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4DDA8A', animation: 'gp-pulse 1.4s infinite', boxShadow: '0 0 9px #4DDA8A' }} />
+              <span style={{ fontSize: '.85rem', fontWeight: 800, color: '#4DDA8A', letterSpacing: '.03em' }}>Ваш ход</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* PR-3 hotfix: блок кассы был здесь, теперь вынесен НАД панелью
           соперника (см. выше). Под доской только «Ваш ход» + моя панель + кнопки. */}
@@ -1277,8 +1284,8 @@ export function GamePage() {
         )}
       </div>
 
-      {/* ── Нижний spacer ────────────────────────────────────────────────── */}
-      <div style={{ flex: 1, minHeight: 6 }} />
+      {/* ── Нижний spacer — фиксированный 6px у зрителя, flex у игрока. */}
+      <div style={isSpectator ? { height: 6, flexShrink: 0 } : { flex: 1, minHeight: 6 }} />
 
       {/* ── Панель действий — ЕДИНЫЙ layout: 4 слота, меняются только 3-й и 4-й ── */}
       <div style={{
@@ -1557,12 +1564,10 @@ export function GamePage() {
         />
       )}
 
-      {/* PR-3 hotfix Кенан 2026-05-18: в режиме зрителя — bottom-nav виден
-          (юзер не играет, ему нужна навигация на другие вкладки). Action-bar
-          выше остаётся (Главная/Сохранить/Донаты/Поделиться) — это локальные
-          действия с этой партией. В playing-режиме nav скрыт чтобы освободить
-          место для action-buttons (Ничья/Сдаться). */}
-      {isSpectator && <BottomNav />}
+      {/* 2026-05-19 (Кенан): BottomNav в spectator-режиме отменён.
+          Action-row (Главная/Сохранить/Донаты/Поделиться) уже играет роль
+          нижней панели — два меню стопкой нелогичны и съедают высоту.
+          В playing-режиме BottomNav и так был скрыт ради Ничья/Сдаться. */}
     </div>
   );
 };
