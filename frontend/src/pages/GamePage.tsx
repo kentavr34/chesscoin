@@ -67,6 +67,12 @@ function fmtTime(secs: number): string {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 }
 
+// Минимальный размер доски — защита от «уехавшей» вёрстки на узких/коротких
+// экранах (например, klavm Telegram WebView с открытой клавиатурой).
+// Если вычисленный reserved-space больше окна, без min-guard получим
+// отрицательный размер → доска ломается.
+const MIN_BOARD_SIZE = 220;
+
 function calcBoardSize(isSpectator = false, hasMeta = false): number {
   // 2026-05-19 (Кенан): BottomNav убран в spectator-режиме (action-row уже
   // играет роль нижней панели). В spectator статус-полоски «Ваш ход» /
@@ -75,7 +81,8 @@ function calcBoardSize(isSpectator = false, hasMeta = false): number {
   const metaSpace = hasMeta ? 28 : 0;
   // 12px = 6px top spacer + 6px bottom spacer (плотный layout без «пустот»).
   const reserved = PANEL_H * 2 + statusReserve + ACTBAR_H + 12 + metaSpace;
-  return Math.floor(Math.min(window.innerWidth, window.innerHeight - reserved));
+  const fit = Math.min(window.innerWidth, window.innerHeight - reserved);
+  return Math.floor(Math.max(MIN_BOARD_SIZE, fit));
 }
 
 function lastMoveFromPgn(pgn: string): { from: string; to: string } | null {
