@@ -30,12 +30,12 @@ const PREMIUM_AVATARS: Array<{
   price: bigint;
   svg: string;       // inline SVG
 }> = [
-  // ── COMMON (500–1000 ᚙ) ──────────────────────────────────────────────────
+  // ── COMMON (10 000–15 000 ᚙ) ─────────────────────────────────────────────
   {
     id: "avatar_knight_blue",
     name: "Blue Knight",
     rarity: "COMMON",
-    price: 500n,
+    price: 10000n,
     svg: makeSVG({
       bg: ["#1A2A6C", "#B21F1F"],
       icon: "♞",
@@ -47,7 +47,7 @@ const PREMIUM_AVATARS: Array<{
     id: "avatar_pawn_green",
     name: "Green Pawn",
     rarity: "COMMON",
-    price: 500n,
+    price: 10000n,
     svg: makeSVG({
       bg: ["#1B5E20", "#33691E"],
       icon: "♟",
@@ -59,7 +59,7 @@ const PREMIUM_AVATARS: Array<{
     id: "avatar_rook_steel",
     name: "Steel Rook",
     rarity: "COMMON",
-    price: 750n,
+    price: 12000n,
     svg: makeSVG({
       bg: ["#263238", "#455A64"],
       icon: "♜",
@@ -71,7 +71,7 @@ const PREMIUM_AVATARS: Array<{
     id: "avatar_bishop_violet",
     name: "Violet Bishop",
     rarity: "COMMON",
-    price: 750n,
+    price: 15000n,
     svg: makeSVG({
       bg: ["#4A148C", "#6A1B9A"],
       icon: "♝",
@@ -80,12 +80,12 @@ const PREMIUM_AVATARS: Array<{
     }),
   },
 
-  // ── RARE (1500–2500 ᚙ) ───────────────────────────────────────────────────
+  // ── RARE (50 000–100 000 ᚙ) ──────────────────────────────────────────────
   {
     id: "avatar_queen_gold",
     name: "Golden Queen",
     rarity: "RARE",
-    price: 1500n,
+    price: 50000n,
     svg: makeSVG({
       bg: ["#F57F17", "#E65100"],
       icon: "♛",
@@ -97,7 +97,7 @@ const PREMIUM_AVATARS: Array<{
     id: "avatar_king_crimson",
     name: "Crimson King",
     rarity: "RARE",
-    price: 2000n,
+    price: 75000n,
     svg: makeSVG({
       bg: ["#B71C1C", "#880E4F"],
       icon: "♚",
@@ -109,7 +109,7 @@ const PREMIUM_AVATARS: Array<{
     id: "avatar_cyber_knight",
     name: "Cyber Knight",
     rarity: "RARE",
-    price: 2500n,
+    price: 100000n,
     svg: makeSVGCyber({
       bg1: "#0D0D2B",
       bg2: "#1A1A4B",
@@ -118,12 +118,12 @@ const PREMIUM_AVATARS: Array<{
     }),
   },
 
-  // ── EPIC (5000–8000 ᚙ) ───────────────────────────────────────────────────
+  // ── EPIC (150 000–250 000 ᚙ) ────────────────────────────────────────────
   {
     id: "avatar_galaxy_queen",
     name: "Galaxy Queen",
     rarity: "EPIC",
-    price: 5000n,
+    price: 150000n,
     svg: makeSVGGalaxy({
       icon: "♛",
       color1: "#7B1FA2",
@@ -135,7 +135,7 @@ const PREMIUM_AVATARS: Array<{
     id: "avatar_dragon_king",
     name: "Dragon King",
     rarity: "EPIC",
-    price: 6000n,
+    price: 200000n,
     svg: makeSVGCyber({
       bg1: "#1A0000",
       bg2: "#3D0000",
@@ -147,7 +147,7 @@ const PREMIUM_AVATARS: Array<{
     id: "avatar_frost_bishop",
     name: "Frost Bishop",
     rarity: "EPIC",
-    price: 8000n,
+    price: 250000n,
     svg: makeSVGGalaxy({
       icon: "♝",
       color1: "#006064",
@@ -156,12 +156,12 @@ const PREMIUM_AVATARS: Array<{
     }),
   },
 
-  // ── LEGENDARY (15000–25000 ᚙ) ────────────────────────────────────────────
+  // ── LEGENDARY (400 000–500 000 ᚙ) ─────────────────────────────────────────
   {
     id: "avatar_legend_zeus",
     name: "Zeus",
     rarity: "LEGENDARY",
-    price: 15000n,
+    price: 400000n,
     svg: makeSVGLegendary({
       icon: "♛",
       color: "#FFD700",
@@ -172,7 +172,7 @@ const PREMIUM_AVATARS: Array<{
     id: "avatar_legend_shadow",
     name: "Shadow Master",
     rarity: "LEGENDARY",
-    price: 25000n,
+    price: 500000n,
     svg: makeSVGLegendary({
       icon: "♚",
       color: "#9C27B0",
@@ -338,7 +338,16 @@ async function main() {
     });
 
     if (existing) {
-      console.log(`  ⏭  Skip: "${avatar.name}" (already exists)`);
+      await prisma.item.update({
+        where: { id: existing.id },
+        data: {
+          priceCoins: avatar.price,
+          category: avatar.rarity === "LEGENDARY" || avatar.rarity === "EPIC" ? "PREMIUM" : "BASIC",
+          rarity: avatar.rarity,
+          sortOrder: SORT_ORDER[avatar.rarity],
+        },
+      });
+      console.log(`  🔄  Updated: "${avatar.name}" price to ${avatar.price} ᚙ`);
       skipped++;
       continue;
     }
