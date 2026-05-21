@@ -405,6 +405,7 @@ export const translations = {
       achievementPuzzler: 'Chess player', achievementPuzzlerDesc: '50 puzzles',
       achievementStreak7: 'On fire', achievementStreak7Desc: '7 days in a row',
       achievementStreak30: 'Unbreakable', achievementStreak30Desc: '30 days in a row',
+      teamFormat: (rank: string, count: number) => `${rank} — Team: ${count} person`,
       settings: {
         title: 'Settings', language: 'Language', sound: 'Sound Effects', soundOn: 'On', soundOff: 'Off', theme: 'Theme', themeDark: 'Dark', themeLight: 'Light',
         langInterface: 'Language & Interface', appLang: 'App language', vibration: 'Vibration',
@@ -1031,6 +1032,7 @@ export const translations = {
       achievementPuzzler: 'Шахматист', achievementPuzzlerDesc: '50 задач',
       achievementStreak7: 'Огонь', achievementStreak7Desc: '7 дней подряд',
       achievementStreak30: 'Несломимый', achievementStreak30Desc: '30 дней подряд',
+      teamFormat: (rank: string, count: number) => `${rank} — Команда: ${count} чел.`,
       settings: {
         title: 'Настройки', language: 'Язык', sound: 'Звуковые эффекты', soundOn: 'Вкл', soundOff: 'Выкл', theme: 'Тема', themeDark: 'Тёмная', themeLight: 'Светлая',
         langInterface: 'Язык и интерфейс', appLang: 'Язык приложения', vibration: 'Вибрация',

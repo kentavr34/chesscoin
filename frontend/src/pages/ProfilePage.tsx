@@ -15,6 +15,7 @@ import { fmtBalance, fmtDate, leagueEmoji } from '@/utils/format';
 import type { Transaction, UserPublic } from '@/types';
 import { JARVIS_LEVELS } from '@/components/ui/JarvisModal';
 import { LeagueProgressBar } from '@/components/ui/LeagueProgressBar';
+import { getRankLabel } from '@/hooks/useReferralRanks';
 
 // Local type for Tab — 'games' включает сохранённые партии (слиты в 2026-05-16)
 type Tab = 'info' | 'games' | 'ach';
@@ -332,12 +333,10 @@ export const ProfilePage: React.FC = () => {
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
             {(displayUser as any)?.militaryRank && (
               <span style={{ ...tagGr, background: 'rgba(255,159,67,0.1)', color: '#FF9F43', borderColor: 'rgba(255,159,67,0.2)' }}>
-                {(displayUser as any).militaryRank.label}
-                {((displayUser as any)?.referralCount ?? 0) > 0 && (
-                  <span style={{ marginLeft: 4, fontSize: 10, opacity: 0.8 }}>
-                    — {((displayUser as any).referralCount ?? 0).toLocaleString()}
-                  </span>
-                )}
+                {t.profile.teamFormat?.(
+                  getRankLabel(t, (displayUser as any).militaryRank.rank),
+                  (displayUser as any).referralCount ?? 0
+                ) ?? `${getRankLabel(t, (displayUser as any).militaryRank.rank)} — Team: ${(displayUser as any).referralCount ?? 0} person`}
               </span>
             )}
             <span style={{ ...tagRobot, display: 'inline-flex', alignItems: 'center', gap: 4 }}><IcoRobot size={11} /> {t.jarvis.levels[Math.max(0, ((displayUser as any)?.jarvisLevel ?? 1) - 1)]?.name ?? `Lv ${(displayUser as any)?.jarvisLevel ?? 1}`}</span>

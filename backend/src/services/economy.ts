@@ -120,13 +120,12 @@ export const updateBalance = async (
 // Welcome бонус (только для новых)
 // ─────────────────────────────────────────
 export const giveWelcomeBonus = async (userId: string) => {
-  const isPhase1 = await canEmit();
   return updateBalance(
     userId,
     config.economy.welcomeBonus,
     TransactionType.WELCOME_BONUS,
     { reason: "new_user" },
-    { isEmission: isPhase1 }
+    { isEmission: true }
   );
 };
 

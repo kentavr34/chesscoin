@@ -68,19 +68,16 @@ export const activateReferral = async (userId: string): Promise<void> => {
     },
   });
 
-  // Rank-based activation bonus — only in Phase 1
-  const emit = await canEmit();
-  if (emit) {
-    const bonuses = getRankBonuses(newCount - 1); // rank BEFORE this new member
-    if (bonuses.activationBonus > 0n) {
-      await updateBalance(
-        user.referrerId,
-        bonuses.activationBonus,
-        TransactionType.REFERRAL_BONUS,
-        { referralId: userId, referralName: user.firstName, rankBonus: bonuses.activationBonus.toString() },
-        { isEmission: true }
-      );
-    }
+  // Rank-based activation bonus — всегда (Фаза 2, Пункт 3)
+  const bonuses = getRankBonuses(newCount - 1); // rank BEFORE this new member
+  if (bonuses.activationBonus > 0n) {
+    await updateBalance(
+      user.referrerId,
+      bonuses.activationBonus,
+      TransactionType.REFERRAL_BONUS,
+      { referralId: userId, referralName: user.firstName, rankBonus: bonuses.activationBonus.toString() },
+      { isEmission: true }
+    );
   }
 
   await prisma.adminNotification.create({

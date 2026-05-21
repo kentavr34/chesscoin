@@ -150,6 +150,34 @@ export const HomePage: React.FC = () => {
     return () => clearInterval(id);
   }, [targetAt]);
 
+  // Welcome notifications (Фаза 2, Пункт 2)
+  useEffect(() => {
+    if (!user) return;
+    const key = `welcome_shown_${user.id}`;
+    const shown = localStorage.getItem(key);
+    
+    let timer: any;
+    if (!shown) {
+      timer = setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('chesscoin:toast', {
+          detail: { text: `${t.home.welcomeBonus} ${t.home.youReceived} 5 000 ᚙ`, type: 'success' }
+        }));
+        
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('chesscoin:toast', {
+            detail: { text: `${t.home.attemptsPerDay}. ${t.home.attemptRestore}`, type: 'info' }
+          }));
+        }, 1500);
+
+        localStorage.setItem(key, 'true');
+      }, 1000);
+    }
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [user?.id, t]);
+
   const handleGameStart = (color: 'white' | 'black', timeMinutes: number, level: JarvisLevel) => {
     const socket = getSocket();
 
