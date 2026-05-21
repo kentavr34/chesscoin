@@ -49,13 +49,6 @@ export const profileApi = {
       refLink: string;
       referrals: UserPublicMin[];
     }>('/profile/referrals'),
-  uploadAvatar: (file: File) => {
-    const form = new FormData();
-    form.append('avatar', file);
-    return api.postForm<{ success: boolean; avatar: string }>('/profile/avatar', form);
-  },
-  deleteAvatar: () =>
-    api.delete<{ success: boolean }>('/profile/avatar'),
   saveTheme: (theme: string) =>
     api.post<{ success: boolean; theme: string }>('/profile/theme', { theme }),
 };

@@ -152,57 +152,172 @@ async function main() {
   ];
 
   // ─── Shop Items — Premium Avatars (A2 Кенан 2026-05-19) ─────────────────
-  // 100 placeholder PREMIUM_AVATAR. Картинка — data:URI SVG (круг с
-  // градиентом и инициалом). До тех пор пока админ не загрузит реальные
-  // через /admin FSM в боте, эти служат placeholder-ами и доступны к покупке.
-  const PREMIUM_AVATAR_PALETTE = [
-    ['#7B61FF', '#3B2D9A'], ['#F0C85A', '#8A6020'], ['#3DBA7A', '#1F5A3A'],
-    ['#4A9EFF', '#1E4D8A'], ['#FF6B6B', '#8A2E2E'], ['#FFA94D', '#8A4F18'],
-    ['#9B85FF', '#4D3DA0'], ['#00C2A8', '#005C50'], ['#FF6BCB', '#8A2E66'],
-    ['#FFD93D', '#8A6F18'],
+  // 24 unique premium SVG avatars (6 white and 6 black pieces: Pawn, Knight, Bishop, Rook, Queen, King on 4 gradient styles)
+  // Encoded as inline Base64 SVG Data URIs. Price ranges strictly between 10K and 500K coins.
+  
+  function makeCommonSVG(icon: string): string {
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+      <defs>
+        <radialGradient id="bg_common" cx="50%" cy="40%" r="70%">
+          <stop offset="0%" stop-color="#1b4d3e"/>
+          <stop offset="100%" stop-color="#0a231c"/>
+        </radialGradient>
+        <filter id="glow_common">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <circle cx="100" cy="100" r="100" fill="url(#bg_common)"/>
+      <circle cx="100" cy="100" r="96" fill="none" stroke="#2ecc71" stroke-width="1.5" opacity="0.4"/>
+      <circle cx="100" cy="100" r="70" fill="none" stroke="#2ecc71" stroke-width="0.8" opacity="0.2"/>
+      <text x="100" y="130" text-anchor="middle" font-size="90" filter="url(#glow_common)" fill="#2ecc71" font-family="serif">${icon}</text>
+      <circle cx="100" cy="100" r="98" fill="none" stroke="#27ae60" stroke-width="3" opacity="0.6"/>
+    </svg>`;
+  }
+
+  function makeRareSVG(icon: string): string {
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+      <defs>
+        <radialGradient id="bg_rare" cx="50%" cy="50%" r="60%">
+          <stop offset="0%" stop-color="#1A1A4B"/>
+          <stop offset="100%" stop-color="#0D0D2B"/>
+        </radialGradient>
+        <filter id="neon_rare">
+          <feGaussianBlur stdDeviation="4" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <circle cx="100" cy="100" r="100" fill="url(#bg_rare)"/>
+      <path d="M100 10 L185 55 L185 145 L100 190 L15 145 L15 55 Z" fill="none" stroke="#00E5FF" stroke-width="1.5" opacity="0.5"/>
+      <path d="M100 30 L170 68 L170 132 L100 170 L30 132 L30 68 Z" fill="none" stroke="#00E5FF" stroke-width="0.8" opacity="0.3"/>
+      <text x="100" y="130" text-anchor="middle" font-size="90" filter="url(#neon_rare)" fill="#00E5FF" font-family="serif">${icon}</text>
+      <line x1="15" y1="55" x2="40" y2="55" stroke="#00E5FF" stroke-width="2" opacity="0.8"/>
+      <line x1="160" y1="55" x2="185" y2="55" stroke="#00E5FF" stroke-width="2" opacity="0.8"/>
+      <line x1="15" y1="145" x2="40" y2="145" stroke="#00E5FF" stroke-width="2" opacity="0.8"/>
+      <line x1="160" y1="145" x2="185" y2="145" stroke="#00E5FF" stroke-width="2" opacity="0.8"/>
+    </svg>`;
+  }
+
+  function makeEpicSVG(icon: string): string {
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+      <defs>
+        <radialGradient id="space_epic" cx="50%" cy="50%" r="70%">
+          <stop offset="0%" stop-color="#7B1FA2" stop-opacity="0.9"/>
+          <stop offset="50%" stop-color="#0D47A1" stop-opacity="0.7"/>
+          <stop offset="100%" stop-color="#050515"/>
+        </radialGradient>
+        <radialGradient id="glow_epic" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#AD1457" stop-opacity="0.6"/>
+          <stop offset="100%" stop-color="transparent"/>
+        </radialGradient>
+        <filter id="starGlow_epic">
+          <feGaussianBlur stdDeviation="5" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <circle cx="100" cy="100" r="100" fill="url(#space_epic)"/>
+      <circle cx="100" cy="100" r="80" fill="url(#glow_epic)" opacity="0.5"/>
+      <circle cx="30" cy="25" r="1.5" fill="white" opacity="0.9"/>
+      <circle cx="160" cy="40" r="1" fill="white" opacity="0.7"/>
+      <circle cx="170" cy="160" r="2" fill="white" opacity="0.8"/>
+      <circle cx="25" cy="155" r="1.5" fill="white" opacity="0.6"/>
+      <circle cx="145" cy="20" r="1" fill="white" opacity="0.9"/>
+      <circle cx="55" cy="175" r="1.5" fill="white" opacity="0.7"/>
+      <circle cx="180" cy="90" r="1" fill="white" opacity="0.8"/>
+      <text x="100" y="130" text-anchor="middle" font-size="90" filter="url(#starGlow_epic)" fill="white" font-family="serif" opacity="0.95">${icon}</text>
+      <circle cx="100" cy="100" r="98" fill="none" stroke="#AD1457" stroke-width="2" opacity="0.5"/>
+    </svg>`;
+  }
+
+  function makeLegendarySVG(icon: string): string {
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+      <defs>
+        <radialGradient id="goldbg_legendary" cx="50%" cy="50%" r="60%">
+          <stop offset="0%" stop-color="#FFD700" stop-opacity="0.25"/>
+          <stop offset="100%" stop-color="#0F0C02"/>
+        </radialGradient>
+        <filter id="legend_filter">
+          <feGaussianBlur stdDeviation="6" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <circle cx="100" cy="100" r="100" fill="#0F0C02"/>
+      <circle cx="100" cy="100" r="100" fill="url(#goldbg_legendary)"/>
+      <circle cx="100" cy="100" r="95" fill="none" stroke="#FFD700" stroke-width="3" opacity="0.9"/>
+      <circle cx="100" cy="100" r="88" fill="none" stroke="#FFD700" stroke-width="0.8" opacity="0.5"/>
+      <circle cx="100" cy="100" r="75" fill="none" stroke="#FFD700" stroke-width="0.5" opacity="0.3"/>
+      <polygon points="100,5 105,20 100,18 95,20" fill="#FFD700" opacity="0.9"/>
+      <polygon points="100,195 105,180 100,182 95,180" fill="#FFD700" opacity="0.9"/>
+      <polygon points="5,100 20,95 18,100 20,105" fill="#FFD700" opacity="0.9"/>
+      <polygon points="195,100 180,95 182,100 180,105" fill="#FFD700" opacity="0.9"/>
+      <text x="100" y="130" text-anchor="middle" font-size="90" filter="url(#legend_filter)" fill="#FFD700" font-family="serif">${icon}</text>
+      <circle cx="50" cy="50" r="3" fill="#FFD700" opacity="0.7" filter="url(#legend_filter)"/>
+      <circle cx="150" cy="50" r="2" fill="#FFD700" opacity="0.6" filter="url(#legend_filter)"/>
+      <circle cx="50" cy="150" r="2" fill="#FFD700" opacity="0.6" filter="url(#legend_filter)"/>
+      <circle cx="150" cy="150" r="3" fill="#FFD700" opacity="0.7" filter="url(#legend_filter)"/>
+    </svg>`;
+  }
+
+  const avatarsDef = [
+    // --- COMMON (10K - 15K) ---
+    { name: "Emerald Pawn (White)", rarity: "COMMON" as const, price: 10_000n, icon: "♙", style: "emerald" },
+    { name: "Emerald Pawn (Black)", rarity: "COMMON" as const, price: 10_000n, icon: "♟", style: "emerald" },
+    { name: "Emerald Bishop (White)", rarity: "COMMON" as const, price: 12_500n, icon: "♗", style: "emerald" },
+    { name: "Emerald Bishop (Black)", rarity: "COMMON" as const, price: 12_500n, icon: "♝", style: "emerald" },
+    { name: "Emerald Knight (White)", rarity: "COMMON" as const, price: 15_000n, icon: "♘", style: "emerald" },
+    { name: "Emerald Knight (Black)", rarity: "COMMON" as const, price: 15_000n, icon: "♞", style: "emerald" },
+
+    // --- RARE (25K - 50K) ---
+    { name: "Cyber Bishop (White)", rarity: "RARE" as const, price: 25_000n, icon: "♗", style: "cyber" },
+    { name: "Cyber Bishop (Black)", rarity: "RARE" as const, price: 25_000n, icon: "♝", style: "cyber" },
+    { name: "Cyber Knight (White)", rarity: "RARE" as const, price: 35_000n, icon: "♘", style: "cyber" },
+    { name: "Cyber Knight (Black)", rarity: "RARE" as const, price: 35_000n, icon: "♞", style: "cyber" },
+    { name: "Cyber Rook (White)", rarity: "RARE" as const, price: 50_000n, icon: "♖", style: "cyber" },
+    { name: "Cyber Rook (Black)", rarity: "RARE" as const, price: 50_000n, icon: "♜", style: "cyber" },
+
+    // --- EPIC (100K - 150K) ---
+    { name: "Galaxy Rook (White)", rarity: "EPIC" as const, price: 100_000n, icon: "♖", style: "galaxy" },
+    { name: "Galaxy Rook (Black)", rarity: "EPIC" as const, price: 100_000n, icon: "♜", style: "galaxy" },
+    { name: "Galaxy Queen (White)", rarity: "EPIC" as const, price: 125_000n, icon: "♕", style: "galaxy" },
+    { name: "Galaxy Queen (Black)", rarity: "EPIC" as const, price: 125_000n, icon: "♛", style: "galaxy" },
+    { name: "Galaxy King (White)", rarity: "EPIC" as const, price: 150_000n, icon: "♔", style: "galaxy" },
+    { name: "Galaxy King (Black)", rarity: "EPIC" as const, price: 150_000n, icon: "♚", style: "galaxy" },
+
+    // --- LEGENDARY (300K - 500K) ---
+    { name: "Royal Knight (White)", rarity: "LEGENDARY" as const, price: 300_000n, icon: "♘", style: "royal" },
+    { name: "Royal Knight (Black)", rarity: "LEGENDARY" as const, price: 300_000n, icon: "♞", style: "royal" },
+    { name: "Royal Queen (White)", rarity: "LEGENDARY" as const, price: 400_000n, icon: "♕", style: "royal" },
+    { name: "Royal Queen (Black)", rarity: "LEGENDARY" as const, price: 400_000n, icon: "♛", style: "royal" },
+    { name: "Royal King (White)", rarity: "LEGENDARY" as const, price: 500_000n, icon: "♔", style: "royal" },
+    { name: "Royal King (Black)", rarity: "LEGENDARY" as const, price: 500_000n, icon: "♚", style: "royal" },
   ];
-  const PREMIUM_AVATAR_TIERS: Array<{ price: number; rarity: 'COMMON' | 'RARE' | 'EPIC' | 'LEGENDARY'; count: number }> = [
-    { price: 50,    rarity: 'COMMON',    count: 20 },
-    { price: 100,   rarity: 'COMMON',    count: 20 },
-    { price: 200,   rarity: 'RARE',      count: 20 },
-    { price: 500,   rarity: 'RARE',      count: 15 },
-    { price: 1000,  rarity: 'EPIC',      count: 12 },
-    { price: 2000,  rarity: 'EPIC',      count: 8 },
-    { price: 5000,  rarity: 'LEGENDARY', count: 5 },
-  ];
+
   const premiumAvatars: Array<{
     name: string; description: string; type: 'PREMIUM_AVATAR'; category: 'PREMIUM';
     rarity: 'COMMON' | 'RARE' | 'EPIC' | 'LEGENDARY'; priceCoins: bigint; sortOrder: number;
     imageUrl: string; previewUrl: string;
   }> = [];
-  let avIdx = 0;
-  for (const tier of PREMIUM_AVATAR_TIERS) {
-    for (let i = 0; i < tier.count; i++) {
-      avIdx += 1;
-      const [c1, c2] = PREMIUM_AVATAR_PALETTE[avIdx % PREMIUM_AVATAR_PALETTE.length];
-      const initial = String.fromCharCode(65 + ((avIdx - 1) % 26));
-      const svg =
-        `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'>` +
-          `<defs><linearGradient id='g${avIdx}' x1='0%' y1='0%' x2='100%' y2='100%'>` +
-            `<stop offset='0%' stop-color='${c1}'/><stop offset='100%' stop-color='${c2}'/>` +
-          `</linearGradient></defs>` +
-          `<circle cx='64' cy='64' r='62' fill='url(#g${avIdx})'/>` +
-          `<text x='64' y='86' font-family='Inter,Arial,sans-serif' font-size='72' font-weight='800' text-anchor='middle' fill='#fff' fill-opacity='0.85'>${initial}</text>` +
-        `</svg>`;
-      const dataUri = `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
-      premiumAvatars.push({
-        name: `Avatar #${String(avIdx).padStart(3, '0')}`,
-        description: `Premium avatar (placeholder ${tier.rarity.toLowerCase()})`,
-        type: 'PREMIUM_AVATAR',
-        category: 'PREMIUM',
-        rarity: tier.rarity,
-        priceCoins: BigInt(tier.price),
-        sortOrder: 100 + avIdx,
-        imageUrl: dataUri,
-        previewUrl: dataUri,
-      });
-    }
-  }
+
+  avatarsDef.forEach((def, index) => {
+    let svg = "";
+    if (def.style === "emerald") svg = makeCommonSVG(def.icon);
+    else if (def.style === "cyber") svg = makeRareSVG(def.icon);
+    else if (def.style === "galaxy") svg = makeEpicSVG(def.icon);
+    else if (def.style === "royal") svg = makeLegendarySVG(def.icon);
+
+    const dataUri = `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
+    premiumAvatars.push({
+      name: def.name,
+      description: `${def.rarity} premium avatar featuring chess piece ${def.icon}`,
+      type: 'PREMIUM_AVATAR',
+      category: 'PREMIUM',
+      rarity: def.rarity,
+      priceCoins: def.price,
+      sortOrder: 100 + index,
+      imageUrl: dataUri,
+      previewUrl: dataUri,
+    });
+  });
 
   const allItems = [...avatarFrames, ...boardSkins, ...pieceSkins, ...moveAnimations, ...pieceSets, ...fonts, ...premiumAvatars];
 

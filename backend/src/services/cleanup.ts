@@ -87,14 +87,15 @@ export const cleanStaleBattles = async (): Promise<void> => {
 
   for (const battle of staleBattles) {
     const creator = battle.sides[0];
+    const bet = battle.bet ?? 0n;
     try {
       // Q1 fix: возврат ставки + отмена батла в одной атомарной транзакции
       await prisma.$transaction(async (tx) => {
         // TAIL-1: используем REFUND — семантически правильный тип для возврата ставки
-        if (creator && battle.bet > 0n) {
+        if (creator && bet > 0n) {
           await updateBalance(
             creator.playerId,
-            battle.bet,
+            bet,
             TransactionType.REFUND,
             { sessionId: battle.id, description: "stale_battle_refund" },
             { tx }

@@ -13,9 +13,9 @@ import { TransactionType } from "@prisma/client";
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
-  fileFilter: (_req: import("express").Request, file: { mimetype: string }, cb: (error: Error | null, acceptFile: boolean) => void) => {
+  fileFilter: (_req, file, cb) => {
     if (file.mimetype.startsWith("image/")) cb(null, true);
-    else cb(new Error("Only image files are allowed"), false);
+    else cb(new Error("Only image files are allowed"));
   },
 });
 
@@ -277,65 +277,6 @@ router.get("/referrals", authMiddleware, async (req: Request, res: Response) => 
   }
 });
 
-// POST /profile/avatar — загрузка кастомного аватара
-router.post(
-  "/avatar",
-  authMiddleware,
-  upload.single("avatar") as import("express").RequestHandler,
-  async (req: Request, res: Response) => {
-    try {
-      const userId = (req as AuthRequest).userId;
-      if (!req.file) return res.status(400).json({ error: "No file provided" });
-
-      const ext = req.file.mimetype.split("/")[1]?.replace("jpeg", "jpg") || "jpg";
-      const key = `avatars/${userId}.${ext}`;
-
-      // Delete old custom avatar from S3 if exists
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { avatar: true, avatarType: true },
-      });
-      if (user?.avatarType === "UPLOAD" && user.avatar) {
-        const oldKey = user.avatar.split(".ru/")[1]?.split("/").slice(1).join("/");
-        if (oldKey) await deleteFromS3(oldKey).catch(() => {});
-      }
-
-      const url = await uploadToS3(key, req.file.buffer, req.file.mimetype);
-
-      await prisma.user.update({
-        where: { id: userId },
-        data: { avatar: url, avatarType: "UPLOAD" },
-      });
-
-      res.json({ success: true, avatar: url });
-    } catch (err: unknown) {
-      res.status(500).json({ error: (err instanceof Error ? err.message : String(err)) });
-    }
-  },
-);
-
-// DELETE /profile/avatar — удалить кастомный аватар (вернуть gradient)
-router.delete("/avatar", authMiddleware, async (req: Request, res: Response) => {
-  try {
-    const userId = (req as AuthRequest).userId;
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { avatar: true, avatarType: true },
-    });
-    if (user?.avatarType === "UPLOAD" && user.avatar) {
-      const oldKey = user.avatar.split(".ru/")[1]?.split("/").slice(1).join("/");
-      if (oldKey) await deleteFromS3(oldKey).catch(() => {});
-    }
-    await prisma.user.update({
-      where: { id: userId },
-      data: { avatar: null, avatarType: "GRADIENT" },
-    });
-    res.json({ success: true });
-  } catch (err: unknown) {
-    res.status(500).json({ error: (err instanceof Error ? err.message : String(err)) });
-  }
-});
-
 // POST /profile/ton-wallet — подключить TON кошелёк
 router.post("/ton-wallet", authMiddleware, validate(WalletSchema), async (req: Request, res: Response) => { // R4
   try {
@@ -586,7 +527,7 @@ router.get("/ton/rate", authMiddleware, async (_req: Request, res: Response) => 
     try {
       const resp = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=the-open-network&vs_currencies=usd", { signal: AbortSignal.timeout(3000) });
       if (resp.ok) {
-        const data = await resp.json();
+        const data = await resp.json() as { "the-open-network"?: { usd?: number } };
         tonUsdt = data["the-open-network"]?.usd ?? tonUsdt;
       }
     } catch {}

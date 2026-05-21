@@ -4,6 +4,7 @@ import type { GameSession, BattleLobbyItem } from '@/types';
 
 // ── Typed events ──
 interface ServerToClient {
+  [event: string]: (...args: any[]) => void;
   'game': (session: GameSession) => void;
   'game:current': (sessions: GameSession[]) => void;
   'game:started': (data: { sessionId: string }) => void;
@@ -13,15 +14,25 @@ interface ServerToClient {
   'battles:list': (battles: BattleLobbyItem[]) => void;
   'battles:added': (battle: BattleLobbyItem) => void;
   'battles:removed': (sessionId: string) => void;
+  'battles:live:list': (battles: GameSession[]) => void;
+  'battles:live:added': (battle: GameSession) => void;
+  'battles:live:removed': (sessionId: string) => void;
   'battle:donated': (data: { donorId: string; amount: string; totalPool: string }) => void;
+  'battle:bravo': (data: { name: string }) => void;
+  'game:saves-count': (data: { sessionId: string; count: number }) => void;
+  'tournament:match': (data: any) => void;
+  'tournament:finished': (data: any) => void;
   'pong': () => void;
 }
 
 interface ClientToServer {
+  [event: string]: (...args: any[]) => void;
   'game:current': (cb: SocketCallback<{ sessions: GameSession[] }>) => void;
   'game:create:bot': (data: { color: 'white' | 'black'; botLevel: number; timeSeconds?: number }, cb: SocketCallback<{ session: GameSession }>) => void;
   'game:create:battle': (data: { color: 'white' | 'black'; duration: number; bet: string; isPrivate?: boolean }, cb: SocketCallback<{ session: GameSession }>) => void;
   'game:join': (data: { code: string }, cb: SocketCallback<{ session: GameSession }>) => void;
+  'game:accept_private': (data: { sessionId: string }, cb: SocketCallback<{ session: GameSession }>) => void;
+  'battles:by-code': (data: { code: string }, cb: SocketCallback<{ session: GameSession }>) => void;
   // Автоформирование публичных батлов: найти соперника либо создать батл
   'matchmaking:quick': (data: { duration: number; bet: string }, cb: SocketCallback<{ session: GameSession; matched: boolean }>) => void;
   'game:move': (data: { sessionId: string; from: string; to: string; promotion?: string }, cb: SocketCallback<{ session: GameSession }>) => void;
@@ -34,7 +45,8 @@ interface ClientToServer {
   'unspectate': (data: { sessionId: string }) => void;
   'battles:subscribe': () => void;
   'battles:unsubscribe': () => void;
-  'battle:donate': (data: { sessionId: string; amount: string }, cb: SocketCallback<{ donationPool: string }>) => void;
+  'battle:donate': (data: { sessionId: string; amount: string; sideId?: string }, cb: SocketCallback<{ donationPool: string }>) => void;
+  'battle:bravo': (data: { sessionId: string; name: string }) => void;
   'ping': () => void;
 }
 

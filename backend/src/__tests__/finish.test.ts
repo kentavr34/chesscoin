@@ -22,21 +22,26 @@ const mockPrismaUserUpdate = jest.fn().mockResolvedValue({});
 const mockApplyReferralIncome = jest.fn().mockResolvedValue(undefined);
 const mockCheckGameAchievements = jest.fn().mockResolvedValue(undefined);
 
+const mockPrismaClient = {
+  session: { findUnique: mockPrismaSessionFindUnique, update: mockPrismaSessionUpdate },
+  sessionSide: { update: mockPrismaSessionSideUpdate, updateMany: mockPrismaSessionSideUpdateMany },
+  platformConfig: { update: mockPrismaPlatformConfigUpdate },
+  adminNotification: { create: mockPrismaAdminNotificationCreate },
+  warBattle: { findUnique: mockPrismaWarBattleFindUnique, update: jest.fn().mockResolvedValue({}) },
+  countryMember: { findUnique: jest.fn().mockResolvedValue(null), update: jest.fn().mockResolvedValue({}) },
+  countryWar: { update: jest.fn().mockResolvedValue({}) },
+  country: { update: jest.fn().mockResolvedValue({}) },
+  user: {
+    update: mockPrismaUserUpdate,
+    findUnique: jest.fn().mockResolvedValue({ id: 'player-1', elo: 1200, jarvisLevel: 1 }),
+    findUniqueOrThrow: jest.fn().mockResolvedValue({ elo: 1200 }),
+  },
+};
+
 jest.mock('@/lib/prisma', () => ({
   prisma: {
-    session: { findUnique: mockPrismaSessionFindUnique, update: mockPrismaSessionUpdate },
-    sessionSide: { update: mockPrismaSessionSideUpdate, updateMany: mockPrismaSessionSideUpdateMany },
-    platformConfig: { update: mockPrismaPlatformConfigUpdate },
-    adminNotification: { create: mockPrismaAdminNotificationCreate },
-    warBattle: { findUnique: mockPrismaWarBattleFindUnique, update: jest.fn().mockResolvedValue({}) },
-    countryMember: { findUnique: jest.fn().mockResolvedValue(null), update: jest.fn().mockResolvedValue({}) },
-    countryWar: { update: jest.fn().mockResolvedValue({}) },
-    country: { update: jest.fn().mockResolvedValue({}) },
-    user: {
-      update: mockPrismaUserUpdate,
-      findUnique: jest.fn().mockResolvedValue({ id: 'player-1', elo: 1200, jarvisLevel: 1 }),
-      findUniqueOrThrow: jest.fn().mockResolvedValue({ elo: 1200 }),
-    },
+    ...mockPrismaClient,
+    $transaction: jest.fn(async (fn: (tx: typeof mockPrismaClient) => unknown) => fn(mockPrismaClient)),
   },
 }));
 

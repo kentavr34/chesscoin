@@ -7,9 +7,8 @@ on:
     branches: [ main ]
 
 jobs:
-  test:
+  validate:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
 
@@ -18,7 +17,15 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Frontend build test
+      - name: Backend generate, build and tests
+        run: |
+          cd backend
+          npm ci
+          npm run generate
+          npm run build
+          npm test -- --runInBand
+
+      - name: Frontend build
         run: |
           cd frontend
           npm ci
@@ -26,8 +33,8 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    needs: [test]
-    if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [validate]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
 
@@ -56,7 +63,7 @@ jobs:
       - name: Health check
         run: |
           sleep 10
-          curl -f https://chesscoin.app/health || echo '⚠️ Health check failed, check logs'
+          curl -f https://chesscoin.app/health
 
       - name: Show logs on failure
         if: failure()

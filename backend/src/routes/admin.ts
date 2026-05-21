@@ -77,9 +77,9 @@ const adminOnly = async (req: Request, res: Response, next: Function) => {
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
-  fileFilter: (_req: import("express").Request, file: { mimetype: string }, cb: (error: Error | null, accept: boolean) => void) => {
+  fileFilter: (_req, file, cb) => {
     if (file.mimetype.startsWith("image/")) cb(null, true);
-    else cb(new Error("Only image files allowed"), false);
+    else cb(new Error("Only image files allowed"));
   },
 });
 

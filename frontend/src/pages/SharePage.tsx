@@ -105,7 +105,7 @@ export const SharePage: React.FC = () => {
   useEffect(() => {
     if (!session || session.status !== 'IN_PROGRESS') return;
     const socket = getSocket();
-    socket.emit('spectate:join', { sessionId: session.id });
+    socket.emit('spectate', { sessionId: session.id });
     const onMove = (payload: any) => {
       if (payload?.sessionId !== session.id) return;
       setSession(prev => prev ? { ...prev, fen: payload.fen, pgn: payload.pgn, currentSideId: payload.currentSideId ?? prev.currentSideId } : prev);
@@ -121,7 +121,7 @@ export const SharePage: React.FC = () => {
     socket.on('battle:donated', onDonated);
     socket.on('game:over', onOver);
     return () => {
-      socket.emit('spectate:leave', { sessionId: session.id });
+      socket.emit('unspectate', { sessionId: session.id });
       socket.off('game', onMove);
       socket.off('battle:donated', onDonated);
       socket.off('game:over', onOver);

@@ -33,6 +33,13 @@ const getGradient = (userId?: string, avatarGradient?: string | null): string =>
 };
 
 export const Avatar: React.FC<AvatarProps> = React.memo(({ user, size = 'm', gold, className = '', onClick }) => {
+  const [hasError, setHasError] = React.useState(false);
+
+  // Сбрасываем стейт ошибки при смене аватара
+  React.useEffect(() => {
+    setHasError(false);
+  }, [user?.avatar, user?.equippedItems?.PREMIUM_AVATAR?.imageUrl]);
+
   const frameStyle = user?.equippedItems?.AVATAR_FRAME
     ? AVATAR_FRAME_STYLE[(user as import("@/types").User).equippedItems?.AVATAR_FRAME?.name ?? ''] ?? null
     : null;
@@ -41,8 +48,10 @@ export const Avatar: React.FC<AvatarProps> = React.memo(({ user, size = 'm', gol
 
   // Премиум-аватар из магазина — берём imageUrl из equippedItems
   const premiumAvatarUrl = user?.equippedItems?.PREMIUM_AVATAR?.imageUrl ?? null;
-  // Показываем: 1) премиум-аватар из магазина, 2) обычное фото (Telegram / загруженное), 3) градиент
+  // Показываем: 1) премиум-аватар из магазина, 2) обычное фото (Telegram), 3) градиент
   const displayAvatar = premiumAvatarUrl ?? (user?.avatar || null);
+
+  const showGradient = !displayAvatar || hasError;
 
   const style: React.CSSProperties = {
     width: w,
@@ -53,7 +62,7 @@ export const Avatar: React.FC<AvatarProps> = React.memo(({ user, size = 'm', gol
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: displayAvatar ? undefined : bg,
+    background: showGradient ? bg : undefined,
     border: frameStyle ? frameStyle.border
       : gold ? `var(--avatar-gold-border-width) solid var(--color-accent, #F5C842)`
       : '2px solid var(--avatar-border-light, rgba(255,255,255,0.18))',
@@ -68,8 +77,8 @@ export const Avatar: React.FC<AvatarProps> = React.memo(({ user, size = 'm', gol
 
   return (
     <div style={style} className={className} onClick={onClick}>
-      {displayAvatar
-        ? <img src={displayAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+      {!showGradient
+        ? <img src={displayAvatar!} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={() => setHasError(true)} />
         : <span style={{ fontSize: fs * 0.55 }}>{initials(user?.firstName ?? '?', user?.lastName)}</span>
       }
     </div>

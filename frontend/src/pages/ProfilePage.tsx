@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { PageLayout, useInfoPopup, InfoPopup } from '@/components/layout/PageLayout';
 import { Avatar } from '@/components/ui/Avatar';
@@ -611,7 +611,7 @@ export const ProfilePage: React.FC = () => {
                           </span>
                           {winner && (
                             <span style={{ fontSize: '.62rem', fontWeight: 700, color: '#3DBA7A', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                              <IcoTrophy size={11} color="#3DBA7A" /> {winner.player?.firstName ?? '?'}
+                              <IcoTrophy size={11} /> {winner.player?.firstName ?? '?'}
                             </span>
                           )}
                           <div style={{ display: 'flex', gap: 4 }}>
@@ -839,7 +839,7 @@ export const ProfilePage: React.FC = () => {
                       </span>
                       {winner && (
                         <span style={{ fontSize: '.65rem', fontWeight: 700, color: '#3DBA7A', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                          <IcoTrophy size={11} color="#3DBA7A" /> {winner.player?.firstName ?? 'Unknown'}
+                          <IcoTrophy size={11} /> {winner.player?.firstName ?? 'Unknown'}
                         </span>
                       )}
                       <button style={{ fontSize: '.62rem', padding: '2px 7px', background: 'rgba(204,96,96,.1)', color: '#CC6060', border: '.5px solid rgba(204,96,96,.25)', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}

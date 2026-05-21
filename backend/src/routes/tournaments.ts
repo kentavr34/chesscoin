@@ -1481,7 +1481,7 @@ export async function processSwissAutoloss() {
         const winnerUserId = winnerPlayerId === match.player1Id ? p1User?.userId : winnerPlayerId === match.player2Id ? p2User?.userId : null;
         const loserUserId = loserPlayerId === match.player1Id ? p1User?.userId : loserPlayerId === match.player2Id ? p2User?.userId : null;
 
-        const targets: Array<{ userId: string | undefined; outcome: 'WIN' | 'LOSS' | 'DRAW' }> = isDraw
+        const targets: Array<{ userId: string | null | undefined; outcome: 'WIN' | 'LOSS' | 'DRAW' }> = isDraw
           ? [
               { userId: p1User?.userId, outcome: 'DRAW' },
               { userId: p2User?.userId, outcome: 'DRAW' },

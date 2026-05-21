@@ -210,7 +210,7 @@ export const HomePage: React.FC = () => {
   const attempts = user.attempts ?? 3;
   const maxAttempts = user.maxAttempts ?? 3;
   const initial = user.firstName?.[0]?.toUpperCase();
-  const countryCode = user.countryMember?.country?.code;
+  const countryCode = (user.countryMember?.country as any)?.code || user.countryMember?.country?.flag;
 
   const blkScale = (key: string) => pressedBlk === key ? 'scale(.94)' : 'scale(1)';
 

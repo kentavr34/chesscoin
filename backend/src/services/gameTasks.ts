@@ -170,27 +170,50 @@ export async function checkDailyLoginTask(userId: string): Promise<void> {
       const alreadyDone = await redis.get(dailyKey);
       if (alreadyDone) continue;
 
-      // Начисляем (DAILY_LOGIN разрешает повторное выполнение каждый день)
-      // Используем специальную запись с датой как суффиксом
-      const dailyTaskId = `${task.id}:${todayStr}`;
+      // Атомарный Redis-замок на 10 секунд для предотвращения race condition
+      const lockKey = `daily_lock:${userId}:${task.id}:${todayStr}`;
+      const locked = await redis.set(lockKey, '1', 'EX', 10, 'NX');
+      if (!locked) continue; // параллельный запрос уже обрабатывается
 
-      const exists = await prisma.completedTask.findFirst({
-        where: { userId, taskId: task.id, completedAt: { gte: today } },
-      });
-      if (exists) {
+      try {
+        const exists = await prisma.completedTask.findFirst({
+          where: { userId, taskId: task.id, completedAt: { gte: today } },
+        });
+        if (exists) {
+          await redis.setex(dailyKey, 86400, '1');
+          continue;
+        }
+
+        // Заменяем create на upsert для предотвращения P2002
+        await prisma.completedTask.upsert({
+          where: {
+            userId_taskId: {
+              userId,
+              taskId: task.id,
+            },
+          },
+          create: {
+            userId,
+            taskId: task.id,
+            completedAt: new Date(),
+          },
+          update: {
+            completedAt: new Date(),
+          },
+        });
+
+        await updateBalance(userId, task.winningAmount, TransactionType.TASK_REWARD, {
+          taskId: task.id, date: todayStr, type: 'daily_login',
+        }, { isEmission: true });
+
+        // Помечаем в Redis на 24 часа
         await redis.setex(dailyKey, 86400, '1');
-        continue;
+
+        logger.info(`[gameTasks] Daily login bonus: user ${userId} +${task.winningAmount} ᚙ`);
+      } finally {
+        // Удаляем временный замок
+        await redis.del(lockKey).catch(() => {});
       }
-
-      await prisma.completedTask.create({ data: { userId, taskId: task.id } });
-      await updateBalance(userId, task.winningAmount, TransactionType.TASK_REWARD, {
-        taskId: task.id, date: todayStr, type: 'daily_login',
-      }, { isEmission: true });
-
-      // Помечаем в Redis на 24 часа
-      await redis.setex(dailyKey, 86400, '1');
-
-      logger.info(`[gameTasks] Daily login bonus: user ${userId} +${task.winningAmount} ᚙ`);
     }
   } catch (err) {
     logger.error('[gameTasks] checkDailyLoginTask error:', err);

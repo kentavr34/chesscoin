@@ -18,17 +18,13 @@ jobs:
           timeout: 300s
           script: |
             set -e
-            echo "=== Docker Compose Config (environment section) ==="
+            echo "=== Docker Compose services ==="
             cd /opt/chesscoin
-            docker compose config 2>&1 | grep -A 50 "environment:" | head -80
+            docker compose ps --services
 
             echo ""
             echo "=== .env file exists? ==="
             ls -la /opt/chesscoin/.env 2>&1 || echo "❌ .env NOT FOUND"
-
-            echo ""
-            echo "=== .env content (first 5 lines) ==="
-            head -5 /opt/chesscoin/.env 2>&1 || echo "❌ Cannot read .env"
 
             echo ""
             echo "=== Container status ==="
@@ -37,10 +33,6 @@ jobs:
             echo ""
             echo "=== Backend logs (last 30 lines) ==="
             docker compose logs backend --tail=30 2>&1 || echo "❌ No backend logs"
-
-            echo ""
-            echo "=== pgbouncer credentials check ==="
-            docker compose exec -T pgbouncer cat /etc/pgbouncer/userlist.txt 2>&1 || echo "❌ Cannot read pgbouncer userlist"
 
             echo ""
             echo "=== Postgres user check ==="

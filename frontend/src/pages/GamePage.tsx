@@ -1,4 +1,4 @@
-﻿// frontend/src/pages/GamePage.tsx
+// frontend/src/pages/GamePage.tsx
 // АРХТЕКТУРА: useSocket.ts (App уровень) слушает 'game' события → store.
 // GamePage читает из store. Для ходов/сдачи/ничьи: socket.emit(...).
 
@@ -911,7 +911,7 @@ export function GamePage() {
   // Объявление `hasMeta` ниже зависит от isBattle/hasBet — те объявлены до этого блока.
   const [boardSize, setBoardSize] = useState(() => calcBoardSize());
   useEffect(() => {
-    const recalc = () => setBoardSize(calcBoardSize(isSpectator, isBattle && hasBet));
+    const recalc = () => setBoardSize(calcBoardSize(!!isSpectator, !!(isBattle && hasBet)));
     recalc();
     window.addEventListener('resize', recalc);
     return () => window.removeEventListener('resize', recalc);
@@ -1493,7 +1493,7 @@ export function GamePage() {
               </div>
               <button
                 onClick={() => {
-                  getSocket().emit('battle:donate', { sessionId, amount: String(selectedDonateAmt) });
+                  getSocket().emit('battle:donate', { sessionId, amount: String(selectedDonateAmt) }, () => {});
                   setShowDonateMenu(false);
                 }}
                 style={{

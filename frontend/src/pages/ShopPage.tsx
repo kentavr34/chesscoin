@@ -21,7 +21,7 @@ type Tab = 'avatars' | 'frames' | 'visual' | 'themes' | 'effects' | 'exchange';
 
 // S1: маппинг вкладок → типы товаров
 const TAB_TYPE: Partial<Record<Tab, ItemType | ItemType[]>> = {
-  avatars:  ['PIECE_SET', 'PIECE_SKIN'],  // наборы/скины фигур (PREMIUM_AVATAR в разработке)
+  avatars:  'PREMIUM_AVATAR',
   frames:   'AVATAR_FRAME',
   visual:   'BOARD_SKIN',
   effects:  'MOVE_ANIMATION',             // анимации ходов (WIN_ANIMATION/CAPTURE_EFFECT в разработке)
@@ -741,13 +741,14 @@ export const ShopPage: React.FC = () => {
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, padding: '0 18px 24px' }}>
             {items.map((item) => (
-              <ItemCard
+              <AvatarItemCard
                 key={item.id}
                 item={item}
                 loading={actionId === item.id}
                 highlighted={item.id === highlightItemId}
                 onPurchase={() => handlePurchase(item)}
                 onEquip={() => handleEquip(item)}
+                onUnequip={() => handleUnequip(item)}
               />
             ))}
           </div>

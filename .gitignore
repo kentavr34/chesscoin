@@ -56,3 +56,20 @@ coverage/
 
 # ─── Runtime data ────────────────────────────────────────────
 bot_inbox/
+
+# Local Codex/Kenan workspace files (never commit)
+/AGENTS.md
+/PROJECTS.json
+/HISTORY.json
+/projects/
+/vault.enc
+/vault_decrypt.bat
+/chesscoin-archive/
+/chesscoin-backups/
+/*.bak_before_*
+/build_994_docx.js
+/чат/
+
+# Legacy local design/docs snapshots
+/ROADMAP.md
+/frontend/CHESS_TIMER_DESIGN_SPEC.txt

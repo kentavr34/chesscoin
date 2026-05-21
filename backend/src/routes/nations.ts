@@ -881,7 +881,7 @@ export async function settleClanBattle(battle: Record<string,unknown>) {
   });
 
   const contributions: Array<{ id: string; userId: string; clanId: string; amount: bigint | string; battleId: string }> = (battle.contributions as Array<{ id: string; userId: string; clanId: string; amount: bigint | string; battleId: string }> | undefined) ?? await prisma.clanBattleContribution.findMany({
-    where: { battleId: battle.id },
+    where: { battleId: battle.id as string },
   });
 
   const totalPool = contributions.reduce<bigint>((s, c) => s + BigInt(c.amount as string | bigint), 0n);
@@ -954,15 +954,17 @@ export async function settleClanBattle(battle: Record<string,unknown>) {
   const winnerPlayerWins = await prisma.clanBattleGame.groupBy({
     by: ["winnerId"],
     where: {
-      battleId: battle.id,
-      winnerClanId,
+      battleId: battle.id as string,
+      winnerClanId: winnerClanId as string,
       winnerId: { not: null },
     },
     _count: { winnerId: true },
   });
   // Преобразуем в Map: userId → winCount
   const winsMap = new Map<string, number>(
-    winnerPlayerWins.map((r: Record<string,unknown> & { winnerId?: string; _count?: { winnerId?: number }; userId?: string; firstName?: string; telegramId?: string }) => [r.winnerId, (r._count as Record<string,unknown> | undefined)?.winnerId as number ?? 0])
+    winnerPlayerWins
+      .filter((r): r is typeof r & { winnerId: string } => typeof r.winnerId === "string")
+      .map((r) => [r.winnerId, r._count.winnerId])
   );
 
   // Сортируем победителей по числу побед (по убыванию)

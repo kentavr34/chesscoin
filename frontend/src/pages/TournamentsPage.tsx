@@ -620,6 +620,7 @@ interface TournamentDetail {
 }
 
 const TournamentDetailModal: React.FC<{ tournamentId: string; onClose: () => void }> = ({ tournamentId, onClose }) => {
+  const navigate = useNavigate();
   const t = useT();
   const tt = t.tournaments;
   const [data, setData] = useState<TournamentDetail | null>(null);
