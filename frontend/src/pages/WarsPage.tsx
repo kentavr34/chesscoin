@@ -237,15 +237,15 @@ const CountryDetailModal: React.FC<{
     const sock = getSocket();
     const channel = `user:${user.id}`;
     const handler = (payload: any) => {
-      const t = payload?.type;
-      if (t === 'country:join-request' && data?.isCommander) {
+      const evType = payload?.type;
+      if (evType === 'country:join-request' && data?.isCommander) {
         warsApi.pending().then(r => setPending(r.pending)).catch(() => {});
-      } else if (t === 'country:join-approved' || t === 'country:join-rejected') {
+      } else if (evType === 'country:join-approved' || evType === 'country:join-rejected') {
         warsApi.country(countryId).then(setData).catch(() => {});
-        toast(t === 'country:join-approved' ? 'Заявка одобрена' : 'Заявка отклонена', t === 'country:join-approved' ? 'success' : 'info');
-      } else if (t === 'country:commander-assigned') {
+        toast(evType === 'country:join-approved' ? t.wars.joinApproved : t.wars.joinRejected, evType === 'country:join-approved' ? 'success' : 'info');
+      } else if (evType === 'country:commander-assigned') {
         // PR-3: первый зашедший в страну → автоматически главком
-        toast(payload?.message ?? 'Ты теперь главнокомандующий', 'success');
+        toast(payload?.message ?? t.wars.youAreCommander, 'success');
         warsApi.country(countryId).then(setData).catch(() => {});
       }
     };
@@ -297,7 +297,7 @@ const CountryDetailModal: React.FC<{
       // PR-3: первый зашедший в страну → автоматически главком (APPROVED + взнос
       // списан сразу). Иначе PENDING-заявка ждёт одобрения главкома.
       if (res.isCommander) {
-        toast('Ты теперь главнокомандующий!', 'success');
+        toast(t.wars.youAreCommander, 'success');
       } else {
         toast(res.pending ? t.wars.joinPendingSent : t.wars.joined, 'success');
       }
@@ -487,7 +487,7 @@ const CountryDetailModal: React.FC<{
                       {p.user.firstName}{p.user.username ? ` · @${p.user.username}` : ''}
                     </div>
                     <div style={{ fontSize: 10, color: '#7A7875', marginTop: 1 }}>
-                      ELO {p.user.elo} · {p.user.referralCount} реф.
+                      ELO {p.user.elo} · {t.wars.referralCountShort(p.user.referralCount)}
                     </div>
                   </div>
                   <button
@@ -526,7 +526,7 @@ const CountryDetailModal: React.FC<{
           <span>{t.wars.fightersLabel} ({members.length})</span>
           {hasActiveWar && (
             <span style={{ fontSize: 9, fontWeight: 700, color: '#FF4D6A', letterSpacing: '.06em' }}>
-              СОРТ: ПОБЕДЫ В ВОЙНЕ
+              {t.wars.sortByWins}
             </span>
           )}
         </div>
@@ -545,7 +545,7 @@ const CountryDetailModal: React.FC<{
                   color: '#0D0D12', fontSize: 9, fontWeight: 900, letterSpacing: '.04em',
                   whiteSpace: 'nowrap',
                 }}>
-                  ГК
+                  {t.wars.gk}
                 </div>
               ) : (
                 <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: '#7A7875', width: 20, textAlign: 'center', flexShrink: 0 }}>
@@ -573,7 +573,7 @@ const CountryDetailModal: React.FC<{
                   <span>{m.user?.firstName} {m.user?.lastName ?? ''}</span>
                   {m.isCommander && (
                     <span style={{ fontSize: 9, color: '#D4A843', fontWeight: 700 }}>
-                      Главком · {m.referralCount ?? 0} реф.
+                      {t.wars.commanderLabel} · {t.wars.referralCountShort(m.referralCount ?? 0)}
                     </span>
                   )}
                 </div>
@@ -587,13 +587,13 @@ const CountryDetailModal: React.FC<{
                       <svg width="8" height="8" viewBox="0 0 10 10" fill="currentColor" style={{ flexShrink: 0 }}>
                         <polygon points="5,1 9,9 1,9"/>
                       </svg>
-                      {m.currentWarWins} в войне
+                      {t.wars.warWinsCount(m.currentWarWins)}
                     </span>
                   )}
                 </div>
                 {BigInt(m.contribution ?? '0') > 0n && (
                   <div style={{ fontSize: 9, color: '#D4A843', marginTop: 2, fontFamily: "'JetBrains Mono',monospace" }}>
-                    вклад {fmtBalance(m.contribution)}
+                    {t.wars.contributionLabel} {fmtBalance(m.contribution)}
                   </div>
                 )}
               </div>

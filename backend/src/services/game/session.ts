@@ -91,7 +91,7 @@ export const createBotSession = async (
 
   // Проверяем разблокировку уровня (нельзя играть уровень выше разблокированного + 1)
   const maxAllowed = (user.jarvisLevel ?? 1) + 1;
-  if (botLevel > maxAllowed) throw new Error(`Уровень ${botLevel} ещё не разблокирован. Сначала победи уровень ${maxAllowed - 1}`);
+  if (botLevel > maxAllowed) throw new Error(`Level ${botLevel} is not unlocked yet. Beat level ${maxAllowed - 1} first`);
 
   const bot = await getBot();
   const chess = new Chess();

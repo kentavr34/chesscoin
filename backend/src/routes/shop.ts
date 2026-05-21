@@ -47,7 +47,7 @@ shopRouter.get("/items", authMiddleware, async (req: Request, res: Response) => 
 shopRouter.post("/purchase", authMiddleware, async (req: Request, res: Response) => {
   try {
     const { itemId } = req.body;
-    if (!itemId) return res.status(400).json({ error: "itemId обязателен" });
+    if (!itemId) return res.status(400).json({ error: "itemId is required" });
 
     const userId = req.user!.id;
 
@@ -75,7 +75,7 @@ shopRouter.post("/purchase", authMiddleware, async (req: Request, res: Response)
       data: { userId, itemId },
     });
 
-    res.json({ success: true, message: `Куплено: ${item.name}` });
+    res.json({ success: true, message: `Purchased: ${item.name}` });
   } catch (err: unknown) {
     logger.error("[shop/purchase]", err);
     res.status(500).json({ error: "Purchase error" });
@@ -86,7 +86,7 @@ shopRouter.post("/purchase", authMiddleware, async (req: Request, res: Response)
 shopRouter.post("/equip", authMiddleware, async (req: Request, res: Response) => {
   try {
     const { itemId } = req.body;
-    if (!itemId) return res.status(400).json({ error: "itemId обязателен" });
+    if (!itemId) return res.status(400).json({ error: "itemId is required" });
 
     const userId = req.user!.id;
 
@@ -139,7 +139,7 @@ shopRouter.post("/equip", authMiddleware, async (req: Request, res: Response) =>
 shopRouter.post("/unequip", authMiddleware, async (req: Request, res: Response) => {
   try {
     const { itemId } = req.body;
-    if (!itemId) return res.status(400).json({ error: "itemId обязателен" });
+    if (!itemId) return res.status(400).json({ error: "itemId is required" });
 
     const userId = req.user!.id;
 

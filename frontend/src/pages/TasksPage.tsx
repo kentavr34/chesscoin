@@ -188,10 +188,10 @@ export const TasksPage: React.FC = () => {
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: '#EAE2CC' }}>
-              {t.lessons?.title ?? 'Уроки'}
+              {t.lessons.title}
             </div>
             <div style={{ fontSize: 11, color: '#9A9490', marginTop: 2 }}>
-              {t.lessons?.openByProgress ?? 'Открываются по мере прохождения'}
+              {t.lessons.openByProgress}
             </div>
           </div>
           <div style={{ fontSize: 14, color: '#9B85FF', fontWeight: 800 }}>→</div>

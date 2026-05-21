@@ -3,27 +3,11 @@ import { PageLayout } from '@/components/layout/PageLayout';
 import { profileApi } from '@/api';
 import { fmtBalance, fmtDate } from '@/utils/format';
 import type { Transaction } from '@/types';
+import { useT } from '@/i18n/useT';
 
-// ── Метки типов транзакций ─────────────────────────────────────────────────────
-const TX_LABELS: Record<string, string> = {
-  BATTLE_WIN:       'Победа в батле',
-  BATTLE_BET:       'Ставка в батле',
-  BATTLE_REFUND:    'Возврат ставки',
-  JARVIS_WIN:       'Победа над Jarvis',
-  JARVIS_LOSE:      'Поражение Jarvis',
-  REFERRAL_BONUS:   'Реферальный бонус',
-  TASK_REWARD:      'Награда за задание',
-  SHOP_PURCHASE:    'Покупка в магазине',
-  TOURNAMENT_PRIZE: 'Приз турнира',
-  TOURNAMENT_FEE:   'Взнос в турнир',
-  WAR_REWARD:       'Награда за войну',
-  DEPOSIT:          'Пополнение',
-  WITHDRAWAL:       'Вывод средств',
-  ADMIN_CREDIT:     'Зачисление',
-};
-
-function formatTxType(type: string): string {
-  if (TX_LABELS[type]) return TX_LABELS[type];
+function formatTxType(type: string, t: any): string {
+  const types = t.txHistory.types as Record<string, string>;
+  if (types[type]) return types[type];
   // Авто-форматирование: SOME_TYPE → Some Type
   return type
     .split('_')
@@ -45,12 +29,12 @@ function getTxDirection(tx: Transaction): TxDirection {
 }
 
 // ── Группировка транзакций по дате ────────────────────────────────────────────
-function groupByDate(transactions: Transaction[]): Array<{ label: string; items: Transaction[] }> {
+function groupByDate(transactions: Transaction[], t: any): Array<{ label: string; items: Transaction[] }> {
   const today = new Date();
   const yesterday = new Date(today);
   yesterday.setDate(today.getDate() - 1);
 
-  const fmt = (d: Date) => d.toLocaleDateString('ru-RU', { year: 'numeric', month: 'long', day: 'numeric' });
+  const fmt = (d: Date) => d.toLocaleDateString(t.settings?.language === 'ru' ? 'ru-RU' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   const todayStr = fmt(today);
   const yesterdayStr = fmt(yesterday);
 
@@ -59,7 +43,7 @@ function groupByDate(transactions: Transaction[]): Array<{ label: string; items:
   for (const tx of transactions) {
     const d = tx.createdAt ? new Date(tx.createdAt) : new Date(0);
     const label = fmt(d);
-    const displayLabel = label === todayStr ? 'Сегодня' : label === yesterdayStr ? 'Вчера' : label;
+    const displayLabel = label === todayStr ? t.txHistory.today : label === yesterdayStr ? t.txHistory.yesterday : label;
     if (!groups.has(displayLabel)) groups.set(displayLabel, []);
     groups.get(displayLabel)!.push(tx);
   }
@@ -91,6 +75,7 @@ const TxIcon: React.FC<{ direction: TxDirection }> = ({ direction }) => {
 
 // ── Одна транзакция ───────────────────────────────────────────────────────────
 const TxRow: React.FC<{ tx: Transaction }> = ({ tx }) => {
+  const t = useT();
   const direction = getTxDirection(tx);
   const isIncome  = direction === 'income';
   const isExpense = direction === 'expense';
@@ -121,7 +106,7 @@ const TxRow: React.FC<{ tx: Transaction }> = ({ tx }) => {
           color: '#EAE2CC',
           whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
         }}>
-          {formatTxType(tx.type)}
+          {formatTxType(tx.type, t)}
         </div>
         <div style={{ fontSize: '.65rem', color: '#5A5248', marginTop: 2 }}>
           {tx.createdAt ? fmtDate(tx.createdAt) : ''}
@@ -157,6 +142,7 @@ const SectionLabel: React.FC<{ label: string }> = ({ label }) => (
 
 // ── Итоговая сводка ────────────────────────────────────────────────────────────
 const SummaryHeader: React.FC<{ transactions: Transaction[] }> = ({ transactions }) => {
+  const t = useT();
   const { totalIn, totalOut } = useMemo(() => {
     let inn = 0n;
     let out = 0n;
@@ -184,7 +170,7 @@ const SummaryHeader: React.FC<{ transactions: Transaction[] }> = ({ transactions
         borderRadius: 12, padding: '10px 12px',
       }}>
         <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#3DBA7A', textTransform: 'uppercase', letterSpacing: '.12em', marginBottom: 4 }}>
-          Приход
+          {t.txHistory.income}
         </div>
         <div style={{ fontSize: '.92rem', fontWeight: 900, color: '#3DBA7A', fontFamily: "'JetBrains Mono', monospace" }}>
           +{fmtBalance(totalIn)}
@@ -199,7 +185,7 @@ const SummaryHeader: React.FC<{ transactions: Transaction[] }> = ({ transactions
         borderRadius: 12, padding: '10px 12px',
       }}>
         <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#CC6060', textTransform: 'uppercase', letterSpacing: '.12em', marginBottom: 4 }}>
-          Расход
+          {t.txHistory.expense}
         </div>
         <div style={{ fontSize: '.92rem', fontWeight: 900, color: '#CC6060', fontFamily: "'JetBrains Mono', monospace" }}>
           −{fmtBalance(totalOut)}
@@ -211,6 +197,7 @@ const SummaryHeader: React.FC<{ transactions: Transaction[] }> = ({ transactions
 
 // ── Главная страница ───────────────────────────────────────────────────────────
 export const TransactionHistoryPage: React.FC = () => {
+  const t = useT();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading]           = useState(true);
 
@@ -223,10 +210,10 @@ export const TransactionHistoryPage: React.FC = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  const groups = useMemo(() => groupByDate(transactions), [transactions]);
+  const groups = useMemo(() => groupByDate(transactions, t), [transactions, t]);
 
   return (
-    <PageLayout title="История транзакций" backTo="/profile" centered>
+    <PageLayout title={t.txHistory.title} backTo="/profile" centered>
       <style>{`@keyframes tx-spin { to { transform: rotate(360deg) } }`}</style>
 
       {/* Загрузка */}
@@ -255,10 +242,10 @@ export const TransactionHistoryPage: React.FC = () => {
             📋
           </div>
           <div style={{ fontSize: '.9rem', fontWeight: 700, color: '#7A7875' }}>
-            Транзакций пока нет
+            {t.txHistory.noTx}
           </div>
           <div style={{ fontSize: '.72rem', color: '#4A4540', textAlign: 'center', maxWidth: 220 }}>
-            Сыграй первую партию или пополни баланс — история появится здесь
+            {t.txHistory.noTxDesc}
           </div>
         </div>
       )}

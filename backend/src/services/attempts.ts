@@ -41,7 +41,7 @@ export const purchaseAttempts = async (
   const totalCost = config.economy.attemptPrice * BigInt(actualCount);
 
   if (user.balance < totalCost) {
-    throw new Error(`Недостаточно монет. Нужно ${totalCost} ᚙ.`);
+    throw new Error(`Not enough coins. Need ${totalCost} ᚙ.`);
   }
 
   await prisma.$transaction(async (tx) => {

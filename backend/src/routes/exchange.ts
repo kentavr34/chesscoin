@@ -55,7 +55,7 @@ exchangeRouter.get('/orders', authMiddleware, async (req: Request, res: Response
     });
   } catch (err) {
     logger.error('[exchange/orders GET]', err);
-    res.status(500).json({ error: 'Ошибка загрузки стакана' });
+    res.status(500).json({ error: 'Failed to load orderbook' });
   }
 });
 
@@ -100,7 +100,7 @@ exchangeRouter.get('/price-history', authMiddleware, async (req: Request, res: R
     });
   } catch (err) {
     logger.error('[exchange/price-history]', err);
-    res.status(500).json({ error: 'Ошибка истории цены' });
+    res.status(500).json({ error: 'Failed to load price history' });
   }
 });
 
@@ -109,22 +109,22 @@ exchangeRouter.post('/orders', authMiddleware, async (req: Request, res: Respons
   try {
     const userId = req.user!.id;
     const { amountCoins, priceTon } = req.body;
-    if (!amountCoins || !priceTon) return res.status(400).json({ error: 'amountCoins и priceTon обязательны' });
+    if (!amountCoins || !priceTon) return res.status(400).json({ error: 'amountCoins and priceTon are required' });
 
     const amount = BigInt(String(amountCoins));
     const price  = Number(priceTon);
-    if (amount < MIN_ORDER_COINS)  return res.status(400).json({ error: `Минимум ${MIN_ORDER_COINS.toLocaleString()} ᚙ` });
-    if (amount > MAX_ORDER_COINS)  return res.status(400).json({ error: `Максимум ${MAX_ORDER_COINS.toLocaleString()} ᚙ` });
-    if (price < MIN_PRICE_TON)     return res.status(400).json({ error: `Минимальная цена ${MIN_PRICE_TON} TON/1M ᚙ` });
-    if (price > MAX_PRICE_TON)     return res.status(400).json({ error: `Слишком высокая цена` });
+    if (amount < MIN_ORDER_COINS)  return res.status(400).json({ error: `Minimum ${MIN_ORDER_COINS.toLocaleString()} ᚙ` });
+    if (amount > MAX_ORDER_COINS)  return res.status(400).json({ error: `Maximum ${MAX_ORDER_COINS.toLocaleString()} ᚙ` });
+    if (price < MIN_PRICE_TON)     return res.status(400).json({ error: `Minimum price is ${MIN_PRICE_TON} TON/1M ᚙ` });
+    if (price > MAX_PRICE_TON)     return res.status(400).json({ error: 'Price is too high' });
 
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { balance: true, tonWalletAddress: true } });
-    if (!user?.tonWalletAddress)   return res.status(403).json({ error: 'TON_WALLET_REQUIRED', message: 'Подключи TON-кошелёк для торговли на бирже' });
-    if (user.balance < amount)     return res.status(400).json({ error: 'INSUFFICIENT_COINS', message: 'Недостаточно ᚙ на балансе' });
+    if (!user?.tonWalletAddress)   return res.status(403).json({ error: 'TON_WALLET_REQUIRED', message: 'Connect TON wallet to trade on the exchange' });
+    if (user.balance < amount)     return res.status(400).json({ error: 'INSUFFICIENT_COINS', message: 'Insufficient ᚙ balance' });
 
     // P4: Лимит открытых ордеров на пользователя (макс 5)
     const openCount = await prisma.p2POrder.count({ where: { sellerId: userId, status: 'OPEN', orderType: 'SELL' } });
-    if (openCount >= 5) return res.status(400).json({ error: 'MAX_OPEN_ORDERS', message: 'Максимум 5 открытых SELL-ордеров. Отмените старый перед созданием нового.' });
+    if (openCount >= 5) return res.status(400).json({ error: 'MAX_OPEN_ORDERS', message: 'Maximum 5 open SELL orders. Cancel an old one before creating a new one.' });
 
     const totalTon = (Number(amount) / 1_000_000) * price;
     const feeTon   = totalTon * PLATFORM_FEE_PERCENT;
@@ -138,7 +138,7 @@ exchangeRouter.post('/orders', authMiddleware, async (req: Request, res: Respons
     res.json({ order: { id: order.id, amountCoins: order.amountCoins.toString(), priceTon: order.priceTon, totalTon: order.totalTon, feeTon: order.feeTon, status: order.status, createdAt: order.createdAt } });
   } catch (err) {
     logger.error('[exchange/orders POST]', err);
-    res.status(500).json({ error: 'Ошибка создания ордера' });
+    res.status(500).json({ error: 'Failed to create order' });
   }
 });
 
@@ -148,9 +148,9 @@ exchangeRouter.delete('/orders/:id', authMiddleware, async (req: Request, res: R
     const userId  = req.user!.id;
     const orderId = req.params.id;
     const order   = await prisma.p2POrder.findUnique({ where: { id: orderId } });
-    if (!order)                     return res.status(404).json({ error: 'Ордер не найден' });
-    if (order.sellerId !== userId)  return res.status(403).json({ error: 'Только создатель может отменить ордер' });
-    if (order.status !== 'OPEN')    return res.status(409).json({ error: 'Ордер уже закрыт' });
+    if (!order)                     return res.status(404).json({ error: 'Order not found' });
+    if (order.sellerId !== userId)  return res.status(403).json({ error: 'Only the creator can cancel this order' });
+    if (order.status !== 'OPEN')    return res.status(409).json({ error: 'Order is already closed' });
 
     await prisma.$transaction(async (tx) => {
       await tx.p2POrder.update({ where: { id: orderId }, data: { status: 'CANCELLED', cancelledAt: new Date() } });
@@ -161,7 +161,7 @@ exchangeRouter.delete('/orders/:id', authMiddleware, async (req: Request, res: R
     res.json({ success: true });
   } catch (err) {
     logger.error('[exchange/orders DELETE]', err);
-    res.status(500).json({ error: 'Ошибка отмены ордера' });
+    res.status(500).json({ error: 'Failed to cancel order' });
   }
 });
 
@@ -171,24 +171,24 @@ exchangeRouter.post('/orders/:id/execute', authMiddleware, async (req: Request, 
     const buyerId = req.user!.id;
     const orderId = req.params.id;
     const { boc, txHash, partialCoins } = req.body; // E12: partialCoins — купить часть ордера
-    if (!txHash) return res.status(400).json({ error: 'txHash обязателен' });
+    if (!txHash) return res.status(400).json({ error: 'txHash is required' });
 
     // Idempotency
     const byHash = await prisma.p2POrder.findFirst({ where: { txHash } });
     if (byHash?.status === 'EXECUTED') return res.json({ success: true, alreadyExecuted: true });
 
     const order = await prisma.p2POrder.findUnique({ where: { id: orderId } });
-    if (!order)                    return res.status(404).json({ error: 'Ордер не найден' });
-    if (order.status !== 'OPEN')   return res.status(409).json({ error: 'Ордер уже закрыт' });
-    if (order.sellerId === buyerId) return res.status(400).json({ error: 'Нельзя купить у самого себя' });
+    if (!order)                    return res.status(404).json({ error: 'Order not found' });
+    if (order.status !== 'OPEN')   return res.status(409).json({ error: 'Order is already closed' });
+    if (order.sellerId === buyerId) return res.status(400).json({ error: 'You cannot buy from yourself' });
 
     const buyer = await prisma.user.findUnique({ where: { id: buyerId }, select: { tonWalletAddress: true } });
-    if (!buyer?.tonWalletAddress)  return res.status(403).json({ error: 'TON_WALLET_REQUIRED', message: 'Подключи TON-кошелёк для торговли' });
+    if (!buyer?.tonWalletAddress)  return res.status(403).json({ error: 'TON_WALLET_REQUIRED', message: 'Connect TON wallet to trade' });
 
     // E12: Частичное исполнение — определяем реальную сумму покупки
     const requestedCoins = partialCoins ? BigInt(String(partialCoins)) : order.amountCoins;
-    if (requestedCoins <= 0n) return res.status(400).json({ error: 'Количество монет должно быть > 0' });
-    if (requestedCoins > order.amountCoins) return res.status(400).json({ error: 'Нельзя купить больше чем в ордере' });
+    if (requestedCoins <= 0n) return res.status(400).json({ error: 'Coin amount must be > 0' });
+    if (requestedCoins > order.amountCoins) return res.status(400).json({ error: 'Cannot buy more than available in the order' });
     const isPartial    = requestedCoins < order.amountCoins;
     const actualCoins  = requestedCoins;
     const actualTonAmt = (Number(actualCoins) / 1_000_000) * order.priceTon;
@@ -207,7 +207,7 @@ exchangeRouter.post('/orders/:id/execute', authMiddleware, async (req: Request, 
       return res.status(422).json({
         error:  'TON_TX_INVALID',
         reason: verification.reason,
-        message: 'Транзакция не прошла верификацию. Монеты не списаны.',
+        message: 'Transaction failed verification. Coins were not debited.',
       });
     }
 
@@ -267,8 +267,8 @@ exchangeRouter.post('/orders/:id/execute', authMiddleware, async (req: Request, 
     ]);
     const notifData = { amountCoins: order.amountCoins.toString(), totalTon: order.totalTon };
     await prisma.adminNotification.createMany({ data: [
-      { type: 'EXCHANGE_ORDER_SOLD',   payload: { ...notifData, telegramId: sellerUser?.telegramId, buyerName:  buyerUser?.firstName  ?? 'Покупатель' } },
-      { type: 'EXCHANGE_ORDER_BOUGHT', payload: { ...notifData, telegramId: buyerUser?.telegramId,  sellerName: sellerUser?.firstName ?? 'Продавец'   } },
+      { type: 'EXCHANGE_ORDER_SOLD',   payload: { ...notifData, telegramId: sellerUser?.telegramId, buyerName:  buyerUser?.firstName  ?? 'Buyer' } },
+      { type: 'EXCHANGE_ORDER_BOUGHT', payload: { ...notifData, telegramId: buyerUser?.telegramId,  sellerName: sellerUser?.firstName ?? 'Seller'   } },
     ]}).catch(() => {}); // не блокируем ответ
 
     // E13: Socket push — немедленное уведомление обоим игрокам
@@ -290,10 +290,10 @@ exchangeRouter.post('/orders/:id/execute', authMiddleware, async (req: Request, 
     res.json({ success: true, amountCoins: actualCoins.toString(), totalTon: actualTonAmt, feeTon: actualTonAmt * PLATFORM_FEE_PERCENT, isPartial });
   } catch (err) {
     if ((err as Error).message === 'ORDER_ALREADY_TAKEN') {
-      return res.status(409).json({ error: 'Ордер уже был куплен другим игроком' });
+      return res.status(409).json({ error: 'Order was already bought by another player' });
     }
     logger.error('[exchange/orders/:id/execute]', err);
-    res.status(500).json({ error: 'Ошибка исполнения ордера' });
+    res.status(500).json({ error: 'Failed to execute order' });
   }
 });
 
@@ -334,7 +334,7 @@ exchangeRouter.get('/stats', authMiddleware, async (_req: Request, res: Response
     });
   } catch (err) {
     logger.error('[exchange/stats]', err);
-    res.status(500).json({ error: 'Ошибка статистики' });
+    res.status(500).json({ error: 'Failed to load stats' });
   }
 });
 
@@ -357,20 +357,20 @@ exchangeRouter.post('/buy-orders', authMiddleware, async (req: Request, res: Res
     const userId = req.user!.id;
     const { amountCoins, priceTon } = req.body;
 
-    if (!amountCoins || !priceTon) return res.status(400).json({ error: 'amountCoins и priceTon обязательны' });
+    if (!amountCoins || !priceTon) return res.status(400).json({ error: 'amountCoins and priceTon are required' });
 
     const amount = BigInt(String(amountCoins));
     const price  = Number(priceTon);
 
-    if (amount < MIN_ORDER_COINS) return res.status(400).json({ error: `Минимум ${MIN_ORDER_COINS.toLocaleString()} ᚙ` });
-    if (price < MIN_PRICE_TON)    return res.status(400).json({ error: `Минимальная цена ${MIN_PRICE_TON} TON/1M ᚙ` });
+    if (amount < MIN_ORDER_COINS) return res.status(400).json({ error: `Minimum ${MIN_ORDER_COINS.toLocaleString()} ᚙ` });
+    if (price < MIN_PRICE_TON)    return res.status(400).json({ error: `Minimum price is ${MIN_PRICE_TON} TON/1M ᚙ` });
 
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { tonWalletAddress: true } });
-    if (!user?.tonWalletAddress) return res.status(403).json({ error: 'TON_WALLET_REQUIRED', message: 'Подключи TON-кошелёк для торговли' });
+    if (!user?.tonWalletAddress) return res.status(403).json({ error: 'TON_WALLET_REQUIRED', message: 'Connect TON wallet to trade' });
 
     // P4: Лимит BUY-ордеров
     const openBuyCount = await prisma.p2POrder.count({ where: { sellerId: userId, status: 'OPEN', orderType: 'BUY' } });
-    if (openBuyCount >= 5) return res.status(400).json({ error: 'MAX_OPEN_ORDERS', message: 'Максимум 5 открытых BUY-ордеров.' });
+    if (openBuyCount >= 5) return res.status(400).json({ error: 'MAX_OPEN_ORDERS', message: 'Maximum 5 open BUY orders.' });
 
     const totalTon = (Number(amount) / 1_000_000) * price;
     const feeTon   = totalTon * PLATFORM_FEE_PERCENT;
@@ -393,7 +393,7 @@ exchangeRouter.post('/buy-orders', authMiddleware, async (req: Request, res: Res
     res.json({ order: { id: order.id, orderType: 'BUY', amountCoins: order.amountCoins.toString(), priceTon: order.priceTon, totalTon: order.totalTon, status: order.status } });
   } catch (err) {
     logger.error('[exchange/buy-orders POST]', err);
-    res.status(500).json({ error: 'Ошибка создания BUY-ордера' });
+    res.status(500).json({ error: 'Failed to create BUY order' });
   }
 });
 
@@ -428,7 +428,7 @@ exchangeRouter.get('/buy-orders', authMiddleware, async (req: Request, res: Resp
     });
   } catch (err) {
     logger.error('[exchange/buy-orders GET]', err);
-    res.status(500).json({ error: 'Ошибка загрузки BUY-стакана' });
+    res.status(500).json({ error: 'Failed to load BUY orders' });
   }
 });
 
@@ -439,10 +439,10 @@ exchangeRouter.delete('/buy-orders/:id', authMiddleware, async (req: Request, re
     const orderId = req.params.id;
 
     const order = await prisma.p2POrder.findUnique({ where: { id: orderId } });
-    if (!order)                    return res.status(404).json({ error: 'Ордер не найден' });
-    if (order.sellerId !== userId) return res.status(403).json({ error: 'Только создатель может отменить ордер' });
-    if (order.orderType !== 'BUY') return res.status(400).json({ error: 'Это не BUY-ордер' });
-    if (order.status !== 'OPEN')   return res.status(409).json({ error: 'Ордер уже закрыт' });
+    if (!order)                    return res.status(404).json({ error: 'Order not found' });
+    if (order.sellerId !== userId) return res.status(403).json({ error: 'Only the creator can cancel this order' });
+    if (order.orderType !== 'BUY') return res.status(400).json({ error: 'This is not a BUY order' });
+    if (order.status !== 'OPEN')   return res.status(409).json({ error: 'Order is already closed' });
 
     await prisma.p2POrder.update({
       where: { id: orderId },
@@ -453,7 +453,7 @@ exchangeRouter.delete('/buy-orders/:id', authMiddleware, async (req: Request, re
     res.json({ success: true });
   } catch (err) {
     logger.error('[exchange/buy-orders DELETE]', err);
-    res.status(500).json({ error: 'Ошибка отмены BUY-ордера' });
+    res.status(500).json({ error: 'Failed to cancel BUY order' });
   }
 });
 
@@ -463,22 +463,22 @@ exchangeRouter.post('/buy-orders/:id/fill', authMiddleware, async (req: Request,
     const sellerId = req.user!.id; // тот кто принимает BUY = продавец ᚙ
     const orderId  = req.params.id;
     const { boc, txHash } = req.body;
-    if (!txHash) return res.status(400).json({ error: 'txHash обязателен' });
+    if (!txHash) return res.status(400).json({ error: 'txHash is required' });
 
     // Idempotency
     const byHash = await prisma.p2POrder.findFirst({ where: { txHash } });
     if (byHash?.status === 'EXECUTED') return res.json({ success: true, alreadyExecuted: true });
 
     const order = await prisma.p2POrder.findUnique({ where: { id: orderId } });
-    if (!order)                     return res.status(404).json({ error: 'Ордер не найден' });
-    if (order.orderType !== 'BUY')  return res.status(400).json({ error: 'Это не BUY-ордер' });
-    if (order.status !== 'OPEN')    return res.status(409).json({ error: 'Ордер уже закрыт' });
-    if (order.sellerId === sellerId) return res.status(400).json({ error: 'Нельзя исполнить свой собственный ордер' });
+    if (!order)                     return res.status(404).json({ error: 'Order not found' });
+    if (order.orderType !== 'BUY')  return res.status(400).json({ error: 'This is not a BUY order' });
+    if (order.status !== 'OPEN')    return res.status(409).json({ error: 'Order is already closed' });
+    if (order.sellerId === sellerId) return res.status(400).json({ error: 'You cannot execute your own order' });
 
     // Проверяем у продавца достаточно ᚙ
     const seller = await prisma.user.findUnique({ where: { id: sellerId }, select: { balance: true, tonWalletAddress: true } });
     if (!seller?.tonWalletAddress) return res.status(403).json({ error: 'TON_WALLET_REQUIRED' });
-    if (seller.balance < order.amountCoins) return res.status(400).json({ error: 'INSUFFICIENT_COINS', message: 'Недостаточно ᚙ для исполнения этого ордера' });
+    if (seller.balance < order.amountCoins) return res.status(400).json({ error: 'INSUFFICIENT_COINS', message: 'Insufficient ᚙ to execute this order' });
 
     // Верификация TON: покупатель (order.sellerWallet) должен был отправить TON продавцу (seller.tonWalletAddress)
     const verification = await verifyTonTransaction({
@@ -514,8 +514,8 @@ exchangeRouter.post('/buy-orders/:id/fill', authMiddleware, async (req: Request,
       prisma.user.findUnique({ where: { id: sellerId },       select: { telegramId: true, firstName: true } }),
     ]);
     await prisma.adminNotification.createMany({ data: [
-      { type: 'EXCHANGE_ORDER_SOLD',   payload: { amountCoins: order.amountCoins.toString(), totalTon: order.totalTon, telegramId: sellerUser?.telegramId, buyerName: buyer?.firstName  ?? 'Покупатель' } },
-      { type: 'EXCHANGE_ORDER_BOUGHT', payload: { amountCoins: order.amountCoins.toString(), totalTon: order.totalTon, telegramId: buyer?.telegramId,      sellerName: sellerUser?.firstName ?? 'Продавец' } },
+      { type: 'EXCHANGE_ORDER_SOLD',   payload: { amountCoins: order.amountCoins.toString(), totalTon: order.totalTon, telegramId: sellerUser?.telegramId, buyerName: buyer?.firstName  ?? 'Buyer' } },
+      { type: 'EXCHANGE_ORDER_BOUGHT', payload: { amountCoins: order.amountCoins.toString(), totalTon: order.totalTon, telegramId: buyer?.telegramId,      sellerName: sellerUser?.firstName ?? 'Seller' } },
     ]}).catch(() => {});
 
     // Socket push
@@ -530,10 +530,10 @@ exchangeRouter.post('/buy-orders/:id/fill', authMiddleware, async (req: Request,
     res.json({ success: true, amountCoins: order.amountCoins.toString(), totalTon: order.totalTon });
   } catch (err) {
     if ((err as Error).message === 'ORDER_ALREADY_TAKEN') {
-      return res.status(409).json({ error: 'Ордер уже исполнен другим продавцом' });
+      return res.status(409).json({ error: 'Order already filled by another seller' });
     }
     logger.error('[exchange/buy-orders/:id/fill]', err);
-    res.status(500).json({ error: 'Ошибка исполнения BUY-ордера' });
+    res.status(500).json({ error: 'Failed to fill BUY order' });
   }
 });
 
@@ -586,6 +586,6 @@ exchangeRouter.get('/leaderboard', authMiddleware, async (req: Request, res: Res
     res.json(lbResult);
   } catch (err) {
     logger.error('[exchange/leaderboard]', err);
-    res.status(500).json({ error: 'Ошибка лидерборда' });
+    res.status(500).json({ error: 'Failed to load leaderboard' });
   }
 });

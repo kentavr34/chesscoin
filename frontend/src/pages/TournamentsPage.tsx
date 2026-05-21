@@ -406,7 +406,7 @@ const TournamentCard: React.FC<{
             </div>
             {tour.isJoined && (
               <div style={{ fontSize: '0.55rem', fontWeight: 700, color: '#3DBA7A', background: 'rgba(61,186,122,.1)', padding: '2px 7px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
-                <IcoCheck size={9} /> Участник
+                <IcoCheck size={9} /> {tt.participant}
               </div>
             )}
           </div>
@@ -451,7 +451,7 @@ const TournamentCard: React.FC<{
           <IcoSwords size={20} />
           <div style={{ flex: 1, textAlign: 'left' }}>
             <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#3DBA7A' }}>
-              Играть матч — Раунд {activeMatch.round}
+              {tt.playMatchRound(activeMatch.round)}
             </div>
             {matchOpponent && (
               <div style={{ fontSize: '0.68rem', color: '#5A9E75', marginTop: 1 }}>
@@ -468,9 +468,9 @@ const TournamentCard: React.FC<{
         <div style={{ margin: '8px 12px', background: 'rgba(61,186,122,.05)', border: '.5px solid rgba(61,186,122,.15)', borderRadius: 10, padding: '7px 12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', gap: 12 }}>
-              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#3DBA7A' }}>{tour.myStats.wins}В</span>
-              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#FF5B5B' }}>{tour.myStats.losses}П</span>
-              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#7A7875' }}>{tour.myStats.draws}Н</span>
+              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#3DBA7A' }}>{tour.myStats.wins}{tt.winsShort}</span>
+              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#FF5B5B' }}>{tour.myStats.losses}{tt.lossesShort}</span>
+              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#7A7875' }}>{tour.myStats.draws}{tt.drawsShort}</span>
             </div>
             <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#F0C85A', fontFamily: "'JetBrains Mono',monospace" }}>
               {tour.myStats.points.toFixed(1)} pts
@@ -493,7 +493,7 @@ const TournamentCard: React.FC<{
             color: isSoonEnding ? '#FF8855' : '#9A9490',
             letterSpacing: '.02em',
           }}>
-            До {endDate}{isSoonEnding ? ' · скоро финал' : ''}
+            {tt.ends} {endDate}{isSoonEnding ? ` · ${tt.soonEnding}` : ''}
           </span>
         </div>
       )}
@@ -516,7 +516,7 @@ const TournamentCard: React.FC<{
               color: '#3DBA7A', fontSize: '0.74rem', fontWeight: 700,
               textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
             }}>
-              <IcoFlag size={13} /> Участвовал
+              <IcoFlag size={13} /> {tt.participated}
             </div>
           ) : (
             <button
@@ -531,10 +531,10 @@ const TournamentCard: React.FC<{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 transition: 'opacity .15s',
               }}
-              title="Клик — выйти из турнира"
+              title={tt.clickToLeave}
             >
               <IcoCheck size={13} />
-              <span>Участник{tour.status === 'IN_PROGRESS' ? ' · идёт' : ''}</span>
+              <span>{tt.participant}{tour.status === 'IN_PROGRESS' ? ` · ${tt.inProgressTag}` : ''}</span>
             </button>
           )
         ) : canJoin ? (
@@ -553,7 +553,7 @@ const TournamentCard: React.FC<{
             }}
           >
             {joining ? (
-              <>Вступаем…</>
+              <>{tt.joining}</>
             ) : (
               <>
                 <IcoTrophy size={16} />
@@ -568,7 +568,7 @@ const TournamentCard: React.FC<{
             color: '#5A5248', fontSize: '0.78rem', fontWeight: 600,
             textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
           }}>
-            {isFinished ? <><IcoFlag size={13} /> Турнир завершён</> : <><IcoLock size={13} /> Регистрация закрыта</>}
+            {isFinished ? <><IcoFlag size={13} /> {tt.status.FINISHED}</> : <><IcoLock size={13} /> {tt.registrationClosed}</>}
           </div>
         )}
         </div>
@@ -589,7 +589,7 @@ const TournamentCard: React.FC<{
         </button>
         <button
           onClick={onDonate}
-          title="Донат в призовой фонд"
+          title={tt.donateToPrize}
           style={{
             width: 44, flexShrink: 0,
             borderRadius: 11,
