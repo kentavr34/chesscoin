@@ -18,6 +18,7 @@ import { fmtBalance } from '@/utils/format';
 import { useConfirm } from '@/components/ui/ConfirmModal';
 import { CountryFlag } from '@/components/ui/CountryFlag';
 import { PgnReplayModal } from '@/components/profile/PgnReplayModal';
+import { useT } from '@/i18n/useT';
 
 // ── Константы ──────────────────────────────────────────────────────────────────
 // 2026-05-16: chess unicode не рендерится в Telegram WebView Android/iOS
@@ -467,6 +468,7 @@ const IcoDraw = () => (
 );
 
 const ResultSheet: React.FC<SheetProps> = ({ type, winAmount, pieceCoins, onRematch, onHome }) => {
+  const t = useT();
   const cfg = RESULT_CFG[type];
   const isWin  = type === 'win';
   const isDraw = type === 'draw';
@@ -538,7 +540,7 @@ const ResultSheet: React.FC<SheetProps> = ({ type, winAmount, pieceCoins, onRema
             marginBottom: 10,
             lineHeight: 1,
           }}>
-            {cfg.title}
+            {isWin ? t.gameResult.win : isDraw ? t.gameResult.draw : t.gameResult.lose}
           </div>
 
           {/* Монеты */}
@@ -552,12 +554,12 @@ const ResultSheet: React.FC<SheetProps> = ({ type, winAmount, pieceCoins, onRema
           )}
           {!coinsDisplay && type === 'lose' && (
             <div style={{ fontSize: '.78rem', color: '#5A3A3A', marginBottom: 28 }}>
-              Не сдавайся — следующая будет лучше
+              {t.gameResult.loseMsg}
             </div>
           )}
           {isDraw && (
             <div style={{ fontSize: '.78rem', color: '#3A5070', marginBottom: 28 }}>
-              Соперники оказались равны
+              {t.gameResult.drawMsg}
             </div>
           )}
           {isWin && !coinsDisplay && (
@@ -576,7 +578,7 @@ const ResultSheet: React.FC<SheetProps> = ({ type, winAmount, pieceCoins, onRema
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
             }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M20.5 9A9 9 0 005.3 5.3L1 10M23 14l-4.2 4.7A9 9 0 013.5 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              Реванш
+              {t.gameResult.rematch}
             </button>
             <button disabled style={{
               flex: 1, padding: '14px 0', borderRadius: 14,
@@ -586,7 +588,7 @@ const ResultSheet: React.FC<SheetProps> = ({ type, winAmount, pieceCoins, onRema
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, opacity: 0.5,
             }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 11l3 3L22 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              Анализ
+              {t.gameResult.analysis}
             </button>
           </div>
           <button onClick={onHome} style={{
@@ -600,7 +602,7 @@ const ResultSheet: React.FC<SheetProps> = ({ type, winAmount, pieceCoins, onRema
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 9.5L12 3l9 6.5V21a1 1 0 01-1 1H15v-6h-6v6H4a1 1 0 01-1-1V9.5z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            На главную
+            {t.gameResult.toMain}
           </button>
         </div>
       </div>
@@ -805,6 +807,34 @@ export function GamePage() {
   const winnerTake     = totalBetPot - bankCommission + donationsBig; // ставки-10% + донаты 100%
   // viewCount — накопительный счётчик просмотров (backend: sessions.viewCount, опционально)
   const viewCount      = session?.viewCount ?? 0;
+
+  const handleRematch = useCallback(() => {
+    if (!session) return;
+    if (session.type === 'BOT' && session.botLevel !== null) {
+      const mySide = session.sides.find(s => s.playerId === user?.id);
+      const oppositeColor = mySide ? (mySide.isWhite ? 'black' : 'white') : 'white';
+      const timeSeconds = session.duration ?? 600;
+
+      getSocket().emit(
+        'game:create:bot',
+        { color: oppositeColor, botLevel: session.botLevel, timeSeconds },
+        (res: { ok: boolean; session?: GameSession; error?: string }) => {
+          if (res?.ok && res.session) {
+            upsertSession(res.session);
+            navigate(`/game/${res.session.id}`);
+            setSoundPlayed(false);
+            setIsSaved(false);
+          } else {
+            window.dispatchEvent(new CustomEvent('chesscoin:toast', {
+              detail: { text: res?.error ?? 'Ошибка создания реванша', type: 'error' }
+            }));
+          }
+        }
+      );
+    } else {
+      navigate('/');
+    }
+  }, [session, user, navigate, upsertSession]);
 
   useEffect(() => { isMyTurnRef.current = isMyTurn; },  [isMyTurn]);
   useEffect(() => { gameOverRef.current = gameOver; }, [gameOver]);
@@ -1545,7 +1575,7 @@ export function GamePage() {
           type={resultType}
           winAmount={mySide?.winningAmount}
           pieceCoins={session.pieceCoins}
-          onRematch={() => navigate('/')}
+          onRematch={handleRematch}
           onHome={() => navigate('/')}
         />
       )}

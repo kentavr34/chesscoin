@@ -117,6 +117,10 @@ export const translations = {
       drawMsg: 'Bets returned to players',
       shareWin: '📤 Share victory', backToMenu: '← Back to menu',
       jarvisCert: 'JARVIS CERTIFICATE', confirmedBy: '✓ Confirmed by ChessCoin', close: 'Close',
+      rematch: 'Rematch',
+      analysis: 'Analysis',
+      toMain: 'Home',
+      loseMsg: 'Don\'t give up — the next one will be better',
     },
     leaderboard: { title: 'Leaderboard' },
     nations: {
@@ -737,6 +741,10 @@ export const translations = {
       drawMsg: 'Ставки возвращены игрокам',
       shareWin: '📤 Поделиться победой', backToMenu: '← Вернуться в меню',
       jarvisCert: 'СЕРТИФИКАТ JARVIS', confirmedBy: '✓ Подтверждено ChessCoin', close: 'Закрыть',
+      rematch: 'Реванш',
+      analysis: 'Анализ',
+      toMain: 'На главную',
+      loseMsg: 'Не сдавайся — следующая будет лучше',
     },
     leaderboard: { title: 'Рейтинг' },
     nations: {

@@ -638,9 +638,18 @@ export const setupSocketHandlers = (io: Server) => {
               const raw = sid ? await redis.get(`session:${sessionId}:pieceCoins:${sid}`) : null;
               return { pieceCoins: raw ?? '0' };
             });
-            io.to(sessionId).emit("game:over", { status: finished.status });
-            io.to("lobby").emit("battles:live:removed", sessionId);
-            cleanupSpectators(sessionId);
+
+            if (session.type === SessionType.BOT) {
+              setTimeout(() => {
+                io.to(sessionId).emit("game:over", { status: finished.status });
+                cleanupSpectators(sessionId);
+              }, 3000);
+            } else {
+              io.to(sessionId).emit("game:over", { status: finished.status });
+              io.to("lobby").emit("battles:live:removed", sessionId);
+              cleanupSpectators(sessionId);
+            }
+
             if (callback) callback({ ok: true, session: formattedFinished });
             return;
           }
@@ -1120,8 +1129,11 @@ const makeBotMove = async (socket: AuthSocket, io: Server, sessionId: string) =>
         return { pieceCoins: raw ?? '0' };
       });
       void formattedFinished;
-      io.to(sessionId).emit("game:over", { status: finished.status });
-      cleanupSpectators(sessionId);
+
+      setTimeout(() => {
+        io.to(sessionId).emit("game:over", { status: finished.status });
+        cleanupSpectators(sessionId);
+      }, 3000);
       return;
     }
 
