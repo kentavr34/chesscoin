@@ -8,6 +8,16 @@
 
 ---
 
+## 🔐 Доступы к ключам
+
+В корне `.secrets.enc` — AES-256-CBC PBKDF2 200 000 iter (OpenSSL). Структура: API keys, ssh paths, telegram tokens (ChessCoin: @chessgamecoin_bot), claudia_api, github, ton wallet, postgres credentials.
+
+**Использовать:** `python tools/secrets_decrypt.py .secrets.enc <passphrase>` → JSON. Passphrase отдельно у Кенана на телефоне + Vault chat backup (2026-05-26).
+
+**Безопасность:** `.secrets.json` (plaintext) **никогда** не в git. `.secrets.enc` в `.gitignore`.
+
+---
+
 ## 🧠 Память проекта (2026-05-26)
 
 **Локально (быстрый доступ):**
