@@ -8,6 +8,24 @@
 
 ---
 
+## 🧠 Память проекта (2026-05-26)
+
+**Локально (быстрый доступ):**
+- [`PROJECT_VISION.md`](PROJECT_VISION.md) — vision + связь с 994
+- [`MASTERPLAN.md`](MASTERPLAN.md) — что строим сейчас
+- [`HISTORY.md`](HISTORY.md) — timeline вех
+- [`KEY_DIALOGS.md`](KEY_DIALOGS.md) — топ-20 важнейших сообщений (importance ≥ 8 из 21 632)
+- [`DECISIONS.md`](DECISIONS.md) — 220 архитектурных решений (топ-50 в файле)
+
+**Удалённо (Claudia 185.203.116.131):**
+- Redis `vision:chesscoin`, `plan:chesscoin:active`, `blockers:chesscoin`, `current_task:chesscoin`
+- Postgres `claudia_memory.dialog_history WHERE project='chesscoin'` — все 21 632 смысловых сообщения (категории + tags + importance)
+- LightRAG категории: `project_chesscoin_vision`, `project_chesscoin_decisions`
+
+Source raw chats: `C:\Users\SAM\Desktop\994\history\claude_code\` (chesscoin/, 30 JSONL, 459 MB, **не в git**).
+
+---
+
 ## 🔴 ПЕРЕД НАЧАЛОМ РАЗРАБОТКИ ПРОЧИТАЙ ОБЯЗАТЕЛЬНО
 
 **Это применимо к разработчикам и помощникам AI (Клаудия).**
