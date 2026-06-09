@@ -73,3 +73,11 @@ bot_inbox/
 # Legacy local design/docs snapshots
 /ROADMAP.md
 /frontend/CHESS_TIMER_DESIGN_SPEC.txt
+
+# Secrets (encrypted is OK, plaintext NEVER)
+.secrets.json
+.secrets.txt
+.secrets.*.json
+# Encrypted .secrets.enc можно commit'ить если passphrase отдельно у Кенана на телефоне
+# Но безопаснее не commit'ить ни в каком виде:
+.secrets.enc
