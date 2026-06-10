@@ -175,7 +175,7 @@ export const LessonPage: React.FC = () => {
       const actualUci = move.from + move.to + (move.promotion ?? '');
 
       if (from === expectedFrom && to === expectedTo) {
-        // вњ… Правильный ход
+        // ✓ Правильный ход
         haptic.impact('medium');
         setChess(tempChess);
         setFen(tempChess.fen());
@@ -200,7 +200,7 @@ export const LessonPage: React.FC = () => {
           }, 700);
         }
       } else {
-        // вќЊ Неверный ход
+        // ✕ Неверный ход
         haptic.impact('heavy');
         setWrongSquare(to);
         setPhase('wrong');
@@ -347,7 +347,7 @@ export const LessonPage: React.FC = () => {
               <div style={{ fontSize: 13, color: '#9A9490' }}>
                 {chess.turn() === 'w' ? t.lesson.whiteToMove : t.lesson.blackToMove}
               </div>
-              <button onClick={startPuzzle} style={goldBtn}>в–¶ Начать решение</button>
+              <button onClick={startPuzzle} style={goldBtn}>▶ Начать решение</button>
             </div>
           )}
           {phase === 'playing' && (
@@ -357,12 +357,12 @@ export const LessonPage: React.FC = () => {
           )}
           {phase === 'wrong' && (
             <div style={{ fontSize: 13, color: '#FF5B5B', fontWeight: 700, animation: 'shake .3s' }}>
-              вќЊ Неверно! {hint}
+              ✕ Неверно! {hint}
             </div>
           )}
           {phase === 'correct' && (
             <div style={{ fontSize: 13, color: '#3DBA7A', fontWeight: 700 }}>
-              вњ… Правильно! Проверяем...
+              ✓ Правильно! Проверяем...
             </div>
           )}
           {phase === 'solved' && (
@@ -387,7 +387,7 @@ export const LessonPage: React.FC = () => {
                   }}
                   style={goldBtn}
                 >
-                  Следующая в–¶
+                  Следующая ▶
                 </button>
               </div>
             </div>

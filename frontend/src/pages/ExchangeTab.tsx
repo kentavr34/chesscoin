@@ -131,9 +131,11 @@ const LockedScreen: React.FC<{ currentPrice: number; change24h: number; onConnec
         <div style={{ fontSize: 16, fontWeight: 800, color: '#EAE2CC', marginBottom: 8 }}>
           Connect TON wallet
         </div>
+        {/* A1 (2026-05-19): 1-TON unlock убран — подключение бесплатное.
+            Старый текст противоречил ShopPage и блокировал юзеров ложной инструкцией. */}
         <div style={{ fontSize: 12, color: '#9A9490', lineHeight: 1.6, marginBottom: 20 }}>
           A TON wallet is required for exchange trading.<br />
-          One-time payment: <b style={{ color: '#0098EA' }}>1 TON</b> — forever.
+          Connection is <b style={{ color: '#3DBA7A' }}>free</b> — no upfront payment.
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12, color: '#9A9490', marginBottom: 20 }}>
           {['Sell for TON directly to other players', 'Buy at market price', 'Platform fee: 0.5%'].map(t => (
@@ -141,7 +143,7 @@ const LockedScreen: React.FC<{ currentPrice: number; change24h: number; onConnec
           ))}
         </div>
         <button onClick={onConnect} style={{ width: '100%', padding: '14px', background: 'linear-gradient(90deg,#0098EA,#006FB8)', color: '#fff', border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-          Ћ Connect TON wallet
+          Connect TON wallet
         </button>
       </div>
     </div>
@@ -188,7 +190,7 @@ const CreateOrderModal: React.FC<{
         <div style={{ width: 36, height: 4, background: 'rgba(154,148,144,.18)', borderRadius: 2, margin: '0 auto 16px' }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <div style={{ fontSize: 16, fontWeight: 800, color: '#EAE2CC' }}>Sell</div>
-          <button onClick={onClose} style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: 'none', color: '#9A9490', cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', flexShrink: 0 }}>вњ•</button>
+          <button onClick={onClose} style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: 'none', color: '#9A9490', cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', flexShrink: 0 }}>✕</button>
         </div>
 
         {/* Amount */}
@@ -332,7 +334,7 @@ const ExecuteOrderModal: React.FC<{
         </>)}
 
         {step === 'paying' && (<>
-          <div style={{ fontSize: 44, marginBottom: 16 }}>вЏі</div>
+          <div style={{ fontSize: 44, marginBottom: 16 }}>⧗</div>
           <div style={{ fontSize: 15, fontWeight: 700, color: '#EAE2CC' }}>{t.exchange.awaitingConfirmation}</div>
           <div style={{ fontSize: 12, color: '#9A9490', marginTop: 8 }}>{t.exchange.confirmInWallet}</div>
         </>)}
@@ -344,7 +346,7 @@ const ExecuteOrderModal: React.FC<{
         </>)}
 
         {step === 'done' && (<>
-          <div style={{ fontSize: 56, marginBottom: 12 }}>вњ…</div>
+          <div style={{ fontSize: 56, marginBottom: 12 }}>✓</div>
           <div style={{ fontSize: 16, fontWeight: 800, color: '#3DBA7A', marginBottom: 8 }}>{t.common.success}!</div>
           <div style={{ fontSize: 13, color: '#9A9490', marginBottom: 20 }}>
             {t.exchange.credited(fmtBalance(order.amountCoins))}
@@ -402,7 +404,7 @@ const CreateBuyOrderModal: React.FC<{
         <div style={{ width: 36, height: 4, background: 'rgba(154,148,144,.18)', borderRadius: 2, margin: '0 auto 16px' }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <div style={{ fontSize: 16, fontWeight: 800, color: '#0098EA' }}>Buy (BUY)</div>
-          <button onClick={onClose} style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: 'none', color: '#9A9490', cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', flexShrink: 0 }}>вњ•</button>
+          <button onClick={onClose} style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: 'none', color: '#9A9490', cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', flexShrink: 0 }}>✕</button>
         </div>
         <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', color: '#5A5248', marginBottom: 8 }}>WANT TO BUY</div>
         <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 26, fontWeight: 800, color: '#0098EA', textAlign: 'center', marginBottom: 10 }}>
@@ -501,9 +503,9 @@ const FillBuyOrderModal: React.FC<{
             </button>
           </div>
         </>)}
-        {step === 'paying' && (<><div style={{ fontSize: 44, marginBottom: 12 }}>вЏі</div><div style={{ fontSize: 14, color: '#EAE2CC' }}>{t.exchange.buyerPaying}</div></>)}
+        {step === 'paying' && (<><div style={{ fontSize: 44, marginBottom: 12 }}>⧗</div><div style={{ fontSize: 14, color: '#EAE2CC' }}>{t.exchange.buyerPaying}</div></>)}
         {step === 'verifying' && (<><div style={{ fontSize: 44, marginBottom: 12 }}>Ќ</div><div style={{ fontSize: 14, color: '#EAE2CC' }}>{t.exchange.verifying}...</div></>)}
-        {step === 'done' && (<><div style={{ fontSize: 56, marginBottom: 12 }}>вњ…</div><div style={{ fontSize: 15, fontWeight: 800, color: '#3DBA7A', marginBottom: 8 }}>{t.exchange.saleSuccess}</div><div style={{ fontSize: 12, color: '#9A9490', marginBottom: 16 }}>{t.exchange.transferred(Number(orderCoins).toLocaleString())}</div><button onClick={onClose} style={{ width: '100%', padding: '13px', background: 'rgba(0,214,143,0.12)', color: '#3DBA7A', border: '1px solid rgba(0,214,143,0.25)', borderRadius: 14, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.common.close}</button></>)}
+        {step === 'done' && (<><div style={{ fontSize: 56, marginBottom: 12 }}>✓</div><div style={{ fontSize: 15, fontWeight: 800, color: '#3DBA7A', marginBottom: 8 }}>{t.exchange.saleSuccess}</div><div style={{ fontSize: 12, color: '#9A9490', marginBottom: 16 }}>{t.exchange.transferred(Number(orderCoins).toLocaleString())}</div><button onClick={onClose} style={{ width: '100%', padding: '13px', background: 'rgba(0,214,143,0.12)', color: '#3DBA7A', border: '1px solid rgba(0,214,143,0.25)', borderRadius: 14, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.common.close}</button></>)}
         {step === 'error' && (<><div style={{ fontSize: 44, marginBottom: 12 }}></div><div style={{ fontSize: 14, fontWeight: 800, color: '#FF5B5B', marginBottom: 8 }}>{t.common.error}</div><div style={{ fontSize: 12, color: '#9A9490', marginBottom: 16 }}>{errMsg}</div><div style={{ display: 'flex', gap: 10 }}><button onClick={onClose} style={{ flex: 1, padding: '12px', background: 'rgba(255,255,255,0.06)', color: '#9A9490', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.common.close}</button><button onClick={handleFill} style={{ flex: 1, padding: '12px', background: 'rgba(0,214,143,0.1)', color: '#3DBA7A', border: '1px solid rgba(0,214,143,0.2)', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.exchange.retry}</button></div></>)}
       </div>
     </div>
@@ -753,7 +755,7 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
             </div>
           ) : myOrders.filter(o => o.status !== 'OPEN').map(order => (
             <div key={order.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: '#141018', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 14, marginBottom: 8 }}>
-              <div style={{ fontSize: 24 }}>{order.status === 'EXECUTED' ? 'вњ…' : 'вќЊ'}</div>
+              <div style={{ fontSize: 24 }}>{order.status === 'EXECUTED' ? '✓' : '✕'}</div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: '#EAE2CC' }}>{fmtBalance(order.amountCoins)}</div>
                 <div style={{ fontSize: 10, color: '#5A5248', marginTop: 2 }}>{order.status === 'EXECUTED' ? t.exchange.executed : t.exchange.cancelled} · {order.priceTon.toFixed(5)} TON/1M</div>

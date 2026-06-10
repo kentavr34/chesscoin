@@ -134,7 +134,7 @@ export const PuzzleDailyPage: React.FC = () => {
         <button onClick={() => setShowInfo(v => !v)} style={{
           background: 'none', border: 'none', cursor: 'pointer',
           fontSize: 18, color: '#A8B0C8', padding: '4px 8px',
-        }}>в“</button>
+        }}>?</button>
       }
     >
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
@@ -144,7 +144,7 @@ export const PuzzleDailyPage: React.FC = () => {
         <div style={{ margin: '0 16px 12px', padding: '12px 14px', background: '#1C2030', borderRadius: 12, fontSize: 13, color: '#A8B0C8', lineHeight: 1.5, position: 'relative' }}>
           <button onClick={() => setShowInfo(false)} style={{
             position: 'absolute', top: 8, right: 8, background: 'none', border: 'none', cursor: 'pointer', color: '#6B7494', fontSize: 16,
-          }}>вњ•</button>
+          }}>✕</button>
           {puzzle.description}
         </div>
       )}
@@ -195,7 +195,7 @@ export const PuzzleDailyPage: React.FC = () => {
 
       {complete && (
         <div style={{ margin: '16px', padding: '20px 16px', background: '#13161E', borderRadius: 16, textAlign: 'center' }}>
-          <div style={{ fontSize: 32 }}>вњ…</div>
+          <div style={{ fontSize: 32 }}>✓</div>
           <div style={{ fontSize: 16, fontWeight: 700, color: '#F5C842', marginTop: 8 }}>
             {rewarded ? `+${Number(puzzle.reward).toLocaleString()} earned!` : 'Puzzle already solved'}
           </div>

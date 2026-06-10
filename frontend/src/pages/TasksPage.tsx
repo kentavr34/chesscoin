@@ -80,10 +80,14 @@ export const TasksPage: React.FC = () => {
     if (task.isCompleted || claiming) return;
     setClaiming(task.id);
     try {
-      await tasksApi.complete(task.id);
+      const res = await tasksApi.complete(task.id);
       setTasks((prev) => prev.map((tk) => tk.id === task.id ? { ...tk, isCompleted: true } : tk));
       const updated = await authApi.me();
       setUser(updated);
+      // Audit-fix 2026-06-10: success-фидбек — раньше тост был только на ошибку,
+      // юзер не видел что награда реально начислена.
+      const rewardTxt = res?.reward ? ` +${res.reward} ᚙ` : '';
+      window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text: `Задание выполнено!${rewardTxt}`, type: 'info' } }));
     } catch (e: unknown) {
       window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text: (e instanceof Error ? e.message : String(e)) ?? 'Error', type: 'error' } }));
     } finally {

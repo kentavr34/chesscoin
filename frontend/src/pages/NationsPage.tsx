@@ -283,7 +283,7 @@ export const NationsPage: React.FC = () => {
                     {b.status === 'IN_PROGRESS' ? t.nations.inProgress : t.nations.waiting}
                   </span>
                   <span style={{ fontSize: 10, color: '#5A5248' }}>
-                    {b.status === 'IN_PROGRESS' && timeLeft != null ? `вЏ° ${timeStr}` : t.nations.duration(Math.floor(b.duration / 3600))}
+                    {b.status === 'IN_PROGRESS' && timeLeft != null ? timeStr : t.nations.duration(Math.floor(b.duration / 3600))}
                   </span>
                 </div>
 
@@ -380,7 +380,7 @@ export const NationsPage: React.FC = () => {
                 </div>
               </div>
               {isLeader && m.userId !== user?.id && !m.isPending && (
-                <button onClick={() => handleKick(m.userId)} style={kickBtn}>вњ•</button>
+                <button onClick={() => handleKick(m.userId)} style={kickBtn}>✕</button>
               )}
             </div>
           ))}
@@ -480,7 +480,7 @@ const ContributeModal: React.FC<{ clanName: string; clanFlag: string; onClose: (
         <div style={handleBar} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <div style={{ fontSize: 17, fontWeight: 700, color: '#F0E8CC' }}>{t.nations.contributeTitle(clanFlag, clanName)}</div>
-          <button onClick={onClose} style={closeBtnStyle}>вњ•</button>
+          <button onClick={onClose} style={closeBtnStyle}>✕</button>
         </div>
         <div style={{ fontSize: 11, color: '#9A9490', marginBottom: 16 }}>
           {t.nations.contributeDesc}
@@ -527,7 +527,7 @@ const WarChallengeModal: React.FC<{ nations: Nation[]; onClose: () => void; onSu
         <div style={handleBar} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
           <div style={{ fontSize: 17, fontWeight: 700, color: '#FF5B5B' }}>{t.nations.declareWarTitle}</div>
-          <button onClick={onClose} style={closeBtnStyle}>вњ•</button>
+          <button onClick={onClose} style={closeBtnStyle}>✕</button>
         </div>
         <div style={{ fontSize: 11, color: '#9A9490', marginBottom: 16 }}>{t.nations.warStakeDesc}</div>
         <div style={{ fontSize: 10, color: '#5A5248', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 8 }}>{t.nations.selectEnemy}</div>
@@ -572,7 +572,7 @@ const JoinClanModal: React.FC<{ clanId: string; clan?: Nation; onClose: () => vo
       <div style={modalStyle}>
         <div style={handleBar} />
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
-          <button onClick={onClose} style={closeBtnStyle}>вњ•</button>
+          <button onClick={onClose} style={closeBtnStyle}>✕</button>
         </div>
         <div style={{ textAlign: 'center', marginBottom: 16 }}>
           <div style={{ fontSize: 48 }}>{clan?.flag}</div>

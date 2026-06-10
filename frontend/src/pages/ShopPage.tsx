@@ -11,7 +11,7 @@ import { setActiveTheme, getActiveTheme, THEMES } from '@/lib/theme';
 import type { ThemeKey } from '@/lib/theme';
 import { useT } from '@/i18n/useT';
 import { ExchangeTab } from './ExchangeTab';
-import { ItemCard, AvatarItemCard, RARITY_COLOR } from '@/components/shop/ShopItemCards';
+import { ItemCard, AvatarItemCard, RARITY_COLOR, ShopCardStyles } from '@/components/shop/ShopItemCards';
 import { CoinIcon } from '@/components/ui/CoinIcon';
 import { IcoBolt, IcoBriefcase, IcoExchange, IcoLock, IcoMoneyFly, IcoShop, IcoTon, IcoArrowDown, IcoArrowUp, IcoCheck2, IcoClose } from '@/components/icons/UiIcons';
 
@@ -601,6 +601,8 @@ export const ShopPage: React.FC = () => {
 
   return (
     <PageLayout title={t.shop.title} centered>
+      {/* Hover/shine стили карточек — один раз на страницу */}
+      <ShopCardStyles />
       {shopInfo.show && <InfoPopup infoKey="shop" slides={shopSlides} onClose={shopInfo.close} />}
       {ConfirmPurchaseDialog}
 

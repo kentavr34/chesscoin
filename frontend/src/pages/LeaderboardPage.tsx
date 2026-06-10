@@ -51,12 +51,14 @@ export const LeaderboardPage: React.FC = () => {
     navigate(`/profile/${id}`);
   };
 
+  // Audit-fix 2026-06-10: period передаётся в запрос — раньше кнопки
+  // «Всё время / Неделя / Месяц» были декорацией (state менялся, запрос нет).
   useEffect(() => {
     setLoading(true);
-    leaderboardApi.get({ league, limit: 50 })
+    leaderboardApi.get({ league, limit: 50, period })
       .then((r) => { setItems(r.users); setLoading(false); })
       .catch(() => setLoading(false));
-  }, [league]);
+  }, [league, period]);
 
   const filtered = query.length >= 3
     ? items.filter((u) => u.firstName.toLowerCase().includes(query.toLowerCase()) || u.username?.toLowerCase().includes(query.toLowerCase()))

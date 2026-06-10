@@ -15,6 +15,47 @@ export const RARITY_COLOR: Record<string, string> = {
   LEGENDARY: 'var(--color-orange-red, #FF6B35)',
 };
 
+// «Дорогой вид» (Кенан 2026-06-10): glow-тени и градиентные подложки по rarity.
+// COMMON — без glow (обычный товар), выше — нарастающее свечение.
+const RARITY_GLOW: Record<string, { boxShadow: string; previewGlow: string }> = {
+  COMMON: {
+    boxShadow: '0 2px 8px rgba(0,0,0,0.35)',
+    previewGlow: 'radial-gradient(circle at 32% 28%, rgba(255,255,255,0.05), transparent 60%)',
+  },
+  RARE: {
+    boxShadow: '0 2px 10px rgba(0,0,0,0.35), 0 0 14px rgba(123,97,255,0.22)',
+    previewGlow: 'radial-gradient(circle at 32% 28%, rgba(123,97,255,0.12), transparent 60%)',
+  },
+  EPIC: {
+    boxShadow: '0 2px 10px rgba(0,0,0,0.35), inset 0 0 18px rgba(245,200,66,0.10), 0 0 18px rgba(245,200,66,0.28)',
+    previewGlow: 'radial-gradient(circle at 32% 28%, rgba(245,200,66,0.14), transparent 60%)',
+  },
+  LEGENDARY: {
+    boxShadow: '0 2px 12px rgba(0,0,0,0.4), inset 0 0 22px rgba(255,107,53,0.12), 0 0 24px rgba(255,107,53,0.32)',
+    previewGlow: 'radial-gradient(circle at 32% 28%, rgba(255,107,53,0.16), transparent 60%)',
+  },
+};
+
+// CSS для hover/shine — инлайн-стили не умеют :hover, поэтому классы.
+// Вставляется один раз на страницу через <ShopCardStyles/>.
+export const ShopCardStyles: React.FC = () => (
+  <style>{`
+    .shop-card { transition: transform .18s ease-out, box-shadow .18s ease-out, border-color .18s ease-out; }
+    .shop-card:hover { transform: translateY(-3px); }
+    .shop-card-rare:hover { box-shadow: 0 6px 18px rgba(0,0,0,.45), 0 0 22px rgba(123,97,255,.4) !important; }
+    .shop-card-epic:hover { box-shadow: 0 6px 18px rgba(0,0,0,.45), inset 0 0 18px rgba(245,200,66,.14), 0 0 28px rgba(245,200,66,.45) !important; }
+    .shop-card-legendary:hover { box-shadow: 0 6px 20px rgba(0,0,0,.5), inset 0 0 24px rgba(255,107,53,.16), 0 0 34px rgba(255,107,53,.5) !important; }
+    .shop-card-common:hover { box-shadow: 0 6px 16px rgba(0,0,0,.45) !important; }
+    @keyframes shop-shine {
+      0% { transform: translateX(-130%) skewX(-18deg); }
+      55%, 100% { transform: translateX(230%) skewX(-18deg); }
+    }
+    .shop-shine { position: absolute; top: 0; bottom: 0; width: 38%; pointer-events: none;
+      background: linear-gradient(100deg, transparent, rgba(255,235,200,0.10), transparent);
+      animation: shop-shine 3.4s ease-in-out infinite; }
+  `}</style>
+);
+
 const btnStyle: React.CSSProperties = {
   padding: 'var(--shop-btn-padding)', border: 'none', borderRadius: 10,
   fontSize: 'var(--shop-btn-font-size)', fontWeight: 700, cursor: 'pointer',
@@ -140,16 +181,19 @@ export const ItemCard: React.FC<ItemCardProps> = ({ item, loading, highlighted, 
   };
 
   // A3 (Кенан 2026-05-19): фон карточек захардкожен на гарантированно
-  // тёмный градиент (раньше зависело от --color-bg-card, который в light-режиме
-  // или при дефолте оказывался почти белым → товары «исчезали» на фоне).
-  // То же для preview-area: гарантированно тёмная подложка.
+  // тёмный градиент. 2026-06-10: + rarity-glow, hover, shine для LEGENDARY —
+  // «дорогой вид» товаров (запрос Кенана: магазин выглядел дёшево).
   const cardBg = 'linear-gradient(135deg, #141018 0%, #0F0E18 100%)';
   const previewBg = '#0B0D11';
+  const glow = RARITY_GLOW[item.rarity] ?? RARITY_GLOW.COMMON;
 
   return (
-    <div ref={cardRef} style={{ background: cardBg, border: `${item.equipped || highlighted ? '2px' : '1px'} solid ${highlighted ? '#3DBA7A' : item.equipped ? '#F0C85A' : `${rarityColor}66`}`, borderRadius: 18, padding: 12, display: 'flex', flexDirection: 'column', gap: 8, position: 'relative', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.35)', animation: highlighted ? 'highlightPulse 1.5s ease-in-out 2' : undefined }}>
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${rarityColor}, transparent)`, opacity: 0.7 }} />
-      <div style={{ width: '100%', aspectRatio: '1', borderRadius: 12, overflow: 'hidden', background: previewBg, border: '1px solid rgba(154,148,144,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div ref={cardRef} className={`shop-card shop-card-${item.rarity.toLowerCase()}`} style={{ background: cardBg, border: `${item.equipped || highlighted ? '2px' : '1px'} solid ${highlighted ? '#3DBA7A' : item.equipped ? '#F0C85A' : `${rarityColor}66`}`, borderRadius: 18, padding: 12, display: 'flex', flexDirection: 'column', gap: 8, position: 'relative', overflow: 'hidden', boxShadow: glow.boxShadow, animation: highlighted ? 'highlightPulse 1.5s ease-in-out 2' : undefined }}>
+      {/* Rarity-полоса сверху — усилена (3px + свечение) */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, transparent, ${rarityColor}, transparent)`, filter: `drop-shadow(0 0 5px ${rarityColor})` }} />
+      {/* Shine-блик для LEGENDARY — медленный проблеск как на витрине */}
+      {item.rarity === 'LEGENDARY' && <div className="shop-shine" />}
+      <div style={{ width: '100%', aspectRatio: '1', borderRadius: 12, overflow: 'hidden', background: `${glow.previewGlow}, ${previewBg}`, border: `1px solid ${rarityColor}22`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {renderPreview()}
       </div>
       <div>
@@ -188,12 +232,16 @@ export const AvatarItemCard: React.FC<AvatarItemCardProps> = ({ item, loading, h
       setTimeout(() => cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
   }, [highlighted]);
 
+  // 2026-06-10: rarity-glow + shine — синхронно с ItemCard («дорогой вид»).
+  const glow = RARITY_GLOW[item.rarity] ?? RARITY_GLOW.COMMON;
+
   return (
-    <div ref={cardRef} style={{ background: 'linear-gradient(135deg, #141018 0%, #0F0E18 100%)', border: `${item.equipped || highlighted ? '2px' : '1px'} solid ${highlighted ? '#3DBA7A' : item.equipped ? '#F0C85A' : `${rarityColor}66`}`, borderRadius: 18, padding: 12, display: 'flex', flexDirection: 'column', gap: 8, position: 'relative', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.35)', animation: highlighted ? 'highlightPulse 1.5s ease-in-out 2' : undefined }}>
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${rarityColor}, transparent)`, opacity: 0.7 }} />
-      {item.equipped && <div style={{ position: 'absolute', top: 8, right: 8, background: '#F0C85A', color: '#1A1208', fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 6 }}>ACTIVE</div>}
-      <div style={{ width: '100%', aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 8 }}>
-        <div style={{ width: '80%', aspectRatio: '1', borderRadius: '50%', overflow: 'hidden', border: `2px solid ${item.equipped ? '#F0C85A' : `${rarityColor}66`}`, boxShadow: item.equipped ? `0 0 12px ${rarityColor}66` : undefined }}>
+    <div ref={cardRef} className={`shop-card shop-card-${item.rarity.toLowerCase()}`} style={{ background: 'linear-gradient(135deg, #141018 0%, #0F0E18 100%)', border: `${item.equipped || highlighted ? '2px' : '1px'} solid ${highlighted ? '#3DBA7A' : item.equipped ? '#F0C85A' : `${rarityColor}66`}`, borderRadius: 18, padding: 12, display: 'flex', flexDirection: 'column', gap: 8, position: 'relative', overflow: 'hidden', boxShadow: glow.boxShadow, animation: highlighted ? 'highlightPulse 1.5s ease-in-out 2' : undefined }}>
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, transparent, ${rarityColor}, transparent)`, filter: `drop-shadow(0 0 5px ${rarityColor})` }} />
+      {item.rarity === 'LEGENDARY' && <div className="shop-shine" />}
+      {item.equipped && <div style={{ position: 'absolute', top: 8, right: 8, background: '#F0C85A', color: '#1A1208', fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 6, zIndex: 1 }}>ACTIVE</div>}
+      <div style={{ width: '100%', aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6, background: glow.previewGlow, borderRadius: 12 }}>
+        <div style={{ width: '86%', aspectRatio: '1', borderRadius: '50%', overflow: 'hidden', border: `2px solid ${item.equipped ? '#F0C85A' : `${rarityColor}88`}`, boxShadow: item.equipped ? `0 0 14px ${rarityColor}88` : `0 0 10px ${rarityColor}33` }}>
           {item.imageUrl && !imgError
             ? <img src={item.imageUrl} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" onError={() => setImgError(true)} />
             : <div style={{ width: '100%', height: '100%', background: '#0B0D11', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5A5248' }}><IcoUsers size={32} /></div>

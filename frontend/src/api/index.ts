@@ -93,13 +93,14 @@ interface UserPublicMin {
 
 // ── LEADERBOARD ───────────────────────────────────────
 export const leaderboardApi = {
-  get: (params?: { league?: string; limit?: number; offset?: number; search?: string; sort?: string }) => {
+  get: (params?: { league?: string; limit?: number; offset?: number; search?: string; sort?: string; period?: string }) => {
     const qs = new URLSearchParams();
     if (params?.league)  qs.set('league',  params.league);
     if (params?.limit)   qs.set('limit',   String(params.limit));
     if (params?.offset)  qs.set('offset',  String(params.offset));
     if (params?.search)  qs.set('search',  params.search);
     if (params?.sort)    qs.set('sort',    params.sort);
+    if (params?.period)  qs.set('period',  params.period); // audit-fix 2026-06-10: backend поддерживал, фронт не передавал
     const q = qs.toString();
     return api.get<{ total: number; myRank: number; users: LeaderboardUser[] }>(
       `/leaderboard${q ? '?' + q : ''}`

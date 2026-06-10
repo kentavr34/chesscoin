@@ -1008,7 +1008,7 @@ export const ProfilePage: React.FC = () => {
                       )}
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <div style={{ fontSize: 18, color: color }}>вњ“</div>
+                      <div style={{ fontSize: 18, color: color }}>✓</div>
                       <div style={{ fontSize: '.55rem', color: '#5A5248', marginTop: 2 }}>{t.profile.passed}</div>
                     </div>
                   </div>
@@ -1029,7 +1029,7 @@ export const ProfilePage: React.FC = () => {
             <div style={{ width: 36, height: 4, background: 'rgba(255,255,255,.08)', borderRadius: 2, margin: '0 auto 18px' }} />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <span style={{ fontSize: '1rem', fontWeight: 900, color: '#EAE2CC', display: 'inline-flex', alignItems: 'center', gap: 8 }}><IcoSettings size={16} /> {t.profile.settings.title}</span>
-              <button onClick={() => setShowSettings(false)} style={{ width: 36, height: 36, borderRadius: 9, background: 'rgba(255,255,255,.05)', border: '.5px solid rgba(255,255,255,.09)', color: '#7A7875', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>вњ•</button>
+              <button onClick={() => setShowSettings(false)} style={{ width: 36, height: 36, borderRadius: 9, background: 'rgba(255,255,255,.05)', border: '.5px solid rgba(255,255,255,.09)', color: '#7A7875', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {/* Язык */}
