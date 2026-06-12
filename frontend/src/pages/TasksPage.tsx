@@ -57,6 +57,10 @@ export const TasksPage: React.FC = () => {
   const [dailyPuzzle, setDailyPuzzle] = useState<PuzzleItem | null>(null);
   const [puzzleLoading, setPuzzleLoading] = useState(true);
   const midnightTimer = useMidnightCountdown();
+  // Audit-fix 2026-06-10: ENTER_CODE-задания требуют код, но фронт его не
+  // спрашивал — юзер сразу получал «Invalid code». Модал ввода кода:
+  const [codeTask, setCodeTask] = useState<Task | null>(null);
+  const [codeValue, setCodeValue] = useState('');
 
   const CAT_LABEL: Record<string, string> = {
     DAILY: tp.catDaily,
@@ -76,11 +80,18 @@ export const TasksPage: React.FC = () => {
       .finally(() => setPuzzleLoading(false));
   }, []);
 
-  const handleClaim = async (task: Task) => {
+  const handleClaim = async (task: Task, code?: string) => {
     if (task.isCompleted || claiming) return;
+    // ENTER_CODE без кода → открываем модал ввода вместо заведомо
+    // провального запроса.
+    if (task.taskType === 'ENTER_CODE' && !code) {
+      setCodeValue('');
+      setCodeTask(task);
+      return;
+    }
     setClaiming(task.id);
     try {
-      const res = await tasksApi.complete(task.id);
+      const res = await tasksApi.complete(task.id, code);
       setTasks((prev) => prev.map((tk) => tk.id === task.id ? { ...tk, isCompleted: true } : tk));
       const updated = await authApi.me();
       setUser(updated);
@@ -88,6 +99,7 @@ export const TasksPage: React.FC = () => {
       // юзер не видел что награда реально начислена.
       const rewardTxt = res?.reward ? ` +${res.reward} ᚙ` : '';
       window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text: `Задание выполнено!${rewardTxt}`, type: 'info' } }));
+      setCodeTask(null); // успех → закрываем модал кода если был открыт
     } catch (e: unknown) {
       window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text: (e instanceof Error ? e.message : String(e)) ?? 'Error', type: 'error' } }));
     } finally {
@@ -333,6 +345,38 @@ export const TasksPage: React.FC = () => {
           ))}
         </React.Fragment>
       ))}
+
+      {/* Модал ввода кода для ENTER_CODE-заданий (audit-fix 2026-06-10) */}
+      {codeTask && (
+        <div
+          onClick={(e) => e.target === e.currentTarget && setCodeTask(null)}
+          style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+        >
+          <div style={{ width: '100%', maxWidth: 360, background: 'linear-gradient(170deg,#141018,#0F0E18)', border: '.5px solid rgba(212,168,67,.3)', borderRadius: 18, padding: '20px 18px' }}>
+            <div style={{ fontSize: 15, fontWeight: 800, color: '#EAE2CC', marginBottom: 6 }}>{codeTask.title}</div>
+            <div style={{ fontSize: 12, color: '#9A9490', marginBottom: 14 }}>Введи код задания:</div>
+            <input
+              autoFocus
+              value={codeValue}
+              onChange={(e) => setCodeValue(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' && codeValue.trim()) handleClaim(codeTask, codeValue.trim()); }}
+              placeholder="Код…"
+              style={{ width: '100%', boxSizing: 'border-box', padding: '12px 14px', background: 'rgba(255,255,255,0.05)', border: '.5px solid rgba(212,168,67,.35)', borderRadius: 12, color: '#F0E8CC', fontSize: 15, fontFamily: "'JetBrains Mono', monospace", outline: 'none', marginBottom: 14 }}
+            />
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={() => setCodeTask(null)}
+                style={{ flex: 1, padding: '12px', background: 'rgba(255,255,255,.05)', color: '#9A9490', border: '.5px solid rgba(255,255,255,.1)', borderRadius: 12, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+              >Отмена</button>
+              <button
+                onClick={() => codeValue.trim() && handleClaim(codeTask, codeValue.trim())}
+                disabled={!codeValue.trim() || claiming === codeTask.id}
+                style={{ flex: 1, padding: '12px', background: codeValue.trim() ? 'linear-gradient(135deg,#F0C85A,#D4A843)' : 'rgba(255,255,255,.06)', color: codeValue.trim() ? '#1A1208' : '#5A5248', border: 'none', borderRadius: 12, fontSize: 13, fontWeight: 800, cursor: codeValue.trim() ? 'pointer' : 'default', fontFamily: 'inherit' }}
+              >{claiming === codeTask.id ? '…' : 'Подтвердить'}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </PageLayout>
     </>
   );

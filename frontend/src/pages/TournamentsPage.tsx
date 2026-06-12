@@ -128,6 +128,9 @@ export const TournamentsPage: React.FC = () => {
     try {
       await tournamentsApi.join(tour.id);
       await load();
+      // Audit-fix 2026-06-10: success-фидбек — раньше после вступления
+      // экран просто тихо перезагружался без подтверждения.
+      showToast(`Ты в турнире «${tour.name}». Матчи появятся в Батлах.`, 'info');
     } catch (e: unknown) {
       const err = e as Record<string, unknown>;
       if ((err.message as string | undefined)?.includes('COUNTRY_REQUIRED') || err.error === 'COUNTRY_REQUIRED') {

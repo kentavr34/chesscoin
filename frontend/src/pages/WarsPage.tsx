@@ -1069,9 +1069,14 @@ export const WarsPage: React.FC = () => {
             >
               {t.wars.btnFighters}
             </button>
+            {/* Audit-fix 2026-06-10: вместо мёртвой disabled-кнопки — тост
+                с объяснением почему недоступно (нет войны и не главком). */}
             <button
-              onClick={() => myActiveWar ? setSelectedWarId(myActiveWar.id) : (isCommander ? setShowDeclareWar(true) : undefined)}
-              disabled={!isCommander && !myActiveWar}
+              onClick={() => {
+                if (myActiveWar) { setSelectedWarId(myActiveWar.id); return; }
+                if (isCommander) { setShowDeclareWar(true); return; }
+                toast('Нет активной войны. Объявить войну может только главком.', 'error');
+              }}
               style={{ ...actionBtnStyle, color: '#3DBA7A', borderColor: 'rgba(61,186,122,0.3)', opacity: (!isCommander && !myActiveWar) ? 0.4 : 1 }}
             >
               {t.wars.btnBattles}

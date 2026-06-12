@@ -1006,7 +1006,14 @@ export function GamePage() {
     setLastMove({ from, to });
     getSocket().emit('game:move', { sessionId, from, to, promotion: promotion ?? 'q' },
       (res: Record<string, unknown>) => {
-        if (!res?.ok) { setLastMove(null); currentFenRef.current = prevFen; }
+        if (!res?.ok) {
+          setLastMove(null);
+          currentFenRef.current = prevFen;
+          // Audit-fix 2026-06-10: ход отклонён сервером — юзер должен это
+          // видеть, а не гадать почему фигура «вернулась».
+          const err = typeof res?.error === 'string' ? res.error : 'Ход отклонён сервером';
+          window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text: err, type: 'error' } }));
+        }
       }
     );
   }, [sessionId]);

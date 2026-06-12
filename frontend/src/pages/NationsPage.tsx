@@ -9,6 +9,7 @@ import type { Nation, ClanWar, ClanMemberData, ClanBattle } from '@/types';
 import { useT } from '@/i18n/useT';
 import { CoinIcon } from '@/components/ui/CoinIcon';
 import { IcoCrown, IcoCheck, IcoClose } from '@/components/icons/UiIcons';
+import { useConfirm } from '@/components/ui/ConfirmModal';
 
 const showToast = (text: string, type: 'error' | 'info' = 'error') => {
   window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text, type } }));
@@ -20,6 +21,7 @@ export const NationsPage: React.FC = () => {
   const t = useT();
   const navigate = useNavigate();
   const { user } = useUserStore();
+  const [pageConfirm, PageConfirmDialog] = useConfirm();
   // Клик по чужому аватару → его профиль (Кенан 2026-05-17).
   const goProfile = (uid?: string | null) => {
     console.log('[profileNav] Nations click', { uid, currentUserId: user?.id });
@@ -78,8 +80,11 @@ export const NationsPage: React.FC = () => {
   useEffect(() => { load(); }, []);
   useEffect(() => { if (tab === 'members') loadMembers(); }, [tab]);
 
+  // Audit-fix 2026-06-10: браузерный confirm() → фирменный useConfirm
+  // (центрированный модал по правилу MASTER_PLAN §0.5).
   const handleLeave = async () => {
-    if (!confirm(t.nations.leaveConfirm)) return;
+    const ok = await pageConfirm({ title: t.nations.leaveConfirm, danger: true });
+    if (!ok) return;
     await nationsApi.leave();
     await load();
     setTab('ranking');
@@ -91,7 +96,8 @@ export const NationsPage: React.FC = () => {
   };
 
   const handleKick = async (targetUserId: string) => {
-    if (!confirm(t.nations.kickConfirm)) return;
+    const ok = await pageConfirm({ title: t.nations.kickConfirm, danger: true });
+    if (!ok) return;
     await nationsApi.kickMember(targetUserId);
     await loadMembers();
   };
@@ -457,6 +463,7 @@ export const NationsPage: React.FC = () => {
           onSuccess={() => { setShowJoinBattle(null); load(); }}
         />
       )}
+      {PageConfirmDialog}
     </PageLayout>
   );
 };

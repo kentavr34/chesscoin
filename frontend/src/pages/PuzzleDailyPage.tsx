@@ -5,6 +5,7 @@ import { Chessboard } from 'react-chessboard';
 import { puzzlesApi } from '@/api/index';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { useUserStore } from '@/store/useUserStore';
+import { fmtBalance } from '@/utils/format';
 
 interface DailyPuzzle {
   id: string;
@@ -98,7 +99,7 @@ export const PuzzleDailyPage: React.FC = () => {
       return true;
     } else {
       setWrong(true);
-      setErrorMsg('Wrong move! Try again.');
+      setErrorMsg('Неверный ход! Попробуй ещё раз.');
       setTimeout(() => setWrong(false), 800);
       return false;
     }
@@ -106,7 +107,7 @@ export const PuzzleDailyPage: React.FC = () => {
 
   if (loading) {
     return (
-      <PageLayout title="Daily Puzzle" onBack={() => navigate(-1)}>
+      <PageLayout title="Задача дня" onBack={() => navigate(-1)}>
         <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}>
           <div style={{ width: 32, height: 32, border: '3px solid #F5C842', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.75s linear infinite' }} />
           <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
@@ -117,8 +118,8 @@ export const PuzzleDailyPage: React.FC = () => {
 
   if (!puzzle) {
     return (
-      <PageLayout title="Daily Puzzle" onBack={() => navigate(-1)}>
-        <div style={{ textAlign: 'center', padding: 40, color: '#A8B0C8' }}>Puzzle not found</div>
+      <PageLayout title="Задача дня" onBack={() => navigate(-1)}>
+        <div style={{ textAlign: 'center', padding: 40, color: '#A8B0C8' }}>Задача не найдена</div>
       </PageLayout>
     );
   }
@@ -152,10 +153,10 @@ export const PuzzleDailyPage: React.FC = () => {
       {/* Reward and difficulty */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 12 }}>
         <div style={{ padding: '4px 14px', background: '#1C2030', borderRadius: 20, fontSize: 12, color: '#F5C842', fontWeight: 600 }}>
-          Reward: {Number(puzzle.reward).toLocaleString()}
+          Награда: {fmtBalance(puzzle.reward)} ᚙ
         </div>
         <div style={{ padding: '4px 14px', background: '#1C2030', borderRadius: 20, fontSize: 12, color: '#A8B0C8' }}>
-          {'в…'.repeat(Math.min(5, Math.ceil(puzzle.difficulty / 20)))}{'в†'.repeat(5 - Math.min(5, Math.ceil(puzzle.difficulty / 20)))}
+          {'★'.repeat(Math.min(5, Math.ceil(puzzle.difficulty / 20)))}{'☆'.repeat(5 - Math.min(5, Math.ceil(puzzle.difficulty / 20)))}
         </div>
       </div>
 
@@ -188,7 +189,7 @@ export const PuzzleDailyPage: React.FC = () => {
             width: '100%', padding: '12px 0', borderRadius: 12, border: 'none', cursor: 'pointer',
             background: '#1C2030', color: '#A8B0C8', fontWeight: 600, fontSize: 14,
           }}>
-            Start over
+            Начать заново
           </button>
         </div>
       )}
@@ -197,9 +198,9 @@ export const PuzzleDailyPage: React.FC = () => {
         <div style={{ margin: '16px', padding: '20px 16px', background: '#13161E', borderRadius: 16, textAlign: 'center' }}>
           <div style={{ fontSize: 32 }}>✓</div>
           <div style={{ fontSize: 16, fontWeight: 700, color: '#F5C842', marginTop: 8 }}>
-            {rewarded ? `+${Number(puzzle.reward).toLocaleString()} earned!` : 'Puzzle already solved'}
+            {rewarded ? `+${Number(puzzle.reward).toLocaleString()} заработано!` : 'Задача уже решена'}
           </div>
-          <div style={{ fontSize: 13, color: '#A8B0C8', marginTop: 4 }}>Come back tomorrow for a new puzzle!</div>
+          <div style={{ fontSize: 13, color: '#A8B0C8', marginTop: 4 }}>Возвращайся завтра за новой задачей!</div>
           <button onClick={() => navigate(-1)} style={{
             marginTop: 16, padding: '12px 32px', background: '#F5C842', color: '#0B0D11',
             border: 'none', borderRadius: 12, fontWeight: 700, cursor: 'pointer', fontSize: 14,
