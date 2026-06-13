@@ -154,8 +154,8 @@ export const BattleHistoryCard: React.FC<BattleHistoryCardProps> = ({ game, me, 
   // Кто белый — кто чёрный
   const whiteUser = game.isWhite ? myUser : opponentUser;
   const blackUser = game.isWhite ? opponentUser : myUser;
-  const whiteFallback = !whiteUser && game.hasBot ? `JARVIS Lv.${game.botLevel ?? '?'}` : undefined;
-  const blackFallback = !blackUser && game.hasBot ? `JARVIS Lv.${game.botLevel ?? '?'}` : undefined;
+  const whiteFallback = !whiteUser && game.hasBot ? (game.botLevel != null ? `JARVIS Lv.${game.botLevel}` : 'JARVIS') : undefined;
+  const blackFallback = !blackUser && game.hasBot ? (game.botLevel != null ? `JARVIS Lv.${game.botLevel}` : 'JARVIS') : undefined;
 
   // Победитель: я если win и т.д.
   const meIsWinner = result === 'win';

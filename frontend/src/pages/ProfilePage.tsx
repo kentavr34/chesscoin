@@ -535,7 +535,7 @@ export const ProfilePage: React.FC = () => {
         };
 
         const filteredGames = recentGames
-          .filter((g) => matches(g.type, g.opponent ? `${g.opponent.firstName} ${(g.opponent as any).lastName ?? ''}` : (g.hasBot ? `JARVIS Lv.${g.botLevel ?? '?'}` : ''), g.finishedAt))
+          .filter((g) => matches(g.type, g.opponent ? `${g.opponent.firstName} ${(g.opponent as any).lastName ?? ''}` : (g.hasBot ? (g.botLevel != null ? `JARVIS Lv.${g.botLevel}` : 'JARVIS') : ''), g.finishedAt))
           .sort((a, b) => (Date.parse(b.finishedAt ?? '') || 0) - (Date.parse(a.finishedAt ?? '') || 0));
 
         const filteredSaves = savedGames.filter((sg) => {

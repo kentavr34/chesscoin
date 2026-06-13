@@ -92,7 +92,12 @@ export const BattleHistoryPage: React.FC = () => {
       setGames(r.games as HistoryGame[]);
       setTotal(r.total ?? 0);
       setOffset(off);
-    } catch {} finally {
+    } catch {
+      // audit-fix 2026-06-12: при ошибке API раньше молча висел старый список
+      setGames([]);
+      setTotal(0);
+      window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text: 'Не удалось загрузить историю', type: 'error' } }));
+    } finally {
       setLoading(false);
     }
   }, []);
@@ -105,7 +110,11 @@ export const BattleHistoryPage: React.FC = () => {
       setPublicGames(r.games ?? []);
       setTotal(r.total ?? 0);
       setOffset(off);
-    } catch {} finally {
+    } catch {
+      setPublicGames([]);
+      setTotal(0);
+      window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text: 'Не удалось загрузить ленту', type: 'error' } }));
+    } finally {
       setLoading(false);
     }
   }, []);

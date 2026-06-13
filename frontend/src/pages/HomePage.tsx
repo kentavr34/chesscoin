@@ -435,7 +435,7 @@ export const HomePage: React.FC = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: '.22rem' }}>
                 <div style={{ display: 'flex', gap: '.04rem' }}>
                   {Array.from({ length: maxAttempts }, (_, i) => (
-                    <svg key={i} width="13" height="13" viewBox="0 0 14 14" fill="none" style={{ opacity: i < attempts ? 1 : 0.18 }}>
+                    <svg key={i} width="13" height="13" viewBox="0 0 14 14" fill="none" style={{ opacity: i < attempts ? 1 : 0.35 }}>
                       <path d="M7 1l1.55 3.63L12.5 5.1l-2.9 2.73.78 3.9L7 9.8l-3.38 1.93.78-3.9L1.5 5.1l3.95-.47z" fill="#D4A843" stroke="#A07830" strokeWidth=".5"/>
                     </svg>
                   ))}
@@ -452,7 +452,7 @@ export const HomePage: React.FC = () => {
                   <circle cx="6" cy="6" r="5" stroke="#5E5A54" strokeWidth="1.2"/>
                   <path d="M6 3.5V6l1.5 1.5" stroke="#5E5A54" strokeWidth="1.2" strokeLinecap="round"/>
                 </svg>
-                <span style={{ fontSize: '.9rem', fontWeight: 900, color: '#9A9590', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{timeLeft || '08:00'}</span>
+                <span style={{ fontSize: '.9rem', fontWeight: 900, color: '#9A9590', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{timeLeft || '—'}</span>
               </div>
             </div>
           </div>

@@ -252,7 +252,13 @@ export const LessonPage: React.FC = () => {
         if (lessonParam) {
           const lvl = Number(lessonParam);
           if (Number.isFinite(lvl) && lvl > 0) {
-            tasksApi.completeLesson(lvl).catch(() => {});
+            // audit-fix 2026-06-12: тихий catch скрывал не-сохранение прогресса —
+            // юзер решал урок, а уровень не поднимался без объяснения.
+            tasksApi.completeLesson(lvl).catch(() => {
+              window.dispatchEvent(new CustomEvent('chesscoin:toast', {
+                detail: { text: 'Прогресс урока не сохранился — проверь уровень в лесенке', type: 'error' },
+              }));
+            });
           }
         }
 

@@ -60,6 +60,9 @@ export const BattlesPage: React.FC = () => {
   const [showQuick, setShowQuick] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showAttempts, setShowAttempts] = useState(false);
+  // Audit-fix 2026-06-12: guard от двойного клика JOIN — два быстрых тапа
+  // отправляли два game:join (риск двойной ставки/SESSION_FULL гонки).
+  const [joiningCode, setJoiningCode] = useState<string | null>(null);
   const [replayData, setReplayData] = useState<{
     pgn: string; title: string; sessionId: string;
     whitePlayer?: UserPublic | null; blackPlayer?: UserPublic | null;
@@ -105,6 +108,7 @@ export const BattlesPage: React.FC = () => {
   };
 
   const handleJoin = (battle: BattleLobbyItem) => {
+    if (joiningCode) return; // уже в процессе join — игнорируем повторный тап
     // Нет попыток → открыть покупку попыток
     if (!hasAttempts) {
       setShowAttempts(true);
@@ -118,8 +122,10 @@ export const BattlesPage: React.FC = () => {
       navigate('/shop');
       return;
     }
+    setJoiningCode(battle.code);
     const socket = getSocket();
     socket.emit('game:join', { code: battle.code }, (res) => {
+      setJoiningCode(null);
       if (res.ok && res.session) {
         upsertSession(res.session);
         navigate('/game/' + res.session.id);
@@ -127,6 +133,8 @@ export const BattlesPage: React.FC = () => {
         showToast(getErrText(res.error ?? ''), 'error');
       }
     });
+    // Страховка: если callback не пришёл за 10с (сокет завис) — разблокируем
+    setTimeout(() => setJoiningCode((c) => (c === battle.code ? null : c)), 10_000);
   };
 
   const goldCircleBtn: React.CSSProperties = {
