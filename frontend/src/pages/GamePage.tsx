@@ -242,7 +242,7 @@ const PlayerPanel: React.FC<PanelProps> = ({
 
   return (
     <div style={{
-      display: 'flex', alignItems: 'center', gap: 10,
+      display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', alignItems: 'center', gap: 6,
       height: PANEL_H, padding: '0 10px 0 14px', flexShrink: 0,
       background: isActive
         ? isCritical ? 'rgba(220,50,47,.06)' : 'rgba(212,168,67,.06)'
@@ -259,6 +259,9 @@ const PlayerPanel: React.FC<PanelProps> = ({
         : 'none',
       transition: 'background .3s, border-color .3s, box-shadow .3s',
     }}>
+
+      {/* ── ЛЕВАЯ 1/3: аватар + имя ───────────────────────────────────── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
 
       {/* ── Аватар (кликабельный → профиль игрока) ───────────────────────── */}
       <div
@@ -293,7 +296,7 @@ const PlayerPanel: React.FC<PanelProps> = ({
       {/* ── ЗОНА 1: герой (имя + флаг + ELO) ───────────────────────────── */}
       <div style={{
         display: 'flex', flexDirection: 'column', justifyContent: 'center',
-        gap: 4, width: 96, flexShrink: 0, overflow: 'hidden',
+        gap: 4, flex: 1, minWidth: 0, overflow: 'hidden',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
           <span style={{
@@ -312,13 +315,11 @@ const PlayerPanel: React.FC<PanelProps> = ({
           {elo !== undefined ? `ELO ${elo}` : (isBot ? 'J.A.R.V.I.S' : '')}
         </span>
       </div>
+      </div>{/* /ЛЕВАЯ 1/3 */}
 
-      {/* Разделитель ────────────────────────────────────────────────────── */}
-      <span style={{ width: 1, height: 38, background: 'rgba(255,255,255,.06)', flexShrink: 0 }} />
-
-      {/* ── ЗОНА 2: монеты (стр. 1) + фигуры с переносом (стр. 2-3) ─────── */}
+      {/* ── СРЕДНЯЯ 1/3: монеты + съеденные фигуры (строго по центру) ───── */}
       <div style={{
-        flex: 1, minWidth: 0, maxHeight: PANEL_H - 10,
+        minWidth: 0, maxHeight: PANEL_H - 10,
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center', gap: 3,
         overflow: 'hidden',
@@ -357,9 +358,8 @@ const PlayerPanel: React.FC<PanelProps> = ({
         )}
       </div>
 
-      {/* Разделитель ────────────────────────────────────────────────────── */}
-      <span style={{ width: 1, height: 38, background: 'rgba(255,255,255,.06)', flexShrink: 0 }} />
-
+      {/* ── ПРАВАЯ 1/3: таймер (по правому краю) ──────────────────────── */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
       {/* ── Таймер ────────────────────────────────────────────────────────── */}
       <div style={{
         background: isCritical
@@ -385,6 +385,7 @@ const PlayerPanel: React.FC<PanelProps> = ({
           {timeDisplay}
         </div>
       </div>
+      </div>{/* /ПРАВАЯ 1/3 */}
     </div>
   );
 };
