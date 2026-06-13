@@ -217,7 +217,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({ item, loading, highlighted, 
   const [imgError, setImgError] = React.useState(false);
   const renderPreview = () => {
     const fallbackBoardColors = getBoardColorsFromCSS('chesscoin');
-    if (item.imageUrl && !imgError) return <img src={item.imageUrl} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" onError={() => setImgError(true)} />;
+    if (item.imageUrl && !imgError) return <img src={item.imageUrl} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" decoding="async" onError={() => setImgError(true)} />;
     if (item.type === 'BOARD_SKIN') { const c = BOARD_KNOWN[item.name] ?? fallbackBoardColors; return <BoardPreview light={c[0]} dark={c[1]} />; }
     if (item.type === 'PIECE_SKIN') return <PiecePreview name={item.name} />;
     if (item.type === 'PIECE_SET')  return <PieceSetPreview name={item.name} />;
@@ -309,7 +309,7 @@ export const AvatarItemCard: React.FC<AvatarItemCardProps> = ({ item, loading, h
       <div style={{ width: '100%', aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6, background: glow.previewGlow, borderRadius: 12 }}>
         <div style={{ width: '86%', aspectRatio: '1', borderRadius: '50%', overflow: 'hidden', border: `2px solid ${item.equipped ? '#F0C85A' : `${rarityColor}88`}`, boxShadow: item.equipped ? `0 0 14px ${rarityColor}88` : `0 0 10px ${rarityColor}33` }}>
           {item.imageUrl && !imgError
-            ? <img src={item.imageUrl} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" onError={() => setImgError(true)} />
+            ? <img src={item.imageUrl} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" decoding="async" onError={() => setImgError(true)} />
             : <div style={{ width: '100%', height: '100%', background: '#0B0D11', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5A5248' }}><IcoUsers size={32} /></div>
           }
         </div>

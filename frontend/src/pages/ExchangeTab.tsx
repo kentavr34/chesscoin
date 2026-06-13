@@ -19,6 +19,7 @@ import type { User } from '@/types';
 import { sendTonPayment, connectWallet } from '@/lib/tonconnect';
 import { createChart, IChartApi, ColorType, LineStyle, type Time } from 'lightweight-charts';
 import { useT } from '@/i18n/useT';
+import { IcoArrowDown, IcoArrowUp } from '@/components/icons/UiIcons';
 
 interface ExchangeTabProps {
   user: User | null;
@@ -166,17 +167,17 @@ const CreateOrderModal: React.FC<{
 }> = ({ userBalance, onClose, onCreated, showToast }) => {
   const t = useT();
   const maxCoins = Math.min(Number(BigInt(userBalance)), 100_000_000);
-  const [amount, setAmount] = useState(Math.max(10_000, Math.min(100_000, maxCoins)));
+  const [amount, setAmount] = useState(Math.max(1_000, Math.min(10_000, maxCoins)));
   const [price, setPrice]   = useState(0.001); // TON per 1M
   const [loading, setLoading] = useState(false);
 
   const totalTon  = (amount / 1_000_000) * price;
   const feeTon    = totalTon * PLATFORM_FEE;
   const netTon    = totalTon - feeTon;
-  const QUICK = [10_000, 100_000, 1_000_000, 10_000_000].filter(v => v <= maxCoins);
+  const QUICK = [1_000, 10_000, 100_000, 1_000_000].filter(v => v <= maxCoins);
 
   const handleCreate = async () => {
-    if (amount < 10_000) return showToast(t.exchange.minCoins);
+    if (amount < 1_000) return showToast(t.exchange.minCoins);
     if (price < MIN_PRICE) return showToast(t.exchange.minPrice(MIN_PRICE));
     setLoading(true);
     try {
@@ -205,7 +206,7 @@ const CreateOrderModal: React.FC<{
         <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 28, fontWeight: 800, color: '#F0C85A', textAlign: 'center', marginBottom: 10 }}>
           {fmtBalance(String(amount))}
         </div>
-        <input type="range" min={10_000} max={maxCoins} step={10_000} value={amount}
+        <input type="range" min={1_000} max={Math.max(1_000, maxCoins)} step={1_000} value={amount}
           onChange={e => setAmount(Number(e.target.value))}
           style={{ width: '100%', marginBottom: 10, accentColor: '#F0C85A' }} />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 6, marginBottom: 18 }}>
@@ -240,8 +241,8 @@ const CreateOrderModal: React.FC<{
           ))}
         </div>
 
-        <button onClick={handleCreate} disabled={loading || amount < 10_000} style={{ width: '100%', padding: '16px', background: loading ? '#2A2F48' : '#F0C85A', color: loading ? '#5A5248' : '#0B0D11', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 800, cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: loading ? 0.7 : 1 }}>
-          {loading ? 'Creating order...' : 'Place order'}
+        <button onClick={handleCreate} disabled={loading || amount < 1_000} style={{ width: '100%', padding: '16px', background: loading ? '#2A2F48' : '#F6465D', color: loading ? '#5A5248' : '#fff', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 800, cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: loading ? 0.7 : 1 }}>
+          {loading ? 'Создаю ордер…' : 'Выставить на продажу'}
         </button>
       </div>
     </div>
@@ -386,14 +387,14 @@ const CreateBuyOrderModal: React.FC<{
   showToast: (m: string) => void;
 }> = ({ onClose, onCreated, showToast }) => {
   const t = useT();
-  const [amount, setAmount] = useState(100_000);
+  const [amount, setAmount] = useState(10_000);
   const [price, setPrice]   = useState(0.001);
   const [loading, setLoading] = useState(false);
   const totalTon = (amount / 1_000_000) * price;
-  const QUICK = [10_000, 100_000, 1_000_000, 10_000_000];
+  const QUICK = [1_000, 10_000, 100_000, 1_000_000];
 
   const handleCreate = async () => {
-    if (amount < 10_000) return showToast(t.exchange.minCoins);
+    if (amount < 1_000) return showToast(t.exchange.minCoins);
     if (price < MIN_PRICE) return showToast(t.exchange.minPrice(MIN_PRICE));
     setLoading(true);
     try {
@@ -417,7 +418,7 @@ const CreateBuyOrderModal: React.FC<{
         <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 26, fontWeight: 800, color: '#0098EA', textAlign: 'center', marginBottom: 10 }}>
           {amount.toLocaleString()}
         </div>
-        <input type="range" min={10_000} max={10_000_000} step={10_000} value={amount} onChange={e => setAmount(Number(e.target.value))} style={{ width: '100%', marginBottom: 10, accentColor: '#0098EA' }} />
+        <input type="range" min={1_000} max={10_000_000} step={1_000} value={amount} onChange={e => setAmount(Number(e.target.value))} style={{ width: '100%', marginBottom: 10, accentColor: '#0ECB81' }} />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 6, marginBottom: 16 }}>
           {QUICK.map(v => (
             <button key={v} onClick={() => setAmount(v)} style={{ padding: '7px 4px', borderRadius: 10, fontSize: 10, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', background: amount === v ? 'rgba(0,152,234,0.15)' : '#141018', color: amount === v ? '#0098EA' : '#9A9490', border: `1px solid ${amount === v ? 'rgba(0,152,234,0.3)' : 'rgba(255,255,255,0.07)'}` }}>
@@ -691,13 +692,13 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
         </div>
       )}
 
-      {/* ── Action buttons ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, margin: '0 18px 10px' }}>
-        <button onClick={() => setShowCreate(true)} style={{ padding: '12px', background: 'rgba(0,214,143,0.12)', color: '#3DBA7A', border: '1px solid rgba(0,214,143,0.3)', borderRadius: 12, fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>
-          Sell
+      {/* ── Action buttons (биржевые цвета: купить=зелёный, продать=красный) ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, margin: '0 18px 12px' }}>
+        <button onClick={() => setShowCreateBuy(true)} style={{ padding: '15px', background: 'linear-gradient(180deg,#0ECB81,#0BA873)', color: '#fff', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 14px rgba(14,203,129,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, letterSpacing: '.02em' }}>
+          <IcoArrowDown size={16} /> Купить
         </button>
-        <button onClick={() => setShowCreateBuy(true)} style={{ padding: '12px', background: 'rgba(0,152,234,0.12)', color: '#0098EA', border: '1px solid rgba(0,152,234,0.3)', borderRadius: 12, fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>
-          Buy
+        <button onClick={() => setShowCreate(true)} style={{ padding: '15px', background: 'linear-gradient(180deg,#F6465D,#D63A4F)', color: '#fff', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 14px rgba(246,70,93,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, letterSpacing: '.02em' }}>
+          <IcoArrowUp size={16} /> Продать
         </button>
       </div>
 

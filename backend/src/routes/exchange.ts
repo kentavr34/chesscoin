@@ -19,7 +19,7 @@ import { updateBalance } from '@/services/economy';
 export const exchangeRouter = Router();
 
 const PLATFORM_FEE_PERCENT = 0.005;
-const MIN_ORDER_COINS      = 10_000n;
+const MIN_ORDER_COINS      = 1_000n; // Кенан 2026-06-13: минимум 1000 монет (было 10 000)
 const MAX_ORDER_COINS      = 100_000_000n;
 const MIN_PRICE_TON        = 0.00001;
 const MAX_PRICE_TON        = 100_000.0;
