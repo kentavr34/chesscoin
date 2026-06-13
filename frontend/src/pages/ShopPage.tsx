@@ -781,6 +781,7 @@ export const ShopPage: React.FC = () => {
                 item={item}
                 loading={actionId === item.id}
                 highlighted={item.id === highlightItemId}
+                comingSoon={item.type === 'THEME' && !THEME_NAME_TO_KEY[item.name]}
                 onPurchase={() => handlePurchase(item)}
                 onEquip={() => handleEquip(item)}
               />

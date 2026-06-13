@@ -199,11 +199,12 @@ interface ItemCardProps {
   item: ShopItem;
   loading: boolean;
   highlighted?: boolean;
+  comingSoon?: boolean;
   onPurchase: () => void;
   onEquip: () => void;
 }
 
-export const ItemCard: React.FC<ItemCardProps> = ({ item, loading, highlighted, onPurchase, onEquip }) => {
+export const ItemCard: React.FC<ItemCardProps> = ({ item, loading, highlighted, comingSoon, onPurchase, onEquip }) => {
   const t = useT();
   const cardRef = useRef<HTMLDivElement>(null);
   const rarityColor = RARITY_COLOR[item.rarity] ?? 'var(--color-text-secondary, #8B92A8)';
@@ -254,6 +255,10 @@ export const ItemCard: React.FC<ItemCardProps> = ({ item, loading, highlighted, 
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, transparent, ${rarityColor}, transparent)`, filter: `drop-shadow(0 0 5px ${rarityColor})` }} />
       {/* Shine-блик для LEGENDARY — медленный проблеск как на витрине */}
       {item.rarity === 'LEGENDARY' && <div className="shop-shine" />}
+      {/* «Скоро» — товар-эффект без живой механики (Кенан, вариант C 2026-06-13) */}
+      {comingSoon && (
+        <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 2, background: 'rgba(20,16,24,0.82)', color: '#C9B98A', fontSize: 9, fontWeight: 800, letterSpacing: 0.4, padding: '3px 7px', borderRadius: 6, border: '1px solid rgba(240,200,90,0.35)', textTransform: 'uppercase' }}>скоро</div>
+      )}
       <div style={{ width: '100%', aspectRatio: '1', borderRadius: 12, overflow: 'hidden', background: `${glow.previewGlow}, ${previewBg}`, border: `1px solid ${rarityColor}22`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {renderPreview()}
       </div>
