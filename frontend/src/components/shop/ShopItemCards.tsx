@@ -6,7 +6,7 @@ import React, { useRef, useEffect } from 'react';
 import { useT } from '@/i18n/useT';
 import { fmtBalance } from '@/utils/format';
 import type { ShopItem } from '@/types';
-import { IcoBolt, IcoCamera, IcoGamepad, IcoMedal, IcoSettings, IcoUsers } from '@/components/icons/UiIcons';
+import { IcoBolt, IcoGamepad, IcoMedal, IcoUsers } from '@/components/icons/UiIcons';
 
 export const RARITY_COLOR: Record<string, string> = {
   COMMON:    'var(--color-text-secondary, #8B92A8)',
@@ -120,6 +120,69 @@ const PieceSetPreview: React.FC<{ name: string }> = ({ name }) => (
   </div>
 );
 
+// ── Палитра эффектов/тем по имени ─────────────────────────────────────────────
+// «Все товары магазина должны быть в превью» (Кенан 2026-06-13): для типов,
+// чьи S3-картинки потеряны (frame/theme/move/win/capture), рисуем богатое
+// синтетическое превью прямо из имени — цвет товара и есть его суть.
+type EffectTheme = { colors: string[]; accent: string };
+function effectThemeFor(name: string): EffectTheme {
+  const n = name.toLowerCase();
+  const has = (...k: string[]) => k.some((x) => n.includes(x));
+  if (has('rainbow'))                       return { colors: ['#FF5757', '#FFC857', '#5BE37D', '#5BC8FF', '#A78BFA'], accent: '#FFFFFF' };
+  if (has('gold', 'golden', 'royal', 'champion', 'legendary', 'binance')) return { colors: ['#FFE9A0', '#F0C85A', '#92660A'], accent: '#FFF7E0' };
+  if (has('silver'))                        return { colors: ['#F1F5F9', '#CBD5E1', '#64748B'], accent: '#FFFFFF' };
+  if (has('platinum'))                      return { colors: ['#E5E7EB', '#9CA3AF', '#4B5563'], accent: '#FFFFFF' };
+  if (has('diamond', 'crystal', 'ice', 'frost')) return { colors: ['#E0FCFF', '#67E8F9', '#155E75'], accent: '#F0FEFF' };
+  if (has('fire', 'blood', 'dragon', 'explosion', 'lava')) return { colors: ['#FDE68A', '#F97316', '#7F1D1D'], accent: '#FFF1E0' };
+  if (has('matrix'))                        return { colors: ['#86EFAC', '#22C55E', '#064E3B'], accent: '#DCFCE7' };
+  if (has('neon', 'cyber'))                 return { colors: ['#A7F3D0', '#22D3EE', '#0369A1'], accent: '#CFFFFB' };
+  if (has('galaxy', 'portal', 'ghost', 'storm'))  return { colors: ['#C4B5FD', '#7C3AED', '#1E1B4B'], accent: '#F5E9FF' };
+  if (has('lightning', 'thunder'))          return { colors: ['#FEF3C7', '#FACC15', '#1E293B'], accent: '#FFFDF2' };
+  if (has('stars', 'galaxy'))               return { colors: ['#C7D2FE', '#6366F1', '#1E1B4B'], accent: '#EEF2FF' };
+  if (has('smoke'))                         return { colors: ['#E5E7EB', '#9CA3AF', '#374151'], accent: '#F3F4F6' };
+  if (has('fireworks', 'victory', 'blast', 'confetti')) return { colors: ['#FCA5A5', '#FBBF24', '#34D399'], accent: '#FFFFFF' };
+  if (has('commander'))                     return { colors: ['#FCD34D', '#B45309', '#1F2937'], accent: '#FFF7E0' };
+  return { colors: ['#9DB2FF', '#6366F1', '#1E1B4B'], accent: '#EEF2FF' };
+}
+
+const gradOf = (c: string[]) =>
+  `linear-gradient(135deg, ${c.map((col, i) => `${col} ${Math.round((i / (c.length - 1)) * 100)}%`).join(', ')})`;
+
+// Универсальное превью эффекта/темы: градиент-плитка + глянец + мотив.
+const EffectPreview: React.FC<{ name: string; rarity: string; motif?: 'bolt' | 'medal' | 'palette' }> = ({ name, rarity, motif = 'palette' }) => {
+  const th = effectThemeFor(name);
+  const ring = RARITY_COLOR[rarity] ?? '#8B92A8';
+  return (
+    <div style={{ position: 'relative', width: '100%', aspectRatio: '1', borderRadius: 10, overflow: 'hidden', background: gradOf(th.colors), border: `1px solid ${ring}55`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 34% 26%, rgba(255,255,255,0.32), transparent 58%)' }} />
+      {motif === 'bolt'  && <span style={{ color: th.accent, opacity: 0.92, filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.4))' }}><IcoBolt size={40} /></span>}
+      {motif === 'medal' && <span style={{ color: th.accent, opacity: 0.92, filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.4))' }}><IcoMedal size={40} /></span>}
+      {motif === 'palette' && (
+        <div style={{ position: 'absolute', bottom: 8, display: 'flex', gap: 5 }}>
+          {th.colors.slice(0, 4).map((c, i) => (
+            <span key={i} style={{ width: 12, height: 12, borderRadius: '50%', background: c, boxShadow: '0 0 0 1.5px rgba(0,0,0,0.25)' }} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Превью рамки аватара: силуэт головы в декоративном кольце темы.
+const FramePreview: React.FC<{ name: string; rarity: string }> = ({ name, rarity }) => {
+  const th = effectThemeFor(name);
+  const ring = RARITY_COLOR[rarity] ?? '#8B92A8';
+  return (
+    <div style={{ width: '100%', aspectRatio: '1', borderRadius: 10, background: 'var(--color-bg-dark, #0B0D11)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px solid ${ring}22` }}>
+      <div style={{ width: '74%', aspectRatio: '1', borderRadius: '50%', padding: 6, background: gradOf(th.colors), boxShadow: `0 0 16px ${th.colors[1]}88`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: '100%', height: '100%', borderRadius: '50%', background: '#0B0D11', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5A6172' }}>
+          <IcoUsers size={30} />
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const BOARD_KNOWN: Record<string, [string, string]> = {
   'Классика': getBoardColorsFromCSS('classic'), 'Classic': getBoardColorsFromCSS('classic'),
   'ChessCoin': getBoardColorsFromCSS('chesscoin'),
@@ -157,14 +220,12 @@ export const ItemCard: React.FC<ItemCardProps> = ({ item, loading, highlighted, 
     if (item.type === 'BOARD_SKIN') { const c = BOARD_KNOWN[item.name] ?? fallbackBoardColors; return <BoardPreview light={c[0]} dark={c[1]} />; }
     if (item.type === 'PIECE_SKIN') return <PiecePreview name={item.name} />;
     if (item.type === 'PIECE_SET')  return <PieceSetPreview name={item.name} />;
-    const previewIcon = (Icon: React.FC<{ size?: number; color?: string }>) =>
-      <span style={{ opacity: 0.6, color: rarityColor }}><Icon size={36} /></span>;
-    if (item.type === 'AVATAR_FRAME') return previewIcon(IcoCamera);
-    if (item.type === 'MOVE_ANIMATION') return previewIcon(IcoBolt);
-    if (item.type === 'WIN_ANIMATION') return previewIcon(IcoMedal);
-    if (item.type === 'CAPTURE_EFFECT') return previewIcon(IcoBolt);
-    if (item.type === 'SPECIAL_MOVE') return previewIcon(IcoBolt);
-    if (item.type === 'THEME') return previewIcon(IcoSettings);
+    if (item.type === 'AVATAR_FRAME') return <FramePreview name={item.name} rarity={item.rarity} />;
+    if (item.type === 'MOVE_ANIMATION') return <EffectPreview name={item.name} rarity={item.rarity} motif="bolt" />;
+    if (item.type === 'SPECIAL_MOVE')   return <EffectPreview name={item.name} rarity={item.rarity} motif="bolt" />;
+    if (item.type === 'CAPTURE_EFFECT') return <EffectPreview name={item.name} rarity={item.rarity} motif="bolt" />;
+    if (item.type === 'WIN_ANIMATION')  return <EffectPreview name={item.name} rarity={item.rarity} motif="medal" />;
+    if (item.type === 'THEME')          return <EffectPreview name={item.name} rarity={item.rarity} motif="palette" />;
     if (item.type === 'FONT') {
       const fontMapping: Record<string, string> = {
         'Inter': "'Inter', sans-serif",
