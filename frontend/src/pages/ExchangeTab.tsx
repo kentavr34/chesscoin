@@ -13,10 +13,10 @@
 // в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { exchangeApi, P2POrder, BuyP2POrder, PriceCandle } from '@/api';
+import { exchangeApi, tonApi, P2POrder, BuyP2POrder, PriceCandle } from '@/api';
 import { fmtBalance } from '@/utils/format';
 import type { User } from '@/types';
-import { sendTonPayment } from '@/lib/tonconnect';
+import { sendTonPayment, connectWallet } from '@/lib/tonconnect';
 import { createChart, IChartApi, ColorType, LineStyle, type Time } from 'lightweight-charts';
 import { useT } from '@/i18n/useT';
 
@@ -110,40 +110,47 @@ const CandleChart: React.FC<{ candles: PriceCandle[]; up: boolean; height?: numb
 };
 
 // ── Locked screen (no wallet) ───────────────────────────────
-const LockedScreen: React.FC<{ currentPrice: number; change24h: number; onConnect: () => void }> = ({ currentPrice, change24h, onConnect }) => {
+const LockedScreen: React.FC<{ user: User | null; connecting: boolean; currentPrice: number; change24h: number; onConnect: () => void }> = ({ user, connecting, currentPrice, change24h, onConnect }) => {
   const up = change24h >= 0;
+  const avatar = user?.avatar;
+  const initial = (user?.firstName ?? '?').slice(0, 1).toUpperCase();
   return (
     <div style={{ padding: '0 18px 24px' }}>
       {/* Price — visible to all */}
       <div style={{ background: '#141018', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: 16, marginBottom: 16, textAlign: 'center' }}>
-        <div style={{ fontSize: 11, color: '#5A5248', marginBottom: 4 }}>CURRENT PRICE</div>
+        <div style={{ fontSize: 11, color: '#5A5248', marginBottom: 4 }}>ТЕКУЩАЯ ЦЕНА</div>
         <div style={{ fontSize: 26, fontWeight: 800, color: '#F0C85A', fontFamily: "'JetBrains Mono',monospace" }}>
           {currentPrice > 0 ? `${currentPrice.toFixed(5)} TON` : '—'}
         </div>
         <div style={{ fontSize: 12, color: currentPrice > 0 ? (up ? '#3DBA7A' : '#FF5B5B') : '#5A5248', marginTop: 4 }}>
-          {currentPrice > 0 ? `${up ? '+' : ''}${change24h.toFixed(2)}% 24h` : 'per 1,000,000'}
+          {currentPrice > 0 ? `${up ? '+' : ''}${change24h.toFixed(2)}% 24h` : 'за 1 000 000'}
         </div>
       </div>
 
       {/* CTA connect wallet */}
       <div style={{ background: 'linear-gradient(135deg,rgba(0,152,234,0.12),rgba(0,152,234,0.06))', border: '1px solid rgba(0,152,234,0.3)', borderRadius: 18, padding: '24px 20px', textAlign: 'center' }}>
-        <div style={{ fontSize: 44, marginBottom: 12 }}></div>
+        {/* Аватар пользователя — кого подключаем (Кенан 2026-06-13) */}
+        <div style={{ width: 64, height: 64, borderRadius: '50%', margin: '0 auto 12px', overflow: 'hidden', border: '2px solid rgba(0,152,234,0.5)', background: 'linear-gradient(135deg,#0098EA,#006FB8)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {avatar
+            ? <img src={avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            : <span style={{ fontSize: 26, fontWeight: 800, color: '#fff' }}>{initial}</span>}
+        </div>
         <div style={{ fontSize: 16, fontWeight: 800, color: '#EAE2CC', marginBottom: 8 }}>
-          Connect TON wallet
+          Подключить TON-кошелёк
         </div>
-        {/* A1 (2026-05-19): 1-TON unlock убран — подключение бесплатное.
-            Старый текст противоречил ShopPage и блокировал юзеров ложной инструкцией. */}
         <div style={{ fontSize: 12, color: '#9A9490', lineHeight: 1.6, marginBottom: 20 }}>
-          A TON wallet is required for exchange trading.<br />
-          Connection is <b style={{ color: '#3DBA7A' }}>free</b> — no upfront payment.
+          Кошелёк нужен для торговли на бирже.<br />
+          Подключение <b style={{ color: '#3DBA7A' }}>бесплатное</b> — без предоплаты.
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12, color: '#9A9490', marginBottom: 20 }}>
-          {['Sell for TON directly to other players', 'Buy at market price', 'Platform fee: 0.5%'].map(t => (
-            <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>{t}</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12, color: '#9A9490', marginBottom: 20, textAlign: 'left' }}>
+          {['Продавай монеты за TON напрямую', 'Покупай по рыночной цене', 'Комиссия платформы: 0.5%'].map(line => (
+            <div key={line} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ color: '#3DBA7A' }}>✓</span>{line}
+            </div>
           ))}
         </div>
-        <button onClick={onConnect} style={{ width: '100%', padding: '14px', background: 'linear-gradient(90deg,#0098EA,#006FB8)', color: '#fff', border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-          Connect TON wallet
+        <button onClick={onConnect} disabled={connecting} style={{ width: '100%', padding: '14px', background: connecting ? '#1E3A52' : 'linear-gradient(90deg,#0098EA,#006FB8)', color: '#fff', border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: connecting ? 'wait' : 'pointer', fontFamily: 'inherit', opacity: connecting ? 0.8 : 1 }}>
+          {connecting ? 'Подключение…' : 'Подключить TON-кошелёк'}
         </button>
       </div>
     </div>
@@ -597,12 +604,38 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
 
   const up = (priceData?.change24h ?? 0) >= 0;
 
+  // Подключение кошелька прямо из биржи (Кенан 2026-06-13): кнопка была
+  // «мёртвой» (показывала тост «подключите выше»). Теперь сама открывает
+  // TonConnect и СОХРАНЯЕТ адрес через /profile/ton-wallet — бесплатно,
+  // без 1-TON платежа (демо-режим). После refresh биржа разблокируется.
+  const [connecting, setConnecting] = useState(false);
+  const handleConnect = async () => {
+    if (connecting) return;
+    setConnecting(true);
+    try {
+      showToast('Открываю кошелёк...');
+      const wallet = await connectWallet();
+      const addr = wallet.account?.address;
+      if (!addr) throw new Error('Не удалось получить адрес кошелька');
+      await tonApi.connectWallet(addr);
+      showToast('Кошелёк подключён');
+      onUserRefresh();
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Ошибка подключения';
+      if (!/Timeout|reject|cancel/i.test(msg)) showToast(msg);
+    } finally {
+      setConnecting(false);
+    }
+  };
+
   if (!hasWallet) {
     return (
       <LockedScreen
+        user={user}
+        connecting={connecting}
         currentPrice={priceData?.currentPrice ?? 0}
         change24h={priceData?.change24h ?? 0}
-        onConnect={() => showToast('Connect TON wallet in the section above')}
+        onConnect={handleConnect}
       />
     );
   }

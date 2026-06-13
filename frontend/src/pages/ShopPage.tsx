@@ -128,20 +128,14 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
       const addr = wallet.account?.address;
       if (!addr) throw new Error('Failed to get wallet address');
 
-      // A1 (2026-05-19): без 1-TON unlock-платежа. verifyWallet вызывается с
-      // пустым boc — backend в этом режиме просто сохраняет адрес кошелька
-      // (бесплатное подключение). Если backend требует boc — он вернёт ошибку
-      // и UI её покажет, не списывая TON.
+      // Фикс 2026-06-13 (Кенан): раньше тут был verifyWallet(addr,'') с пустым
+      // boc — backend возвращал 400 «Missing transaction confirmation», ошибка
+      // глоталась, адрес НЕ сохранялся → tonWalletAddress оставался null → биржа
+      // навсегда заблокирована. Демо-режим: сохраняем адрес напрямую через
+      // /profile/ton-wallet (бесплатно, без 1-TON платежа).
       setConnectStep('verifying');
-      showToast('Verifying wallet...');
-      try {
-        await tonApi.verifyWallet(addr, '');
-      } catch (verifyErr: unknown) {
-        // Если backend требует TON-платёж — оставляем кошелёк подключённым
-        // на клиенте, но не помечаем как verified. Юзер сможет вернуться
-        // и сделать платёж через отдельный flow (не блокируем).
-        console.warn('[shop/ton] verify failed (continuing as connected-only):', verifyErr);
-      }
+      showToast('Сохраняю кошелёк...');
+      await tonApi.connectWallet(addr);
 
       setWalletAddress(addr);
       setWalletConnected(true);
