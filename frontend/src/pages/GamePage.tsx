@@ -880,8 +880,25 @@ export function GamePage() {
       });
     }
 
+    // Reconnect-логика (Кенан, полировка 2026-06-13): сервер хранит зрителя
+    // в room на стороне сокета. При сетевом сбое socket.io переподключается
+    // (reconnectionAttempts:10), но room-членство теряется → зритель «замерзает»
+    // на последнем ходе. На каждый connect заново входим в spectate и
+    // подтягиваем актуальное состояние по REST (догоняем пропущенные ходы).
+    const rejoinSpectate = () => {
+      if (!isSpectator || !sessionId) return;
+      sock.emit('spectate', { sessionId });
+      import('@/api/client').then(({ api }) => {
+        api.get<{ session: GameSession }>(`/games/spectate/${sessionId}`)
+          .then((r) => { if (r.session) upsertSession(r.session); })
+          .catch(() => {});
+      });
+    };
+
     if (isSpectator) {
       sock.emit('spectate', { sessionId });
+      // socket.io шлёт 'connect' заново после каждого reconnect
+      sock.on('connect', rejoinSpectate);
     }
 
     return () => {
@@ -889,6 +906,7 @@ export function GamePage() {
       sock.off('battle:bravo', onBravo);
       sock.off('game:saves-count', onSavesCount);
       if (isSpectator) {
+        sock.off('connect', rejoinSpectate);
         sock.emit('unspectate', { sessionId });
       }
     };
