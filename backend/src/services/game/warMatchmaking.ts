@@ -75,12 +75,21 @@ export async function scheduleWarMatches(warId: string): Promise<number> {
       busyIds.add(b.defenderId);
     }
 
-    // Свободные бойцы ИЗ ОЧЕРЕДИ
-    const queuedAttackersRaw = await redis.smembers(`war:queue:${warId}:${war.attackerCountryId}`);
-    const queuedDefendersRaw = await redis.smembers(`war:queue:${warId}:${war.defenderCountryId}`);
+    // ФИКС 2026-06-13 (Кенан: «войны есть, батлы не генерируются»):
+    // Раньше бойцы брались ТОЛЬКО из Redis-очереди `war:queue:*`, которая
+    // заполнялась лишь когда юзер держит открытой WarsPage (TTL 1ч). Это
+    // ломало войну: если оба бойца не на странице одновременно — 0 батлов.
+    // По канону (см. шапку файла) система парит ВСЕХ членов воюющих стран.
+    // Теперь пул = все члены страны (кроме занятых). Redis-очередь
+    // используется лишь как ПРИОРИТЕТ сортировки (онлайн-бойцы первыми).
+    const allAttackers = attackerMembers.map((m) => m.userId).filter((id) => !busyIds.has(id));
+    const allDefenders = defenderMembers.map((m) => m.userId).filter((id) => !busyIds.has(id));
 
-    const freeAttackers = queuedAttackersRaw.filter((id) => !busyIds.has(id));
-    const freeDefenders = queuedDefendersRaw.filter((id) => !busyIds.has(id));
+    const queuedAttackers = new Set(await redis.smembers(`war:queue:${warId}:${war.attackerCountryId}`));
+    const queuedDefenders = new Set(await redis.smembers(`war:queue:${warId}:${war.defenderCountryId}`));
+
+    const freeAttackers = allAttackers;
+    const freeDefenders = allDefenders;
 
     if (freeAttackers.length === 0 || freeDefenders.length === 0) return 0;
 
@@ -116,11 +125,17 @@ export async function scheduleWarMatches(warId: string): Promise<number> {
     const freeDefendersLimited = freeDefenders.filter(isFree);
     if (freeAttackersLimited.length === 0 || freeDefendersLimited.length === 0) return 0;
 
-    // Ротация: сортируем по количеству сыгранных партий (кто играл меньше — первый)
+    // Ротация: онлайн-бойцы (в Redis-очереди) первыми, затем кто играл меньше.
     const playedCounts = await getPlayedCounts(warId);
+    const withOnlinePriority = (ids: string[], online: Set<string>) =>
+      sortByPlayed(ids, playedCounts).sort((a, b) => {
+        const ao = online.has(a) ? 0 : 1;
+        const bo = online.has(b) ? 0 : 1;
+        return ao - bo; // онлайн (0) раньше оффлайн (1); внутри группы порядок sortByPlayed сохраняется
+      });
 
-    const sortedAttackers = sortByPlayed(freeAttackersLimited, playedCounts);
-    const sortedDefenders = sortByPlayed(freeDefendersLimited, playedCounts);
+    const sortedAttackers = withOnlinePriority(freeAttackersLimited, queuedAttackers);
+    const sortedDefenders = withOnlinePriority(freeDefendersLimited, queuedDefenders);
 
     // Создаём пары
     const matchCount = Math.min(slotsAvailable, sortedAttackers.length, sortedDefenders.length);

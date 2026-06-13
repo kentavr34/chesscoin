@@ -229,8 +229,15 @@ services:
       WEBHOOK_URL: ${BOT_WEBHOOK_URL:-}   # если пусто — polling mode
       BOT_WEBHOOK_SECRET: ${BOT_WEBHOOK_SECRET:-chesscoin_wh_secret}
       BOT_PORT: 8080
+      # Premium-аватары: бот сохраняет загруженные файлы на ХОСТ (volume ниже),
+      # nginx отдаёт их по /static/avatars/ (см. location в nginx-конфиге).
+      AVATAR_STORAGE_DIR: /var/lib/chesscoin/avatars
+      PUBLIC_AVATAR_BASE_URL: https://${DOMAIN}/static/avatars
     expose:
       - "8080"
+    volumes:
+      # host-папка переживает пересборку контейнера и доступна nginx
+      - /opt/chesscoin/avatars:/var/lib/chesscoin/avatars
     depends_on:
       - backend
     networks:
