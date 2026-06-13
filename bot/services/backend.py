@@ -159,6 +159,27 @@ class BackendClient:
         """
         return await self._post("/bot/items/avatar", payload)
 
+    async def list_avatars(self) -> list:
+        """Список всех premium-аватаров (для управления)."""
+        data = await self._get("/bot/items/avatars")
+        return data.get("items", []) if isinstance(data, dict) else []
+
+    async def update_avatar(self, avatar_id: str, payload: dict) -> dict:
+        """Изменить имя/цену/редкость/активность аватара."""
+        async with self._session.patch(self._url(f"/bot/items/avatar/{avatar_id}"), json=payload) as resp:
+            data = await resp.json()
+            if not resp.ok:
+                raise RuntimeError(f"Backend {resp.status}: {data}")
+            return data
+
+    async def delete_avatar(self, avatar_id: str) -> dict:
+        """Удалить (или деактивировать, если куплен) аватар."""
+        async with self._session.delete(self._url(f"/bot/items/avatar/{avatar_id}")) as resp:
+            data = await resp.json()
+            if not resp.ok:
+                raise RuntimeError(f"Backend {resp.status}: {data}")
+            return data
+
     async def toggle_task(self, task_id: str) -> dict:
         """Переключить статус задания ACTIVE ↔ ARCHIVED."""
         async with self._session.put(self._url(f"/bot/tasks/{task_id}/toggle")) as resp:

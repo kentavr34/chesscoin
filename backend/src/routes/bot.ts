@@ -633,3 +633,88 @@ botRouter.post("/items/avatar", async (req: Request, res: Response) => {
     res.status(500).json({ error: "Failed to create avatar item" });
   }
 });
+
+// ── GET /api/v1/bot/items/avatars — список premium-аватаров для управления ───
+botRouter.get("/items/avatars", async (_req: Request, res: Response) => {
+  try {
+    const items = await prisma.item.findMany({
+      where: { type: "PREMIUM_AVATAR" },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+      include: { _count: { select: { owners: true } } },
+    });
+    res.json({
+      items: items.map((i) => ({
+        id: i.id,
+        name: i.name,
+        rarity: i.rarity,
+        priceCoins: i.priceCoins.toString(),
+        isActive: i.isActive,
+        imageUrl: i.imageUrl,
+        owners: (i as unknown as { _count?: { owners?: number } })._count?.owners ?? 0,
+      })),
+    });
+  } catch (err: unknown) {
+    logger.error("[bot/items/avatars list]", err);
+    res.status(500).json({ error: "Failed to list avatars" });
+  }
+});
+
+// ── PATCH /api/v1/bot/items/avatar/:id — имя/цена/редкость/активность ────────
+botRouter.patch("/items/avatar/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { name, priceCoins, rarity, isActive } = req.body ?? {};
+    const exists = await prisma.item.findFirst({ where: { id, type: "PREMIUM_AVATAR" } });
+    if (!exists) return res.status(404).json({ error: "Avatar not found" });
+
+    const data: Record<string, unknown> = {};
+    if (name != null) {
+      const n = String(name).trim();
+      if (n.length === 0 || n.length > 120) return res.status(400).json({ error: "name must be 1..120 chars" });
+      data.name = n;
+    }
+    if (priceCoins != null) {
+      const p = String(priceCoins).trim();
+      if (!/^\d+$/.test(p)) return res.status(400).json({ error: "priceCoins must be a non-negative integer" });
+      const pb = BigInt(p);
+      if (pb < 0n || pb > 10_000_000n) return res.status(400).json({ error: "priceCoins out of range" });
+      data.priceCoins = pb;
+    }
+    if (rarity != null) {
+      const allowed = ["COMMON", "RARE", "EPIC", "LEGENDARY"];
+      if (!allowed.includes(rarity)) return res.status(400).json({ error: "invalid rarity" });
+      data.rarity = rarity;
+      data.category = (rarity === "EPIC" || rarity === "LEGENDARY") ? "PREMIUM" : "BASIC";
+    }
+    if (isActive != null) data.isActive = !!isActive;
+
+    const item = await prisma.item.update({ where: { id }, data });
+    res.json({ id: item.id, name: item.name, priceCoins: item.priceCoins.toString(), rarity: item.rarity, isActive: item.isActive });
+  } catch (err: unknown) {
+    logger.error("[bot/items/avatar patch]", err);
+    res.status(500).json({ error: "Failed to update avatar" });
+  }
+});
+
+// ── DELETE /api/v1/bot/items/avatar/:id — удалить (или деактивировать) ───────
+botRouter.delete("/items/avatar/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const item = await prisma.item.findFirst({
+      where: { id, type: "PREMIUM_AVATAR" },
+      include: { _count: { select: { owners: true } } },
+    });
+    if (!item) return res.status(404).json({ error: "Avatar not found" });
+    const owners = (item as unknown as { _count?: { owners?: number } })._count?.owners ?? 0;
+    if (owners > 0) {
+      // Куплен игроками — только деактивируем (не ломаем их инвентарь).
+      await prisma.item.update({ where: { id }, data: { isActive: false } });
+      return res.json({ deleted: false, deactivated: true, owners });
+    }
+    await prisma.item.delete({ where: { id } });
+    res.json({ deleted: true, deactivated: false });
+  } catch (err: unknown) {
+    logger.error("[bot/items/avatar delete]", err);
+    res.status(500).json({ error: "Failed to delete avatar" });
+  }
+});

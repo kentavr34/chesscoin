@@ -38,6 +38,16 @@ class AvatarCreateForm(StatesGroup):
     rarity = State()
 
 
+# ─── FSM: Пакетная загрузка + редактирование (Кенан 2026-06-13) ───────────────
+class AvatarBatchForm(StatesGroup):
+    collecting = State()  # шлём фото пачкой, каждое сразу → товар с дефолтами
+
+
+class AvatarEditForm(StatesGroup):
+    rename = State()      # ждём новое имя
+    price = State()       # ждём новую цену
+
+
 # ─── Клавиатуры ────────────────────────────────────────────────────────────────
 def main_menu_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
@@ -47,6 +57,10 @@ def main_menu_kb() -> InlineKeyboardMarkup:
         ],
         [
             InlineKeyboardButton(text="🖼️ Add Avatar", callback_data="avatar:create_start"),
+            InlineKeyboardButton(text="📦 Пакет аватаров", callback_data="avatar:batch_start"),
+        ],
+        [
+            InlineKeyboardButton(text="🗂 Аватары (список)", callback_data="avatar:list:0"),
             InlineKeyboardButton(text="🗑️ Очистка БД", callback_data="admin:cleanup_menu"),
         ],
         [
@@ -1114,3 +1128,308 @@ async def cb_avatar_rarity(call: CallbackQuery, state: FSMContext):
             f"❌ Ошибка создания: {e}\n\n🛡️ Панель администратора:",
             reply_markup=main_menu_kb(),
         )
+
+
+# ─── Пакетная загрузка аватаров (Кенан 2026-06-13) ────────────────────────────
+# Причина бага «41 файл, 4 товара»: одиночный визард сохранял файл ДО ввода
+# имени/цены — незавершённый визард = осиротевший файл. Здесь каждая картинка
+# СРАЗУ становится товаром с дефолтами (COMMON, 50 000), переименовать/оценить
+# можно потом через «🗂 Аватары».
+_BATCH_DEFAULT_PRICE = 50000
+_AV_PAGE = 8
+
+
+async def _save_avatar_file(bot: Bot, message: Message):
+    file_id = None
+    suffix = ".jpg"
+    if message.photo:
+        file_id = message.photo[-1].file_id
+        suffix = ".jpg"
+    elif message.document:
+        file_id = message.document.file_id
+        mt = (message.document.mime_type or "").lower()
+        suffix = ".svg" if "svg" in mt else ".png" if "png" in mt else ".webp" if "webp" in mt else ".jpg"
+    if not file_id:
+        return None
+    try:
+        _os.makedirs(AVATAR_STORAGE_DIR, exist_ok=True)
+    except Exception:
+        pass
+    file = await bot.get_file(file_id)
+    fname = f"{file.file_unique_id}{suffix}"
+    dest = _os.path.join(AVATAR_STORAGE_DIR, fname)
+    await bot.download_file(file.file_path, destination=dest)
+    return f"{PUBLIC_AVATAR_BASE_URL.rstrip('/')}/{fname}", file.file_unique_id
+
+
+@router.callback_query(F.data == "avatar:batch_start")
+async def cb_avatar_batch_start(call: CallbackQuery, state: FSMContext):
+    if not is_admin(call.from_user.id):
+        return await call.answer("❌ Нет доступа", show_alert=True)
+    await state.set_state(AvatarBatchForm.collecting)
+    await state.update_data(batch_count=0)
+    await call.message.edit_text(
+        "📦 <b>Пакетная загрузка</b>\n\n"
+        "Шли картинки одну за другой (фото или файл .png/.jpg/.svg/.webp).\n"
+        "Каждая сразу станет товаром: COMMON, 50 000 ᚙ, имя по умолчанию.\n"
+        "Потом переименуешь/переоценишь через «🗂 Аватары».\n\n"
+        "Закончишь — нажми «✅ Готово».",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="✅ Готово", callback_data="avatar:batch_done")],
+        ]),
+    )
+    await call.answer()
+
+
+@router.message(AvatarBatchForm.collecting, F.photo | F.document)
+async def fsm_avatar_batch_image(message: Message, state: FSMContext, bot: Bot):
+    if not is_admin(message.from_user.id):
+        return
+    saved = await _save_avatar_file(bot, message)
+    if not saved:
+        return await message.answer("❌ Не похоже на картинку — пропустил")
+    image_url, uniq = saved
+    data = await state.get_data()
+    cnt = data.get("batch_count", 0) + 1
+    await state.update_data(batch_count=cnt)
+    name = f"Premium {uniq[-5:]}"
+    try:
+        async with BackendClient() as client:
+            await client.create_avatar_item({
+                "name": name,
+                "description": "Premium avatar (batch)",
+                "priceCoins": _BATCH_DEFAULT_PRICE,
+                "imageUrl": image_url,
+                "rarity": "COMMON",
+            })
+        await message.answer(f"✅ #{cnt}: <b>{name}</b> добавлен (COMMON, 50 000 ᚙ)")
+    except Exception as e:
+        await message.answer(f"❌ #{cnt}: ошибка создания — {e}")
+
+
+@router.message(AvatarBatchForm.collecting)
+async def fsm_avatar_batch_other(message: Message):
+    await message.answer("Пришли картинку или нажми «✅ Готово».")
+
+
+@router.callback_query(F.data == "avatar:batch_done")
+async def cb_avatar_batch_done(call: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    cnt = data.get("batch_count", 0)
+    await state.clear()
+    await call.message.edit_text(
+        f"📦 Готово. Добавлено аватаров: <b>{cnt}</b>.\n"
+        "Все видны в магазине → вкладка Avatars.",
+        reply_markup=main_menu_kb(),
+    )
+    await call.answer()
+
+
+# ─── Управление аватарами: список / переименование / цена / редкость / удаление
+def _avatar_list_kb(items: list, page: int) -> InlineKeyboardMarkup:
+    start = page * _AV_PAGE
+    chunk = items[start:start + _AV_PAGE]
+    rows = []
+    for it in chunk:
+        flag = "" if it.get("isActive") else "🚫 "
+        rows.append([InlineKeyboardButton(
+            text=f"{flag}{it['name']} · {it['rarity']} · {it['priceCoins']}",
+            callback_data=f"avatar:item:{it['id']}")])
+    nav = []
+    if page > 0:
+        nav.append(InlineKeyboardButton(text="◀", callback_data=f"avatar:list:{page-1}"))
+    if start + _AV_PAGE < len(items):
+        nav.append(InlineKeyboardButton(text="▶", callback_data=f"avatar:list:{page+1}"))
+    if nav:
+        rows.append(nav)
+    rows.append([InlineKeyboardButton(text="⬅️ Меню", callback_data="admin:main")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def _avatar_item_kb(aid: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="✏️ Имя", callback_data=f"avatar:rename:{aid}"),
+         InlineKeyboardButton(text="💰 Цена", callback_data=f"avatar:price:{aid}")],
+        [InlineKeyboardButton(text="⭐ Редкость", callback_data=f"avatar:rar:{aid}"),
+         InlineKeyboardButton(text="🔁 Вкл/выкл", callback_data=f"avatar:toggle:{aid}")],
+        [InlineKeyboardButton(text="🗑 Удалить", callback_data=f"avatar:del:{aid}")],
+        [InlineKeyboardButton(text="⬅️ К списку", callback_data="avatar:list:0")],
+    ])
+
+
+@router.callback_query(F.data.startswith("avatar:list:"))
+async def cb_avatar_list(call: CallbackQuery, state: FSMContext):
+    if not is_admin(call.from_user.id):
+        return await call.answer("❌ Нет доступа", show_alert=True)
+    await state.clear()
+    page = int(call.data.split(":")[-1])
+    try:
+        async with BackendClient() as client:
+            items = await client.list_avatars()
+    except Exception as e:
+        return await call.message.edit_text(f"❌ Ошибка списка: {e}", reply_markup=main_menu_kb())
+    if not items:
+        return await call.message.edit_text("Аватаров нет.", reply_markup=main_menu_kb())
+    total = len(items)
+    active = sum(1 for i in items if i.get("isActive"))
+    await call.message.edit_text(
+        f"🗂 <b>Premium-аватары</b> — всего {total}, активных {active}  (стр. {page+1})",
+        reply_markup=_avatar_list_kb(items, page))
+    await call.answer()
+
+
+@router.callback_query(F.data.startswith("avatar:item:"))
+async def cb_avatar_item(call: CallbackQuery, state: FSMContext):
+    if not is_admin(call.from_user.id):
+        return await call.answer("❌ Нет доступа", show_alert=True)
+    aid = call.data.split(":")[-1]
+    try:
+        async with BackendClient() as client:
+            items = await client.list_avatars()
+    except Exception as e:
+        return await call.message.edit_text(f"❌ {e}", reply_markup=main_menu_kb())
+    it = next((x for x in items if x["id"] == aid), None)
+    if not it:
+        return await call.message.edit_text("Не найдено.", reply_markup=main_menu_kb())
+    await call.message.edit_text(
+        f"🖼 <b>{it['name']}</b>\n"
+        f"Редкость: {it['rarity']}\nЦена: {it['priceCoins']} ᚙ\n"
+        f"Активен: {'да' if it['isActive'] else 'нет'}\nКуплен: {it.get('owners', 0)} раз\n"
+        f"<code>{it.get('imageUrl', '')}</code>",
+        reply_markup=_avatar_item_kb(aid))
+    await call.answer()
+
+
+@router.callback_query(F.data.startswith("avatar:rename:"))
+async def cb_avatar_rename(call: CallbackQuery, state: FSMContext):
+    if not is_admin(call.from_user.id):
+        return await call.answer("❌ Нет доступа", show_alert=True)
+    aid = call.data.split(":")[-1]
+    await state.set_state(AvatarEditForm.rename)
+    await state.update_data(edit_id=aid)
+    await call.message.answer("Пришли новое <b>имя</b> аватара:")
+    await call.answer()
+
+
+@router.message(AvatarEditForm.rename, F.text)
+async def fsm_avatar_rename(message: Message, state: FSMContext):
+    name = (message.text or "").strip()
+    if not name or len(name) > 120:
+        return await message.answer("❌ Имя 1..120 символов")
+    data = await state.get_data()
+    aid = data.get("edit_id")
+    await state.clear()
+    try:
+        async with BackendClient() as client:
+            await client.update_avatar(aid, {"name": name})
+        await message.answer(f"✅ Имя обновлено: <b>{name}</b>", reply_markup=_avatar_item_kb(aid))
+    except Exception as e:
+        await message.answer(f"❌ {e}")
+
+
+@router.callback_query(F.data.startswith("avatar:price:"))
+async def cb_avatar_price(call: CallbackQuery, state: FSMContext):
+    if not is_admin(call.from_user.id):
+        return await call.answer("❌ Нет доступа", show_alert=True)
+    aid = call.data.split(":")[-1]
+    await state.set_state(AvatarEditForm.price)
+    await state.update_data(edit_id=aid)
+    await call.message.answer("Пришли новую <b>цену</b> (целое число монет):")
+    await call.answer()
+
+
+@router.message(AvatarEditForm.price, F.text)
+async def fsm_avatar_price_edit(message: Message, state: FSMContext):
+    txt = (message.text or "").strip()
+    if not txt.isdigit() or int(txt) <= 0:
+        return await message.answer("❌ Цена — положительное целое число")
+    data = await state.get_data()
+    aid = data.get("edit_id")
+    await state.clear()
+    try:
+        async with BackendClient() as client:
+            await client.update_avatar(aid, {"priceCoins": int(txt)})
+        await message.answer(f"✅ Цена: {txt} ᚙ", reply_markup=_avatar_item_kb(aid))
+    except Exception as e:
+        await message.answer(f"❌ {e}")
+
+
+@router.callback_query(F.data.startswith("avatar:rar:"))
+async def cb_avatar_rar_menu(call: CallbackQuery, state: FSMContext):
+    if not is_admin(call.from_user.id):
+        return await call.answer("❌ Нет доступа", show_alert=True)
+    aid = call.data.split(":")[-1]
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=r, callback_data=f"avatar:setrar:{aid}:{r}") for r in ("COMMON", "RARE")],
+        [InlineKeyboardButton(text=r, callback_data=f"avatar:setrar:{aid}:{r}") for r in ("EPIC", "LEGENDARY")],
+        [InlineKeyboardButton(text="⬅️", callback_data=f"avatar:item:{aid}")],
+    ])
+    await call.message.edit_text("Выбери редкость:", reply_markup=kb)
+    await call.answer()
+
+
+@router.callback_query(F.data.startswith("avatar:setrar:"))
+async def cb_avatar_setrar(call: CallbackQuery, state: FSMContext):
+    if not is_admin(call.from_user.id):
+        return await call.answer("❌ Нет доступа", show_alert=True)
+    parts = call.data.split(":")
+    aid, rar = parts[2], parts[3]
+    try:
+        async with BackendClient() as client:
+            await client.update_avatar(aid, {"rarity": rar})
+        await call.message.edit_text(f"✅ Редкость → {rar}", reply_markup=_avatar_item_kb(aid))
+        await call.answer(rar)
+    except Exception as e:
+        await call.answer(f"❌ {e}", show_alert=True)
+
+
+@router.callback_query(F.data.startswith("avatar:toggle:"))
+async def cb_avatar_toggle(call: CallbackQuery, state: FSMContext):
+    if not is_admin(call.from_user.id):
+        return await call.answer("❌ Нет доступа", show_alert=True)
+    aid = call.data.split(":")[-1]
+    try:
+        async with BackendClient() as client:
+            items = await client.list_avatars()
+            it = next((x for x in items if x["id"] == aid), None)
+            newv = not (it and it.get("isActive"))
+            await client.update_avatar(aid, {"isActive": newv})
+        await call.message.edit_text(
+            f"✅ {'Показан' if newv else 'Скрыт'} в магазине",
+            reply_markup=_avatar_item_kb(aid))
+        await call.answer("Показан" if newv else "Скрыт")
+    except Exception as e:
+        await call.answer(f"❌ {e}", show_alert=True)
+
+
+@router.callback_query(F.data.startswith("avatar:del:"))
+async def cb_avatar_del(call: CallbackQuery, state: FSMContext):
+    if not is_admin(call.from_user.id):
+        return await call.answer("❌ Нет доступа", show_alert=True)
+    aid = call.data.split(":")[-1]
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🗑 Да, удалить", callback_data=f"avatar:delyes:{aid}"),
+         InlineKeyboardButton(text="Отмена", callback_data=f"avatar:item:{aid}")],
+    ])
+    await call.message.edit_text(
+        "Удалить аватар? Если он уже куплен игроками — будет скрыт, не удалён.",
+        reply_markup=kb)
+    await call.answer()
+
+
+@router.callback_query(F.data.startswith("avatar:delyes:"))
+async def cb_avatar_delyes(call: CallbackQuery, state: FSMContext):
+    if not is_admin(call.from_user.id):
+        return await call.answer("❌ Нет доступа", show_alert=True)
+    aid = call.data.split(":")[-1]
+    back = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="⬅️ К списку", callback_data="avatar:list:0")],
+    ])
+    try:
+        async with BackendClient() as client:
+            r = await client.delete_avatar(aid)
+        msg = "🗑 Удалён" if r.get("deleted") else f"🚫 Скрыт (куплен {r.get('owners', 0)} раз)"
+        await call.message.edit_text(msg, reply_markup=back)
+    except Exception as e:
+        await call.message.edit_text(f"❌ {e}", reply_markup=back)
+    await call.answer()
