@@ -526,10 +526,15 @@ export const ShopPage: React.FC = () => {
       const res = await shopApi.purchase(item.id);
       await refreshUser();
       await loadItems();
-      const key = THEME_NAME_TO_KEY[item.name] ?? 'default';
-      setActiveTheme(key);
-      profileApi.saveTheme(key).catch(() => {});
-      showToast(`Theme "${item.name}" purchased and applied!`);
+      // Применяем тему ТОЛЬКО если у товара есть реальная тема. Иначе (это
+      // мис-категоризированные эффекты под типом THEME — Fireworks, Capture:…)
+      // НЕ трогаем активную тему пользователя, чтобы не сбросить её в default.
+      const key = THEME_NAME_TO_KEY[item.name];
+      if (key) {
+        setActiveTheme(key);
+        profileApi.saveTheme(key).catch(() => {});
+      }
+      showToast(key ? `Тема «${item.name}» куплена и применена` : `«${item.name}» куплено`);
     } catch (e: unknown) {
       showToast((e instanceof Error ? e.message : "Error"));
     } finally {
@@ -538,10 +543,15 @@ export const ShopPage: React.FC = () => {
   };
 
   const handleThemeApply = (item: ShopItem) => {
-    const key = THEME_NAME_TO_KEY[item.name] ?? 'default';
-    setActiveTheme(key);
-    profileApi.saveTheme(key).catch(() => {});
-    showToast(`Theme "${item.name}" applied`);
+    const key = THEME_NAME_TO_KEY[item.name];
+    if (key) {
+      setActiveTheme(key);
+      profileApi.saveTheme(key).catch(() => {});
+      showToast(`Тема «${item.name}» применена`);
+    } else {
+      // Товар куплен, но это эффект без живой механики — не сбрасываем тему.
+      showToast(`«${item.name}» — эффект появится в игре`);
+    }
   };
 
   useEffect(() => { loadItems(); }, [loadItems]);
