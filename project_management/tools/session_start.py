@@ -90,12 +90,25 @@ import os  # noqa: E402
 todo = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                     'registry', 'TODO_FIXES.md')
 if os.path.exists(todo):
-    lines = [l for l in open(todo, encoding='utf-8') if l.startswith('| ') and '|' in l[2:]]
-    closed = sum(1 for l in lines if '✅' in l)
+    # Реестр разбит на секции «## Закрыто» и «## Открыто» — считаем по секции,
+    # а не по галочке в строке (галочка внутри текста давала ложный счёт).
+    closed, openx, section = [], [], None
+    for l in open(todo, encoding='utf-8'):
+        if l.startswith('## '):
+            section = 'closed' if 'Закрыт' in l else ('open' if 'Открыт' in l else None)
+        elif l.startswith('| ') and not l.startswith('|---') and '№' not in l[:6]:
+            if section == 'closed':
+                closed.append(l)
+            elif section == 'open':
+                openx.append(l)
+    lines = closed + openx
     guard = one('select count(*) from chesscoin_pm.regression_cases where active')
-    print('   строк в реестре: %d | помечено закрытыми: %d | случаев в эталоне: %s'
-          % (len(lines), closed, guard))
-    for l in lines:
+    print('   всего: %d | закрыто: %d | открыто: %d | случаев в эталоне: %s'
+          % (len(lines), len(closed), len(openx), guard))
+    if isinstance(guard, str) and guard.isdigit() and len(closed) > int(guard):
+        print('     ⚠️ закрытых дефектов больше, чем охраняемых случаев — '
+              '%d без охраны, вернутся незамеченными' % (len(closed) - int(guard)))
+    for l in openx:
         if '🔴' in l or '🟠' in l:
             print('     %s' % l.strip()[:110])
 else:

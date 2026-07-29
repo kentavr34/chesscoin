@@ -6,21 +6,31 @@
 >
 > Обозначения: 🔴 ломает продукт · 🟠 мешает работе · 🟡 долг/риск
 
-| № | Уровень | Что | Найдено | Доказательство | Статус |
-|---|---|---|---|---|---|
-| 1 | 🔴 | Бот бесконечно ретраит уведомление заблокировавшему пользователю: `Forbidden: bot was blocked by the user`, одно и то же `cmrf7ssjb002qituqgu643kys`, каждые 30 сек | 29.07 | первая запись 10.07 17:34; **2866 ошибок за сутки**, ~54 000 всего; `docker logs chesscoin_bot` | ✅ **закрыт 29.07** — `PERMANENT_ERRORS` в `bot/handlers/notifications.py`: неустранимые ошибки Telegram снимают уведомление с очереди. Проверено на проде: одно снятие в 17:16, дальше 0 ошибок. В эталоне (случай «Бот не зациклен») |
-| 2 | 🟠 | Нет автоматического бэкапа: БД `chesscoin`, каталог `avatars/` (6.7 МБ), `.env` прода нигде не сохраняются по расписанию | 29.07 | расписания на сервере не найдено; в GitHub только код | открыт |
-| 3 | 🟠 | `gh` CLI не работает: `GH_TOKEN` невалиден → `HTTP 401: Bad credentials`. PR/issues через API недоступны | 29.07 | `gh auth status` | нужен новый токен от Кенана |
-| 4 | 🟡 | Рабочая копия отстала: `codex/synced-main` −21 коммит, локальный `main` −86; три `prunable` worktree указывают на исчезнувший путь `C:\Users\SAM\Desktop\chesscoin` | 29.07 | `git status -sb`, `git worktree list` | открыт |
-| 5 | 🟡 | Мёртвые IP (`185.203.118.96`, `185.203.116.131`) остались в рабочих документах: `docs/safety/SAFETY_POLICY.md` (11), `docs/product/MASTERPLAN.md` (4), `AGENTS.md` (2), `docs/product/PROJECT_VISION.md` (2), `ROADMAP*.md` (2), `README.md` (1) | 29.07 | grep по репо | `CLAUDE.md` и `MASTER_PLAN.md` — ✅ исправлены 29.07; остальные открыты |
-| 6 | 🟡 | Фикс авторизации pgbouncer↔postgres не reset-safe: compose-патч работает только при init на пустой БД, на живой стоит ручной `ALTER USER` + правка `pg_hba.conf` | 14.05 | `MASTER_PLAN.md` § 5.7 | открыт |
-| 7 | 🟡 | В рабочей копии лежат файлы чужих проектов: `build_994_docx.js`, `claudia_main_new.py`, `crew_board_new.py`, `patch_bot.py`, `docx_unzipped/`, `Шахматы.docx` | 29.07 | `ls` корня репо | кандидаты в архив, решение за Кенаном |
-| 8 | 🟡 | Публичного health-эндпоинта нет: `/api/health` → 404. Снаружи состояние backend проверить нечем | 29.07 | `curl https://chesscoin.app/api/health` | открыт (решение: пробросить `/health` через nginx) |
-| 9 | 🔴 | ✅ **закрыт локально 29.07** — 9 файлов канона перенесены в `design_canon/` и закоммичены (`git ls-files design_canon` = 10). Полностью закроется, когда ветка попадёт в GitHub (упирается в дефект №3). В эталоне (случай «Канон дизайна версионируется в git»). Было: **утверждённые UI-шаблоны не версионируются.** `.gitignore` строка 4 — `.claude/`, поэтому ни один `TPL-*.tsx` и ни один `*_TEMPLATE.tsx` не в git. Канон дизайна живёт только незакоммиченными файлами на этой машине; путей из `CLAUDE.md` (`.claude/archive/templates/`) в рабочей копии не существует | 29.07 | `git ls-files \| grep -c "TPL-\|TEMPLATE.tsx"` → **0** | открыт — предложение: перенести 5 TPL + 4 `*_TEMPLATE.tsx` в отслеживаемую папку `design_canon/` и обновить ссылки в `CLAUDE.md` |
-| 10 | 🟡 | `README.md` отправляет читать `.claude/STARTUP.md`, `.claude/INIT.md`, `.claude/management/README.md`, `.claude/management/02-TASKS.md` — **ни одного из этих файлов не существует** ни в рабочей копии, ни на проде | 29.07 | `ls .claude/` → только `worktrees`, `lightrag_upload.md`, `settings.local.json` | открыт |
+## Закрыто 29.07.2026
+
+| № | Что было | Чем закрыто | Доказательство |
+|---|---|---|---|
+| 1 | 🔴 Бот 19 дней ретраил уведомление заблокировавшему пользователю каждые 30 сек (с 10.07 17:34, ~2866 ошибок в сутки, ~54 000 всего) | `PERMANENT_ERRORS` в `bot/handlers/notifications.py`: `TelegramForbiddenError`/`TelegramBadRequest` снимают уведомление с очереди | на проде одно снятие в 17:16:17, дальше 0 строк `Failed to send notification`. Эталон: «Бот не зациклен» |
+| 2 | 🟠 Бэкапа проекта не существовало: код, аватары, память, `.env` нигде не сохранялись по расписанию | `scripts/backup_chesscoin.sh` — код с историей (git bundle) + БД + память контура + аватары + секреты (AES, ключ вне архива) → GDrive `chesscoin-backups/` + Telegram; таймер `chesscoin-backup.timer` 04:30 | архив распакован и восстановлен: клон из бандла (370 файлов), `env.enc` расшифрован, дамп 40 таблиц. Эталон: 2 случая |
+| 3 | 🟠 `gh` CLI и push: `HTTP 401 Bad credentials` | **Диагноз был неверный.** Токен не «протух» — протухшая переменная `GH_TOKEN` перекрывала рабочие доступы Windows Credential Manager | `unset GH_TOKEN GITHUB_TOKEN` → push прошёл. Записано в `agent_mistakes` как моя ошибка |
+| 4 | 🟡 Рабочая копия отстала (−21 и −86 коммитов), три `prunable` worktree на исчезнувший Desktop-путь | `git worktree prune`, ветка влита в `main` | локально = GitHub = прод на `7d7a366`. Эталон: «Прод не отстаёт от origin/main» |
+| 9 | 🔴 Канон дизайна не версионировался: `.gitignore` строка 4 (`.claude/`) — `git ls-files \| grep TPL` = **0** | 9 файлов перенесены в `design_canon/`, ссылки в `CLAUDE.md` обновлены | `git ls-files design_canon` = 10, на проде тоже. Эталон: «Канон дизайна версионируется в git» |
+| 10 | 🟡 `README.md` отправлял читать 4 несуществующих файла (`.claude/STARTUP.md`, `.claude/INIT.md`, `.claude/management/*`) | README переписан на реальный управляющий контур | ссылки ведут в `project_management/` |
+| 11 | 🔴 **Канон требований Кенана не версионировался**: вся папка `чат/` под `.gitignore` (строка 71), а `CLAUDE.md` требовал её читать | 8 спецификаций вынесены в `docs/kenan_canon/` (208 КБ); сырые дампы (21 МБ) остаются вне git — они в БД и бэкапах | `git ls-files docs/kenan_canon` = 8, на проде тоже |
+| 12 | 🟡 Беспорядок в корне: 41 отслеживаемый файл вперемешку, чужие скрипты 994/Claudia | `docs/{kenan_canon,product,history,design,safety}`, `archive/{legacy_tools,snapshots}`; ничего не удалено | в корне 9 файлов; `docs/STRUCTURE.md` — карта |
+
+## Открыто
+
+| № | Уровень | Что | Найдено | Доказательство |
+|---|---|---|---|---|
+| 5 | 🟡 | Мёртвые IP (`185.203.118.96`, `185.203.116.131`) остались в исторических документах: `docs/safety/SAFETY_POLICY.md` (11), `docs/product/MASTERPLAN.md` (4), `AGENTS.md` (2), `docs/product/PROJECT_VISION.md` (2), `ROADMAP*.md` (2) | 29.07 | grep по репо. В `CLAUDE.md` и `MASTER_PLAN.md` — исправлено. В летописи IP оставлять допустимо, но `AGENTS.md` — рабочий файл, его надо поправить |
+| 6 | 🟡 | Фикс авторизации pgbouncer↔postgres не reset-safe: compose-патч действует только при init на пустой БД, на живой стоит ручной `ALTER USER` + правка `pg_hba.conf` | 14.05 | `MASTER_PLAN.md` § 5.7 |
+| 7 | 🟡 | На проде остались чужие каталоги-остатки: `docx_unzipped/`, `чат/` (21 МБ сырых дампов) — в git их нет, место занимают | 29.07 | `ls /opt/chesscoin` |
+| 8 | 🟡 | Публичного health-эндпоинта нет: `/api/health` → 404. Снаружи состояние backend проверить нечем | 29.07 | `curl https://chesscoin.app/api/health` |
+| 13 | 🟡 | Бот ChessCoin не добавлен в группу бэкапов — доставка идёт через бота-архивариуса Claudia. Для полной независимости проекта добавить `@chessgamecoin_bot` в группу | 29.07 | Telegram: `chat not found` для своего токена, `ok:true` для архивариуса |
 
 ## Продуктовый бэклог требований Кенана
 
 Не дублируется здесь: живёт в `MASTER_PLAN.md` § 2 (регрессии A1–A6, новые
-системы B1–B7, стандартизация C1–C4) и в `docs/product/MECHANICS.md`. Этот файл — только
-про **дефекты**, а не про нереализованные фичи.
+системы B1–B7, стандартизация C1–C4), `docs/product/MECHANICS.md` и
+`docs/kenan_canon/`. Этот файл — только про **дефекты**, а не про нереализованные фичи.

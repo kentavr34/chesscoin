@@ -32,3 +32,4 @@
 | 20:49 | change | управляющий контур собран: 10 правил, 5 реестров, 5 инструментов; указатели в README.md и CLAUDE.md | project_management/, README.md, CLAUDE.md |
 | 21:19 | deploy | hotfix бота: PERMANENT_ERRORS снимают неотправляемое уведомление с очереди; пересобран chesscoin_bot; 0 ошибок за 2 мин | bot/handlers/notifications.py |
 | 22:42 | change | независимая память проекта: chat_history 21731, problem_solutions 12, change_log 178 коммитов; sync_memory.py | — |
+| 22:50 | verify | разбор системы контроля: найдено 4 дефекта в самом контуре, все исправлены; эталон 11/11 | — |
