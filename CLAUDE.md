@@ -1,6 +1,30 @@
 # CLAUDE.md — ChessCoin
 
-## ⚠️ ПЕРЕД ЛЮБЫМ ДЕЙСТВИЕМ — ЧИТАТЬ MASTER_PLAN.md
+## 🧠 УПРАВЛЯЮЩИЙ КОНТУР — `project_management/`
+
+Правила работы, память ошибок, реестры и инструменты живут в отдельной папке
+**`project_management/`** — третья система проекта, наравне с ботом и игрой,
+не смешивается ни с тем, ни с другим.
+
+**Задача на ЧТЕНИЕ или обсуждение** — ритуал не нужен, читать можно свободно.
+**Задача на ИЗМЕНЕНИЕ** (код, БД, сервер, дизайн, документы) — сначала Инструкция 1:
+
+```bash
+python project_management/tools/session_start.py "тема работы"
+```
+
+Скрипт покажет: где прод, что с контейнерами, о чём говорили за сутки, что уже
+решали по теме, какие мои ошибки к ней относятся, какие дефекты открыты —
+и зарегистрирует вход. Ссылки: [README](project_management/README.md) ·
+[01 вход](project_management/rules/01_SESSION_START.md) ·
+[02 изменения](project_management/rules/02_HOW_TO_CHANGE.md) ·
+[03 завершение](project_management/rules/03_SESSION_END.md) ·
+[04 супер-правила](project_management/rules/04_IRON_RULES.md).
+
+**Перед словом «корень»** — `python project_management/tools/why.py <тема>`.
+**Перед словом «готово»** — `python project_management/tools/regression.py`.
+
+## ⚠️ ПЕРЕД ЛЮБЫМ ИЗМЕНЕНИЕМ — ЧИТАТЬ MASTER_PLAN.md
 
 **Жёсткое правило**, обязательное для каждой новой сессии Claude:
 
@@ -9,10 +33,10 @@
 3. Прочитать `чат/GAME_REQUIREMENTS_FROM_KENAN.md` — канон 47 элементов,
    все одобренные Кенаном требования (нельзя ломать).
 4. Выполнить чек-лист в `MASTER_PLAN.md` § 7 «В начале сессии»:
-   - `getent hosts chesscoin.app` (должно быть `185.203.118.96`)
-   - `git log --oneline -10` в worktree
-   - `ssh root@185.203.118.96 "cd /opt/chesscoin && git log --oneline -3"`
-5. Только **после этих 4 шагов** — читать запрос Кенана и работать.
+   - `nslookup chesscoin.app` (должно быть `45.67.216.36`)
+   - `git log --oneline -10` в рабочей копии
+   - `ssh root@45.67.216.36 "cd /opt/chesscoin && git log --oneline -3"`
+5. Только **после этих 4 шагов** — планировать изменения.
 
 **Никаких `Read` / `Edit` / `Bash` до завершения шагов 1–4.**
 Если запрос Кенана срочен — всё равно прочесть MASTER_PLAN, это 5 минут чтения,
@@ -26,7 +50,10 @@
 Есть **два независимых проекта**, их нельзя путать:
 
 1. **ChessCoin** — основной продукт. Telegram Mini App с шахматными батлами.
-   Путь: `C:\Users\SAM\Desktop\chesscoin\`. Сервер: `/opt/chesscoin` на eVPS.
+   Путь: `D:\Документы\chesscoin\` (обновлено 2026-07-29; Desktop-копии больше нет).
+   Сервер: `/opt/chesscoin` на `45.67.216.36`.
+   Внутри — три системы: **бот** (`bot/`), **игра** (`backend/`, `frontend/`)
+   и **управление проектом** (`project_management/`).
    **99% задач Кенана — здесь.**
 
 2. **Claudia** — внутренняя инфраструктура (ты сама). Один из проектов,
@@ -85,17 +112,21 @@
    неприкосновенны. Любое расхождение текущего кода с шаблоном чинится
    **возвратом к шаблону**, а не написанием новой версии «с нуля».
 
-   **Где лежат шаблоны:**
-   - `.claude/archive/templates/v1_current/TPL-NNN_<date>_<Имя>.tsx` (канон).
-   - `.claude/archive/*_TEMPLATE.tsx` (HOMEPAGE / JARVIS_PLAY_MODAL /
+   **Где лежат шаблоны (проверено 2026-07-29):**
+   - `design_canon/templates/TPL-NNN_<date>_<Имя>.tsx` — **канон, в git**.
+   - `design_canon/*_TEMPLATE.tsx` (HOMEPAGE / JARVIS_PLAY_MODAL /
      CREATE_BATTLE_MODAL / GAMEPAGE).
-   - Эталонная стабильная копия рабочей версии — `C:\Users\SAM\Desktop\
-     chesscoin-archive\` (read-only, см. § «Архив ↔ рабочая копия»).
-   - **Индекс:** `.claude/archive/templates/TEMPLATES_INDEX.md`.
+   - **Индекс:** `design_canon/TEMPLATES_INDEX.md`.
+   - Эталонная стабильная копия рабочей версии — `chesscoin-archive/`
+     внутри репо (read-only, см. § «Архив ↔ рабочая копия»).
+   - Прежних путей `.claude/archive/templates/` и `C:\Users\SAM\Desktop\
+     chesscoin-archive\` **не существует** — до 29.07 шаблоны не попадали
+     в git из-за `.gitignore: .claude/`. Подробно:
+     `project_management/rules/09_TEMPLATES.md`.
 
    **Алгоритм правки UI-компонента:**
    1. Сначала проверить — есть ли TPL-шаблон для этого компонента (grep
-      по имени в TEMPLATES_INDEX.md, либо в `.claude/archive/templates/`).
+      по имени в `design_canon/TEMPLATES_INDEX.md`).
    2. Если есть — сравнить (`diff`) текущий код с шаблоном. Расхождения
       = откатить к шаблону, не «улучшать».
    3. Если нет — сравнить с `chesscoin-archive/` (последняя одобренная
@@ -119,7 +150,7 @@
    2. `chesscoin-archive/chesscoin-main/` — это **снимок** какой-то
       ветки прошлого, может содержать **более старую** или **другую**
       версию с багами, не обязательно «последнюю рабочую».
-   3. `.claude/archive/templates/v1_current/TPL-NNN_*.tsx` — это
+   3. `design_canon/templates/TPL-NNN_*.tsx` — это
       утверждённый эталон стиля/структуры, не «текущий рабочий».
    4. Всегда уточнить у Кенана если непонятно «какую именно вернуть»
       — лучше один вопрос, чем 3 неправильных копирования.
@@ -190,11 +221,12 @@ systemd-unit, или в entrypoint скрипт. Временный фикс = �
 
 ## АРХИВ ↔ РАБОЧАЯ КОПИЯ ↔ СЕРВЕР (закон)
 
-1. **Архив неприкосновенен.** `C:\Users\SAM\Desktop\chesscoin-archive\` —
+1. **Архив неприкосновенен.** `chesscoin-archive/` **внутри репо** (обновлено
+   2026-07-29; прежнего `C:\Users\SAM\Desktop\chesscoin-archive\` больше нет) —
    снимок последней стабильной версии. Его НЕ правят.
-2. **Рабочая копия** — `C:\Users\SAM\Desktop\chesscoin\`. Все правки только здесь.
+2. **Рабочая копия** — `D:\Документы\chesscoin\`. Все правки только здесь.
 3. **Испорчена рабочая** → не чиним, переименовываем в
-   `chesscoin-broken-YYYY-MM-DD`, берём новую копию из `chesscoin-archive`.
+   `chesscoin-broken-YYYY-MM-DD`, берём новую копию из GitHub (`origin/main`).
 4. **GitHub-хаб** — `kentavr34/chesscoin`. Push только из рабочей копии,
    в отдельную ветку, merge в `main` делает Кенан.
 5. **Сервер** — авто-pull `main` из GitHub. Прямые правки на сервере

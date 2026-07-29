@@ -36,24 +36,31 @@ Source raw chats: `C:\Users\SAM\Desktop\994\history\claude_code\` (chesscoin/, 3
 
 ---
 
-## 🔴 ПЕРЕД НАЧАЛОМ РАЗРАБОТКИ ПРОЧИТАЙ ОБЯЗАТЕЛЬНО
+## 🔴 ПЕРЕД НАЧАЛОМ РАБОТЫ — ЧИТАТЬ ОБЯЗАТЕЛЬНО
 
-**Это применимо к разработчикам и помощникам AI (Клаудия).**
+Проект разделён на **три системы**: бот (`bot/`), игра (`backend/`, `frontend/`)
+и **управление проектом** (`project_management/`). Управление живёт отдельно
+и не смешивается с продуктом.
 
-### Если ты разработчик (SAM):
-1. [CLAUDE.md](./CLAUDE.md) — главная конституция проекта (история, ошибки, правила)
-2. [.claude/STARTUP.md](./.claude/STARTUP.md) — личные инструкции для Клаудии
-3. [.claude/management/README.md](./.claude/management/README.md) — система управления проектом
+### Порядок входа (обязателен для любой задачи, которая что-то МЕНЯЕТ):
 
-### Если ты Клаудия (AI помощница):
-**ОБЯЗАТЕЛЬНО в этом порядке:**
-1. [CLAUDE.md](./CLAUDE.md) — конституция проекта
-2. [.claude/STARTUP.md](./.claude/STARTUP.md) — твои личные инструкции ⭐ **ГЛАВНОЕ**
-3. [.claude/INIT.md](./.claude/INIT.md) — алгоритм инициализации
-4. [.claude/projects/.../memory/MEMORY.md](./.claude/projects/) — полная память проекта
-5. [.claude/management/README.md](./.claude/management/README.md) — управляющие файлы
+1. [CLAUDE.md](./CLAUDE.md) — конституция проекта: правила, серверы, история ошибок
+2. [project_management/README.md](./project_management/README.md) — **управляющий контур** ⭐
+3. [project_management/rules/01_SESSION_START.md](./project_management/rules/01_SESSION_START.md) — что сделать ДО планирования
+4. [project_management/rules/04_IRON_RULES.md](./project_management/rules/04_IRON_RULES.md) — правила, которые нарушать нельзя
+5. [MASTER_PLAN.md](./MASTER_PLAN.md) — что одобрено и не трогается, § 2 — открытый бэклог
 
-**После прочтения → перейди к [.claude/management/02-TASKS.md](./.claude/management/02-TASKS.md) для текущих приоритетов**
+Одной командой:
+
+```bash
+python project_management/tools/session_start.py "тема работы"
+```
+
+**Задача на чтение и обсуждение** — ритуал не обязателен, читать можно свободно.
+**Задача на изменение** — только после Инструкции 1.
+
+Текущие приоритеты: [project_management/registry/PROJECT_MANAGEMENT.md](./project_management/registry/PROJECT_MANAGEMENT.md)
+Открытые дефекты: [project_management/registry/TODO_FIXES.md](./project_management/registry/TODO_FIXES.md)
 
 ---
 

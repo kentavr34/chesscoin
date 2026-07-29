@@ -81,3 +81,6 @@ bot_inbox/
 # Encrypted .secrets.enc можно commit'ить если passphrase отдельно у Кенана на телефоне
 # Но безопаснее не commit'ить ни в каком виде:
 .secrets.enc
+
+# управляющий контур: кеш python
+project_management/tools/__pycache__/
