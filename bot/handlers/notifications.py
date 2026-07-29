@@ -6,9 +6,16 @@
 import asyncio
 import logging
 from aiogram import Bot
+from aiogram.exceptions import TelegramForbiddenError, TelegramBadRequest
 from services.backend import BackendClient
 
 logger = logging.getLogger(__name__)
+
+# Ошибки Telegram, которые НЕ лечатся повтором: пользователь заблокировал бота,
+# удалил аккаунт, чат не существует. Такое уведомление нужно снимать с очереди,
+# иначе оно ретраится каждые 30 секунд бесконечно.
+# (2026-07-10 → 2026-07-29: одно уведомление дало ~54 000 попыток, 2866 в сутки.)
+PERMANENT_ERRORS = (TelegramForbiddenError, TelegramBadRequest)
 
 
 # ─────────────────────────────────────────
@@ -121,7 +128,20 @@ async def process_admin_notifications(bot: Bot) -> None:
                 await _dispatch(bot, notif)
                 async with BackendClient() as client:
                     await client.mark_notification_sent(notif["id"])
+            except PERMANENT_ERRORS as e:
+                # Повтор бессмысленен — снимаем с очереди, чтобы не долбить вечно.
+                logger.warning(
+                    f"Notification {notif['id']} снята с очереди (неустранимая ошибка): {e}"
+                )
+                try:
+                    async with BackendClient() as client:
+                        await client.mark_notification_sent(notif["id"])
+                except Exception as mark_err:
+                    logger.error(
+                        f"Не удалось снять уведомление {notif['id']} с очереди: {mark_err}"
+                    )
             except Exception as e:
+                # Временная ошибка (сеть, 5xx, RetryAfter) — оставляем на следующий цикл.
                 logger.error(f"Failed to send notification {notif['id']}: {e}")
 
     except Exception as e:

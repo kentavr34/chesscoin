@@ -30,3 +30,4 @@
 | 17:20 | change | Создан управляющий контур `project_management/`: README, 10 правил, 4 реестра, 5 инструментов | эта папка |
 | 20:45 | verify | контур управления собран и прогнан: эталон 7/8, инвентаризация 325 файлов | — |
 | 20:49 | change | управляющий контур собран: 10 правил, 5 реестров, 5 инструментов; указатели в README.md и CLAUDE.md | project_management/, README.md, CLAUDE.md |
+| 21:19 | deploy | hotfix бота: PERMANENT_ERRORS снимают неотправляемое уведомление с очереди; пересобран chesscoin_bot; 0 ошибок за 2 мин | bot/handlers/notifications.py |
