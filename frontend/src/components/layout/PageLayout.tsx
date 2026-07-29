@@ -180,21 +180,31 @@ export const useInfoPopup = (infoKey: string, slides: InfoSlide[]) => {
       return;
     }
 
-    // Проверяем Telegram CloudStorage — переживает реустановку, общий между устройствами
+    // Проверяем Telegram CloudStorage — переживает реустановку, общий между устройствами.
+    // ВАЖНО: сам вызов может бросить WebAppMethodUnsupported на клиентах, где метод
+    // объявлен, но не поддерживается. Без try/catch исключение долетало до ErrorBoundary
+    // и вместо страницы игрок видел «Something went wrong» (найдено 2026-07-29).
     const cs = getCloudStorage();
+    let cloudAsked = false;
     if (cs) {
-      cs.getItem(cacheKey, (_err, v) => {
-        if (v) {
-          // Был раньше прочитан — сохраним и локально, и больше не показываем
-          localStorage.setItem(cacheKey, '1');
-          seenCache.add(cacheKey);
-          return;
-        }
-        // Не видел — показываем после небольшой задержки
-        setTimeout(() => setShow(true), 600);
-      });
-    } else {
-      // Нет TG CloudStorage — простой localStorage путь
+      try {
+        cs.getItem(cacheKey, (_err, v) => {
+          if (v) {
+            // Был раньше прочитан — сохраним и локально, и больше не показываем
+            localStorage.setItem(cacheKey, '1');
+            seenCache.add(cacheKey);
+            return;
+          }
+          // Не видел — показываем после небольшой задержки
+          setTimeout(() => setShow(true), 600);
+        });
+        cloudAsked = true;
+      } catch {
+        cloudAsked = false;
+      }
+    }
+    if (!cloudAsked) {
+      // Нет TG CloudStorage или он не поддерживается — простой localStorage путь
       setTimeout(() => setShow(true), 600);
     }
   }, [cacheKey, slides.length]);
@@ -203,7 +213,8 @@ export const useInfoPopup = (infoKey: string, slides: InfoSlide[]) => {
     localStorage.setItem(cacheKey, '1');
     seenCache.add(cacheKey);
     const cs = getCloudStorage();
-    cs?.setItem(cacheKey, '1');
+    // Тот же риск, что и при чтении: неподдерживаемый метод не должен ронять экран.
+    try { cs?.setItem(cacheKey, '1'); } catch { /* флаг уже сохранён в localStorage */ }
     setShow(false);
   };
 
