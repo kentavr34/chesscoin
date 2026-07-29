@@ -12,7 +12,7 @@
 | 2 | 🟠 | Нет автоматического бэкапа: БД `chesscoin`, каталог `avatars/` (6.7 МБ), `.env` прода нигде не сохраняются по расписанию | 29.07 | расписания на сервере не найдено; в GitHub только код | открыт |
 | 3 | 🟠 | `gh` CLI не работает: `GH_TOKEN` невалиден → `HTTP 401: Bad credentials`. PR/issues через API недоступны | 29.07 | `gh auth status` | нужен новый токен от Кенана |
 | 4 | 🟡 | Рабочая копия отстала: `codex/synced-main` −21 коммит, локальный `main` −86; три `prunable` worktree указывают на исчезнувший путь `C:\Users\SAM\Desktop\chesscoin` | 29.07 | `git status -sb`, `git worktree list` | открыт |
-| 5 | 🟡 | Мёртвые IP (`185.203.118.96`, `185.203.116.131`) остались в рабочих документах: `SAFETY_POLICY.md` (11), `MASTERPLAN.md` (4), `AGENTS.md` (2), `PROJECT_VISION.md` (2), `ROADMAP*.md` (2), `README.md` (1) | 29.07 | grep по репо | `CLAUDE.md` и `MASTER_PLAN.md` — ✅ исправлены 29.07; остальные открыты |
+| 5 | 🟡 | Мёртвые IP (`185.203.118.96`, `185.203.116.131`) остались в рабочих документах: `docs/safety/SAFETY_POLICY.md` (11), `docs/product/MASTERPLAN.md` (4), `AGENTS.md` (2), `docs/product/PROJECT_VISION.md` (2), `ROADMAP*.md` (2), `README.md` (1) | 29.07 | grep по репо | `CLAUDE.md` и `MASTER_PLAN.md` — ✅ исправлены 29.07; остальные открыты |
 | 6 | 🟡 | Фикс авторизации pgbouncer↔postgres не reset-safe: compose-патч работает только при init на пустой БД, на живой стоит ручной `ALTER USER` + правка `pg_hba.conf` | 14.05 | `MASTER_PLAN.md` § 5.7 | открыт |
 | 7 | 🟡 | В рабочей копии лежат файлы чужих проектов: `build_994_docx.js`, `claudia_main_new.py`, `crew_board_new.py`, `patch_bot.py`, `docx_unzipped/`, `Шахматы.docx` | 29.07 | `ls` корня репо | кандидаты в архив, решение за Кенаном |
 | 8 | 🟡 | Публичного health-эндпоинта нет: `/api/health` → 404. Снаружи состояние backend проверить нечем | 29.07 | `curl https://chesscoin.app/api/health` | открыт (решение: пробросить `/health` через nginx) |
@@ -22,5 +22,5 @@
 ## Продуктовый бэклог требований Кенана
 
 Не дублируется здесь: живёт в `MASTER_PLAN.md` § 2 (регрессии A1–A6, новые
-системы B1–B7, стандартизация C1–C4) и в `MECHANICS.md`. Этот файл — только
+системы B1–B7, стандартизация C1–C4) и в `docs/product/MECHANICS.md`. Этот файл — только
 про **дефекты**, а не про нереализованные фичи.

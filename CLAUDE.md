@@ -30,7 +30,7 @@ python project_management/tools/session_start.py "тема работы"
 
 1. **САМОЕ ПЕРВОЕ** — открыть и прочитать `MASTER_PLAN.md` в корне репо целиком.
 2. Прочитать этот файл (`CLAUDE.md`) целиком.
-3. Прочитать `чат/GAME_REQUIREMENTS_FROM_KENAN.md` — канон 47 элементов,
+3. Прочитать `docs/kenan_canon/GAME_REQUIREMENTS_FROM_KENAN.md` — канон 47 элементов,
    все одобренные Кенаном требования (нельзя ломать).
 4. Выполнить чек-лист в `MASTER_PLAN.md` § 7 «В начале сессии»:
    - `nslookup chesscoin.app` (должно быть `45.67.216.36`)
@@ -308,7 +308,7 @@ DeepSeek+DashScope+GLM). Header `X-API-Key: chesscoin_rag_secret_2026`,
 
 ### Приоритет поиска в начале сессии
 
-1. Прочитать локальные `MASTER_PLAN.md`, `CLAUDE.md`, `чат/*.md`
+1. Прочитать локальные `MASTER_PLAN.md`, `CLAUDE.md`, `docs/kenan_canon/*.md`
 2. `git log --oneline -10` в worktree
 3. **`dialog_history` из claudia DB** — последние 10 по проекту
 4. **Redis `claudia:*`** — текущее состояние (autopilot_mode, projects)

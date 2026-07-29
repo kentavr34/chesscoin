@@ -21,11 +21,11 @@
 ## 🧠 Память проекта (2026-05-26)
 
 **Локально (быстрый доступ):**
-- [`PROJECT_VISION.md`](PROJECT_VISION.md) — vision + связь с 994
-- [`MASTERPLAN.md`](MASTERPLAN.md) — что строим сейчас
-- [`HISTORY.md`](HISTORY.md) — timeline вех
-- [`KEY_DIALOGS.md`](KEY_DIALOGS.md) — топ-20 важнейших сообщений (importance ≥ 8 из 21 632)
-- [`DECISIONS.md`](DECISIONS.md) — 220 архитектурных решений (топ-50 в файле)
+- [`docs/product/PROJECT_VISION.md`](docs/product/PROJECT_VISION.md) — vision + связь с 994
+- [`docs/product/MASTERPLAN.md`](docs/product/MASTERPLAN.md) — что строим сейчас
+- [`docs/history/HISTORY.md`](docs/history/HISTORY.md) — timeline вех
+- [`docs/history/KEY_DIALOGS.md`](docs/history/KEY_DIALOGS.md) — топ-20 важнейших сообщений (importance ≥ 8 из 21 632)
+- [`docs/history/DECISIONS.md`](docs/history/DECISIONS.md) — 220 архитектурных решений (топ-50 в файле)
 
 **Удалённо (Claudia 185.203.116.131):**
 - Redis `vision:chesscoin`, `plan:chesscoin:active`, `blockers:chesscoin`, `current_task:chesscoin`
@@ -61,6 +61,8 @@ python project_management/tools/session_start.py "тема работы"
 
 Текущие приоритеты: [project_management/registry/PROJECT_MANAGEMENT.md](./project_management/registry/PROJECT_MANAGEMENT.md)
 Открытые дефекты: [project_management/registry/TODO_FIXES.md](./project_management/registry/TODO_FIXES.md)
+**Где что лежит:** [docs/STRUCTURE.md](./docs/STRUCTURE.md) — карта проекта после уборки 29.07.2026
+Канон требований Кенана: [docs/kenan_canon/](./docs/kenan_canon/) · канон дизайна: [design_canon/](./design_canon/)
 
 ---
 
@@ -346,7 +348,7 @@ chesscoin-v7.1.0/
 ├── nginx/
 │   └── nginx.conf              # Reverse proxy конфиг
 ├── docker-compose.yml          # Все сервисы
-├── MASTERPLAN.md               # История разработки + архитектура
+├── docs/product/MASTERPLAN.md               # История разработки + архитектура
 └── AUDIT.md                    # Лог всех багов и исправлений
 ```
 
@@ -422,5 +424,5 @@ docker compose exec backend npx prisma migrate deploy
 ## 📞 Контакты
 
 - Репозиторий: https://github.com/kentavr34/chesscoin
-- MASTERPLAN: [MASTERPLAN.md](./MASTERPLAN.md)
+- MASTERPLAN: [docs/product/MASTERPLAN.md](./MASTERPLAN.md)
 - Аудит багов: [AUDIT.md](./AUDIT.md)

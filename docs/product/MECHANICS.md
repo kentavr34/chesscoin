@@ -1,4 +1,4 @@
-# MECHANICS.md — Полная механика ChessCoin
+# docs/product/MECHANICS.md — Полная механика ChessCoin
 
 > Каноническая механика игры на 14.05.2026. Сшито из всех источников:
 > `GAME_REQUIREMENTS_FROM_KENAN.md`, `SPEC_2026-05-12_KENAN.md`,
@@ -369,5 +369,5 @@ matrix_dark`. Расширять до 10+ по росту цены 10K → 1M �
 ---
 
 **Этот файл — описание ЦЕЛЕВОЙ механики. Текущая реализация (что есть в коде,
-что нет, что сломано) — в `AUDIT_2026-05-14.md` и
+что нет, что сломано) — в `docs/history/AUDIT_2026-05-14.md` и
 `projects/chesscoin/HISTORY.json`.**

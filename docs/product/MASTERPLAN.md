@@ -1,6 +1,6 @@
 # MASTERPLAN — ChessCoin
 
-> Что строим **СЕЙЧАС**. См. также `PROJECT_VISION.md` (зачем) и `HISTORY.md` (вехи).
+> Что строим **СЕЙЧАС**. См. также `docs/product/PROJECT_VISION.md` (зачем) и `docs/history/HISTORY.md` (вехи).
 > Live source: Redis `plan:chesscoin:active` на Claudia (185.203.116.131).
 
 ---
@@ -15,14 +15,14 @@
 
 1. **i18n stability** — единый источник `i18n/translations.ts`, ru+en; useT() hook. После wholesale extraction 25 апреля все hardcoded строки на `t.*`.
 2. **Monetization v1** — Telegram Stars + USDT через Telegram Wallet, 7 пакетов Mini→Pro+.
-3. **UX iterations** — see `KEY_DIALOGS.md` для топ-20 решений из 21632 messages.
+3. **UX iterations** — see `docs/history/KEY_DIALOGS.md` для топ-20 решений из 21632 messages.
 4. **Auth stability** — `useAuth.ts` с `tg.ready()+tg.expand()` ДО проверки initData (мобильный Telegram timing).
 
 ## III. Где детали
 
-- `KEY_DIALOGS.md` — топ-20 важнейших сообщений (importance ≥ 8) из chesscoin chats (24 апр — 25 мая)
-- `DECISIONS.md` — 220 архитектурных решений (топ-50)
-- `HISTORY.md` — chronology вех
+- `docs/history/KEY_DIALOGS.md` — топ-20 важнейших сообщений (importance ≥ 8) из chesscoin chats (24 апр — 25 мая)
+- `docs/history/DECISIONS.md` — 220 архитектурных решений (топ-50)
+- `docs/history/HISTORY.md` — chronology вех
 - Live на сервере: `claudia_memory.dialog_history WHERE project='chesscoin'` (21 632 messages)
 - Source chats: `Desktop\994\history\claude_code\` (459 MB, не в git)
 

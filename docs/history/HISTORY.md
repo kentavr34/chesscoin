@@ -8,7 +8,7 @@
 ## 2026-05-26 — Memory consolidation FINAL
 
 - 4-слойная архитектура памяти готова: Redis + Postgres (dialog_history 21 632 rows project=chesscoin) + LightRAG + локальные системные файлы.
-- KEY_DIALOGS.md (топ-20 importance), DECISIONS.md (220 решений, топ-50 в файле), MASTERPLAN.md, PROJECT_VISION.md созданы.
+- docs/history/KEY_DIALOGS.md (топ-20 importance), docs/history/DECISIONS.md (220 решений, топ-50 в файле), docs/product/MASTERPLAN.md, docs/product/PROJECT_VISION.md созданы.
 
 ## 2026-05-21 — i18n wholesale extraction completed
 
@@ -21,7 +21,7 @@
 - 2026-05-09T19:09 Кенан: *«Запомни и отложи проект 994 — это код страны»*
 - 994 = код страны Азербайджана (telephone code)
 - M-vision канон М1-М5 задекларирован Кенаном 2026-05-10T18:02:32 в session `61e3b95d` — продолжение того же chesscoin chat
-- См. `Desktop\994\PROJECT_VISION.md` для канона
+- См. `Desktop\994\docs/product/PROJECT_VISION.md` для канона
 
 ## 2026-04-25 — session_log.md создан
 

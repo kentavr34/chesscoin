@@ -33,7 +33,7 @@
 9. **`registry/PROJECT_MANAGEMENT.md`**: отметить выполненное, обновить открытое.
 10. **git commit + push** в ветку; мёрдж в `main` — решение Кенана.
 11. **Итог в память:** запись в `claudia_memory.dialog_history` (project='chesscoin')
-    и в локальный `HISTORY.md`.
+    и в локальный `docs/history/HISTORY.md`.
 12. **Закрыть регистрацию входа:**
     ```sql
     UPDATE chesscoin_pm.session_log SET closed_at=now(), summary='...' WHERE id=<id>;

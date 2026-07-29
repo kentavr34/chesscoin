@@ -28,14 +28,14 @@ Production: **185.203.118.96 / chesscoin.app**, бот @chessgamecoin_bot.
 
 ## IV. Связь с другими проектами
 
-**994 (AC Translate)** — был **именован Кенаном внутри chesscoin chat** session `e4fdca62` 2026-05-09T19:09: *«Запомни и отложи проект 994 — это код страны»*. M-vision канон М1-М5 задекларирован 2026-05-10T18:02:32 в session `61e3b95d` (тоже chesscoin Claude Code project). 994 = **отдельный проект** с собственной vision (см. `Desktop\994\PROJECT_VISION.md`).
+**994 (AC Translate)** — был **именован Кенаном внутри chesscoin chat** session `e4fdca62` 2026-05-09T19:09: *«Запомни и отложи проект 994 — это код страны»*. M-vision канон М1-М5 задекларирован 2026-05-10T18:02:32 в session `61e3b95d` (тоже chesscoin Claude Code project). 994 = **отдельный проект** с собственной vision (см. `Desktop\994\docs/product/PROJECT_VISION.md`).
 
 285 transition matches между ChessCoin и 994 в одном `Desktop\994\history\TRANSITION_CHESSCOIN_TO_994_2026-04-25_to_05-10.json`.
 
 ## V. История
 
 Полная история chats — `Desktop\994\history\claude_code\` (chesscoin/, 30 JSONL, 459 MB).
-Краткая выжимка — `KEY_DIALOGS.md` (топ-20), `DECISIONS.md` (220 решений).
+Краткая выжимка — `docs/history/KEY_DIALOGS.md` (топ-20), `docs/history/DECISIONS.md` (220 решений).
 
 24 уникальных memory MD файла в `Desktop\994\history\claude_code\memory\` — session_log, project_management_system, deployment_process, и др.
 
