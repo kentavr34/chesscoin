@@ -402,7 +402,9 @@ adminRouter.post("/broadcast", authMiddleware, adminOnly, validate(BroadcastSche
 adminRouter.post("/channel", authMiddleware, adminOnly, validate(ChannelSchema), async (req: Request, res: Response) => {
   try {
     const { text, buttonText, buttonUrl } = req.body; // R4: validated
-    const channelId = process.env.TELEGRAM_CHANNEL_ID ?? process.env.TELEGRAM__1001755258296;
+    // Было `?? process.env.TELEGRAM__1001755258296` — исковерканная попытка вписать
+    // id канала как имя переменной. Канал: -1001755258296 (@chesscoinofficial).
+    const channelId = process.env.TELEGRAM_CHANNEL_ID ?? "";
     const botToken = process.env.BOT_TOKEN;
     if (!botToken || !channelId) return res.status(500).json({ error: "BOT_TOKEN or CHANNEL_ID not set" });
     const inlineKeyboard = buttonText && buttonUrl ? { inline_keyboard: [[{ text: buttonText, url: buttonUrl }]] } : undefined;

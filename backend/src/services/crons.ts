@@ -24,8 +24,16 @@ const CHANNEL_ID = () => process.env.TELEGRAM_CHANNEL_ID ?? "";
 const BOT_LINK = "https://t.me/chessgamecoin_bot";
 
 // ─── Telegram helper ─────────────────────────────────────────────────────────
+// Минимальная ставка для поста в канал. Было `> 10000`, а стандартная ставка
+// батла — ровно 10 000: под условие попадали 3 батла из 43, канал молчал.
+const MIN_CHANNEL_BET = 10_000n;
+
 async function sendToChannel(text: string, keyboard?: TelegramKeyboard) {
-  if (!BOT_TOKEN() || !CHANNEL_ID()) return;
+  if (!BOT_TOKEN() || !CHANNEL_ID()) {
+    // Раньше выходили молча, и cron рапортовал «completed», ничего не отправив.
+    logger.warn("[Cron/Channel] Пост пропущен: не задан BOT_TOKEN или TELEGRAM_CHANNEL_ID");
+    return;
+  }
   try {
     const body: Record<string, unknown> = { chat_id: CHANNEL_ID(), text, parse_mode: "HTML" };
     if (keyboard) body.reply_markup = keyboard;
@@ -53,7 +61,7 @@ async function postTopBattle() {
       },
     });
 
-    if (topLive?.bet && topLive.bet > 10000n) {
+    if (topLive?.bet && topLive.bet >= MIN_CHANNEL_BET) {
       const betK = (Number(topLive.bet) / 1000).toFixed(1);
       const p1 = topLive.sides[0]?.player;
       const p2 = topLive.sides[1]?.player;
@@ -80,7 +88,7 @@ async function postTopBattle() {
       },
     });
 
-    if (topWaiting?.bet && topWaiting.bet > 10000n) {
+    if (topWaiting?.bet && topWaiting.bet >= MIN_CHANNEL_BET) {
       const betK = (Number(topWaiting.bet) / 1000).toFixed(1);
       const creator = topWaiting.sides[0]?.player;
       const waitText = `⚔️ <b>Вызов на батл!</b>\n\n` +
