@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { PageLayout } from '@/components/layout/PageLayout';
-import { Avatar } from '@/components/ui/Avatar';
 import { useUserStore } from '@/store/useUserStore';
 import { profileApi } from '@/api';
 import { fmtBalance, fmtDate } from '@/utils/format';
