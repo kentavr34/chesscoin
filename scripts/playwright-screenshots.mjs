@@ -62,25 +62,27 @@ const page = await context.newPage();
 
 const PAGES = [
   { name: '00_home',        path: '/',             wait: 3000 },
-  { name: '01_game_setup',  path: '/',             wait: 1000, click: 'text=Играть' },
-  { name: '02_battles',     path: '/battles',      wait: 2000 },
-  { name: '03_leaderboard', path: '/leaderboard',  wait: 2000 },
+  { name: '01_game_setup',  path: '/',             wait: 2000, click: 'text=Играть' },
+  // battles/leaderboard/lessons рисуются дольше прочих (список + слайдер подсказки),
+  // на 2 с снимок попадал на пустой экран — проверено 30.07
+  { name: '02_battles',     path: '/battles',      wait: 6000 },
+  { name: '03_leaderboard', path: '/leaderboard',  wait: 4000 },
   { name: '04_shop',        path: '/shop',         wait: 3000 },
-  { name: '05_shop_boards', path: '/shop',         wait: 500,  click: 'text=Доски' },
-  { name: '06_shop_pieces', path: '/shop',         wait: 500,  click: 'text=Фигуры' },
-  { name: '07_shop_anims',  path: '/shop',         wait: 500,  click: 'text=Анимации' },
-  { name: '08_profile',     path: '/profile',      wait: 2000 },
-  { name: '09_tasks',       path: '/tasks',        wait: 2000 },
-  { name: '10_nations',     path: '/nations',      wait: 2000 },
-  { name: '11_referrals',   path: '/referrals',    wait: 2000 },
+  { name: '05_shop_boards', path: '/shop',         wait: 1800, click: 'text=Доски' },
+  { name: '06_shop_pieces', path: '/shop',         wait: 1800, click: 'text=Фигуры' },
+  { name: '07_shop_anims',  path: '/shop',         wait: 1800, click: 'text=Анимации' },
+  { name: '08_profile',     path: '/profile',      wait: 3500 },
+  { name: '09_tasks',       path: '/tasks',        wait: 3500 },
+  { name: '10_nations',     path: '/nations',      wait: 3500 },
+  { name: '11_referrals',   path: '/referrals',    wait: 3500 },
   // ── добавлено 2026-07-29 для визуального эталона: экраны, по которым
   //    Кенан исторически ловил регрессии (заголовки, панели, шаблоны) ──
-  { name: '12_wars',        path: '/wars',         wait: 2500 },
-  { name: '13_tournaments', path: '/tournaments',  wait: 2500 },
-  { name: '14_lessons',     path: '/lessons',      wait: 2000 },
-  { name: '15_battle_hist', path: '/battles/history', wait: 2000 },
-  { name: '16_settings',    path: '/settings',     wait: 1500 },
-  { name: '17_transactions', path: '/transactions', wait: 2000 },
+  { name: '12_wars',        path: '/wars',         wait: 3500 },
+  { name: '13_tournaments', path: '/tournaments',  wait: 3500 },
+  { name: '14_lessons',     path: '/lessons',      wait: 4000 },
+  { name: '15_battle_hist', path: '/battles/history', wait: 3500 },
+  { name: '16_settings',    path: '/settings',     wait: 3500 },
+  { name: '17_transactions', path: '/transactions', wait: 3500 },
 ];
 
 // Каждый goto — полная перезагрузка SPA, авторизация проходит заново.

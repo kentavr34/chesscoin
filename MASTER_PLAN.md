@@ -327,9 +327,10 @@ LessonPage, ExchangeTab, ShopPage) **переведены с CSS-перемен�
 6. **`donateAmt` тип Number → String** — может ломать поле ввода (`type="number"`
    ожидает Number, я передаю String). Frontend `<input type="number" value={...}>`.
 
-7. **Pgbouncer auth fix применён руками на проде** (`docker exec ... ALTER USER`).
-   Не reset-safe — переживёт ли pull-обновление postgres? Compose-патч есть, но он
-   работает только при init на пустой БД.
+7. ~~Pgbouncer auth fix применён руками на проде~~ — **проверено 2026-07-30: фикс reset-safe.**
+   `docker-compose` патчит `pg_hba.conf` при каждом старте и поднимает postgres
+   с `password_encryption=md5`; `POSTGRES_INITDB_ARGS` закрывает новые тома.
+   Хэши ролей — md5. В эталоне есть страж «Пароли ролей в md5».
 
 8. **Wars `myMembership.contribution` отображается как BigInt-строка**, но если в
    старых записях `contribution` ещё 0 — не отрисую «вклад N ᚙ». Корректно? Думаю да.

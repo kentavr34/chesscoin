@@ -131,13 +131,24 @@ fi
 # Токен доставки: сначала свой бот ChessCoin, затем бот-архивариус.
 # Свой бот заработает, как только его добавят в группу бэкапов
 # (сейчас Telegram отвечает «chat not found» — бота там нет).
+# Доставка. Приоритет — своими силами, чтобы проект не зависел от чужого бота:
+#   1) бот ChessCoin в группу бэкапов (заработает, когда его туда добавят);
+#   2) бот ChessCoin в личку владельцу (ADMIN_IDS) — уже полностью наш канал;
+#   3) бот-архивариус Claudia в ту же группу — последний резерв.
 TOKEN=$(grep -E '^BOT_TOKEN=' "$PROJ/.env" 2>/dev/null | cut -d= -f2- | tr -d '"')
-probe() { curl -s -m 15 "https://api.telegram.org/bot$1/getChat?chat_id=${TG_CHAT}" | grep -q '"ok":true'; }
-if [ -n "$TOKEN" ] && ! probe "$TOKEN"; then
+ADMIN=$(grep -E '^ADMIN_IDS=' "$PROJ/.env" 2>/dev/null | cut -d= -f2- | tr -d '"' | cut -d, -f1)
+probe() { curl -s -m 15 "https://api.telegram.org/bot$1/getChat?chat_id=$2" | grep -q '"ok":true'; }
+
+if [ -n "$TOKEN" ] && probe "$TOKEN" "$TG_CHAT"; then
+  log "  канал: свой бот → группа бэкапов"
+elif [ -n "$TOKEN" ] && [ -n "$ADMIN" ] && probe "$TOKEN" "$ADMIN"; then
+  TG_CHAT="$ADMIN"
+  log "  канал: свой бот → личка владельца (бот в группу не добавлен)"
+else
   ALT=$(grep -E '^ARCHIVIST_BOT_TOKEN=' /opt/claudia/.env 2>/dev/null | cut -d= -f2- | tr -d '"')
-  if [ -n "$ALT" ] && probe "$ALT"; then
+  if [ -n "$ALT" ] && probe "$ALT" "$TG_CHAT"; then
     TOKEN="$ALT"
-    log "  бот ChessCoin в группу не добавлен → доставка через бота-архивариуса"
+    log "  канал: резервный — бот-архивариус Claudia"
   fi
 fi
 if [ -n "$TOKEN" ]; then

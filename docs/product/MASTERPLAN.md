@@ -1,5 +1,9 @@
 # MASTERPLAN — ChessCoin
 
+> ⚠️ **Адреса серверов в этом документе устарели.** Актуально с 2026-06-08:
+> прод и инфра — `45.67.216.36`. `185.203.118.96` и `185.203.116.131` мертвы.
+> Источник истины — `CLAUDE.md` § СЕРВЕРА.
+
 > Что строим **СЕЙЧАС**. См. также `docs/product/PROJECT_VISION.md` (зачем) и `docs/history/HISTORY.md` (вехи).
 > Live source: Redis `plan:chesscoin:active` на Claudia (185.203.116.131).
 
