@@ -34,3 +34,4 @@
 | 22:42 | change | независимая память проекта: chat_history 21731, problem_solutions 12, change_log 178 коммитов; sync_memory.py | — |
 | 22:50 | verify | разбор системы контроля: найдено 4 дефекта в самом контуре, все исправлены; эталон 11/11 | — |
 | 23:20 | change | визуальный эталон: 17 экранов в design_canon/baseline_screens, visual.py, случай в эталоне; пойман дефект PageLayout/CloudStorage | project_management/tools/visual.py, scripts/playwright-screenshots.mjs |
+| 23:45 | deploy | починены оба дефекта: миграция lesson_progress (200 OK) и обёртка CloudStorage (страницы не падают при WebAppMethodUnsupported); эталон 13/13 | backend/prisma/migrations/20260729_lesson_progress/migration.sql, frontend/src/components/layout/PageLayout.tsx |
