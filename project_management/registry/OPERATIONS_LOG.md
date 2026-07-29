@@ -35,3 +35,9 @@
 | 22:50 | verify | разбор системы контроля: найдено 4 дефекта в самом контуре, все исправлены; эталон 11/11 | — |
 | 23:20 | change | визуальный эталон: 17 экранов в design_canon/baseline_screens, visual.py, случай в эталоне; пойман дефект PageLayout/CloudStorage | project_management/tools/visual.py, scripts/playwright-screenshots.mjs |
 | 23:45 | deploy | починены оба дефекта: миграция lesson_progress (200 OK) и обёртка CloudStorage (страницы не падают при WebAppMethodUnsupported); эталон 13/13 | backend/prisma/migrations/20260729_lesson_progress/migration.sql, frontend/src/components/layout/PageLayout.tsx |
+
+## 2026-07-30
+
+| Время | Вид | Что | Доказательство |
+|---|---|---|---|
+| 00:24 | change | дрейф схемы разобран: применены 9 индексов + 2 FK, дрейф 133→100 строк, решения по каждому пункту в SCHEMA_DRIFT.md, страж в эталоне | backend/prisma/migrations/20260730_missing_indexes_fk/migration.sql |
