@@ -395,6 +395,65 @@ router.post("/ton-wallet/verify", authMiddleware, async (req: Request, res: Resp
   }
 });
 
+// ── Хелпер: поиск входящего TON-платежа через toncenter.com ───────────────────
+// Возвращает саму транзакцию, а не «да/нет»: вызывающему нужны и фактическая
+// сумма (начислять по блокчейну, а не по числу из запроса), и идентификатор
+// транзакции (чтобы один платёж нельзя было предъявить дважды).
+type TonPayment = { hash: string; lt: string; valueNano: bigint; utime: number };
+
+async function findTonPayment(
+  fromWallet: string,
+  toWallet: string,
+  minAmountNano: bigint,
+  windowSec = 600
+): Promise<TonPayment | null> {
+  try {
+    const network = config.ton.network;
+    const apiBase = network === "testnet"
+      ? "https://testnet.toncenter.com/api/v2"
+      : "https://toncenter.com/api/v2";
+    const apiKey = config.ton.toncenterApiKey;
+
+    const url = `${apiBase}/getTransactions?address=${encodeURIComponent(toWallet)}&limit=20${apiKey ? `&api_key=${apiKey}` : ""}`;
+    const resp = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+    if (!resp.ok) {
+      logger.warn(`[TON verify] toncenter returned ${resp.status}`);
+      return null;
+    }
+    const data = await resp.json() as { ok: boolean; result: Array<Record<string, unknown>> };
+    if (!data.ok || !Array.isArray(data.result)) return null;
+
+    const since = Math.floor(Date.now() / 1000) - windowSec;
+
+    for (const tx of data.result) {
+      const utime = tx.utime as number;
+      if (utime < since) break; // отсортированы по времени, новые первые
+
+      const inMsg = tx.in_msg as Record<string, unknown> | undefined;
+      if (!inMsg) continue;
+
+      const srcAddr = (inMsg.source as string | undefined) ?? "";
+      const value = BigInt((inMsg.value as string | number | undefined) ?? "0");
+      const srcNorm = srcAddr.replace(/^0:/, "UQ").toLowerCase();
+      const fromNorm = fromWallet.toLowerCase();
+
+      if ((srcAddr === fromWallet || srcNorm.includes(fromNorm.slice(2, 10))) && value >= minAmountNano) {
+        const txId = tx.transaction_id as Record<string, unknown> | undefined;
+        const hash = String(txId?.hash ?? (inMsg.body_hash as string | undefined) ?? `${utime}:${value}`);
+        const lt = String(txId?.lt ?? utime);
+        logger.info(`[TON verify] ✅ Платёж найден: ${value} nTON от ${srcAddr}, tx ${hash.slice(0, 16)}`);
+        return { hash, lt, valueNano: value, utime };
+      }
+    }
+
+    logger.warn(`[TON verify] Платёж не найден: ${fromWallet} → ${toWallet}`);
+    return null;
+  } catch (err) {
+    logError("[TON verify]", err);
+    return null;
+  }
+}
+
 // ── Хелпер: верификация TON платежа через toncenter.com ───────────────────────
 async function verifyTonPayment(
   fromWallet: string,
@@ -551,19 +610,58 @@ router.post("/ton/buy", authMiddleware, async (req: Request, res: Response) => {
     if (!user?.tonWalletAddress) {
       return res.status(400).json({ error: "Connect TON wallet first" });
     }
+    // ── Проверка платежа в блокчейне ─────────────────────────────────────────
+    // До 2026-07-30 монеты начислялись по числу из тела запроса, без всякой
+    // проверки: любой мог получить миллионы бесплатно (найдено Кенаном,
+    // на проде успело пройти 3 таких начисления на 11 442 500 монет).
+    // Теперь источник истины — блокчейн: сумма берётся из транзакции,
+    // а не из запроса, и один платёж нельзя предъявить дважды.
+    const platformWallet = config.ton.platformWallet;
+    if (!platformWallet) {
+      logger.error("[TON buy] PLATFORM_TON_WALLET не задан — начисление невозможно");
+      return res.status(503).json({ error: "TON deposits temporarily unavailable" });
+    }
+
+    const requestedNano = BigInt(Math.round(parseFloat(amountTon) * 1e9));
+    // Допуск на газ: платёж может прийти чуть меньше заявленного.
+    const minNano = (requestedNano * 97n) / 100n;
+
+    const payment = await findTonPayment(user.tonWalletAddress, platformWallet, minNano);
+    if (!payment) {
+      return res.status(402).json({
+        error: "Payment not found on-chain. Отправьте TON на кошелёк платформы и повторите.",
+      });
+    }
+
+    // Защита от повторного предъявления одного и того же платежа
+    const already = await prisma.tonDeposit.findUnique({ where: { txHash: payment.hash } });
+    if (already) {
+      return res.status(409).json({ error: "This payment has already been credited" });
+    }
+
+    // Начисляем по ФАКТИЧЕСКОЙ сумме из блокчейна, а не по запрошенной
     const coinsPerTon = 1_000_000;
-    const gross = Math.round(parseFloat(amountTon) * coinsPerTon);
+    const actualTon = Number(payment.valueNano) / 1e9;
+    const gross = Math.round(actualTon * coinsPerTon);
     const fee = Math.round(gross * 0.005);
     const net = gross - fee;
-    // Начисляем монеты сразу (реальная оплата TON — вне платформы, пользователь подтверждает)
-    // updateBalance and TransactionType imported at top level
+
+    await prisma.tonDeposit.create({
+      data: {
+        txHash: payment.hash, lt: payment.lt, userId,
+        valueNano: payment.valueNano, coinsCredited: BigInt(net),
+      },
+    });
     await updateBalance(userId, BigInt(net), TransactionType.TON_DEPOSIT, {
-      amountTon: parseFloat(amountTon),
+      amountTon: actualTon,
+      requestedTon: parseFloat(amountTon),
+      txHash: payment.hash,
       coinsGross: gross,
       coinsFee: fee,
       coinsNet: net,
     });
-    res.json({ success: true, coinsReceived: net, fee });
+    logger.info(`[TON buy] Зачислено ${net} монет юзеру ${userId} по транзакции ${payment.hash.slice(0, 16)}`);
+    res.json({ success: true, coinsReceived: net, fee, amountTon: actualTon });
   } catch (err: unknown) {
     res.status(500).json({ error: (err instanceof Error ? err.message : String(err)) });
   }
