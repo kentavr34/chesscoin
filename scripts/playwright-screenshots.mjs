@@ -6,7 +6,7 @@ import { existsSync } from 'fs';
 
 const APP_URL = process.env.APP_URL || 'https://chesscoin.app';
 const AUTH_TOKEN = process.env.AUTH_TOKEN || '';
-const OUT = './screenshots';
+const OUT = process.env.OUT || './screenshots';
 
 await mkdir(OUT, { recursive: true });
 
@@ -16,6 +16,12 @@ const context = await browser.newContext({
   deviceScaleFactor: 2,
   userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15',
 });
+
+// Настоящий telegram-web-app.js перетирает наш мок и роняет страницы:
+// PageLayout зовёт CloudStorage.getItems, вне Telegram это WebAppMethodUnsupported,
+// исключение долетает до ErrorBoundary → «Something went wrong» вместо экрана.
+// Для съёмки блокируем загрузку SDK, чтобы остался наш мок.
+await context.route('**/telegram-web-app.js*', (route) => route.abort());
 
 // Inject auth token before every page load
 if (AUTH_TOKEN) {
@@ -37,6 +43,15 @@ if (AUTH_TOKEN) {
         ready: () => {},
         HapticFeedback: { impactOccurred: () => {}, notificationOccurred: () => {}, selectionChanged: () => {} },
         BackButton: { isVisible: false, show: () => {}, hide: () => {}, onClick: () => {} },
+        // CloudStorage обязателен: PageLayout читает через него флаги подсказок
+        CloudStorage: {
+          getItem: (k, cb) => cb && cb(null, ''),
+          getItems: (ks, cb) => cb && cb(null, Object.fromEntries((ks || []).map((k) => [k, '']))),
+          setItem: (k, v, cb) => cb && cb(null, true),
+          removeItem: (k, cb) => cb && cb(null, true),
+          removeItems: (ks, cb) => cb && cb(null, true),
+          getKeys: (cb) => cb && cb(null, []),
+        },
         MainButton: { isVisible: false, text: '', show: () => {}, hide: () => {}, enable: () => {}, disable: () => {}, setText: () => {}, onClick: () => {} },
       }
     };
@@ -58,11 +73,32 @@ const PAGES = [
   { name: '09_tasks',       path: '/tasks',        wait: 2000 },
   { name: '10_nations',     path: '/nations',      wait: 2000 },
   { name: '11_referrals',   path: '/referrals',    wait: 2000 },
+  // ── добавлено 2026-07-29 для визуального эталона: экраны, по которым
+  //    Кенан исторически ловил регрессии (заголовки, панели, шаблоны) ──
+  { name: '12_wars',        path: '/wars',         wait: 2500 },
+  { name: '13_tournaments', path: '/tournaments',  wait: 2500 },
+  { name: '14_lessons',     path: '/lessons',      wait: 2000 },
+  { name: '15_battle_hist', path: '/battles/history', wait: 2000 },
+  { name: '16_settings',    path: '/settings',     wait: 1500 },
+  { name: '17_transactions', path: '/transactions', wait: 2000 },
 ];
+
+// Каждый goto — полная перезагрузка SPA, авторизация проходит заново.
+// Фиксированное ожидание не годится: часть экранов снималась на «Loading…».
+// Ждём ПО ФАКТУ исчезновения индикатора, потом даём отрисовке успокоиться.
+async function waitReady(page) {
+  try {
+    await page.waitForFunction(
+      () => !/Loading\.\.\./.test(document.body.innerText || ''),
+      { timeout: 25000 }
+    );
+  } catch { /* остаёмся с тем, что есть — это увидит проверка содержимого */ }
+}
 
 for (const pg of PAGES) {
   try {
     await page.goto(`${APP_URL}${pg.path}`, { waitUntil: 'networkidle', timeout: 15000 });
+    await waitReady(page);
     await page.waitForTimeout(pg.wait);
     if (pg.click) {
       try { await page.click(pg.click, { timeout: 2000 }); await page.waitForTimeout(1000); }

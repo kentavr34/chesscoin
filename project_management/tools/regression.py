@@ -10,6 +10,7 @@
 
 Запуск:  python project_management/tools/regression.py [фильтр-по-теме]
 """
+import os
 import sys
 import subprocess
 sys.path.insert(0, __file__.rsplit('\\', 1)[0].rsplit('/', 1)[0])
@@ -31,9 +32,17 @@ regressions = []
 for c in cases:
     cid, tema, kind, cmd = c[0], c[1], c[2], c[3]
     must, mustnot, proven = c[4], c[5], c[6]
-    out = sh(cmd, timeout=90) if not cmd.startswith('curl') else \
-        (subprocess.run(cmd, shell=True, capture_output=True, encoding='utf-8',
-                        errors='replace', timeout=60).stdout or '').strip()
+    # 'local:' — выполнить на ПК (визуальные проверки гоняют браузер локально),
+    # 'curl'   — тоже локально, чтобы мерить сайт снаружи;
+    # остальное — боевым путём на проде.
+    if cmd.startswith('local:') or cmd.startswith('curl'):
+        local_cmd = cmd[6:] if cmd.startswith('local:') else cmd
+        r = subprocess.run(local_cmd, shell=True, capture_output=True, encoding='utf-8',
+                           errors='replace', timeout=900, cwd=os.path.dirname(
+                               os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+        out = ((r.stdout or '') + (r.stderr or '')).strip()
+    else:
+        out = sh(cmd, timeout=90)
     ok = True
     why = ''
     if must and must not in out:

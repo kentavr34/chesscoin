@@ -28,6 +28,8 @@
 | 7 | 🟡 | На проде остались чужие каталоги-остатки: `docx_unzipped/`, `чат/` (21 МБ сырых дампов) — в git их нет, место занимают | 29.07 | `ls /opt/chesscoin` |
 | 8 | 🟡 | Публичного health-эндпоинта нет: `/api/health` → 404. Снаружи состояние backend проверить нечем | 29.07 | `curl https://chesscoin.app/api/health` |
 | 13 | 🟡 | Бот ChessCoin не добавлен в группу бэкапов — доставка идёт через бота-архивариуса Claudia. Для полной независимости проекта добавить `@chessgamecoin_bot` в группу | 29.07 | Telegram: `chat not found` для своего токена, `ok:true` для архивариуса |
+| 14 | 🔴 | **`CloudStorage.getItems` в `PageLayout` не обёрнут в try/catch.** Если клиент Telegram не поддерживает CloudStorage, `WebAppMethodUnsupported` долетает до ErrorBoundary и вместо экрана игрок видит «Something went wrong» с трейсом. Падает не один блок, а вся страница | 29.07 | поймано при съёмке эталона: 7 экранов подряд (магазин, профиль, задания, турниры) отдавали ErrorBoundary с `Error: WebAppMethodUnsupported at cloudStorage.getItems … at PageLayout` |
+| 15 | 🟡 | Экран `/battles` не отрисовывается в съёмке (пустой), хотя остальные 17 — да. Вероятно ждёт сокет-соединение; из эталона временно исключён | 29.07 | `visual.py capture`: содержимое 0.2% против 5–13% у остальных |
 
 ## Продуктовый бэклог требований Кенана
 
