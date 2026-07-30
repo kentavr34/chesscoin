@@ -2,35 +2,37 @@ import { useState, useEffect } from 'react';
 
 export type Breakpoint = 'mobile' | 'tablet' | 'desktop';
 
+// Границы те же, что в CSS — единственный источник правды о размерах экрана.
+// Читать window.innerWidth запрещено правилом проекта: в Telegram WebView оно
+// врёт при открытой клавиатуре и при смене ориентации приходит с задержкой.
+const QUERIES: [Breakpoint, string][] = [
+  ['desktop', '(min-width: 768px)'],
+  ['tablet',  '(min-width: 480px)'],
+];
+
+function current(): Breakpoint {
+  for (const [name, query] of QUERIES) {
+    if (window.matchMedia(query).matches) return name;
+  }
+  return 'mobile';
+}
+
 /**
- * useBreakpoint — Hook для определения текущего responsive breakpoint
- * Используется для компонентов, требующих динамической логики на разных экранах
+ * useBreakpoint — текущий responsive breakpoint через CSS media queries.
  *
  * Usage:
  *   const breakpoint = useBreakpoint();
  *   const isSmall = breakpoint === 'mobile';
  */
 export function useBreakpoint(): Breakpoint {
-  const [breakpoint, setBreakpoint] = useState<Breakpoint>('mobile');
+  const [breakpoint, setBreakpoint] = useState<Breakpoint>(current);
 
   useEffect(() => {
-    const updateBreakpoint = () => {
-      const width = window.innerWidth;
-      if (width < 480) {
-        setBreakpoint('mobile');
-      } else if (width < 768) {
-        setBreakpoint('tablet');
-      } else {
-        setBreakpoint('desktop');
-      }
-    };
-
-    // Set initial breakpoint
-    updateBreakpoint();
-
-    // Listen to window resize events
-    window.addEventListener('resize', updateBreakpoint);
-    return () => window.removeEventListener('resize', updateBreakpoint);
+    const update = () => setBreakpoint(current());
+    const lists = QUERIES.map(([, query]) => window.matchMedia(query));
+    lists.forEach(l => l.addEventListener('change', update));
+    update();
+    return () => lists.forEach(l => l.removeEventListener('change', update));
   }, []);
 
   return breakpoint;
