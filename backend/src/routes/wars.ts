@@ -8,6 +8,7 @@ import { logger, logError } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { authMiddleware } from "@/middleware/auth";
 import { updateBalance } from "@/services/economy";
+import { announceWarDeclared } from "@/services/telegramChannel";
 import { TransactionType, CountryWarStatus } from "@prisma/client";
 
 
@@ -846,6 +847,24 @@ warsRouter.post("/declare", authMiddleware, validate(DeclareWarSchema), async (r
         }).catch(() => {});
       }
     }
+
+    // Объявление в канал: кто кому объявил, сколько в кассе, как делятся деньги.
+    // Не блокирует ответ — война не должна падать из-за Telegram.
+    void (async () => {
+      const [atk, def] = await Promise.all([
+        prisma.country.findUnique({ where: { id: membership.countryId }, select: { treasury: true } }),
+        prisma.country.findUnique({ where: { id: defenderCountryId }, select: { treasury: true } }),
+      ]);
+      await announceWarDeclared({
+        attackerName:     war.attackerCountry.nameRu,
+        attackerFlag:     war.attackerCountry.flag,
+        attackerTreasury: atk?.treasury ?? 0n,
+        defenderName:     war.defenderCountry.nameRu,
+        defenderFlag:     war.defenderCountry.flag,
+        defenderTreasury: def?.treasury ?? 0n,
+        endAt:            war.endAt,
+      });
+    })().catch(e => logError("[Wars] анонс войны в канал:", e));
 
     // Автоматический матчмейкинг — запустить первые партии через 5 секунд
     setTimeout(async () => {

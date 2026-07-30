@@ -16,6 +16,7 @@ import { settleClanBattle } from "@/routes/nations";
 import { verifyTonTransaction } from "@/lib/tonverify";
 import { recoverStuckGames } from "@/services/game/recover";
 import { releaseExpiredReservations } from "@/routes/exchange";
+import { splitTournamentPot, splitWarPot } from "@/services/prizes";
 import { processWarAutoloss } from "@/services/game/warAutoloss"; // PR-1
 import { processTonWithdrawals } from "@/services/tonWithdrawalWorker"; // A5
 
@@ -327,19 +328,15 @@ async function checkTournamentResults() {
         continue;
       }
 
-      // БАГ #5 fix: WORLD получает 70/20/10%, COUNTRY — 60/30/10%
-      const prizes: [bigint, number][] =
-        t.type === 'WORLD'
-          ? [[totalPool * 70n / 100n, 0], [totalPool * 20n / 100n, 1], [totalPool * 10n / 100n, 2]]
-        : t.type === 'COUNTRY'
-          ? [[totalPool * 60n / 100n, 0], [totalPool * 30n / 100n, 1], [totalPool * 10n / 100n, 2]]
-        : t.type === 'SEASONAL'
-          ? [[totalPool * 30n / 100n, 0], [totalPool * 10n / 100n, 1]]
-        : t.type === 'MONTHLY'
-          ? [[totalPool * 20n / 100n, 0]]
-          : [[totalPool * 10n / 100n, 0]]; // WEEKLY
+      // Кенан 31.07.2026: касса делится 60/30/10 между первыми тремя местами
+      // НЕЗАВИСИМО от типа турнира, из каждой доли 10% — комиссия стола.
+      // Мест меньше трёх — доли перенормируются, один игрок забирает всё
+      // минус комиссию. Прежние проценты (WEEKLY 10%, MONTHLY 20%, SEASONAL
+      // 30%) сжигали остаток: за 10 турниров пропало 100 000 монет.
+      const { payouts, commission } = splitTournamentPot(totalPool, t.players.length);
 
-      for (const [amount, idx] of prizes) {
+      for (let idx = 0; idx < payouts.length; idx++) {
+        const amount = payouts[idx];
         const player = t.players[idx];
         if (!player || amount <= 0n) continue;
         await updateBalance(player.userId, amount, TransactionType.TOURNAMENT_WIN, {
@@ -370,22 +367,16 @@ async function checkTournamentResults() {
         }
       }
 
-      // PR-3 (Кенан 2026-05-18): WEEKLY/MONTHLY/SEASONAL выплачивают только
-      // 10/20/30% пула. Остаток пула — в platform reserve (не сжигается, не
-      // возвращается участникам). WORLD/COUNTRY раздают 100% — там нулевой
-      // остаток. Считаем явно чтобы быть устойчивыми к будущим изменениям %.
-      const totalPaid = prizes.reduce((s, [amt, idx]) => {
-        const player = t.players[idx];
-        return player && amt > 0n ? s + amt : s;
-      }, 0n);
-      const leftover = totalPool - totalPaid;
-      if (leftover > 0n) {
+      // Комиссия стола — единственное, что остаётся у платформы. Остатка
+      // сверх неё быть не может: splitTournamentPot гарантирует, что выплаты
+      // плюс комиссия равны кассе до последней монеты.
+      if (commission > 0n) {
         try {
           await prisma.platformConfig.update({
             where: { id: "singleton" },
-            data: { platformReserve: { increment: leftover } },
+            data: { platformReserve: { increment: commission } },
           });
-          logger.info(`[Cron/Tournament] ${t.id} "${t.name}": leftover ${leftover} (${totalPool}-${totalPaid}) → platformReserve`);
+          logger.info(`[Cron/Tournament] ${t.id} "${t.name}": комиссия стола ${commission} из кассы ${totalPool}`);
         } catch (e) { logError("[Cron/Tournament/platformReserve]", e); }
       }
 
@@ -401,7 +392,7 @@ async function checkTournamentResults() {
       // Публикуем результаты в канал
       const winner = t.players[0];
       if (winner) {
-        const amtK = (Number(prizes[0]?.[0] ?? 0n) / 1000).toFixed(1);
+        const amtK = (Number(payouts[0] ?? 0n) / 1000).toFixed(1);
         let text = '';
 
         if (t.type === 'COUNTRY') {
@@ -429,12 +420,20 @@ async function checkTournamentResults() {
 }
 
 // ─── Hourly: расчёт завершённых войн между странами ─────────────────────────
-// PR-3 (Кенан 2026-05-17): распределение казны win/lose страны по схеме
-// min(treasury_winner, treasury_loser) — победитель забирает у проигравшего
-// сумму, ограниченную меньшей из двух казн. Это значит, нападать на богатую
-// страну выгодно (риск меньше, потолок прибыли = твоя казна).
-// 10% комиссии платформы. 20% / 10% / 5% — топ-1/2/3 бойцам по warWinsCurrent,
-// 65% — пропорционально warWinsCurrent остальным. Ничья — никто никого не списывает.
+//
+// Кенан 31.07.2026 — новое правило, отменяет прежнее (min(казна), топ-1/2/3
+// 20/10/5% плюс 65% пропорционально):
+//
+//   У каждой страны своя казна: взносы вступающих воинов плюс донаты.
+//   Победившая по числу побед забирает казну проигравшей ЦЕЛИКОМ, до нуля;
+//   своя казна остаётся при ней. Захваченное делится между своими воинами
+//   строго кратно числу побед, которые они принесли команде: одна победа —
+//   один эквивалент, доля = касса × победы ÷ сумма побед. Вложил деньги,
+//   но не сыграл ни партии — не получает ничего.
+//
+// Комиссия стола 10% остаётся как была (Кенан 2026-05-17) — 31.07 он её не
+// отменял, а снимать утверждённое правило молча нельзя.
+// Ничья — никто никого не списывает.
 export async function distributeCountryWarPrize(war: { id: string; attackerCountryId: string; defenderCountryId: string; attackerWins: number; defenderWins: number }) {
   // PR-3: idempotency guard — если статус FINISHED, значит уже распределено
   // (через другой call path: finishWar или checkCountryWarResults).
@@ -456,16 +455,19 @@ export async function distributeCountryWarPrize(war: { id: string; attackerCount
   ]);
   if (!winner || !loser) return;
 
-  const prize = loser.treasury < winner.treasury ? loser.treasury : winner.treasury;
+  // Победитель забирает казну проигравшего ЦЕЛИКОМ. Раньше приз ограничивался
+  // меньшей из двух казн — из-за этого нападать на богатого было выгоднее,
+  // чем защищаться, а большая часть чужой казны оставалась нетронутой.
+  const prize = loser.treasury;
   if (prize <= 0n) {
-    logger.info(`[Cron/CountryWar/Prize] War ${war.id}: prize=0 (one country empty)`);
+    logger.info(`[Cron/CountryWar/Prize] War ${war.id}: казна проигравшего пуста`);
     return;
   }
 
-  // Списываем приз из казны проигравшего.
+  // Обнуляем казну проигравшего — забрали всё.
   await prisma.country.update({
     where: { id: loserCountryId },
-    data: { treasury: { decrement: prize } },
+    data: { treasury: 0n },
   });
 
   // 10% комиссии платформы → platformConfig.platformReserve.
@@ -495,32 +497,24 @@ export async function distributeCountryWarPrize(war: { id: string; attackerCount
     return;
   }
 
-  const top1 = netPrize * 20n / 100n;
-  const top2 = netPrize * 10n / 100n;
-  const top3 = netPrize * 5n  / 100n;
-  const restPool = netPrize - top1 - top2 - top3; // 65%
-  const totalWins = members.reduce((s, m) => s + (m.warWinsCurrent ?? 0), 0);
+  // Кратно победам: одна победа — один эквивалент. Никаких мест и бонусов
+  // за верхушку: кто принёс пять побед, получает впятеро больше того, кто
+  // принёс одну. Кто не сыграл — ничего.
+  const shares = splitWarPot(netPrize, members.map(m => ({
+    userId: m.userId, wins: m.warWinsCurrent ?? 0,
+  })));
 
-  const userMap = new Map<string, bigint>();
-  for (let i = 0; i < members.length; i++) {
-    const m = members[i]!;
-    let amount = 0n;
-    if (i === 0) amount += top1;
-    else if (i === 1) amount += top2;
-    else if (i === 2) amount += top3;
-    if (totalWins > 0 && (m.warWinsCurrent ?? 0) > 0) {
-      amount += restPool * BigInt(m.warWinsCurrent ?? 0) / BigInt(totalWins);
-    }
-    if (amount > 0n) userMap.set(m.userId, (userMap.get(m.userId) ?? 0n) + amount);
-  }
+  const userMap = new Map<string, bigint>(shares.map(s => [s.userId, s.amount]));
 
-  // Если никто не сделал ни одной победы (totalWins=0 и членов >0) — делим
-  // restPool поровну между всеми (защита от того что top1/2/3 остаются).
-  if (totalWins === 0 && members.length > 0) {
-    const equal = restPool / BigInt(members.length);
-    for (const m of members) {
-      userMap.set(m.userId, (userMap.get(m.userId) ?? 0n) + equal);
-    }
+  // Победа страны без единой личной победы бойцов невозможна, но если счёт
+  // сложился так — приз остаётся в казне победителя, а не растворяется.
+  if (userMap.size === 0) {
+    await prisma.country.update({
+      where: { id: winnerCountryId },
+      data: { treasury: { increment: netPrize } },
+    });
+    logger.warn(`[Cron/CountryWar/Prize] War ${war.id}: победных партий нет — ${netPrize} осталось в казне победителя`);
+    return;
   }
 
   // Выплаты + уведомления.

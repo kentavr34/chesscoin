@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { getIo } from "@/lib/io"; // BUG-01 fix: без circular dependency
 import { authMiddleware } from "@/middleware/auth";
 import { updateBalance } from "@/services/economy";
+import { splitTournamentPot } from "@/services/prizes";
 import { TransactionType } from "@prisma/client";
 import { Chess } from "chess.js";
 import { nanoid } from "nanoid";
@@ -426,39 +427,24 @@ export async function settleTournament(tournamentId: string) {
   if (!tournament) throw new Error('Tournament not found');
   if (tournament.status === 'FINISHED') return; // already settled
 
+  // Касса = взносы + донаты. Донат постороннего человека тоже идёт в кассу
+  // и делится вместе со взносами (Кенан 31.07.2026).
   const totalPool = tournament.prizePool + tournament.donationPool;
-  const type = tournament.type as TournamentType;
 
-  // Prize distribution by type
+  // Единое правило для всех типов турниров: 60/30/10 между первыми тремя
+  // местами, из каждой доли 10% — комиссия стола. Мест меньше трёх — доли
+  // перенормируются, один игрок забирает всю кассу минус комиссию.
+  const { payouts, commission } = splitTournamentPot(totalPool, tournament.players.length);
+
   const prizes: Array<{ rank: number; share: bigint; playerId: string; userId: string }> = [];
-
-  const byShare = (pct: number) => (totalPool * BigInt(Math.round(pct * 100))) / 10000n;
-
-  if (type === 'COUNTRY' || type === 'WORLD') {
-    // 1st=60%, 2nd=30%, 3rd=10%
-    const ranks = [
-      { rank: 1, pct: 60 },
-      { rank: 2, pct: 30 },
-      { rank: 3, pct: 10 },
-    ];
-    for (const { rank, pct } of ranks) {
-      const player = tournament.players[rank - 1];
-      if (player) {
-        prizes.push({ rank, share: byShare(pct), playerId: player.id, userId: player.userId });
-      }
-    }
-  } else {
-    // Single winner
-    const pct = type === 'WEEKLY' ? 10 : type === 'MONTHLY' ? 20 : type === 'SEASONAL' ? 30 : 10;
-    const champion = tournament.players[0];
-    if (champion) {
-      prizes.push({ rank: 1, share: byShare(pct), playerId: champion.id, userId: champion.userId });
-    }
+  for (let i = 0; i < payouts.length; i++) {
+    const player = tournament.players[i];
+    if (!player || payouts[i] <= 0n) continue;
+    prizes.push({ rank: i + 1, share: payouts[i], playerId: player.id, userId: player.userId });
   }
 
   // Pay out prizes
   for (const prize of prizes) {
-    if (prize.share <= 0n) continue;
     await updateBalance(prize.userId, prize.share, TransactionType.TOURNAMENT_WIN, {
       tournamentId: tournament.id,
       rank: prize.rank,
@@ -469,6 +455,15 @@ export async function settleTournament(tournamentId: string) {
       where: { id: prize.playerId },
       data: { contribution: prize.share },
     });
+  }
+
+  // Комиссия стола — всё, что платформа берёт с турнира. Раньше остаток
+  // кассы просто оставался в строке турнира и сгорал.
+  if (commission > 0n) {
+    await prisma.platformConfig.update({
+      where: { id: 'singleton' },
+      data: { platformReserve: { increment: commission } },
+    }).catch(e => logError('[Tournaments] комиссия стола:', e));
   }
 
   // Mark tournament as finished
