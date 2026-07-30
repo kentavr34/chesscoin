@@ -23,7 +23,12 @@ import sys
 sys.path.insert(0, __file__.rsplit('\\', 1)[0].rsplit('/', 1)[0])
 from _pm import q, one, head  # noqa: E402
 
-LIVE = 'u."isBot" = false AND u."telegramId" <> \'screenshotter_001\''
+# Служебные аккаунты со стартовым балансом, выданным напрямую мимо
+# транзакций: бот, скриншотер, тестовые. Не жертвы ошибок, а инвентарь —
+# считаются отдельной строкой, иначе проверка врёт (поймано 30.07
+# на собственном тестовом аккаунте).
+SERVICE = """u."telegramId" = 'screenshotter_001' OR u."telegramId" LIKE 'tester_%'"""
+LIVE = 'u."isBot" = false AND NOT (' + SERVICE + ')'
 
 
 def fmt(n):
@@ -39,8 +44,7 @@ def summary():
     on_hands = one(f'select coalesce(sum(u.balance),0) from users u where {LIVE}', game_db=True)
     emitted = one(f'''select coalesce(sum(t.amount),0) from transactions t
                       join users u on u.id = t."userId" where {LIVE}''', game_db=True)
-    seed = one('''select coalesce(sum(u.balance),0) from users u
-                  where u."isBot" = true or u."telegramId" = 'screenshotter_001' ''', game_db=True)
+    seed = one('select coalesce(sum(u.balance),0) from users u where u."isBot" = true or (' + SERVICE + ')', game_db=True)
 
     diff = int(on_hands) - int(emitted)
 
@@ -50,8 +54,8 @@ def summary():
     print('   ' + '-' * 52)
     print('   расхождение:                      %18s ᚙ' % fmt(diff))
 
-    print('\n▶ ВНЕ ПРОВЕРКИ (стартовые балансы, выданы мимо транзакций)')
-    print('   бот и служебный аккаунт:          %18s ᚙ' % fmt(seed))
+    print('\n▶ ВНЕ ПРОВЕРКИ (служебные: бот, скриншотер, тестовые)')
+    print('   бот и служебные аккаунты:          %18s ᚙ' % fmt(seed))
 
     if diff == 0:
         print('\n✅ БУХГАЛТЕРИЯ СХОДИТСЯ: каждая монета на руках обеспечена историей.')
