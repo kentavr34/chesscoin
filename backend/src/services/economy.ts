@@ -54,31 +54,51 @@ export const updateBalance = async (
   options: UpdateBalanceOptions = {}
 ) => {
   const execute = async (tx: import("@prisma/client").Prisma.TransactionClient) => {
-    // 1. Получаем пользователя с блокировкой
-    const user = await tx.user.findUniqueOrThrow({
-      where: { id: userId },
-    });
+    // ⚠️ ЗДЕСЬ БЫЛ read-modify-write: читали баланс, складывали в приложении
+    // и писали абсолютное значение. Комментарий обещал блокировку, но её не было —
+    // параллельные начисления затирали друг друга (lost update).
+    // Цена на 30.07.2026: у 33 игроков из 91 баланс разошёлся с историей
+    // транзакций, у Mikayıl — на 247 900 монет в минус.
+    // Теперь только атомарные inc/dec на стороне Postgres.
 
-    // 2. Проверяем достаточно ли монет для списания
-    if (amount < 0n && user.balance + amount < 0n) {
-      throw new Error(`Insufficient balance: ${user.balance} < ${-amount}`);
+    let updatedUser;
+
+    if (amount < 0n) {
+      // Списание с атомарной проверкой достатка: условие в WHERE, а не в коде.
+      // Если денег не хватило — updateMany вернёт count=0, и мы падаем,
+      // не уводя баланс в минус.
+      const res = await tx.user.updateMany({
+        where: { id: userId, balance: { gte: -amount } },
+        data: {
+          balance: { increment: amount },
+          totalSpent: { increment: -amount },
+        },
+      });
+      if (res.count === 0) {
+        const cur = await tx.user.findUnique({ where: { id: userId }, select: { balance: true } });
+        throw new Error(`Insufficient balance: ${cur?.balance ?? 0} < ${-amount}`);
+      }
+      updatedUser = await tx.user.findUniqueOrThrow({ where: { id: userId } });
+    } else {
+      updatedUser = await tx.user.update({
+        where: { id: userId },
+        data: {
+          balance: { increment: amount },
+          totalEarned: { increment: amount },
+        },
+      });
     }
 
-    const newBalance = user.balance + amount;
-
-    // 3. Определяем лигу по новому балансу
-    const newLeague = calculateLeague(newBalance);
-
-    // 4. Обновляем баланс пользователя
-    const updatedUser = await tx.user.update({
-      where: { id: userId },
-      data: {
-        balance: newBalance,
-        totalEarned: amount > 0n ? user.totalEarned + amount : user.totalEarned,
-        totalSpent:  amount < 0n ? user.totalSpent + (-amount) : user.totalSpent,
-        league: options.skipLeagueUpdate ? user.league : newLeague,
-      },
-    });
+    // Лига считается по ФАКТИЧЕСКОМУ балансу после инкремента.
+    if (!options.skipLeagueUpdate) {
+      const newLeague = calculateLeague(updatedUser.balance);
+      if (newLeague !== updatedUser.league) {
+        updatedUser = await tx.user.update({
+          where: { id: userId },
+          data: { league: newLeague },
+        });
+      }
+    }
 
     // 5. Записываем транзакцию
     await tx.transaction.create({
