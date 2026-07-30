@@ -358,6 +358,11 @@ router.post("/ton-wallet/verify", authMiddleware, async (req: Request, res: Resp
       if (!verified) {
         return res.status(402).json({ error: "1 TON payment not confirmed. Try again in 30 seconds." });
       }
+    } else if (process.env.NODE_ENV === "production") {
+      // Раньше здесь просто писали warn и шли дальше: на проде это означало
+      // бесплатную разблокировку кошелька для всех.
+      logger.error("[TON] PLATFORM_TON_WALLET не задан — разблокировка запрещена");
+      return res.status(503).json({ error: "TON verification unavailable" });
     } else {
       logger.warn("[TON] PLATFORM_TON_WALLET не задан — верификация пропущена (dev mode)");
     }
@@ -394,6 +399,29 @@ router.post("/ton-wallet/verify", authMiddleware, async (req: Request, res: Resp
     res.status(500).json({ error: (err instanceof Error ? err.message : String(err)) });
   }
 });
+
+
+// ── Канон B1: 1 TON единоразово за подключение кошелька ───────────────────────
+// POST /ton-wallet сохраняет адрес без оплаты (нужен фронту после TonConnect),
+// поэтому сам факт наличия адреса ничего не разрешает. Денежные операции
+// требуют ОПЛАЧЕННОЙ разблокировки — транзакции WALLET_UNLOCK.
+// Кошельки, привязанные до 30.07.2026, работают как раньше: закрываем дыру
+// на будущее, не отключая тех, кто уже пользовался.
+const WALLET_PAYWALL_SINCE = new Date("2026-07-30T00:00:00Z");
+
+async function isWalletUnlocked(userId: string): Promise<boolean> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { tonConnectedAt: true },
+  });
+  if (!user?.tonConnectedAt) return false;
+  if (user.tonConnectedAt < WALLET_PAYWALL_SINCE) return true; // унаследованные
+  const paid = await prisma.transaction.findFirst({
+    where: { userId, type: TransactionType.WALLET_UNLOCK },
+    select: { id: true },
+  });
+  return Boolean(paid);
+}
 
 // ── Хелпер: поиск входящего TON-платежа через toncenter.com ───────────────────
 // Возвращает саму транзакцию, а не «да/нет»: вызывающему нужны и фактическая
@@ -527,6 +555,9 @@ router.post("/ton/withdraw", authMiddleware, async (req: Request, res: Response)
     if (!user.tonWalletAddress) {
       return res.status(400).json({ error: "Connect TON wallet first" });
     }
+    if (!(await isWalletUnlocked(userId))) {
+      return res.status(403).json({ error: "Connect and unlock your TON wallet first (1 TON)" });
+    }
     if (user.balance < BigInt(amountCoins)) {
       return res.status(400).json({ error: "Not enough coins" });
     }
@@ -610,6 +641,9 @@ router.post("/ton/buy", authMiddleware, async (req: Request, res: Response) => {
     if (!user?.tonWalletAddress) {
       return res.status(400).json({ error: "Connect TON wallet first" });
     }
+    if (!(await isWalletUnlocked(userId))) {
+      return res.status(403).json({ error: "Connect and unlock your TON wallet first (1 TON)" });
+    }
     // ── Проверка платежа в блокчейне ─────────────────────────────────────────
     // До 2026-07-30 монеты начислялись по числу из тела запроса, без всякой
     // проверки: любой мог получить миллионы бесплатно (найдено Кенаном,
@@ -677,6 +711,9 @@ router.post("/ton/sell", authMiddleware, async (req: Request, res: Response) => 
     }
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { balance: true, tonWalletAddress: true } });
     if (!user?.tonWalletAddress) return res.status(400).json({ error: "Connect TON wallet first" });
+    if (!(await isWalletUnlocked(userId))) {
+      return res.status(403).json({ error: "Connect and unlock your TON wallet first (1 TON)" });
+    }
     if (user.balance < BigInt(amountCoins)) return res.status(400).json({ error: "Not enough coins" });
     const coinsPerTon = 1_000_000;
     const tonGross = Number(amountCoins) / coinsPerTon;
