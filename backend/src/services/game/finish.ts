@@ -427,12 +427,14 @@ const processBattlePayouts = async (
   const winnerPayout = totalPot - commission;
 
   if (isDraw) {
-    // Ничья: каждый получает свою ставку обратно (без комиссии)
+    // Ничья: каждый получает свою ставку обратно (без комиссии).
+    // Тип REFUND, а не BATTLE_BET: возврат и списание не должны быть
+    // неотличимы по типу — иначе экономику по типам не собрать.
     for (const side of session.sides) {
       await updateBalance(
         side.playerId,
         bet,
-        TransactionType.BATTLE_BET,
+        TransactionType.REFUND,
         { sessionId: session.id, result: "draw" },
         { tx }
       );

@@ -792,7 +792,10 @@ export const setupSocketHandlers = (io: Server) => {
 
           if (session.type === SessionType.BATTLE && session.bet) {
             // Возвращаем ставку
-            await updateBalance(userId, session.bet, TransactionType.BATTLE_BET, {
+            // Возврат ставки — тип REFUND. Раньше здесь стоял BATTLE_BET
+            // со знаком плюс: списание и возврат были неотличимы по типу,
+            // и экономику по типам транзакций собрать было нельзя.
+            await updateBalance(userId, session.bet, TransactionType.REFUND, {
               reason: "battle_cancelled", sessionId: session.id,
             });
             // Возвращаем попытку (батл отменён до старта — попытка не должна сгорать)

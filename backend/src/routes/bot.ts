@@ -511,10 +511,12 @@ botRouter.post("/cleanup/sessions", async (_req: Request, res: Response) => {
       if (session.type === "BATTLE" && session.bet) {
         const humanSide = session.sides.find((s: Record<string,unknown>) => !s.isBot);
         if (humanSide) {
+          // Возврат ставки — тип REFUND. Раньше писался BATTLE_WIN с флагом
+          // refund в meta: в отчётах это выглядело как выигрыш, которого не было.
           await updateBalance(
             humanSide.playerId,
             session.bet,
-            TransactionType.BATTLE_WIN,
+            TransactionType.REFUND,
             { refund: true, sessionId: session.id },
             { isEmission: false }
           );

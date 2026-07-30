@@ -810,8 +810,13 @@ export function startGameCrons() {
     );
   });
 
-  // G22: Автоочистка неотвеченных батлов >30 дней — раз в сутки 04:00 UTC
-  cron.schedule("0 4 * * *", async () => {
+  // Автоснятие зависших вызовов — каждые 15 минут.
+  // Было: раз в сутки и с порогом 30 дней. Из-за этого ставка игрока могла
+  // висеть замороженной неделями: на 30.07 две заявки ждали с 24 июля,
+  // а 20 отменённых батлов простояли по 14 часов медианно (Кенан: «батлы
+  // не доигрываются»). Партия стартует только когда ОБА нажали «принять»,
+  // поэтому зависает и та заявка, к которой соперник уже присоединился.
+  cron.schedule("*/15 * * * *", async () => {
     await cleanupStaleBattles().catch((err) =>
       logError("[Crons/StaleBattles] Error:", err)
     );
@@ -954,7 +959,11 @@ export async function cancelStaleExchangeOrders(): Promise<void> {
 // партии с дедлайном 24ч обрабатывает свой autoloss (processWarAutoloss /
 // processSwissAutoloss) — там логика «есть победитель», не возврат ставки.
 async function cleanupStaleBattles() {
-  const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  // Час — достаточный срок: если за это время соперник не пришёл или
+  // рукопожатие «оба приняли» не состоялось, вызов снимается и ставка
+  // возвращается. Раньше здесь стояло 30 дней.
+  const STALE_MS = 60 * 60 * 1000;
+  const cutoff = new Date(Date.now() - STALE_MS);
   const staleSessions = await prisma.session.findMany({
     where: {
       status: 'WAITING_FOR_OPPONENT',
@@ -979,7 +988,7 @@ async function cleanupStaleBattles() {
   }
 
   if (staleSessions.length > 0) {
-    logger.info(`[Cron/StaleBattles] Cleaned up ${staleSessions.length} stale battles (>30 days)`);
+    logger.info(`[Cron/StaleBattles] Снято зависших вызовов: ${staleSessions.length}, ставки возвращены`);
   }
 }
 

@@ -71,10 +71,12 @@ describe('TransactionType usage', () => {
     expect(TOURNAMENT_WIN).not.toBe(BATTLE_WIN);
   });
 
-  it('draw returns BATTLE_BET type (original stake)', () => {
-    const drawType = 'BATTLE_BET';
-    // При ничьей игрок получает обратно свою ставку — тип BATTLE_BET
-    expect(drawType).toBe('BATTLE_BET');
+  it('draw returns REFUND type (original stake)', () => {
+    const drawType = 'REFUND';
+    // При ничьей игрок получает обратно свою ставку — это возврат, не ставка.
+    // Было BATTLE_BET: списание и возврат совпадали по типу (исправлено 30.07).
+    expect(drawType).toBe('REFUND');
+    expect(drawType).not.toBe('BATTLE_BET');
   });
 });
 
