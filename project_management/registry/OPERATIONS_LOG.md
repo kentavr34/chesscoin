@@ -52,3 +52,4 @@
 | 03:59 | change | канал включён: TELEGRAM_CHANNEL_ID=-1001755258296 в .env + проброс в compose, порог >=10000, warning вместо тихого выхода; задание на подписку переведено на @chesscoinofficial | backend/src/services/crons.ts, docker-compose.yml |
 | 09:36 | deploy | механика: зависшие вызовы снимаются за час (cron 15 мин), возврат везде REFUND; проверено на проде — снято 2 заявки от 24.07, ожидающих 0 | backend/src/services/crons.ts, backend/src/services/game/socket.ts, backend/src/routes/bot.ts, backend/src/services/game/finish.ts |
 | 12:33 | change | объявление опубликовано в канал (msg 504): батлы + реферальные звания с Новобранца + главком по званию даёт право объявить войну | — |
+| 13:11 | change | решение по кланам: единый список со странами, создаёт офицер высшего ранга не-главком; записано в DECISIONS.md и MASTER_PLAN B8; не реализуем сейчас | docs/history/DECISIONS.md, MASTER_PLAN.md |
