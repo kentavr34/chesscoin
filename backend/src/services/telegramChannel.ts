@@ -32,7 +32,10 @@ export async function sendToChannel(text: string, keyboard?: TelegramKeyboard): 
       signal: AbortSignal.timeout(15_000),
     });
     const ok = resp.ok;
-    if (!ok) logger.warn(`[Channel] Telegram ответил ${resp.status}`);
+    // Логируем и успех: молчащий канал уже один раз выглядел здоровым —
+    // cron рапортовал «completed», не отправив ни одного поста (30.07).
+    if (ok) logger.info("[Channel] Пост отправлен: " + text.slice(0, 40) + "…");
+    else logger.warn(`[Channel] Telegram ответил ${resp.status}`);
     return ok;
   } catch (err: unknown) {
     logError("[Channel]", err);
