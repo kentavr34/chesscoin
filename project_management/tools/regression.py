@@ -42,7 +42,8 @@ for c in cases:
                                os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
         out = ((r.stdout or '') + (r.stderr or '')).strip()
     else:
-        out = sh(cmd, timeout=90)
+        # 90 с не хватало проверке бэкапа: rclone ходит в Google Drive по сети
+        out = sh(cmd, timeout=240)
     ok = True
     why = ''
     if must and must not in out:
