@@ -195,3 +195,55 @@ export async function verifyTonTransaction(params: {
     return { status: 'pending', reason: `TON API недоступен: ${msg}` };
   }
 }
+
+// ── Поиск фактического входящего платежа ─────────────────────────────────────
+// Клиент не может сообщить настоящий хэш: TonConnect возвращает BOC, а фронт
+// делал из него псевдо-хэш (кусок base64). Искать такой «хэш» в блокчейне
+// бессмысленно — верификация всегда возвращала pending, и до 30.07.2026
+// биржа на этом основании выдавала монеты бесплатно.
+// Поэтому источник истины — сам блокчейн: ищем перевод от кошелька покупателя
+// на нужный адрес нужной суммы за последние минуты.
+export type FoundPayment = { hash: string; lt: string; valueNano: bigint; utime: number };
+
+function sameWallet(a: string, b: string): boolean {
+  if (!a || !b) return false;
+  const norm = (s: string) => s.replace(/^0:/, '').replace(/^(UQ|EQ|0Q|kQ)/i, '').toLowerCase();
+  const na = norm(a), nb = norm(b);
+  return na === nb || na.slice(0, 24) === nb.slice(0, 24) || na.includes(nb.slice(0, 16)) || nb.includes(na.slice(0, 16));
+}
+
+export async function findIncomingPayment(params: {
+  toWallet: string;
+  fromWallet: string;
+  minNano: bigint;
+  windowSec?: number;
+}): Promise<FoundPayment | null> {
+  const { toWallet, fromWallet, minNano, windowSec = 900 } = params;
+  try {
+    const res = await tonRequest<TonTransaction[]>('getTransactions', {
+      address: toWallet,
+      limit:   '30',
+    });
+    if (!res.ok || !Array.isArray(res.result)) return null;
+
+    const since = Math.floor(Date.now() / 1000) - windowSec;
+    for (const tx of res.result) {
+      if (tx.utime < since) break; // отсортированы: новые первыми
+      const inMsg = tx.in_msg;
+      if (!inMsg) continue;
+      const value = BigInt(String(inMsg.value ?? '0'));
+      if (value < minNano) continue;
+      if (!sameWallet(String(inMsg.source ?? ''), fromWallet)) continue;
+      return {
+        hash: String(tx.transaction_id?.hash ?? `${tx.utime}:${value}`),
+        lt:   String(tx.transaction_id?.lt ?? tx.utime),
+        valueNano: value,
+        utime: tx.utime,
+      };
+    }
+    return null;
+  } catch (err) {
+    logger.warn('[tonverify] findIncomingPayment failed:', err);
+    return null;
+  }
+}

@@ -13,9 +13,10 @@ import { authMiddleware } from '@/middleware/auth';
 import { TransactionType } from '@prisma/client';
 import { logger } from '@/lib/logger';
 import { redis } from '@/lib/redis';
-import { verifyTonTransaction } from '@/lib/tonverify';
+import { findIncomingPayment, verifyTonTransaction } from '@/lib/tonverify';
 import { getIo } from '@/lib/io';
 import { updateBalance } from '@/services/economy';
+import config from '@/config';
 export const exchangeRouter = Router();
 
 const PLATFORM_FEE_PERCENT = 0.005;
@@ -193,22 +194,54 @@ exchangeRouter.post('/orders/:id/execute', authMiddleware, async (req: Request, 
     const actualCoins  = requestedCoins;
     const actualTonAmt = (Number(actualCoins) / 1_000_000) * order.priceTon;
 
-    // ── E11: Верификация TON-транзакции ──────────────────────────
-    const verification = await verifyTonTransaction({
-      boc,
-      txHash,
-      expectedTo:  order.sellerWallet,
-      expectedTon: actualTonAmt,
-      fromAddress: buyer.tonWalletAddress ?? undefined,
-    });
+    // ── Верификация ОБОИХ переводов по факту в блокчейне ─────────
+    // Платформа денег не хранит и ничего не отправляет: покупатель одной
+    // TonConnect-транзакцией шлёт 99.5% продавцу и 0.5% комиссии на кошелёк
+    // платформы (frontend/src/lib/tonconnect.ts). Наш кошелёк только принимает.
+    //
+    // Искать по txHash с клиента нельзя: фронт делает псевдо-хэш из BOC,
+    // в блокчейне такого нет — верификация всегда возвращала pending, и биржа
+    // на этом основании выдавала монеты бесплатно (найдено 30.07.2026).
+    // Поэтому ищем сами платежи: от кошелька покупателя, нужной суммы, свежие.
+    const platformWallet = config.ton.platformWallet;
+    if (!platformWallet) {
+      logger.error('[exchange] PLATFORM_TON_WALLET не задан — сделки запрещены');
+      return res.status(503).json({ error: 'EXCHANGE_UNAVAILABLE', message: 'Обмен временно недоступен' });
+    }
 
-    if (verification.status === 'invalid') {
-      logger.warn(`[exchange] Invalid TON tx for order ${orderId}: ${verification.reason}`);
-      return res.status(422).json({
-        error:  'TON_TX_INVALID',
-        reason: verification.reason,
-        message: 'Transaction failed verification. Coins were not debited.',
+    const feeTonExpected    = actualTonAmt * PLATFORM_FEE_PERCENT;
+    const sellerTonExpected = actualTonAmt - feeTonExpected;
+    // допуск 3% на газ и округления
+    const toNano = (ton: number) => BigInt(Math.floor(ton * 0.97 * 1e9));
+
+    const sellerLeg = await findIncomingPayment({
+      toWallet:   order.sellerWallet,
+      fromWallet: buyer.tonWalletAddress!,
+      minNano:    toNano(sellerTonExpected),
+    });
+    if (!sellerLeg) {
+      return res.status(402).json({
+        error:   'TON_TX_NOT_CONFIRMED',
+        message: 'Перевод продавцу пока не найден в блокчейне. Повторите через 30 секунд — монеты не списаны.',
       });
+    }
+
+    const feeLeg = await findIncomingPayment({
+      toWallet:   platformWallet,
+      fromWallet: buyer.tonWalletAddress!,
+      minNano:    toNano(feeTonExpected),
+    });
+    if (!feeLeg) {
+      return res.status(402).json({
+        error:   'FEE_NOT_CONFIRMED',
+        message: 'Комиссия платформы пока не найдена в блокчейне. Повторите через 30 секунд — монеты не списаны.',
+      });
+    }
+
+    // Один и тот же платёж нельзя предъявить дважды — ключ по реальному хэшу.
+    const already = await prisma.p2POrder.findFirst({ where: { txHash: sellerLeg.hash } });
+    if (already) {
+      return res.status(409).json({ error: 'PAYMENT_ALREADY_USED', message: 'Этот платёж уже использован' });
     }
 
     // Раньше PENDING «разрешали, но помечали»: монеты уходили покупателю сразу,
@@ -216,15 +249,8 @@ exchangeRouter.post('/orders/:id/execute', authMiddleware, async (req: Request, 
     // стояло «не откатываем (монеты уже начислены)». То есть любой txHash
     // из головы давал бесплатные монеты. Теперь монеты двигаются только
     // после подтверждения платежа в блокчейне (найдено 30.07.2026).
-    if (verification.status !== 'ok') {
-      logger.warn(`[exchange] Order ${orderId}: платёж не подтверждён — ${(verification as any).reason}`);
-      return res.status(402).json({
-        error:   'TON_TX_NOT_CONFIRMED',
-        reason:  (verification as any).reason,
-        message: 'Платёж пока не найден в блокчейне. Повторите через 30 секунд — монеты не списаны.',
-      });
-    }
     const verifyStatus = 'VERIFIED';
+    const realTxHash = sellerLeg.hash;
 
     const updated = await prisma.$transaction(async (tx) => {
       // Атомарное обновление: updateMany с фильтром status=OPEN защищает от race condition
@@ -237,7 +263,7 @@ exchangeRouter.post('/orders/:id/execute', authMiddleware, async (req: Request, 
         // Закрываем текущий ордер
         const result = await tx.p2POrder.updateMany({
           where: { id: orderId, status: 'OPEN' },
-          data:  { status: 'EXECUTED', buyerId, buyerWallet: buyer.tonWalletAddress!, txHash, txBoc: boc ?? null, executedAt: new Date(), verifyStatus, amountCoins: actualCoins, totalTon: actualTonAmt, feeTon: partialFee },
+          data:  { status: 'EXECUTED', buyerId, buyerWallet: buyer.tonWalletAddress!, txHash: realTxHash, txBoc: boc ?? null, executedAt: new Date(), verifyStatus, amountCoins: actualCoins, totalTon: actualTonAmt, feeTon: partialFee },
         });
         if (result.count === 0) throw new Error('ORDER_ALREADY_TAKEN');
 
@@ -261,7 +287,7 @@ exchangeRouter.post('/orders/:id/execute', authMiddleware, async (req: Request, 
         // Полное исполнение (исходная логика)
         const result = await tx.p2POrder.updateMany({
           where: { id: orderId, status: 'OPEN' },
-          data:  { status: 'EXECUTED', buyerId, buyerWallet: buyer.tonWalletAddress!, txHash, txBoc: boc ?? null, executedAt: new Date(), verifyStatus },
+          data:  { status: 'EXECUTED', buyerId, buyerWallet: buyer.tonWalletAddress!, txHash: realTxHash, txBoc: boc ?? null, executedAt: new Date(), verifyStatus },
         });
         if (result.count === 0) throw new Error('ORDER_ALREADY_TAKEN');
         await updateBalance(buyerId, order.amountCoins, TransactionType.EXCHANGE_BUY, { orderId, txHash, totalTon: order.totalTon }, { tx });
