@@ -50,3 +50,4 @@
 | 03:29 | find | аудит магазина и биржи: магазин работает (28 покупок, скины применяются), биржа мертва (0 сделок, 10 ордеров висят с апреля) | — |
 | 03:46 | deploy | TON-эксплойт закрыт: сумма из блокчейна + ton_deposits против повтора; проверено на проде (402, баланс не изменился) | backend/src/routes/profile.ts |
 | 03:59 | change | канал включён: TELEGRAM_CHANNEL_ID=-1001755258296 в .env + проброс в compose, порог >=10000, warning вместо тихого выхода; задание на подписку переведено на @chesscoinofficial | backend/src/services/crons.ts, docker-compose.yml |
+| 09:36 | deploy | механика: зависшие вызовы снимаются за час (cron 15 мин), возврат везде REFUND; проверено на проде — снято 2 заявки от 24.07, ожидающих 0 | backend/src/services/crons.ts, backend/src/services/game/socket.ts, backend/src/routes/bot.ts, backend/src/services/game/finish.ts |
