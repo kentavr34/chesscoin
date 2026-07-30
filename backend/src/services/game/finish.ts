@@ -4,6 +4,13 @@ import type { SessionWithSides } from "@/types/db"; // R1 // Q2
 import { prisma } from "@/lib/prisma";
 import config from "@/config";
 import { updateBalance, canEmit, getCurrentPhase } from "@/services/economy";
+
+// Единый порядок блокировки игроков во всех транзакциях завершения партии.
+// Без него параллельные finish'ы берут строки users в разном порядке и получают
+// deadlock (Postgres 40P01) — партия не завершается, мат «не проходит».
+function orderedSides<T extends { playerId: string }>(sides: T[]): T[] {
+  return [...sides].sort((a, b) => (a.playerId < b.playerId ? -1 : a.playerId > b.playerId ? 1 : 0));
+}
 import { activateReferral, applyReferralIncome } from "@/services/referral";
 import { deleteCachedSession } from "./session";
 import { checkGameAchievements, checkJarvisAchievement, checkWarAchievements } from "@/services/achievements";
@@ -72,8 +79,12 @@ export const finishSession = async (
       include: { sides: { include: { player: true } } },
     });
 
-    // 4. Убираем из активных сессий пользователей
-    for (const side of session.sides) {
+    // 4. Убираем из активных сессий пользователей.
+    // ВАЖНО: строго по возрастанию playerId. Две партии, завершающиеся
+    // одновременно, блокировали одних и тех же игроков в разном порядке —
+    // Postgres ловил deadlock (40P01) и мат не засчитывался (найдено 30.07.2026
+    // живым прогоном турнирного матча). Единый порядок блокировок это исключает.
+    for (const side of orderedSides(session.sides)) {
       if (!side.isBot) {
         await tx.user.update({
           where: { id: side.playerId },
@@ -430,7 +441,7 @@ const processBattlePayouts = async (
     // Ничья: каждый получает свою ставку обратно (без комиссии).
     // Тип REFUND, а не BATTLE_BET: возврат и списание не должны быть
     // неотличимы по типу — иначе экономику по типам не собрать.
-    for (const side of session.sides) {
+    for (const side of orderedSides(session.sides)) {
       await updateBalance(
         side.playerId,
         bet,

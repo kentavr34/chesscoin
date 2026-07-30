@@ -50,6 +50,11 @@ export const LessonPage: React.FC = () => {
   const [hint, setHint] = useState<string | null>(null);
   const [wrongSquare, setWrongSquare] = useState<string | null>(null);
   const [reward, setReward] = useState<string>('0');
+  // Сторона, с которой смотрит игрок. Берётся из стартовой позиции задачи
+  // и дальше НЕ меняется: доска не должна переворачиваться посреди решения.
+  // Раньше параметра не было вовсе — react-chessboard всегда рисовал со стороны
+  // белых, и при «ходе чёрных» игрок смотрел глазами соперника (Кенан, 30.07).
+  const [boardSide, setBoardSide] = useState<'white' | 'black'>('white');
   const [optionSquares, setOptionSquares] = useState<Record<string, React.CSSProperties>>({});
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
   const [showFanfare, setShowFanfare] = useState(false);
@@ -83,6 +88,9 @@ export const LessonPage: React.FC = () => {
     const c = new Chess(p.fen);
     setChess(c);
     setFen(p.fen);
+    // Игрок решает за ту сторону, чей ход в стартовой позиции — значит и смотреть
+    // должен с её стороны. Иначе «ход чёрных» показывался глазами белых.
+    setBoardSide(c.turn() === 'b' ? 'black' : 'white');
     setPlayerMoves([]);
     setSolutionIdx(0);
     setIsPlayerTurn(false);
@@ -331,6 +339,7 @@ export const LessonPage: React.FC = () => {
           <Chessboard
             id="lesson-board"
             position={fen}
+            boardOrientation={boardSide}
             boardWidth={boardSize}
             onSquareClick={handleSquareClick}
             onPieceDrop={(from, to) => { handlePieceDrop(from, to); return true; }}
