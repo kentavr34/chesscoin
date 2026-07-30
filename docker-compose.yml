@@ -163,6 +163,9 @@ services:
       SCREENSHOT_SECRET: ${SCREENSHOT_SECRET}
       PLATFORM_TON_WALLET: ${PLATFORM_TON_WALLET}
       TONCENTER_API_KEY: ${TONCENTER_API_KEY}
+      # Ключ тестовой сети лежит про запас для будущего тестового контура,
+      # кодом не используется — боевая сеть определяется TON_NETWORK.
+      TONCENTER_API_KEY_TESTNET: ${TONCENTER_API_KEY_TESTNET:-}
       TON_NETWORK: ${TON_NETWORK:-mainnet}
       DOMAIN: ${DOMAIN}
       # OPT-10: Worker pool size (уменьшено до 2 для экономии ресурса на 2GB VPS)
