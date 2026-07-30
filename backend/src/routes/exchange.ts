@@ -211,11 +211,20 @@ exchangeRouter.post('/orders/:id/execute', authMiddleware, async (req: Request, 
       });
     }
 
-    // PENDING = API недоступен или tx ещё не индексирован — разрешаем, но помечаем
-    const verifyStatus = verification.status === 'ok' ? 'VERIFIED' : 'PENDING';
-    if (verifyStatus === 'PENDING') {
-      logger.warn(`[exchange] Order ${orderId} will be re-verified in background: ${(verification as any).reason}`);
+    // Раньше PENDING «разрешали, но помечали»: монеты уходили покупателю сразу,
+    // а фоновая перепроверка при провале ничего не откатывала — в коде прямо
+    // стояло «не откатываем (монеты уже начислены)». То есть любой txHash
+    // из головы давал бесплатные монеты. Теперь монеты двигаются только
+    // после подтверждения платежа в блокчейне (найдено 30.07.2026).
+    if (verification.status !== 'ok') {
+      logger.warn(`[exchange] Order ${orderId}: платёж не подтверждён — ${(verification as any).reason}`);
+      return res.status(402).json({
+        error:   'TON_TX_NOT_CONFIRMED',
+        reason:  (verification as any).reason,
+        message: 'Платёж пока не найден в блокчейне. Повторите через 30 секунд — монеты не списаны.',
+      });
     }
+    const verifyStatus = 'VERIFIED';
 
     const updated = await prisma.$transaction(async (tx) => {
       // Атомарное обновление: updateMany с фильтром status=OPEN защищает от race condition
@@ -238,10 +247,14 @@ exchangeRouter.post('/orders/:id/execute', authMiddleware, async (req: Request, 
         });
 
         await updateBalance(buyerId, actualCoins, TransactionType.EXCHANGE_BUY, { orderId, txHash, partial: true, totalTon: actualTonAmt }, { tx });
-        // Возвращаем разницу продавцу (он заморозил весь ордер, остаток возвращаем)
-        await updateBalance(order.sellerId, remainCoins, TransactionType.EXCHANGE_UNFREEZE, { orderId, reason: 'partial_remain' }, { tx });
+        // Остаток НЕ возвращаем на баланс: он остаётся замороженным и обеспечивает
+        // новый ордер. Раньше остаток и возвращали продавцу, и оставляли в новом
+        // ордере — монеты удваивались (найдено 30.07.2026).
+        // Запись о продаже — нулевая, только для истории: монеты списаны при заморозке,
+        // а TON пришли продавцу вне платформы. Ненулевая сумма здесь ломала бы
+        // инвариант balance == sum(transactions).
         await tx.transaction.create({
-          data: { userId: order.sellerId, type: TransactionType.EXCHANGE_SELL, amount: -actualCoins, payload: { orderId, txHash, partial: true, totalTon: actualTonAmt } }
+          data: { userId: order.sellerId, type: TransactionType.EXCHANGE_SELL, amount: 0n, payload: { orderId, txHash, partial: true, coinsSold: actualCoins.toString(), totalTon: actualTonAmt } }
         });
         return result;
       } else {
@@ -252,8 +265,12 @@ exchangeRouter.post('/orders/:id/execute', authMiddleware, async (req: Request, 
         });
         if (result.count === 0) throw new Error('ORDER_ALREADY_TAKEN');
         await updateBalance(buyerId, order.amountCoins, TransactionType.EXCHANGE_BUY, { orderId, txHash, totalTon: order.totalTon }, { tx });
+        // Нулевая запись для истории: монеты уже списаны при заморозке ордера,
+        // TON продавец получил вне платформы. Раньше здесь писалась отрицательная
+        // сумма напрямую в transactions, минуя updateBalance — это ломало
+        // инвариант balance == sum(transactions).
         await tx.transaction.create({
-          data: { userId: order.sellerId, type: TransactionType.EXCHANGE_SELL, amount: -order.amountCoins, payload: { orderId, txHash, totalTon: order.totalTon, feeTon: order.feeTon } }
+          data: { userId: order.sellerId, type: TransactionType.EXCHANGE_SELL, amount: 0n, payload: { orderId, txHash, coinsSold: order.amountCoins.toString(), totalTon: order.totalTon, feeTon: order.feeTon } }
         });
         return result;
       }

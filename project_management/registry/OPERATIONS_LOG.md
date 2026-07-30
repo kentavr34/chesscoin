@@ -55,3 +55,6 @@
 | 13:11 | change | решение по кланам: единый список со странами, создаёт офицер высшего ранга не-главком; записано в DECISIONS.md и MASTER_PLAN B8; не реализуем сейчас | docs/history/DECISIONS.md, MASTER_PLAN.md |
 | 13:23 | find | TonConnect: testnet при mainnet-кошельке, пустой TONCENTER_API_KEY, бесплатный обход платной привязки (WALLET_UNLOCK=0 при 2 кошельках), icon-192.png 404 | — |
 | 15:32 | deploy | платёжка: обход платной привязки закрыт (403 без WALLET_UNLOCK, унаследованные до 30.07 работают), верификация без PLATFORM_TON_WALLET на проде теперь 503; мгновенный анонс вызова в канал | backend/src/routes/profile.ts, backend/src/services/telegramChannel.ts |
+| 16:32 | change | восстановлены балансы 31 игрока по истории транзакций: вернули 329900 монет, Mikayil +247900; расхождений 0 | — |
+| 20:46 | change | TON переведён на mainnet: ключи из docx на Диске (файл удалён), сеть согласована с адресом, toncenter отвечает ok | — |
+| 20:59 | change | иконка манифеста: взят премиум-аватар 37 (золотой конь), 192x192 PNG, отдаётся 200 | frontend/public/icon-192.png |
