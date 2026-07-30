@@ -53,3 +53,4 @@
 | 09:36 | deploy | механика: зависшие вызовы снимаются за час (cron 15 мин), возврат везде REFUND; проверено на проде — снято 2 заявки от 24.07, ожидающих 0 | backend/src/services/crons.ts, backend/src/services/game/socket.ts, backend/src/routes/bot.ts, backend/src/services/game/finish.ts |
 | 12:33 | change | объявление опубликовано в канал (msg 504): батлы + реферальные звания с Новобранца + главком по званию даёт право объявить войну | — |
 | 13:11 | change | решение по кланам: единый список со странами, создаёт офицер высшего ранга не-главком; записано в DECISIONS.md и MASTER_PLAN B8; не реализуем сейчас | docs/history/DECISIONS.md, MASTER_PLAN.md |
+| 13:23 | find | TonConnect: testnet при mainnet-кошельке, пустой TONCENTER_API_KEY, бесплатный обход платной привязки (WALLET_UNLOCK=0 при 2 кошельках), icon-192.png 404 | — |

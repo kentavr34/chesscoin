@@ -163,12 +163,27 @@ nationsRouter.post("/leave", authMiddleware, async (req: Request, res: Response)
       });
     }
 
-    // Если лидер уходит — назначаем нового по числу военных побед
+    // Лидер уходит — назначаем нового по КАНОНУ SPEC_2026-05-12 §69:
+    // «лидер = тот, у кого выше командный статус (звание за рефералов)»,
+    // при равенстве — кто раньше вступил. Раньше здесь стояли военные победы,
+    // что противоречило канону (исправлено 30.07 по указанию Кенана).
     if (membership.role === "COMMANDER") {
-      const nextLeader = await prisma.clanMember.findFirst({
+      // В схеме у ClanMember нет relation на User (строка 425 schema.prisma),
+      // поэтому рефералов берём отдельным запросом.
+      const candidates = await prisma.clanMember.findMany({
         where: { clanId: membership.clanId, userId: { not: userId }, isPending: false },
-        orderBy: [{ warWins: "desc" }, { contribution: "desc" }],
       });
+      const refs = await prisma.user.findMany({
+        where: { id: { in: candidates.map(c => c.userId) } },
+        select: { id: true, referralCount: true },
+      });
+      const refByUser = new Map(refs.map(r => [r.id, r.referralCount ?? 0]));
+      candidates.sort((a, b) => {
+        const diff = (refByUser.get(b.userId) ?? 0) - (refByUser.get(a.userId) ?? 0);
+        if (diff !== 0) return diff;
+        return a.joinedAt.getTime() - b.joinedAt.getTime();
+      });
+      const nextLeader = candidates[0] ?? null;
       if (nextLeader) {
         await prisma.clan.update({ where: { id: membership.clanId }, data: { leaderId: nextLeader.userId } });
         await prisma.clanMember.update({ where: { id: nextLeader.id }, data: { role: "COMMANDER" } });

@@ -5,6 +5,7 @@ import { redis } from "@/lib/redis";
 import config from "@/config";
 import { useAttempt } from "@/services/attempts";
 import { updateBalance } from "@/services/economy";
+import { announceBattleChallenge } from "@/services/telegramChannel";
 
 const SESSION_CACHE_TTL = 60 * 60 * 24; // 24 часа в Redis
 
@@ -233,6 +234,20 @@ export const createBattleSession = async (
   });
 
   await cacheSession(session);
+
+  // Публичный вызов — сразу в канал. Часовой cron публиковал слишком поздно:
+  // вызов живёт минуты, а к следующему запуску уже протухал. Именно канал
+  // приводит того, кто примет (доигрывалось 6 батлов из 50 — принимать было некому).
+  // Ошибка Telegram не должна ронять создание батла, поэтому без await-цепочки.
+  if (!isPrivate) {
+    void announceBattleChallenge({
+      code: session.code ?? code,
+      bet: bet as bigint,
+      creatorName: session.sides[0]?.player?.firstName ?? "Игрок",
+      creatorElo: session.sides[0]?.player?.elo,
+    });
+  }
+
   return session;
 };
 
