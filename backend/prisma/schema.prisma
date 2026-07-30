@@ -868,6 +868,7 @@ model P2POrder {
   status P2POrderStatus @default(OPEN)
 
   createdAt    DateTime  @default(now())
+  reservedAt   DateTime? // BUY: когда продавец зарезервировал ордер и заморозил монеты
   executedAt   DateTime?
   cancelledAt  DateTime?
 
@@ -1039,6 +1040,7 @@ enum WithdrawalStatus {
 
 enum P2POrderStatus {
   OPEN
+  RESERVED // BUY-ордер: продавец отдал монеты в заморозку, ждём оплату TON от покупателя
   EXECUTED
   CANCELLED
 }

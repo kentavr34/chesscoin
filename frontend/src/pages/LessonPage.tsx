@@ -55,6 +55,11 @@ export const LessonPage: React.FC = () => {
   // Раньше параметра не было вовсе — react-chessboard всегда рисовал со стороны
   // белых, и при «ходе чёрных» игрок смотрел глазами соперника (Кенан, 30.07).
   const [boardSide, setBoardSide] = useState<'white' | 'black'>('white');
+  // Ширина контейнера доски. Канон запрещает читать window.innerWidth
+  // (правило 14): окно и контейнер — разные вещи, при боковых отступах
+  // доска вылезала за край. Меряем сам контейнер через ResizeObserver.
+  const boardBoxRef = React.useRef<HTMLDivElement | null>(null);
+  const [boardBoxWidth, setBoardBoxWidth] = useState(360);
   const [optionSquares, setOptionSquares] = useState<Record<string, React.CSSProperties>>({});
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
   const [showFanfare, setShowFanfare] = useState(false);
@@ -83,6 +88,18 @@ export const LessonPage: React.FC = () => {
       setPhase('intro');
     }
   };
+
+  // Следим за фактической шириной контейнера: работает и при повороте экрана,
+  // и при смене раскладки, без чтения размеров окна.
+  useEffect(() => {
+    const el = boardBoxRef.current;
+    if (!el) return;
+    const apply = () => setBoardBoxWidth(el.clientWidth || 360);
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [phase]);
 
   const initGame = (p: PuzzleItem) => {
     const c = new Chess(p.fen);
@@ -303,7 +320,7 @@ export const LessonPage: React.FC = () => {
   }
 
   const diff = getDiff(puzzle.rating);
-  const boardSize = Math.min(window.innerWidth - 32, 380);
+  const boardSize = Math.min(boardBoxWidth - 32, 380);
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: '#0D0D12', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -334,7 +351,7 @@ export const LessonPage: React.FC = () => {
       )}
 
       {/* Доска */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 16px', gap: 16 }}>
+      <div ref={boardBoxRef} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 16px', gap: 16 }}>
         <div style={{ position: 'relative' }}>
           <Chessboard
             id="lesson-board"

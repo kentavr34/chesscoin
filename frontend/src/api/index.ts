@@ -303,6 +303,11 @@ export interface BuyP2POrder extends P2POrder {
   buyerName:   string;
   buyerElo:    number;
   buyerWallet: string;
+  // Заполняются, когда продавец зарезервировал ордер и ждёт оплату
+  reservedAt?:     string | null;
+  reservedByName?: string | null;
+  sellerWallet:    string;   // кошелёк продавца — куда платит создатель ордера
+  isReservedByMe?: boolean;  // я и есть тот продавец, который зарезервировал
 }
 
 export interface P2POrder {
@@ -314,7 +319,7 @@ export interface P2POrder {
   priceTon:     number;   // TON за 1 000 000
   totalTon:     number;
   sellerWallet: string;
-  status:       'OPEN' | 'EXECUTED' | 'CANCELLED';
+  status:       'OPEN' | 'RESERVED' | 'EXECUTED' | 'CANCELLED';
   createdAt:    string;
   isOwn:        boolean;
 }
@@ -360,18 +365,24 @@ export const exchangeApi = {
     api.post<{ order: P2POrder }>('/exchange/buy-orders', { amountCoins, priceTon }),
   cancelBuyOrder: (orderId: string) =>
     api.delete<{ success: boolean }>(`/exchange/buy-orders/${orderId}`),
-  // Продавец принимает BUY-ордер: txHash+boc из TonConnect
-  fillBuyOrder: (orderId: string, txHash: string, boc?: string) =>
+  // BUY-ордер исполняется в два шага: продавец резервирует (монеты замораживаются),
+  // затем создатель ордера платит TON и вызывает settle. Платить за покупателя
+  // продавец не может — TonConnect подписывает только своим кошельком.
+  reserveBuyOrder: (orderId: string) =>
+    api.post<{ success: boolean; status: string; expiresAt: string; amountCoins: string; totalTon: number }>(
+      `/exchange/buy-orders/${orderId}/reserve`, {}
+    ),
+  settleBuyOrder: (orderId: string, boc?: string) =>
     api.post<{ success: boolean; amountCoins: string; totalTon: number }>(
-      `/exchange/buy-orders/${orderId}/fill`,
-      { txHash, boc }
+      `/exchange/buy-orders/${orderId}/settle`,
+      { boc }
     ),
 
   // Исполнить ордер (покупка) — после TON-транзакции на фронте
   // E12: partialCoins — купить только часть ордера
-  executeOrder: (orderId: string, txHash: string, boc?: string, partialCoins?: string) =>
+  executeOrder: (orderId: string, boc?: string, partialCoins?: string) =>
     api.post<{ success: boolean; amountCoins: string; totalTon: number; feeTon: number; isPartial: boolean }>(
       `/exchange/orders/${orderId}/execute`,
-      { txHash, boc, ...(partialCoins ? { partialCoins } : {}) }
+      { boc, ...(partialCoins ? { partialCoins } : {}) }
     ),
 };

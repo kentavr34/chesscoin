@@ -14,6 +14,8 @@ import { TransactionType } from "@prisma/client";
 import { ensureSystemTournaments, checkTournamentForfeits, matchmakeAllTournaments, processSwissAutoloss } from "@/routes/tournaments";
 import { settleClanBattle } from "@/routes/nations";
 import { verifyTonTransaction } from "@/lib/tonverify";
+import { recoverStuckGames } from "@/services/game/recover";
+import { releaseExpiredReservations } from "@/routes/exchange";
 import { processWarAutoloss } from "@/services/game/warAutoloss"; // PR-1
 import { processTonWithdrawals } from "@/services/tonWithdrawalWorker"; // A5
 
@@ -816,6 +818,21 @@ export function startGameCrons() {
   // а 20 отменённых батлов простояли по 14 часов медианно (Кенан: «батлы
   // не доигрываются»). Партия стартует только когда ОБА нажали «принять»,
   // поэтому зависает и та заявка, к которой соперник уже присоединился.
+  // Партии, чьё завершение сорвалось: позиция терминальна, а статус игровой.
+  // Раз в 5 минут доводим до правильного результата, иначе мат превращается
+  // в ничью при последующей уборке (поймано 30.07 живым прогоном).
+  cron.schedule("*/5 * * * *", async () => {
+    await recoverStuckGames().catch((err) => logError("[Crons/Recover] Error:", err));
+  });
+
+  // BUY-ордер: продавец согласился и заморозил монеты, покупатель не заплатил.
+  // Без снятия резерва монеты продавца зависли бы навсегда.
+  cron.schedule("*/5 * * * *", async () => {
+    await releaseExpiredReservations().catch((err) =>
+      logError("[Crons/Exchange] Error:", err)
+    );
+  });
+
   cron.schedule("*/15 * * * *", async () => {
     await cleanupStaleBattles().catch((err) =>
       logError("[Crons/StaleBattles] Error:", err)
@@ -938,14 +955,19 @@ export async function cancelStaleExchangeOrders(): Promise<void> {
     const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // 30 дней
     const stale  = await prisma.p2POrder.findMany({
       where: { status: 'OPEN', createdAt: { lt: cutoff } },
-      select: { id: true, sellerId: true, amountCoins: true },
+      select: { id: true, sellerId: true, amountCoins: true, orderType: true },
     });
     if (stale.length === 0) return;
 
     for (const order of stale) {
       await prisma.$transaction(async (tx) => {
         await tx.p2POrder.update({ where: { id: order.id }, data: { status: 'CANCELLED', cancelledAt: new Date() } });
-        await updateBalance(order.sellerId, order.amountCoins, TransactionType.EXCHANGE_UNFREEZE, { orderId: order.id, reason: 'stale_auto_cancel' }, { tx });
+        // Возврат — только SELL-ордерам: там монеты действительно заморожены при
+        // создании. У BUY-ордера создатель ничего не замораживал, и возврат
+        // печатал ему монеты из воздуха (найдено 30.07.2026).
+        if (order.orderType !== 'BUY') {
+          await updateBalance(order.sellerId, order.amountCoins, TransactionType.EXCHANGE_UNFREEZE, { orderId: order.id, reason: 'stale_auto_cancel' }, { tx });
+        }
       });
     }
     logger.info(`[Cron/Exchange] Cancelled ${stale.length} stale orders older than 30 days`);

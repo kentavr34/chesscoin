@@ -13,7 +13,7 @@ import { authMiddleware } from '@/middleware/auth';
 import { TransactionType } from '@prisma/client';
 import { logger } from '@/lib/logger';
 import { redis } from '@/lib/redis';
-import { findIncomingPayment, verifyTonTransaction } from '@/lib/tonverify';
+import { findIncomingPayment } from '@/lib/tonverify';
 import { getIo } from '@/lib/io';
 import { updateBalance } from '@/services/economy';
 import config from '@/config';
@@ -171,12 +171,10 @@ exchangeRouter.post('/orders/:id/execute', authMiddleware, async (req: Request, 
   try {
     const buyerId = req.user!.id;
     const orderId = req.params.id;
-    const { boc, txHash, partialCoins } = req.body; // E12: partialCoins — купить часть ордера
-    if (!txHash) return res.status(400).json({ error: 'txHash is required' });
-
-    // Idempotency
-    const byHash = await prisma.p2POrder.findFirst({ where: { txHash } });
-    if (byHash?.status === 'EXECUTED') return res.json({ success: true, alreadyExecuted: true });
+    const { boc, partialCoins } = req.body; // E12: partialCoins — купить часть ордера
+    // txHash с клиента больше не принимаем ни в каком виде: настоящий хэш
+    // кошелёк фронту не отдаёт, а выдуманный доказательством не был.
+    // Идемпотентность — ниже, по реальному хэшу найденного платежа.
 
     const order = await prisma.p2POrder.findUnique({ where: { id: orderId } });
     if (!order)                    return res.status(404).json({ error: 'Order not found' });
@@ -241,6 +239,9 @@ exchangeRouter.post('/orders/:id/execute', authMiddleware, async (req: Request, 
     // Один и тот же платёж нельзя предъявить дважды — ключ по реальному хэшу.
     const already = await prisma.p2POrder.findFirst({ where: { txHash: sellerLeg.hash } });
     if (already) {
+      // Тот же ордер, оплаченный тем же платежом, — не мошенничество, а повтор
+      // запроса (сеть, кнопка дважды). Отвечаем успехом, монеты не двигаем.
+      if (already.id === orderId) return res.json({ success: true, alreadyExecuted: true });
       return res.status(409).json({ error: 'PAYMENT_ALREADY_USED', message: 'Этот платёж уже использован' });
     }
 
@@ -272,7 +273,7 @@ exchangeRouter.post('/orders/:id/execute', authMiddleware, async (req: Request, 
           data: { sellerId: order.sellerId, amountCoins: remainCoins, priceTon: order.priceTon, totalTon: remainTon, feeTon: remainTon * PLATFORM_FEE_PERCENT, sellerWallet: order.sellerWallet, status: 'OPEN' },
         });
 
-        await updateBalance(buyerId, actualCoins, TransactionType.EXCHANGE_BUY, { orderId, txHash, partial: true, totalTon: actualTonAmt }, { tx });
+        await updateBalance(buyerId, actualCoins, TransactionType.EXCHANGE_BUY, { orderId, txHash: realTxHash, partial: true, totalTon: actualTonAmt }, { tx });
         // Остаток НЕ возвращаем на баланс: он остаётся замороженным и обеспечивает
         // новый ордер. Раньше остаток и возвращали продавцу, и оставляли в новом
         // ордере — монеты удваивались (найдено 30.07.2026).
@@ -280,7 +281,7 @@ exchangeRouter.post('/orders/:id/execute', authMiddleware, async (req: Request, 
         // а TON пришли продавцу вне платформы. Ненулевая сумма здесь ломала бы
         // инвариант balance == sum(transactions).
         await tx.transaction.create({
-          data: { userId: order.sellerId, type: TransactionType.EXCHANGE_SELL, amount: 0n, payload: { orderId, txHash, partial: true, coinsSold: actualCoins.toString(), totalTon: actualTonAmt } }
+          data: { userId: order.sellerId, type: TransactionType.EXCHANGE_SELL, amount: 0n, payload: { orderId, txHash: realTxHash, partial: true, coinsSold: actualCoins.toString(), totalTon: actualTonAmt } }
         });
         return result;
       } else {
@@ -290,13 +291,13 @@ exchangeRouter.post('/orders/:id/execute', authMiddleware, async (req: Request, 
           data:  { status: 'EXECUTED', buyerId, buyerWallet: buyer.tonWalletAddress!, txHash: realTxHash, txBoc: boc ?? null, executedAt: new Date(), verifyStatus },
         });
         if (result.count === 0) throw new Error('ORDER_ALREADY_TAKEN');
-        await updateBalance(buyerId, order.amountCoins, TransactionType.EXCHANGE_BUY, { orderId, txHash, totalTon: order.totalTon }, { tx });
+        await updateBalance(buyerId, order.amountCoins, TransactionType.EXCHANGE_BUY, { orderId, txHash: realTxHash, totalTon: order.totalTon }, { tx });
         // Нулевая запись для истории: монеты уже списаны при заморозке ордера,
         // TON продавец получил вне платформы. Раньше здесь писалась отрицательная
         // сумма напрямую в transactions, минуя updateBalance — это ломало
         // инвариант balance == sum(transactions).
         await tx.transaction.create({
-          data: { userId: order.sellerId, type: TransactionType.EXCHANGE_SELL, amount: 0n, payload: { orderId, txHash, coinsSold: order.amountCoins.toString(), totalTon: order.totalTon, feeTon: order.feeTon } }
+          data: { userId: order.sellerId, type: TransactionType.EXCHANGE_SELL, amount: 0n, payload: { orderId, txHash: realTxHash, coinsSold: order.amountCoins.toString(), totalTon: order.totalTon, feeTon: order.feeTon } }
         });
         return result;
       }
@@ -329,7 +330,7 @@ exchangeRouter.post('/orders/:id/execute', authMiddleware, async (req: Request, 
       logger.warn('[exchange] Socket emit failed (non-critical):', socketErr);
     }
 
-    logger.info(`[exchange] Executed order ${orderId}: buyer=${buyerId}, ${order.amountCoins} ᚙ, tx=${txHash}`);
+    logger.info(`[exchange] Executed order ${orderId}: buyer=${buyerId}, ${order.amountCoins} ᚙ, tx=${realTxHash}`);
     res.json({ success: true, amountCoins: actualCoins.toString(), totalTon: actualTonAmt, feeTon: actualTonAmt * PLATFORM_FEE_PERCENT, isPartial });
   } catch (err) {
     if ((err as Error).message === 'ORDER_ALREADY_TAKEN') {
@@ -446,11 +447,16 @@ exchangeRouter.get('/buy-orders', authMiddleware, async (req: Request, res: Resp
     const userId = req.user!.id;
     const limit  = Math.min(Number(req.query.limit ?? 100), 200);
 
+    // RESERVED показываем тоже: создатель ордера должен увидеть, что продавец
+    // нашёлся, и оплатить — без этого экрана сделка не может состояться.
     const orders = await prisma.p2POrder.findMany({
-      where:   { orderType: 'BUY', status: 'OPEN' },
+      where:   { orderType: 'BUY', status: { in: ['OPEN', 'RESERVED'] } },
       orderBy: { priceTon: 'desc' }, // лучшая цена (выше) — первая
       take:    limit,
-      include: { seller: { select: { id: true, firstName: true, elo: true } } },
+      include: {
+        seller: { select: { id: true, firstName: true, elo: true } },
+        buyer:  { select: { firstName: true } },
+      },
     });
 
     res.json({
@@ -467,6 +473,11 @@ exchangeRouter.get('/buy-orders', authMiddleware, async (req: Request, res: Resp
         status:        o.status,
         createdAt:     o.createdAt,
         isOwn:         o.sellerId === userId,
+        // Кому платить, если ордер зарезервирован продавцом
+        reservedAt:     o.reservedAt,
+        reservedByName: o.status === 'RESERVED' ? (o.buyer?.firstName ?? null) : null,
+        sellerWallet:   o.status === 'RESERVED' ? o.buyerWallet : null,
+        isReservedByMe: o.status === 'RESERVED' && o.buyerId === userId,
       })),
     });
   } catch (err) {
@@ -485,11 +496,21 @@ exchangeRouter.delete('/buy-orders/:id', authMiddleware, async (req: Request, re
     if (!order)                    return res.status(404).json({ error: 'Order not found' });
     if (order.sellerId !== userId) return res.status(403).json({ error: 'Only the creator can cancel this order' });
     if (order.orderType !== 'BUY') return res.status(400).json({ error: 'This is not a BUY order' });
-    if (order.status !== 'OPEN')   return res.status(409).json({ error: 'Order is already closed' });
+    if (order.status === 'EXECUTED' || order.status === 'CANCELLED') {
+      return res.status(409).json({ error: 'Order is already closed' });
+    }
 
-    await prisma.p2POrder.update({
-      where: { id: orderId },
-      data:  { status: 'CANCELLED', cancelledAt: new Date() },
+    await prisma.$transaction(async (tx) => {
+      await tx.p2POrder.update({
+        where: { id: orderId },
+        data:  { status: 'CANCELLED', cancelledAt: new Date() },
+      });
+      // Если продавец уже зарезервировал ордер — его монеты заморожены,
+      // возвращаем. Иначе отмена молча съедала чужие монеты.
+      if (order.status === 'RESERVED' && order.buyerId) {
+        await updateBalance(order.buyerId, order.amountCoins, TransactionType.EXCHANGE_UNFREEZE,
+          { orderId, reason: 'buy_order_cancelled' }, { tx });
+      }
     });
 
     logger.info(`[exchange] BUY order cancelled: ${orderId} by ${userId}`);
@@ -500,85 +521,214 @@ exchangeRouter.delete('/buy-orders/:id', authMiddleware, async (req: Request, re
   }
 });
 
-// ── E15-4: POST /buy-orders/:id/fill — продавец принимает BUY-ордер ──────────
-exchangeRouter.post('/buy-orders/:id/fill', authMiddleware, async (req: Request, res: Response) => {
+// ── E15-4: BUY-ордер исполняется В ДВА ШАГА ─────────────────────────────────
+//
+// Раньше был один шаг /fill: продавец жал «принять», его же кошелёк подписывал
+// перевод, а бэкенд «проверял», что покупатель заплатил. Проверка шла по
+// псевдо-хэшу с фронта, всегда возвращала pending — и монеты продавца уходили
+// покупателю бесплатно (найдено 30.07.2026). Платить за покупателя продавец
+// физически не может: TonConnect подписывает только текущим кошельком.
+//
+// Правильный порядок, не нарушающий канон «платформа денег не хранит»:
+//   1. RESERVE — продавец соглашается и замораживает свои монеты;
+//   2. SETTLE  — покупатель платит TON напрямую продавцу (99.5%) и комиссию
+//      платформе (0.5%), бэкенд находит ОБА платежа в блокчейне и только
+//      после этого отдаёт монеты.
+// Не оплатил за RESERVE_TTL — резерв снимается, монеты возвращаются продавцу.
+
+// Сколько ждём оплату после резерва. Больше — продавец надолго без монет,
+// меньше — покупатель не успевает подтвердить в кошельке.
+const RESERVE_TTL_MS = 30 * 60 * 1000;
+
+// ── E15-4a: POST /buy-orders/:id/reserve — продавец соглашается ──────────────
+exchangeRouter.post('/buy-orders/:id/reserve', authMiddleware, async (req: Request, res: Response) => {
   try {
     const sellerId = req.user!.id; // тот кто принимает BUY = продавец ᚙ
     const orderId  = req.params.id;
-    const { boc, txHash } = req.body;
-    if (!txHash) return res.status(400).json({ error: 'txHash is required' });
-
-    // Idempotency
-    const byHash = await prisma.p2POrder.findFirst({ where: { txHash } });
-    if (byHash?.status === 'EXECUTED') return res.json({ success: true, alreadyExecuted: true });
 
     const order = await prisma.p2POrder.findUnique({ where: { id: orderId } });
-    if (!order)                     return res.status(404).json({ error: 'Order not found' });
-    if (order.orderType !== 'BUY')  return res.status(400).json({ error: 'This is not a BUY order' });
-    if (order.status !== 'OPEN')    return res.status(409).json({ error: 'Order is already closed' });
+    if (!order)                      return res.status(404).json({ error: 'Order not found' });
+    if (order.orderType !== 'BUY')   return res.status(400).json({ error: 'This is not a BUY order' });
+    if (order.status !== 'OPEN')     return res.status(409).json({ error: 'ORDER_NOT_OPEN', message: 'Ордер уже занят или закрыт' });
     if (order.sellerId === sellerId) return res.status(400).json({ error: 'You cannot execute your own order' });
 
-    // Проверяем у продавца достаточно ᚙ
     const seller = await prisma.user.findUnique({ where: { id: sellerId }, select: { balance: true, tonWalletAddress: true } });
-    if (!seller?.tonWalletAddress) return res.status(403).json({ error: 'TON_WALLET_REQUIRED' });
-    if (seller.balance < order.amountCoins) return res.status(400).json({ error: 'INSUFFICIENT_COINS', message: 'Insufficient ᚙ to execute this order' });
+    if (!seller?.tonWalletAddress)          return res.status(403).json({ error: 'TON_WALLET_REQUIRED' });
+    if (seller.balance < order.amountCoins) return res.status(400).json({ error: 'INSUFFICIENT_COINS', message: 'Недостаточно монет для этого ордера' });
 
-    // Верификация TON: покупатель (order.sellerWallet) должен был отправить TON продавцу (seller.tonWalletAddress)
-    const verification = await verifyTonTransaction({
-      boc,
-      txHash,
-      expectedTo:  seller.tonWalletAddress,
-      expectedTon: order.totalTon,
-      fromAddress: order.sellerWallet,
-    });
-
-    if (verification.status === 'invalid') {
-      return res.status(422).json({ error: 'TON_TX_INVALID', reason: verification.reason });
-    }
-
-    const verifyStatus = verification.status === 'ok' ? 'VERIFIED' : 'PENDING';
-
-    // Атомарная сделка
     await prisma.$transaction(async (tx) => {
       const result = await tx.p2POrder.updateMany({
         where: { id: orderId, status: 'OPEN', orderType: 'BUY' },
-        data:  { status: 'EXECUTED', buyerId: sellerId, buyerWallet: seller.tonWalletAddress!, txHash, txBoc: boc ?? null, executedAt: new Date(), verifyStatus },
+        data:  { status: 'RESERVED', buyerId: sellerId, buyerWallet: seller.tonWalletAddress!, reservedAt: new Date() },
+      });
+      if (result.count === 0) throw new Error('ORDER_ALREADY_TAKEN');
+      // Монеты замораживаются так же, как в SELL-ордере: продавец больше не
+      // может ими распорядиться, пока сделка не завершится или не истечёт.
+      await updateBalance(sellerId, -order.amountCoins, TransactionType.EXCHANGE_FREEZE,
+        { orderId, action: 'freeze_buy_reserve' }, { tx });
+    });
+
+    const [buyerUser, sellerUser] = await Promise.all([
+      prisma.user.findUnique({ where: { id: order.sellerId }, select: { telegramId: true } }),
+      prisma.user.findUnique({ where: { id: sellerId },       select: { firstName: true } }),
+    ]);
+    await prisma.adminNotification.create({ data: {
+      type: 'EXCHANGE_BUY_RESERVED',
+      payload: { orderId, amountCoins: order.amountCoins.toString(), totalTon: order.totalTon,
+                 telegramId: buyerUser?.telegramId, sellerName: sellerUser?.firstName ?? 'Seller' },
+    } }).catch(() => {});
+
+    try {
+      const io = getIo();
+      io.emit(`user:${order.sellerId}`, { type: 'exchange:reserved', orderId, totalTon: order.totalTon, role: 'buyer' });
+    } catch {}
+
+    logger.info(`[exchange] BUY order reserved: ${orderId} by seller=${sellerId}`);
+    res.json({
+      success:      true,
+      status:       'RESERVED',
+      expiresAt:    new Date(Date.now() + RESERVE_TTL_MS),
+      amountCoins:  order.amountCoins.toString(),
+      totalTon:     order.totalTon,
+    });
+  } catch (err) {
+    if ((err as Error).message === 'ORDER_ALREADY_TAKEN') {
+      return res.status(409).json({ error: 'Order already taken by another seller' });
+    }
+    logger.error('[exchange/buy-orders/:id/reserve]', err);
+    res.status(500).json({ error: 'Failed to reserve BUY order' });
+  }
+});
+
+// ── E15-4b: POST /buy-orders/:id/settle — покупатель оплатил ─────────────────
+exchangeRouter.post('/buy-orders/:id/settle', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const buyerId = req.user!.id; // создатель BUY-ордера = покупатель ᚙ
+    const orderId = req.params.id;
+    const { boc } = req.body; // txHash с клиента не принимаем — см. /orders/:id/execute
+
+    const order = await prisma.p2POrder.findUnique({ where: { id: orderId } });
+    if (!order)                      return res.status(404).json({ error: 'Order not found' });
+    if (order.orderType !== 'BUY')   return res.status(400).json({ error: 'This is not a BUY order' });
+    if (order.status === 'EXECUTED') return res.json({ success: true, alreadyExecuted: true });
+    if (order.status !== 'RESERVED') return res.status(409).json({ error: 'ORDER_NOT_RESERVED', message: 'Ордер ещё не принят продавцом' });
+    if (order.sellerId !== buyerId)  return res.status(403).json({ error: 'Only the order creator can pay for it' });
+    if (!order.buyerId || !order.buyerWallet) return res.status(500).json({ error: 'RESERVATION_BROKEN' });
+
+    const platformWallet = config.ton.platformWallet;
+    if (!platformWallet) {
+      logger.error('[exchange] PLATFORM_TON_WALLET не задан — сделки запрещены');
+      return res.status(503).json({ error: 'EXCHANGE_UNAVAILABLE', message: 'Обмен временно недоступен' });
+    }
+
+    const buyer = await prisma.user.findUnique({ where: { id: buyerId }, select: { tonWalletAddress: true } });
+    if (!buyer?.tonWalletAddress) return res.status(403).json({ error: 'TON_WALLET_REQUIRED' });
+
+    // Ищем оба платежа в блокчейне: покупатель → продавцу 99.5% и → платформе 0.5%.
+    const feeTonExpected    = order.totalTon * PLATFORM_FEE_PERCENT;
+    const sellerTonExpected = order.totalTon - feeTonExpected;
+    const toNano = (ton: number) => BigInt(Math.floor(ton * 0.97 * 1e9)); // допуск 3% на газ
+
+    const sellerLeg = await findIncomingPayment({
+      toWallet:   order.buyerWallet,          // для BUY buyerWallet = кошелёк продавца монет
+      fromWallet: buyer.tonWalletAddress,
+      minNano:    toNano(sellerTonExpected),
+    });
+    if (!sellerLeg) {
+      return res.status(402).json({ error: 'TON_TX_NOT_CONFIRMED', message: 'Перевод продавцу пока не найден в блокчейне. Повторите через 30 секунд — монеты не списаны.' });
+    }
+
+    const feeLeg = await findIncomingPayment({
+      toWallet:   platformWallet,
+      fromWallet: buyer.tonWalletAddress,
+      minNano:    toNano(feeTonExpected),
+    });
+    if (!feeLeg) {
+      return res.status(402).json({ error: 'FEE_NOT_CONFIRMED', message: 'Комиссия платформы пока не найдена в блокчейне. Повторите через 30 секунд — монеты не списаны.' });
+    }
+
+    const already = await prisma.p2POrder.findFirst({ where: { txHash: sellerLeg.hash } });
+    if (already) {
+      if (already.id === orderId) return res.json({ success: true, alreadyExecuted: true });
+      return res.status(409).json({ error: 'PAYMENT_ALREADY_USED', message: 'Этот платёж уже использован' });
+    }
+
+    const sellerOfCoins = order.buyerId;
+    await prisma.$transaction(async (tx) => {
+      const result = await tx.p2POrder.updateMany({
+        where: { id: orderId, status: 'RESERVED', orderType: 'BUY' },
+        data:  { status: 'EXECUTED', txHash: sellerLeg.hash, txBoc: boc ?? null, executedAt: new Date(), verifyStatus: 'VERIFIED' },
       });
       if (result.count === 0) throw new Error('ORDER_ALREADY_TAKEN');
 
-      // ᚙ от продавца → покупателю ᚙ (создателю BUY-ордера)
-      await updateBalance(sellerId, -order.amountCoins, TransactionType.EXCHANGE_SELL, { orderId, txHash, orderType: 'BUY_FILL', totalTon: order.totalTon }, { tx });
-      await updateBalance(order.sellerId, order.amountCoins, TransactionType.EXCHANGE_BUY, { orderId, txHash, orderType: 'BUY_FILL', totalTon: order.totalTon }, { tx });
+      // Монеты продавца уже заморожены на шаге reserve — здесь только начисление
+      // покупателю. Нулевая запись продавцу — для истории, чтобы не сломать
+      // инвариант balance == sum(transactions).
+      await updateBalance(buyerId, order.amountCoins, TransactionType.EXCHANGE_BUY,
+        { orderId, txHash: sellerLeg.hash, orderType: 'BUY_FILL', totalTon: order.totalTon }, { tx });
+      await tx.transaction.create({ data: {
+        userId: sellerOfCoins, type: TransactionType.EXCHANGE_SELL, amount: 0n,
+        payload: { orderId, txHash: sellerLeg.hash, orderType: 'BUY_FILL', coinsSold: order.amountCoins.toString(), totalTon: order.totalTon },
+      } });
     });
 
-    // Уведомления (fire-and-forget)
-    const [buyer, sellerUser] = await Promise.all([
-      prisma.user.findUnique({ where: { id: order.sellerId }, select: { telegramId: true, firstName: true } }),
-      prisma.user.findUnique({ where: { id: sellerId },       select: { telegramId: true, firstName: true } }),
+    const [buyerUser, sellerUser] = await Promise.all([
+      prisma.user.findUnique({ where: { id: buyerId },       select: { telegramId: true, firstName: true } }),
+      prisma.user.findUnique({ where: { id: sellerOfCoins }, select: { telegramId: true, firstName: true } }),
     ]);
     await prisma.adminNotification.createMany({ data: [
-      { type: 'EXCHANGE_ORDER_SOLD',   payload: { amountCoins: order.amountCoins.toString(), totalTon: order.totalTon, telegramId: sellerUser?.telegramId, buyerName: buyer?.firstName  ?? 'Buyer' } },
-      { type: 'EXCHANGE_ORDER_BOUGHT', payload: { amountCoins: order.amountCoins.toString(), totalTon: order.totalTon, telegramId: buyer?.telegramId,      sellerName: sellerUser?.firstName ?? 'Seller' } },
-    ]}).catch(() => {});
+      { type: 'EXCHANGE_ORDER_SOLD',   payload: { amountCoins: order.amountCoins.toString(), totalTon: order.totalTon, telegramId: sellerUser?.telegramId, buyerName: buyerUser?.firstName ?? 'Buyer' } },
+      { type: 'EXCHANGE_ORDER_BOUGHT', payload: { amountCoins: order.amountCoins.toString(), totalTon: order.totalTon, telegramId: buyerUser?.telegramId,  sellerName: sellerUser?.firstName ?? 'Seller' } },
+    ] }).catch(() => {});
 
-    // Socket push
     try {
       const io = getIo();
       const payload = { type: 'exchange:executed', orderId, orderType: 'BUY', amountCoins: order.amountCoins.toString(), totalTon: order.totalTon };
-      io.emit(`user:${order.sellerId}`, { ...payload, role: 'buyer'  });
-      io.emit(`user:${sellerId}`,       { ...payload, role: 'seller' });
+      io.emit(`user:${buyerId}`,       { ...payload, role: 'buyer'  });
+      io.emit(`user:${sellerOfCoins}`, { ...payload, role: 'seller' });
     } catch {}
 
-    logger.info(`[exchange] BUY order filled: ${orderId} by seller=${sellerId}`);
+    logger.info(`[exchange] BUY order settled: ${orderId}, buyer=${buyerId}, tx=${sellerLeg.hash}`);
     res.json({ success: true, amountCoins: order.amountCoins.toString(), totalTon: order.totalTon });
   } catch (err) {
     if ((err as Error).message === 'ORDER_ALREADY_TAKEN') {
-      return res.status(409).json({ error: 'Order already filled by another seller' });
+      return res.status(409).json({ error: 'Order state changed, reload the orderbook' });
     }
-    logger.error('[exchange/buy-orders/:id/fill]', err);
-    res.status(500).json({ error: 'Failed to fill BUY order' });
+    logger.error('[exchange/buy-orders/:id/settle]', err);
+    res.status(500).json({ error: 'Failed to settle BUY order' });
   }
 });
+
+/**
+ * Снять протухшие резервы BUY-ордеров и вернуть монеты продавцам.
+ * Без этого продавец, чей покупатель не заплатил, остаётся без монет навсегда.
+ * Вызывается из cron.
+ */
+export async function releaseExpiredReservations(): Promise<void> {
+  try {
+    const cutoff = new Date(Date.now() - RESERVE_TTL_MS);
+    const stale = await prisma.p2POrder.findMany({
+      where: { orderType: 'BUY', status: 'RESERVED', reservedAt: { lt: cutoff } },
+      take:  50,
+    });
+    for (const order of stale) {
+      if (!order.buyerId) continue;
+      const sellerOfCoins = order.buyerId;
+      await prisma.$transaction(async (tx) => {
+        const result = await tx.p2POrder.updateMany({
+          where: { id: order.id, status: 'RESERVED' },
+          data:  { status: 'OPEN', buyerId: null, buyerWallet: null, reservedAt: null },
+        });
+        if (result.count === 0) return; // успели оплатить — не трогаем
+        await updateBalance(sellerOfCoins, order.amountCoins, TransactionType.EXCHANGE_UNFREEZE,
+          { orderId: order.id, reason: 'reservation_expired' }, { tx });
+      });
+      logger.warn(`[exchange] Резерв BUY-ордера ${order.id.slice(0, 8)} истёк, монеты возвращены продавцу`);
+    }
+  } catch (err) {
+    logger.error('[exchange/releaseExpiredReservations]', err);
+  }
+}
 
 // ── P2: GET /leaderboard — топ трейдеров (с Redis кешем 5 мин) ───────────────
 exchangeRouter.get('/leaderboard', authMiddleware, async (req: Request, res: Response) => {

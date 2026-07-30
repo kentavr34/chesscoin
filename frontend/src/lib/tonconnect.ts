@@ -114,15 +114,15 @@ export interface TonPaymentParams {
 }
 
 export interface TonPaymentResult {
-  txHash: string;      // хэш транзакции (из boc)
-  boc:    string;      // raw BOC для верификации на бэкенде
+  boc: string;      // raw BOC от кошелька; хэш находит бэкенд в блокчейне
 }
 
 /**
  * Отправить TON на произвольный адрес (P2P биржа).
- * Используется при исполнении ордера: покупатель платит продавцу.
+ * Покупатель одной транзакцией платит продавцу 99.5% и комиссию 0.5%
+ * на кошелёк платформы — платформа денег не хранит и ничего не отправляет.
  * @param params toAddress, amount (TON), comment
- * @returns { txHash, boc }
+ * @returns { boc }
  */
 export async function sendTonPayment(params: TonPaymentParams): Promise<TonPaymentResult> {
   const tc = await getTonConnect();
@@ -163,11 +163,13 @@ export async function sendTonPayment(params: TonPaymentParams): Promise<TonPayme
   const result = await tc.sendTransaction(tx);
   const boc    = result.boc;
 
-  // Получаем txHash из BOC (первые 32 байта после декодирования = hash)
-  // В production используют @ton/core для точного извлечения, здесь — base64 как идентификатор
-  const txHash = btoa(boc).slice(0, 44).replace(/[/+=]/g, '').slice(0, 32);
-
-  return { txHash, boc };
+  // Раньше здесь из BOC делался ПСЕВДО-хэш (кусок base64) и отправлялся на бэкенд
+  // как txHash. В блокчейне такого хэша нет — верификация искала его и никогда
+  // не находила, а биржа на этом основании выдавала монеты бесплатно (30.07.2026).
+  // Настоящий хэш клиент получить не может; бэкенд теперь сам находит платёж
+  // в блокчейне по паре «отправитель → получатель + сумма + свежесть»
+  // и берёт реальный хэш оттуда. Поэтому отдаём только BOC — то, что у нас есть.
+  return { boc };
 }
 
 /** Отключить кошелёк */

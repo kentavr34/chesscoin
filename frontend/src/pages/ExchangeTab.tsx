@@ -286,15 +286,16 @@ const ExecuteOrderModal: React.FC<{
     try {
       // Initiate TON transaction via TonConnect
       // Seller receives 99.5%, platform 0.5%
-      const { txHash, boc } = await sendTonPayment({
+      const { boc } = await sendTonPayment({
         toAddress:  order.sellerWallet,
         amount:     toSeller,
         comment:    `ChessCoin P2P Order ${order.id}`,
       });
 
       setStep('verifying');
-      // Send proof to backend (with partial amount if needed)
-      await exchangeApi.executeOrder(order.id, txHash, boc, isPartial ? String(partialAmt) : undefined);
+      // Бэкенд сам находит оба платежа в блокчейне и берёт реальный хэш оттуда:
+      // клиент настоящий хэш получить не может, а выдуманный доказательством не был.
+      await exchangeApi.executeOrder(order.id, boc, isPartial ? String(partialAmt) : undefined);
       await onUserRefresh();
       setStep('done');
       onExecuted();
@@ -459,7 +460,9 @@ const CreateBuyOrderModal: React.FC<{
   );
 };
 
-// ── E15: FillBuyOrderModal (seller accepts BUY) ───────────
+// ── E15: FillBuyOrderModal — продавец РЕЗЕРВИРУЕТ BUY-ордер ───────────
+// Продавец только соглашается и замораживает монеты. TON платит покупатель
+// со своего кошелька вторым шагом — подписать за него продавец не может.
 const FillBuyOrderModal: React.FC<{
   order: BuyP2POrder;
   sellerWallet: string;
@@ -467,31 +470,23 @@ const FillBuyOrderModal: React.FC<{
   onClose: () => void;
   onFilled: () => void;
   showToast: (m: string) => void;
-}> = ({ order, sellerWallet, userBalance, onClose, onFilled, showToast }) => {
+}> = ({ order, userBalance, onClose, onFilled, showToast }) => {
   const t = useT();
-  const [step, setStep] = useState<'confirm'|'paying'|'verifying'|'done'|'error'>('confirm');
+  const [step, setStep] = useState<'confirm'|'reserving'|'done'|'error'>('confirm');
   const [errMsg, setErrMsg] = useState('');
   const balance = BigInt(userBalance);
   const orderCoins = BigInt(order.amountCoins);
   const hasEnough = balance >= orderCoins;
-  const buyerWalletAddr = order.buyerWallet ?? order.sellerWallet;
 
   const handleFill = async () => {
     if (!hasEnough) return showToast('Недостаточно монет для этого ордера');
-    setStep('paying');
+    setStep('reserving');
     try {
-      // Buyer (BUY order creator) pays seller (us) via TonConnect
-      const { txHash, boc } = await sendTonPayment({
-        toAddress: sellerWallet,        // seller receives TON
-        amount:    order.totalTon,
-        comment:   `ChessCoin BUY Order ${order.id}`,
-      });
-      setStep('verifying');
-      await exchangeApi.fillBuyOrder(order.id, txHash, boc);
+      await exchangeApi.reserveBuyOrder(order.id);
       setStep('done');
       onFilled();
     } catch (e: unknown) {
-      setErrMsg((e as Error)?.message ?? 'Transaction cancelled');
+      setErrMsg((e as Error)?.message ?? 'Не удалось зарезервировать ордер');
       setStep('error');
     }
   };
@@ -507,6 +502,10 @@ const FillBuyOrderModal: React.FC<{
             Покупатель: {order.buyerName ?? 'Игрок'} · ELO {order.buyerElo ?? order.sellerElo}
           </div>
           {!hasEnough && <div style={{ fontSize: 12, color: '#FF5B5B', marginBottom: 12, padding: '8px 12px', background: 'rgba(255,77,106,0.1)', borderRadius: 10 }}>Недостаточно баланса</div>}
+          <div style={{ fontSize: 11, color: '#9A9490', marginBottom: 12, padding: '8px 12px', background: 'rgba(255,255,255,0.04)', borderRadius: 10, textAlign: 'left' as const, lineHeight: 1.5 }}>
+            Монеты замораживаются, TON придёт от покупателя на твой кошелёк напрямую.
+            Не оплатит за 30 минут — монеты вернутся автоматически.
+          </div>
           <div style={{ background: '#0D0D12', borderRadius: 12, padding: '12px 14px', marginBottom: 20, textAlign: 'left' as const }}>
             {[['Продаёшь', `${Number(orderCoins).toLocaleString()}`], ['Получишь', `${order.totalTon.toFixed(4)} TON`], ['Цена', `${order.priceTon.toFixed(5)} TON/1M`]].map(([l,v]) => (
               <div key={l} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
@@ -518,14 +517,80 @@ const FillBuyOrderModal: React.FC<{
           <div style={{ display: 'flex', gap: 10 }}>
             <button onClick={onClose} style={{ flex: 1, padding: '13px', background: 'rgba(255,255,255,0.06)', color: '#9A9490', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.common.cancel}</button>
             <button onClick={handleFill} disabled={!hasEnough} style={{ flex: 1, padding: '13px', background: 'rgba(0,214,143,0.15)', color: '#3DBA7A', border: '1px solid rgba(0,214,143,0.3)', borderRadius: 14, fontSize: 13, fontWeight: 800, cursor: hasEnough ? 'pointer' : 'not-allowed', fontFamily: 'inherit', opacity: hasEnough ? 1 : 0.5 }}>
-              {t.exchange.sellFor(order.totalTon.toFixed(4))}
+              Принять за {order.totalTon.toFixed(4)} TON
             </button>
           </div>
         </>)}
-        {step === 'paying' && (<><div style={{ fontSize: 44, marginBottom: 12 }}><ExClock size={38} /></div><div style={{ fontSize: 14, color: '#EAE2CC' }}>{t.exchange.buyerPaying}</div></>)}
-        {step === 'verifying' && (<><div style={{ fontSize: 44, marginBottom: 12 }}><ExSearch size={38} /></div><div style={{ fontSize: 14, color: '#EAE2CC' }}>{t.exchange.verifying}...</div></>)}
-        {step === 'done' && (<><div style={{ fontSize: 56, marginBottom: 12 }}>✓</div><div style={{ fontSize: 15, fontWeight: 800, color: '#3DBA7A', marginBottom: 8 }}>{t.exchange.saleSuccess}</div><div style={{ fontSize: 12, color: '#9A9490', marginBottom: 16 }}>{t.exchange.transferred(Number(orderCoins).toLocaleString())}</div><button onClick={onClose} style={{ width: '100%', padding: '13px', background: 'rgba(0,214,143,0.12)', color: '#3DBA7A', border: '1px solid rgba(0,214,143,0.25)', borderRadius: 14, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.common.close}</button></>)}
+        {step === 'reserving' && (<><div style={{ fontSize: 44, marginBottom: 12 }}><ExClock size={38} /></div><div style={{ fontSize: 14, color: '#EAE2CC' }}>Резервирую ордер...</div></>)}
+        {step === 'done' && (<><div style={{ fontSize: 56, marginBottom: 12 }}>✓</div><div style={{ fontSize: 15, fontWeight: 800, color: '#3DBA7A', marginBottom: 8 }}>Ордер зарезервирован</div><div style={{ fontSize: 12, color: '#9A9490', marginBottom: 16 }}>Монеты заморожены. Покупатель оплатит {order.totalTon.toFixed(4)} TON на твой кошелёк — тогда сделка закроется. Не оплатит за 30 минут — монеты вернутся.</div><button onClick={onClose} style={{ width: '100%', padding: '13px', background: 'rgba(0,214,143,0.12)', color: '#3DBA7A', border: '1px solid rgba(0,214,143,0.25)', borderRadius: 14, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.common.close}</button></>)}
         {step === 'error' && (<><div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><ExWarn size={40} /></div><div style={{ fontSize: 14, fontWeight: 800, color: '#FF5B5B', marginBottom: 8 }}>{t.common.error}</div><div style={{ fontSize: 12, color: '#9A9490', marginBottom: 16 }}>{errMsg}</div><div style={{ display: 'flex', gap: 10 }}><button onClick={onClose} style={{ flex: 1, padding: '12px', background: 'rgba(255,255,255,0.06)', color: '#9A9490', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.common.close}</button><button onClick={handleFill} style={{ flex: 1, padding: '12px', background: 'rgba(0,214,143,0.1)', color: '#3DBA7A', border: '1px solid rgba(0,214,143,0.2)', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.exchange.retry}</button></div></>)}
+      </div>
+    </div>
+  );
+};
+
+// ── E15-4b: PayReservedOrderModal — создатель BUY-ордера платит ──────────────
+// Второй шаг сделки: продавец уже заморозил монеты, теперь покупатель платит
+// ему TON напрямую (99.5%) и комиссию платформе (0.5%). Бэкенд находит оба
+// платежа в блокчейне и только тогда отдаёт монеты.
+const PayReservedOrderModal: React.FC<{
+  order: BuyP2POrder;
+  onClose: () => void;
+  onPaid: () => void;
+}> = ({ order, onClose, onPaid }) => {
+  const t = useT();
+  const [step, setStep] = useState<'confirm'|'paying'|'verifying'|'done'|'error'>('confirm');
+  const [errMsg, setErrMsg] = useState('');
+  const orderCoins = BigInt(order.amountCoins);
+
+  const handlePay = async () => {
+    if (!order.sellerWallet) return setErrMsg('Кошелёк продавца не найден, обнови список');
+    setStep('paying');
+    try {
+      const { boc } = await sendTonPayment({
+        toAddress: order.sellerWallet,
+        amount:    order.totalTon,
+        comment:   `ChessCoin BUY Order ${order.id}`,
+      });
+      setStep('verifying');
+      await exchangeApi.settleBuyOrder(order.id, boc);
+      setStep('done');
+      onPaid();
+    } catch (e: unknown) {
+      setErrMsg((e as Error)?.message ?? 'Транзакция отменена');
+      setStep('error');
+    }
+  };
+
+  return (
+    <div onClick={e => e.target === e.currentTarget && onClose()} style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <div style={{ width: '100%', maxWidth: 360, background: 'linear-gradient(180deg,#100C18,#0A080E)', border: '1px solid rgba(0,152,234,0.25)', borderRadius: 24, padding: 28, textAlign: 'center' }}>
+        {step === 'confirm' && (<>
+          <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><ExCoinSwap size={42} /></div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: '#0098EA', marginBottom: 6 }}>Продавец найден</div>
+          <div style={{ fontSize: 24, fontWeight: 800, color: '#F0C85A', marginBottom: 4, fontFamily: "'JetBrains Mono',monospace" }}>{Number(orderCoins).toLocaleString()}</div>
+          <div style={{ fontSize: 13, color: '#9A9490', marginBottom: 16 }}>
+            {order.reservedByName ?? 'Игрок'} заморозил монеты и ждёт оплату
+          </div>
+          <div style={{ background: '#0D0D12', borderRadius: 12, padding: '12px 14px', marginBottom: 20, textAlign: 'left' as const }}>
+            {[['Получишь', `${Number(orderCoins).toLocaleString()}`], ['Заплатишь', `${order.totalTon.toFixed(4)} TON`], ['Цена', `${order.priceTon.toFixed(5)} TON/1M`]].map(([l,v]) => (
+              <div key={l} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
+                <span style={{ color: '#9A9490' }}>{l}</span>
+                <span style={{ fontWeight: 700, color: '#EAE2CC', fontFamily: "'JetBrains Mono',monospace" }}>{v}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button onClick={onClose} style={{ flex: 1, padding: '13px', background: 'rgba(255,255,255,0.06)', color: '#9A9490', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.common.cancel}</button>
+            <button onClick={handlePay} style={{ flex: 1, padding: '13px', background: 'rgba(0,152,234,0.15)', color: '#0098EA', border: '1px solid rgba(0,152,234,0.3)', borderRadius: 14, fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>
+              Оплатить {order.totalTon.toFixed(4)} TON
+            </button>
+          </div>
+        </>)}
+        {step === 'paying' && (<><div style={{ fontSize: 44, marginBottom: 12 }}><ExClock size={38} /></div><div style={{ fontSize: 14, color: '#EAE2CC' }}>Подтверди перевод в кошельке</div></>)}
+        {step === 'verifying' && (<><div style={{ fontSize: 44, marginBottom: 12 }}><ExSearch size={38} /></div><div style={{ fontSize: 14, color: '#EAE2CC' }}>{t.exchange.verifying}...</div></>)}
+        {step === 'done' && (<><div style={{ fontSize: 56, marginBottom: 12 }}>✓</div><div style={{ fontSize: 15, fontWeight: 800, color: '#3DBA7A', marginBottom: 8 }}>Монеты получены</div><div style={{ fontSize: 12, color: '#9A9490', marginBottom: 16 }}>{Number(orderCoins).toLocaleString()} зачислено на баланс</div><button onClick={onClose} style={{ width: '100%', padding: '13px', background: 'rgba(0,214,143,0.12)', color: '#3DBA7A', border: '1px solid rgba(0,214,143,0.25)', borderRadius: 14, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.common.close}</button></>)}
+        {step === 'error' && (<><div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><ExWarn size={40} /></div><div style={{ fontSize: 14, fontWeight: 800, color: '#FF5B5B', marginBottom: 8 }}>{t.common.error}</div><div style={{ fontSize: 12, color: '#9A9490', marginBottom: 16 }}>{errMsg}</div><div style={{ display: 'flex', gap: 10 }}><button onClick={onClose} style={{ flex: 1, padding: '12px', background: 'rgba(255,255,255,0.06)', color: '#9A9490', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.common.close}</button><button onClick={handlePay} style={{ flex: 1, padding: '12px', background: 'rgba(0,152,234,0.1)', color: '#0098EA', border: '1px solid rgba(0,152,234,0.2)', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.exchange.retry}</button></div></>)}
       </div>
     </div>
   );
@@ -548,6 +613,7 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
   const [buyOrders, setBuyOrders]     = useState<BuyP2POrder[]>([]);
   const [showCreateBuy, setShowCreateBuy] = useState(false);
   const [fillOrder, setFillOrder]     = useState<BuyP2POrder | null>(null);
+  const [payOrder, setPayOrder]       = useState<BuyP2POrder | null>(null);
   const [leaderboard, setLeaderboard] = useState<Array<{ rank: number; name: string; elo: number; trades: number; volumeTon: number }>>([]);
   const [lbPeriod, setLbPeriod]       = useState<'24h'|'7d'|'30d'>('30d'); // BUY order that seller accepts
 
@@ -816,7 +882,21 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
       {/* ── Buyers order book (BUY orders) ── */}
       {view === 'buybook' && (
         <div style={{ padding: '0 18px' }}>
-          {buyOrders.filter(o => !o.isOwn).length === 0 ? (
+          {/* Мои ордера, которые продавец уже принял — ждут оплаты от меня */}
+          {buyOrders.filter(o => o.isOwn && o.status === 'RESERVED').map(order => (
+            <div key={order.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', background: '#141018', border: '1px solid rgba(0,152,234,0.35)', borderRadius: 14, marginBottom: 8 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: '#0098EA' }}>Продавец найден</div>
+                <div style={{ fontSize: 11, color: '#9A9490', marginTop: 2 }}>
+                  {Number(BigInt(order.amountCoins)).toLocaleString()} за {order.totalTon.toFixed(4)} TON
+                </div>
+              </div>
+              <button onClick={() => setPayOrder(order)} style={{ padding: '9px 14px', background: 'rgba(0,152,234,0.15)', color: '#0098EA', border: '1px solid rgba(0,152,234,0.3)', borderRadius: 12, fontSize: 12, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>
+                Оплатить
+              </button>
+            </div>
+          ))}
+          {buyOrders.filter(o => !o.isOwn && o.status === 'OPEN').length === 0 ? (
             <div style={{ textAlign: 'center', padding: 32 }}>
               <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'center' }}><ExEmpty size={30} /></div>
               <div style={{ fontSize: 13, color: '#5A5248' }}>Нет ордеров на покупку</div>
@@ -830,7 +910,7 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
                   <div key={h} style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.07em', color: '#5A5248', textTransform: 'uppercase' as const }}>{h}</div>
                 ))}
               </div>
-              {buyOrders.filter(o => !o.isOwn).sort((a, b) => b.priceTon - a.priceTon).map(order => (
+              {buyOrders.filter(o => !o.isOwn && o.status === 'OPEN').sort((a, b) => b.priceTon - a.priceTon).map(order => (
                 <div key={order.id} onClick={() => setFillOrder(order)} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4, alignItems: 'center', padding: '10px', background: '#141018', border: '1px solid rgba(0,214,143,0.12)', borderRadius: 12, marginBottom: 6, cursor: 'pointer' }}>
                   <div>
                     <div style={{ fontSize: 12, fontWeight: 600, color: '#EAE2CC' }}>{(order as BuyP2POrder).buyerName ?? order.sellerName}</div>
@@ -923,6 +1003,15 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
           onClose={() => setFillOrder(null)}
           onFilled={() => { loadOrders(); setFillOrder(null); onUserRefresh(); }}
           showToast={showToast}
+        />
+      )}
+
+      {/* E15: Создатель BUY-ордера оплачивает зарезервированную сделку */}
+      {payOrder && user && (
+        <PayReservedOrderModal
+          order={payOrder}
+          onClose={() => setPayOrder(null)}
+          onPaid={() => { loadOrders(); setPayOrder(null); onUserRefresh(); }}
         />
       )}
     </div>
