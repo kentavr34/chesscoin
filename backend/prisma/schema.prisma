@@ -1087,6 +1087,21 @@ model PendingReferral {
 // Все видимые пользователю строки в одном месте с указанием, где они
 // показываются. Языки — колонками: новый язык добавляется колонкой,
 // без правок кода. Русский обязателен — это исходный язык.
+// Подтверждённые TON-кошельки (Кенан 31.07.2026).
+// Плата 1 TON — единоразовая и за АДРЕС. Тот же адрес подключается бесплатно
+// всегда; другой адрес — отдельное подтверждение и отдельная оплата.
+model TonWalletConfirmation {
+  id            String   @id @default(uuid())
+  userId        String
+  walletAddress String
+  txHash        String?  // хэш платежа; пусто у кошельков, привязанных до платы
+  confirmedAt   DateTime @default(now())
+
+  @@unique([userId, walletAddress])
+  @@index([userId])
+  @@map("ton_wallet_confirmations")
+}
+
 model UiText {
   key       String   @id            // exchange.createOrder.title
   screen    String                  // ExchangeTab

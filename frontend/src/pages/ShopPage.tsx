@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { PageLayout, useInfoPopup, InfoPopup } from '@/components/layout/PageLayout';
 import { useConfirm } from '@/components/ui/ConfirmModal';
 import { shopApi, authApi, tonApi, profileApi } from '@/api';
-import { connectWallet, getWalletAddress, disconnectWallet } from '@/lib/tonconnect';
+import { connectWallet, getWalletAddress, disconnectWallet, sendVerificationPayment } from '@/lib/tonconnect';
 import { useUserStore } from '@/store/useUserStore';
 import { fmtBalance } from '@/utils/format';
 import type { ShopItem, ItemType } from '@/types';
@@ -133,18 +133,27 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
       const addr = wallet.account?.address;
       if (!addr) throw new Error('Failed to get wallet address');
 
-      // Фикс 2026-06-13 (Кенан): раньше тут был verifyWallet(addr,'') с пустым
-      // boc — backend возвращал 400 «Missing transaction confirmation», ошибка
-      // глоталась, адрес НЕ сохранялся → tonWalletAddress оставался null → биржа
-      // навсегда заблокирована. Демо-режим: сохраняем адрес напрямую через
-      // /profile/ton-wallet (бесплатно, без 1-TON платежа).
+      // Подтверждение кошелька (Кенан 31.07.2026): 1 TON платится ОДИН раз за
+      // адрес. Уже подтверждённый кошелёк подключается бесплатно — бэкенд
+      // сразу отвечает успехом. Новый адрес возвращает 402 WALLET_NOT_CONFIRMED:
+      // тогда просим оплату и подтверждаем. До этого плату не спрашивали вовсе,
+      // и любой кошелёк подключался бесплатно.
       setConnectStep('verifying');
       showToast(t.shop.tonTab.saving);
-      await tonApi.connectWallet(addr);
+      try {
+        await tonApi.connectWallet(addr);
+      } catch (err: unknown) {
+        const emsg = err instanceof Error ? err.message : String(err);
+        if (!emsg.includes('WALLET_NOT_CONFIRMED')) throw err;
+        showToast(t.shop.tonTab.unlockPrompt);
+        const boc = await sendVerificationPayment(user?.id ?? '');
+        showToast(t.exchange.verifying);
+        await tonApi.verifyWallet(addr, boc);
+      }
 
       setWalletAddress(addr);
       setWalletConnected(true);
-      showToast('{t.shop.tonTab.connected}!');
+      showToast(t.shop.tonTab.connected);
       onUserRefresh();
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Connection error';

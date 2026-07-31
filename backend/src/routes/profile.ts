@@ -294,6 +294,24 @@ router.post("/ton-wallet", authMiddleware, validate(WalletSchema), async (req: R
     if (existing) {
       return res.status(409).json({ error: "This wallet is already linked to another account" });
     }
+
+    // Правило Кенана 31.07.2026: плата за подключение — единоразовая и
+    // привязана к АДРЕСУ. Этот адрес уже подтверждён — пускаем бесплатно,
+    // сколько бы раз человек ни переподключался. Новый адрес — новое
+    // подтверждение и новая оплата, он идёт через /ton-wallet/verify.
+    const confirmed = await prisma.tonWalletConfirmation.findUnique({
+      where: { userId_walletAddress: { userId, walletAddress } },
+      select: { confirmedAt: true },
+    });
+    if (!confirmed) {
+      return res.status(402).json({
+        error: "WALLET_NOT_CONFIRMED",
+        walletAddress,
+        priceTon: WALLET_UNLOCK_TON,
+        message: `Этот кошелёк ещё не подтверждён. Подтверждение — ${WALLET_UNLOCK_TON} TON, один раз за адрес. Дальше он будет подключаться бесплатно.`,
+      });
+    }
+
     await prisma.user.update({
       where: { id: userId },
       data: { tonWalletAddress: walletAddress, tonConnectedAt: new Date() },
@@ -301,7 +319,7 @@ router.post("/ton-wallet", authMiddleware, validate(WalletSchema), async (req: R
     // Сбрасываем кеш /auth/me: он живёт 30 секунд, и без сброса биржа ещё
     // полминуты считала бы, что кошелька нет.
     await redis.del(`user:me:${userId}`).catch(() => {});
-    res.json({ success: true, walletAddress });
+    res.json({ success: true, walletAddress, alreadyConfirmed: true });
   } catch (err: unknown) {
     res.status(500).json({ error: (err instanceof Error ? err.message : String(err)) });
   }
@@ -346,13 +364,22 @@ router.post("/ton-wallet/verify", authMiddleware, async (req: Request, res: Resp
       return res.status(409).json({ error: "This wallet is already linked to another account" });
     }
 
-    // Проверяем что пользователь ещё не подключил кошелёк
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { tonWalletAddress: true, tonConnectedAt: true },
+    // Раньше здесь стоял запрет «кошелёк уже подключён». Он мешал главному:
+    // по правилу Кенана 31.07.2026 привязать ДРУГОЙ адрес можно, просто это
+    // ещё одно подтверждение за 1 TON. Проверяем не факт подключения, а факт
+    // подтверждения именно этого адреса.
+    const already = await prisma.tonWalletConfirmation.findUnique({
+      where: { userId_walletAddress: { userId, walletAddress } },
+      select: { confirmedAt: true },
     });
-    if (user?.tonWalletAddress) {
-      return res.status(400).json({ error: "Wallet already connected" });
+    if (already) {
+      // Платить второй раз за тот же адрес не нужно — просто подключаем.
+      await prisma.user.update({
+        where: { id: userId },
+        data: { tonWalletAddress: walletAddress, tonConnectedAt: new Date() },
+      });
+      await redis.del(`user:me:${userId}`).catch(() => {});
+      return res.json({ success: true, walletAddress, alreadyConfirmed: true });
     }
 
     // Верификация транзакции через TON Center API
@@ -371,11 +398,18 @@ router.post("/ton-wallet/verify", authMiddleware, async (req: Request, res: Resp
       logger.warn("[TON] PLATFORM_TON_WALLET не задан — верификация пропущена (dev mode)");
     }
 
+    // Записываем подтверждение АДРЕСА: с этого момента он подключается
+    // бесплатно навсегда, сколько бы раз человек ни переподключался.
+    await prisma.tonWalletConfirmation.create({
+      data: { userId, walletAddress, txHash: boc.slice(0, 64) },
+    }).catch(() => {}); // гонка двойного клика — подтверждение уже есть
+
     // Сохраняем кошелёк
     await prisma.user.update({
       where: { id: userId },
       data: { tonWalletAddress: walletAddress, tonConnectedAt: new Date() },
     });
+    await redis.del(`user:me:${userId}`).catch(() => {});
 
     // Логируем TON транзакцию
     await prisma.tonTransaction.create({
@@ -409,27 +443,31 @@ router.post("/ton-wallet/verify", authMiddleware, async (req: Request, res: Resp
 // POST /ton-wallet сохраняет адрес без оплаты (нужен фронту после TonConnect),
 // поэтому сам факт наличия адреса ничего не разрешает. Денежные операции
 // требуют ОПЛАЧЕННОЙ разблокировки — транзакции WALLET_UNLOCK.
-// Кошельки, привязанные до 30.07.2026, работают как раньше: закрываем дыру
-// на будущее, не отключая тех, кто уже пользовался.
-const WALLET_PAYWALL_SINCE = new Date("2026-07-30T00:00:00Z");
+// Кошельки, привязанные до введения платы, перенесены в таблицу подтверждений
+// самой миграцией — отдельная дата-граница в коде больше не нужна.
 
 // Курс монеты (Кенан 31.07.2026): 100 000 монет = 1 TON. Раньше был
 // миллион, и число было продублировано в трёх местах — при правке одного
 // курс разъезжался. Теперь одно объявление на весь файл.
 const COINS_PER_TON = 100_000;
 
+// Разовая плата за подтверждение одного адреса кошелька (Кенан 31.07.2026).
+const WALLET_UNLOCK_TON = 1;
+
 async function isWalletUnlocked(userId: string): Promise<boolean> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { tonConnectedAt: true },
+    select: { tonWalletAddress: true },
   });
-  if (!user?.tonConnectedAt) return false;
-  if (user.tonConnectedAt < WALLET_PAYWALL_SINCE) return true; // унаследованные
-  const paid = await prisma.transaction.findFirst({
-    where: { userId, type: TransactionType.WALLET_UNLOCK },
+  if (!user?.tonWalletAddress) return false;
+  // Разрешение привязано к КОНКРЕТНОМУ адресу. Проверять «была ли когда-то
+  // оплата» нельзя: оплатив один кошелёк, человек привязал бы любой другой
+  // и пользовался им бесплатно.
+  const confirmed = await prisma.tonWalletConfirmation.findUnique({
+    where: { userId_walletAddress: { userId, walletAddress: user.tonWalletAddress } },
     select: { id: true },
   });
-  return Boolean(paid);
+  return Boolean(confirmed);
 }
 
 // ── Хелпер: поиск входящего TON-платежа через toncenter.com ───────────────────
