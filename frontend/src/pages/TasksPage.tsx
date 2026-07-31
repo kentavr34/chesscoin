@@ -45,6 +45,21 @@ function useMidnightCountdown(): string {
   return timeStr;
 }
 
+
+// Название и описание задания — из словаря переводов по ключу
+// tasks.item.<id>.title / .desc. Если ключа нет, показываем то, что пришло
+// из базы: задание не должно остаться без подписи (Кенан 31.07.2026).
+const taskText = (
+  dict: Record<string, unknown>,
+  id: string,
+  field: 'title' | 'desc',
+  fallback: string,
+): string => {
+  const item = (dict as Record<string, any>)?.item?.[id];
+  const value = item?.[field];
+  return typeof value === 'string' && value ? value : fallback;
+};
+
 export const TasksPage: React.FC = () => {
   const t = useT();
   const tp = t.tasksPage;
@@ -310,9 +325,9 @@ export const TasksPage: React.FC = () => {
                 <CategoryIcon cat={cat} size={18} color={task.isCompleted ? '#3DBA7A' : '#9B85FF'} />
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: '#EAE2CC' }}>{task.title}</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#EAE2CC' }}>{taskText(t.tasks, task.id, 'title', task.title)}</div>
                 <div style={{ fontSize: 11, color: '#9A9490', marginTop: 2 }}>
-                  {task.isCompleted ? t.tasks.completed : task.description}
+                  {task.isCompleted ? t.tasks.completed : taskText(t.tasks, task.id, 'desc', task.description ?? '')}
                 </div>
                 {task.maxProgress && !task.isCompleted && (
                   <div style={{ marginTop: 6 }}>
@@ -353,7 +368,7 @@ export const TasksPage: React.FC = () => {
           style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
         >
           <div style={{ width: '100%', maxWidth: 360, background: 'linear-gradient(170deg,#141018,#0F0E18)', border: '.5px solid rgba(212,168,67,.3)', borderRadius: 18, padding: '20px 18px' }}>
-            <div style={{ fontSize: 15, fontWeight: 800, color: '#EAE2CC', marginBottom: 6 }}>{codeTask.title}</div>
+            <div style={{ fontSize: 15, fontWeight: 800, color: '#EAE2CC', marginBottom: 6 }}>{taskText(t.tasks, codeTask.id, 'title', codeTask.title)}</div>
             <div style={{ fontSize: 12, color: '#9A9490', marginBottom: 14 }}>Введи код задания:</div>
             <input
               autoFocus
