@@ -70,6 +70,9 @@ import { PgnReplayModal } from '@/components/profile/PgnReplayModal'; // R3
 import { BadgeDetailModal } from '@/components/profile/BadgeDetailModal'; // R3
 import { CircStat, StatCard } from '@/components/profile/StatComponents'; // R3
 
+// Флаг рядом с названием языка в настройках.
+const LANG_FLAG: Record<string, string> = { ru: 'RU', en: 'GB', az: 'AZ', tr: 'TR' };
+
 export const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useUserStore();
@@ -1036,10 +1039,10 @@ export const ProfilePage: React.FC = () => {
               <div style={{ padding: '12px 14px', background: 'rgba(255,255,255,.03)', border: '.5px solid rgba(255,255,255,.07)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: '.8rem', fontWeight: 700, color: '#EAE2CC' }}>{t.profile.settings.language}</span>
                 <div style={{ display: 'flex', gap: 6 }}>
-                  {(['en', 'ru'] as Lang[]).map((l) => (
+                  {(['ru', 'en', 'az', 'tr'] as Lang[]).map((l) => (
                     <button key={l} onClick={() => setLang(l)} style={{ padding: '5px 12px', background: lang === l ? 'rgba(74,158,255,.18)' : 'rgba(255,255,255,.04)', color: lang === l ? '#82CFFF' : '#5A5248', border: lang === l ? '.5px solid rgba(74,158,255,.3)' : '.5px solid rgba(255,255,255,.07)', borderRadius: 7, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                      <CountryFlag code={l === 'en' ? 'GB' : 'RU'} size={14} />
-                      {l === 'en' ? 'EN' : 'RU'}
+                      <CountryFlag code={LANG_FLAG[l]} size={14} />
+                      {l.toUpperCase()}
                     </button>
                   ))}
                 </div>
