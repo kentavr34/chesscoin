@@ -582,6 +582,7 @@ export const translations = {
       draw: '🤝 Draw',
     },
     exchange: {
+      onSale: 'On sale',
       noChartData: 'No chart data',
       noDataForPeriod: 'No data for this period',
       orderCreated: 'Order placed! Coins frozen.',
@@ -1217,6 +1218,7 @@ export const translations = {
       draw: '🤝 Ничья',
     },
     exchange: {
+      onSale: 'В продаже',
       noChartData: 'Нет данных для графика',
       noDataForPeriod: 'Нет данных за этот период',
       orderCreated: '✅ Ордер выставлен! Монеты заморожены.',

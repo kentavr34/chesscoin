@@ -809,7 +809,7 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
             const ton = open.reduce((sum, o) => sum + o.totalTon, 0);
             return (
               <div style={{ display: 'flex', justifyContent: 'space-between', margin: '0 0 8px', padding: '8px 10px', background: 'rgba(0,152,234,0.06)', border: '1px solid rgba(0,152,234,0.15)', borderRadius: 8 }}>
-                <div style={{ fontSize: 10, color: '#9A9490' }}>В продаже</div>
+                <div style={{ fontSize: 10, color: '#9A9490' }}>{t.exchange.onSale}</div>
                 <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, fontWeight: 700, color: '#F0C85A' }}>
                   {fmtBalance(coins.toString())}
                   <span style={{ color: '#0098EA', marginLeft: 8 }}>{ton.toFixed(4)} TON</span>

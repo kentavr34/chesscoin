@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS "ton_wallet_confirmations" (
     "walletAddress" TEXT NOT NULL,
     "txHash"        TEXT,               -- хэш платежа; NULL у унаследованных
     "confirmedAt"   TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "ton_wallet_confirmations_user_wallet_key" UNIQUE ("userId", "walletAddress")
+    CONSTRAINT "ton_wallet_confirmations_userId_walletAddress_key" UNIQUE ("userId", "walletAddress")
 );
 
 CREATE INDEX IF NOT EXISTS "ton_wallet_confirmations_userId_idx"

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { translations } from './translations';
-import type { Lang } from './translations';
+import type { Lang, Translations } from './translations';
 import { useI18nStore } from './useI18nStore';
 
 /**
@@ -43,6 +43,11 @@ export const useT = () => {
 
   useEffect(() => { void load(lang); }, [lang, load]);
 
-  const base = translations[lang] ?? translations.ru;
+  // Встроенных словарей два — ru и en; az и tr живут только в базе, поэтому
+  // для них здесь берётся русский как запасной. Приведение нужно, чтобы
+  // TypeScript продолжал проверять ключи: без него `translations[lang]`
+  // выводился как any, и опечатка в `t.…` молча давала пустое место на экране.
+  const dicts = translations as unknown as Record<Lang, Translations>;
+  const base = dicts[lang] ?? dicts.ru;
   return withOverrides(base, dict);
 };
