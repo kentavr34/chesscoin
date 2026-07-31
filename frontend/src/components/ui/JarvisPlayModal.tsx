@@ -409,16 +409,13 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.35rem', marginBottom: 3 }}>
                 {levelStatus === 'completed' && <span style={{ fontSize: '1.1rem', color: '#3DBA7A' }}>✓</span>}
-                {levelStatus === 'locked' && <span style={{ fontSize: '1.1rem', color: 'rgba(255,255,255,.3)' }}>🔒</span>}
                 <div style={{
                   fontSize: '1.08rem', fontWeight: 900, letterSpacing: '.02em',
-                  color: levelStatus === 'completed' ? 'rgba(130,207,255,.4)'
-                    : levelStatus === 'locked' ? 'rgba(255,255,255,.25)'
-                    : '#82CFFF',
+                  color: levelStatus === 'completed' ? 'rgba(130,207,255,.4)' : '#82CFFF',
                 }}>{levelName}</div>
               </div>
               <div style={{ fontSize: '.87rem', color: levelStatus === 'current' ? 'rgba(74,158,255,.6)' : 'rgba(74,158,255,.25)' }}>
-                {levelStatus === 'completed' ? 'Пройдено' : levelStatus === 'locked' ? 'Закрыто' : `Победа: +${(level?.reward || 0).toLocaleString()}`}
+                {levelStatus === 'completed' ? 'Пройдено' : `Победа: +${(level?.reward || 0).toLocaleString()}`}
               </div>
             </div>
 
@@ -538,7 +535,6 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
             )}
             <style>{`@keyframes jpm-shine{0%{left:-100%}100%{left:200%}}`}</style>
             {levelStatus === 'completed' ? '✓ ПРОЙДЕНО'
-              : levelStatus === 'locked' ? '🔒 ЗАКРЫТ'
               : userAttempts <= 0 ? 'НЕТ ПОПЫТОК'
               : 'ИГРАТЬ'}
           </button>
