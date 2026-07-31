@@ -72,9 +72,14 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
   const level = localizedLevels[selectedLvl - 1];
   const levelName = level?.name || JARVIS_NAMES[selectedLvl - 1] || `Уровень ${selectedLvl}`;
 
-  const levelStatus = selectedLvl < currentJarvisLevel ? 'completed'
-    : selectedLvl === currentJarvisLevel ? 'current'
-    : 'locked';
+  // Кенан 01.08.2026: «те уровни, которые ещё не пройдены, сделать открытыми.
+  // Если игрок уже готов играть с более сложным уровнем, чтобы он не
+  // церемонился на той версии, где сейчас».
+  //
+  // Было наоборот: пройденные закрыты (это верно), а НЕ пройденные тоже
+  // закрыты — играть можно было ровно один уровень. Теперь непройденные
+  // открыты все: игрок сам выбирает, с чего ему лучше начать.
+  const levelStatus = selectedLvl < currentJarvisLevel ? 'completed' : 'current';
   const canPlay = levelStatus === 'current';
 
   // Countdown логика
