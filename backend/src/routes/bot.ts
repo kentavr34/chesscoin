@@ -1,4 +1,5 @@
 import { Router, Request, Response, NextFunction } from "express";
+import { getCirculationStats } from "@/services/treasury";
 import { logger, logError } from "@/lib/logger";
 import { prisma } from "../lib/prisma";
 import { updateBalance } from "../services/economy";
@@ -131,9 +132,14 @@ botRouter.get("/stats", async (_req: Request, res: Response) => {
     const tournamentsPool = (activeTournamentPoolAgg._sum.prizePool ?? 0n) + (activeTournamentPoolAgg._sum.donationPool ?? 0n);
     const platformReserve = config?.platformReserve ?? 0n;
     const totalEmitted = config?.totalEmitted ?? 0n;
+    // Монеты в обращении — отдельным блоком (Кенан 31.07.2026).
+    // Прежняя цифра totalInCirculation прибавляла резерв платформы и потому
+    // показывала почти весь капитал: резерв — это НЕ выпущенные монеты.
+    const circulation = await getCirculationStats();
     const totalInCirculation = usersBalance + countriesTreasury + tournamentsPool + platformReserve;
 
     res.json({
+      circulation,
       totalUsers,
       totalSessions,
       totalBattles,

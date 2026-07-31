@@ -24,7 +24,7 @@ import { ItemType, ItemCategory, ItemRarity, TransactionType } from "@prisma/cli
 import { redis } from "@/lib/redis";
 import { safeStringify } from "@/lib/json"; // Q6: safe BigInt serialization
 import { updateBalance } from "@/services/economy";
-import { payFromTreasury } from "@/services/treasury";
+import { payFromTreasury, getCirculationStats } from "@/services/treasury";
 import { authMiddleware } from "@/middleware/auth";
 import { uploadToS3, deleteFromS3 } from "@/lib/s3";
 
@@ -315,7 +315,9 @@ adminRouter.get("/stats", authMiddleware, adminOnly, async (_req: Request, res: 
     ]);
     const activeSessions = await prisma.session.count({ where: { status: { in: ["IN_PROGRESS", "WAITING_FOR_OPPONENT"] } } });
     const battlesToday = await prisma.session.count({ where: { type: "BATTLE", createdAt: { gte: new Date(Date.now() - 86400000) } } });
-    res.json({ users, sessions, activeSessions, battlesToday, totalEmitted: config?.totalEmitted?.toString() ?? "0", currentPhase: config?.currentPhase ?? 1, platformReserve: config?.platformReserve?.toString() ?? "0" });
+    // Монеты в обращении — та же цифра, что у бота (Кенан 31.07.2026).
+    const circulation = await getCirculationStats();
+    res.json({ users, sessions, activeSessions, battlesToday, circulation, totalEmitted: config?.totalEmitted?.toString() ?? "0", currentPhase: config?.currentPhase ?? 1, platformReserve: config?.platformReserve?.toString() ?? "0" });
   } catch (err: unknown) { res.status(500).json({ error: (err instanceof Error ? err.message : String(err)) }); }
 });
 
