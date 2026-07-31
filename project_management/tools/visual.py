@@ -94,6 +94,14 @@ def diff_pct(a, b, out_path):
 
 
 def compare():
+    # Снимаем заново перед каждым сравнением. Раньше compare брал то, что
+    # осталось в /tmp от прошлых запусков: когда playwright не установился,
+    # capture молча падал, а сравнение сходилось со старыми снимками и всегда
+    # рапортовало успех — проверка врала (найдено 01.08.2026).
+    if not capture():
+        print('   🚨 СНИМКИ НЕ СНЯТЫ — сравнивать нечего.')
+        print('      Проверь playwright: npm i -D playwright && npx playwright install chromium')
+        return 2
     if not os.path.isdir(BASELINE) or not os.listdir(BASELINE):
         print('   ⚠️ эталона нет. Снять текущий вид и утвердить его:')
         print('      python project_management/tools/visual.py approve all')

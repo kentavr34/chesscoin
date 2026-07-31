@@ -33,6 +33,20 @@ SRC = os.path.join(ROOT, 'frontend', 'src')
 SKIP_FILES = {os.path.join('i18n', 'translations.ts')}
 
 CYR = re.compile('[А-Яа-яЁё]')
+
+# Вшитый АНГЛИЙСКИЙ так же ломает интерфейс, как вшитый русский: 01.08.2026
+# на экране профиля заголовок и текст были английскими, а кнопка русской.
+# Первый аудит искал только кириллицу и этого не видел.
+#
+# Отличить фразу для человека от технической строки помогает форма:
+# начинается с заглавной и содержит хотя бы два обычных слова.
+LAT_PHRASE = re.compile(r"^[A-Z][a-z]+(?:[\s,.:;!?'—-]+[A-Za-z][a-z]*)+")
+
+# Служебное, что похоже на фразу, но фразой не является: константы вроде
+# TASK_REWARD, ссылки, camelCase-идентификаторы, css-значения.
+# Шаблон констант обязательно якорим с обеих сторон: без этого он срабатывал
+# на первой же заглавной букве и отбрасывал любую нормальную фразу.
+TECH = re.compile(r'^(?:[A-Z0-9_]+$|https?://|[a-z]+[A-Z]|\d|#[0-9a-fA-F]{3,})')
 STRING_LIT = re.compile(r"""(['"`])((?:\\.|(?!\1)[^\\])*)\1""")
 
 
@@ -75,22 +89,29 @@ def strip_comments(text):
     return ''.join(out)
 
 
+def is_english_phrase(text):
+    """Похоже ли на фразу для человека, а не на техническую строку."""
+    if not text or CYR.search(text):
+        return False
+    if TECH.match(text):
+        return False
+    return bool(LAT_PHRASE.match(text))
+
+
 def scan_file(path, rel):
     text = io.open(path, encoding='utf-8', errors='replace').read()
     code = strip_comments(text)
     findings = []
     for lineno, line in enumerate(code.split('\n'), 1):
-        if not CYR.search(line):
-            continue
         hits = []
         for m in STRING_LIT.finditer(line):
-            body = m.group(2)
-            if CYR.search(body):
-                hits.append(body.strip())
+            body = m.group(2).strip()
+            if CYR.search(body) or is_english_phrase(body):
+                hits.append(body)
         # Текст прямо в разметке: >Привет<
-        for m in re.finditer(r'>([^<>{}]*[А-Яа-яЁё][^<>{}]*)<', line):
+        for m in re.finditer(r'>([^<>{}]+)<', line):
             body = m.group(1).strip()
-            if body:
+            if body and (CYR.search(body) or is_english_phrase(body)):
                 hits.append(body)
         for h in dict.fromkeys(hits):
             findings.append((rel, lineno, h[:90]))

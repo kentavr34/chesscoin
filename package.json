@@ -2,5 +2,8 @@
   "dependencies": {
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.20.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.62.1"
   }
 }
