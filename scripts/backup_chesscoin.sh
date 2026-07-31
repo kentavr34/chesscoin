@@ -8,7 +8,12 @@
 #         независимая память проекта (chesscoin_pm + выжимка по project='chesscoin') ·
 #         аватары · конфиги · секреты (зашифрованы отдельно) · инструкция восстановления.
 #
-# Назначение: Google Drive (gdrive:chesscoin-backups/) + Telegram-группа.
+# Назначение — три зеркала (Кенан 31.07.2026):
+#   1. Google Drive  (gdrive:chesscoin-backups/)
+#   2. Telegram-группа бэкапов
+#   3. Локальный компьютер — архив остаётся на сервере в KEEP_DIR, откуда его
+#      забирает `scripts/pull_backup.sh` с рабочей машины. Держим последние
+#      KEEP_LAST копий: диск не резиновый, а один архив ~50 МБ.
 #
 # Запуск:  bash /opt/chesscoin/scripts/backup_chesscoin.sh [метка]
 #          метка попадёт в имя файла, например: bash backup_chesscoin.sh before-cleanup
@@ -22,6 +27,8 @@ NAME="chesscoin_${TS}_${LABEL}"
 WORK="/tmp/${NAME}"
 ARCHIVE="/tmp/${NAME}.tar.gz"
 GDRIVE_DIR="gdrive:chesscoin-backups"
+KEEP_DIR=/opt/chesscoin-backups                # откуда рабочая машина забирает копию
+KEEP_LAST=5                                    # сколько архивов держим на сервере
 TG_CHAT="${TG_CHAT:--1001963289478}"          # группа бэкапов (решение Кенана 2026-07-29)
 PASSFILE=/root/.chesscoin_backup_pass          # ключ шифрования секретов, НЕ в архиве
 
@@ -169,6 +176,21 @@ GDrive: ${GDRIVE_DIR}/$(basename "$ARCHIVE")
   fi
 else
   log "  ⚠ BOT_TOKEN не найден — Telegram пропущен"
+fi
+
+# ── Третье зеркало: копия под рукой для локальной машины ────────────────
+# Telegram режет файлы больше 45 МБ, Google Drive — чужая инфраструктура.
+# Копия на самом сервере нужна, чтобы её можно было забрать напрямую по scp
+# и положить на локальный диск (scripts/pull_backup.sh).
+mkdir -p "$KEEP_DIR"
+if cp "$ARCHIVE" "$KEEP_DIR/"; then
+  log "  локально: $KEEP_DIR/$(basename "$ARCHIVE")"
+  # Оставляем только последние KEEP_LAST — старые уже лежат на GDrive.
+  ls -1t "$KEEP_DIR"/chesscoin_*.tar.gz 2>/dev/null | tail -n +$((KEEP_LAST + 1)) | while read -r old; do
+    rm -f "$old" && log "  старую копию убрал: $(basename "$old")"
+  done
+else
+  log "  ⚠ локальная копия не создана"
 fi
 
 rm -rf "$WORK"
