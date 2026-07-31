@@ -50,10 +50,15 @@ function fmtTime(secs: number): string {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 }
 
-function calcBoardSize(): number {
+// Кенан 31.07.2026: размеры берём у корневого бокса страницы, не у окна.
+// window.innerWidth/innerHeight в Telegram WebView врут при открытой
+// клавиатуре и опаздывают при повороте экрана. Корень страницы —
+// position: fixed; inset: 0 — в обычном состоянии даёт те же числа.
+// Замеряется через ResizeObserver, см. pages/GamePage.tsx.
+function calcBoardSize(boxW: number, boxH: number): number {
   // Панели + статус-полоски + action bar + минимальные spacer-ы (8px сверху/снизу)
   const reserved = PANEL_H * 2 + STATUS_GAP * 2 + ACTBAR_H + 16;
-  return Math.floor(Math.min(window.innerWidth, window.innerHeight - reserved));
+  return Math.floor(Math.min(boxW, boxH - reserved));
 }
 
 function lastMoveFromPgn(pgn: string): { from: string; to: string } | null {

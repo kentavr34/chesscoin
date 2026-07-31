@@ -74,7 +74,20 @@ function fmtTime(secs: number): string {
 // отрицательный размер → доска ломается.
 const MIN_BOARD_SIZE = 220;
 
-function calcBoardSize(isSpectator = false, hasMeta = false): number {
+/**
+ * Размер доски по фактическому боксу страницы.
+ *
+ * Раньше здесь стояло `window.innerWidth` / `window.innerHeight`. Правило
+ * проекта это запрещает, и не зря: в Telegram WebView окно «уменьшается»
+ * при открытой клавиатуре, отдаёт устаревшие числа при повороте экрана и
+ * ничего не знает о панелях, которые занимают часть экрана. Меряем корневой
+ * бокс самой страницы (Кенан 31.07.2026) — он и есть то место, где живёт
+ * вёрстка. В обычном состоянии числа совпадают со старыми: корень — это
+ * `position: fixed; inset: 0`.
+ *
+ * Функция чистая, чтобы расчёт можно было проверить тестом.
+ */
+export function calcBoardSize(boxW: number, boxH: number, isSpectator = false, hasMeta = false): number {
   // 2026-05-19 (Кенан): BottomNav убран в spectator-режиме (action-row уже
   // играет роль нижней панели). В spectator статус-полоски «Ваш ход» /
   // «Думает...» не показываются → их высоту в reserved не учитываем.
@@ -82,7 +95,7 @@ function calcBoardSize(isSpectator = false, hasMeta = false): number {
   const metaSpace = hasMeta ? 28 : 0;
   // 12px = 6px top spacer + 6px bottom spacer (плотный layout без «пустот»).
   const reserved = PANEL_H * 2 + statusReserve + ACTBAR_H + 12 + metaSpace;
-  const fit = Math.min(window.innerWidth, window.innerHeight - reserved);
+  const fit = Math.min(boxW, boxH - reserved);
   return Math.floor(Math.max(MIN_BOARD_SIZE, fit));
 }
 
@@ -958,12 +971,21 @@ export function GamePage() {
 
   // Размер доски — PR-3 hotfix Кенан 2026-05-18: учитываем bottom-nav и meta-полоску.
   // Объявление `hasMeta` ниже зависит от isBattle/hasBet — те объявлены до этого блока.
-  const [boardSize, setBoardSize] = useState(() => calcBoardSize());
+  // Корневой бокс страницы — источник размеров вместо окна браузера.
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const [boardSize, setBoardSize] = useState(MIN_BOARD_SIZE);
   useEffect(() => {
-    const recalc = () => setBoardSize(calcBoardSize(!!isSpectator, !!(isBattle && hasBet)));
+    const el = rootRef.current;
+    if (!el) return;
+    const recalc = () => setBoardSize(calcBoardSize(
+      el.clientWidth, el.clientHeight, !!isSpectator, !!(isBattle && hasBet),
+    ));
     recalc();
-    window.addEventListener('resize', recalc);
-    return () => window.removeEventListener('resize', recalc);
+    // ResizeObserver ловит и поворот экрана, и появление панелей, и смену
+    // раскладки — всё, о чём событие resize у окна либо молчит, либо врёт.
+    const ro = new ResizeObserver(recalc);
+    ro.observe(el);
+    return () => ro.disconnect();
   }, [isSpectator, isBattle, hasBet]);
 
   // Данные сессии
@@ -1131,7 +1153,7 @@ export function GamePage() {
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: '#0B0D11', display: 'flex', flexDirection: 'column', fontFamily: 'Inter, sans-serif', overflow: 'hidden' }}>
+    <div ref={rootRef} style={{ position: 'fixed', inset: 0, background: '#0B0D11', display: 'flex', flexDirection: 'column', fontFamily: 'Inter, sans-serif', overflow: 'hidden' }}>
       <style>{`
         @keyframes gp-spin   { to { transform: rotate(360deg) } }
         @keyframes gp-pulse  { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(.7)} }
