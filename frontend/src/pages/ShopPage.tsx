@@ -38,7 +38,9 @@ const THEME_NAME_TO_KEY: Record<string, ThemeKey> = {
   'Crystal Ice':   'crystal_ice',
 };
 
-const DEFAULT_TON_TO_COINS = 1_000_000;
+// Курс: 100 000 монет за 1 TON (Кенан 31.07.2026). Настоящий курс
+// приходит с бэкенда, это запасное значение до ответа.
+const DEFAULT_TON_TO_COINS = 100_000;
 const DEFAULT_USDT_TO_COINS = 200_000;
 const FEE_PERCENT = 0.5;
 
@@ -89,10 +91,13 @@ interface TonTabProps {
 }
 
 const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
+  // Панель TON была целиком написана по-английски прямо в разметке — при
+  // выборе любого языка она оставалась английской (Кенан 31.07.2026).
+  const t = useT();
   const [walletConnected, setWalletConnected] = useState(false);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [connecting, setConnecting] = useState(false);
-  const [activeAction, setActiveAction] = useState<'buy' | 'sell' | 'withdraw' | null>(null);
+  const [activeAction, setActiveAction] = useState<'buy' | 'sell' | null>(null);
   const [amount, setAmount] = useState('');
   const [processing, setProcessing] = useState(false);
   const [tonToCoins, setTonToCoins] = useState(DEFAULT_TON_TO_COINS);
@@ -123,7 +128,7 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
     if (connectStep !== 'idle') return;
     try {
       setConnectStep('connecting');
-      showToast('Opening wallet...');
+      showToast(t.shop.tonTab.connecting);
       const wallet = await connectWallet();
       const addr = wallet.account?.address;
       if (!addr) throw new Error('Failed to get wallet address');
@@ -134,12 +139,12 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
       // навсегда заблокирована. Демо-режим: сохраняем адрес напрямую через
       // /profile/ton-wallet (бесплатно, без 1-TON платежа).
       setConnectStep('verifying');
-      showToast('Сохраняю кошелёк...');
+      showToast(t.shop.tonTab.saving);
       await tonApi.connectWallet(addr);
 
       setWalletAddress(addr);
       setWalletConnected(true);
-      showToast('TON wallet connected!');
+      showToast('{t.shop.tonTab.connected}!');
       onUserRefresh();
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Connection error';
@@ -190,15 +195,15 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
           </div>
           <div style={{ fontSize: 17, fontWeight: 800, color: '#EAE2CC', marginBottom: 6 }}>TON / USDT</div>
           <div style={{ fontSize: 12, color: '#7A7875', textAlign: 'center', lineHeight: 1.6, marginBottom: 20 }}>
-            Connect a TON wallet and get access to buying coins with real crypto and withdrawing earnings
+            {t.shop.tonTab.introText}
           </div>
 
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
             {([
-              { key: 'coin', Ico: () => <CoinIcon size={18} />, text: 'Buy coins with TON or USDT', sub: '1 TON ≈ 1,000,000' },
-              { key: 'fly',  Ico: () => <IcoMoneyFly size={18} color="#0098EA" />, text: 'Withdraw coins to TON', sub: '0.5% fee on all operations' },
+              { key: 'coin', Ico: () => <CoinIcon size={18} />, text: t.shop.tonTab.benefits[0].text, sub: t.shop.tonTab.benefits[0].sub },
+              { key: 'fly',  Ico: () => <IcoMoneyFly size={18} color="#0098EA" />, text: t.shop.tonTab.benefits[1].text, sub: t.shop.tonTab.benefits[1].sub },
               // A1: 1 TON unlock-плата убрана. Подключение бесплатное.
-              { key: 'free', Ico: () => <IcoCheck2 size={18} color="#3DBA7A" />, text: 'Free wallet connection', sub: 'No upfront payment required' },
+              { key: 'free', Ico: () => <IcoCheck2 size={18} color="#3DBA7A" />, text: t.shop.tonTab.benefits[2].text, sub: t.shop.tonTab.benefits[2].sub },
             ] as const).map(r => (
               <div key={r.key} style={{ display: 'flex', gap: 10, padding: '10px 12px', background: 'rgba(255,255,255,.04)', border: '.5px solid rgba(154,148,144,.14)', borderRadius: 12, alignItems: 'flex-start', transition: 'all .15s' }}>
                 <span style={{ display: 'flex', alignItems: 'center' }}><r.Ico /></span>
@@ -215,12 +220,12 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
             disabled={connectStep !== 'idle'}
             style={{ width: '100%', padding: '14px', background: 'linear-gradient(135deg,#0098EA,#006BBF)', color: '#fff', border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: connectStep === 'idle' ? 'pointer' : 'default', fontFamily: 'inherit', transition: 'all .15s', opacity: connectStep !== 'idle' ? 0.7 : 1 }}
           >
-            {connectStep === 'idle' ? 'Connect TON Wallet' :
-             connectStep === 'connecting' ? 'Opening wallet...' :
-             'Verifying...'}
+            {connectStep === 'idle' ? t.shop.tonTab.connectWallet :
+             connectStep === 'connecting' ? t.shop.tonTab.connecting :
+             t.exchange.verifying}
           </button>
           <div style={{ fontSize: 10, color: '#7A7875', marginTop: 8, textAlign: 'center' }}>
-            Free — no upfront TON payment
+            {t.shop.tonTab.freeNote}
           </div>
         </div>
       </div>
@@ -233,7 +238,7 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
       <div style={{ padding: '13px 15px', background: 'linear-gradient(135deg,rgba(0,152,234,.12),rgba(0,122,194,.06))', border: '.5px solid rgba(0,152,234,.28)', borderRadius: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
         <span style={{ display: 'flex', color: '#0098EA' }}><IcoTon size={22} /></span>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 11, color: '#0098EA', fontWeight: 700, marginBottom: 2 }}>TON wallet connected</div>
+          <div style={{ fontSize: 11, color: '#0098EA', fontWeight: 700, marginBottom: 2 }}>{t.shop.tonTab.connected}</div>
           <div style={{ fontSize: 10, color: '#7A7875', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{walletAddress}</div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
@@ -241,9 +246,9 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
           <button
             onClick={handleDisconnectWallet}
             style={{ fontSize: 9, padding: '3px 7px', background: 'transparent', color: '#7A7875', border: '.5px solid rgba(154,148,144,.25)', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}
-            title="Disconnect TON wallet"
+            title={t.shop.tonTab.disconnect}
           >
-            Disconnect
+            {t.shop.tonTab.disconnect}
           </button>
         </div>
       </div>
@@ -251,11 +256,11 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
       {/* Balance row */}
       <div style={{ display: 'flex', gap: 8 }}>
         <div style={{ flex: 1, padding: '12px', ...S.card, borderRadius: 12, textAlign: 'center' }}>
-          <div style={{ ...S.sectionLabel, marginBottom: 4 }}>BALANCE</div>
+          <div style={{ ...S.sectionLabel, marginBottom: 4 }}>{t.profile.balance}</div>
           <div style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 14, fontWeight: 700, color: '#F5C842' }}>{fmtBalance(user?.balance ?? '0')}</div>
         </div>
         <div style={{ flex: 1, padding: '12px', ...S.card, borderRadius: 12, textAlign: 'center' }}>
-          <div style={{ ...S.sectionLabel, marginBottom: 4 }}>RATE</div>
+          <div style={{ ...S.sectionLabel, marginBottom: 4 }}>{t.shop.tonTab.rate}</div>
           <div style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 12, fontWeight: 700, color: '#0098EA' }}>1 TON = {(tonToCoins / 1000).toFixed(0)}K</div>
           <div style={{ fontSize: 9, color: '#7A7875', marginTop: 2 }}>≈ ${tonUsdt.toFixed(2)}</div>
         </div>
@@ -263,9 +268,9 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
 
       {/* Actions */}
       <div style={{ display: 'flex', gap: 6 }}>
-        {(['buy', 'sell', 'withdraw'] as const).map(a => {
+        {(['buy', 'sell'] as const).map(a => {
           const isActive = activeAction === a;
-          const activeColor = a === 'buy' ? '#0098EA' : a === 'sell' ? '#7B61FF' : '#3DBA7A';
+          const activeColor = a === 'buy' ? '#0098EA' : '#7B61FF';
           return (
             <button key={a} onClick={() => setActiveAction(activeAction === a ? null : a)} style={{
               flex: 1, padding: '10px 4px', border: isActive ? `.5px solid ${activeColor}40` : '.5px solid rgba(154,148,144,.18)', borderRadius: 12, fontFamily: 'inherit',
@@ -274,7 +279,7 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
               color: isActive ? activeColor : '#7A7875',
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5,
             }}>
-              {a === 'buy' ? <><IcoArrowDown size={11} /> Buy</> : a === 'sell' ? <><IcoArrowUp size={11} /> Sell</> : <><IcoBriefcase size={11} /> Withdraw</>}
+              {a === 'buy' ? <><IcoArrowDown size={11} /> {t.shop.tonTab.buy}</> : <><IcoArrowUp size={11} /> {t.shop.tonTab.sell}</>}
             </button>
           );
         })}
@@ -283,7 +288,7 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
       {/* Buy panel */}
       {activeAction === 'buy' && (
         <div style={{ padding: '16px', ...S.card, border: '.5px solid rgba(0,152,234,.22)' }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#EAE2CC', marginBottom: 12 }}>Buy coins</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#EAE2CC', marginBottom: 12 }}>{t.shop.tonTab.buyCoins}</div>
           <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
             {[{ label: '0.5 TON', val: '0.5', ton: true }, { label: '1 TON', val: '1', ton: true }, { label: '10 USDT', val: '10', ton: false }].map(opt => {
               const c = calcCoins(opt.val, opt.ton);
@@ -354,7 +359,7 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
             <button
               disabled={processing || !amount}
               onClick={async () => {
-                if (!amount || BigInt(amount.replace(/\D/g,'') || '0') < 1_000_000n) { showToast('Minimum 1,000,000'); return; }
+                if (!amount || BigInt(amount.replace(/\D/g,'') || '0') < BigInt(tonToCoins)) { showToast(t.shop.tonTab.minCoins); return; }
                 setProcessing(true);
                 try {
                   const r = await tonApi.sell(amount.replace(/\D/g,''));
@@ -380,55 +385,12 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
         </div>
       )}
 
-      {/* Withdraw panel */}
-      {activeAction === 'withdraw' && (
-        <div style={{ padding: '16px', ...S.card, border: '.5px solid rgba(61,186,122,.22)' }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#EAE2CC', marginBottom: 4 }}>Withdraw to TON</div>
-          <div style={{ fontSize: 11, color: '#7A7875', marginBottom: 12 }}>To wallet: {walletAddress?.slice(0, 12)}...{walletAddress?.slice(-6)}</div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <input
-              type="number"
-              placeholder="Amount"
-              value={amount}
-              onChange={e => setAmount(e.target.value)}
-              style={{ ...S.input, flex: 1 }}
-            />
-            <button
-              disabled={processing || !amount}
-              onClick={async () => {
-                if (!amount || BigInt(amount.replace(/\D/g,'') || '0') < 1_000_000n) { showToast('Minimum 1,000,000'); return; }
-                setProcessing(true);
-                try {
-                  const r = await tonApi.withdraw(amount.replace(/\D/g,''));
-                  showToast(`Order created: ${(r as Record<string,unknown> & { netTon?: number }).netTon?.toFixed(4)} TON`);
-                  setAmount('');
-                  onUserRefresh();
-                } catch (e: unknown) { showToast((e instanceof Error ? e.message : "Error") || 'Error'); }
-                finally { setProcessing(false); }
-              }}
-              style={{ padding: '10px 16px', background: processing ? 'rgba(255,255,255,.08)' : 'linear-gradient(135deg,#1A5C3A,#3DBA7A)', color: processing ? '#7A7875' : '#0D0D12', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: processing ? 'default' : 'pointer', fontFamily: 'inherit', transition: 'all .15s' }}
-            >
-              {processing ? '...' : 'Withdraw'}
-            </button>
-          </div>
-          {amount && (
-            <div style={{ marginTop: 10, fontSize: 11, color: '#7A7875', lineHeight: 1.8 }}>
-              {(() => { const c = calcWithdraw(amount); return <>
-                <div>You receive: <b style={{ color: '#3DBA7A' }}>{c.net.toFixed(4)} TON</b></div>
-                <div>Fee {FEE_PERCENT}%: {c.fee.toFixed(4)} TON</div>
-                <div style={{ color: '#7A7875' }}>≈ {(c.net * 5.5).toFixed(2)} USDT</div>
-              </>; })()}
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Transaction History */}
       <div style={{ padding: '14px', ...S.card }}>
-        <div style={{ ...S.sectionLabel, marginBottom: 10 }}>TRANSACTION HISTORY</div>
+        <div style={{ ...S.sectionLabel, marginBottom: 10 }}>{t.txHistory.title}</div>
         {tonHistory.length === 0 ? (
           <div style={{ fontSize: 12, color: '#7A7875', textAlign: 'center', padding: '12px 0' }}>
-            No TON transactions
+            {t.txHistory.noTx}
           </div>
         ) : (
           tonHistory.slice(0, 5).map((tx, i) => {
@@ -644,7 +606,7 @@ export const ShopPage: React.FC = () => {
       {/* Balance bar */}
       {user && (
         <div style={{ margin: '4px 18px 10px', padding: '11px 16px', ...S.card, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ ...S.sectionLabel }}>BALANCE</span>
+          <span style={{ ...S.sectionLabel }}>{t.profile.balance}</span>
           <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 14, fontWeight: 700, color: '#F5C842' }}>
             {fmtBalance(user.balance)}
           </span>

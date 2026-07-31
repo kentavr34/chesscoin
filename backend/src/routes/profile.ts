@@ -4,6 +4,7 @@ import { logger, logError } from "@/lib/logger";
 import { validate } from "@/middleware/validate"; // R4
 import multer from "multer";
 import { prisma } from "@/lib/prisma";
+import { redis } from "@/lib/redis";
 import config from "@/config";
 import { authMiddleware, AuthRequest } from "@/middleware/auth";
 import { uploadToS3, deleteFromS3 } from "@/lib/s3";
@@ -297,6 +298,9 @@ router.post("/ton-wallet", authMiddleware, validate(WalletSchema), async (req: R
       where: { id: userId },
       data: { tonWalletAddress: walletAddress, tonConnectedAt: new Date() },
     });
+    // Сбрасываем кеш /auth/me: он живёт 30 секунд, и без сброса биржа ещё
+    // полминуты считала бы, что кошелька нет.
+    await redis.del(`user:me:${userId}`).catch(() => {});
     res.json({ success: true, walletAddress });
   } catch (err: unknown) {
     res.status(500).json({ error: (err instanceof Error ? err.message : String(err)) });
@@ -408,6 +412,11 @@ router.post("/ton-wallet/verify", authMiddleware, async (req: Request, res: Resp
 // Кошельки, привязанные до 30.07.2026, работают как раньше: закрываем дыру
 // на будущее, не отключая тех, кто уже пользовался.
 const WALLET_PAYWALL_SINCE = new Date("2026-07-30T00:00:00Z");
+
+// Курс монеты (Кенан 31.07.2026): 100 000 монет = 1 TON. Раньше был
+// миллион, и число было продублировано в трёх местах — при правке одного
+// курс разъезжался. Теперь одно объявление на весь файл.
+const COINS_PER_TON = 100_000;
 
 async function isWalletUnlocked(userId: string): Promise<boolean> {
   const user = await prisma.user.findUnique({
@@ -544,7 +553,7 @@ router.post("/ton/withdraw", authMiddleware, async (req: Request, res: Response)
   try {
     const userId = (req as AuthRequest).userId;
     const { amountCoins } = req.body;
-    if (!amountCoins || BigInt(amountCoins) < 1_000_000n) {
+    if (!amountCoins || BigInt(amountCoins) < BigInt(COINS_PER_TON)) {
       return res.status(400).json({ error: "Minimum withdrawal: 1,000,000 ᚙ" });
     }
     const user = await prisma.user.findUnique({
@@ -569,7 +578,7 @@ router.post("/ton/withdraw", authMiddleware, async (req: Request, res: Response)
       return res.status(409).json({ error: "You already have an active withdrawal request" });
     }
     // Calculate TON equivalent (placeholder rate: 1 TON = 1,000,000 ᚙ)
-    const tonAmount = Number(amountCoins) / 1_000_000;
+    const tonAmount = Number(amountCoins) / COINS_PER_TON;
     const commission = tonAmount * 0.005; // 0.5% commission
     const netTon = tonAmount - commission;
 
@@ -621,7 +630,7 @@ router.get("/ton/rate", authMiddleware, async (_req: Request, res: Response) => 
         tonUsdt = data["the-open-network"]?.usd ?? tonUsdt;
       }
     } catch {}
-    const coinsPerTon = 1_000_000;
+    const coinsPerTon = COINS_PER_TON;
     const coinsPerUsdt = Math.round(coinsPerTon / tonUsdt);
     res.json({ tonUsdt, coinsPerTon, coinsPerUsdt, feePercent: 0.5 });
   } catch (err: unknown) {
@@ -674,7 +683,7 @@ router.post("/ton/buy", authMiddleware, async (req: Request, res: Response) => {
     }
 
     // Начисляем по ФАКТИЧЕСКОЙ сумме из блокчейна, а не по запрошенной
-    const coinsPerTon = 1_000_000;
+    const coinsPerTon = COINS_PER_TON;
     const actualTon = Number(payment.valueNano) / 1e9;
     const gross = Math.round(actualTon * coinsPerTon);
     const fee = Math.round(gross * 0.005);
@@ -706,8 +715,8 @@ router.post("/ton/sell", authMiddleware, async (req: Request, res: Response) => 
   try {
     const userId = (req as AuthRequest).userId;
     const { amountCoins } = req.body;
-    if (!amountCoins || BigInt(amountCoins) < 1_000_000n) {
-      return res.status(400).json({ error: "Minimum sale: 1,000,000 ᚙ (= 1 TON)" });
+    if (!amountCoins || BigInt(amountCoins) < BigInt(COINS_PER_TON)) {
+      return res.status(400).json({ error: `Minimum sale: ${COINS_PER_TON.toLocaleString()} ᚙ (= 1 TON)` });
     }
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { balance: true, tonWalletAddress: true } });
     if (!user?.tonWalletAddress) return res.status(400).json({ error: "Connect TON wallet first" });
@@ -715,7 +724,7 @@ router.post("/ton/sell", authMiddleware, async (req: Request, res: Response) => 
       return res.status(403).json({ error: "Connect and unlock your TON wallet first (1 TON)" });
     }
     if (user.balance < BigInt(amountCoins)) return res.status(400).json({ error: "Not enough coins" });
-    const coinsPerTon = 1_000_000;
+    const coinsPerTon = COINS_PER_TON;
     const tonGross = Number(amountCoins) / coinsPerTon;
     const tonFee = tonGross * 0.005;
     const tonNet = tonGross - tonFee;

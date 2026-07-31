@@ -223,6 +223,11 @@ const formatUser = (user: any, isCommander = false, stats?: { wins: number; loss
   })(),
   createdAt: user.createdAt,
   hasSeenWarsIntro: user.hasSeenWarsIntro ?? false,
+  // TON-кошелёк. Без этих полей фронт НИКОГДА не узнавал, что кошелёк
+  // подключён: биржа вечно показывала «подключи кошелёк», стакан не грузился,
+  // а создание ордера падало с TON_WALLET_REQUIRED (Кенан 31.07.2026).
+  tonWalletAddress: user.tonWalletAddress ?? null,
+  tonConnectedAt: user.tonConnectedAt ?? null,
   activeTheme: user.activeTheme ?? 'default',
   countryMember: user.countryMember ? {
     country: user.countryMember.country,
