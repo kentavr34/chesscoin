@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { CoinIcon } from '@/components/ui/CoinIcon';
 import { shopApi } from '@/api';
 import { useUserStore } from '@/store/useUserStore';
 import type { User } from '@/types';
@@ -24,19 +25,6 @@ const IcoStar = ({ filled, size = 30 }: { filled: boolean; size?: number }) => (
   </svg>
 );
 
-const IcoCoin = ({ size = 15 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 20 20" fill="none">
-    <circle cx="10" cy="10" r="9" fill="url(#buyAttCoinGrad)" stroke="#A07830" strokeWidth=".8"/>
-    <text x="10" y="14" textAnchor="middle" fontSize="9" fontWeight="800" fontFamily="serif" fill="#120E04">₿</text>
-    <defs>
-      <radialGradient id="buyAttCoinGrad" cx="35%" cy="30%" r="70%">
-        <stop offset="0%" stopColor="#F0C85A"/>
-        <stop offset="60%" stopColor="#D4A843"/>
-        <stop offset="100%" stopColor="#8A6020"/>
-      </radialGradient>
-    </defs>
-  </svg>
-);
 
 export const AttemptsModal: React.FC<Props> = ({ user, onClose }) => {
   const t = useT();
@@ -139,7 +127,7 @@ export const AttemptsModal: React.FC<Props> = ({ user, onClose }) => {
               <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#D4A843', letterSpacing: '-.01em' }}>
                 {balance.toLocaleString()}
               </span>
-              <IcoCoin size={17} />
+              <CoinIcon size={17} />
             </div>
           </div>
         </div>
@@ -182,7 +170,7 @@ export const AttemptsModal: React.FC<Props> = ({ user, onClose }) => {
                     color: canAfford ? 'rgba(212,168,67,.65)' : '#EF4444',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
                   }}>
-                    {totalCost.toLocaleString()} <IcoCoin size={13} />
+                    {totalCost.toLocaleString()} <CoinIcon size={13} />
                   </div>
                 </div>
 

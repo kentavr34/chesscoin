@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { CoinIcon } from '@/components/ui/CoinIcon';
 import { getJarvisLevels, JARVIS_LEVELS, type JarvisLevel } from './JarvisModal';
 import { useT } from '@/i18n/useT';
 import { IcoStripedQueen, IcoKingWhite, IcoKingBlack } from '@/components/icons/ChessIcons';
@@ -217,9 +218,9 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
               borderRadius: 12, padding: '12px 14px',
             }}>
               <div style={{ fontSize: '.7rem', fontWeight: 700, color: '#6A6458', lineHeight: 1.6 }}>
-                <div>⭐ Система выдаёт <span style={{ color: '#D4A843' }}>1 попытку</span> каждые <span style={{ color: '#D4A843' }}>8 часов</span></div>
-                <div>🎮 Максимум <span style={{ color: '#D4A843' }}>{maxAttempts} бесплатных</span> попытки в день</div>
-                <div>🪙 Дополнительные попытки — за монеты</div>
+                <div>Система выдаёт <span style={{ color: '#D4A843' }}>1 попытку</span> каждые <span style={{ color: '#D4A843' }}>8 часов</span></div>
+                <div>Максимум <span style={{ color: '#D4A843' }}>{maxAttempts} бесплатных</span> попытки в день</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}><CoinIcon size={12} /> Дополнительные попытки — за монеты</div>
               </div>
             </div>
           </div>
@@ -239,7 +240,7 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
                   boxShadow: '0 4px 20px rgba(212,168,67,.18)',
                 }}
               >
-                🛒 Купить попытки — 1 000 🪙 / шт
+                Купить попытки — 1 000 / шт
               </button>
             )}
             <button
@@ -412,7 +413,7 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
                 }}>{levelName}</div>
               </div>
               <div style={{ fontSize: '.87rem', color: levelStatus === 'current' ? 'rgba(74,158,255,.6)' : 'rgba(74,158,255,.25)' }}>
-                {levelStatus === 'completed' ? 'Пройдено' : levelStatus === 'locked' ? 'Закрыто' : `Победа: +${(level?.reward || 0).toLocaleString()} 🪙`}
+                {levelStatus === 'completed' ? 'Пройдено' : levelStatus === 'locked' ? 'Закрыто' : `Победа: +${(level?.reward || 0).toLocaleString()}`}
               </div>
             </div>
 
@@ -533,7 +534,7 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
             <style>{`@keyframes jpm-shine{0%{left:-100%}100%{left:200%}}`}</style>
             {levelStatus === 'completed' ? '✓ ПРОЙДЕНО'
               : levelStatus === 'locked' ? '🔒 ЗАКРЫТ'
-              : userAttempts <= 0 ? '⭐ НЕТ ПОПЫТОК'
+              : userAttempts <= 0 ? 'НЕТ ПОПЫТОК'
               : 'ИГРАТЬ'}
           </button>
         </div>

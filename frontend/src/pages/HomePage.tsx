@@ -64,20 +64,6 @@ const IcoWars = ({ size = 28 }: { size?: number }) => (
   </svg>
 );
 
-const IcoCoin = ({ size = 16 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 20 20" fill="none">
-    <circle cx="10" cy="10" r="9" fill="url(#coinGrad)" stroke="#A07830" strokeWidth=".8"/>
-    <circle cx="10" cy="10" r="6.5" stroke="rgba(255,255,255,.15)" strokeWidth=".5"/>
-    <text x="10" y="14" textAnchor="middle" fontSize="9" fontWeight="800" fontFamily="serif" fill="#120E04">₿</text>
-    <defs>
-      <radialGradient id="coinGrad" cx="35%" cy="30%" r="70%">
-        <stop offset="0%" stopColor="#F0C85A"/>
-        <stop offset="60%" stopColor="#D4A843"/>
-        <stop offset="100%" stopColor="#8A6020"/>
-      </radialGradient>
-    </defs>
-  </svg>
-);
 
 const IcoAvatar = ({ src, initial }: { src?: string; initial?: string }) => (
   <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -424,7 +410,7 @@ export const HomePage: React.FC = () => {
               <div style={{ fontSize: '.43rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: '.32rem' }}>Баланс</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '.18rem' }}>
                 <span style={{ fontSize: '1.08rem', fontWeight: 900, color: '#D4A843', letterSpacing: '-.01em', lineHeight: 1, textShadow: '0 0 12px rgba(212,168,67,.4)' }}>{formattedBalance}</span>
-                <IcoCoin size={16} />
+                <CoinIcon size={16} />
                 <div className="hp-hbal-plus" style={{ width: 20, height: 20, borderRadius: 6, background: 'rgba(212,168,67,.18)', border: '.5px solid rgba(212,168,67,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.8rem', fontWeight: 900, color: '#F0C85A', cursor: 'pointer', marginLeft: '.22rem', boxShadow: '0 0 8px rgba(212,168,67,.25)' }} onClick={() => navigate('/shop')}>+</div>
               </div>
             </div>
