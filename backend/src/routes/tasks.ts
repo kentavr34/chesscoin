@@ -5,6 +5,7 @@ import { prisma } from "../lib/prisma";
 import { authMiddleware } from "../middleware/auth";
 import { validate } from "@/middleware/validate";
 import { updateBalance } from "@/services/economy";
+import { payFromTreasury } from "@/services/treasury";
 import { TransactionType } from "@prisma/client";
 
 const CompleteTaskSchema = z.object({ taskId: z.string() });
@@ -41,7 +42,7 @@ tasksRouter.get("/", authMiddleware, async (req: Request, res: Response) => {
         if (actual >= required) {
           try {
             await prisma.completedTask.create({ data: { userId, taskId: task.id } });
-            await updateBalance(userId, task.winningAmount, TransactionType.TASK_REWARD, { taskId: task.id, auto: true }, { isEmission: true });
+            await payFromTreasury(userId, task.winningAmount, TransactionType.TASK_REWARD, { taskId: task.id, auto: true });
             completedSet.set(task.id, new Date());
             logger.info(`[tasks] Auto-completed REFERRAL task ${task.id} for user ${userId}`);
           } catch {}
@@ -170,7 +171,7 @@ tasksRouter.post("/complete", authMiddleware, validate(CompleteTaskSchema), asyn
 
     // Начислить награду через updateBalance (создаёт транзакцию автоматически)
     await prisma.completedTask.create({ data: { userId, taskId } });
-    await updateBalance(userId, BigInt(task.winningAmount.toString()), TransactionType.TASK_REWARD, { taskId, taskTitle: task.title });
+    await payFromTreasury(userId, BigInt(task.winningAmount.toString()), TransactionType.TASK_REWARD, { taskId, taskTitle: task.title });
 
     res.json({
       success: true,
@@ -310,7 +311,7 @@ tasksRouter.post("/lessons/:level/complete", authMiddleware, async (req: Request
           "updatedAt"   = ${now}
     `;
 
-    await updateBalance(userId, reward, TransactionType.TASK_REWARD, { lessonLevel: level }, { isEmission: true });
+    await payFromTreasury(userId, reward, TransactionType.TASK_REWARD, { lessonLevel: level });
 
     res.json({
       success: true,
@@ -363,7 +364,7 @@ tasksRouter.post("/puzzles/:id/complete", authMiddleware, async (req: Request, r
     }
 
     await prisma.completedPuzzle.create({ data: { userId, puzzleId, reward: puzzle.reward } });
-    await updateBalance(userId, puzzle.reward, TransactionType.TASK_REWARD, { puzzleId, rating: puzzle.rating }, { isEmission: true });
+    await payFromTreasury(userId, puzzle.reward, TransactionType.TASK_REWARD, { puzzleId, rating: puzzle.rating });
 
     res.json({
       success: true,

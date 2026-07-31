@@ -5,6 +5,7 @@ import { prisma } from "../lib/prisma";
 import { redis } from "@/lib/redis";
 import { authMiddleware } from "../middleware/auth";
 import { updateBalance } from "@/services/economy";
+import { collectToTreasury } from "@/services/treasury";
 import { TransactionType } from "@prisma/client";
 
 export const shopRouter = Router();
@@ -68,7 +69,9 @@ shopRouter.post("/purchase", authMiddleware, async (req: Request, res: Response)
       return res.status(400).json({ error: "Not enough ᚙ" });
 
     // Снять монеты через updateBalance (создаёт транзакцию автоматически)
-    await updateBalance(userId, -BigInt(item.priceCoins.toString()), TransactionType.ITEM_PURCHASE, { itemId: item.id, itemName: item.name });
+    // Кенан 31.07.2026: «продажа аватаров и прочих украшательств в магазине»
+    // — деньги игрока уходят НА счёт платформы, а не исчезают с баланса.
+    await collectToTreasury(userId, BigInt(item.priceCoins.toString()), TransactionType.ITEM_PURCHASE, { itemId: item.id, itemName: item.name });
 
     // Добавить в инвентарь
     await prisma.userItem.create({

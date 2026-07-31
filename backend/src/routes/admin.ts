@@ -24,6 +24,7 @@ import { ItemType, ItemCategory, ItemRarity, TransactionType } from "@prisma/cli
 import { redis } from "@/lib/redis";
 import { safeStringify } from "@/lib/json"; // Q6: safe BigInt serialization
 import { updateBalance } from "@/services/economy";
+import { payFromTreasury } from "@/services/treasury";
 import { authMiddleware } from "@/middleware/auth";
 import { uploadToS3, deleteFromS3 } from "@/lib/s3";
 
@@ -353,7 +354,7 @@ adminRouter.post("/users/:id/balance", authMiddleware, adminOnly, validate(Balan
   try {
     const { amount, reason } = req.body; // R4: validated by BalanceSchema
     if (!amount) return res.status(400).json({ error: "amount required" });
-    await updateBalance(req.params.id, BigInt(amount), TransactionType.REFERRAL_BONUS, { reason });
+    await payFromTreasury(req.params.id, BigInt(amount), TransactionType.REFERRAL_BONUS, { reason });
     const user = await prisma.user.findUnique({ where: { id: req.params.id }, select: { balance: true } });
     res.json({ ok: true, newBalance: user?.balance.toString() });
   } catch (err: unknown) { res.status(500).json({ error: (err instanceof Error ? err.message : String(err)) }); }

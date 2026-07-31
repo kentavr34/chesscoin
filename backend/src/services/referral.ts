@@ -26,6 +26,7 @@ import { TransactionType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import config from "@/config";
 import { updateBalance, canEmit } from "@/services/economy";
+import { payFromTreasury } from "@/services/treasury";
 import { getMilitaryRank, getRankBonuses } from "@/utils/militaryRank";
 
 // ─────────────────────────────────────────
@@ -71,12 +72,11 @@ export const activateReferral = async (userId: string): Promise<void> => {
   // Rank-based activation bonus — всегда (Фаза 2, Пункт 3)
   const bonuses = getRankBonuses(newCount - 1); // rank BEFORE this new member
   if (bonuses.activationBonus > 0n) {
-    await updateBalance(
+    await payFromTreasury(
       user.referrerId,
       bonuses.activationBonus,
       TransactionType.REFERRAL_BONUS,
-      { referralId: userId, referralName: user.firstName, rankBonus: bonuses.activationBonus.toString() },
-      { isEmission: true }
+      { referralId: userId, referralName: user.firstName, rankBonus: bonuses.activationBonus.toString() }
     );
   }
 
@@ -136,12 +136,11 @@ export const applyReferralIncome = async (
   if (l1Percent > 0) {
     const l1Amount = (winAmount * BigInt(l1Percent)) / 100n;
     if (l1Amount > 0n) {
-      await updateBalance(
+      await payFromTreasury(
         l1,
         l1Amount,
         TransactionType.REFERRAL_INCOME,
-        { sourceUserId: winnerId, winAmount: winAmount.toString(), level: 1, percent: l1Percent },
-        { isEmission: false }
+        { sourceUserId: winnerId, winAmount: winAmount.toString(), level: 1, percent: l1Percent }
       );
       await prisma.user.update({
         where: { id: l1 },
@@ -154,12 +153,11 @@ export const applyReferralIncome = async (
   if (l2) {
     const l2Amount = (winAmount * BigInt(config.economy.subReferrerIncomePercent)) / 100n;
     if (l2Amount > 0n) {
-      await updateBalance(
+      await payFromTreasury(
         l2,
         l2Amount,
         TransactionType.SUB_REFERRAL_INCOME,
-        { sourceUserId: winnerId, winAmount: winAmount.toString(), level: 2 },
-        { isEmission: false }
+        { sourceUserId: winnerId, winAmount: winAmount.toString(), level: 2 }
       );
       await prisma.user.update({
         where: { id: l2 },

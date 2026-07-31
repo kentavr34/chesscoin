@@ -17,6 +17,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { prisma } from '@/lib/prisma';
+import { payFromTreasury } from "@/services/treasury";
 import { redis } from '@/lib/redis';
 import { updateBalance } from '@/services/economy';
 import { TransactionType, TaskType } from '@prisma/client';
@@ -32,7 +33,7 @@ async function completeTask(userId: string, taskId: string, reward: bigint): Pro
     if (exists) return false; // уже выполнено
 
     await prisma.completedTask.create({ data: { userId, taskId } });
-    await updateBalance(userId, reward, TransactionType.TASK_REWARD, { taskId }, { isEmission: true });
+    await payFromTreasury(userId, reward, TransactionType.TASK_REWARD, { taskId });
 
     logger.info(`[gameTasks] User ${userId} completed task ${taskId} (+${reward} ᚙ)`);
     return true;
@@ -202,9 +203,9 @@ export async function checkDailyLoginTask(userId: string): Promise<void> {
           },
         });
 
-        await updateBalance(userId, task.winningAmount, TransactionType.TASK_REWARD, {
+        await payFromTreasury(userId, task.winningAmount, TransactionType.TASK_REWARD, {
           taskId: task.id, date: todayStr, type: 'daily_login',
-        }, { isEmission: true });
+        });
 
         // Помечаем в Redis на 24 часа
         await redis.setex(dailyKey, 86400, '1');

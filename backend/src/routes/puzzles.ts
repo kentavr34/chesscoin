@@ -3,6 +3,7 @@ import { logError } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { authMiddleware } from "@/middleware/auth";
 import { updateBalance } from "@/services/economy";
+import { payFromTreasury } from "@/services/treasury";
 import { TransactionType } from "@prisma/client";
 import { checkPuzzleAchievements } from "@/services/achievements";
 
@@ -155,10 +156,10 @@ puzzlesRouter.post("/:id/complete", authMiddleware, async (req: Request, res: Re
       data: { userId, puzzleId: id, reward: finalReward },
     });
 
-    await updateBalance(userId, finalReward, TransactionType.TASK_REWARD, {
+    await payFromTreasury(userId, finalReward, TransactionType.TASK_REWARD, {
       puzzleId: id,
       rating: puzzle.rating,
-    }, { isEmission: true });
+    });
 
     // Проверяем достижение Puzzler (50 головоломок)
     setImmediate(() => checkPuzzleAchievements(userId).catch((err) => logError("[Puzzles]", err)));

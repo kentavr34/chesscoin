@@ -9,6 +9,7 @@ import { checkDailyLoginTask } from "@/services/gameTasks"; // BUG #1 fix
 import { redis } from "@/lib/redis";
 import { getMilitaryRank, getRankBonuses } from "@/utils/militaryRank";
 import { updateBalance } from "@/services/economy";
+import { payFromTreasury } from "@/services/treasury";
 import { TransactionType } from "@prisma/client";
 import { checkGameAchievements } from "@/services/achievements";
 
@@ -89,9 +90,9 @@ router.get("/me", authMiddleware, async (req: Request, res: Response) => {
       };
       if (STREAK_BONUSES[newStreak]) {
         try {
-          await updateBalance(userId, STREAK_BONUSES[newStreak], TransactionType.TASK_REWARD, {
+          await payFromTreasury(userId, STREAK_BONUSES[newStreak], TransactionType.TASK_REWARD, {
             streakBonus: newStreak,
-          }, { isEmission: true });
+          });
         } catch (e) {
           logger.error('[Auth/Streak] bonus error:', e);
         }

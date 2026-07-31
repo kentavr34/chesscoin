@@ -5,6 +5,7 @@
 import { logger, logError } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { updateBalance } from "@/services/economy";
+import { payFromTreasury } from "@/services/treasury";
 import { TransactionType } from "@prisma/client";
 
 export interface Achievement {
@@ -62,9 +63,9 @@ export async function grantAchievement(userId: string, achievementId: string): P
 
     // Начисляем награду
     if (ach.reward > 0n) {
-      await updateBalance(userId, ach.reward, TransactionType.TASK_REWARD, {
+      await payFromTreasury(userId, ach.reward, TransactionType.TASK_REWARD, {
         achievement: achievementId,
-      }, { isEmission: true });
+      });
     }
 
     logger.info(`[Achievement] ${userId} unlocked "${ach.nameRu}" (+${ach.reward} ᚙ)`);
@@ -156,8 +157,8 @@ export async function checkTournamentWinnerAchievement(userId: string, tournamen
     await prisma.user.update({ where: { id: userId }, data: { achievements: cur as any } });
     const ach = ACHIEVEMENTS.find(a => a.id === key);
     if (ach && ach.reward > 0n) {
-      await updateBalance(userId, ach.reward, TransactionType.TASK_REWARD,
-        { achievement: key, tournamentId }, { isEmission: true });
+      await payFromTreasury(userId, ach.reward, TransactionType.TASK_REWARD,
+        { achievement: key, tournamentId });
     }
     logger.info(`[Achievement] ${userId} tournament-winner ${key} (tournament ${tournamentId})`);
   } catch (e) { logError('[Achievement/tournament]', e); }
@@ -191,8 +192,8 @@ export async function awardWarVictorAchievements(winnerCountryId: string, warId:
         cur.push({ id: 'war_ace', date: new Date().toISOString(), meta: { warId, wins } });
         const ace = ACHIEVEMENTS.find(a => a.id === 'war_ace');
         if (ace && ace.reward > 0n) {
-          await updateBalance(m.userId, ace.reward, TransactionType.TASK_REWARD,
-            { achievement: 'war_ace', warId }, { isEmission: true });
+          await payFromTreasury(m.userId, ace.reward, TransactionType.TASK_REWARD,
+            { achievement: 'war_ace', warId });
         }
       }
       await prisma.user.update({ where: { id: m.userId }, data: { achievements: cur as any } });

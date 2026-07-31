@@ -4,6 +4,7 @@ import type { SessionWithSides } from "@/types/db"; // R1 // Q2
 import { prisma } from "@/lib/prisma";
 import config from "@/config";
 import { updateBalance, canEmit, getCurrentPhase } from "@/services/economy";
+import { payFromTreasury, getTreasuryId } from "@/services/treasury";
 
 // Единый порядок блокировки игроков во всех транзакциях завершения партии.
 // Без него параллельные finish'ы берут строки users в разном порядке и получают
@@ -353,12 +354,14 @@ const processBotPayouts = async (
       const botReward = config.economy.botRewards[session.botLevel] ?? 1000n;
       // Монеты за фигуры уже начислены во время игры
       // Здесь начисляем только финальный бонус за победу
-      await updateBalance(
+      // Кенан 31.07.2026: «Джарвис не должен иметь своего счёта — он играет
+      // от нашего счёта». Награда за победу над ботом уходит со счёта платформы.
+      await payFromTreasury(
         humanSide.playerId,
         botReward,
         TransactionType.BOT_WIN,
         { sessionId: session.id, botLevel: session.botLevel },
-        { isEmission: true, tx }
+        { tx }
       );
 
       const db = tx ?? prisma;
@@ -410,12 +413,12 @@ const processBotPayouts = async (
     // Фаза 2+: победитель получает награду из резерва, проигравший ничего не теряет
     if (session.botLevel && humanWon) {
       const botReward = config.economy.botRewards[session.botLevel] ?? 1000n;
-      await updateBalance(
+      await payFromTreasury(
         humanSide.playerId,
         botReward,
         TransactionType.BOT_WIN,
         { sessionId: session.id },
-        { isEmission: false, tx }
+        { tx }
       );
     }
     // При проигрыше боту — только теряется попытка, монеты не снимаются
@@ -490,7 +493,17 @@ const processBattlePayouts = async (
     data: { winningAmount: winnerPayout },
   });
 
-  // Комиссия идёт на счёт платформы (platform_reserve увеличивается)
+  // Комиссия стола 10% — на СЧЁТ платформы отдельной проводкой (Кенан
+  // 31.07.2026: «со счёта игроков нам — комиссия стола при всех играх»).
+  // Раньше она увеличивала только счётчик platformReserve, а сами монеты
+  // просто исчезали из обращения — проследить их было нельзя.
+  if (commission > 0n) {
+    const treasuryId = await getTreasuryId();
+    if (treasuryId) {
+      await updateBalance(treasuryId, commission, TransactionType.BATTLE_COMMISSION,
+        { sessionId: session.id, totalPot: totalPot.toString() }, { tx });
+    }
+  }
   await db.platformConfig.update({
     where: { id: "singleton" },
     data: { platformReserve: { increment: commission } },

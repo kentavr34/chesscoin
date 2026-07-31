@@ -1,4 +1,5 @@
 import cron from "node-cron";
+import { collectToTreasury } from "@/services/treasury";
 import { logger, logError } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import config from "@/config";
@@ -45,12 +46,14 @@ export const purchaseAttempts = async (
   }
 
   await prisma.$transaction(async (tx) => {
+    // Плата за попытки уходит НА счёт платформы. Раньше баланс уменьшался
+    // напрямую, минуя общий путь: монеты просто исчезали из обращения,
+    // и в капитале их было не найти (Кенан 31.07.2026).
+    await collectToTreasury(userId, totalCost, TransactionType.ATTEMPT_PURCHASE,
+      { count: actualCount }, { tx });
     await tx.user.update({
       where: { id: userId },
-      data: { balance: { decrement: totalCost }, totalSpent: { increment: totalCost }, attempts: { increment: actualCount } },
-    });
-    await tx.transaction.create({
-      data: { userId, type: TransactionType.ATTEMPT_PURCHASE, amount: -totalCost, payload: { count: actualCount } },
+      data: { attempts: { increment: actualCount } },
     });
   });
 };
