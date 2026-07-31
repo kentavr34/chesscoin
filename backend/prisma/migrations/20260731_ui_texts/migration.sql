@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS "ui_texts" (
     "az"        TEXT,
     "tr"        TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    "updatedAt" TIMESTAMP(3) NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS "ui_texts_screen_idx" ON "ui_texts"("screen");

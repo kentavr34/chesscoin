@@ -58,6 +58,37 @@ else:
     for p in chg[:10]:
         print('     ~ %s' % p)
 
+# ── чужое внутри рабочей копии ──────────────────────────────────────────
+# Реестр по git этого не видел: `.claude/` под .gitignore, а внутри лежали
+# шесть брошенных worktree — полные копии проекта на 1.3 ГБ. Такие копии
+# опасны не местом, а тем, что поиск по проекту цепляет из них старый код
+# (найдено 31.07.2026).
+print('\n▶ посторонние копии внутри рабочей копии')
+LOCAL = ROOT.rsplit(os.sep, 1)[0]
+strays = []
+wt = os.path.join(LOCAL, '.claude', 'worktrees')
+if os.path.isdir(wt):
+    for name in sorted(os.listdir(wt)):
+        path = os.path.join(wt, name)
+        if not os.path.isdir(path):
+            continue
+        size = 0
+        for base, dirs, files in os.walk(path):
+            for fn in files:
+                try:
+                    size += os.path.getsize(os.path.join(base, fn))
+                except OSError:
+                    pass
+        strays.append((os.path.join('.claude', 'worktrees', name), size))
+if strays:
+    total = sum(s for _, s in strays)
+    print('   найдено копий: %d, суммарно %.1f ГБ' % (len(strays), total / 1024 ** 3))
+    for path, size in strays:
+        print('     · %-46s %6.1f МБ' % (path, size / 1024 ** 2))
+    print('   Это брошенные worktree прошлых сессий. Удалять — только по слову Кенана.')
+else:
+    print('   нет')
+
 # ── расхождение прод ↔ репо ─────────────────────────────────────────────
 print('\n▶ расхождение прод ↔ рабочая копия')
 prod_top = set(os.path.basename(p) for p in cur if p.count('/') == 3)
