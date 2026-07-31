@@ -13,26 +13,33 @@ puzzlesRouter.get("/daily", authMiddleware, async (req: Request, res: Response) 
   const userId = req.user!.id;
 
   try {
-    // Ищем активную задачу дня
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+
+    // Задача дня действительна только сегодня. Раньше здесь искалась любая
+    // строка с isDaily=true без проверки даты, а ротация брала первую по
+    // алфавиту id — то есть одну и ту же вечно. «Задача дня» не менялась
+    // никогда (Кенан 31.07.2026).
     let daily = await prisma.puzzle.findFirst({
-      where: { isDaily: true },
+      where: { isDaily: true, dailyDate: today },
       include: {
         completions: { where: { userId }, select: { id: true, reward: true } },
       },
     });
 
-    // Если нет — ротируем: берём случайную medium
     if (!daily) {
-      const puzzles = await prisma.puzzle.findMany({
+      // Выбор детерминирован по дате: все игроки в один день решают одну
+      // задачу, а назавтра она сменится. Смещение — номер дня от эпохи.
+      const pool = await prisma.puzzle.findMany({
         where: { rating: { gte: 1200, lte: 1600 } },
-        take: 1,
+        select: { id: true },
         orderBy: { id: 'asc' },
       });
-      if (puzzles[0]) {
-        const today = new Date(); today.setHours(0, 0, 0, 0);
+      if (pool.length > 0) {
+        const dayNumber = Math.floor(today.getTime() / 86_400_000);
+        const chosen = pool[dayNumber % pool.length];
         await prisma.puzzle.updateMany({ where: { isDaily: true }, data: { isDaily: false } });
         daily = await prisma.puzzle.update({
-          where: { id: puzzles[0].id },
+          where: { id: chosen.id },
           data: { isDaily: true, dailyDate: today },
           include: { completions: { where: { userId }, select: { id: true, reward: true } } },
         });
@@ -179,27 +186,21 @@ function fmtPuzzle(p: any, completed: boolean) {
 
 /**
  * Сравниваем ходы игрока с правильным решением.
- * Lichess хранит ходы в паре: первый ход — ход противника (надо применить),
- * потом чередуются ходы игрока и противника.
+ * В наших задачах FEN — это позиция, где ходит ИГРОК, а moves[0] — его
+ * собственный ход. Дальше чередование: 0 игрок, 1 соперник, 2 игрок…
+ *
+ * Раньше здесь стояла лichess-конвенция (moves[0] — ход соперника) с костылём
+ * «кроме задач из одного хода». С данными это не сходилось: во всех задачах
+ * длиннее одного хода валидация ждала не те ходы, а фронт вдобавок проигрывал
+ * ход игрока за соперника — задачи были невыполнимы (Кенан 31.07.2026).
  *
  * Формат UCI: e2e4, e7e8q (промоция)
- * playerMoves — только ходы игрока (нечётные индексы из puzzle.moves)
+ * playerMoves — только ходы игрока (чётные индексы из puzzle.moves)
  */
 function validateMoves(playerMoves: string[], solutionMoves: string[]): boolean {
   if (solutionMoves.length === 0) return false;
 
-  // Lichess формат: первый ход (index 0) — ход противника (применяется автоматически),
-  // затем чередуются ходы игрока (нечётные индексы: 1, 3, 5...) и противника.
-  // Исключение: задача с одним ходом (solutionMoves.length === 1) —
-  //   это ход игрока без предварительного хода противника.
-  let expectedPlayerMoves: string[];
-  if (solutionMoves.length === 1) {
-    // Одноходовая задача — единственный ход делает игрок
-    expectedPlayerMoves = [solutionMoves[0]];
-  } else {
-    // Стандартный формат: 0=противник, 1=игрок, 2=противник, 3=игрок...
-    expectedPlayerMoves = solutionMoves.filter((_, i) => i % 2 === 1);
-  }
+  const expectedPlayerMoves = solutionMoves.filter((_, i) => i % 2 === 0);
 
   if (playerMoves.length !== expectedPlayerMoves.length) return false;
 

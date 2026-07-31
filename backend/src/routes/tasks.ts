@@ -116,7 +116,36 @@ tasksRouter.post("/complete", authMiddleware, validate(CompleteTaskSchema), asyn
     });
     if (existing) return res.status(409).json({ error: "Task already completed" });
 
-    // Для FOLLOW_LINK / SUBSCRIBE_TELEGRAM — доверяем клиенту (v5)
+    // Подписку на канал проверяем по факту у Telegram, а не на слово клиента:
+    // раньше любой запрос к этому эндпоинту выдавал награду без подписки
+    // (Кенан 31.07.2026 — «проверь все задания»).
+    if (task.taskType === "SUBSCRIBE_TELEGRAM") {
+      const channel = process.env.TELEGRAM_CHANNEL_ID ?? "";
+      const botToken = process.env.BOT_TOKEN ?? "";
+      const me = await prisma.user.findUnique({ where: { id: userId }, select: { telegramId: true } });
+      if (!channel || !botToken || !me?.telegramId) {
+        return res.status(503).json({ error: "SUBSCRIPTION_CHECK_UNAVAILABLE", message: "Проверка подписки временно недоступна" });
+      }
+      try {
+        const r = await fetch(
+          `https://api.telegram.org/bot${botToken}/getChatMember?chat_id=${encodeURIComponent(channel)}&user_id=${encodeURIComponent(me.telegramId)}`,
+          { signal: AbortSignal.timeout(10_000) },
+        );
+        const data = await r.json() as { ok?: boolean; result?: { status?: string } };
+        const status = data?.result?.status ?? "";
+        const subscribed = ["creator", "administrator", "member"].includes(status);
+        if (!data?.ok || !subscribed) {
+          return res.status(400).json({ error: "NOT_SUBSCRIBED", message: "Подпишись на канал и вернись за наградой" });
+        }
+      } catch (e) {
+        logError("[tasks] проверка подписки", e);
+        return res.status(503).json({ error: "SUBSCRIPTION_CHECK_FAILED", message: "Не удалось проверить подписку, попробуй ещё раз" });
+      }
+    }
+
+    // Для FOLLOW_LINK — проверить нечем: ни Twitter, ни YouTube не дают
+    // подтвердить подписку. Такие задания живут на доверии, поэтому держать
+    // их активными имеет смысл только с настоящими ссылками.
     // Для REFERRAL — проверяем количество рефералов
     if (task.taskType === "REFERRAL") {
       const meta = task.metadata as Record<string, unknown>;

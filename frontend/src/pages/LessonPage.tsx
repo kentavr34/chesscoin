@@ -115,17 +115,20 @@ export const LessonPage: React.FC = () => {
     setPhase('intro');
   };
 
-  // Начинаем — противник делает первый ход автоматически
+  // Начинаем — ходит СРАЗУ игрок.
+  //
+  // Раньше здесь первым делом проигрывался moves[0] «за противника» — по
+  // лichess-конвенции, где задача начинается с ошибки соперника. Наши задачи
+  // построены иначе: FEN — это уже позиция, где ходит игрок, и moves[0] —
+  // его собственный ход. Из-за подмены доска показывала сторону игрока,
+  // тут же делала за него его же ход и передавала очередь сопернику: игрок
+  // видел «твой ход», а ходить мог только чужими фигурами, и задача
+  // становилась невыполнимой (Кенан 31.07.2026, задача 820 «мат в 1»).
   const startPuzzle = useCallback(() => {
     if (!puzzle) return;
     setPhase('playing');
-
-    // Первый ход в solution — ход противника
-    if (puzzle.moves.length > 0) {
-      setTimeout(() => {
-        applyOpponentMove(puzzle, new Chess(puzzle.fen), 0);
-      }, 600);
-    }
+    setSolutionIdx(0);
+    setIsPlayerTurn(true);
   }, [puzzle]);
 
   const applyOpponentMove = (p: PuzzleItem, c: Chess, idx: number) => {
@@ -255,10 +258,11 @@ export const LessonPage: React.FC = () => {
 
   const submitSolution = async (moves: string[]) => {
     if (!puzzle) return;
-    const playerOnlyMoves = puzzle.moves
-      .map((_, i) => i)
-      .filter(i => i % 2 === 1)
-      .map(i => moves[Math.floor(i / 2)]);
+    // Ходы игрока — ЧЁТНЫЕ индексы решения (0, 2, 4…): первым ходит он,
+    // соперник отвечает. `moves` уже содержит только сыгранное игроком,
+    // поэтому отправляем как есть — прежний пересчёт индексов сдвигал
+    // список на один ход и валидация на бэкенде не сходилась.
+    const playerOnlyMoves = moves;
 
     try {
       const r = await puzzlesApi.complete(puzzle.id, playerOnlyMoves, isTestMode);
