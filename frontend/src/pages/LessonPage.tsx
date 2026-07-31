@@ -4,7 +4,7 @@
  * Также используется для Задачи дня: /lesson/daily
  */
 import React, { useEffect, useState, useCallback } from 'react';
-import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
 import { puzzlesApi, tasksApi, type PuzzleItem } from '@/api';
@@ -34,6 +34,7 @@ export const LessonPage: React.FC = () => {
   const { puzzleId } = useParams<{ puzzleId: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { setUser } = useUserStore();
 
   // Режим: "learn" (подсказки) или "test" (без подсказок, награда ×1.5)
@@ -64,10 +65,16 @@ export const LessonPage: React.FC = () => {
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
   const [showFanfare, setShowFanfare] = useState(false);
 
-  // Загрузка задачи
+  // Загрузка задачи.
+  //
+  // Зависимость от location.key, а не только от puzzleId: кнопка «Следующая»
+  // ведёт на тот же адрес /lesson/random, puzzleId не меняется — и эффект
+  // не перезапускался. Первый переход срабатывал, дальше кнопка была мёртвой,
+  // приходилось выходить в меню (Кенан 01.08.2026). key меняется при каждом
+  // переходе, даже если адрес тот же.
   useEffect(() => {
     loadPuzzle();
-  }, [puzzleId]);
+  }, [puzzleId, location.key]);
 
   const loadPuzzle = async () => {
     setPhase('loading');
@@ -419,11 +426,20 @@ export const LessonPage: React.FC = () => {
                 <button
                   onClick={() => {
                     const diff = getDiff(puzzle.rating);
-                    navigate(`/lesson/random?difficulty=${diff}`);
+                    // Из урока идём к следующему уроку по порядку, из обычной
+                    // задачи — к следующей случайной той же сложности.
+                    const lessonParam = searchParams.get('lesson');
+                    const lvl = lessonParam ? Number(lessonParam) : NaN;
+                    if (Number.isFinite(lvl) && lvl > 0) {
+                      navigate(`/lesson/random?difficulty=${diff}&lesson=${lvl + 1}`);
+                    } else {
+                      const mode = searchParams.get('mode');
+                      navigate(`/lesson/random?difficulty=${diff}${mode ? `&mode=${mode}` : ''}`);
+                    }
                   }}
                   style={goldBtn}
                 >
-                  Следующая ▶
+                  {t.lesson.next}
                 </button>
               </div>
             </div>
