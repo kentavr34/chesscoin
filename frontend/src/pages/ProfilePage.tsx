@@ -86,7 +86,7 @@ export const ProfilePage: React.FC = () => {
   const rawViewedId: string | undefined = params.userId ?? (location.state as Record<string,unknown>)?.userId as string | undefined;
   const viewedUserId: string | undefined = (rawViewedId && rawViewedId !== 'undefined' && rawViewedId !== 'null') ? rawViewedId : undefined;
   const isOwnProfile = !viewedUserId || viewedUserId === user?.id;
-  const profileInfo = useInfoPopup('profile', [{ icon: '', title: 'Your Profile', desc: 'Your stats, badges and game history. ELO shows your level — the higher, the stronger opponents.' }, { icon: '', title: 'Military Rank', desc: 'Rank grows with referrals. Higher rank — bigger percentage from friends\' wins.' }, { icon: '', title: 'Leagues & Rewards', desc: 'Earn coins to climb leagues: Bronze → Silver → Gold → Diamond → Champion.' }]);
+  const profileInfo = useInfoPopup('profile', [...t.profile.infoSlides]);
 
   const [tab, setTab] = useState<Tab>('info');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -214,7 +214,7 @@ export const ProfilePage: React.FC = () => {
 
   return (
     <>
-    {isOwnProfile && profileInfo.show && <InfoPopup infoKey="profile" slides={[{ icon: '', title: 'Your Profile', desc: 'Your stats, badges and game history. ELO shows your level — the higher, the stronger opponents.' }, { icon: '', title: 'Military Rank', desc: 'Rank grows with referrals. Higher rank — bigger percentage from friends\' wins.' }, { icon: '', title: 'Leagues & Rewards', desc: 'Earn coins to climb leagues: Bronze → Silver → Gold → Diamond → Champion.' }]} onClose={profileInfo.close} />}
+    {isOwnProfile && profileInfo.show && <InfoPopup infoKey="profile" slides={[...t.profile.infoSlides]} onClose={profileInfo.close} />}
     <PageLayout backTo="/" rightAction={rightAction} centered>
       {/* Toast */}
       {toast && (

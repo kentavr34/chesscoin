@@ -4,6 +4,7 @@ import { profileApi } from '@/api';
 import { fmtBalance, fmtDate } from '@/utils/format';
 import type { Transaction } from '@/types';
 import { useT } from '@/i18n/useT';
+import { useSettingsStore } from '@/store/useSettingsStore';
 
 function formatTxType(type: string, t: any): string {
   const types = t.txHistory.types as Record<string, string>;
@@ -29,12 +30,17 @@ function getTxDirection(tx: Transaction): TxDirection {
 }
 
 // ── Группировка транзакций по дате ────────────────────────────────────────────
-function groupByDate(transactions: Transaction[], t: any): Array<{ label: string; items: Transaction[] }> {
+function groupByDate(transactions: Transaction[], t: any, lang: string): Array<{ label: string; items: Transaction[] }> {
   const today = new Date();
   const yesterday = new Date(today);
   yesterday.setDate(today.getDate() - 1);
 
-  const fmt = (d: Date) => d.toLocaleDateString(t.settings?.language === 'ru' ? 'ru-RU' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  // Заголовки дат шли по en-US всегда: проверка смотрела на t.settings, а
+  // настройки лежат в t.profile.settings — условие никогда не выполнялось,
+  // и в русском интерфейсе висело «JULY 30, 2026» (Кенан 01.08.2026).
+  const LOCALES: Record<string, string> = { ru: 'ru-RU', en: 'en-US', az: 'az-AZ', tr: 'tr-TR' };
+  const fmt = (d: Date) => d.toLocaleDateString(LOCALES[lang] ?? 'ru-RU',
+    { year: 'numeric', month: 'long', day: 'numeric' });
   const todayStr = fmt(today);
   const yesterdayStr = fmt(yesterday);
 
@@ -76,6 +82,7 @@ const TxIcon: React.FC<{ direction: TxDirection }> = ({ direction }) => {
 // ── Одна транзакция ───────────────────────────────────────────────────────────
 const TxRow: React.FC<{ tx: Transaction }> = ({ tx }) => {
   const t = useT();
+  const lang = useSettingsStore((s) => s.lang);
   const direction = getTxDirection(tx);
   const isIncome  = direction === 'income';
   const isExpense = direction === 'expense';
@@ -198,6 +205,7 @@ const SummaryHeader: React.FC<{ transactions: Transaction[] }> = ({ transactions
 // ── Главная страница ───────────────────────────────────────────────────────────
 export const TransactionHistoryPage: React.FC = () => {
   const t = useT();
+  const lang = useSettingsStore((s) => s.lang);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading]           = useState(true);
 
@@ -210,7 +218,7 @@ export const TransactionHistoryPage: React.FC = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  const groups = useMemo(() => groupByDate(transactions, t), [transactions, t]);
+  const groups = useMemo(() => groupByDate(transactions, t, lang), [transactions, t, lang]);
 
   return (
     <PageLayout title={t.txHistory.title} backTo="/profile" centered>
