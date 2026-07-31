@@ -802,9 +802,24 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
               </div>
             );
           })()}
+          {/* Общий объём стакана: сколько монет выставлено и на сколько TON. */}
+          {orders.filter(o => o.status === 'OPEN' && !o.isOwn).length > 0 && (() => {
+            const open = orders.filter(o => o.status === 'OPEN' && !o.isOwn);
+            const coins = open.reduce((sum, o) => sum + BigInt(o.amountCoins), 0n);
+            const ton = open.reduce((sum, o) => sum + o.totalTon, 0);
+            return (
+              <div style={{ display: 'flex', justifyContent: 'space-between', margin: '0 0 8px', padding: '8px 10px', background: 'rgba(0,152,234,0.06)', border: '1px solid rgba(0,152,234,0.15)', borderRadius: 8 }}>
+                <div style={{ fontSize: 10, color: '#9A9490' }}>В продаже</div>
+                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, fontWeight: 700, color: '#F0C85A' }}>
+                  {fmtBalance(coins.toString())}
+                  <span style={{ color: '#0098EA', marginLeft: 8 }}>{ton.toFixed(4)} TON</span>
+                </div>
+              </div>
+            );
+          })()}
           {/* Order book header */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4, padding: '6px 10px', marginBottom: 4 }}>
-            {['Продавец', 'Кол-во', 'Цена TON'].map(h => (
+          <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr 1fr', gap: 4, padding: '6px 10px', marginBottom: 4 }}>
+            {['Продавец', 'Монет / в TON', 'Цена за 1M'].map(h => (
               <div key={h} style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.07em', color: '#5A5248', textTransform: 'uppercase' }}>{h}</div>
             ))}
           </div>
@@ -817,13 +832,19 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
               <div style={{ fontSize: 11, color: '#5A5248', marginTop: 4 }}>Будь первым — выстави ордер!</div>
             </div>
           ) : orders.filter(o => o.status === 'OPEN' && !o.isOwn).sort((a,b) => a.priceTon - b.priceTon).map(order => (
-            <div key={order.id} onClick={() => setExecuteOrder(order)} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4, alignItems: 'center', padding: '10px', background: '#141018', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, marginBottom: 6, cursor: 'pointer', transition: 'border-color .15s' }}>
+            <div key={order.id} onClick={() => setExecuteOrder(order)} style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr 1fr', gap: 4, alignItems: 'center', padding: '10px', background: '#141018', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, marginBottom: 6, cursor: 'pointer', transition: 'border-color .15s' }}>
               <div>
                 <div style={{ fontSize: 12, fontWeight: 600, color: '#EAE2CC' }}>{order.sellerName}</div>
                 <div style={{ fontSize: 10, color: '#5A5248', marginTop: 1 }}>ELO {order.sellerElo}</div>
               </div>
-              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, color: '#F0C85A' }}>
-                {fmtBalance(order.amountCoins)}
+              <div>
+                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, color: '#F0C85A' }}>
+                  {fmtBalance(order.amountCoins)}
+                </div>
+                {/* Сколько это в TON — чтобы не считать в уме (Кенан 31.07). */}
+                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, color: '#0098EA', marginTop: 1 }}>
+                  {order.totalTon.toFixed(4)} TON
+                </div>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, color: '#0098EA' }}>{order.priceTon.toFixed(5)}</div>
