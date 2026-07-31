@@ -16,6 +16,10 @@
   python project_management/tools/i18n_audit.py           — сводка по файлам
   python project_management/tools/i18n_audit.py --list    — все находки построчно
   python project_management/tools/i18n_audit.py --count   — только число (для стража)
+  python project_management/tools/i18n_audit.py --max N   — не больше N (для стража)
+
+`--max` сравнивает прямо здесь, а не в оболочке: awk с кавычками не переживает
+запуск через Windows-оболочку, и страж вместо ответа возвращал текст ошибки.
 """
 import io
 import os
@@ -114,6 +118,14 @@ if __name__ == '__main__':
 
     if arg == '--count':
         print('HARDCODED_STRINGS=%d' % len(findings))
+        sys.exit(0)
+
+    if arg == '--max':
+        ceiling = int(sys.argv[2])
+        n = len(findings)
+        # Потолок опускается по мере переноса строк в таблицу, но расти не должен.
+        print('HARDCODED_OK %d/%d' % (n, ceiling) if n <= ceiling
+              else 'HARDCODED_GREW %d>%d' % (n, ceiling))
         sys.exit(0)
 
     print('=' * 74)
