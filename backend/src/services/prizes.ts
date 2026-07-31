@@ -70,10 +70,19 @@ export function splitTournamentPot(pot: bigint, places: number): PotSplit {
 // Считаем эквивалентами: одна победа = один эквивалент. Доля воина =
 // захваченная касса × его победы ÷ сумма побед всех. Кто внёс деньги, но не
 // сыграл ни одной партии, не получает ничего — прямое условие Кенана.
+//
+// Комиссия стола снимается не с кассы, а с доли — в момент, когда доля
+// переходит на баланс игрока. Сначала касса расходится вся, чтобы видно было,
+// что делёж ровный; 10% берутся уже на переходе (Кенан 31.07.2026).
 
 export interface WarShare {
   userId: string;
   wins: number;
+  /** Доля бойца от ВСЕЙ захваченной кассы — то, что он видит как свою часть */
+  gross: bigint;
+  /** Комиссия стола, снимается при зачислении на баланс */
+  commission: bigint;
+  /** Сколько реально ляжет на баланс */
   amount: bigint;
 }
 
@@ -82,8 +91,13 @@ export interface WarShare {
  * @param pot     казна проигравшей страны, забирается целиком
  * @param winners воины страны-победителя с числом побед в этой войне
  *
- * Гарантия: sum(amount) === pot, если хоть кто-то победил. Остаток от деления
- * достаётся тому, кто принёс больше побед.
+ * Порядок важен (Кенан 31.07.2026): сначала касса делится между игроками
+ * ЦЕЛИКОМ — они видят, что она разошлась ровно, — и только при переходе доли
+ * на баланс конкретного игрока с неё снимается 10% комиссии стола. Раньше
+ * комиссия снималась с кассы заранее, и делилось уже урезанное.
+ *
+ * Гарантии: sum(gross) === pot и sum(amount) + sum(commission) === pot.
+ * Остаток от деления достаётся тому, кто принёс больше побед.
  */
 export function splitWarPot(
   pot: bigint,
@@ -97,14 +111,18 @@ export function splitWarPot(
   if (scoring.length === 0) return []; // никто не победил — делить не по чему
 
   const totalWins = BigInt(scoring.reduce((s, w) => s + w.wins, 0));
-  const shares = scoring.map(w => ({
-    userId: w.userId,
-    wins: w.wins,
-    amount: (pot * BigInt(w.wins)) / totalWins,
-  }));
-
+  const gross = scoring.map(w => (pot * BigInt(w.wins)) / totalWins);
   // Остаток — лучшему по победам, чтобы касса разошлась до последней монеты.
-  shares[0].amount += pot - shares.reduce((s, x) => s + x.amount, 0n);
+  gross[0] += pot - gross.reduce((s, g) => s + g, 0n);
 
-  return shares;
+  return scoring.map((w, i) => {
+    const commission = (gross[i] * COMMISSION_PERCENT) / 100n;
+    return {
+      userId: w.userId,
+      wins: w.wins,
+      gross: gross[i],
+      commission,
+      amount: gross[i] - commission,
+    };
+  });
 }

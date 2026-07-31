@@ -51,14 +51,25 @@ describe('Касса турнира: 60/30/10 минус 10% комиссии', 
   });
 });
 
-describe('Касса войны: кратно победам', () => {
+describe('Касса войны: кратно победам, комиссия на переходе к балансу', () => {
   it('пять побед против одной — впятеро больше', () => {
     const shares = splitWarPot(600_000n, [
       { userId: 'a', wins: 5 },
       { userId: 'b', wins: 1 },
     ]);
-    expect(shares.find(s => s.userId === 'a')!.amount).toBe(500_000n);
-    expect(shares.find(s => s.userId === 'b')!.amount).toBe(100_000n);
+    expect(shares.find(s => s.userId === 'a')!.gross).toBe(500_000n);
+    expect(shares.find(s => s.userId === 'b')!.gross).toBe(100_000n);
+    // На баланс — минус 10% с доли, а не с кассы заранее.
+    expect(shares.find(s => s.userId === 'a')!.amount).toBe(450_000n);
+    expect(shares.find(s => s.userId === 'b')!.amount).toBe(90_000n);
+  });
+
+  it('касса делится ЦЕЛИКОМ — доли в сумме равны кассе до комиссии', () => {
+    const shares = splitWarPot(600_000n, [
+      { userId: 'a', wins: 5 },
+      { userId: 'b', wins: 1 },
+    ]);
+    expect(shares.reduce((s, x) => s + x.gross, 0n)).toBe(600_000n);
   });
 
   it('внёс деньги, но не сыграл — не получает ничего', () => {
@@ -68,16 +79,18 @@ describe('Касса войны: кратно победам', () => {
     ]);
     expect(shares).toHaveLength(1);
     expect(shares[0].userId).toBe('fighter');
-    expect(shares[0].amount).toBe(100_000n);
+    expect(shares[0].gross).toBe(100_000n);
+    expect(shares[0].amount).toBe(90_000n);
   });
 
-  it('касса расходится до последней монеты', () => {
-    const shares = splitWarPot(100n, [
-      { userId: 'a', wins: 1 },
-      { userId: 'b', wins: 1 },
-      { userId: 'c', wins: 1 },
-    ]);
-    expect(shares.reduce((s, x) => s + x.amount, 0n)).toBe(100n);
+  it('выплаты плюс комиссия равны кассе при любом раскладе', () => {
+    for (const pot of [1n, 97n, 100n, 33_333n, 500_000n]) {
+      for (const wins of [[1], [1, 1, 1], [7, 2], [10, 3, 3, 1]]) {
+        const shares = splitWarPot(pot, wins.map((w, i) => ({ userId: 'u' + i, wins: w })));
+        const total = shares.reduce((s, x) => s + x.amount + x.commission, 0n);
+        expect(total).toBe(pot);
+      }
+    }
   });
 
   it('никто не победил — делить не по чему', () => {

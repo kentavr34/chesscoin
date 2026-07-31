@@ -470,17 +470,7 @@ export async function distributeCountryWarPrize(war: { id: string; attackerCount
     data: { treasury: 0n },
   });
 
-  // 10% комиссии платформы → platformConfig.platformReserve.
-  const commission = prize * 10n / 100n;
-  const netPrize = prize - commission;
-  try {
-    await prisma.platformConfig.update({
-      where: { id: "singleton" },
-      data: { platformReserve: { increment: commission } },
-    });
-  } catch (e) { logError("[Cron/CountryWar/Prize] commission", e); }
-
-  // Распределение netPrize между бойцами победителя.
+  // Бойцы страны-победителя.
   const winnerMembers = await prisma.countryMember.findMany({
     where: { countryId: winnerCountryId, status: 'APPROVED' as any },
     select: { userId: true, warWinsCurrent: true as any } as any,
@@ -488,41 +478,52 @@ export async function distributeCountryWarPrize(war: { id: string; attackerCount
   type M = { userId: string; warWinsCurrent: number };
   const members = (winnerMembers as any as M[])
     .sort((a, b) => (b.warWinsCurrent ?? 0) - (a.warWinsCurrent ?? 0));
-  if (members.length === 0) {
-    logger.warn(`[Cron/CountryWar/Prize] War ${war.id}: winner has no members — prize stays in country treasury`);
-    await prisma.country.update({
-      where: { id: winnerCountryId },
-      data: { treasury: { increment: netPrize } },
-    });
-    return;
-  }
 
   // Кратно победам: одна победа — один эквивалент. Никаких мест и бонусов
   // за верхушку: кто принёс пять побед, получает впятеро больше того, кто
-  // принёс одну. Кто не сыграл — ничего.
-  const shares = splitWarPot(netPrize, members.map(m => ({
+  // принёс одну. Кто не сыграл — ничего. Касса делится ЦЕЛИКОМ, комиссия
+  // снимается с доли на переходе к балансу игрока (Кенан 31.07.2026).
+  const shares = splitWarPot(prize, members.map(m => ({
     userId: m.userId, wins: m.warWinsCurrent ?? 0,
   })));
 
-  const userMap = new Map<string, bigint>(shares.map(s => [s.userId, s.amount]));
-
   // Победа страны без единой личной победы бойцов невозможна, но если счёт
   // сложился так — приз остаётся в казне победителя, а не растворяется.
-  if (userMap.size === 0) {
+  if (shares.length === 0) {
     await prisma.country.update({
       where: { id: winnerCountryId },
-      data: { treasury: { increment: netPrize } },
+      data: { treasury: { increment: prize } },
     });
-    logger.warn(`[Cron/CountryWar/Prize] War ${war.id}: победных партий нет — ${netPrize} осталось в казне победителя`);
+    logger.warn(`[Cron/CountryWar/Prize] War ${war.id}: победных партий нет — ${prize} осталось в казне победителя`);
     return;
   }
+
+  // Комиссия стола — сумма удержаний со всех долей.
+  const commission = shares.reduce((s, x) => s + x.commission, 0n);
+  if (commission > 0n) {
+    try {
+      await prisma.platformConfig.update({
+        where: { id: "singleton" },
+        data: { platformReserve: { increment: commission } },
+      });
+    } catch (e) { logError("[Cron/CountryWar/Prize] commission", e); }
+  }
+
+  const userMap = new Map<string, bigint>(shares.map(s => [s.userId, s.amount]));
+  const grossMap = new Map<string, bigint>(shares.map(s => [s.userId, s.gross]));
 
   // Выплаты + уведомления.
   let totalPaid = 0n;
   for (const [uid, amount] of userMap.entries()) {
     if (amount <= 0n) continue;
+    const gross = grossMap.get(uid) ?? amount;
     await updateBalance(uid, amount, TransactionType.COUNTRY_WAR_WIN, {
-      warId: war.id, winnerCountryId, share: amount.toString(),
+      warId: war.id, winnerCountryId,
+      // Пишем и долю от кассы, и удержание: игрок должен видеть, что касса
+      // разошлась ровно, а 10% сняты именно на переходе к его балансу.
+      share: gross.toString(),
+      commission: (gross - amount).toString(),
+      credited: amount.toString(),
     });
     totalPaid += amount;
     try {
@@ -533,7 +534,8 @@ export async function distributeCountryWarPrize(war: { id: string; attackerCount
             type: "COUNTRY_WAR_PAYOUT",
             payload: {
               telegramId: u.telegramId, name: u.firstName,
-              amount: amount.toString(), warId: war.id,
+              amount: amount.toString(), share: gross.toString(),
+              commission: (gross - amount).toString(), warId: war.id,
             },
           },
         }).catch(() => {});
