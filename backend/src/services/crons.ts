@@ -17,6 +17,7 @@ import { verifyTonTransaction } from "@/lib/tonverify";
 import { recoverStuckGames } from "@/services/game/recover";
 import { releaseExpiredReservations } from "@/routes/exchange";
 import { splitTournamentPot, splitWarPot } from "@/services/prizes";
+import { ensurePlatformOrder } from "@/services/platformOrder";
 import { processWarAutoloss } from "@/services/game/warAutoloss"; // PR-1
 import { processTonWithdrawals } from "@/services/tonWithdrawalWorker"; // A5
 
@@ -819,6 +820,14 @@ export function startGameCrons() {
   // в ничью при последующей уборке (поймано 30.07 живым прогоном).
   cron.schedule("*/5 * * * *", async () => {
     await recoverStuckGames().catch((err) => logError("[Crons/Recover] Error:", err));
+  });
+
+  // Постоянный ордер платформы: держим витрину наполненной, пока в казне
+  // есть монеты (Кенан 31.07.2026 — «пока все 100 миллиардов не распроданы»).
+  cron.schedule("*/5 * * * *", async () => {
+    await ensurePlatformOrder().catch((err) =>
+      logError("[Crons/PlatformOrder] Error:", err)
+    );
   });
 
   // BUY-ордер: продавец согласился и заморозил монеты, покупатель не заплатил.

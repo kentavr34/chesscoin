@@ -956,6 +956,8 @@ enum TransactionType {
   TOURNAMENT_WIN     // выигрыш в турнире
   TON_DEPOSIT        // пополнение через TON
   WALLET_UNLOCK      // разовый платёж за подключение кошелька
+  TREASURY_OPENING   // открывающий баланс счёта платформы
+  TREASURY_SALE      // продажа монет со счёта платформы игроку
   EXCHANGE_SELL      // продажа ᚙ через P2P биржу (приход TON, расход ᚙ)
   EXCHANGE_BUY       // покупка ᚙ через P2P биржу (расход TON, приход ᚙ)
   EXCHANGE_FREEZE    // заморозка ᚙ при создании ордера

@@ -20,7 +20,10 @@ import config from '@/config';
 export const exchangeRouter = Router();
 
 const PLATFORM_FEE_PERCENT = 0.005;
-const MIN_ORDER_COINS      = 1_000n; // Кенан 2026-06-13: минимум 1000 монет (было 10 000)
+// Минимальный размер сделки — 1 TON (Кенан 31.07.2026: «меньше смысла даже
+// нет торговать»). При курсе 100 000 монет за TON это 100 000 монет.
+// Порог одинаково касается и целого ордера, и частичной покупки.
+const MIN_ORDER_COINS      = 100_000n;
 const MAX_ORDER_COINS      = 100_000_000n;
 const MIN_PRICE_TON        = 0.00001;
 const MAX_PRICE_TON        = 100_000.0;
@@ -187,6 +190,14 @@ exchangeRouter.post('/orders/:id/execute', authMiddleware, async (req: Request, 
     // E12: Частичное исполнение — определяем реальную сумму покупки
     const requestedCoins = partialCoins ? BigInt(String(partialCoins)) : order.amountCoins;
     if (requestedCoins <= 0n) return res.status(400).json({ error: 'Coin amount must be > 0' });
+    // Частичная покупка разрешена (как на криптобиржах: ордер на 100 000 можно
+    // взять на 10 000), но не мельче минимальной сделки.
+    if (requestedCoins < MIN_ORDER_COINS) {
+      return res.status(400).json({
+        error: 'BELOW_MIN_TRADE',
+        message: `Минимальная сделка — ${MIN_ORDER_COINS.toLocaleString()} ᚙ (1 TON)`,
+      });
+    }
     if (requestedCoins > order.amountCoins) return res.status(400).json({ error: 'Cannot buy more than available in the order' });
     const isPartial    = requestedCoins < order.amountCoins;
     const actualCoins  = requestedCoins;
