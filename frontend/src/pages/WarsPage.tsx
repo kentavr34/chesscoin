@@ -46,11 +46,11 @@ const WarsIntroModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           <button onClick={onClose} style={closeBtnStyle}><IcoClose size={14} /></button>
         </div>
         <div style={{ fontSize: 13, color: '#7A7875', lineHeight: 1.75 }}>
-          <p style={{ marginBottom: 10 }}>{t.wars.warIntro.p1}</p>
-          <p style={{ marginBottom: 10 }}>{t.wars.warIntro.p2}</p>
-          <p style={{ marginBottom: 10 }}>{t.wars.warIntro.p3}</p>
-          <p style={{ marginBottom: 10 }}>{t.wars.warIntro.p4}</p>
-          <p>{t.wars.warIntro.p5}</p>
+          <p style={{ marginBottom: 10 }}>{withBold(t.wars.warIntro.p1)}</p>
+          <p style={{ marginBottom: 10 }}>{withBold(t.wars.warIntro.p2)}</p>
+          <p style={{ marginBottom: 10 }}>{withBold(t.wars.warIntro.p3)}</p>
+          <p style={{ marginBottom: 10 }}>{withBold(t.wars.warIntro.p4)}</p>
+          <p>{withBold(t.wars.warIntro.p5)}</p>
         </div>
         <button onClick={onClose} style={{ ...greenBtnFull, marginTop: 20 }}>
           {t.wars.warIntro.btn}
@@ -823,6 +823,18 @@ const WarDetailModal: React.FC<{ warId: string; onClose: () => void }> = ({ warI
 // MAIN WARSPAGE
 // ─────────────────────────────────────────────────────────────────────────────
 type Tab = 'countries' | 'active' | 'history';
+
+
+// Тексты вводного окна содержат <b>…</b> для выделения. React выводит строку
+// как есть, поэтому на экране висели сами теги: «<b>Войны между странами</b>»
+// (Кенан 01.08.2026). Разбираем только жирный — ничего исполняемого в текстах
+// нет, и вставлять сырой HTML в разметку ради этого не нужно.
+const withBold = (text: string): React.ReactNode[] =>
+  String(text).split(/<b>|<\/b>/g).map((part, i) =>
+    i % 2 === 1
+      ? <strong key={i} style={{ color: '#EAE2CC', fontWeight: 700 }}>{part}</strong>
+      : <React.Fragment key={i}>{part}</React.Fragment>,
+  );
 
 export const WarsPage: React.FC = () => {
   const t = useT();
