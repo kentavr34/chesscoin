@@ -56,28 +56,61 @@ const page = await context.newPage();
 // Запоминаем, какие задачи приходили с сервера: смена id — доказательство,
 // что страница действительно перезагрузила задачу, а не просто перерисовалась.
 const loaded = [];
+const solutions = [];
 page.on('response', async (res) => {
   if (!res.url().includes('/api/v1/puzzles/')) return;
   try {
     const body = await res.json();
-    const id = body?.puzzle?.id;
-    if (id) loaded.push(id);
+    if (body?.puzzle?.id) loaded.push(body.puzzle.id);
+    if (body?.puzzle?.moves) solutions.push(body.puzzle.moves);
   } catch {}
 });
 
 await page.goto(`${APP_URL}/lesson/random?difficulty=easy`, { waitUntil: 'networkidle' });
-await page.waitForTimeout(1500);
+await page.waitForTimeout(2500);
+const shown = await page.locator('body').innerText();
+console.log('на экране:', shown.replace(/\s+/g, ' ').slice(0, 200));
 
-// Задачу надо сначала решить, иначе кнопки «Следующая» не будет. Решаем не
-// по-настоящему: жмём «Следующая», если она есть, иначе выходим с диагнозом.
-const CLICKS = 3;
+// Кнопка «Следующая» появляется только после решённой задачи, поэтому задачу
+// приходится честно решать: берём ходы решения из ответа сервера и кликаем
+// по клеткам доски, как это делает игрок.
+async function solveCurrent() {
+  // Начать решение
+  const start = page.locator('button', { hasText: /Начать решение|Start|Başla|Həllə/ });
+  if (await start.count() > 0) {
+    await start.first().click();
+    await page.waitForTimeout(600);
+  }
+  const moves = solutions[solutions.length - 1];
+  if (!moves) return false;
+  // Ходы игрока — чётные индексы; ответы соперника приложение играет само.
+  for (let i = 0; i < moves.length; i += 2) {
+    const from = moves[i].slice(0, 2);
+    const to = moves[i].slice(2, 4);
+    for (const sq of [from, to]) {
+      const cell = page.locator(`[data-square="${sq}"]`);
+      if (await cell.count() === 0) return false;
+      await cell.first().click();
+      await page.waitForTimeout(350);
+    }
+    await page.waitForTimeout(900); // ответ соперника
+  }
+  await page.waitForTimeout(1200);
+  return true;
+}
+
+const ROUNDS = 3;
 let clicked = 0;
-for (let i = 0; i < CLICKS; i++) {
-  const btn = page.locator('button', { hasText: /Следующая|Next|Növbəti|Sonraki/ });
-  if (await btn.count() === 0) break;
+for (let i = 0; i < ROUNDS; i++) {
+  await solveCurrent();
+  const btn = page.locator('button', { hasText: /Следующая|Next ▶|Növbəti|Sonraki/ });
+  if (await btn.count() === 0) {
+    console.log(`круг ${i + 1}: кнопки «Следующая» нет`);
+    break;
+  }
   await btn.first().click();
   clicked++;
-  await page.waitForTimeout(1800);
+  await page.waitForTimeout(2200);
 }
 
 const unique = [...new Set(loaded)];
