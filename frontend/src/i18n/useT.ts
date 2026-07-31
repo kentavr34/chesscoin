@@ -1,7 +1,48 @@
+import { useEffect } from 'react';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { translations } from './translations';
+import type { Lang } from './translations';
+import { useI18nStore } from './useI18nStore';
+
+/**
+ * Тексты интерфейса.
+ *
+ * Источников два, и порядок важен:
+ *   1. таблица `ui_texts` в базе — то, что можно править без выкладки кода
+ *      и куда добавляются новые языки (Кенан 31.07.2026);
+ *   2. встроенный словарь `translations.ts` — запасной, чтобы интерфейс
+ *      работал, даже если база недоступна.
+ *
+ * Обращение прежнее — `t.home.balance`, поэтому переписывать компоненты не
+ * нужно: под капотом сначала смотрим в загруженный словарь по ключу
+ * `home.balance`, и только потом во встроенный.
+ */
+function withOverrides<T extends object>(base: T, dict: Record<string, string>, path = ''): T {
+  return new Proxy(base, {
+    get(target, prop) {
+      if (typeof prop !== 'string') return Reflect.get(target, prop);
+      const key = path ? `${path}.${prop}` : prop;
+      const value = Reflect.get(target, prop);
+
+      if (typeof value === 'string') return dict[key] ?? value;
+      // Функции-шаблоны оставляем как есть: подстановка у них внутри кода.
+      if (typeof value === 'function') return value;
+      if (value && typeof value === 'object') return withOverrides(value as object, dict, key);
+
+      // Ключа нет во встроенном словаре, но он может быть в базе —
+      // так новые строки появляются без правки translations.ts.
+      return dict[key] ?? value;
+    },
+  }) as T;
+}
 
 export const useT = () => {
-  const lang = useSettingsStore((s) => s.lang);
-  return translations[lang];
+  const lang = useSettingsStore((s) => s.lang) as Lang;
+  const dict = useI18nStore((s) => s.dict);
+  const load = useI18nStore((s) => s.load);
+
+  useEffect(() => { void load(lang); }, [lang, load]);
+
+  const base = translations[lang] ?? translations.ru;
+  return withOverrides(base, dict);
 };

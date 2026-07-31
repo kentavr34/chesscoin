@@ -1081,6 +1081,29 @@ model PendingReferral {
 // ─────────────────────────────────────────
 // PUZZLE — шахматные задачи (из Lichess)
 // ─────────────────────────────────────────
+// ─────────────────────────────────────────
+// ТЕКСТЫ ИНТЕРФЕЙСА (Кенан 31.07.2026)
+// ─────────────────────────────────────────
+// Все видимые пользователю строки в одном месте с указанием, где они
+// показываются. Языки — колонками: новый язык добавляется колонкой,
+// без правок кода. Русский обязателен — это исходный язык.
+model UiText {
+  key       String   @id            // exchange.createOrder.title
+  screen    String                  // ExchangeTab
+  place     String?                 // модалка создания ордера
+  kind      String                  // title | button | label | hint | error | notification
+  ru        String
+  en        String?
+  az        String?
+  tr        String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([screen])
+  @@index([kind])
+  @@map("ui_texts")
+}
+
 model Puzzle {
   id          String   @id  // lichess PuzzleId
   fen         String        // стартовая позиция FEN

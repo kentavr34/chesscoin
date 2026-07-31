@@ -59,6 +59,7 @@ import { warsRouter } from "@/routes/wars";
 import tournamentsRouter from "@/routes/tournaments";
 import screenshotterRouter from "@/routes/screenshotter";
 import { puzzlesRouter } from "@/routes/puzzles";
+import { i18nRouter } from "@/routes/i18n";
 import { adminRouter } from "@/routes/admin";
 import { rateLimit } from "express-rate-limit";
 
@@ -121,6 +122,8 @@ app.use(`${API}/nations`,       nationsRouter);
 app.use(`${API}/wars`,          warsRouter);
 app.use(`${API}/tournaments`,   tournamentsRouter);
 app.use(`${API}/puzzles`,       puzzlesRouter);
+// Тексты интерфейса — без авторизации: словарь нужен ещё до входа (сплэш, ошибки).
+app.use(`${API}/i18n`,          i18nRouter);
 app.use(`${API}/admin`, rateLimit({ windowMs: 60_000, max: 30, message: { error: 'Too many admin requests' } }));
 app.use(`${API}/admin`,         adminRouter);
 app.use(`${API}/screenshotter`, screenshotterRouter);
