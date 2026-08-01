@@ -76,9 +76,11 @@ export const LessonLearnPage: React.FC = () => {
   const [wrong, setWrong] = useState(false);
   const [reward, setReward] = useState<string | null>(null);
 
-  // Название и пояснение живут в таблице текстов под ключом с номером урока.
-  const lessonTitle = useText(`lessons.item.${lessonId}.title`);
-  const explain = useText(`lessons.item.${lessonId}.explain`);
+  // Ключи текстов берём у самого урока, а не собираем из номера: в блоке
+  // приёмов пояснение одно на весь приём (`lessons.theme.fork.explain`), и
+  // сборка ключа по номеру оставляла экран без объяснения вовсе.
+  const lessonTitle = useText(lesson?.titleKey ?? `lessons.item.${lessonId}.title`);
+  const explain = useText(lesson?.explainKey ?? `lessons.item.${lessonId}.explain`);
   const navNext = useText('lessons.nav.next', 'Следующий');
   const navMenu = useText('lessons.nav.menu', 'Меню');
 
