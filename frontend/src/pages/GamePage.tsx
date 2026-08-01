@@ -804,6 +804,9 @@ export function GamePage() {
   const [savesCount,        setSavesCount]        = useState(0);
   const [selectedDonateAmt, setSelectedDonateAmt] = useState(1000);
   const [showDonateMenu,    setShowDonateMenu]    = useState(false);
+  // Партия кончилась — доска остаётся, но нижние кнопки должны стать панелью
+  // просмотра, а не предлагать сдаться (Кенан 01.08.2026).
+  const [showReplay,        setShowReplay]        = useState(false);
   const [bravoQueue,  setBravoQueue]  = useState<string[]>([]);
   const [bravoName,   setBravoName]   = useState<string | null>(null);
 
@@ -1485,8 +1488,20 @@ export function GamePage() {
           </span>
         </button>
 
-        {/* Слот 3: игрок=Ничья | зритель=Донат */}
-        {isSpectator ? (
+        {/* Слот 3: игра кончилась=Партия | игрок=Ничья | зритель=Донат */}
+        {gameOver && session?.pgn ? (
+          <button
+            onClick={() => setShowReplay(true)}
+            style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              gap: 5, background: 'rgba(212,168,67,.06)', border: 'none',
+              color: '#D4A843', cursor: 'pointer', fontFamily: 'inherit',
+            }}
+          >
+            <IcoBook size={18} color="#D4A843" />
+            <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Партия</span>
+          </button>
+        ) : isSpectator ? (
           isPublicBattle ? (
             <button
               disabled={gameOver}
@@ -1539,8 +1554,8 @@ export function GamePage() {
           </button>
         )}
 
-        {/* Слот 4: игрок=Сдаться | зритель=Поделиться (Telegram share) */}
-        {isSpectator ? (
+        {/* Слот 4: игрок=Сдаться | зритель или конец игры=Поделиться */}
+        {(isSpectator || gameOver) ? (
           <button
             onClick={() => {
               // PR-3 hotfix Кенан 2026-05-18: используем PR-2 shareToken (универсальная
@@ -1707,14 +1722,14 @@ export function GamePage() {
           Если игрок участвовал — ему показывается ResultSheet (выше), модал
           replay-а ему не нужен. Зритель или прохожий по watch-ссылке
           получает PGN-просмотр (Кенан 2026-05-16). */}
-      {gameOver && session?.pgn && isSpectator && session.pgn.length > 0 && (
+      {gameOver && session?.pgn && (isSpectator || showReplay) && session.pgn.length > 0 && (
         <PgnReplayModal
           pgn={session.pgn}
           title={`${specWhiteSide?.player?.firstName ?? 'White'} vs ${specBlackSide?.player?.firstName ?? 'Black'}`}
           sessionId={session.id}
           whitePlayer={specWhiteSide?.player as any}
           blackPlayer={specBlackSide?.player as any}
-          onClose={() => navigate('/')}
+          onClose={() => { if (showReplay) setShowReplay(false); else navigate('/'); }}
         />
       )}
 
