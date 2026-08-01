@@ -140,12 +140,15 @@ export const updateBalance = async (
 // Welcome бонус (только для новых)
 // ─────────────────────────────────────────
 export const giveWelcomeBonus = async (userId: string) => {
-  return updateBalance(
+  // Подарок новичку — тоже наш расход, а не печать монет (Кенан 31.07.2026:
+  // «за реферал, за задания, за обучение — с нашего счёта игрокам»). Импорт
+  // отложенный: treasury.ts сам берёт updateBalance отсюда.
+  const { payFromTreasury } = await import("@/services/treasury");
+  return payFromTreasury(
     userId,
     config.economy.welcomeBonus,
     TransactionType.WELCOME_BONUS,
-    { reason: "new_user" },
-    { isEmission: true }
+    { reason: "new_user" }
   );
 };
 

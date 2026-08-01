@@ -132,6 +132,7 @@ export const cleanupSpectators = (sessionId: string) => {
   spectatorRooms.delete(sessionId);
 };
 import { updateBalance, canEmit } from "@/services/economy";
+import { payFromTreasury } from "@/services/treasury";
 
 interface SocketData {
   userId: string;
@@ -610,9 +611,15 @@ export const setupSocketHandlers = (io: Server) => {
               const piecePrice =
                 config.economy.piecePrice[moveResult.captured as keyof typeof config.economy.piecePrice] ?? 0n;
               if (piecePrice > 0n) {
-                await updateBalance(userId, piecePrice, TransactionType.BOT_PIECE, {
+                // За Джарвиса платим мы: монеты за съеденную фигуру уходят
+                // СО СЧЁТА ПЛАТФОРМЫ, а не появляются из ниоткуда. Раньше это
+                // была прямая дописка на баланс — единственный оставшийся
+                // источник печати монет: капитал разошёлся на 1800 за сутки
+                // (дефект 40, Кенан 01.08.2026: «война не должна генерировать
+                // монеты» — то же правило и для игры с ботом).
+                await payFromTreasury(userId, piecePrice, TransactionType.BOT_PIECE, {
                   piece: moveResult.captured, sessionId,
-                }, { isEmission: true });
+                });
                 // Трекинг монет за фигуры для отображения в модале результата
                 await redis.incrby(`session:${sessionId}:pieceCoins:${userId}`, Number(piecePrice));
                 await redis.expire(`session:${sessionId}:pieceCoins:${userId}`, 86400);

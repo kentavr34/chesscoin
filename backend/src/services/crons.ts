@@ -512,14 +512,24 @@ export async function distributeCountryWarPrize(war: { id: string; attackerCount
     return;
   }
 
-  // Комиссия стола — сумма удержаний со всех долей.
+  // Комиссия стола — сумма удержаний со всех долей. Она обязана лечь на СЧЁТ
+  // платформы, а не в счётчик platformReserve: касса ушла из казны страны,
+  // и если её десятая часть никуда не зачисляется, монеты просто исчезают из
+  // капитала. Кенан 01.08.2026: «казна страны делится после победы — 10%
+  // возврат к нам, 90% победителям».
   const commission = shares.reduce((s, x) => s + x.commission, 0n);
   if (commission > 0n) {
     try {
+      const treasuryId = await getTreasuryId();
+      if (treasuryId) {
+        await updateBalance(treasuryId, commission, TransactionType.COUNTRY_WAR_WIN,
+          { warId: war.id, winnerCountryId, reason: "table_commission" });
+      }
       await prisma.platformConfig.update({
         where: { id: "singleton" },
         data: { platformReserve: { increment: commission } },
       });
+      logger.info(`[Cron/CountryWar/Prize] War ${war.id}: комиссия ${commission} из кассы ${prize} на счёт платформы`);
     } catch (e) { logError("[Cron/CountryWar/Prize] commission", e); }
   }
 

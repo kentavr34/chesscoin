@@ -280,14 +280,12 @@ async function updateWarBattle(sessionId: string, winnerSideId?: string, isDraw:
       });
     }
 
-    // Начисляем prizePerWin в казну победившей страны
-    const prize = warBattle.war.prizePerWin ?? 0n;
-    if (winnerCountryId && prize > 0n) {
-      await prisma.country.update({
-        where: { id: winnerCountryId },
-        data: { treasury: { increment: prize } },
-      });
-    }
+    // Победа в партии НЕ создаёт монет (Кенан 01.08.2026: «война не должна
+    // генерировать монеты»). Раньше здесь prizePerWin дописывался в казну
+    // страны-победителя, а не списывался ниоткуда — капитал переставал
+    // сходиться ровно на 100 монет за каждую победу (дефект 40).
+    // Теперь личная победа только копится в warWinsCurrent: по ней в конце
+    // войны делится касса проигравшей страны.
 
     logger.info(`[WarBattle] Battle ${warBattle.id} finished: winner=${winnerId} country=${winnerCountryId}`);
 
