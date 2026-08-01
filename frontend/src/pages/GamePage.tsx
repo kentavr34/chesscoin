@@ -20,6 +20,7 @@ import { CountryFlag } from '@/components/ui/CountryFlag';
 import { PgnReplayModal } from '@/components/profile/PgnReplayModal';
 import { useT } from '@/i18n/useT';
 import { linkToSession } from '@/lib/deepLink';
+import { IcoBook } from '@/components/icons/UiIcons';
 
 // ── Константы ──────────────────────────────────────────────────────────────────
 // 2026-05-16: chess unicode не рендерится в Telegram WebView Android/iOS
@@ -484,6 +485,7 @@ const IcoDraw = () => (
 
 const ResultSheet: React.FC<SheetProps> = ({ type, winAmount, pieceCoins, onRematch, onHome }) => {
   const t = useT();
+  const navigateResult = useNavigate();
   const cfg = RESULT_CFG[type];
   const isWin  = type === 'win';
   const isDraw = type === 'draw';
@@ -606,6 +608,23 @@ const ResultSheet: React.FC<SheetProps> = ({ type, winAmount, pieceCoins, onRema
               {t.gameResult.analysis}
             </button>
           </div>
+          {/* Проиграл — зовём учиться (Кенан 01.08.2026: «если игрок проигрывает
+              Джарвису — кнопку, пройди обучение и научись побеждать»). Раньше
+              эта кнопка была добавлена в GameResultModal.tsx, который на экране
+              не используется вовсе, и до игрока не доходила. */}
+          {type === 'lose' && (
+            <button onClick={() => navigateResult('/lessons')} style={{
+              width: '100%', padding: '14px 0', borderRadius: 14, marginBottom: 10,
+              background: 'rgba(155,109,255,.14)',
+              border: '.5px solid rgba(155,109,255,.4)',
+              color: '#C4B5FF', fontSize: '.85rem', fontWeight: 800,
+              cursor: 'pointer', fontFamily: 'inherit',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            }}>
+              <IcoBook size={16} color="#C4B5FF" />
+              {t.gameResult.goLearn}
+            </button>
+          )}
           <button onClick={onHome} style={{
             width: '100%', padding: '16px 0', borderRadius: 14,
             background: 'linear-gradient(135deg,#2A1E08,#4A3810)',

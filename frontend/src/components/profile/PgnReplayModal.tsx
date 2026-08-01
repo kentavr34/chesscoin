@@ -4,6 +4,7 @@ import { Chess } from 'chess.js';
 import { useNavigate } from 'react-router-dom';
 import { Avatar } from '@/components/ui/Avatar';
 import { ShareSessionButton } from '@/components/ui/ShareSessionButton';
+import { IcoToStart, IcoToEnd, IcoStepBack, IcoStepFwd, IcoPlay, IcoPause } from '@/components/icons/UiIcons';
 import { gamesApi } from '@/api';
 import type { UserPublic } from '@/types';
 
@@ -28,6 +29,8 @@ export const PgnReplayModal: React.FC<PgnReplayModalProps> = ({ pgn, title, sess
   // Состояние «сохранено в избранное». null — ещё не загружено / нет sessionId.
   const [isSaved, setIsSaved] = useState<boolean | null>(null);
   const [saveBusy, setSaveBusy] = useState(false);
+  // Просмотр партии как записи: ходы листаются сами, пока не дойдут до конца.
+  const [playing, setPlaying] = useState(false);
 
   useEffect(() => {
     if (!sessionId) { setIsSaved(null); return; }
@@ -66,6 +69,13 @@ export const PgnReplayModal: React.FC<PgnReplayModalProps> = ({ pgn, title, sess
   }, [pgn]);
 
   const currentFen = fens[step] ?? 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+
+  useEffect(() => {
+    if (!playing) return;
+    if (step >= fens.length - 1) { setPlaying(false); return; }
+    const id = setTimeout(() => setStep(s => Math.min(fens.length - 1, s + 1)), 800);
+    return () => clearTimeout(id);
+  }, [playing, step, fens.length]);
   // Chessboard требует числовой boardWidth — используем ResizeObserver на контейнере.
   // window.innerWidth нарочно не трогаем (правило 4): размер берём из реального wrapper-а.
   const boardWrapRef = React.useRef<HTMLDivElement | null>(null);
@@ -144,37 +154,6 @@ export const PgnReplayModal: React.FC<PgnReplayModalProps> = ({ pgn, title, sess
               {title ?? 'Партия'}
             </span>
           </div>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
-            {/* Сохранить / убрать из сохранённых. Доступно если знаем sessionId. */}
-            {sessionId && (
-              <button
-                onClick={toggleSave}
-                disabled={saveBusy || isSaved === null}
-                aria-label={isSaved ? 'Убрать из сохранённых' : 'Сохранить партию'}
-                title={isSaved ? 'Убрать из сохранённых' : 'Сохранить партию'}
-                style={{
-                  width: 34, height: 34, borderRadius: 10,
-                  background: isSaved ? 'rgba(212,168,67,.18)' : 'rgba(255,255,255,.05)',
-                  border: `.5px solid ${isSaved ? 'rgba(212,168,67,.5)' : 'rgba(255,255,255,.1)'}`,
-                  color: isSaved ? '#F0C85A' : '#B8B0A4',
-                  fontSize: '1rem', cursor: saveBusy ? 'wait' : 'pointer', fontFamily: 'inherit',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  transition: 'background .15s, color .15s, border-color .15s',
-                  opacity: isSaved === null ? .55 : 1,
-                }}
-              >
-                {isSaved ? '★' : '☆'}
-              </button>
-            )}
-            {/* PR-2: ShareSessionButton — поделиться deep-link на эту партию (по shareToken) */}
-            {shareToken && <ShareSessionButton shareToken={shareToken} compact />}
-            <button onClick={onClose} aria-label="Закрыть" style={{
-              width: 34, height: 34, borderRadius: 10,
-              background: 'rgba(255,255,255,.05)', border: '.5px solid rgba(255,255,255,.1)',
-              color: '#B8B0A4', fontSize: '.9rem', cursor: 'pointer', fontFamily: 'inherit',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>✕</button>
-          </div>
         </div>
 
         {/* Шапка с игроками — кликабельные аватары ведут на страницу профиля */}
@@ -223,12 +202,61 @@ export const PgnReplayModal: React.FC<PgnReplayModalProps> = ({ pgn, title, sess
           )}
         </div>
 
-        {/* Кнопки управления — крупные, без жадничанья */}
+        {/* Панель партии. Кенан 01.08.2026: нижняя панель при просмотре партии
+            должна стать панелью просмотра — привычный набор перемотки, как в
+            шахматных программах, плюс сохранение и выход. Крестик из шапки
+            убран: он ложился поверх собственных кнопок Telegram, а сохранение
+            там дублировало это же действие. */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '0 16px 12px' }}>
+          <button onClick={() => { setPlaying(false); setStep(0); }} disabled={step === 0}
+                  style={{ ...ctrlBtn, opacity: step === 0 ? .3 : 1 }} aria-label="В начало">
+            <IcoToStart size={16} color="#EAE2CC" />
+          </button>
+          <button onClick={() => { setPlaying(false); setStep(s => Math.max(0, s - 1)); }} disabled={step === 0}
+                  style={{ ...ctrlBtn, opacity: step === 0 ? .3 : 1 }} aria-label="Назад на ход">
+            <IcoStepBack size={16} color="#EAE2CC" />
+          </button>
+          <button onClick={() => { if (step >= totalMoves) setStep(0); setPlaying(p => !p); }}
+                  style={{ ...ctrlBtn, background: 'rgba(240,200,90,.13)', border: '.5px solid rgba(240,200,90,.3)' }}
+                  aria-label={playing ? 'Пауза' : 'Смотреть'}>
+            {playing ? <IcoPause size={17} color="#F0C85A" /> : <IcoPlay size={17} color="#F0C85A" />}
+          </button>
+          <button onClick={() => { setPlaying(false); setStep(s => Math.min(totalMoves, s + 1)); }} disabled={step >= totalMoves}
+                  style={{ ...ctrlBtn, opacity: step >= totalMoves ? .3 : 1 }} aria-label="Вперёд на ход">
+            <IcoStepFwd size={16} color="#EAE2CC" />
+          </button>
+          <button onClick={() => { setPlaying(false); setStep(totalMoves); }} disabled={step >= totalMoves}
+                  style={{ ...ctrlBtn, opacity: step >= totalMoves ? .3 : 1 }} aria-label="В конец">
+            <IcoToEnd size={16} color="#EAE2CC" />
+          </button>
+        </div>
+
         <div style={{ display: 'flex', gap: 8, padding: '0 16px 14px' }}>
-          <button onClick={() => setStep(0)}                                    style={ctrlBtn} aria-label="В начало">⏮</button>
-          <button onClick={() => setStep(s => Math.max(0, s - 1))}              style={ctrlBtn} aria-label="Назад на ход">◀</button>
-          <button onClick={() => setStep(s => Math.min(totalMoves, s + 1))}     style={ctrlBtn} aria-label="Вперёд на ход">▶</button>
-          <button onClick={() => setStep(totalMoves)}                           style={ctrlBtn} aria-label="В конец">⏭</button>
+          {sessionId && (
+            <button
+              onClick={toggleSave}
+              disabled={saveBusy || isSaved === null}
+              style={{
+                flex: 1, padding: '12px', borderRadius: 12,
+                background: isSaved ? 'rgba(212,168,67,.18)' : 'rgba(255,255,255,.05)',
+                border: `.5px solid ${isSaved ? 'rgba(212,168,67,.5)' : 'rgba(255,255,255,.1)'}`,
+                color: isSaved ? '#F0C85A' : '#B8B0A4',
+                fontSize: '.8rem', fontWeight: 700, fontFamily: 'inherit',
+                cursor: saveBusy ? 'wait' : 'pointer',
+                opacity: isSaved === null ? .55 : 1,
+              }}
+            >
+              {isSaved ? 'Сохранено' : 'Сохранить'}
+            </button>
+          )}
+          {shareToken && <ShareSessionButton shareToken={shareToken} compact />}
+          <button onClick={onClose} style={{
+            flex: 1, padding: '12px', borderRadius: 12,
+            background: 'rgba(255,255,255,.05)', border: '.5px solid rgba(255,255,255,.1)',
+            color: '#B8B0A4', fontSize: '.8rem', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer',
+          }}>
+            Закрыть
+          </button>
         </div>
 
         {/* Список ходов — ощутимые тап-таргеты, больше воздуха */}
