@@ -126,7 +126,11 @@ for (const pg of PAGES) {
     await page.addStyleTag({ content:
       '*,*::before,*::after{animation:none!important;transition:none!important;' +
       'animation-duration:0s!important;transition-duration:0s!important}' +
-      '[data-toasts]{display:none!important}' }).catch(() => {});
+      '[data-toasts]{display:none!important}' +
+      // Подсказка-приветствие показывается по ответу CloudStorage и успевала
+      // отрисоваться то до снимка, то после: 12_wars расходился на 12% через
+      // раз. Эталон снимаем с содержимого экрана, а не с подсказки поверх.
+      '[data-onboarding]{display:none!important}' }).catch(() => {});
     await page.evaluate(() => {
       for (let id = 1; id < 10000; id++) window.clearInterval(id);
     }).catch(() => {});

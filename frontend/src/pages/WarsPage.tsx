@@ -37,7 +37,7 @@ const WarCountdown: React.FC<{ initialSeconds: number; active: boolean }> = ({ i
 const WarsIntroModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const t = useT();
   return (
-    <div style={overlayStyle} onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div data-onboarding style={overlayStyle} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div style={{ ...modalCardStyle, maxWidth: 420, margin: 'auto', borderRadius: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 18 }}>
           <div style={{ fontSize: 20, fontFamily: "'Inter',sans-serif", fontWeight: 800, color: '#EAE2CC', letterSpacing: '-.01em' }}>
@@ -107,7 +107,7 @@ const DeclareWarModal: React.FC<{
   };
 
   return (
-    <div style={overlayStyle} onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div data-onboarding style={overlayStyle} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div style={bottomSheetStyle}>
         <div style={handleBar} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
@@ -369,7 +369,7 @@ const CountryDetailModal: React.FC<{
   const entryFeeStr = c?.entryFee ?? COUNTRY_ENTRY_FEE.toString();
 
   return (
-    <div style={overlayStyle} onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div data-onboarding style={overlayStyle} onClick={(e) => e.target === e.currentTarget && onClose()}>
       {ConfirmDialog}
       {showDonateModal && (
         <DonateModal
@@ -648,7 +648,7 @@ const WarDetailModal: React.FC<{ warId: string; onClose: () => void }> = ({ warI
   const war = data;
 
   return (
-    <div style={overlayStyle} onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div data-onboarding style={overlayStyle} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div style={{ ...bottomSheetStyle, maxHeight: '90vh' }}>
         <div style={handleBar} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
