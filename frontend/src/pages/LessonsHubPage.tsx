@@ -17,8 +17,9 @@ import { IcoLock, IcoCheck2 } from '@/components/icons/UiIcons';
 import { useT, useText } from '@/i18n/useT';
 
 const MAX_LEVELS = 50;
-// Backend формула наград: 1000 + 1000 * level
-const lessonReward = (level: number) => 1000 + 1000 * level;
+// Награда живёт в самом уроке — за трудность блока, а не за номер
+// (Кенан 01.08.2026). Формула осталась только для номеров вне линейки.
+const fallbackReward = (level: number) => 1000 + 1000 * level;
 
 /** Название урока и блока приходят ключами — берём их из словаря. */
 const LessonTitle: React.FC<{ titleKey: string; fallback: string; color: string }> =
@@ -42,7 +43,7 @@ const BlockHeading: React.FC<{ blockKey: string }> = ({ blockKey }) => {
 export const LessonsHubPage: React.FC = () => {
   const navigate = useNavigate();
   // Линейка уроков со сценарием: нужны и число, и названия с блоками.
-  const [lessons, setLessons] = useState<Array<{ id: number; block: string; titleKey: string }>>([]);
+  const [lessons, setLessons] = useState<Array<{ id: number; block: string; titleKey: string; reward: string }>>([]);
   const lessonsCount = lessons.length;
   const t = useT();
   const [current, setCurrent] = useState<number>(1);
@@ -59,6 +60,8 @@ export const LessonsHubPage: React.FC = () => {
   // Линейка не должна упираться в число из кода: уроков со сценарием уже
   // больше полусотни, и обрезать список по MAX_LEVELS значило бы спрятать их.
   const levels = Array.from({ length: Math.max(MAX_LEVELS, lessonsCount) }, (_, i) => i + 1);
+  const rewardOf = (level: number) =>
+    lessons.find(l => l.id === level)?.reward ?? String(fallbackReward(level));
 
   return (
     <PageLayout title={t.lessons?.title ?? 'Уроки'} centered>
@@ -84,7 +87,7 @@ export const LessonsHubPage: React.FC = () => {
               {t.lessons?.currentLevel ?? 'Текущий уровень'} {current}
             </div>
             <div style={{ fontSize: '.66rem', color: '#9A9490', marginTop: 2, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-              {t.lessons?.reward ?? 'Награда'}: <CoinIcon size={11} /> {fmtBalance(String(lessonReward(current)))}
+              {t.lessons?.reward ?? 'Награда'}: <CoinIcon size={11} /> {fmtBalance(rewardOf(current))}
             </div>
           </div>
         </div>
@@ -153,7 +156,7 @@ export const LessonsHubPage: React.FC = () => {
                   </div>
                   <div style={{ fontSize: '.62rem', color: isLocked ? '#3A3028' : '#7A7875', marginTop: 2, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                     {isCompleted ? (t.lessons?.completed ?? 'Пройден') : (
-                      <>+{fmtBalance(String(lessonReward(level)))} <CoinIcon size={9} /></>
+                      <>+{fmtBalance(rewardOf(level))} <CoinIcon size={9} /></>
                     )}
                   </div>
                 </div>

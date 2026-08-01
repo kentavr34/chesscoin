@@ -253,8 +253,19 @@ tasksRouter.get("/puzzles/daily", authMiddleware, async (req: Request, res: Resp
 });
 
 // ─── Sprint 5 (Floor 2: Learning) — последовательные уроки ─────────────────
-// Формула награды: 1000 + 1000 * level
-const lessonReward = (level: number) => BigInt(1000 + 1000 * level);
+// Награда — за трудность блока, а не за номер урока (Кенан 01.08.2026).
+// Прежняя формула 1000 + 1000 * level разгонялась вместе с линейкой: урок
+// 120 платил бы 121 000, а весь путь — 7,3 млн на игрока. Теперь сумма
+// лежит в самом уроке: азбука 2 тыс., маты 3 тыс., приёмы 5 тыс.,
+// эндшпиль 7 тыс. Формула осталась только для номеров вне линейки —
+// там урок берётся случайной задачей и своей строки не имеет.
+const fallbackReward = (level: number) => BigInt(1000 + 1000 * level);
+const lessonReward = async (level: number): Promise<bigint> => {
+  const lesson = await prisma.lesson.findUnique({
+    where: { id: level }, select: { reward: true },
+  }).catch(() => null);
+  return lesson?.reward ?? fallbackReward(level);
+};
 
 // GET /api/v1/tasks/lessons/progress
 tasksRouter.get("/lessons/progress", authMiddleware, async (req: Request, res: Response) => {
@@ -273,7 +284,7 @@ tasksRouter.get("/lessons/progress", authMiddleware, async (req: Request, res: R
       currentLevel,
       completedLevels,
       completedAt: row?.completedAt ?? [],
-      nextReward: lessonReward(currentLevel).toString(),
+      nextReward: (await lessonReward(currentLevel)).toString(),
     });
   } catch (err) {
     logger.error("[tasks/lessons/progress]", err);
@@ -298,7 +309,7 @@ tasksRouter.post("/lessons/:level/complete", authMiddleware, async (req: Request
       return res.status(400).json({ error: `Текущий уровень: ${current}, нельзя завершить ${level}` });
     }
 
-    const reward = lessonReward(level);
+    const reward = await lessonReward(level);
     const now = new Date();
 
     // upsert progress
