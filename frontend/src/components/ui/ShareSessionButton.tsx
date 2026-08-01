@@ -8,6 +8,7 @@
 
 import React from 'react';
 import { IcoShare } from '@/components/icons/UiIcons';
+import { linkToShare } from '@/lib/deepLink';
 
 const showToast = (text: string, type: 'info' | 'error' = 'info') => {
   window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text, type } }));
@@ -20,11 +21,9 @@ interface Props {
   color?: string;
 }
 
-// PR-2: формат deep-link. Бот должен принимать ?startapp=share_<token>
-// и роутить Mini App на /share/<token>. Для копирования просто URL Mini App.
-function buildShareUrl(token: string): string {
-  return `https://t.me/ChessCoinBot/app?startapp=share_${token}`;
-}
+// Ссылка собирается в одном месте — @/lib/deepLink. Здесь она вела на
+// несуществующего ChessCoinBot и не открывала ничего.
+const buildShareUrl = linkToShare;
 
 export const ShareSessionButton: React.FC<Props> = ({ shareToken, label = 'Поделиться', compact = false, color = '#82CFFF' }) => {
   if (!shareToken) return null;

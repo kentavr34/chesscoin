@@ -18,6 +18,85 @@ import { nanoid } from "nanoid";
 import { updateBalance } from "@/services/economy";
 import { TransactionType } from "@prisma/client";
 
+const BOT_TOKEN = () => process.env.BOT_TOKEN ?? "";
+const BOT_USERNAME = "chessgamecoin_bot";
+
+/**
+ * Личное сообщение бойцу о назначенном бою в войне.
+ *
+ * Кенан 01.08.2026: «когда ему система войны отправляет battle, ему должны
+ * через бота в личное сообщение прийти уведомление о том, что ты участвуешь
+ * в войне, заходи сражайся за свою страну. И с кнопкой ссылки, на которую
+ * нажав, он должен перейти напрямую в комнату этой войны, то есть на эту доску».
+ *
+ * Ссылка ведёт в Mini App параметром match_<sessionId> — приложение открывает
+ * доску сразу, без промежуточных экранов.
+ */
+async function notifyWarMatchInTelegram(
+  sessionId: string,
+  warId: string,
+  attackerUserId: string,
+  defenderUserId: string,
+) {
+  if (!BOT_TOKEN()) return;
+
+  const [war, players] = await Promise.all([
+    prisma.countryWar.findUnique({
+      where: { id: warId },
+      select: {
+        attackerCountry: { select: { id: true, nameRu: true, nameEn: true, flag: true } },
+        defenderCountry: { select: { id: true, nameRu: true, nameEn: true, flag: true } },
+      },
+    }),
+    prisma.user.findMany({
+      where: { id: { in: [attackerUserId, defenderUserId] } },
+      select: { id: true, telegramId: true, firstName: true, username: true, language: true },
+    }),
+  ]);
+  if (!war) return;
+
+  const url = `https://t.me/${BOT_USERNAME}?startapp=match_${sessionId}`;
+  const byId = new Map(players.map(p => [p.id, p]));
+
+  for (const [meId, foeId, myCountry, foeCountry] of [
+    [attackerUserId, defenderUserId, war.attackerCountry, war.defenderCountry] as const,
+    [defenderUserId, attackerUserId, war.defenderCountry, war.attackerCountry] as const,
+  ]) {
+    const me = byId.get(meId);
+    const foe = byId.get(foeId);
+    if (!me?.telegramId) continue;
+
+    const foeName = foe?.firstName || foe?.username || "соперник";
+    const text =
+      `${myCountry?.flag ?? ""} <b>Тебе назначен бой в войне!</b>
+
+` +
+      `Ты играешь за <b>${myCountry?.nameRu ?? "свою страну"}</b> против ` +
+      `${foeCountry?.flag ?? ""} <b>${foeCountry?.nameRu ?? "соперника"}</b>.
+` +
+      `Соперник: <b>${foeName}</b>.
+
+` +
+      `Партия ждёт тебя сутки — каждая победа увеличивает твою долю в трофее.`;
+
+    try {
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN()}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: me.telegramId,
+          text,
+          parse_mode: "HTML",
+          reply_markup: { inline_keyboard: [[{ text: "⚔️ За доску", url }]] },
+        }),
+      });
+      logger.info(`[WarMatchmaking] уведомление отправлено ${me.telegramId} по партии ${sessionId}`);
+    } catch (e) {
+      logError("[WarMatchmaking] sendMessage", e);
+    }
+  }
+}
+
 const MAX_CONCURRENT_BATTLES = 10;
 const WAR_MATCHMAKING_LOCK_TTL = 15; // seconds
 // PR-1: 15 минут на сторону (Кенан 2026-05-17). Было 10. Причина: онлайн-связь
@@ -263,6 +342,12 @@ async function createWarMatch(
       });
     } catch {}
   }
+
+  // Событие в сокете видит только тот, кто прямо сейчас в приложении. Кенан
+  // 01.08.2026: боец должен узнать о назначенном бое личным сообщением от
+  // бота, с кнопкой прямо на доску, а не искать его в списке сражений страны.
+  notifyWarMatchInTelegram(session.id, war.id, attackerUserId, defenderUserId)
+    .catch(err => logError("[WarMatchmaking] уведомление в Telegram", err));
 
   // Удалить из очереди
   await redis.srem(`war:queue:${war.id}:${war.attackerCountryId}`, attackerUserId);

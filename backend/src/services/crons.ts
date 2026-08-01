@@ -27,6 +27,10 @@ type TelegramKeyboard = { inline_keyboard: Array<Array<{ text: string; url?: str
 const BOT_TOKEN = () => process.env.BOT_TOKEN ?? "";
 const CHANNEL_ID = () => process.env.TELEGRAM_CHANNEL_ID ?? "";
 const BOT_LINK = "https://t.me/chessgamecoin_bot";
+// Кенан 01.08.2026: «человек кликает, но попадает на главную страницу игры,
+// а не сразу на ту игровую доску». `?start=` открывает чат с ботом; чтобы
+// открылось само приложение на нужном экране, нужен `?startapp=`.
+const APP_LINK = (param: string) => `https://t.me/chessgamecoin_bot?startapp=${param}`;
 
 // ─── Telegram helper ─────────────────────────────────────────────────────────
 // Минимальная ставка для поста в канал. Было `> 10000`, а стандартная ставка
@@ -75,7 +79,7 @@ async function postTopBattle() {
         `💰 Ставка: <b>${betK}K ᚙ</b>\n\n` +
         `Смотри и болей за победителя!`;
       const liveKb: TelegramKeyboard = {
-        inline_keyboard: [[{ text: '👁 Смотреть игру', url: `${BOT_LINK}?start=spectate_${topLive.id}` }]],
+        inline_keyboard: [[{ text: '👁 Смотреть игру', url: APP_LINK(`match_${topLive.id}`) }]],
       };
       await sendToChannel(liveText, liveKb);
     }
@@ -101,7 +105,7 @@ async function postTopBattle() {
         `Первый, кто примет — сразится за двойной банк!\n` +
         `Кто готов? 💪`;
       const waitKb: TelegramKeyboard = {
-        inline_keyboard: [[{ text: '⚔️ Принять вызов', url: `${BOT_LINK}?start=battle_${topWaiting.code}` }]],
+        inline_keyboard: [[{ text: '⚔️ Принять вызов', url: APP_LINK(`game_${topWaiting.code}`) }]],
       };
       await sendToChannel(waitText, waitKb);
     }

@@ -12,7 +12,9 @@ import { translations } from '@/i18n/translations';
 import { IcoStripedQueen, IcoKingWhite as IcoKingW, IcoKingBlack as IcoKingB } from '@/components/icons/ChessIcons';
 import { IcoBolt, IcoClose } from '@/components/icons/UiIcons';
 import { PgnReplayModal } from '@/components/profile/PgnReplayModal';
-import { ShareSessionButton, buildShareUrl } from '@/components/ui/ShareSessionButton';
+import { ShareSessionButton } from '@/components/ui/ShareSessionButton';
+import { linkToSession, telegramShare } from '@/lib/deepLink';
+import { CountryFlag } from '@/components/ui/CountryFlag';
 import type { BattleLobbyItem, GameSession, UserPublic } from '@/types';
 import { useT } from '@/i18n/useT';
 
@@ -349,14 +351,31 @@ export const BattlesPage: React.FC = () => {
               // если shareToken отсутствует (старая сессия до миграции), fallback на
               // share по sessionId (?startapp=battle_<id>).
               const shareToken = (s as any).shareToken as string | undefined;
-              const fallbackUrl = `https://t.me/share/url?url=${encodeURIComponent(`https://t.me/ChessCoinBot/app?startapp=battle_${s.id}`)}&text=${encodeURIComponent(`Вызов на шахматный батл! Ставка: ${fmtBalance(s.bet ?? '0')} монет`)}`;
+              // Приглашение ведёт прямо на доску и приводит реферала тому, кто
+              // поделился (Кенан 01.08.2026). Прежняя ссылка вела на
+              // несуществующего бота и терялась вовсе.
+              const inviteUrl = linkToSession(s.id, user?.telegramId);
+              const fallbackUrl = telegramShare(
+                inviteUrl,
+                `Вызов на шахматный батл! Ставка: ${fmtBalance(s.bet ?? '0')} монет`,
+              );
               return (
                 <PrivateBattleCard
                   key={s.id}
                   session={s}
                   onShare={() => {
-                    if (shareToken) window.open(buildShareUrl(shareToken), '_blank');
-                    else window.open(fallbackUrl, '_blank');
+                    // Ссылка на комнату важнее универсального просмотра:
+                    // приглашают именно СЫГРАТЬ этот батл.
+                    window.open(fallbackUrl, '_blank');
+                  }}
+                  onPlay={() => {
+                    // Бой из войны или турнира: принимаем и сразу за доску —
+                    // ради этого панелька и нужна (Кенан 01.08.2026).
+                    const socket = getSocket();
+                    socket.emit('game:accept_private', { sessionId: s.id }, (res: any) => {
+                      if (res?.ok && res.session) upsertSession(res.session);
+                      navigate('/game/' + s.id);
+                    });
                   }}
                   onCancel={() => handleCancel(s.id)}
                   onProfile={(id) => navigate('/profile/' + id)}
@@ -1345,8 +1364,9 @@ const PrivateBattleCard: React.FC<{
   session: GameSession;
   onShare: () => void;
   onCancel: () => void;
+  onPlay: () => void;
   onProfile: (id: string) => void;
-}> = ({ session, onShare, onCancel, onProfile }) => {
+}> = ({ session, onShare, onCancel, onPlay, onProfile }) => {
   const { user } = useUserStore();
   const mySide = session.sides.find(s => s.playerId === user?.id);
   const oppSide = session.sides.find(s => s.playerId !== user?.id);
@@ -1380,6 +1400,10 @@ const PrivateBattleCard: React.FC<{
 
   const borderColor = src?.border ?? 'rgba(155,109,255,.25)';
   const labelColor = src?.color ?? '#9B85FF';
+  // Бой, назначенный системой: игрок его не создавал и отменить не может.
+  const assigned = srcKey === 'WAR' || srcKey === 'TOURNAMENT';
+  const myCountry = (mySide?.player as any)?.country as string | undefined;
+  const oppCountry = (opp as any)?.country as string | undefined;
 
   return (
     <div style={{
@@ -1436,6 +1460,13 @@ const PrivateBattleCard: React.FC<{
           <div style={{ fontSize: '.85rem', fontWeight: 700, color: '#EAE2CC', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {opp?.firstName ?? mySide?.player?.firstName ?? '?'}
           </div>
+          {srcKey === 'WAR' && (myCountry || oppCountry) && (
+            <div style={{ fontSize: '.62rem', color: '#9A9490', marginTop: 3, display: 'flex', alignItems: 'center', gap: 5 }}>
+              {myCountry && <CountryFlag code={myCountry} size={13} />}
+              <span style={{ color: labelColor, fontWeight: 700 }}>против</span>
+              {oppCountry && <CountryFlag code={oppCountry} size={13} />}
+            </div>
+          )}
           <div style={{ fontSize: '.65rem', color: '#7A7875', marginTop: 2, display: 'flex', gap: 8 }}>
             {timerText && (
               <span style={{ color: secsLeft < 3600 ? '#FF8855' : labelColor, fontWeight: 700 }}>
@@ -1448,16 +1479,23 @@ const PrivateBattleCard: React.FC<{
           </div>
         </div>
 
-        {/* Действия */}
+        {/* Действия. Назначенный системой бой отменить нельзя — его играют;
+            поэтому у войны и турнира главная кнопка ведёт прямо на доску. */}
         <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
           {srcKey === 'PRIVATE' && (
             <button onClick={onShare} style={privateCardBtnStyle('#82CFFF', 'rgba(74,158,255,.1)', 'rgba(74,158,255,.3)')}>
               Поделиться
             </button>
           )}
-          <button onClick={onCancel} style={privateCardBtnStyle('#FF8080', 'rgba(220,50,47,.08)', 'rgba(220,50,47,.3)')}>
-            Отменить
-          </button>
+          {assigned ? (
+            <button onClick={onPlay} style={privateCardBtnStyle(labelColor, `${labelColor}1A`, `${labelColor}4D`)}>
+              За доску
+            </button>
+          ) : (
+            <button onClick={onCancel} style={privateCardBtnStyle('#FF8080', 'rgba(220,50,47,.08)', 'rgba(220,50,47,.3)')}>
+              Отменить
+            </button>
+          )}
         </div>
       </div>
     </div>

@@ -112,7 +112,7 @@ async function postNewBattleToChannel(
       `👤 Игрок: <b>${creatorName}</b>\n` +
       `💰 Ставка: <b>${betFmt}M ᚙ</b>\n` +
       `⏱ Время: <b>${mins} мин</b>\n\n` +
-      `🎯 Принять вызов → <a href="${BOT_LINK}?start=battle_${sessionCode}">Войти в батл</a>`;
+      `🎯 Принять вызов → <a href="${BOT_LINK}?startapp=game_${sessionCode}">Войти в батл</a>`;
     await fetch(`https://api.telegram.org/bot${BOT_TOKEN()}/sendMessage`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -121,7 +121,7 @@ async function postNewBattleToChannel(
         text,
         parse_mode: "HTML",
         reply_markup: {
-          inline_keyboard: [[{ text: "⚔️ Принять вызов", url: `${BOT_LINK}?start=battle_${sessionCode}` }]],
+          inline_keyboard: [[{ text: "⚔️ Принять вызов", url: `${BOT_LINK}?startapp=game_${sessionCode}` }]],
         },
       }),
     });
@@ -243,6 +243,12 @@ export const setupSocketHandlers = (io: Server) => {
                 currentSideId: true, winnerSideId: true, bet: true, botLevel: true,
                 isSurrender: true, duration: true, turnStartedAt: true,
                 startedAt: true, finishedAt: true, createdAt: true, code: true,
+                // Без этих полей военная партия не доходила до вкладки
+                // «Приватные»: формат подставлял isPrivate=false, фронт
+                // отбрасывал её фильтром, и игрок узнавал о своём бое только
+                // зайдя в страну и раскрыв список сражений (Кенан 01.08.2026).
+                isPrivate: true, sourceType: true, sourceRefId: true,
+                deadlineAt: true, acceptedByAll: true, shareToken: true,
                 sides: { include: { player: { select: { id: true, firstName: true, lastName: true, username: true, elo: true, avatar: true, avatarType: true, avatarGradient: true, league: true, countryMember: { select: { country: { select: { code: true } } } } } } } },
               },
             },

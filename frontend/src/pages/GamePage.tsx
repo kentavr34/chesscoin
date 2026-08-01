@@ -19,6 +19,7 @@ import { useConfirm } from '@/components/ui/ConfirmModal';
 import { CountryFlag } from '@/components/ui/CountryFlag';
 import { PgnReplayModal } from '@/components/profile/PgnReplayModal';
 import { useT } from '@/i18n/useT';
+import { linkToShare, BOT_USERNAME } from '@/lib/deepLink';
 
 // ── Константы ──────────────────────────────────────────────────────────────────
 // 2026-05-16: chess unicode не рендерится в Telegram WebView Android/iOS
@@ -1479,8 +1480,8 @@ export function GamePage() {
               // Fallback на legacy watch_<code> для очень старых сессий без токена.
               const shareToken = (session as any)?.shareToken as string | undefined;
               const inviteUrl = shareToken
-                ? `https://t.me/ChessCoinBot/app?startapp=share_${shareToken}`
-                : `https://t.me/chessgamecoin_bot?start=watch_${session?.code ?? sessionId}`;
+                ? linkToShare(shareToken)
+                : `https://t.me/${BOT_USERNAME}?start=watch_${session?.code ?? sessionId}`;
               const text = `Смотри партию ChessCoin в прямом эфире`;
               try {
                 const tg = (window as any).Telegram?.WebApp;

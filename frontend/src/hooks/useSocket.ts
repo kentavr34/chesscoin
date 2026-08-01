@@ -61,6 +61,18 @@ export const useSocket = () => {
       });
     }
 
+    // Deep-link на конкретную партию: ?startapp=match_<id> и refmatch_.
+    // useAuth клал id в window и оставлял записку «приложение подхватит» —
+    // но подхватывать было некому, и человек по ссылке из канала или из
+    // уведомления о войне попадал на главный экран вместо доски
+    // (Кенан 01.08.2026). Присоединяться не нужно: он уже участник или
+    // смотрит партию зрителем — это решает сама страница партии.
+    const pendingSid = (window as unknown as Record<string, unknown>).__pendingSessionId as string | undefined;
+    if (pendingSid) {
+      delete (window as unknown as Record<string, unknown>).__pendingSessionId;
+      navigate('/game/' + pendingSid);
+    }
+
     // Watch deep-link: открыть партию как зритель по короткому коду.
     // Работает и для завершённых сессий (на GamePage откроется PGN-replay).
     const pendingWatch = (window as any).__pendingWatchCode as string | undefined;
