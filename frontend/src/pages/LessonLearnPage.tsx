@@ -238,7 +238,6 @@ export const LessonLearnPage: React.FC = () => {
           />
         </div>
       </div>
-      </div>
 
       {/* Запись партии: в обучении по ней можно перематывать, в тесте она
           просто показывает ходы, которые игрок уже сделал. */}
@@ -262,6 +261,7 @@ export const LessonLearnPage: React.FC = () => {
             </span>
           );
         })}
+      </div>
       </div>
 
       <div style={S.hint}>
