@@ -39,8 +39,12 @@ const parseStartParam = (startParam: string): string | undefined => {
     return undefined;
   }
   if (startParam.startsWith('refmatch_')) {
+    // Режем по ПОСЛЕДНЕМУ подчёркиванию: в идентификаторе партии их не
+    // бывает, а вот в коде пригласившего — запросто. По первому рвалось
+    // ровно посередине, и на доску уходил обрубок (поймано проверкой
+    // двумя аккаунтами 01.08.2026).
     const rest = startParam.slice(9);
-    const sep = rest.indexOf('_');
+    const sep = rest.lastIndexOf('_');
     if (sep > 0) {
       sessionStorage.setItem('pendingSessionId', rest.slice(sep + 1));
       return rest.slice(0, sep);
