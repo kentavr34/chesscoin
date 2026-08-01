@@ -55,10 +55,13 @@ async function openAs(token, startParam) {
 const sessionId = await new Promise((resolve) => {
   const s = io(APP_URL, { auth: { token: TOKEN1 }, transports: ['websocket'], path: '/socket.io' });
   const done = (v) => { try { s.close(); } catch {} resolve(v); };
-  s.on('connect_error', (e) => done(null));
+  s.on('connect_error', (e) => { console.log('сокет не подключился:', e?.message); done(null); });
   s.on('connect', () => {
     s.emit('game:create:battle', { color: 'white', duration: 300, bet: '1000', isPrivate: true },
-      (res) => done(res?.session?.id ?? null));
+      (res) => {
+        if (!res?.session?.id) console.log('ответ сервера:', JSON.stringify(res).slice(0, 200));
+        done(res?.session?.id ?? null);
+      });
   });
   setTimeout(() => done(null), 15000);
 });
@@ -83,10 +86,15 @@ console.log('кнопка «Принять вызов»:', hasAccept);
 let joined = false;
 if (hasAccept) {
   await acceptBtn.first().click().catch(() => {});
-  for (let i = 0; i < 20; i++) {
-    const body = (await two.page.locator('body').innerText()).replace(/\s+/g, ' ');
-    if (/ВАШ ХОД|Ход соперника|Your move/i.test(body)) { joined = true; break; }
+  // Признак успеха — кнопка исчезла: она рисуется, только пока место свободно.
+  // Искать «ВАШ ХОД» нельзя: принявший ходит вторым, и надпись у него другая.
+  for (let i = 0; i < 24; i++) {
+    if (await acceptBtn.count() === 0) { joined = true; break; }
     await two.page.waitForTimeout(500);
+  }
+  if (!joined) {
+    const body = (await two.page.locator('body').innerText()).replace(/\s+/g, ' ');
+    console.log('после нажатия экран:', body.slice(0, 220));
   }
 }
 console.log('сел за доску игроком:', joined);
