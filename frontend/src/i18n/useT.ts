@@ -51,3 +51,16 @@ export const useT = () => {
   const base = dicts[lang] ?? dicts.ru;
   return withOverrides(base, dict);
 };
+
+/**
+ * Строка из таблицы текстов по прямому ключу.
+ *
+ * Нужна там, где ключ собирается на лету — например `lessons.item.3.title`
+ * для урока номер 3. Через `t.lessons.item[3].title` это не достать: во
+ * встроенном словаре такой ветки нет, и цепочка обрывается на первом же
+ * несуществующем звене (поймано на живом уроке 01.08.2026).
+ */
+export const useText = (key: string, fallback = ''): string => {
+  const dict = useI18nStore((s) => s.dict);
+  return dict[key] ?? fallback;
+};

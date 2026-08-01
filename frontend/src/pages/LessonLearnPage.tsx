@@ -15,7 +15,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
 import { lessonsApi, tasksApi, type LessonItem } from '@/api';
-import { useT } from '@/i18n/useT';
+import { useT, useText } from '@/i18n/useT';
 import { fmtBalance } from '@/utils/format';
 import { haptic } from '@/lib/haptic';
 import { CoinIcon } from '@/components/ui/CoinIcon';
@@ -59,6 +59,10 @@ export const LessonLearnPage: React.FC = () => {
   const [wrong, setWrong] = useState(false);
   const [reward, setReward] = useState<string | null>(null);
 
+  // Название и пояснение живут в таблице текстов под ключом с номером урока.
+  const lessonTitle = useText(`lessons.item.${lessonId}.title`);
+  const explain = useText(`lessons.item.${lessonId}.explain`);
+
   const boardBoxRef = useRef<HTMLDivElement | null>(null);
   const [boardWidth, setBoardWidth] = useState(340);
 
@@ -100,9 +104,14 @@ export const LessonLearnPage: React.FC = () => {
     ? positionAfter(startFen, moves, shown)
     : positionAfter(startFen, moves, played);
 
+  // Ход можно сделать и кликом: две клетки подряд. На телефоне это основной
+  // способ, перетаскивание вторично.
+  const [selected, setSelected] = useState<string | null>(null);
+
   const switchMode = (m: Mode) => {
     setMode(m);
     setWrong(false);
+    setSelected(null);
     if (m === 'test') setPlayed(0);
     else setShown(0);
   };
@@ -150,8 +159,7 @@ export const LessonLearnPage: React.FC = () => {
     );
   }
 
-  const title = (t.lessons as Record<string, any>)?.item?.[lesson.id]?.title ?? `${t.lessons.lesson} ${lesson.id}`;
-  const explain = (t.lessons as Record<string, any>)?.item?.[lesson.id]?.explain ?? '';
+  const title = lessonTitle || `${t.lessons.lesson} ${lesson.id}`;
 
   return (
     <Shell>
@@ -167,7 +175,15 @@ export const LessonLearnPage: React.FC = () => {
             position={fen}
             boardOrientation={boardSide}
             arePiecesDraggable={mode === 'test' && phase === 'ready'}
-            onPieceDrop={(from, to) => tryMove(from, to)}
+            onPieceDrop={(from, to) => { setSelected(null); return tryMove(from, to); }}
+            onSquareClick={(square) => {
+              if (mode !== 'test') return;
+              if (!selected) { setSelected(square); return; }
+              if (selected === square) { setSelected(null); return; }
+              tryMove(selected, square);
+              setSelected(null);
+            }}
+            customSquareStyles={selected ? { [selected]: { background: 'rgba(123,97,255,.4)' } } : {}}
             customBoardStyle={{ borderRadius: 10 }}
           />
         </div>
