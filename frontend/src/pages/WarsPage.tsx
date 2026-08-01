@@ -5,7 +5,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { warsApi } from '@/api';
 import { useUserStore } from '@/store/useUserStore';
 import { fmtBalance } from '@/utils/format';
-import { useT } from '@/i18n/useT';
+import { useT, useText } from '@/i18n/useT';
 import { useConfirm } from '@/components/ui/ConfirmModal';
 import { CoinIcon } from '@/components/ui/CoinIcon';
 import { DonateModal } from '@/components/ui/DonateModal';
@@ -218,8 +218,19 @@ const CountryDetailModal: React.FC<{
   const [pending, setPending] = useState<Array<{ id: string; joinedAt: string; user: { id: string; firstName: string; username?: string | null; avatar?: string | null; elo: number; referralCount: number } }>>([]);
   const [pendingBusy, setPendingBusy] = useState<string | null>(null);
 
+  // Счёт против каждой другой страны (Кенан 30.07.2026). Считается из
+  // завершённых войн, поэтому не может разойтись с историей партий.
+  const rivalsTitle = useText('wars.rivals.title', 'Счёт против стран');
+  const rivalsWarsLabel = useText('wars.rivals.wars', 'войн');
+  const rivalsBattlesLabel = useText('wars.rivals.battles', 'партий');
+  const [rivals, setRivals] = useState<Array<{
+    country: { id: string; nameRu: string; flag: string };
+    warsWon: number; warsLost: number; battlesWon: number; battlesLost: number;
+  }>>([]);
+
   useEffect(() => {
     warsApi.country(countryId).then(setData).catch(console.error);
+    warsApi.rivals(countryId).then(r => setRivals(r.rivals)).catch(() => {});
   }, [countryId]);
 
   // Грузим pending только если я ГК этой страны
@@ -520,6 +531,41 @@ const CountryDetailModal: React.FC<{
               ))}
             </div>
           </div>
+        )}
+
+        {/* Счёт против других стран (Кенан 30.07.2026). Пусто, пока страна
+            ни с кем не воевала — лишний заголовок в этом случае не рисуем. */}
+        {rivals.length > 0 && (
+          <>
+            <div style={{ ...sectionLabelStyle, marginBottom: 10 }}>
+              <span>{rivalsTitle}</span>
+            </div>
+            <div style={{ marginBottom: 16 }}>
+              {rivals.map(r => (
+                <div key={r.country.id} style={{
+                  display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px',
+                  background: 'rgba(255,255,255,.02)', border: '.5px solid rgba(255,255,255,.05)',
+                  borderRadius: 12, marginBottom: 6,
+                }}>
+                  <span style={{ fontSize: 18, flexShrink: 0 }}>{r.country.flag}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#EAE2CC', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {r.country.nameRu}
+                    </div>
+                    <div style={{ fontSize: 10, color: '#7A7875', marginTop: 1 }}>
+                      {rivalsWarsLabel}: {r.warsWon}–{r.warsLost}
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 800, color: r.battlesWon >= r.battlesLost ? '#3DBA7A' : '#FF8080' }}>
+                      {r.battlesWon}:{r.battlesLost}
+                    </div>
+                    <div style={{ fontSize: 9, color: '#5A5248' }}>{rivalsBattlesLabel}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
 
         <div style={{ ...sectionLabelStyle, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

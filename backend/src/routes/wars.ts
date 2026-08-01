@@ -597,6 +597,81 @@ warsRouter.get("/active", authMiddleware, async (req: Request, res: Response) =>
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /wars/countries/:id/rivals — счёт против каждой другой страны
+//
+// Кенан 30.07.2026: «счётчик побед у каждой страны над каждой другой стороной».
+// Отдельного поля под это нет и не нужно — всё считается из завершённых войн
+// и сыгранных в них партий, поэтому цифры не могут разойтись с историей.
+// ─────────────────────────────────────────────────────────────────────────────
+warsRouter.get("/countries/:id/rivals", authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id;
+
+    const wars = await prisma.countryWar.findMany({
+      where: {
+        status: "FINISHED",
+        OR: [{ attackerCountryId: id }, { defenderCountryId: id }],
+      },
+      select: {
+        id: true, attackerCountryId: true, defenderCountryId: true,
+        attackerWins: true, defenderWins: true, finishedAt: true,
+        attackerCountry: { select: { id: true, code: true, nameRu: true, nameEn: true, flag: true } },
+        defenderCountry: { select: { id: true, code: true, nameRu: true, nameEn: true, flag: true } },
+      },
+    });
+
+    type Row = {
+      country: { id: string; code: string; nameRu: string; nameEn: string; flag: string };
+      warsWon: number; warsLost: number; warsDraw: number;
+      battlesWon: number; battlesLost: number;
+      lastAt: Date | null;
+    };
+    const byRival = new Map<string, Row>();
+
+    for (const w of wars) {
+      const iAmAttacker = w.attackerCountryId === id;
+      const rival = iAmAttacker ? w.defenderCountry : w.attackerCountry;
+      if (!rival) continue;
+      const myWins = iAmAttacker ? w.attackerWins : w.defenderWins;
+      const foeWins = iAmAttacker ? w.defenderWins : w.attackerWins;
+
+      const row = byRival.get(rival.id) ?? {
+        country: rival, warsWon: 0, warsLost: 0, warsDraw: 0,
+        battlesWon: 0, battlesLost: 0, lastAt: null,
+      };
+      row.battlesWon += myWins;
+      row.battlesLost += foeWins;
+      if (myWins > foeWins) row.warsWon += 1;
+      else if (myWins < foeWins) row.warsLost += 1;
+      else row.warsDraw += 1;
+      if (w.finishedAt && (!row.lastAt || w.finishedAt > row.lastAt)) row.lastAt = w.finishedAt;
+      byRival.set(rival.id, row);
+    }
+
+    // Сначала те, с кем воевали чаще, потом по названию.
+    const rivals = [...byRival.values()].sort((a, b) => {
+      const ta = a.warsWon + a.warsLost + a.warsDraw;
+      const tb = b.warsWon + b.warsLost + b.warsDraw;
+      if (ta !== tb) return tb - ta;
+      return a.country.nameRu.localeCompare(b.country.nameRu, "ru");
+    });
+
+    res.json({
+      rivals,
+      total: {
+        warsWon: rivals.reduce((n, r) => n + r.warsWon, 0),
+        warsLost: rivals.reduce((n, r) => n + r.warsLost, 0),
+        battlesWon: rivals.reduce((n, r) => n + r.battlesWon, 0),
+        battlesLost: rivals.reduce((n, r) => n + r.battlesLost, 0),
+      },
+    });
+  } catch (e: unknown) {
+    logError("[Wars/rivals]", e);
+    res.status(500).json({ error: (e instanceof Error ? e.message : String(e)) });
+  }
+});
+
 // GET /wars/history — завершённые войны
 // ─────────────────────────────────────────────────────────────────────────────
 warsRouter.get("/history", authMiddleware, async (req: Request, res: Response) => {

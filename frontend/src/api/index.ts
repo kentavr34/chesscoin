@@ -204,6 +204,15 @@ export const tournamentsApi = {
 export const warsApi = {
   countries: (sort?: 'wins' | 'alpha') =>
     api.get<{ countries: Country[] }>(`/wars/countries${sort ? `?sort=${sort}` : ''}`),
+  rivals: (id: string) =>
+    api.get<{
+      rivals: Array<{
+        country: { id: string; code: string; nameRu: string; nameEn: string; flag: string };
+        warsWon: number; warsLost: number; warsDraw: number;
+        battlesWon: number; battlesLost: number; lastAt: string | null;
+      }>;
+      total: { warsWon: number; warsLost: number; battlesWon: number; battlesLost: number };
+    }>(`/wars/countries/${id}/rivals`),
   country: (id: string, sort?: 'alpha' | 'auto') =>
     api.get<{ country: Country; members: import('@/types').CountryMemberFull[]; isCommander: boolean }>(
       `/wars/countries/${id}${sort === 'alpha' ? '?sort=alpha' : ''}`,
