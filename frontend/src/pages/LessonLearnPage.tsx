@@ -23,9 +23,16 @@ import { CoinIcon } from '@/components/ui/CoinIcon';
 type Mode = 'learn' | 'test';
 type Phase = 'loading' | 'ready' | 'done' | 'notfound';
 
+const EMPTY_FEN = '8/8/8/8/8/8/8/8 w - - 0 1';
+
 /** Позиция после первых n ходов сценария. */
 function positionAfter(fen: string, moves: string[], n: number): string {
-  const chess = new Chess(fen);
+  // Компонент считает позицию на каждой отрисовке, в том числе пока урок ещё
+  // грузится и fen пустой. new Chess('') бросает исключение, и весь экран
+  // падал в «Something went wrong» (поймано живой проверкой 01.08.2026).
+  if (!fen) return EMPTY_FEN;
+  let chess: Chess;
+  try { chess = new Chess(fen); } catch { return EMPTY_FEN; }
   for (let i = 0; i < n && i < moves.length; i++) {
     const uci = moves[i];
     try {
@@ -83,8 +90,11 @@ export const LessonLearnPage: React.FC = () => {
 
   const moves = lesson?.moves ?? [];
   const startFen = lesson?.fen ?? '';
-  const boardSide: 'white' | 'black' =
-    startFen && new Chess(startFen).turn() === 'b' ? 'black' : 'white';
+  const boardSide: 'white' | 'black' = (() => {
+    if (!startFen) return 'white';
+    try { return new Chess(startFen).turn() === 'b' ? 'black' : 'white'; }
+    catch { return 'white'; }
+  })();
 
   const fen = mode === 'learn'
     ? positionAfter(startFen, moves, shown)
