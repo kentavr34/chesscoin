@@ -56,7 +56,9 @@ export const LessonsHubPage: React.FC = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  const levels = Array.from({ length: MAX_LEVELS }, (_, i) => i + 1);
+  // Линейка не должна упираться в число из кода: уроков со сценарием уже
+  // больше полусотни, и обрезать список по MAX_LEVELS значило бы спрятать их.
+  const levels = Array.from({ length: Math.max(MAX_LEVELS, lessonsCount) }, (_, i) => i + 1);
 
   return (
     <PageLayout title={t.lessons?.title ?? 'Уроки'} centered>
