@@ -1,5 +1,63 @@
 declare global { interface Window { __pendingGameCode?: string; __pendingSessionId?: string; } }
 
+/**
+ * Перенести разобранные из ссылки намерения в window, чтобы их подхватил
+ * useSocket и открыл нужный экран.
+ *
+ * Раньше это делалось только внутри ветки «логинимся впервые»: у всех, кто уже
+ * открывал приложение, токен есть, функция выходила раньше — и ссылка на
+ * партию не срабатывала вообще (Кенан 01.08.2026: «попадает на главную
+ * страницу игры, а не сразу на ту игровую доску»).
+ */
+const applyPendingDeepLink = () => {
+  const move = (key: string, prop: string) => {
+    const v = sessionStorage.getItem(key);
+    if (!v) return;
+    sessionStorage.removeItem(key);
+    (window as unknown as Record<string, unknown>)[prop] = v;
+  };
+  move('pendingGameCode', '__pendingGameCode');
+  move('pendingSessionId', '__pendingSessionId');
+  move('pendingWatchCode', '__pendingWatchCode');
+  move('pendingShareToken', '__pendingShareToken');
+};
+
+/**
+ * Разобрать параметр ссылки Telegram. Вызывается ДО любых ветвлений по токену:
+ * намерение игрока не зависит от того, авторизован он уже или нет.
+ * Возвращает реферала, если он был в ссылке.
+ */
+const parseStartParam = (startParam: string): string | undefined => {
+  if (!startParam) return undefined;
+  if (startParam.startsWith('ref_')) return startParam.slice(4);
+  if (startParam.startsWith('game_')) {
+    sessionStorage.setItem('pendingGameCode', startParam.slice(5));
+    return undefined;
+  }
+  if (startParam.startsWith('match_')) {
+    sessionStorage.setItem('pendingSessionId', startParam.slice(6));
+    return undefined;
+  }
+  if (startParam.startsWith('refmatch_')) {
+    const rest = startParam.slice(9);
+    const sep = rest.indexOf('_');
+    if (sep > 0) {
+      sessionStorage.setItem('pendingSessionId', rest.slice(sep + 1));
+      return rest.slice(0, sep);
+    }
+    return undefined;
+  }
+  if (startParam.startsWith('watch_')) {
+    sessionStorage.setItem('pendingWatchCode', startParam.slice(6));
+    return undefined;
+  }
+  if (startParam.startsWith('share_')) {
+    sessionStorage.setItem('pendingShareToken', startParam.slice(6));
+  }
+  return undefined;
+};
+
+
 import { useEffect } from 'react';
 import { authApi } from '@/api';
 import { setTokens, clearTokens, getAccessToken } from '@/api/client';
@@ -55,12 +113,17 @@ export const useAuth = () => {
     }
     // ─────────────────────────────────────────────────────────────────────────
 
+    // Намерение из ссылки разбираем ДО всего остального: оно не зависит от
+    // того, авторизован игрок или нет.
+    const linkReferrer = parseStartParam(tg?.initDataUnsafe?.start_param ?? '');
+
     // Уже есть токен — пробуем получить профиль
     if (getAccessToken()) {
       try {
         const user = await authApi.me();
         setUser(user);
         if (user.activeTheme) setActiveTheme(user.activeTheme as ThemeKey);
+        applyPendingDeepLink();
         return;
       } catch {
         clearTokens();
@@ -103,46 +166,7 @@ export const useAuth = () => {
       return;
     }
 
-    // Получаем referrer и game deep link из startParam.
-    // Поддерживаем форматы:
-    //   ref_<userId>           — реферальная ссылка
-    //   game_<code>            — войти в батл по короткому коду
-    //   match_<sessionId>      — открыть конкретную партию сразу после логина
-    //   refmatch_<uid>_<sid>   — реферал + сразу окно партии
-    //   watch_<code>           — смотреть как зритель публичный батл (2026-05-16)
-    //                            работает и для завершённых партий — открывает PGN-replay
-    const startParam = tg.initDataUnsafe?.start_param ?? '';
-    let referrer: string | undefined;
-    let gameCode: string | undefined;
-    let sessionId: string | undefined;
-    let watchCode: string | undefined;
-    if (startParam.startsWith('ref_')) {
-      referrer = startParam.slice(4);
-    } else if (startParam.startsWith('game_')) {
-      gameCode = startParam.slice(5);
-    } else if (startParam.startsWith('match_')) {
-      sessionId = startParam.slice(6);
-    } else if (startParam.startsWith('refmatch_')) {
-      const rest = startParam.slice(9);
-      const sep = rest.indexOf('_');
-      if (sep > 0) {
-        referrer = rest.slice(0, sep);
-        sessionId = rest.slice(sep + 1);
-      }
-    } else if (startParam.startsWith('watch_')) {
-      watchCode = startParam.slice(6);
-    } else if (startParam.startsWith('share_')) {
-      // PR-2: deep-link на универсальный SharePage по shareToken.
-      // Сохраняем в sessionStorage — App после auth сделает navigate(`/share/${token}`).
-      const shareToken = startParam.slice(6);
-      sessionStorage.setItem('pendingShareToken', shareToken);
-    }
-
-    if (gameCode)  sessionStorage.setItem('pendingGameCode', gameCode);
-    if (sessionId) sessionStorage.setItem('pendingSessionId', sessionId);
-    if (watchCode) sessionStorage.setItem('pendingWatchCode', watchCode);
-
-    await loginWithInitData(tg.initData, referrer);
+    await loginWithInitData(tg.initData, linkReferrer);
   };
 
   const loginWithInitData = async (initData: string, referrer?: string) => {
@@ -153,32 +177,8 @@ export const useAuth = () => {
       setUser(result.user);
       if (result.user.activeTheme) setActiveTheme(result.user.activeTheme as ThemeKey);
 
-      // Deep link в конкретную игру (по коду)
-      const pendingCode = sessionStorage.getItem('pendingGameCode');
-      if (pendingCode) {
-        sessionStorage.removeItem('pendingGameCode');
-        window.__pendingGameCode = pendingCode;
-      }
-      // Deep link по sessionId — сразу в окно партии (через переход по роутеру)
-      const pendingSid = sessionStorage.getItem('pendingSessionId');
-      if (pendingSid) {
-        sessionStorage.removeItem('pendingSessionId');
-        window.__pendingSessionId = pendingSid;
-        // Приложение подхватит и сделает navigate('/game/' + sid) в App.tsx / Router
-      }
-      // Watch-deep-link: смотреть партию зрителем по коду
-      // (работает и после завершения — на странице покажется PGN-replay).
-      const pendingWatch = sessionStorage.getItem('pendingWatchCode');
-      if (pendingWatch) {
-        sessionStorage.removeItem('pendingWatchCode');
-        (window as any).__pendingWatchCode = pendingWatch;
-      }
-      // PR-2: Share-deep-link — универсальный SharePage по shareToken.
-      const pendingShare = sessionStorage.getItem('pendingShareToken');
-      if (pendingShare) {
-        sessionStorage.removeItem('pendingShareToken');
-        (window as any).__pendingShareToken = pendingShare;
-      }
+      // Намерение из ссылки — одним местом на оба пути входа.
+      applyPendingDeepLink();
     } catch (err) {
       console.error('[Auth] Login failed:', err);
       setLoading(false);
