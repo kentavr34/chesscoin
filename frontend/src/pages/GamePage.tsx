@@ -811,8 +811,12 @@ export function GamePage() {
   // первый, он как бы принять, выходит, либо если игра уже началась, то он
   // попадает в список зрителей»). У боёв войны и турнира обе стороны заняты
   // системой — там остаётся только смотреть.
+  // Персональный вызов создаётся как FRIENDLY, а не BATTLE — если проверять
+  // только BATTLE, приглашение «сыграем?» принять было бы нельзя, а это как
+  // раз самый частый случай, ради которого ссылкой и делятся.
+  const isJoinableType = session?.type === 'BATTLE' || session?.type === 'FRIENDLY';
   const canAcceptChallenge = !!(
-    isBattle
+    isJoinableType
     && session?.status === 'WAITING_FOR_OPPONENT'
     && !session?.mySideId
     && (session?.sides?.length ?? 0) < 2
