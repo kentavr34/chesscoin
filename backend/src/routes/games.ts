@@ -103,7 +103,15 @@ router.get("/spectate/:sessionId", async (req: Request, res: Response) => {
       },
     });
     if (!session) return res.status(404).json({ error: "SESSION_NOT_FOUND" });
-    if (session.isPrivate) return res.status(403).json({ error: "SESSION_PRIVATE" });
+    // Приватную партию посторонним по-прежнему не показываем — кроме одного
+    // случая: она ещё ждёт соперника и место свободно. Тогда это не чужая
+    // партия, а открытое приглашение, и ссылка на него и есть пропуск
+    // (Кенан 01.08.2026: «либо если первый, он как бы принять выходит»).
+    // Как только партия началась, правило снова строгое.
+    const isOpenInvite = session.status === "WAITING_FOR_OPPONENT" && session.sides.length < 2;
+    if (session.isPrivate && !isOpenInvite) {
+      return res.status(403).json({ error: "SESSION_PRIVATE" });
+    }
 
     // Формируем как formatSession, но без mySide (зритель не участник).
     const formatSide = (s: any) => ({
