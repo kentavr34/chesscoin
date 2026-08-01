@@ -179,7 +179,30 @@ warsRouter.get("/countries/:id", authMiddleware, async (req: Request, res: Respo
       winsInActiveWar = await getWarWinsByUser(activeWar.id);
     }
 
+    // Порядок списка бойцов задан Кенаном (30.07.2026): чемпион, затем
+    // главнокомандующий, затем три лучших по победам за страну, затем все
+    // остальные. Внутри каждой ступени — прежний порядок: кто больше принёс
+    // в текущей войне, потом по победам за всё время, потом по алфавиту.
+    const topByWins = [...members]
+      .sort((a, b) => b.warWins - a.warWins || a.joinedAt.getTime() - b.joinedAt.getTime())
+      .filter(m => m.warWins > 0)
+      .slice(0, 3)
+      .map(m => m.userId);
+    const topByWinsSet = new Set(topByWins);
+
+    const tierOf = (m: typeof members[0]) => {
+      if (m.user.isMonthlyChampion) return 0;   // чемпион
+      if (m.userId === commanderId) return 1;   // главком
+      if (topByWinsSet.has(m.userId)) return 2; // три лучших по победам
+      return 3;                                 // остальные
+    };
+
     const cmp = (a: typeof members[0], b: typeof members[0]) => {
+      // Алфавитный режим просит именно алфавит — ступени в нём не мешаем.
+      if (!wantAlpha) {
+        const ta = tierOf(a), tb = tierOf(b);
+        if (ta !== tb) return ta - tb;
+      }
       if (activeWar) {
         const wa = winsInActiveWar.get(a.userId) ?? 0;
         const wb = winsInActiveWar.get(b.userId) ?? 0;
@@ -205,6 +228,11 @@ warsRouter.get("/countries/:id", authMiddleware, async (req: Request, res: Respo
       referralCount: m.user.referralCount ?? 0,
       joinedAt: m.joinedAt,
       isCommander: m.userId === commanderId,
+      // Чем боец выделен в списке: 0 чемпион, 1 главком, 2 один из трёх
+      // лучших по победам за страну, 3 остальные.
+      tier: tierOf(m),
+      isChampion: !!m.user.isMonthlyChampion,
+      isTopByWins: topByWinsSet.has(m.userId),
       user: m.user,
     }));
 
