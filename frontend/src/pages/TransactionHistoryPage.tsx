@@ -264,7 +264,12 @@ export const TransactionHistoryPage: React.FC = () => {
           {/* Сводка прихода/расхода */}
           <SummaryHeader transactions={transactions} />
 
-          {/* Группы по дате */}
+          {/* Группы по дате. Помечены как живые данные: страж вида сравнивает
+              экраны попиксельно, а здесь содержимое меняется от каждой
+              операции — и он сообщал о «расхождении с утверждённым видом»,
+              которого нет. В снимке эти строки скрываются, сверяется рамка
+              экрана: заголовок, сводка, вкладки, нижнее меню. */}
+          <div data-dynamic-list style={{ display: 'contents' }}>
           {groups.map(({ label, items }) => (
             <div key={label}>
               <SectionLabel label={label} />
@@ -275,6 +280,7 @@ export const TransactionHistoryPage: React.FC = () => {
               </div>
             </div>
           ))}
+          </div>
 
           {/* Нижний отступ */}
           <div style={{ height: 16 }} />

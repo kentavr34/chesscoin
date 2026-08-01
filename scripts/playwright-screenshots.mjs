@@ -151,7 +151,11 @@ for (const pg of PAGES) {
       // Подсказка-приветствие показывается по ответу CloudStorage и успевала
       // отрисоваться то до снимка, то после: 12_wars расходился на 12% через
       // раз. Эталон снимаем с содержимого экрана, а не с подсказки поверх.
-      '[data-onboarding]{display:none!important}' }).catch(() => {});
+      '[data-onboarding]{display:none!important}' +
+      // Живые списки (история операций) меняются от каждой сделки. Сверяем
+      // рамку экрана, а не содержимое строк: иначе страж кричал бы после
+      // каждой транзакции на проде.
+      '[data-dynamic-list]{visibility:hidden!important}' }).catch(() => {});
     await page.evaluate(() => {
       for (let id = 1; id < 10000; id++) window.clearInterval(id);
     }).catch(() => {});
