@@ -90,9 +90,12 @@ export const createBotSession = async (
 
   const user = await validateCanStartSession(userId, SessionType.BOT);
 
-  // Проверяем разблокировку уровня (нельзя играть уровень выше разблокированного + 1)
-  const maxAllowed = (user.jarvisLevel ?? 1) + 1;
-  if (botLevel > maxAllowed) throw new Error(`Level ${botLevel} is not unlocked yet. Beat level ${maxAllowed - 1} first`);
+  // Уровни Джарвиса открыты все (Кенан 01.08.2026): «всё равно я не смогу
+  // выиграть двадцатый, если не могу девятый. Но зато будет весело».
+  // Раньше выше «пройденный + 1» подняться было нельзя, и в списке уровень
+  // выглядел доступным, а по нажатию выскакивало красное «сначала пройди
+  // девятый». Прогресс это не ломает: награда и повышение jarvisLevel
+  // по-прежнему считаются по своим правилам в finish.ts.
 
   const bot = await getBot();
   const chess = new Chess();

@@ -91,8 +91,11 @@ export const JarvisModal: React.FC<JarvisModalProps> = ({ currentJarvisLevel, on
         {/* Scrollable levels container */}
         <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingRight: 4, display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
           {[...localizedLevels].reverse().map((lvl) => {
-            const unlocked = lvl.level <= currentJarvisLevel;
+            // Кенан 01.08.2026: непройденные уровни открыты ВСЕ. «Всё равно я
+            // не выиграю двадцатый, если не могу девятый. Но зато будет
+            // весело». Закрыт только пройденный — его переигрывать незачем.
             const completed = lvl.level < currentJarvisLevel;
+            const unlocked = !completed;
             const isActive = lvl.level === currentJarvisLevel;
 
             return (
@@ -121,8 +124,6 @@ export const JarvisModal: React.FC<JarvisModalProps> = ({ currentJarvisLevel, on
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
                   {completed ? (
                     <span style={{ fontSize: 'var(--jarvis-badge-size)', color: 'var(--color-green, #00D68F)', fontWeight: 700 }}>{t.profile.passed}</span>
-                  ) : !unlocked ? (
-                    <span style={{ fontSize: 'var(--jarvis-lock-size)' }}>{t.jarvis.locked ? '🔒' : ''}</span>
                   ) : (
                     <div>
                       <div style={{ fontSize: 'var(--jarvis-reward-size)', fontWeight: 800, color: 'var(--color-accent, #F5C842)', fontFamily: "'JetBrains Mono',monospace" }}>
