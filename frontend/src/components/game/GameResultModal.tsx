@@ -3,6 +3,7 @@ import { fmtBalance } from '@/utils/format';
 import { haptic } from '@/lib/haptic';
 import { sound } from '@/lib/sound';
 import { useT } from '@/i18n/useT';
+import { useNavigate } from 'react-router-dom';
 import { IcoTrophy, IcoSwords } from '@/components/icons/TournamentIcons';
 import { IcoHandshake, IcoHeartBroken, IcoSave, IcoCheck2 } from '@/components/icons/UiIcons';
 
@@ -48,6 +49,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
 }) => {
   const [gameSaved, setGameSaved] = React.useState(false);
   const t = useT();
+  const navigate = useNavigate();
   const [visible, setVisible] = useState(false);
 
   // Анимация появления + haptic + sound
@@ -268,7 +270,29 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             }}
           >
-            <IcoSwords size={16} /> Rematch
+            <IcoSwords size={16} /> {t.gameResult.rematch}
+          </button>
+        )}
+
+        {/* Кенан 01.08.2026: «на уведомлении о проигрыше добавить кнопку —
+            пройди обучение и научись побеждать». Показываем при любом
+            проигрыше: и Джарвису, и живому игроку. Ведёт на текущий урок
+            игрока, а не в начало линейки. */}
+        {result === 'lose' && (
+          <button
+            onClick={() => navigate('/lessons')}
+            style={{
+              width: '100%', marginTop: 'var(--gap-m)',
+              padding: 'var(--card-padding-md)', borderRadius: 'var(--radius-m)',
+              background: 'rgba(130,207,255,0.1)',
+              border: '1px solid rgba(130,207,255,0.3)',
+              color: '#82CFFF',
+              fontSize: 'var(--result-button-size)', fontWeight: 700,
+              cursor: 'pointer', fontFamily: 'inherit',
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            }}
+          >
+            {t.gameResult.goLearn}
           </button>
         )}
 

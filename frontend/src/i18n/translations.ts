@@ -113,6 +113,7 @@ export const translations = {
       playAgain: 'Play again', backToMenu: 'Back to menu',
     },
     gameResult: {
+      goLearn: 'Learn and start winning',
       win: 'Victory!', lose: 'Defeat', draw: 'Draw',
       forWin: 'For victory', forPieces: 'For pieces', earned: 'Earned',
       commission: 'Table commission (10%)', total: 'Total',
@@ -792,6 +793,7 @@ export const translations = {
       playAgain: 'Играть снова', backToMenu: 'Назад в меню',
     },
     gameResult: {
+      goLearn: 'Пройди обучение и научись побеждать',
       win: 'Победа!', lose: 'Поражение', draw: 'Ничья',
       forWin: 'За победу', forPieces: 'За фигуры', earned: 'Заработано',
       commission: 'Комиссия стола (10%)', total: 'Итого',
