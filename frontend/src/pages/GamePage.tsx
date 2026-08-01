@@ -18,7 +18,7 @@ import { fmtBalance } from '@/utils/format';
 import { useConfirm } from '@/components/ui/ConfirmModal';
 import { CountryFlag } from '@/components/ui/CountryFlag';
 import { PgnReplayModal } from '@/components/profile/PgnReplayModal';
-import { useT } from '@/i18n/useT';
+import { useT, useText } from '@/i18n/useT';
 import { linkToSession } from '@/lib/deepLink';
 import { IcoBook } from '@/components/icons/UiIcons';
 
@@ -486,6 +486,7 @@ const IcoDraw = () => (
 const ResultSheet: React.FC<SheetProps> = ({ type, winAmount, pieceCoins, onRematch, onHome }) => {
   const t = useT();
   const navigateResult = useNavigate();
+  const learnLabel = useText('gameResult.learn', 'Обучение');
   const cfg = RESULT_CFG[type];
   const isWin  = type === 'win';
   const isDraw = type === 'draw';
@@ -597,34 +598,21 @@ const ResultSheet: React.FC<SheetProps> = ({ type, winAmount, pieceCoins, onRema
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M20.5 9A9 9 0 005.3 5.3L1 10M23 14l-4.2 4.7A9 9 0 013.5 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               {t.gameResult.rematch}
             </button>
-            <button disabled style={{
-              flex: 1, padding: '14px 0', borderRadius: 14,
-              background: 'rgba(255,255,255,.03)', border: '.5px solid rgba(255,255,255,.06)',
-              color: '#303440', fontSize: '.82rem', fontWeight: 800,
-              cursor: 'default', fontFamily: 'inherit',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, opacity: 0.5,
-            }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 11l3 3L22 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              {t.gameResult.analysis}
-            </button>
-          </div>
-          {/* Проиграл — зовём учиться (Кенан 01.08.2026: «если игрок проигрывает
-              Джарвису — кнопку, пройди обучение и научись побеждать»). Раньше
-              эта кнопка была добавлена в GameResultModal.tsx, который на экране
-              не используется вовсе, и до игрока не доходила. */}
-          {type === 'lose' && (
+            {/* Кенан 02.08.2026: «место анализа лучше сделать обучение и
+                кликнуть, пусть человек переходит на обучение». Кнопка «Анализ»
+                была нарисована серой и не нажималась — то есть её как бы не
+                было вовсе. */}
             <button onClick={() => navigateResult('/lessons')} style={{
-              width: '100%', padding: '14px 0', borderRadius: 14, marginBottom: 10,
-              background: 'rgba(155,109,255,.14)',
-              border: '.5px solid rgba(155,109,255,.4)',
-              color: '#C4B5FF', fontSize: '.85rem', fontWeight: 800,
+              flex: 1, padding: '14px 0', borderRadius: 14,
+              background: 'rgba(155,109,255,.14)', border: '.5px solid rgba(155,109,255,.4)',
+              color: '#C4B5FF', fontSize: '.82rem', fontWeight: 800,
               cursor: 'pointer', fontFamily: 'inherit',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
             }}>
               <IcoBook size={16} color="#C4B5FF" />
-              {t.gameResult.goLearn}
+              {learnLabel}
             </button>
-          )}
+          </div>
           <button onClick={onHome} style={{
             width: '100%', padding: '16px 0', borderRadius: 14,
             background: 'linear-gradient(135deg,#2A1E08,#4A3810)',
