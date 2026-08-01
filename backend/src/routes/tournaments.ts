@@ -7,6 +7,7 @@ import { getIo } from "@/lib/io"; // BUG-01 fix: без circular dependency
 import { authMiddleware } from "@/middleware/auth";
 import { updateBalance } from "@/services/economy";
 import { splitTournamentPot } from "@/services/prizes";
+import { getTreasuryId } from "@/services/treasury";
 import { TransactionType } from "@prisma/client";
 import { Chess } from "chess.js";
 import { nanoid } from "nanoid";
@@ -457,14 +458,25 @@ export async function settleTournament(tournamentId: string) {
     });
   }
 
-  // Комиссия стола — всё, что платформа берёт с турнира. Раньше остаток
-  // кассы просто оставался в строке турнира и сгорал.
+  // Комиссия стола — на СЧЁТ платформы, чтобы монеты не исчезали из капитала.
   if (commission > 0n) {
+    const treasuryId = await getTreasuryId();
+    if (treasuryId) {
+      await updateBalance(treasuryId, commission, TransactionType.TOURNAMENT_WIN,
+        { tournamentId: tournament.id, reason: 'table_commission' })
+        .catch(e => logError('[Tournaments] комиссия стола:', e));
+    }
     await prisma.platformConfig.update({
       where: { id: 'singleton' },
       data: { platformReserve: { increment: commission } },
-    }).catch(e => logError('[Tournaments] комиссия стола:', e));
+    }).catch(e => logError('[Tournaments] счётчик резерва:', e));
   }
+
+  // Касса роздана — обнуляем, иначе число висит в строке турнира навсегда.
+  await prisma.tournament.update({
+    where: { id: tournamentId },
+    data: { prizePool: 0n, donationPool: 0n },
+  }).catch(e => logError('[Tournaments] обнуление кассы:', e));
 
   // Mark tournament as finished
   await prisma.tournament.update({

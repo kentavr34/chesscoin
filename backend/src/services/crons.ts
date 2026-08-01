@@ -17,6 +17,7 @@ import { verifyTonTransaction } from "@/lib/tonverify";
 import { recoverStuckGames } from "@/services/game/recover";
 import { releaseExpiredReservations } from "@/routes/exchange";
 import { splitTournamentPot, splitWarPot } from "@/services/prizes";
+import { getTreasuryId } from "@/services/treasury";
 import { ensurePlatformOrder } from "@/services/platformOrder";
 import { processWarAutoloss } from "@/services/game/warAutoloss"; // PR-1
 import { processTonWithdrawals } from "@/services/tonWithdrawalWorker"; // A5
@@ -368,18 +369,30 @@ async function checkTournamentResults() {
         }
       }
 
-      // Комиссия стола — единственное, что остаётся у платформы. Остатка
-      // сверх неё быть не может: splitTournamentPot гарантирует, что выплаты
-      // плюс комиссия равны кассе до последней монеты.
+      // Комиссия стола уходит на СЧЁТ платформы, а не в счётчик: иначе монеты
+      // просто исчезают из капитала (Кенан 01.08.2026 — «эти цифры сомнительны»).
       if (commission > 0n) {
         try {
+          const treasuryId = await getTreasuryId();
+          if (treasuryId) {
+            await updateBalance(treasuryId, commission, TransactionType.TOURNAMENT_WIN,
+              { tournamentId: t.id, reason: "table_commission" });
+          }
           await prisma.platformConfig.update({
             where: { id: "singleton" },
             data: { platformReserve: { increment: commission } },
           });
           logger.info(`[Cron/Tournament] ${t.id} "${t.name}": комиссия стола ${commission} из кассы ${totalPool}`);
-        } catch (e) { logError("[Cron/Tournament/platformReserve]", e); }
+        } catch (e) { logError("[Cron/Tournament/commission]", e); }
       }
+
+      // Касса роздана — обнуляем её. Раньше число оставалось в строке турнира
+      // навсегда: в завершённых турнирах висело около 6 млн фантомных монет,
+      // и капитал переставал сходиться.
+      await prisma.tournament.update({
+        where: { id: t.id },
+        data: { prizePool: 0n, donationPool: 0n },
+      }).catch(e => logError("[Cron/Tournament/zeroPool]", e));
 
       // Обновляем статус
       await prisma.tournament.update({
