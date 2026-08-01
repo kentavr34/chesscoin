@@ -349,3 +349,64 @@ export const IcoMedalPlace: React.FC<{ place: 1 | 2 | 3; size?: number }> = ({ p
     </svg>
   );
 };
+
+// ── Перемотка сценария: привычный набор из разбора партий ─────────────────────
+// Кенан 01.08.2026: стрелки «‹ ›» непривычны, нужны кнопки как в PGN-плеере.
+export const IcoToStart: React.FC<Props> = ({ size = 14, color = 'currentColor' }) => baseSvg(size, '0 0 20 20', (
+  <>
+    <path d="M15 5v10L8 10l7-5z" fill={color}/>
+    <line x1="5.5" y1="5" x2="5.5" y2="15" stroke={color} strokeWidth="1.8" strokeLinecap="round"/>
+  </>
+));
+
+export const IcoToEnd: React.FC<Props> = ({ size = 14, color = 'currentColor' }) => baseSvg(size, '0 0 20 20', (
+  <>
+    <path d="M5 5v10l7-5-7-5z" fill={color}/>
+    <line x1="14.5" y1="5" x2="14.5" y2="15" stroke={color} strokeWidth="1.8" strokeLinecap="round"/>
+  </>
+));
+
+export const IcoStepBack: React.FC<Props> = ({ size = 14, color = 'currentColor' }) => baseSvg(size, '0 0 20 20', (
+  <path d="M13 5v10L6 10l7-5z" fill={color}/>
+));
+
+export const IcoStepFwd: React.FC<Props> = ({ size = 14, color = 'currentColor' }) => baseSvg(size, '0 0 20 20', (
+  <path d="M7 5v10l7-5-7-5z" fill={color}/>
+));
+
+export const IcoPause: React.FC<Props> = ({ size = 14, color = 'currentColor' }) => baseSvg(size, '0 0 20 20', (
+  <>
+    <rect x="6" y="5" width="3" height="10" rx="1" fill={color}/>
+    <rect x="11" y="5" width="3" height="10" rx="1" fill={color}/>
+  </>
+));
+
+// Обучение / тест / меню в нижней панели урока
+export const IcoBook: React.FC<Props> = ({ size = 14, color = 'currentColor' }) => baseSvg(size, '0 0 20 20', (
+  <>
+    <path d="M3 4.5h5.5a2 2 0 012 2V16a2 2 0 00-2-1.6H3V4.5z" stroke={color} strokeWidth="1.4" strokeLinejoin="round"/>
+    <path d="M17 4.5h-5.5a2 2 0 00-2 2V16a2 2 0 012-1.6H17V4.5z" stroke={color} strokeWidth="1.4" strokeLinejoin="round"/>
+  </>
+));
+
+export const IcoTarget: React.FC<Props> = ({ size = 14, color = 'currentColor' }) => baseSvg(size, '0 0 20 20', (
+  <>
+    <circle cx="10" cy="10" r="6.5" stroke={color} strokeWidth="1.4"/>
+    <circle cx="10" cy="10" r="2.5" stroke={color} strokeWidth="1.4"/>
+  </>
+));
+
+export const IcoList: React.FC<Props> = ({ size = 14, color = 'currentColor' }) => baseSvg(size, '0 0 20 20', (
+  <>
+    <line x1="7" y1="6" x2="16" y2="6" stroke={color} strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="7" y1="10" x2="16" y2="10" stroke={color} strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="7" y1="14" x2="16" y2="14" stroke={color} strokeWidth="1.5" strokeLinecap="round"/>
+    <circle cx="4" cy="6" r="1.1" fill={color}/>
+    <circle cx="4" cy="10" r="1.1" fill={color}/>
+    <circle cx="4" cy="14" r="1.1" fill={color}/>
+  </>
+));
+
+export const IcoPlay: React.FC<Props> = ({ size = 14, color = 'currentColor' }) => baseSvg(size, '0 0 20 20', (
+  <path d="M6 4l11 6-11 6V4z" fill={color}/>
+));

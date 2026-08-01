@@ -57,17 +57,26 @@ const head = (await page.locator('body').innerText()).replace(/\s+/g, ' ').slice
 console.log('экран:', head);
 if (!scenario) { console.log('LESSON_NOT_LOADED'); await browser.close(); process.exit(0); }
 
-// ── Этап «Обучение»: листаем сценарий вперёд ──────────────────────────────
-const forward = page.locator('button', { hasText: '›' });
+// ── Этап «Обучение»: перемотка как в разборе партий ───────────────────────
+// Кенан 01.08.2026 заменил стрелки «‹ ›» на привычный набор: в начало, шаг
+// назад, воспроизведение, шаг вперёд, в конец. Проверяем, что они на месте.
+const controls = ['start', 'prev', 'play', 'next', 'end'];
+const missing = [];
+for (const c of controls) {
+  if (await page.locator(`button[aria-label="${c}"]`).count() === 0) missing.push(c);
+}
+console.log('кнопки перемотки:', missing.length ? 'нет ' + missing.join(',') : 'все пять');
+
+const forward = page.locator('button[aria-label="next"]');
 let stepped = 0;
 for (let i = 0; i < scenario.moves.length; i++) {
   if (await forward.count() === 0) break;
+  if (await forward.first().isDisabled()) break;
   await forward.first().click();
   stepped++;
   await page.waitForTimeout(250);
 }
-const counter = (await page.locator('body').innerText()).match(/(\d+)\s*\/\s*(\d+)/);
-console.log('пролистано ходов:', stepped, '| счётчик:', counter ? counter[0] : 'нет');
+console.log('пролистано ходов:', stepped, 'из', scenario.moves.length);
 
 // ── Этап «Тест»: играем ходы сами ─────────────────────────────────────────
 await page.locator('button', { hasText: /^Тест$|^Test$/ }).first().click();
@@ -87,15 +96,17 @@ await page.waitForTimeout(1500);
 
 const finalText = (await page.locator('body').innerText()).replace(/\s+/g, ' ');
 const done = /Урок пройден|Lesson complete|Dərs keçildi|Ders tamamlandı/.test(finalText);
-const hasNext = /Следующий урок|Next lesson|Növbəti dərs|Sonraki ders/.test(finalText);
-const hasMenu = /Вернуться в меню|Back to menu|Menyuya qayıt|Menüye dön/.test(finalText);
+// Нижняя панель постоянная: подписи короткие, «Следующий» гаснет, пока урок
+// не пройден, и для последнего урока в линейке остаётся выключенной.
+const nextBtn = page.locator('button', { hasText: /^(Следующий|Next|Növbəti|Sonraki)$/ });
+const menuBtn = page.locator('button', { hasText: /^(Меню|Menu|Menyu|Menü)$/ });
+const hasNext = await nextBtn.count() > 0 && !(await nextBtn.first().isDisabled());
+const hasMenu = await menuBtn.count() > 0;
 
 console.log('после теста:', finalText.slice(0, 160));
 console.log('пройден:', done, '| кнопка «следующий»:', hasNext, '| кнопка «в меню»:', hasMenu);
 
-// «Следующий» есть только если следующий урок существует — для последнего
-// в линейке его законно нет.
-if (done && hasMenu) console.log('LESSON_FLOW_OK');
+if (done && hasMenu && missing.length === 0 && stepped === scenario.moves.length) console.log('LESSON_FLOW_OK');
 else console.log('LESSON_FLOW_BROKEN');
 
 await browser.close();
