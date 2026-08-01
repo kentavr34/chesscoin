@@ -10,7 +10,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '@/components/layout/PageLayout';
-import { tasksApi } from '@/api';
+import { lessonsApi, tasksApi } from '@/api';
 import { fmtBalance } from '@/utils/format';
 import { CoinIcon } from '@/components/ui/CoinIcon';
 import { IcoLock, IcoCheck2 } from '@/components/icons/UiIcons';
@@ -22,11 +22,14 @@ const lessonReward = (level: number) => 1000 + 1000 * level;
 
 export const LessonsHubPage: React.FC = () => {
   const navigate = useNavigate();
+  // Сколько уроков со сценарием уже заведено в линейке.
+  const [lessonsCount, setLessonsCount] = useState(0);
   const t = useT();
   const [current, setCurrent] = useState<number>(1);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    lessonsApi.list().then(r => setLessonsCount(r.total)).catch(() => {});
     tasksApi.lessonsProgress()
       .then(r => setCurrent(r.currentLevel))
       .catch(() => setCurrent(1))
@@ -74,7 +77,12 @@ export const LessonsHubPage: React.FC = () => {
               <div
                 key={level}
                 onClick={() => {
-                  if (isCurrent) {
+                  // Урок с готовым сценарием открываем на своём экране: показ,
+                  // затем тест. Для номеров, которых ещё нет в линейке,
+                  // остаётся прежний путь со случайной задачей.
+                  if (isCompleted) return;
+                  if (level <= lessonsCount) navigate(`/learn/${level}`);
+                  else if (isCurrent) {
                     const difficulty = level < 10 ? 'easy' : level < 25 ? 'medium' : 'hard';
                     navigate(`/lesson/random?difficulty=${difficulty}&lesson=${level}`);
                   }

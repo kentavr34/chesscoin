@@ -386,3 +386,25 @@ export const exchangeApi = {
       { boc, ...(partialCoins ? { partialCoins } : {}) }
     ),
 };
+
+// ── ОБУЧЕНИЕ (Кенан 01.08.2026) ───────────────────────────────
+// Тексты приходят ключами: название и пояснение берутся из словаря,
+// поэтому урок сразу работает на всех языках.
+export interface LessonItem {
+  id: number;
+  block: string;
+  titleKey: string;
+  explainKey: string;
+  fen: string;
+  moves: string[];
+  reward: string;
+  isCompleted?: boolean;
+  isCurrent?: boolean;
+}
+
+export const lessonsApi = {
+  list: () =>
+    api.get<{ currentLevel: number; total: number; lessons: LessonItem[] }>('/lessons'),
+  get: (id: number) =>
+    api.get<{ lesson: LessonItem; nextId: number | null }>(`/lessons/${id}`),
+};

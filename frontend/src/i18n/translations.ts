@@ -488,6 +488,11 @@ export const translations = {
       ],
     },
     lessons: {
+      learnBtn: 'Learn', testBtn: 'Test', restart: 'Restart',
+      watchHint: 'Watch the moves, step back and forth',
+      testHint: 'Repeat the moves yourself — no hints',
+      testWrong: 'Wrong move. Go back to Learn and watch again.',
+      done: 'Lesson complete!', nextLesson: 'Next lesson', toMenu: 'Back to menu',
       title: 'Lessons',
       currentLevel: 'Current Level',
       reward: 'Reward',
@@ -1162,6 +1167,11 @@ export const translations = {
       ],
     },
     lessons: {
+      learnBtn: 'Обучение', testBtn: 'Тест', restart: 'Сначала',
+      watchHint: 'Смотри ходы, листай вперёд и назад',
+      testHint: 'Повтори ходы сам — подсказок не будет',
+      testWrong: 'Не тот ход. Вернись в обучение и посмотри ещё раз.',
+      done: 'Урок пройден!', nextLesson: 'Следующий урок', toMenu: 'Вернуться в меню',
       title: 'Уроки',
       currentLevel: 'Текущий уровень',
       reward: 'Награда',

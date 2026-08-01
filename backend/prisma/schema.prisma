@@ -1197,6 +1197,27 @@ enum TradeOrderStatus {
 }
 
 // Sprint 5 (Floor 2: Learning) — последовательное прохождение уровней-уроков
+// ─────────────────────────────────────────
+// ОБУЧЕНИЕ (Кенан 01.08.2026)
+// ─────────────────────────────────────────
+// Урок — не случайная задача, а звено строгой линейки от «как ходит пешка»
+// до сложных комбинаций. Каждый урок проходится в два этапа: сначала доска
+// сама проигрывает сценарий, потом игрок повторяет его без подсказок.
+// Тексты только ключами в ui_texts — урок сразу работает на четырёх языках.
+model Lesson {
+  id         Int      @id                 // номер в линейке
+  block      String                       // azbuka | mates | tactics | endgame | combos | mastery
+  titleKey   String                       // ключ названия в ui_texts
+  explainKey String                       // ключ пояснения в ui_texts
+  fen        String                       // стартовая позиция
+  moves      String[]                     // сценарий: чётные — ходы игрока, нечётные — ответы
+  reward     BigInt
+  createdAt  DateTime @default(now())
+
+  @@index([block])
+  @@map("lessons")
+}
+
 model LessonProgress {
   userId       String     @id
   currentLevel Int        @default(1)
