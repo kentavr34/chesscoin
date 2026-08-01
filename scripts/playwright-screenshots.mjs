@@ -27,6 +27,15 @@ await context.route('**/telegram-web-app.js*', (route) => route.abort());
 if (AUTH_TOKEN) {
   await context.addInitScript((token) => {
     localStorage.setItem('accessToken', token);
+
+    // Медленные таймеры — это карусели подсказок и часы обратного отсчёта.
+    // Пока они тикали, снимок каждый раз попадал в другой кадр и страж
+    // сообщал о «расхождении с утверждённым видом» на ровном месте. Короткие
+    // таймеры не трогаем: на них держится React и загрузка данных.
+    const si = window.setInterval.bind(window);
+    const st = window.setTimeout.bind(window);
+    window.setInterval = (fn, ms, ...a) => (Number(ms) >= 800 ? 0 : si(fn, ms, ...a));
+    window.setTimeout = (fn, ms, ...a) => (Number(ms) >= 800 ? 0 : st(fn, ms, ...a));
     // Mock Telegram WebApp to prevent auth redirect
     window.Telegram = {
       WebApp: {
@@ -106,6 +115,22 @@ for (const pg of PAGES) {
       try { await page.click(pg.click, { timeout: 2000 }); await page.waitForTimeout(1000); }
       catch {}
     }
+    // Экран обязан быть одинаковым от прогона к прогону, иначе страж мигает
+    // и его расхождениям перестаёшь верить (01.08.2026: 00_home, 10_nations и
+    // 12_wars расходились на 3–12% подряд без единой правки в коде).
+    // Гасим анимации и переводы, а карусели подсказок останавливаем на первом
+    // слайде: дальше их листает setInterval, и снимок попадал в случайный кадр.
+    // Всплывашки живут своей жизнью (приветственный бонус, восстановление
+    // попыток) и попадали в кадр через раз — из эталона их убираем: они не
+    // часть вида экрана.
+    await page.addStyleTag({ content:
+      '*,*::before,*::after{animation:none!important;transition:none!important;' +
+      'animation-duration:0s!important;transition-duration:0s!important}' +
+      '[data-toasts]{display:none!important}' }).catch(() => {});
+    await page.evaluate(() => {
+      for (let id = 1; id < 10000; id++) window.clearInterval(id);
+    }).catch(() => {});
+    await page.waitForTimeout(400);
     await page.screenshot({ path: `${OUT}/${pg.name}.png`, fullPage: false });
     console.log(`✅ ${pg.name}.png`);
   } catch (e) {
