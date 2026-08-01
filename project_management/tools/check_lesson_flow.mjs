@@ -51,7 +51,11 @@ page.on('response', async (res) => {
 });
 
 await page.goto(`${APP_URL}/learn/${LESSON_ID}`, { waitUntil: 'networkidle' });
-await page.waitForTimeout(2000);
+// Фиксированной паузы мало: на холодном старте (сразу после пересборки
+// фронта) бандлы тянутся дольше, и страж врал про «урок не загрузился».
+// Ждём именно ответ по уроку, до 20 секунд.
+for (let i = 0; i < 40 && !scenario; i++) await page.waitForTimeout(500);
+await page.waitForTimeout(500);
 
 const head = (await page.locator('body').innerText()).replace(/\s+/g, ' ').slice(0, 140);
 console.log('экран:', head);
