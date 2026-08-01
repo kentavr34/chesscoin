@@ -1,6 +1,7 @@
 /**
  * VictoryScreen.tsx — V3: Помпезный экран победы на 3 секунды
- * Появляется ДО GameResultModal. Проигрыш — маленький тост, без экрана.
+ * Появляется ДО окна результата (ResultSheet в GamePage). Проигрыш —
+ * маленький тост, без экрана.
  */
 
 import React, { useEffect, useState, useRef } from 'react';
