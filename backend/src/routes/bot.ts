@@ -337,7 +337,7 @@ botRouter.get("/stats/detailed", async (_req: Request, res: Response) => {
       stuckWaiting, stuckInProgress,
       config,
       commissionAgg,
-      tonDeposits, pendingWithdrawals, completedWithdrawals,
+      tonDeposits,
     ] = await Promise.all([
       prisma.user.count({ where: { isBot: false } }),
       prisma.user.count({ where: { isBot: false, createdAt: { gte: todayStart } } }),
@@ -359,10 +359,27 @@ botRouter.get("/stats/detailed", async (_req: Request, res: Response) => {
       prisma.session.count({ where: { status: "IN_PROGRESS", updatedAt: { lt: sixHoursAgo } } }),
       prisma.platformConfig.findUnique({ where: { id: "singleton" } }),
       prisma.transaction.aggregate({ where: { type: "BATTLE_COMMISSION" }, _sum: { amount: true } }),
-      prisma.tonTransaction.count({ where: { type: "DEPOSIT" } }),
-      prisma.withdrawalRequest.count({ where: { status: "PENDING" } }),
-      prisma.withdrawalRequest.count({ where: { status: "COMPLETED" } }),
+      prisma.tonDeposit.count(),
     ]);
+
+    // Обращение и казна — из одного места, что и в остальной статистике.
+    const circulation = await getCirculationStats();
+
+    // Цена монеты считается от курса TON, а не хранится числом: 100 000 монет
+    // за 1 TON. Курс берём с CoinGecko, при недоступности — запасное значение.
+    const COINS_PER_TON_STATS = 100_000;
+    let tonUsdt = 5.5;
+    try {
+      const resp = await fetch(
+        "https://api.coingecko.com/api/v3/simple/price?ids=the-open-network&vs_currencies=usd",
+        { signal: AbortSignal.timeout(3000) },
+      );
+      if (resp.ok) {
+        const data = await resp.json() as { "the-open-network"?: { usd?: number } };
+        tonUsdt = data["the-open-network"]?.usd ?? tonUsdt;
+      }
+    } catch { /* сеть недоступна — покажем запасной курс, но не соврём нулём */ }
+    const coinPriceUsd = tonUsdt / COINS_PER_TON_STATS;
 
     res.json({
       users: {
@@ -389,15 +406,28 @@ botRouter.get("/stats/detailed", async (_req: Request, res: Response) => {
         stuckWaiting,
         stuckInProgress,
       },
+      // Экономика считается по РЕАЛЬНЫМ счетам, а не по счётчикам.
+      // Кенан 01.08.2026 назвал прежние цифры сомнительными — и был прав:
+      //   · «эмиттировано» показывало 2 006 200 при обращении 9 027 999:
+      //     счётчик двигался только там, где передавали флаг эмиссии;
+      //   · «резерв» расходился со счётом платформы на 17 млн по той же причине;
+      //   · «цена токена» стояла $0.001, хотя при курсе 100 000 монет за TON
+      //     монета стоит примерно $0.000014 — ошибка в семьдесят раз;
+      //   · «депозитов TON» читалось из старой таблицы и было всегда 0.
       economy: {
         phase: config?.currentPhase ?? 1,
-        totalEmitted: config?.totalEmitted?.toString() ?? "0",
-        reserve: config?.platformReserve?.toString() ?? "0",
-        tokenPrice: config?.tokenPriceUsd ?? 0,
+        capital: circulation.capital,
+        inCirculation: circulation.circulation,
+        circulationPercent: circulation.circulationPercent,
+        treasury: circulation.treasury,
+        balanced: circulation.balanced,
+        threshold: circulation.phase,
+        nextThreshold: circulation.nextThreshold,
+        tokenPriceUsd: coinPriceUsd,
+        tonUsdt,
+        coinsPerTon: COINS_PER_TON_STATS,
         totalCommission: (commissionAgg._sum.amount ?? 0n).toString(),
         tonDeposits,
-        pendingWithdrawals,
-        completedWithdrawals,
       },
     });
   } catch (err: unknown) {

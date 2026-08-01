@@ -254,18 +254,40 @@ async def cb_stats_economy(call: CallbackQuery):
         async with BackendClient() as client:
             stats = await client.get_detailed_stats()
         e = stats.get("economy", {})
+
+        def num(v):
+            """Разряды пробелами: 99990972001 глазами не читается."""
+            try:
+                return f"{int(v):,}".replace(",", " ")
+            except (TypeError, ValueError):
+                return str(v)
+
+        balanced = "сходится" if e.get("balanced") else "⚠️ НЕ СХОДИТСЯ"
+        threshold = {
+            "free": "до 30 млрд — раздача как есть",
+            "soft": "30 млрд пройдено — раздача уменьшается",
+            "hard": "60 млрд пройдено — только рефералка",
+        }.get(e.get("threshold"), "—")
+
         text = (
             f"💰 <b>Экономика</b>\n\n"
             f"📈 Фаза: <b>{e.get('phase', '—')}</b>\n"
-            f"🏦 Эмиттировано: <b>{e.get('totalEmitted', '—')} ᚙ</b>\n"
-            f"🔒 Резерв: <b>{e.get('reserve', '—')} ᚙ</b>\n"
-            f"💎 Цена токена: <b>${e.get('tokenPrice', '—')}</b>\n\n"
+            f"🪙 Общий капитал: <b>{num(e.get('capital'))} ᚙ</b>\n"
+            f"🔄 В обращении: <b>{num(e.get('inCirculation'))} ᚙ</b>"
+            f" ({e.get('circulationPercent', '—')}%)\n"
+            f"🏦 Не выпущено: <b>{num(e.get('treasury'))} ᚙ</b>\n"
+            f"⚖️ Баланс капитала: <b>{balanced}</b>\n\n"
+            f"<b>Порог выдачи:</b>\n"
+            f"  {threshold}\n"
+            f"  Следующий: <b>{num(e.get('nextThreshold'))} ᚙ</b>\n\n"
+            f"<b>Курс:</b>\n"
+            f"  💎 1 TON = <b>{num(e.get('coinsPerTon'))} ᚙ</b> (${e.get('tonUsdt', '—')})\n"
+            f"  🪙 1 монета ≈ <b>${e.get('tokenPriceUsd', 0):.8f}</b>\n\n"
             f"<b>Комиссии (батлы):</b>\n"
-            f"  💸 Собрано всего: <b>{e.get('totalCommission', '—')} ᚙ</b>\n\n"
-            f"<b>TON / Выводы:</b>\n"
-            f"  📥 Депозитов TON: <b>{e.get('tonDeposits', '—')}</b>\n"
-            f"  ⏳ Выводов (ожидание): <b>{e.get('pendingWithdrawals', '—')}</b>\n"
-            f"  ✅ Выводов (выполнено): <b>{e.get('completedWithdrawals', '—')}</b>"
+            f"  💸 Собрано всего: <b>{num(e.get('totalCommission'))} ᚙ</b>\n\n"
+            f"<b>TON:</b>\n"
+            f"  📥 Зачислено платежей: <b>{e.get('tonDeposits', '—')}</b>\n"
+            f"  ℹ️ Вывода средств в проекте нет"
         )
         await call.message.edit_text(text, reply_markup=back_kb("admin:stats_menu"))
     except Exception as e:
