@@ -19,7 +19,7 @@ import { useConfirm } from '@/components/ui/ConfirmModal';
 import { CountryFlag } from '@/components/ui/CountryFlag';
 import { PgnReplayModal } from '@/components/profile/PgnReplayModal';
 import { useT } from '@/i18n/useT';
-import { linkToShare, BOT_USERNAME } from '@/lib/deepLink';
+import { linkToSession } from '@/lib/deepLink';
 
 // ── Константы ──────────────────────────────────────────────────────────────────
 // 2026-05-16: chess unicode не рендерится в Telegram WebView Android/iOS
@@ -806,6 +806,17 @@ export function GamePage() {
   const isSpectator     = isBattle && !session?.mySideId;
   const hasBet          = isBattle && session?.bet && BigInt(session.bet) > 0n;
   const isPrivateBattle = isBattle && !!session?.isPrivate;
+  // Пришёл по ссылке на батл, который ещё ждёт соперника, и свободное место
+  // есть — значит он и есть тот самый соперник (Кенан 01.08.2026: «либо если
+  // первый, он как бы принять, выходит, либо если игра уже началась, то он
+  // попадает в список зрителей»). У боёв войны и турнира обе стороны заняты
+  // системой — там остаётся только смотреть.
+  const canAcceptChallenge = !!(
+    isBattle
+    && session?.status === 'WAITING_FOR_OPPONENT'
+    && !session?.mySideId
+    && (session?.sides?.length ?? 0) < 2
+  );
   const isPublicBattle  = isBattle && !session?.isPrivate;
 
   // ── Касса: ставки обоих игроков + донаты зрителей ─────────────────────────
@@ -1165,6 +1176,40 @@ export function GamePage() {
         @keyframes result-pop{ from{opacity:0;transform:scale(.88)} to{opacity:1;transform:scale(1)} }
       `}</style>
 
+      {/* ── Пришёл по ссылке на свободный вызов: можно принять прямо здесь ── */}
+      {canAcceptChallenge && (
+        <div style={{
+          position: 'fixed', left: 12, right: 12,
+          bottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
+          zIndex: 60,
+        }}>
+          <button
+            onClick={() => {
+              const code = session?.code;
+              if (!code) return;
+              getSocket().emit('game:join', { code }, (res: any) => {
+                if (!res?.ok) {
+                  window.dispatchEvent(new CustomEvent('chesscoin:toast', {
+                    detail: { text: res?.error ?? 'Не удалось войти в батл', type: 'error' },
+                  }));
+                }
+                // Успех приходит обновлением сессии по сокету — экран тот же,
+                // человек уже за доской.
+              });
+            }}
+            style={{
+              width: '100%', padding: '15px',
+              background: 'linear-gradient(135deg,rgba(240,200,90,.22),rgba(240,200,90,.1))',
+              border: '.5px solid rgba(240,200,90,.45)', borderRadius: 16,
+              color: '#F0C85A', fontSize: 15, fontWeight: 800, fontFamily: 'inherit',
+              cursor: 'pointer',
+            }}
+          >
+            Принять вызов{hasBet ? ` · ${fmtBalance(session?.bet ?? '0')}` : ''}
+          </button>
+        </div>
+      )}
+
       {/* ── Диалог предложения ничьи (только когда соперник предлагает) ──── */}
       {drawOfferedByOpp && !drawOfferedByMe && !gameOver && (
         <GameDialog
@@ -1478,10 +1523,10 @@ export function GamePage() {
               // PR-3 hotfix Кенан 2026-05-18: используем PR-2 shareToken (универсальная
               // /share/:token ссылка работает на 3 стадиях — waiting/live/archive).
               // Fallback на legacy watch_<code> для очень старых сессий без токена.
-              const shareToken = (session as any)?.shareToken as string | undefined;
-              const inviteUrl = shareToken
-                ? linkToShare(shareToken)
-                : `https://t.me/${BOT_USERNAME}?start=watch_${session?.code ?? sessionId}`;
+              // Ссылка ведёт на ЭТУ доску и несёт реферальный код того, кто
+              // делится: пришедший впервые попадает к нему в рефералы, оба
+              // получают бонусы (Кенан 01.08.2026).
+              const inviteUrl = linkToSession(sessionId ?? session?.id ?? '', user?.telegramId);
               const text = `Смотри партию ChessCoin в прямом эфире`;
               try {
                 const tg = (window as any).Telegram?.WebApp;

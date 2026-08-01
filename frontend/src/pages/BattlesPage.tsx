@@ -1482,11 +1482,12 @@ const PrivateBattleCard: React.FC<{
         {/* Действия. Назначенный системой бой отменить нельзя — его играют;
             поэтому у войны и турнира главная кнопка ведёт прямо на доску. */}
         <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-          {srcKey === 'PRIVATE' && (
-            <button onClick={onShare} style={privateCardBtnStyle('#82CFFF', 'rgba(74,158,255,.1)', 'rgba(74,158,255,.3)')}>
-              Поделиться
-            </button>
-          )}
+          {/* Поделиться можно любым батлом — персональным, войной, турниром
+              (Кенан 01.08.2026: «эта ссылка существует во всех формах батла»).
+              Ссылка ведёт на ту же доску и приводит реферала пригласившему. */}
+          <button onClick={onShare} style={privateCardBtnStyle('#82CFFF', 'rgba(74,158,255,.1)', 'rgba(74,158,255,.3)')}>
+            Поделиться
+          </button>
           {assigned ? (
             <button onClick={onPlay} style={privateCardBtnStyle(labelColor, `${labelColor}1A`, `${labelColor}4D`)}>
               За доску
