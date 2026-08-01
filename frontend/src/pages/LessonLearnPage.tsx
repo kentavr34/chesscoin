@@ -213,11 +213,11 @@ export const LessonLearnPage: React.FC = () => {
 
   return (
     <Shell>
-      {/* Пояснение прижато к доске: пустота уходит наверх, а не в середину. */}
+      {/* Заголовок, пояснение и доска — один блок по центру экрана. Пустоты
+          между текстом и доской нет, свободное место делится сверху и снизу. */}
       <div style={S.top}>
         <div style={S.title}>{t.lessons.lesson} {lesson.id} · {title}</div>
         <div style={S.explain}>{explain}</div>
-      </div>
 
       <div ref={boardBoxRef} style={S.boardBox}>
         <div style={{ width: boardWidth }}>
@@ -237,6 +237,7 @@ export const LessonLearnPage: React.FC = () => {
             customBoardStyle={{ borderRadius: 10 }}
           />
         </div>
+      </div>
       </div>
 
       {/* Запись партии: в обучении по ней можно перематывать, в тесте она
@@ -364,10 +365,10 @@ const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 
 const S: Record<string, React.CSSProperties> = {
   center:   { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9A9490', fontSize: 13 },
-  top:      { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '14px 18px 10px' },
+  top:      { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '10px 18px 0' },
   title:    { fontSize: 16, fontWeight: 800, color: '#EAE2CC', marginBottom: 6 },
-  explain:  { fontSize: 12, color: '#9A9490', lineHeight: 1.6 },
-  boardBox: { flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 12px' },
+  explain:  { fontSize: 12, color: '#9A9490', lineHeight: 1.6, marginBottom: 12 },
+  boardBox: { flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 -6px' },
   sanRow:   { display: 'flex', flexWrap: 'nowrap', overflowX: 'auto', gap: 6, padding: '10px 18px 0', minHeight: 30, alignItems: 'center' },
   san:      { display: 'inline-flex', alignItems: 'center', gap: 3, flexShrink: 0, padding: '3px 7px', borderRadius: 7, fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: '#9A9490', background: 'rgba(255,255,255,.04)' },
   sanActive:{ background: 'rgba(123,97,255,.22)', color: '#C4B5FF' },
