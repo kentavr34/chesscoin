@@ -19,9 +19,11 @@ if not secret:
 with urllib.request.urlopen('%s/api/v1/screenshotter/token?secret=%s' % (APP, secret), timeout=20) as r:
     token = json.load(r).get('token', '')
 
-r = subprocess.run(['node', os.path.join(REPO, 'project_management', 'tools', 'check_lesson_flow.mjs'), '3'],
-                   cwd=REPO, env=dict(os.environ, AUTH_TOKEN=token, APP_URL=APP),
-                   capture_output=True, encoding='utf-8', errors='replace', timeout=600)
-print((r.stdout or '').strip())
-if r.returncode != 0:
-    print((r.stderr or '')[:200])
+for lesson in (sys.argv[1:] or ['3']):
+    print('── урок %s ──' % lesson)
+    r = subprocess.run(['node', os.path.join(REPO, 'project_management', 'tools', 'check_lesson_flow.mjs'), lesson],
+                       cwd=REPO, env=dict(os.environ, AUTH_TOKEN=token, APP_URL=APP),
+                       capture_output=True, encoding='utf-8', errors='replace', timeout=600)
+    print((r.stdout or '').strip())
+    if r.returncode != 0:
+        print((r.stderr or '')[:200])

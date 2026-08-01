@@ -14,22 +14,42 @@ import { lessonsApi, tasksApi } from '@/api';
 import { fmtBalance } from '@/utils/format';
 import { CoinIcon } from '@/components/ui/CoinIcon';
 import { IcoLock, IcoCheck2 } from '@/components/icons/UiIcons';
-import { useT } from '@/i18n/useT';
+import { useT, useText } from '@/i18n/useT';
 
 const MAX_LEVELS = 50;
 // Backend формула наград: 1000 + 1000 * level
 const lessonReward = (level: number) => 1000 + 1000 * level;
 
+/** Название урока и блока приходят ключами — берём их из словаря. */
+const LessonTitle: React.FC<{ titleKey: string; fallback: string; color: string }> =
+  ({ titleKey, fallback, color }) => (
+    <span style={{ color }}>{useText(titleKey, fallback)}</span>
+  );
+
+const BlockHeading: React.FC<{ blockKey: string }> = ({ blockKey }) => {
+  const label = useText(`lessons.block.${blockKey}`, '');
+  if (!label) return null;
+  return (
+    <div style={{
+      margin: '10px 2px 2px', fontSize: '.64rem', fontWeight: 800,
+      letterSpacing: '.08em', textTransform: 'uppercase', color: '#7A6BA8',
+    }}>
+      {label}
+    </div>
+  );
+};
+
 export const LessonsHubPage: React.FC = () => {
   const navigate = useNavigate();
-  // Сколько уроков со сценарием уже заведено в линейке.
-  const [lessonsCount, setLessonsCount] = useState(0);
+  // Линейка уроков со сценарием: нужны и число, и названия с блоками.
+  const [lessons, setLessons] = useState<Array<{ id: number; block: string; titleKey: string }>>([]);
+  const lessonsCount = lessons.length;
   const t = useT();
   const [current, setCurrent] = useState<number>(1);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    lessonsApi.list().then(r => setLessonsCount(r.total)).catch(() => {});
+    lessonsApi.list().then(r => setLessons(r.lessons ?? [])).catch(() => {});
     tasksApi.lessonsProgress()
       .then(r => setCurrent(r.currentLevel))
       .catch(() => setCurrent(1))
@@ -73,7 +93,13 @@ export const LessonsHubPage: React.FC = () => {
             const isCompleted = level < current;
             const isCurrent = level === current;
             const isLocked = level > current;
-            return (
+            const lesson = lessons.find(l => l.id === level);
+            const prevBlock = lessons.find(l => l.id === level - 1)?.block;
+            const rows: React.ReactNode[] = [];
+            if (lesson && lesson.block !== prevBlock) {
+              rows.push(<BlockHeading key={`b${level}`} blockKey={lesson.block} />);
+            }
+            rows.push(
               <div
                 key={level}
                 onClick={() => {
@@ -118,7 +144,10 @@ export const LessonsHubPage: React.FC = () => {
                     fontSize: '.82rem', fontWeight: 700,
                     color: isCompleted ? '#9A9490' : isCurrent ? '#EAE2CC' : '#5A5248',
                   }}>
-                    {t.lessons?.lesson ?? 'Урок'} {level}
+                    {lesson
+                      ? <LessonTitle titleKey={lesson.titleKey} color="inherit"
+                          fallback={`${t.lessons?.lesson ?? 'Урок'} ${level}`} />
+                      : `${t.lessons?.lesson ?? 'Урок'} ${level}`}
                   </div>
                   <div style={{ fontSize: '.62rem', color: isLocked ? '#3A3028' : '#7A7875', marginTop: 2, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                     {isCompleted ? (t.lessons?.completed ?? 'Пройден') : (
@@ -137,8 +166,9 @@ export const LessonsHubPage: React.FC = () => {
                     {t.lessons?.play ?? 'Решить'} →
                   </div>
                 )}
-              </div>
+              </div>,
             );
+            return <React.Fragment key={`row${level}`}>{rows}</React.Fragment>;
           })}
         </div>
       </div>
