@@ -20,6 +20,7 @@ import { sendTonPayment, connectWallet } from '@/lib/tonconnect';
 import { createChart, IChartApi, ColorType, LineStyle, type Time } from 'lightweight-charts';
 import { useT } from '@/i18n/useT';
 import { IcoArrowDown, IcoArrowUp } from '@/components/icons/UiIcons';
+import { IcoTon } from '@/components/icons/UiIcons';
 
 // ── Иконки состояний модалов (заменяют битые глифы/пустые placeholder'ы; без эмодзи) ──
 const sx = (size: number, body: React.ReactNode, color = 'currentColor') => (
@@ -125,30 +126,14 @@ const CandleChart: React.FC<{ candles: PriceCandle[]; up: boolean; height?: numb
 };
 
 // ── Locked screen (no wallet) ───────────────────────────────
-const LockedScreen: React.FC<{ user: User | null; connecting: boolean; currentPrice: number; change24h: number; orders: P2POrder[]; onConnect: () => void }> = ({ user, connecting, currentPrice, change24h, orders, onConnect }) => {
-  const up = change24h >= 0;
+// Карточка подключения кошелька. Цена, стакан и история живут на самой
+// странице биржи — здесь только само подключение, чтобы не было двух
+// механизмов (Кенан 03.08.2026).
+const LockedScreen: React.FC<{ user: User | null; connecting: boolean; onConnect: () => void }> = ({ user, connecting, onConnect }) => {
   const avatar = user?.avatar;
   const initial = (user?.firstName ?? '?').slice(0, 1).toUpperCase();
   return (
     <div style={{ padding: '0 18px 24px' }}>
-      {/* Price — visible to all */}
-      <div style={{ background: '#141018', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: 16, marginBottom: 16, textAlign: 'center' }}>
-        <div style={{ fontSize: 11, color: '#5A5248', marginBottom: 4 }}>ТЕКУЩАЯ ЦЕНА</div>
-        <div style={{ fontSize: 26, fontWeight: 800, color: '#F0C85A', fontFamily: "'JetBrains Mono',monospace" }}>
-          {currentPrice > 0 ? `${currentPrice.toFixed(5)} TON` : '—'}
-        </div>
-        <div style={{ fontSize: 12, color: currentPrice > 0 ? (up ? '#3DBA7A' : '#FF5B5B') : '#5A5248', marginTop: 4 }}>
-          {currentPrice > 0 ? `${up ? '+' : ''}${change24h.toFixed(2)}% 24h` : 'за 1 000 000'}
-        </div>
-        {/* Кенан 03.08.2026 читает курс как «1 TON = столько-то монет», а не
-            «столько-то TON за миллион» — показываем и в его единицах. */}
-        {currentPrice > 0 && (
-          <div style={{ fontSize: 12, color: '#9A9490', marginTop: 6 }}>
-            1 TON = {Math.round(1_000_000 / currentPrice).toLocaleString('ru-RU')} ᚙ
-          </div>
-        )}
-      </div>
-
       {/* CTA connect wallet */}
       <div style={{ background: 'linear-gradient(135deg,rgba(0,152,234,0.12),rgba(0,152,234,0.06))', border: '1px solid rgba(0,152,234,0.3)', borderRadius: 18, padding: '24px 20px', textAlign: 'center' }}>
         {/* Аватар пользователя — кого подключаем (Кенан 2026-06-13) */}
@@ -160,40 +145,6 @@ const LockedScreen: React.FC<{ user: User | null; connecting: boolean; currentPr
         <div style={{ fontSize: 16, fontWeight: 800, color: '#EAE2CC', marginBottom: 8 }}>
           Подключить TON-кошелёк
         </div>
-        {/* Стакан виден и без кошелька: посмотреть, почём торгуют, должно быть
-          можно всякому — кошелёк нужен только чтобы торговать самому
-          (Кенан 03.08.2026: «где стакан ордеров»). */}
-      {orders.filter(o => o.status === 'OPEN').length > 0 && (
-        <div style={{ margin: '0 0 14px' }}>
-          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', color: '#5A5248', marginBottom: 8 }}>
-            СТАКАН · ПРОДАЮТ
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: 4, padding: '0 10px 6px' }}>
-            {['Монет', 'Всего TON', 'За 1 TON'].map(h => (
-              <div key={h} style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.07em', color: '#5A5248', textTransform: 'uppercase' }}>{h}</div>
-            ))}
-          </div>
-          {orders
-            .filter(o => o.status === 'OPEN')
-            .sort((a, b) => a.priceTon - b.priceTon)
-            .slice(0, 6)
-            .map(o => (
-              <div key={o.id} style={{
-                display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: 4,
-                padding: '9px 10px', marginBottom: 5, borderRadius: 10,
-                background: 'rgba(255,255,255,.03)', border: '.5px solid rgba(255,255,255,.06)',
-                fontFamily: "'JetBrains Mono',monospace", fontSize: 11,
-              }}>
-                <div style={{ color: '#F0C85A', fontWeight: 700 }}>{fmtBalance(String(o.amountCoins))}</div>
-                <div style={{ color: '#0098EA', fontWeight: 700 }}>{o.totalTon.toFixed(4)}</div>
-                <div style={{ color: '#9A9490' }}>
-                  {o.priceTon > 0 ? Math.round(1_000_000 / o.priceTon).toLocaleString('ru-RU') : '—'}
-                </div>
-              </div>
-            ))}
-        </div>
-      )}
-
       <div style={{ fontSize: 12, color: '#9A9490', lineHeight: 1.6, marginBottom: 20 }}>
           Кошелёк нужен для торговли на бирже.<br />
           Подтверждение адреса — <b style={{ color: '#F0C85A' }}>1 TON, один раз</b>.
@@ -756,21 +707,33 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
     }
   };
 
-  if (!hasWallet) {
-    return (
-      <LockedScreen
-        user={user}
-        connecting={connecting}
-        currentPrice={priceData?.currentPrice ?? 0}
-        change24h={priceData?.change24h ?? 0}
-        orders={orders}
-        onConnect={handleConnect}
-      />
-    );
-  }
-
   return (
     <div style={{ paddingBottom: 24 }}>
+
+      {/* ── Кошелёк. Кенан 03.08.2026: «подключить кошелёк и биржа — одна
+            страница, а не два механизма». Пока не подключён — карточка
+            подключения; после подключения ужимается в одну полоску, а ниже
+            идёт сама биржа: цена, график, купля-продажа, стакан, история. ── */}
+      {!hasWallet ? (
+        <LockedScreen user={user} connecting={connecting} onConnect={handleConnect} />
+      ) : (
+        <div style={{
+          margin: '0 18px 12px', padding: '10px 14px', borderRadius: 12,
+          background: 'rgba(0,152,234,.07)', border: '.5px solid rgba(0,152,234,.25)',
+          display: 'flex', alignItems: 'center', gap: 10,
+        }}>
+          <span style={{ color: '#5BC8F5', display: 'flex' }}><IcoTon size={16} /></span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#5BC8F5' }}>Кошелёк подключён</div>
+            <div style={{
+              fontSize: 10, color: '#7A7875', fontFamily: "'JetBrains Mono',monospace",
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>
+              {user?.tonWalletAddress}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Price indicator ── */}
       <div style={{ margin: '0 18px 12px', background: '#141018', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '14px 16px' }}>

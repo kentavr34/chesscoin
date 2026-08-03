@@ -622,10 +622,13 @@ export const ShopPage: React.FC = () => {
         </div>
       )}
 
-      {/* TON wallet button */}
+      {/* Кнопка ведёт на биржу, а не в отдельное окно кошелька. Кенан
+          03.08.2026: «не два механизма — подключение кошелька и биржа должны
+          быть одной страницей». Подключение теперь живёт наверху биржи и
+          после привязки ужимается в полоску. */}
       <div style={{ margin: '0 18px 14px' }}>
         <button
-          onClick={() => setShowTon(true)}
+          onClick={() => setTab('exchange')}
           style={{
             width: '100%', padding: '13px 16px',
             background: 'linear-gradient(135deg,rgba(0,101,160,.6),rgba(0,152,234,.35))',
