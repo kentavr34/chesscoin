@@ -168,14 +168,24 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
   };
 
   const handleDisconnectWallet = async () => {
+    // Кенан 03.08.2026: «нажимаю отвязать — пишет отключено, а по факту нет,
+    // и другой кошелёк подключить нельзя». Причина: рвался только сеанс
+    // TonConnect в браузере, а на сервере адрес оставался привязанным.
+    // Отвязка обязана дойти до сервера, иначе сообщение врёт.
     try {
       await disconnectWallet();
     } catch (e) {
       console.warn('[shop/ton] disconnect failed', e);
     }
+    try {
+      await tonApi.disconnectWallet();
+    } catch (e) {
+      showToast('Не удалось отвязать кошелёк, попробуй ещё раз');
+      return;
+    }
     setWalletConnected(false);
     setWalletAddress(null);
-    showToast('TON wallet disconnected');
+    showToast('Кошелёк отвязан');
     onUserRefresh();
   };
 
