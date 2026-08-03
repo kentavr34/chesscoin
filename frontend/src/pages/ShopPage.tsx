@@ -187,12 +187,7 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
     return { gross, fee, net: gross - fee };
   };
 
-  const calcWithdraw = (coins: string) => {
-    const n = BigInt(coins.replace(/\D/g, '') || '0');
-    const ton = Number(n) / tonToCoins;
-    const fee = ton * (FEE_PERCENT / 100);
-    return { ton, fee, net: ton - fee };
-  };
+
 
   if (!walletConnected) {
     return (
@@ -277,7 +272,9 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
 
       {/* Actions */}
       <div style={{ display: 'flex', gap: 6 }}>
-        {(['buy', 'sell'] as const).map(a => {
+        {/* Продажа монет за TON закрыта (Кенан 03.08.2026): крипта идёт
+            только к нам. Продать монеты можно другому игроку на бирже. */}
+        {(['buy'] as const).map(a => {
           const isActive = activeAction === a;
           const activeColor = a === 'buy' ? '#0098EA' : '#7B61FF';
           return (
@@ -354,46 +351,6 @@ const TonTab: React.FC<TonTabProps> = ({ user, showToast, onUserRefresh }) => {
       )}
 
       {/* Sell panel */}
-      {activeAction === 'sell' && (
-        <div style={{ padding: '16px', ...S.card, border: '.5px solid rgba(123,97,255,.22)' }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#EAE2CC', marginBottom: 12 }}>Sell coins for TON</div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <input
-              type="number"
-              placeholder="Amount"
-              value={amount}
-              onChange={e => setAmount(e.target.value)}
-              style={{ ...S.input, flex: 1 }}
-            />
-            <button
-              disabled={processing || !amount}
-              onClick={async () => {
-                if (!amount || BigInt(amount.replace(/\D/g,'') || '0') < BigInt(tonToCoins)) { showToast(t.shop.tonTab.minCoins); return; }
-                setProcessing(true);
-                try {
-                  const r = await tonApi.sell(amount.replace(/\D/g,''));
-                  showToast(`Order created: ${r.tonAmount.toFixed(4)} TON`);
-                  setAmount('');
-                  onUserRefresh();
-                } catch (e: unknown) { showToast((e instanceof Error ? e.message : "Error") || 'Error'); }
-                finally { setProcessing(false); }
-              }}
-              style={{ padding: '10px 16px', background: processing ? 'rgba(255,255,255,.08)' : 'linear-gradient(135deg,#4A2E9A,#7B61FF)', color: processing ? '#7A7875' : '#fff', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: processing ? 'default' : 'pointer', fontFamily: 'inherit', transition: 'all .15s' }}
-            >
-              {processing ? '...' : 'Sell'}
-            </button>
-          </div>
-          {amount && (
-            <div style={{ marginTop: 10, fontSize: 11, color: '#7A7875', lineHeight: 1.8 }}>
-              {(() => { const c = calcWithdraw(amount); return <>
-                <div>You receive: <b style={{ color: '#0098EA' }}>{c.net.toFixed(4)} TON</b></div>
-                <div>Fee {FEE_PERCENT}%: {c.fee.toFixed(4)} TON</div>
-              </>; })()}
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Transaction History */}
       <div style={{ padding: '14px', ...S.card }}>
         <div style={{ ...S.sectionLabel, marginBottom: 10 }}>{t.txHistory.title}</div>

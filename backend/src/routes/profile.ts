@@ -587,60 +587,16 @@ async function verifyTonPayment(
 }
 
 // POST /profile/ton/withdraw — запрос на вывод (создаёт WithdrawalRequest)
-router.post("/ton/withdraw", authMiddleware, async (req: Request, res: Response) => {
-  try {
-    const userId = (req as AuthRequest).userId;
-    const { amountCoins } = req.body;
-    if (!amountCoins || BigInt(amountCoins) < BigInt(COINS_PER_TON)) {
-      return res.status(400).json({ error: "Minimum withdrawal: 1,000,000 ᚙ" });
-    }
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { balance: true, tonWalletAddress: true },
-    });
-    if (!user) return res.status(404).json({ error: "User not found" });
-    if (!user.tonWalletAddress) {
-      return res.status(400).json({ error: "Connect TON wallet first" });
-    }
-    if (!(await isWalletUnlocked(userId))) {
-      return res.status(403).json({ error: "Connect and unlock your TON wallet first (1 TON)" });
-    }
-    if (user.balance < BigInt(amountCoins)) {
-      return res.status(400).json({ error: "Not enough coins" });
-    }
-    // Check no pending withdrawal exists
-    const pending = await prisma.withdrawalRequest.findFirst({
-      where: { userId, status: "PENDING" },
-    });
-    if (pending) {
-      return res.status(409).json({ error: "You already have an active withdrawal request" });
-    }
-    // Calculate TON equivalent (placeholder rate: 1 TON = 1,000,000 ᚙ)
-    const tonAmount = Number(amountCoins) / COINS_PER_TON;
-    const commission = tonAmount * 0.005; // 0.5% commission
-    const netTon = tonAmount - commission;
-
-    // Deduct from balance
-    // updateBalance and TransactionType imported at top level
-    await updateBalance(userId, -BigInt(amountCoins), TransactionType.WITHDRAWAL, {
-      tonWallet: user.tonWalletAddress,
-      tonAmount: netTon,
-    });
-
-    const withdrawal = await prisma.withdrawalRequest.create({
-      data: {
-        userId,
-        amountCoins: BigInt(amountCoins),
-        tonWalletAddress: user.tonWalletAddress,
-        tonCommission: commission,
-        status: "PENDING",
-      },
-    });
-
-    res.json({ success: true, withdrawal: { ...withdrawal, amountCoins: withdrawal.amountCoins.toString() }, netTon });
-  } catch (err: unknown) {
-    res.status(500).json({ error: (err instanceof Error ? err.message : String(err)) });
-  }
+router.post("/ton/withdraw", authMiddleware, async (_req, res: Response) => {
+  // ЗАКРЫТО (Кенан 03.08.2026). Правило: «у нас нет пока выведения ничего
+  // вообще», «крипта из биржи должна идти на наш криптокошелёк и никак не
+  // обратно». Путь оставался живым и уносил монеты из капитала: они
+  // списывались с баланса и никуда не зачислялись. Продать монеты можно
+  // другому игроку через стакан на бирже — монеты остаются внутри системы.
+  res.status(403).json({
+    error: "WITHDRAWALS_CLOSED",
+    message: "Вывод монет за TON закрыт. Продать монеты можно на бирже другому игроку.",
+  });
 });
 
 // POST /profile/theme — сохранить активную тему
@@ -749,36 +705,16 @@ router.post("/ton/buy", authMiddleware, async (req: Request, res: Response) => {
 });
 
 // POST /profile/ton/sell — продать монеты за TON (создаёт заявку на выплату)
-router.post("/ton/sell", authMiddleware, async (req: Request, res: Response) => {
-  try {
-    const userId = (req as AuthRequest).userId;
-    const { amountCoins } = req.body;
-    if (!amountCoins || BigInt(amountCoins) < BigInt(COINS_PER_TON)) {
-      return res.status(400).json({ error: `Minimum sale: ${COINS_PER_TON.toLocaleString()} ᚙ (= 1 TON)` });
-    }
-    const user = await prisma.user.findUnique({ where: { id: userId }, select: { balance: true, tonWalletAddress: true } });
-    if (!user?.tonWalletAddress) return res.status(400).json({ error: "Connect TON wallet first" });
-    if (!(await isWalletUnlocked(userId))) {
-      return res.status(403).json({ error: "Connect and unlock your TON wallet first (1 TON)" });
-    }
-    if (user.balance < BigInt(amountCoins)) return res.status(400).json({ error: "Not enough coins" });
-    const coinsPerTon = COINS_PER_TON;
-    const tonGross = Number(amountCoins) / coinsPerTon;
-    const tonFee = tonGross * 0.005;
-    const tonNet = tonGross - tonFee;
-    // updateBalance and TransactionType imported at top level
-    await updateBalance(userId, -BigInt(amountCoins), TransactionType.WITHDRAWAL, {
-      type: "sell",
-      tonWallet: user.tonWalletAddress,
-      tonAmount: tonNet,
-    });
-    await prisma.withdrawalRequest.create({
-      data: { userId, amountCoins: BigInt(amountCoins), tonCommission: tonFee, tonWalletAddress: user.tonWalletAddress },
-    });
-    res.json({ success: true, tonAmount: tonNet, fee: tonFee });
-  } catch (err: unknown) {
-    res.status(500).json({ error: (err instanceof Error ? err.message : String(err)) });
-  }
+router.post("/ton/sell", authMiddleware, async (_req, res: Response) => {
+  // ЗАКРЫТО (Кенан 03.08.2026). Правило: «у нас нет пока выведения ничего
+  // вообще», «крипта из биржи должна идти на наш криптокошелёк и никак не
+  // обратно». Путь оставался живым и уносил монеты из капитала: они
+  // списывались с баланса и никуда не зачислялись. Продать монеты можно
+  // другому игроку через стакан на бирже — монеты остаются внутри системы.
+  res.status(403).json({
+    error: "WITHDRAWALS_CLOSED",
+    message: "Вывод монет за TON закрыт. Продать монеты можно на бирже другому игроку.",
+  });
 });
 
 // GET /profile/:userId/games — публичные игры другого игрока
