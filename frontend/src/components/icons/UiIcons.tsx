@@ -410,3 +410,51 @@ export const IcoList: React.FC<Props> = ({ size = 14, color = 'currentColor' }) 
 export const IcoPlay: React.FC<Props> = ({ size = 14, color = 'currentColor' }) => baseSvg(size, '0 0 20 20', (
   <path d="M6 4l11 6-11 6V4z" fill={color}/>
 ));
+
+// ── Вкладки магазина. Кенан 03.08.2026: эмодзи из вкладок убрать, поставить
+//    иконки — правило проекта «в интерфейсе только SVG». ──────────────────────
+export const IcoMask: React.FC<Props> = ({ size = 14, color = 'currentColor' }) => baseSvg(size, '0 0 20 20', (
+  <>
+    <path d="M3.5 5.5c0-.8.7-1.4 1.5-1.3 3.4.5 6.6.5 10 0 .8-.1 1.5.5 1.5 1.3v3.1c0 3.3-2.4 6.2-5.6 6.8a2.3 2.3 0 01-.8 0C6.9 14.8 4.5 11.9 4.5 8.6V5.5z" stroke={color} strokeWidth="1.3" strokeLinejoin="round"/>
+    <circle cx="7.6" cy="8.6" r="1" fill={color}/>
+    <circle cx="12.4" cy="8.6" r="1" fill={color}/>
+  </>
+));
+
+export const IcoFrame: React.FC<Props> = ({ size = 14, color = 'currentColor' }) => baseSvg(size, '0 0 20 20', (
+  <>
+    <rect x="3" y="3" width="14" height="14" rx="2" stroke={color} strokeWidth="1.4"/>
+    <rect x="6" y="6" width="8" height="8" rx="1" stroke={color} strokeWidth="1.1" opacity=".6"/>
+  </>
+));
+
+export const IcoPalette: React.FC<Props> = ({ size = 14, color = 'currentColor' }) => baseSvg(size, '0 0 20 20', (
+  <>
+    <path d="M10 3a7 7 0 000 14c.9 0 1.4-.7 1.1-1.4-.3-.8.2-1.6 1.1-1.6h1.3A3.5 3.5 0 0017 10.5C17 6.4 13.9 3 10 3z" stroke={color} strokeWidth="1.3" strokeLinejoin="round"/>
+    <circle cx="7" cy="8" r="1" fill={color}/>
+    <circle cx="10" cy="6.3" r="1" fill={color}/>
+    <circle cx="13" cy="8" r="1" fill={color}/>
+  </>
+));
+
+export const IcoSparkles: React.FC<Props> = ({ size = 14, color = 'currentColor' }) => baseSvg(size, '0 0 20 20', (
+  <>
+    <path d="M8 3l1.2 3.3L12.5 7.5 9.2 8.7 8 12 6.8 8.7 3.5 7.5l3.3-1.2L8 3z" stroke={color} strokeWidth="1.2" strokeLinejoin="round"/>
+    <path d="M14.5 11.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7.7-1.8z" stroke={color} strokeWidth="1.1" strokeLinejoin="round"/>
+  </>
+));
+
+// Кубик для вкладки «Визуал». Рисунок взят один в один из утверждённого
+// шаблона TPL-002 (ChessIcons.IcoDice) — тот компонент фиксирован по размеру
+// и без параметров, поэтому здесь та же геометрия, но с size/color.
+// Переделывать шаблон нельзя, дублировать рисунок «по-своему» — тоже.
+export const IcoDiceShop: React.FC<Props> = ({ size = 14, color = 'currentColor' }) => baseSvg(size, '0 0 18 18', (
+  <>
+    <rect x="1.5" y="1.5" width="15" height="15" rx="3" stroke={color} strokeWidth="1.3"/>
+    <circle cx="5.5" cy="5.5" r="1.2" fill={color}/>
+    <circle cx="12.5" cy="5.5" r="1.2" fill={color}/>
+    <circle cx="9" cy="9" r="1.2" fill={color}/>
+    <circle cx="5.5" cy="12.5" r="1.2" fill={color}/>
+    <circle cx="12.5" cy="12.5" r="1.2" fill={color}/>
+  </>
+));

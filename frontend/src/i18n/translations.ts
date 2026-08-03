@@ -353,7 +353,7 @@ export const translations = {
     },
     shop: {
       title: 'Shop',
-      tabs: { avatars: '🎭 Avatars', frames: '🖼 Frames', visual: '🎲 Visual', themes: '🎨 Themes', effects: '🎬 Effects', exchange: '💱 Exchange' },
+      tabs: { avatars: 'Avatars', frames: 'Frames', visual: 'Visual', themes: 'Themes', effects: 'Effects', exchange: 'Exchange' },
       visualTabs: { boards: '🏁 Boards', pieces: '♔ Pieces', sets: '♟ Sets', animations: '💫 Animations', fonts: 'Aa Fonts' },
       rarity: { COMMON: 'Common', RARE: 'Rare', EPIC: 'Epic', LEGENDARY: 'Legendary' },
       equip: 'Equip', equipped: 'Equipped', unequip: 'Unequip', buy: 'Buy', buying: '...', owned: 'Owned',
@@ -1033,7 +1033,7 @@ export const translations = {
     },
     shop: {
       title: 'Магазин',
-      tabs: { avatars: '🎭 Аватары', frames: '🖼 Рамки', visual: '🎲 Визуал', themes: '🎨 Темы', effects: '🎬 Эффекты', exchange: '💱 Биржа' },
+      tabs: { avatars: 'Аватары', frames: 'Рамки', visual: 'Визуал', themes: 'Темы', effects: 'Эффекты', exchange: 'Биржа' },
       visualTabs: { boards: '🏁 Доски', pieces: '♔ Фигуры', sets: '♟ Наборы', animations: '💫 Анимации', fonts: 'Aa Шрифты' },
       rarity: { COMMON: 'Обычный', RARE: 'Редкий', EPIC: 'Эпический', LEGENDARY: 'Легендарный' },
       equip: 'Надеть', equipped: 'Надето', unequip: 'Снять', buy: 'Купить', buying: '...', owned: 'Куплено',

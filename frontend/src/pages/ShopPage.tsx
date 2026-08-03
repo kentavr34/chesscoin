@@ -13,7 +13,7 @@ import { useT } from '@/i18n/useT';
 import { ExchangeTab } from './ExchangeTab';
 import { ItemCard, AvatarItemCard, RARITY_COLOR, ShopCardStyles } from '@/components/shop/ShopItemCards';
 import { CoinIcon } from '@/components/ui/CoinIcon';
-import { IcoBolt, IcoBriefcase, IcoExchange, IcoLock, IcoMoneyFly, IcoShop, IcoTon, IcoArrowDown, IcoArrowUp, IcoCheck2, IcoClose } from '@/components/icons/UiIcons';
+import { IcoBolt, IcoBriefcase, IcoExchange, IcoLock, IcoMoneyFly, IcoShop, IcoTon, IcoArrowDown, IcoArrowUp, IcoCheck2, IcoClose, IcoMask, IcoFrame, IcoPalette, IcoSparkles, IcoDiceShop } from '@/components/icons/UiIcons';
 
 // N6: 6 вкладок покупок (объединены Фигуры = pieces+pieceSets+anims) + TON отдельно сверху
 // S1: 6 вкладок в 2 ряда по 3: [Аватары|Рамки|Визуал] / [Темы|Эффекты|Биржа]
@@ -531,13 +531,14 @@ export const ShopPage: React.FC = () => {
     }
   };
 
-  const SHOP_TABS: { key: Tab; label: string }[] = [
-    { key: 'avatars',   label: t.shop.tabs.avatars   },
-    { key: 'frames',    label: t.shop.tabs.frames    },
-    { key: 'visual',    label: t.shop.tabs.visual    },
-    { key: 'themes',    label: t.shop.tabs.themes    },
-    { key: 'effects',   label: t.shop.tabs.effects   },
-    { key: 'exchange',  label: t.shop.tabs.exchange  },
+  // Иконки вместо эмодзи (правило проекта, подтверждено Кенаном 03.08.2026).
+  const SHOP_TABS: { key: Tab; label: string; Icon: React.FC<{ size?: number; color?: string }> }[] = [
+    { key: 'avatars',   label: t.shop.tabs.avatars,  Icon: IcoMask     },
+    { key: 'frames',    label: t.shop.tabs.frames,   Icon: IcoFrame    },
+    { key: 'visual',    label: t.shop.tabs.visual,   Icon: IcoDiceShop },
+    { key: 'themes',    label: t.shop.tabs.themes,   Icon: IcoPalette  },
+    { key: 'effects',   label: t.shop.tabs.effects,  Icon: IcoSparkles },
+    { key: 'exchange',  label: t.shop.tabs.exchange, Icon: IcoExchange },
   ];
   const tabRows = [SHOP_TABS.slice(0, 3), SHOP_TABS.slice(3, 6)];
 
@@ -621,7 +622,7 @@ export const ShopPage: React.FC = () => {
         <div style={{ background: 'rgba(255,255,255,.05)', borderRadius: 14, padding: 4, display: 'flex', flexDirection: 'column', gap: 4 }}>
           {tabRows.map((row, ri) => (
             <div key={ri} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4 }}>
-              {row.map(({ key, label }) => {
+              {row.map(({ key, label, Icon }) => {
                 const isActive = tab === key;
                 return (
                   <button
@@ -632,9 +633,11 @@ export const ShopPage: React.FC = () => {
                       fontSize: 11, fontWeight: isActive ? 800 : 600, cursor: 'pointer', transition: 'all .15s',
                       background: isActive ? 'linear-gradient(135deg,#2A1E08,#4A3810)' : 'transparent',
                       color: isActive ? '#F0C85A' : '#7A7875',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
                     }}
                   >
-                    {label}
+                    <Icon size={15} color={isActive ? '#F0C85A' : '#7A7875'} />
+                    <span>{label}</span>
                   </button>
                 );
               })}
