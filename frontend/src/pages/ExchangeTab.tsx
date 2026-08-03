@@ -137,6 +137,13 @@ const LockedScreen: React.FC<{ user: User | null; connecting: boolean; currentPr
         <div style={{ fontSize: 12, color: currentPrice > 0 ? (up ? '#3DBA7A' : '#FF5B5B') : '#5A5248', marginTop: 4 }}>
           {currentPrice > 0 ? `${up ? '+' : ''}${change24h.toFixed(2)}% 24h` : 'за 1 000 000'}
         </div>
+        {/* Кенан 03.08.2026 читает курс как «1 TON = столько-то монет», а не
+            «столько-то TON за миллион» — показываем и в его единицах. */}
+        {currentPrice > 0 && (
+          <div style={{ fontSize: 12, color: '#9A9490', marginTop: 6 }}>
+            1 TON = {Math.round(1_000_000 / currentPrice).toLocaleString('ru-RU')} ᚙ
+          </div>
+        )}
       </div>
 
       {/* CTA connect wallet */}
@@ -152,7 +159,8 @@ const LockedScreen: React.FC<{ user: User | null; connecting: boolean; currentPr
         </div>
         <div style={{ fontSize: 12, color: '#9A9490', lineHeight: 1.6, marginBottom: 20 }}>
           Кошелёк нужен для торговли на бирже.<br />
-          Подключение <b style={{ color: '#3DBA7A' }}>бесплатное</b> — без предоплаты.
+          Подтверждение адреса — <b style={{ color: '#F0C85A' }}>1 TON, один раз</b>.
+          Тот же кошелёк дальше подключается бесплатно.
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12, color: '#9A9490', marginBottom: 20, textAlign: 'left' }}>
           {['Продавай монеты за TON напрямую', 'Покупай по рыночной цене', 'Комиссия платформы: 0.5%'].map(line => (

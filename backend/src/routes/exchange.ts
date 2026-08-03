@@ -92,7 +92,17 @@ exchangeRouter.get('/price-history', authMiddleware, async (req: Request, res: R
 
     const last  = await prisma.p2POrder.findFirst({ where: { status: 'EXECUTED' }, orderBy: { executedAt: 'desc' }, select: { priceTon: true } });
     const prev  = await prisma.p2POrder.findFirst({ where: { status: 'EXECUTED', executedAt: { lte: new Date(Date.now() - 86400_000) } }, orderBy: { executedAt: 'desc' }, select: { priceTon: true } });
-    const cur   = last?.priceTon ?? 0;
+
+    // Цена бралась ТОЛЬКО из состоявшихся сделок. Сделок ещё не было — и на
+    // бирже вместо цены стоял прочерк, хотя в стакане висит постоянный ордер
+    // платформы (Кенан 03.08.2026). Пока рынок не заторговал, показываем цену
+    // лучшего предложения на продажу — так делают все биржи до первой сделки.
+    const bestAsk = last ? null : await prisma.p2POrder.findFirst({
+      where: { status: 'OPEN', orderType: 'SELL' },
+      orderBy: { priceTon: 'asc' },
+      select: { priceTon: true },
+    });
+    const cur   = last?.priceTon ?? bestAsk?.priceTon ?? 0;
     const p24   = prev?.priceTon ?? cur;
     const chg24 = p24 > 0 ? Math.round(((cur - p24) / p24) * 10000) / 100 : 0;
 
