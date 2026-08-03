@@ -413,7 +413,7 @@ export const ShopPage: React.FC = () => {
   const [toast, setToast] = useState<string | null>(null);
   const [showTon, setShowTon] = useState(false);
   const shopSlides = [
-    { icon: <IcoShop size={32} color="#F5C842" />, title: t?.shop?.title ?? 'Магазин ChessCoin', desc: 'Покупай аватары, рамки, доски и темы за монеты. Подключи TON кошелек для вывода или покупки за TON/USDT.' },
+    { icon: <IcoShop size={32} color="#F5C842" />, title: t?.shop?.title ?? 'Магазин ChessCoin', desc: 'Покупай аватары, рамки, доски и темы за монеты. Подключи TON-кошелёк, чтобы купить монеты за TON или торговать ими на бирже с другими игроками.' },
     { icon: <IcoBolt size={32} color="#F5C842" />, title: 'Как использовать предметы', desc: 'Купи предмет, затем нажми "Применить". Он мгновенно появится в твоем профиле и будет виден для других игроков.' },
     { icon: <IcoTon size={32} color="#0098EA" />, title: 'TON Wallet', desc: 'Подключи TON кошелек чтобы выводить заработанные монеты. Курс конвертации обновляется автоматически.' },
   ];
