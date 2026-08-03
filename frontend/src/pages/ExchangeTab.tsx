@@ -40,6 +40,9 @@ interface ExchangeTabProps {
 
 const PLATFORM_FEE = 0.005; // 0.5%
 const MIN_PRICE    = 0.00001;
+// Базовая цена платформы: 10 TON за миллион монет = 100 000 монет за тонну
+// (Кенан 31.07.2026). Запасное значение, если рынок ещё не отдал цену.
+const BASE_PRICE   = 10;
 const PERIODS = [
   { label: '1D',  hours: 24  as const },
   { label: '7D',  hours: 168 as const },
@@ -122,7 +125,7 @@ const CandleChart: React.FC<{ candles: PriceCandle[]; up: boolean; height?: numb
 };
 
 // ── Locked screen (no wallet) ───────────────────────────────
-const LockedScreen: React.FC<{ user: User | null; connecting: boolean; currentPrice: number; change24h: number; onConnect: () => void }> = ({ user, connecting, currentPrice, change24h, onConnect }) => {
+const LockedScreen: React.FC<{ user: User | null; connecting: boolean; currentPrice: number; change24h: number; orders: P2POrder[]; onConnect: () => void }> = ({ user, connecting, currentPrice, change24h, orders, onConnect }) => {
   const up = change24h >= 0;
   const avatar = user?.avatar;
   const initial = (user?.firstName ?? '?').slice(0, 1).toUpperCase();
@@ -157,7 +160,41 @@ const LockedScreen: React.FC<{ user: User | null; connecting: boolean; currentPr
         <div style={{ fontSize: 16, fontWeight: 800, color: '#EAE2CC', marginBottom: 8 }}>
           Подключить TON-кошелёк
         </div>
-        <div style={{ fontSize: 12, color: '#9A9490', lineHeight: 1.6, marginBottom: 20 }}>
+        {/* Стакан виден и без кошелька: посмотреть, почём торгуют, должно быть
+          можно всякому — кошелёк нужен только чтобы торговать самому
+          (Кенан 03.08.2026: «где стакан ордеров»). */}
+      {orders.filter(o => o.status === 'OPEN').length > 0 && (
+        <div style={{ margin: '0 0 14px' }}>
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', color: '#5A5248', marginBottom: 8 }}>
+            СТАКАН · ПРОДАЮТ
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: 4, padding: '0 10px 6px' }}>
+            {['Монет', 'Всего TON', 'За 1 TON'].map(h => (
+              <div key={h} style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.07em', color: '#5A5248', textTransform: 'uppercase' }}>{h}</div>
+            ))}
+          </div>
+          {orders
+            .filter(o => o.status === 'OPEN')
+            .sort((a, b) => a.priceTon - b.priceTon)
+            .slice(0, 6)
+            .map(o => (
+              <div key={o.id} style={{
+                display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: 4,
+                padding: '9px 10px', marginBottom: 5, borderRadius: 10,
+                background: 'rgba(255,255,255,.03)', border: '.5px solid rgba(255,255,255,.06)',
+                fontFamily: "'JetBrains Mono',monospace", fontSize: 11,
+              }}>
+                <div style={{ color: '#F0C85A', fontWeight: 700 }}>{fmtBalance(String(o.amountCoins))}</div>
+                <div style={{ color: '#0098EA', fontWeight: 700 }}>{o.totalTon.toFixed(4)}</div>
+                <div style={{ color: '#9A9490' }}>
+                  {o.priceTon > 0 ? Math.round(1_000_000 / o.priceTon).toLocaleString('ru-RU') : '—'}
+                </div>
+              </div>
+            ))}
+        </div>
+      )}
+
+      <div style={{ fontSize: 12, color: '#9A9490', lineHeight: 1.6, marginBottom: 20 }}>
           Кошелёк нужен для торговли на бирже.<br />
           Подтверждение адреса — <b style={{ color: '#F0C85A' }}>1 TON, один раз</b>.
           Тот же кошелёк дальше подключается бесплатно.
@@ -180,14 +217,18 @@ const LockedScreen: React.FC<{ user: User | null; connecting: boolean; currentPr
 // ── Create order modal (E8) ────────────────────────────────
 const CreateOrderModal: React.FC<{
   userBalance: string;
+  marketPrice: number;
   onClose: () => void;
   onCreated: () => void;
   showToast: (m: string) => void;
-}> = ({ userBalance, onClose, onCreated, showToast }) => {
+}> = ({ userBalance, marketPrice, onClose, onCreated, showToast }) => {
   const t = useT();
   const maxCoins = Math.min(Number(BigInt(userBalance)), 100_000_000);
   const [amount, setAmount] = useState(Math.max(1_000, Math.min(10_000, maxCoins)));
-  const [price, setPrice]   = useState(0.001); // TON per 1M
+  // Цена по умолчанию — рыночная. Раньше стояло 0.001 TON за миллион, то есть
+  // миллиард монет за тонну: выставив ордер «как есть», человек отдавал монеты
+  // даром (Кенан 03.08.2026 прислал этот экран).
+  const [price, setPrice]   = useState(marketPrice > 0 ? marketPrice : BASE_PRICE);
   const [loading, setLoading] = useState(false);
 
   const totalTon  = (amount / 1_000_000) * price;
@@ -402,13 +443,14 @@ const ExecuteOrderModal: React.FC<{
 
 // ── E15: CreateBuyOrderModal ──────────────────────────────────
 const CreateBuyOrderModal: React.FC<{
+  marketPrice: number;
   onClose: () => void;
   onCreated: () => void;
   showToast: (m: string) => void;
-}> = ({ onClose, onCreated, showToast }) => {
+}> = ({ marketPrice, onClose, onCreated, showToast }) => {
   const t = useT();
   const [amount, setAmount] = useState(10_000);
-  const [price, setPrice]   = useState(0.001);
+  const [price, setPrice]   = useState(marketPrice > 0 ? marketPrice : BASE_PRICE);
   const [loading, setLoading] = useState(false);
   const totalTon = (amount / 1_000_000) * price;
   const QUICK = [1_000, 10_000, 100_000, 1_000_000];
@@ -721,6 +763,7 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
         connecting={connecting}
         currentPrice={priceData?.currentPrice ?? 0}
         change24h={priceData?.change24h ?? 0}
+        orders={orders}
         onConnect={handleConnect}
       />
     );
@@ -963,6 +1006,7 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
       {showCreate && user && (
         <CreateOrderModal
           userBalance={user.balance}
+          marketPrice={priceData?.currentPrice ?? 0}
           onClose={() => setShowCreate(false)}
           onCreated={() => { loadOrders(); onUserRefresh(); }}
           showToast={showToast}
@@ -1017,6 +1061,7 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
       {/* E15: Create BUY order */}
       {showCreateBuy && (
         <CreateBuyOrderModal
+          marketPrice={priceData?.currentPrice ?? 0}
           onClose={() => setShowCreateBuy(false)}
           onCreated={() => { loadOrders(); setShowCreateBuy(false); }}
           showToast={showToast}
