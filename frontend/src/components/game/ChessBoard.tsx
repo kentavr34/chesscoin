@@ -166,10 +166,13 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
   // «вторая звезда сохранения прямо на доске - убрать»). Сохранение
   // партии теперь только из других мест UI (action-bar/история).
 
-  // Применяем filter фигур через CSS переменную
+  // Применяем filter фигур через CSS переменную.
+  // Зависимость именно от effectivePieceFilter: раньше стояла от pieceFilter,
+  // и когда фильтр приходил из самой партии (sessionPieceSkinUrl), переменная
+  // не обновлялась — фигуры оставались в прежнем стиле.
   useEffect(() => {
     document.documentElement.style.setProperty('--piece-filter', effectivePieceFilter);
-  }, [pieceFilter]);
+  }, [effectivePieceFilter]);
 
   // Применяем класс анимации фигур через CSS переменную
   useEffect(() => {
