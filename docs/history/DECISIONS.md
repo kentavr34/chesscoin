@@ -1,1143 +1,320 @@
-# DECISIONS — chesscoin
-
-> Ключевые архитектурные/процессные решения проекта.
-> Источник: `SELECT * FROM claudia_memory.dialog_history WHERE project='chesscoin' AND category='decision'`.
-> Сгенерировано: 2026-05-26. Total: 220 решений (importance ≥ 8).
-
----
-
-## 1. 2026-04-03 10:46 — user — imp 8
-**Tags:** `chesscoin`
-
-> This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
-> 
-> Summary:
-> 1. Primary Request and Intent:
->    The session started with initialization of the ChessCoin project context (я — Клаудия, пользователь — SAM). The main work was implementing the `chesscoin_v7.html` design mockup as the new `HomePage.tsx`. Subsequent requests were iterative refinements: SVG icons, button animations, font unification (→ Inter), mode block icon improvements, active sessions panel, and 5 specific UI tweaks (name truncation, balance format, badge sizing, avatar size, country flag slot). The final (pending) request is to: (a) save the HomePage as a design template/standard, update all rule/memory files to reference it, a
-
----
-
-## 2. 2026-04-03 10:46 — user — imp 8
-**Tags:** `chesscoin`
-
-> This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
-> 
-> Summary:
-> 1. Primary Request and Intent:
->    The session started with initialization of the ChessCoin project context (я — Клаудия, пользователь — SAM). The main work was implementing the `chesscoin_v7.html` design mockup as the new `HomePage.tsx`. Subsequent requests were iterative refinements: SVG icons, button animations, font unification (→ Inter), mode block icon improvements, active sessions panel, and 5 specific UI tweaks (name truncation, balance format, badge sizing, avatar size, country flag slot). The final (pending) request is to: (a) save the HomePage as a design template/standard, update all rule/memory files to reference it, a
-
----
-
-## 3. 2026-04-03 10:46 — user — imp 8
-**Tags:** `chesscoin`
-
-> This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
-> 
-> Summary:
-> 1. Primary Request and Intent:
->    The session started with initialization of the ChessCoin project context (я — Клаудия, пользователь — SAM). The main work was implementing the `chesscoin_v7.html` design mockup as the new `HomePage.tsx`. Subsequent requests were iterative refinements: SVG icons, button animations, font unification (→ Inter), mode block icon improvements, active sessions panel, and 5 specific UI tweaks (name truncation, balance format, badge sizing, avatar size, country flag slot). The final (pending) request is to: (a) save the HomePage as a design template/standard, update all rule/memory files to reference it, a
-
----
-
-## 4. 2026-04-03 16:54 — user — imp 8
-**Tags:** `chesscoin`
-
-> This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
-> 
-> Summary:
-> 1. Primary Request and Intent:
-> 
-> **Request 1 — JarvisPlayModal as immutable template:**
-> Save `JarvisPlayModal.tsx` to `.claude/archive/JARVIS_PLAY_MODAL_TEMPLATE.tsx` (same as HOMEPAGE_TEMPLATE.tsx was saved in Session 17). The modal structure is the reference for all game creation modals — only the header changes (Jarvis icon/title for bot, different icon/title for Battle, etc.) but the lower section (color selector + time + ИГРАТЬ button) stays identical.
-> 
-> **Request 2 — GamePage full redesign + chess mechanics fix:**
-> - Opponent info at TOP (avatar, name, captured pieces, earned coins, timer)
-> - Chess board in CENTER (fullscreen-fr
-
----
-
-## 5. 2026-04-03 16:54 — user — imp 8
-**Tags:** `chesscoin`
-
-> This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
-> 
-> Summary:
-> 1. Primary Request and Intent:
-> 
-> **Request 1 — JarvisPlayModal as immutable template:**
-> Save `JarvisPlayModal.tsx` to `.claude/archive/JARVIS_PLAY_MODAL_TEMPLATE.tsx` (same as HOMEPAGE_TEMPLATE.tsx was saved in Session 17). The modal structure is the reference for all game creation modals — only the header changes (Jarvis icon/title for bot, different icon/title for Battle, etc.) but the lower section (color selector + time + ИГРАТЬ button) stays identical.
-> 
-> **Request 2 — GamePage full redesign + chess mechanics fix:**
-> - Opponent info at TOP (avatar, name, captured pieces, earned coins, timer)
-> - Chess board in CENTER (fullscreen-fr
-
----
-
-## 6. 2026-04-03 16:54 — user — imp 8
-**Tags:** `chesscoin`
-
-> This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
-> 
-> Summary:
-> 1. Primary Request and Intent:
-> 
-> **Request 1 — JarvisPlayModal as immutable template:**
-> Save `JarvisPlayModal.tsx` to `.claude/archive/JARVIS_PLAY_MODAL_TEMPLATE.tsx` (same as HOMEPAGE_TEMPLATE.tsx was saved in Session 17). The modal structure is the reference for all game creation modals — only the header changes (Jarvis icon/title for bot, different icon/title for Battle, etc.) but the lower section (color selector + time + ИГРАТЬ button) stays identical.
-> 
-> **Request 2 — GamePage full redesign + chess mechanics fix:**
-> - Opponent info at TOP (avatar, name, captured pieces, earned coins, timer)
-> - Chess board in CENTER (fullscreen-fr
-
----
-
-## 7. 2026-04-03 18:33 — user — imp 8
-**Tags:** `chesscoin, pricing`
-
-> This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
-> 
-> Summary:
-> 1. Primary Request and Intent:
-> 
-> **Session continued from prior context** where GamePage had been rewritten (correct socket architecture: Zustand store instead of broken `socket.emit('game:state')`). User said "давай" → deploy proceeded.
-> 
-> **Main requests this session (in order):**
-> 
-> **R1 — Game board redesign (Chess.com/Lichess style)**
-> User: board "по десятибалльной шкале пока на 5 баллов" — not proportional, avatars too small, player info not centered. Requirements:
-> - Avatar double size (×2), name font double, ELO visible and lighter
-> - Back button move from top → bottom
-> - "Ваш ход" near timer in player panel
-> - Add **Сдаться** and
-
----
-
-## 8. 2026-04-03 18:33 — user — imp 8
-**Tags:** `chesscoin, pricing`
-
-> This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
-> 
-> Summary:
-> 1. Primary Request and Intent:
-> 
-> **Session continued from prior context** where GamePage had been rewritten (correct socket architecture: Zustand store instead of broken `socket.emit('game:state')`). User said "давай" → deploy proceeded.
-> 
-> **Main requests this session (in order):**
-> 
-> **R1 — Game board redesign (Chess.com/Lichess style)**
-> User: board "по десятибалльной шкале пока на 5 баллов" — not proportional, avatars too small, player info not centered. Requirements:
-> - Avatar double size (×2), name font double, ELO visible and lighter
-> - Back button move from top → bottom
-> - "Ваш ход" near timer in player panel
-> - Add **Сдаться** and
-
----
-
-## 9. 2026-04-03 18:33 — user — imp 8
-**Tags:** `chesscoin, pricing`
-
-> This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
-> 
-> Summary:
-> 1. Primary Request and Intent:
-> 
-> **Session continued from prior context** where GamePage had been rewritten (correct socket architecture: Zustand store instead of broken `socket.emit('game:state')`). User said "давай" → deploy proceeded.
-> 
-> **Main requests this session (in order):**
-> 
-> **R1 — Game board redesign (Chess.com/Lichess style)**
-> User: board "по десятибалльной шкале пока на 5 баллов" — not proportional, avatars too small, player info not centered. Requirements:
-> - Avatar double size (×2), name font double, ELO visible and lighter
-> - Back button move from top → bottom
-> - "Ваш ход" near timer in player panel
-> - Add **Сдаться** and
-
----
-
-## 10. 2026-04-03 20:50 — user — imp 8
-**Tags:** `chesscoin, i18n`
-
-> This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
-> 
-> Summary:
-> 1. Primary Request and Intent:
-> 
-> **Session continued from prior context** where native Stockfish microservice was implemented and the GamePage layout was being refined.
-> 
-> **R1 — Architecture study**: Study v1.0.2 battle architecture to understand patterns for implementing battles in the current version. Key findings: current backend is MORE advanced than v1.0.2 (has donations, clan challenges, diff-based lobby, S3 skins).
-> 
-> **R2 — "Battles will be cooler"**: User expressed enthusiasm; agent provided analysis of existing features and improvement roadmap (spectator count, gradient by bet size, watch mode, ELO diff indicator).
-> 
-> **R3 — C
-
----
-
-## 11. 2026-04-03 20:50 — user — imp 8
-**Tags:** `chesscoin, i18n`
+# История решений по ChessCoin
 
-> This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
-> 
-> Summary:
-> 1. Primary Request and Intent:
-> 
-> **Session continued from prior context** where native Stockfish microservice was implemented and the GamePage layout was being refined.
-> 
-> **R1 — Architecture study**: Study v1.0.2 battle architecture to understand patterns for implementing battles in the current version. Key findings: current backend is MORE advanced than v1.0.2 (has donations, clan challenges, diff-based lobby, S3 skins).
-> 
-> **R2 — "Battles will be cooler"**: User expressed enthusiasm; agent provided analysis of existing features and improvement roadmap (spectator count, gradient by bet size, watch mode, ELO diff indicator).
-> 
-> **R3 — C
-
----
-
-## 12. 2026-04-03 20:50 — user — imp 8
-**Tags:** `chesscoin, i18n`
-
-> This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
-> 
-> Summary:
-> 1. Primary Request and Intent:
-> 
-> **Session continued from prior context** where native Stockfish microservice was implemented and the GamePage layout was being refined.
-> 
-> **R1 — Architecture study**: Study v1.0.2 battle architecture to understand patterns for implementing battles in the current version. Key findings: current backend is MORE advanced than v1.0.2 (has donations, clan challenges, diff-based lobby, S3 skins).
-> 
-> **R2 — "Battles will be cooler"**: User expressed enthusiasm; agent provided analysis of existing features and improvement roadmap (spectator count, gradient by bet size, watch mode, ELO diff indicator).
-> 
-> **R3 — C
-
----
-
-## 13. 2026-04-04 08:06 — user — imp 8
-
-> Значит, обсуждаем страницу батлы, во-первых, заголовок страницы написан шрифтом старым, и этот Shift нам не подходит, кажется, даже не идеально посередине, во-вторых, кнопки публичные и приватный они тусклые текст тусклые не видно публично. Хотя бы ещё немного видно, это не видно. В-третьих, по две анимашки не нужны две анимашки на одном мяче на одном замок по одной анимашке не анимашки. Там там на самом деле сейчас эмодзи, а надо эти эмодзи заменить на наши э, значит. Иконки Запомни эти требования, которые сейчас я представляю, как по стандартам и создать стандарт. Э-э для формирования. У тебя есть шаблон. Э главной страницы, когда мы создавали, шаблон, главная страница, но э принципы, э, создания страниц. Да. Э, требования к страницам. У тебя кажется отсутствует, поэтому нужно создать ещ
-
----
-
-## 14. 2026-04-04 08:06 — user — imp 8
-
-> Значит, обсуждаем страницу батлы, во-первых, заголовок страницы написан шрифтом старым, и этот Shift нам не подходит, кажется, даже не идеально посередине, во-вторых, кнопки публичные и приватный они тусклые текст тусклые не видно публично. Хотя бы ещё немного видно, это не видно. В-третьих, по две анимашки не нужны две анимашки на одном мяче на одном замок по одной анимашке не анимашки. Там там на самом деле сейчас эмодзи, а надо эти эмодзи заменить на наши э, значит. Иконки Запомни эти требования, которые сейчас я представляю, как по стандартам и создать стандарт. Э-э для формирования. У тебя есть шаблон. Э главной страницы, когда мы создавали, шаблон, главная страница, но э принципы, э, создания страниц. Да. Э, требования к страницам. У тебя кажется отсутствует, поэтому нужно создать ещ
-
----
-
-## 15. 2026-04-04 08:06 — user — imp 8
-
-> Значит, обсуждаем страницу батлы, во-первых, заголовок страницы написан шрифтом старым, и этот Shift нам не подходит, кажется, даже не идеально посередине, во-вторых, кнопки публичные и приватный они тусклые текст тусклые не видно публично. Хотя бы ещё немного видно, это не видно. В-третьих, по две анимашки не нужны две анимашки на одном мяче на одном замок по одной анимашке не анимашки. Там там на самом деле сейчас эмодзи, а надо эти эмодзи заменить на наши э, значит. Иконки Запомни эти требования, которые сейчас я представляю, как по стандартам и создать стандарт. Э-э для формирования. У тебя есть шаблон. Э главной страницы, когда мы создавали, шаблон, главная страница, но э принципы, э, создания страниц. Да. Э, требования к страницам. У тебя кажется отсутствует, поэтому нужно создать ещ
-
----
-
-## 16. 2026-04-05 22:03 — assistant — imp 8
-
-> Давай сделаем правильно — починим `docker-compose.yml` в репозитории и задеплоим чисто с GitHub.
-
----
-
-## 17. 2026-04-05 22:03 — assistant — imp 8
-
-> Давай сделаем правильно — починим `docker-compose.yml` в репозитории и задеплоим чисто с GitHub.
-
----
-
-## 18. 2026-04-05 22:03 — assistant — imp 8
-
-> Давай сделаем правильно — починим `docker-compose.yml` в репозитории и задеплоим чисто с GitHub.
-
----
-
-## 19. 2026-04-06 09:18 — assistant — imp 8
-
-> Договорились 😄
-> 
-> Я кожу — ты хочешь. Рабочая схема.
-> 
-> Что следующее на очереди для ChessCoin?
-
----
-
-## 20. 2026-04-06 09:18 — assistant — imp 8
-
-> Договорились 😄
-> 
-> Я кожу — ты хочешь. Рабочая схема.
-> 
-> Что следующее на очереди для ChessCoin?
-
----
-
-## 21. 2026-04-06 09:18 — assistant — imp 8
-
-> Договорились 😄
-> 
-> Я кожу — ты хочешь. Рабочая схема.
-> 
-> Что следующее на очереди для ChessCoin?
-
----
-
-## 22. 2026-04-06 20:56 — user — imp 10
-**Tags:** `chesscoin, claudia, pricing, illuminant, virus_of_guilt`
-
-> This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
-> 
-> Summary:
-> 1. Primary Request and Intent:
-> 
-> **Session started** by continuing ChessCoin UI work (ELO styling) then evolved into a major new project: **Claudia AI Voice Assistant**.
-> 
-> **ChessCoin UI (completed):**
-> - ELO display standardized across all 3 battle panels: gray "ELO " label (#7A7470) + yellow number (#F0C85A)
-> - Name+ELO centered under avatar in BattleLiveCard (PlayerCol), BattleHistoryPage, WaitingForOpponent
-> - Version bumped to **7.1.3**, deploy-005 (commit 40bfa19, then e562996 for version bump)
-> - **Versioning rule established:** each deploy = PATCH +1, both frontend/package.json AND backend/package.json sync
-> 
-> **Identity - Claudia
-
----
-
-## 23. 2026-04-06 20:56 — user — imp 10
-**Tags:** `chesscoin, claudia, pricing, illuminant, virus_of_guilt`
-
-> This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
-> 
-> Summary:
-> 1. Primary Request and Intent:
-> 
-> **Session started** by continuing ChessCoin UI work (ELO styling) then evolved into a major new project: **Claudia AI Voice Assistant**.
-> 
-> **ChessCoin UI (completed):**
-> - ELO display standardized across all 3 battle panels: gray "ELO " label (#7A7470) + yellow number (#F0C85A)
-> - Name+ELO centered under avatar in BattleLiveCard (PlayerCol), BattleHistoryPage, WaitingForOpponent
-> - Version bumped to **7.1.3**, deploy-005 (commit 40bfa19, then e562996 for version bump)
-> - **Versioning rule established:** each deploy = PATCH +1, both frontend/package.json AND backend/package.json sync
-> 
-> **Identity - Claudia
-
----
-
-## 24. 2026-04-06 20:56 — user — imp 10
-**Tags:** `chesscoin, claudia, pricing, illuminant, virus_of_guilt`
-
-> This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
-> 
-> Summary:
-> 1. Primary Request and Intent:
-> 
-> **Session started** by continuing ChessCoin UI work (ELO styling) then evolved into a major new project: **Claudia AI Voice Assistant**.
-> 
-> **ChessCoin UI (completed):**
-> - ELO display standardized across all 3 battle panels: gray "ELO " label (#7A7470) + yellow number (#F0C85A)
-> - Name+ELO centered under avatar in BattleLiveCard (PlayerCol), BattleHistoryPage, WaitingForOpponent
-> - Version bumped to **7.1.3**, deploy-005 (commit 40bfa19, then e562996 for version bump)
-> - **Versioning rule established:** each deploy = PATCH +1, both frontend/package.json AND backend/package.json sync
-> 
-> **Identity - Claudia
-
----
-
-## 25. 2026-04-07 00:46 — user — imp 8
-
-> а можно создать команату диалога - когда сложная задача чтобы все вместе обсуждали детали пока не создадут единого решения оптимального по требованию и потом разделяли задачи на подзадачи - кто и что именно в этом проекте будет делать - итоговое решение как Ген.Директора распределяющего задачи - Клаудия под капотом с Апи от тебя - так как?
-
----
-
-## 26. 2026-04-07 00:46 — user — imp 8
-
-> а можно создать команату диалога - когда сложная задача чтобы все вместе обсуждали детали пока не создадут единого решения оптимального по требованию и потом разделяли задачи на подзадачи - кто и что именно в этом проекте будет делать - итоговое решение как Ген.Директора распределяющего задачи - Клаудия под капотом с Апи от тебя - так как?
-
----
-
-## 27. 2026-04-07 00:46 — user — imp 8
-
-> а можно создать команату диалога - когда сложная задача чтобы все вместе обсуждали детали пока не создадут единого решения оптимального по требованию и потом разделяли задачи на подзадачи - кто и что именно в этом проекте будет делать - итоговое решение как Ген.Директора распределяющего задачи - Клаудия под капотом с Апи от тебя - так как?
-
----
-
-## 28. 2026-04-07 00:47 — assistant — imp 8
-
-> Да, это реальная технология — называется **мультиагентная система**. И под твой сценарий подходит идеально.
-> 
-> ---
-> 
-> ## Как это работает
-> 
-> ```
-> Ты → Клаудия: "сложная задача"
->          ↓
->     [Круглый стол]
->     
->     🏛️ Архитектор (Claude)     — структура, риски
->     💻 Разработчик (Qwen-Coder) — реализуемость, сложность  
->     🔍 Аналитик (DeepSeek R1)   — полнота, логика, пробелы
->     📋 Критик (любой)           — что пойдёт не так
->          ↓
->     [Раунды обсуждения]
->     агенты читают друг друга, возражают, уточняют
->          ↓
->     👔 Гендиректор (Claude)
->     синтезирует → итоговое решение → распределяет задачи
->          ↓
-> Клаудия → тебе: финальный план + кто что делает
-> ```
-> 
-> ---
-> 
-> ## Фреймворк — CrewAI
-> 
-> Именно для этого сценария. Уже готовый инструмент:
-> 
-> ```python
-> from crewai import Agent, Task, Crew
-> 
-> arch
-
----
-
-## 29. 2026-04-07 00:47 — assistant — imp 8
-
-> Да, это реальная технология — называется **мультиагентная система**. И под твой сценарий подходит идеально.
-> 
-> ---
-> 
-> ## Как это работает
-> 
-> ```
-> Ты → Клаудия: "сложная задача"
->          ↓
->     [Круглый стол]
->     
->     🏛️ Архитектор (Claude)     — структура, риски
->     💻 Разработчик (Qwen-Coder) — реализуемость, сложность  
->     🔍 Аналитик (DeepSeek R1)   — полнота, логика, пробелы
->     📋 Критик (любой)           — что пойдёт не так
->          ↓
->     [Раунды обсуждения]
->     агенты читают друг друга, возражают, уточняют
->          ↓
->     👔 Гендиректор (Claude)
->     синтезирует → итоговое решение → распределяет задачи
->          ↓
-> Клаудия → тебе: финальный план + кто что делает
-> ```
-> 
-> ---
-> 
-> ## Фреймворк — CrewAI
-> 
-> Именно для этого сценария. Уже готовый инструмент:
-> 
-> ```python
-> from crewai import Agent, Task, Crew
-> 
-> arch
-
----
-
-## 30. 2026-04-07 00:47 — assistant — imp 8
-
-> Да, это реальная технология — называется **мультиагентная система**. И под твой сценарий подходит идеально.
-> 
-> ---
-> 
-> ## Как это работает
-> 
-> ```
-> Ты → Клаудия: "сложная задача"
->          ↓
->     [Круглый стол]
->     
->     🏛️ Архитектор (Claude)     — структура, риски
->     💻 Разработчик (Qwen-Coder) — реализуемость, сложность  
->     🔍 Аналитик (DeepSeek R1)   — полнота, логика, пробелы
->     📋 Критик (любой)           — что пойдёт не так
->          ↓
->     [Раунды обсуждения]
->     агенты читают друг друга, возражают, уточняют
->          ↓
->     👔 Гендиректор (Claude)
->     синтезирует → итоговое решение → распределяет задачи
->          ↓
-> Клаудия → тебе: финальный план + кто что делает
-> ```
-> 
-> ---
-> 
-> ## Фреймворк — CrewAI
-> 
-> Именно для этого сценария. Уже готовый инструмент:
-> 
-> ```python
-> from crewai import Agent, Task, Crew
-> 
-> arch
-
----
-
-## 31. 2026-04-07 06:17 — user — imp 8
-
-> from crewai import Agent, Task, Crew
-> 
-> architect = Agent(
->     role='Архитектор',
->     goal='Предложить оптимальную структуру решения',
->     llm='claude-3-5-sonnet'
-> )
-> 
-> developer = Agent(
->     role='Разработчик',
->     goal='Оценить реализуемость, указать на технические риски',
->     llm='qwen2.5-coder'  # дешевле
-> )
-> 
-> analyst = Agent(
->     role='Аналитик',
->     goal='Убедиться что задача понята полностью, нет пробелов',
->     llm='deepseek-r1'    # сильный в логике
-> )
-> 
-> director = Agent(
->     role='Генеральный директор',
->     goal='Принять итоговое решение и распределить задачи',
->     llm='claude-3-5-sonnet'
-> )
-> 
-> crew = Crew(
->     agents=[analyst, architect, developer, director],
->     process='sequential'  # или hierarchical
-> )
-
----
-
-## 32. 2026-04-07 06:17 — user — imp 8
-
-> from crewai import Agent, Task, Crew
-> 
-> architect = Agent(
->     role='Архитектор',
->     goal='Предложить оптимальную структуру решения',
->     llm='claude-3-5-sonnet'
-> )
-> 
-> developer = Agent(
->     role='Разработчик',
->     goal='Оценить реализуемость, указать на технические риски',
->     llm='qwen2.5-coder'  # дешевле
-> )
-> 
-> analyst = Agent(
->     role='Аналитик',
->     goal='Убедиться что задача понята полностью, нет пробелов',
->     llm='deepseek-r1'    # сильный в логике
-> )
-> 
-> director = Agent(
->     role='Генеральный директор',
->     goal='Принять итоговое решение и распределить задачи',
->     llm='claude-3-5-sonnet'
-> )
-> 
-> crew = Crew(
->     agents=[analyst, architect, developer, director],
->     process='sequential'  # или hierarchical
-> )
-
----
-
-## 33. 2026-04-07 06:17 — user — imp 8
-
-> from crewai import Agent, Task, Crew
-> 
-> architect = Agent(
->     role='Архитектор',
->     goal='Предложить оптимальную структуру решения',
->     llm='claude-3-5-sonnet'
-> )
-> 
-> developer = Agent(
->     role='Разработчик',
->     goal='Оценить реализуемость, указать на технические риски',
->     llm='qwen2.5-coder'  # дешевле
-> )
-> 
-> analyst = Agent(
->     role='Аналитик',
->     goal='Убедиться что задача понята полностью, нет пробелов',
->     llm='deepseek-r1'    # сильный в логике
-> )
-> 
-> director = Agent(
->     role='Генеральный директор',
->     goal='Принять итоговое решение и распределить задачи',
->     llm='claude-3-5-sonnet'
-> )
-> 
-> crew = Crew(
->     agents=[analyst, architect, developer, director],
->     process='sequential'  # или hierarchical
-> )
-
----
-
-## 34. 2026-04-07 06:43 — user — imp 8
-**Tags:** `chesscoin, illuminant, virus_of_guilt`
-
-> This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
-> 
-> Summary:
-> 1. Primary Request and Intent:
-> 
-> The session continued from previous context. Key requests in order:
-> - **# command system**: Replace `/task/project` commands with `#` prefix system (`#task`, `#chesscoin`, `#end`, etc.)
-> - **Full system deployment**: "разворачивай всю систему пока кроме голоса" — deploy complete state machine, DB tables, Aider
-> - **Task workflow redesign**: Multi-material collection → `#ok` trigger → CrewAI analysis → confirmation → task creation
-> - **TTS without ElevenLabs**: Free local voice synthesis on server
-> - **Speed fix**: "слишком долго жду ответа" — text first, voice async
-> - **CrewAI board of directors**: Anal
-
----
-
-## 35. 2026-04-07 06:43 — user — imp 8
-**Tags:** `chesscoin, illuminant, virus_of_guilt`
-
-> This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
-> 
-> Summary:
-> 1. Primary Request and Intent:
-> 
-> The session continued from previous context. Key requests in order:
-> - **# command system**: Replace `/task/project` commands with `#` prefix system (`#task`, `#chesscoin`, `#end`, etc.)
-> - **Full system deployment**: "разворачивай всю систему пока кроме голоса" — deploy complete state machine, DB tables, Aider
-> - **Task workflow redesign**: Multi-material collection → `#ok` trigger → CrewAI analysis → confirmation → task creation
-> - **TTS without ElevenLabs**: Free local voice synthesis on server
-> - **Speed fix**: "слишком долго жду ответа" — text first, voice async
-> - **CrewAI board of directors**: Anal
-
----
-
-## 36. 2026-04-07 06:43 — user — imp 8
-**Tags:** `chesscoin, illuminant, virus_of_guilt`
-
-> This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
-> 
-> Summary:
-> 1. Primary Request and Intent:
-> 
-> The session continued from previous context. Key requests in order:
-> - **# command system**: Replace `/task/project` commands with `#` prefix system (`#task`, `#chesscoin`, `#end`, etc.)
-> - **Full system deployment**: "разворачивай всю систему пока кроме голоса" — deploy complete state machine, DB tables, Aider
-> - **Task workflow redesign**: Multi-material collection → `#ok` trigger → CrewAI analysis → confirmation → task creation
-> - **TTS without ElevenLabs**: Free local voice synthesis on server
-> - **Speed fix**: "слишком долго жду ответа" — text first, voice async
-> - **CrewAI board of directors**: Anal
-
----
-
-## 37. 2026-04-07 06:54 — assistant — imp 8
-
-> Клаудия запущена. Теперь отвечу на вопросы про совет директоров.
-> 
-> ---
-> 
-> **Совет директоров — расширенная версия**
-> 
-> Идея отличная. Вот как я вижу команду:
-> 
-> | Агент | Роль | Модель |
-> |-------|------|--------|
-> | Аналитик | Разбирает требования, риски | DeepSeek R1 |
-> | Архитектор | Проектирует решение | Claude |
-> | **Кодер** | Детали реализации, код | Qwen2.5-Coder-32B |
-> | **Дизайнер** | UI/UX, визуальная часть | Qwen3-VL-Plus (видит картинки!) |
-> | CEO | Финальное решение | Claude |
-> 
-> `qwen3-vl-plus` в роли **дизайнера** — это мощно: он увидит скриншот, поймёт UI и скажет что конкретно менять в CSS/компонентах.
-> 
-> Насчёт **Kimi, NotebookLM, Gamma, KlingAI** — они не подходят для совета директоров, объясню почему:
-> - **Kimi** — хорош для длинных документов, но нет API для агентов
-> - **NotebookLM** — т
-
----
-
-## 38. 2026-04-07 06:54 — assistant — imp 8
-
-> Клаудия запущена. Теперь отвечу на вопросы про совет директоров.
-> 
-> ---
-> 
-> **Совет директоров — расширенная версия**
-> 
-> Идея отличная. Вот как я вижу команду:
-> 
-> | Агент | Роль | Модель |
-> |-------|------|--------|
-> | Аналитик | Разбирает требования, риски | DeepSeek R1 |
-> | Архитектор | Проектирует решение | Claude |
-> | **Кодер** | Детали реализации, код | Qwen2.5-Coder-32B |
-> | **Дизайнер** | UI/UX, визуальная часть | Qwen3-VL-Plus (видит картинки!) |
-> | CEO | Финальное решение | Claude |
-> 
-> `qwen3-vl-plus` в роли **дизайнера** — это мощно: он увидит скриншот, поймёт UI и скажет что конкретно менять в CSS/компонентах.
-> 
-> Насчёт **Kimi, NotebookLM, Gamma, KlingAI** — они не подходят для совета директоров, объясню почему:
-> - **Kimi** — хорош для длинных документов, но нет API для агентов
-> - **NotebookLM** — т
-
----
-
-## 39. 2026-04-07 06:54 — assistant — imp 8
-
-> Клаудия запущена. Теперь отвечу на вопросы про совет директоров.
-> 
-> ---
-> 
-> **Совет директоров — расширенная версия**
-> 
-> Идея отличная. Вот как я вижу команду:
-> 
-> | Агент | Роль | Модель |
-> |-------|------|--------|
-> | Аналитик | Разбирает требования, риски | DeepSeek R1 |
-> | Архитектор | Проектирует решение | Claude |
-> | **Кодер** | Детали реализации, код | Qwen2.5-Coder-32B |
-> | **Дизайнер** | UI/UX, визуальная часть | Qwen3-VL-Plus (видит картинки!) |
-> | CEO | Финальное решение | Claude |
-> 
-> `qwen3-vl-plus` в роли **дизайнера** — это мощно: он увидит скриншот, поймёт UI и скажет что конкретно менять в CSS/компонентах.
-> 
-> Насчёт **Kimi, NotebookLM, Gamma, KlingAI** — они не подходят для совета директоров, объясню почему:
-> - **Kimi** — хорош для длинных документов, но нет API для агентов
-> - **NotebookLM** — т
-
----
-
-## 40. 2026-04-07 06:58 — assistant — imp 8
-
-> Совет директоров v3.0 загружен. Состав:
-> 
-> | # | Агент | Модель | Роль |
-> |---|-------|--------|------|
-> | 1 | Аналитик | DeepSeek R1 | Риски, требования |
-> | 2 | Архитектор | Claude | Техническое решение |
-> | 3 | Tech Lead | **Qwen3.6-Plus** | Код + UI/дизайн в одном |
-> | 4 | CEO | Claude | Финальное решение |
-> 
-> ---
-> 
-> **Теперь важное** — зайди на вкладку **Audio** в Model Studio. Там должен быть `Qwen-Audio` для распознавания голоса. Если есть — добавим реальную транскрипцию голосовых сообщений вместо заглушки `[голосовое сообщение]`. Пришли скриншот или модель ID.
-
----
-
-## 41. 2026-04-07 06:58 — assistant — imp 8
-
-> Совет директоров v3.0 загружен. Состав:
-> 
-> | # | Агент | Модель | Роль |
-> |---|-------|--------|------|
-> | 1 | Аналитик | DeepSeek R1 | Риски, требования |
-> | 2 | Архитектор | Claude | Техническое решение |
-> | 3 | Tech Lead | **Qwen3.6-Plus** | Код + UI/дизайн в одном |
-> | 4 | CEO | Claude | Финальное решение |
-> 
-> ---
-> 
-> **Теперь важное** — зайди на вкладку **Audio** в Model Studio. Там должен быть `Qwen-Audio` для распознавания голоса. Если есть — добавим реальную транскрипцию голосовых сообщений вместо заглушки `[голосовое сообщение]`. Пришли скриншот или модель ID.
-
----
-
-## 42. 2026-04-07 06:58 — assistant — imp 8
-
-> Совет директоров v3.0 загружен. Состав:
-> 
-> | # | Агент | Модель | Роль |
-> |---|-------|--------|------|
-> | 1 | Аналитик | DeepSeek R1 | Риски, требования |
-> | 2 | Архитектор | Claude | Техническое решение |
-> | 3 | Tech Lead | **Qwen3.6-Plus** | Код + UI/дизайн в одном |
-> | 4 | CEO | Claude | Финальное решение |
-> 
-> ---
-> 
-> **Теперь важное** — зайди на вкладку **Audio** в Model Studio. Там должен быть `Qwen-Audio` для распознавания голоса. Если есть — добавим реальную транскрипцию голосовых сообщений вместо заглушки `[голосовое сообщение]`. Пришли скриншот или модель ID.
-
----
-
-## 43. 2026-04-07 07:04 — assistant — imp 8
-
-> Окей, по скриншоту уже видны нужные model IDs. Вот что я нашёл и что будем использовать:
-> 
-> **Для голосовой транскрипции (ASR):**
-> - `fun-asr-realtime` — реалтайм распознавание
-> 
-> **Для синтеза голоса (TTS) с клонированием:**
-> - `qwen-voice-enrollment` → регистрируем образец голоса
-> - `qwen3-tts-vc-realtime-2026-01-15` → синтез с клонированным голосом
-> 
-> **1М токенов бесплатно** — отлично, значит тесты совета директоров бесплатны.
-> 
-> Давай сделаем по порядку. Самое важное — транскрипция голоса и TTS. Обновляю main.py:
-
----
-
-## 44. 2026-04-07 07:04 — assistant — imp 8
-
-> Окей, по скриншоту уже видны нужные model IDs. Вот что я нашёл и что будем использовать:
-> 
-> **Для голосовой транскрипции (ASR):**
-> - `fun-asr-realtime` — реалтайм распознавание
-> 
-> **Для синтеза голоса (TTS) с клонированием:**
-> - `qwen-voice-enrollment` → регистрируем образец голоса
-> - `qwen3-tts-vc-realtime-2026-01-15` → синтез с клонированным голосом
-> 
-> **1М токенов бесплатно** — отлично, значит тесты совета директоров бесплатны.
-> 
-> Давай сделаем по порядку. Самое важное — транскрипция голоса и TTS. Обновляю main.py:
-
----
-
-## 45. 2026-04-07 07:04 — assistant — imp 8
-
-> Окей, по скриншоту уже видны нужные model IDs. Вот что я нашёл и что будем использовать:
-> 
-> **Для голосовой транскрипции (ASR):**
-> - `fun-asr-realtime` — реалтайм распознавание
-> 
-> **Для синтеза голоса (TTS) с клонированием:**
-> - `qwen-voice-enrollment` → регистрируем образец голоса
-> - `qwen3-tts-vc-realtime-2026-01-15` → синтез с клонированным голосом
-> 
-> **1М токенов бесплатно** — отлично, значит тесты совета директоров бесплатны.
-> 
-> Давай сделаем по порядку. Самое важное — транскрипция голоса и TTS. Обновляю main.py:
-
----
-
-## 46. 2026-04-07 07:32 — assistant — imp 8
-
-> Всё зелёное:
-> - Бот: **active**
-> - Aider timer: **active** 
-> - БД: пустая, ждёт первую задачу
-> 
-> ---
-> 
-> **Абсолютно правильно.** Оптимизирую распределение по ролям:
-> 
-> | Функция | Модель | Стоимость |
-> |---------|--------|-----------|
-> | Живые ответы в чате | **Qwen3.6-Plus** | дёшево |
-> | Совет директоров — Аналитик | DeepSeek R1 | дёшево |
-> | Совет директоров — Архитектор | **Claude** | нужен |
-> | Совет директоров — Tech Lead | Qwen3.6-Plus | дёшево |
-> | Совет директоров — CEO решение | **Claude** | нужен |
-> | Aider (выполнение кода) | Claude claude-sonnet | нужен |
-> 
-> Claude только там где реально нужен — архитектура и финальное решение. Всё остальное — Qwen (у тебя 1M токенов бесплатно).
-
----
-
-## 47. 2026-04-07 07:32 — assistant — imp 8
-
-> Всё зелёное:
-> - Бот: **active**
-> - Aider timer: **active** 
-> - БД: пустая, ждёт первую задачу
-> 
-> ---
-> 
-> **Абсолютно правильно.** Оптимизирую распределение по ролям:
-> 
-> | Функция | Модель | Стоимость |
-> |---------|--------|-----------|
-> | Живые ответы в чате | **Qwen3.6-Plus** | дёшево |
-> | Совет директоров — Аналитик | DeepSeek R1 | дёшево |
-> | Совет директоров — Архитектор | **Claude** | нужен |
-> | Совет директоров — Tech Lead | Qwen3.6-Plus | дёшево |
-> | Совет директоров — CEO решение | **Claude** | нужен |
-> | Aider (выполнение кода) | Claude claude-sonnet | нужен |
-> 
-> Claude только там где реально нужен — архитектура и финальное решение. Всё остальное — Qwen (у тебя 1M токенов бесплатно).
-
----
-
-## 48. 2026-04-07 07:32 — assistant — imp 8
-
-> Всё зелёное:
-> - Бот: **active**
-> - Aider timer: **active** 
-> - БД: пустая, ждёт первую задачу
-> 
-> ---
-> 
-> **Абсолютно правильно.** Оптимизирую распределение по ролям:
-> 
-> | Функция | Модель | Стоимость |
-> |---------|--------|-----------|
-> | Живые ответы в чате | **Qwen3.6-Plus** | дёшево |
-> | Совет директоров — Аналитик | DeepSeek R1 | дёшево |
-> | Совет директоров — Архитектор | **Claude** | нужен |
-> | Совет директоров — Tech Lead | Qwen3.6-Plus | дёшево |
-> | Совет директоров — CEO решение | **Claude** | нужен |
-> | Aider (выполнение кода) | Claude claude-sonnet | нужен |
-> 
-> Claude только там где реально нужен — архитектура и финальное решение. Всё остальное — Qwen (у тебя 1M токенов бесплатно).
-
----
-
-## 49. 2026-04-10 23:37 — user — imp 10
-**Tags:** `chesscoin, claudia, illuminant`
-
-> This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
-> 
-> Summary:
-> 1. Primary Request and Intent:
->    The session continued from a previous conversation debugging a 405 webhook error. Main tasks accomplished:
->    - Fix nginx 405 error for Claudia Bot webhook (chesscoin.app/claudia/webhook → 185.203.116.131:8444)
->    - Configure Cursor IDE and VS Code with OpenRouter API + DeepSeek
->    - Fix LightRAG on eVPS (OpenAI quota exhausted → switch to DeepSeek/Qwen)
->    - Enable LightRAG authentication (login/password)
->    - Fix LightRAG file upload (413/500 errors)
->    - Fix LightRAG "disconnected" SSE indicator
->    - Create comprehensive CLAUDIA_MASTER.md master reference file
->    - Set up GitHub integration fro
-
----
-
-## 50. 2026-04-10 23:37 — user — imp 10
-**Tags:** `chesscoin, claudia, illuminant`
-
-> This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
-> 
-> Summary:
-> 1. Primary Request and Intent:
->    The session continued from a previous conversation debugging a 405 webhook error. Main tasks accomplished:
->    - Fix nginx 405 error for Claudia Bot webhook (chesscoin.app/claudia/webhook → 185.203.116.131:8444)
->    - Configure Cursor IDE and VS Code with OpenRouter API + DeepSeek
->    - Fix LightRAG on eVPS (OpenAI quota exhausted → switch to DeepSeek/Qwen)
->    - Enable LightRAG authentication (login/password)
->    - Fix LightRAG file upload (413/500 errors)
->    - Fix LightRAG "disconnected" SSE indicator
->    - Create comprehensive CLAUDIA_MASTER.md master reference file
->    - Set up GitHub integration fro
-
----
-
----
-
-## 2026-07-30 — Кланы: одна ячейка со странами, создаёт офицер высшего ранга
-
-**Решение Кенана** (закрывает вопрос Q1 из `docs/kenan_canon/SPEC_2026-05-12_KENAN.md`
-«клан и страна — одно или разное»):
-
-1. **Кланы и страны живут в ОДНОМ списке.** Отдельной вкладки/раздела не делать.
-   В списке войн рядом с «Албания» стоит «Дракон» — это клан. У клана своя
-   фотография и название, всё остальное — как у страны.
-2. **Создать клан может только офицер высшего ранга, который НЕ является
-   главнокомандующим.** Логика: игрок дорос до звания, но место главкома занято —
-   он вправе собрать свою армию и сам вызывать на бой.
-3. **UX:** дорос до нужного звания → в интерфейсе появляется предложение
-   «ты можешь создать свой клан». Игрок решает сам. Согласился — клан появляется
-   в общем списке стран.
-4. **Срочность:** не сейчас. Актуально, когда игроков станет много.
-   Для демо достаточно возможности создать клан в общем списке.
-
-**Фактическое состояние на 30.07.2026:**
-- эндпоинта создания клана **не существует** — в `nations.ts` только
-  list / join / leave / approve / kick / contribute / war;
-- на проде **30 кланов, у всех `leaderId` пустой, участников 0** — мёртвые сид-данные;
-- живёт только система стран: 7 стран с участниками, 10 человек всего.
-
-**Что потребуется при реализации:**
-- `POST /nations/clans` с проверкой: реферальный ранг ≥ порога офицера
-  И игрок не является главкомом своей страны;
-- поля клана: название, фото, страна-родитель (или без неё);
-- отдача клана в общем списке `GET /nations/clans` вместе со странами;
-- привести лидерство к канону `SPEC_2026-05-12 §69` — лидер по званию за рефералов
-  (сейчас в коде: первый вступивший, преемник по военным победам).
-
----
-
-## 2026-07-30 — Платформа не хранит деньги: некастодиальная модель
-
-**Решение Кенана** (уточнено 30.07.2026; в канон до этого дня записано НЕ БЫЛО —
-проверено поиском по `docs/kenan_canon/` и по истории диалога):
-
-1. **Платформа не хранит и не пересылает деньги игроков.** TON идёт
-   **напрямую с кошелька покупателя на кошелёк продавца**.
-2. **Комиссия платформы платится параллельно, тем же переводом** — второй
-   message в той же TonConnect-транзакции, 0.5 % на кошелёк платформы.
-3. **Кошелёк платформы только принимает.** Исходящие переводы с него
-   не подписываются системой **никогда** — это накопительный кошелёк.
-4. **Вывод средств делает Кенан вручную** на другие кошельки или инструменты.
-5. Отсюда риск платформы: деньги либо поступили, либо нет. Кастодиального
-   риска нет по устройству.
-
-**Что это значит для кода:**
-- Никаких автоматических исходящих переводов с `PLATFORM_TON_WALLET`.
-- Верификация сделки обязана проверять **оба** перевода: продавцу и комиссию.
-- Проверка идёт по факту в блокчейне (`findIncomingPayment`), а не по
-  идентификатору, присланному клиентом — клиент может прислать что угодно.
-
-**Найдено при реализации:** `txHash`, который фронт отправляет на бэкенд, —
-псевдо-идентификатор из BOC, а не хэш транзакции. Верификация по нему
-невозможна в принципе. Исправлено 30.07: ищем сам платёж.
-
-**Открытый вопрос безопасности** (Кенан просил проверить, что механизм
-нельзя обойти автоматикой): сейчас платёж ищется по паре «отправитель →
-получатель + сумма + свежесть». Этого достаточно против выдуманных хэшей,
-но у модели есть предел: если покупатель отправит один платёж и попытается
-предъявить его к двум ордерам, второй будет отклонён по реальному хэшу (409).
-Остаётся сценарий, когда продавец и покупатель — сговорившиеся аккаунты
-одного человека: комиссия платформе при этом всё равно платится, поэтому
-экономического ущерба нет.
-
----
-
-## 2026-07-31 — Распределение призовых касс: турниры и войны
-
-**Повод.** Проверка турниров по факту: за 10 завершённых турниров собрали
-158 000 монет взносов, выплатили 58 000. **100 000 монет исчезли** — не игрокам
-и не в `platformReserve`. Чемпион недели получал 10% кассы: заплатил 1000,
-забрал 100. Канон честно фиксировал, что проценты (WORLD 70/20/10, SEASONAL 30,
-MONTHLY 20, WEEKLY 10) Кенан никогда не утверждал.
-
-### Решение Кенана по турнирам
-
-Касса = взносы **плюс донаты**. Донат постороннего человека, который сам не
-играет, тоже идёт в общую кассу и делится вместе со взносами.
-
-- **Один участник** — забирает всю кассу минус 10% комиссии стола.
-- **Много участников** — касса делится 60% / 30% / 10% между первым, вторым и
-  третьим местом, **независимо от типа турнира**. Из каждой доли 10% — комиссия
-  стола, игроку уходит 90% его доли.
-
-Пример Кенана, касса 100 000:
-
-| Место | Доля кассы | Комиссия | На счёт |
-|---|---|---|---|
-| 1 | 60 000 | 6 000 | **54 000** |
-| 2 | 30 000 | 3 000 | **27 000** |
-| 3 | 10 000 | 1 000 | **9 000** |
-| | | итого 10 000 | |
-
-Мест меньше трёх — доли перенормируются между теми, кто есть; правило «один
-игрок забирает всё минус комиссия» получается из этого автоматически.
-
-**Инвариант:** выплаты плюс комиссия равны кассе до последней монеты. Именно
-его отсутствие сожгло 100 000. Закреплён тестами `prizes.test.ts`.
-
-### Решение Кенана по войнам
-
-Прежняя схема (приз = `min(казна победителя, казна проигравшего)`, топ-1/2/3
-получают 20/10/5%, остальные 65% пропорционально) **отменена**.
-
-У каждой страны своя казна: взносы вступающих воинов плюс донаты. Две страны
-объявляют войну. Победившая **по числу побед** забирает казну проигравшей
-**целиком, до нуля** — своя казна остаётся при ней.
-
-Захваченное делится между своими воинами **строго кратно числу побед**:
-
-> одна победа = один эквивалент; доля воина = касса × его победы ÷ сумма побед всех.
-
-Кто внёс деньги, но не сыграл ни одной партии, **не получает ничего** —
-прямое условие Кенана. Членство при этом сохраняется.
-
-**Комиссия стола 10% в войнах оставлена как была** (утверждена 2026-05-17).
-31.07 Кенан её не отменял, а снимать утверждённое правило молча нельзя —
-вынесено на подтверждение.
-
-### Публикация в канал при объявлении войны
-
-Бот публикует: кто кому объявил войну, казна каждой стороны и общая касса,
-что победитель забирает казну проигравшего целиком, что деньги делятся кратно
-числу побед каждого бойца, сколько идёт война и что вступить можно после начала.
-
-### Вход после старта
-
-- **Война** — вступить можно в идущую войну; матчмейкинг каждые 30 секунд
-  берёт всех членов воюющих стран и ставит новичка в пары до конца срока.
-- **Турнир** — вступить можно в идущий турнир; система назначает новичку
-  соревнования до конца чемпионата.
-
-Оба пути уже работали в коде — проверено, не выдумано.
-
-### Уточнение 31.07 вечером: когда снимается комиссия
-
-Кенан: комиссия стола берётся **при переходе доли на баланс игрока**, а не с
-кассы заранее. Порядок принципиален:
-
-1. касса делится между игроками **целиком** — они видят, что делёж ровный;
-2. при зачислении конкретной доли на баланс с неё удерживаются 10%.
-
-Численно игрок получает столько же, но показывать надо именно так. В турнирах
-это уже работало (доля считается от полной кассы, комиссия — с доли). В войнах
-комиссия снималась с казны до дележа — исправлено: `splitWarPot` теперь делит
-всю захваченную казну и возвращает по каждому бойцу `gross` (доля от кассы),
-`commission` (удержание) и `amount` (на баланс). Транзакция и уведомление
-несут все три числа.
-
-Вопрос «оставлять ли комиссию в войнах» этим закрыт: комиссия есть, просто
-берётся на переходе.
-
-### Подтверждение модели вывода средств
-
-Кенан повторил: **опции вывода монет нет и не будет**. Есть только купля-продажа,
-где TON идёт с кошелька одного игрока на кошелёк другого мимо платформы, а
-параллельной транзакцией комиссия приходит на наш кошелёк. Платформа получает
-деньги и не отдаёт ничего — поэтому её нечего ломать и нечего ставить на
-автопилот. Это ровно та модель, что уже реализована (см. § 2026-07-30
-про биржу): подписи на исходящие переводы с `PLATFORM_TON_WALLET` нет нигде.
-
----
-
-## 2026-07-31 (вечер) — Единый капитал и фазы ужесточения выдачи
-
-### Все монеты из одного капитала
-
-Кенан: «Джарвис не должен иметь своего счёта — он играет от нашего счёта.
-В обращении должно быть 100 млрд. Где за Джарвиса платим мы — и за реферал,
-и за задания, и за обучение. Со счёта игроков нам — комиссия стола 10% при
-всех играх, продажа аватаров и прочих украшательств в магазине.»
-
-Было: награды дописывались игроку на баланс — монеты возникали из ниоткуда,
-а сборы (комиссия, покупки) так же бесследно исчезали.
-
-Стало: `services/treasury.ts` — `payFromTreasury` и `collectToTreasury`.
-Любое движение денег это перевод между двумя счетами с двумя записями
-в истории. Капитал закреплён: **100 000 000 000 монет**.
-
-| Со счёта платформы игрокам | Со счёта игроков платформе |
-|---|---|
-| победа над Джарвисом, монеты за фигуры | комиссия стола 10% с каждой партии |
-| реферальные бонусы всех уровней | покупки в магазине (аватары, украшательства) |
-| награды за задания, задачи, обучение | покупка попыток |
-| приветственный бонус | |
-
-**Крипта — только в одну сторону.** Покупатель платит напрямую на
-`PLATFORM_TON_WALLET`, монеты приходят ему со счёта платформы. Подписи на
-исходящий перевод с нашего кошелька нет нигде в коде.
-
-**У Джарвиса счёт закрыт.** На нём лежал 1 000 002 124 999 монет — в десять
-раз больше всего капитала; из этого мешка бот выдавал выигрыши мимо эмиссии.
-
-### Пороги ужесточения выдачи
-
-Кенан обозначил план, автоматики пока нет — только наблюдение в статистике:
-
-| Обращение | Что меняется |
-|---|---|
-| до 30 млрд | как сейчас: раздача, задания, обучение |
-| **30 млрд** | раздача уменьшается, обратный закуп растёт |
-| **60 млрд** | подарки только за рефералку; остальное — спарринг и ставки: игрок получает выигранное, а не подаренное |
-
-Статистика показывает достигнутый порог (`phase`) и следующий
-(`nextThreshold`). Механизмы внедряются по слову Кенана, когда порог подойдёт.
-
-### Монеты в обращении в статистике
-
-Блок `circulation` в `/bot/stats` и `/admin/stats`. Обращение — это всё, что
-ушло со счёта платформы: балансы игроков, заморозка в их ордерах, казны стран,
-призовые фонды турниров. Резерв обращением **не** является — прежняя цифра
-`totalInCirculation` его прибавляла и показывала почти весь капитал.
-
-Признак `balanced` сразу поймал ошибку: открывающая проводка казны не учла
-казны стран и фонды турниров, капитал превышал 100 млрд на 66 412. Поправлено
-отдельной проводкой — история показывает и ошибку, и исправление.
+Выгрузка из памяти проекта (`claudia_memory.dialog_history`, проект chesscoin).
+Здесь — **почему** сделано так, а не только что сделано: решения Кенана,
+найденные дефекты, уроки на ошибках. Файл нужен графу знаний: без него
+карта показывает устройство кода, но не замысел.
+
+Обновлять: `python project_management/tools/export_history.py`.
+
+## 2026-08-04
+
+### session_auto
+
+[session_auto Claude Code] проект=chesscoin session=4a16dca3-e496-4e0b-a9b1-8727c0b8a360    [КЕНАН]: установи graphify project в папку проекта на локальном компьютере  запусти и пополни его как структурой проекта, так и управляющими файлами и чатом об этом проекте так чтобы карта всего проекта была как на ладони - доступна, видна комплексно и связанно.  [CLAUDE]: Понял — ставлю graphify в проект и наполняю его структурой, управляющими файлами и историей этого разговора. Читаю навык.  [КЕНАН]: Base directory for this skill: C:\Users\SAM\.claude\skills\graphify    # /graphify    Turn any folder of files into a navigable knowledge graph with community detection, an honest audit trail, and three outputs: interactive HTML, GraphRAG-ready JSON, and a plain-language GRAPH_REPORT.md.    ## Usage    ```  /graphify                                             # full pipeline on current directory (HTML viz  [CLAUDE]: Ставлю graphify в проект.  [CLAUDE]: Останавливаю graphify — сначала исправляю оба, раз это прямое указание. Вернусь к графу после.    Начинаю с кодов товаров: сейчас настройки ищутся по человеческому названию, и любая опечатка или переименование тихо ломает покупку.  [CLAUDE]: Коды проставлены всем 141 товару. Теперь бэкенд должен их отдавать, а фронт — искать по ним.  [CLAUDE]: Теперь фронт — ищет по коду, название остаётся только для показа.  [CLAUDE]: Чтобы код стал главным ключом, а не украшением, свожу ключи таблиц к тому же правилу, что и в базе.  [CLAUDE]: Первое исправлено. Теперь второе — чтобы стражи проверяли сами себя.  [CLAUDE]: Тест проходит. Но тест, который проходит всегда, бесполезен — проверяю, что он ловит поломку.  [CLAUDE]: Тест с зубами: сломала стража нарочно — он поймал обе ошибки и сказал чинить себя, а не продукт. Восстановила, снова зелёный.    Ставлю самопроверку в эталон и выкатываю оба исправления.  [CLAUDE]: Код доходит до списка товаров, но не до надетых — запрос инвентаря его не выбирает. Правлю.  [CLAUDE]: Оба исправления работают, проверено на живой доске: неоновый цвет, ромбовидные клетки, золотой фильтр фигур, свечение шаха — всё через код, а не через название.    Запускаю регрессию и возвращаюсь к графу.  [CLAUDE]: Оба исправила.    **Первое — название больше не ключ.** У каждого из 141 товара появился неизменяемый код: `golden_pieces`, `silver_frame`, `diamond_cells`. Настройки ищутся по нему, название осталось только для показа. Теперь товар можно переименовать, перевести на любой язык, поправить опечатку — покупка не сломается. Ключи таблиц во фронте сводятся к коду тем же правилом, что и база, поэтому рука
+
+### Сделано
+
+МАГАЗИН доведён по трём просьбам Кенана 03.08 («обе и B9»).  1) НАЗВАНИЯ ТОВАРОВ на четырёх языках: 262 строки (131 название + 131 описание) в ui_texts под ключами shop.item.<id>.name/.desc. Имена собственные НЕ переводятся: шрифты, ChessCoin, Lichess, Binance, Matrix. ВАЖНО: английское название осталось КЛЮЧОМ поиска настроек (цвета доски, фильтры фигур, превью) — показывается перевод, ищется оригинал. Иначе повторили бы поломку стилей фигур. Диалог покупки тоже был английским, переведён.  2) ЗВУК СТАЛ ТОВАРОМ: тип SOUND, пять наборов (обычный, деревянный стук, хрустальный звон, восьмибитный писок, раскат грома). Набор задаёт ХАРАКТЕР — pitch/gain/waveform/noise, а не подменяет звуки файлами: звуки синтезируются в браузере, файлов нет. Надетый набор кладётся в localStorage (chesscoin-sound-set) из App.tsx — импортировать стор в sound.ts нельзя, круговой импорт. Поиск сразу нечувствителен к регистру.  3) B9: РАМКА АВАТАРА стала свечением вместо обводки — три слоя тени (кольцо 3px, свечение 12px, ореол 26px вторым цветом), ~3 мм как просил Кенан. Попутно: рамка искалась по ТОЧНОМУ ключу мимо pick() — «Golden Frame» из магазина не находилась («Gold Frame» в таблице); золотое кольцо профиля рисовалось ПОВЕРХ купленной рамки и глушило её.  4) B9: ФОРМА КЛЕТОК — новый тип CELL_SHAPE, пять форм (квадрат, скруглённые, круглые, ромб, срезанный угол). Задаётся стилем клетки, поэтому работает поверх любого цвета доски. Проверено на проде: clipPath ромба на клетке доски. Теперь все четыре измерения Кенана существуют: цвета доски, цвета фигур, формы фигур, формы клеток.  ЕЩЁ ОДНО ИСПРАВЛЕНИЕ СТРАЖА: счётчик непереведённых считал КЛЮЧИ таблиц соответствий («Golden pieces»: «sepia…») — каждый новый стиль или звук «ухудшал» перевод. Ключи и запасные значения useText больше не считаются: 660 → 582. Это не перевод 78 строк, а прекращение счёта лишнего; планка опущена до 582.  ОСТАЛОСЬ ИЗ B9: анимации и подсветка («будет хорошо решено, если выполнено действительно качественно»).
+
+### daily_digest
+
+=== Daily digest 2026-08-04 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (5 entries): You are summarising mesh activity for project 'chesscoin' over last 24h. Below are 5 dialog_history entries (truncated). Produce a 5-8 bullet summary: - key milestones (deploys, bugs fixed, new features) - counts (tasks done, failed, pairs added) - blockers / TODOs - decisions taken  Use Russian. Be concise. Format: '- bullet' lines.  RAW ENTRIES: [06:46] (session_auto imp=5) [claude auto] chesscoin: <task-notification> <task-id>bhvxu3139</task-id> <tool-use-id>toolu_01Wyc8Esd8uPtPtB6H9KVG4L</tool-use-id> <output-file>C:\Users\SAM\AppData\Local\Temp\claude\D------------che [06:45] (fix imp=9) МАГАЗИН, внедрение косметики (Кенан 03.08: «сначала магазин и фигуры — их внедрение в дизайн доски и фигур, звуков, анимации»).  ДЫРА В БЕЗОПАСНОСТИ, нашлась попутно: в shop.ts жила ВТОРАЯ группа дене [13:08] (decision imp=8) КОМИССИИ — Кенан 03.08 расставил окончательно: 0,5% берётся ТОЛЬКО с криптовалюты при купле-продаже монет (и когда два игрока торгуют между собой — 0,5% всё равно параллельно идёт нам); 10% — комиссия [11:04] (fix imp=9) БИРЖА, разбор Кенана 03.08. Он спросил «почему 1 TON не 100К монет, а 100М» — курс ВЕЗДЕ верный (COINS_PER_TON=100_000, ордер платформы 10 млн монет за 100 TON). Настоящие дефекты оказались другие:  1 [07:00] (daily_digest imp=8) daily chesscoin 20260803: 0done +0az-ru
+
+### Исправление
+
+МАГАЗИН, внедрение косметики (Кенан 03.08: «сначала магазин и фигуры — их внедрение в дизайн доски и фигур, звуков, анимации»).  ДЫРА В БЕЗОПАСНОСТИ, нашлась попутно: в shop.ts жила ВТОРАЯ группа денежных путей /shop/ton/*. connect привязывал кошелёк БЕЗ подтверждения; buy НАЧИСЛЯЛ МОНЕТЫ ПО СЛОВУ КЛИЕНТА — никакой сверки платежа с блокчейном, достаточно передать любое число тонн в теле запроса; sell и withdraw списывали монеты без заявки и по курсу 1 000 000 за TON вместо 100 000. Фронт эту группу не вызывал, поэтому и не всплывало. Все четыре закрыты (410/403), проверено запросами на проде. УРОК: закрывая денежный путь, искать ВСЕ его копии по проекту — вчера я закрыла пару в profile.ts и эту не увидела.  ВНЕДРЕНИЕ КОСМЕТИКИ: работали доски (10), наборы форм (7), анимации хода (10). НЕ работали стили фигур — 9 из 10: в базе «Silver pieces», в equippedItems.ts ключ «Silver Pieces». Точное сравнение молча не находило, купленный стиль ничего не менял. «Golden pieces»/«Legend Gold»/«Golden Frame» расходились и по слову. Введена функция pick(): сначала точное, потом без учёта регистра; недостающие названия добавлены. По всем 37 предметам без соответствия ноль.  ДОКАЗАНО ЗАМЕРОМ НА ПРОДЕ, не чтением: тёмная клетка до покупки rgb(139,69,19) (дуб), после покупки Neon — rgb(7,21,32); на фигурах после «Golden pieces» появился фильтр sepia(1) saturate(4)… Капитал сходится.  МОЯ ОШИБКА В ХОДЕ РАБОТЫ: сначала заявила, что не применяется ни одна из 10 анимаций. Неверно — мой скрипт сравнения искал ключи только в ДВОЙНЫХ кавычках, а MOVE_ANIMATION_CONFIG использует одинарные. Урок: проверяя соответствия, учитывать оба стиля кавычек и перепроверять «слишком плохой» результат.  ОТКРЫТО, ждёт Кенана: (1) названия 121 товара только по-английски — нарушает правило «ни одного чужеродного слова»; (2) звук не является товаром, синтезируется в браузере и общий для всех.
+
+## 2026-08-03
+
+### Решение
+
+КОМИССИИ — Кенан 03.08 расставил окончательно: 0,5% берётся ТОЛЬКО с криптовалюты при купле-продаже монет (и когда два игрока торгуют между собой — 0,5% всё равно параллельно идёт нам); 10% — комиссия стола ВНУТРИ игры, с выигрыша в батлах и партиях с Джарвисом, монета на монету. Менять ничего не надо, в коде уже так. Биржа проверяет обе части платежа в блокчейне: если наш 0,5%-платёж не найден, сделка НЕ исполняется (FEE_NOT_CONFIRMED).  ОТВЯЗКА КОШЕЛЬКА была сломана: handleDisconnectWallet рвал только сеанс TonConnect в браузере и показывал «отключено», а DELETE /profile/ton-wallet НЕ вызывал. Адрес оставался в базе → другой кошелёк подключить нельзя. Починено, проверено на проде.  КОШЕЛЁК БЕЗ ПОДТВЕРЖДЕНИЯ — НЕ ДЕФЕКТ, и команду Кенана «отвязать» я НЕ выполнила намеренно: единственный такой адрес принадлежит счёту platform_treasury. Это НАШ адрес получения TON из PLATFORM_TON_WALLET, он стоит sellerWallet в постоянном ордере — отвязка оставила бы покупателей без адреса для оплаты. У игроков неподтверждённых кошельков нет ни одного. Урок: проверку «кошелёк без подтверждения» считать по игрокам, исключая счёт платформы.  ПОВТОРНОЕ ПОДКЛЮЧЕНИЕ уже по правилу: подтверждённый адрес пускается бесплатно (ton_wallet_confirmations по паре userId+walletAddress), новый требует 1 TON.
+
+### Исправление
+
+БИРЖА, разбор Кенана 03.08. Он спросил «почему 1 TON не 100К монет, а 100М» — курс ВЕЗДЕ верный (COINS_PER_TON=100_000, ордер платформы 10 млн монет за 100 TON). Настоящие дефекты оказались другие:  1) ЦЕНА НЕ ПОКАЗЫВАЛАСЬ ВОВСЕ: currentPrice бралась только из EXECUTED-ордеров, сделок не было ни одной → прочерк. Теперь до первой сделки берём лучший открытый SELL (постоянный ордер платформы). Рядом печатаем «1 TON = 100 000 ᚙ» — Кенан думает в этих единицах, а UI везде «TON за 1 000 000».  2) ЦЕНА ОРДЕРА ПО УМОЛЧАНИЮ 0.001 TON/1M = миллиард монет за тонну. Выставив ордер «как есть», игрок отдавал монеты даром. Теперь подставляется рыночная, запасная BASE_PRICE=10.  3) ДВА ВХОДА В ОДНО: синяя кнопка магазина открывала своё окно кошелька (TonTab), вкладка «Биржа» — свой LockedScreen. Кенан: «подключить кошелёк и биржа — одна страница». Объединено: кнопка ведёт на биржу, карточка подключения первым блоком, после привязки — полоска с адресом, ниже цена/график/купля-продажа/стакан/история.  4) ГЛАВНОЕ — ВЫВОД МОНЕТ ЗА TON БЫЛ ЖИВ. /profile/ton/sell и /ton/withdraw списывали монеты и заводили заявку; монеты не зачислялись НИКУДА → 02.08 пропало 100 000, capital broken. Тонны не выплачивались (заявка PENDING, кошелёк не подписывал). Кенан подтвердил своё правило «вывода нет вообще» → оба эндпоинта закрыты 403, форма продажи убрана из UI, методы удалены из клиента, заявка отменена, 100 000 возвращены проводкой, balanced:true.  МЕТОД, КОТОРЫЙ НАШЁЛ ПРОПАЖУ: SELECT type, sum(amount) FROM transactions WHERE createdAt > <окно> GROUP BY 1 HAVING sum<>0 — у парных переводов сумма нулевая, у односторонних нет. Работает второй раз подряд.  ОСТАЛОСЬ ЗА КЕНАНОМ: комиссия биржи 0.5% против общего правила 10%; один кошелёк на проде привязан без подтверждения; эмодзи во вкладках магазина.
+
+### daily_digest
+
+=== Daily digest 2026-08-03 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (0 entries): No activity in last 24h.
+
+## 2026-08-02
+
+### daily_digest
+
+=== Daily digest 2026-08-02 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (9 entries): You are summarising mesh activity for project 'chesscoin' over last 24h. Below are 9 dialog_history entries (truncated). Produce a 5-8 bullet summary: - key milestones (deploys, bugs fixed, new features) - counts (tasks done, failed, pairs added) - blockers / TODOs - decisions taken  Use Russian. Be concise. Format: '- bullet' lines.  RAW ENTRIES: [23:03] (session_auto imp=5) [claude auto] chesscoin: <task-notification> <task-id>bg32ji61p</task-id> <tool-use-id>toolu_014pJQEorDEk8PdhA5xHfkum</tool-use-id> <output-file>C:\Users\SAM\AppData\Local\Temp\claude\D------------che [22:10] (fix imp=8) ЖИЗНЕННЫЙ ЦИКЛ ПАРТИИ И ПАНЕЛИ (Кенан 01-02.08).  ПРОВЕРЕНО ПО ФАКТУ: ссылка на партию работает на ВСЕХ этапах. Завершённая партия открывается по той же ссылке (/share/<token> и /game/<id>): показывае [18:44] (feature imp=8) ВОЙНЫ, пункты 3-6 из очереди Кенана закрыты (01.08).  3) СОРТИРОВКА БОЙЦОВ: ступени в wars.ts — 0 чемпион (isMonthlyChampion), 1 главком (max referralCount), 2 три лучших по countryMember.warWins, 3 о [17:48] (fix imp=9) ВТОРОЙ ПРОВЕРОЧНЫЙ АККАУНТ (screenshotter_002) заведён с разрешения Кенана 01.08. Токен: /api/v1/screenshotter/token?secret=...&who=2. Баланс НЕ засыпан прямо в базу — переведён с первого настоящей пр [17:08] (decision imp=8) ССЫЛКИ: Кенан 01.08 развёл два вида. (1) Простая реферальная — зовёт в игру вообще, приглашённые становятся «армией» (ref_<telegramId>, militaryRank). (2) Приглашение на КОНКРЕТНЫЙ батл — существует у [15:51] (fix imp=9) ВОЙНЫ,
+
+## 2026-08-01
+
+### Исправление
+
+ЖИЗНЕННЫЙ ЦИКЛ ПАРТИИ И ПАНЕЛИ (Кенан 01-02.08).  ПРОВЕРЕНО ПО ФАКТУ: ссылка на партию работает на ВСЕХ этапах. Завершённая партия открывается по той же ссылке (/share/<token> и /game/<id>): показывает финальную позицию, итог и кнопку «Посмотреть партию» с записью ходов. LIVE-раздел в публичной вкладке есть, приватная партия при старте становится публичной (isPrivate→false проверено в тесте приглашения).  МОЯ ОШИБКА, НАШЛАСЬ ТОЛЬКО ГЛАЗАМИ: кнопку «Пройди обучение» при проигрыше я добавила в components/game/GameResultModal.tsx — а он НЕ ИМПОРТИРОВАН НИГДЕ. Окно результата рисует ResultSheet внутри GamePage.tsx. Кнопка до игрока не доходила, а я отчиталась «сделано». Урок: перед правкой UI-компонента grep по имени вне самого файла; типизация мёртвый код не ловит.  ОКНО PGN переделано по жалобам Кенана: крестик из шапки убран (ложился поверх кнопок Telegram и не нажимался), звёздочка «сохранить» из шапки убрана (дублировала действие). Внизу теперь ПАНЕЛЬ ПАРТИИ: в начало, шаг назад, воспроизведение/пауза, шаг вперёд, в конец — теми же SVG-иконками, что в обучении (прежние ⏮◀▶⏭ были текстовыми глифами), плюс «Сохранить», «Поделиться», «Закрыть». Ходы листаются сами по 800 мс. API сохранения проверено отдельно — работало и раньше.  ЭКРАН ПАРТИИ: после конца игры нижние кнопки больше не предлагают «Сдаться»/«Ничья»/«Ждём». Третий слот становится «Партия» (открывает запись), четвёртый «Поделиться». Проверено на проде: «Главная Сохранить Партия Поделиться», «Сдаться» нет.
+
+### Сделано
+
+ВОЙНЫ, пункты 3-6 из очереди Кенана закрыты (01.08).  3) СОРТИРОВКА БОЙЦОВ: ступени в wars.ts — 0 чемпион (isMonthlyChampion), 1 главком (max referralCount), 2 три лучших по countryMember.warWins, 3 остальные. Внутри ступени прежний порядок (победы в текущей войне → за всё время → алфавит). ?sort=alpha ступеней не навязывает. В ответ добавлены tier/isChampion/isTopByWins. ПРОВЕРЕНО частично: видно главкома первым; ступени 0 и 2 показать не на ком — флага чемпиона нет ни у кого, единственный боец с победами и так главком.  4) ОБНУЛЕНИЕ ПОБЕД ПРИ СМЕНЕ СТРАНЫ работало и раньше: warWins лежит в countryMember, /wars/leave удаляет запись. Проверено по факту вторым аккаунтом: 5 побед в Австрии → выход → вступление в Алжир → 0. Кода не трогала. Следы проверки убраны, взносы возвращены, balanced:true.  5) СЧЁТ ПРОТИВ КАЖДОЙ СТРАНЫ: новый GET /wars/countries/:id/rivals. Отдельного поля НЕ заводила — считается из завершённых countryWar, поэтому цифры не могут разойтись с историей. Отдаёт warsWon/Lost/Draw и battlesWon/Lost на каждого противника + итог. В карточке страны блок «Счёт против стран». Проверено: Азербайджан 2:0 против Австралии, Австралия зеркально 0:2.  6) ИСТОРИЯ ВОЙН уже была реализована. Проверено: 6 войн с датами, счётом, числом партий; деталь открывает партии, клик по игроку → профиль. НЕ ПОНЯЛА формулировку «число турниров и сражений» — что считать турнирами внутри войны, у Кенана не уточнено, выдумывать не стала.  ОСТАЛОСЬ в очереди: пункт 2 — автопилот вызова. Механизм scheduleWarMatches существует; чтобы проверить по факту, нужна активная война между странами с живыми игроками — это затрагивает реальные аккаунты и взносы, поэтому без слова Кенана войну не объявляю.
+
+### Исправление
+
+ВТОРОЙ ПРОВЕРОЧНЫЙ АККАУНТ (screenshotter_002) заведён с разрешения Кенана 01.08. Токен: /api/v1/screenshotter/token?secret=...&who=2. Баланс НЕ засыпан прямо в базу — переведён с первого настоящей проводкой (у первого 999 999 дописаны мимо истории, сверка баланс↔история на нём не сходится до сих пор).  ОН СРАЗУ ОКУПИЛСЯ — нашёл две поломки, невидимые в коде: 1) refmatch_<кто>_<партия> резался по ПЕРВОМУ подчёркиванию → идентификатор партии рвался пополам. Чиню на lastIndexOf: в UUID подчёркиваний не бывает, в коде пригласившего — запросто. 2) ПРИГЛАШЕНИЕ НА ПЕРСОНАЛЬНЫЙ БАТЛ НЕ РАБОТАЛО СОВСЕМ: GET /games/spectate/:id отдаёт 403 SESSION_PRIVATE для любой приватной партии, то есть приглашённый не видел даже доски. Открыт ровно один случай: партия ещё WAITING и sides<2 — это открытое приглашение, ссылка и есть пропуск. Началась игра — правило снова строгое. Плюс своя же ошибка: canAcceptChallenge проверял только type=BATTLE, а персональный вызов создаётся как FRIENDLY.  check_invite_accept.mjs: первый создаёт вызов через socket.io-client, второй приходит playwright по refmatch-ссылке, жмёт «Принять вызов». INVITE_ACCEPT_OK на живом проде.  УРОК ПРО ОТМЕНУ ПАРТИИ ЗАПРОСОМ: прямой UPDATE status=CANCELLED не возвращает ставку и не чистит _ActiveUserSessions. Игрок упирается в «Max active battles reached», монеты выпадают из капитала (поймала на себе: -2000, balanced:false). Отменять через приложение либо возвращать ставку и связку руками.
+
+### Решение
+
+ССЫЛКИ: Кенан 01.08 развёл два вида. (1) Простая реферальная — зовёт в игру вообще, приглашённые становятся «армией» (ref_<telegramId>, militaryRank). (2) Приглашение на КОНКРЕТНЫЙ батл — существует у ВСЕХ форм: публичный, война, чемпионат, персональный. Несёт ДВА кода: реферальный того, кто делится, и код комнаты. Переход ведёт на доску, а не на главную. Если батл ещё ждёт соперника — пришедший может ПРИНЯТЬ вызов; если партия идёт или обе стороны заняты (война, турнир) — становится зрителем. Новый игрок при этом попадает в рефералы пригласившего, бонусы получают оба.  Сделано: refmatch_<пригласивший>_<партия> во всех точках, кнопка «Поделиться» у всех форм батла (была только у персонального), ссылка со страницы партии переведена с share_<token> на linkToSession, на доске появилась полоса «Принять вызов» при status=WAITING и sides<2 (условие sides<2 отсекает войну и турнир, где обе стороны заняты системой).  ЧЕСТНО О ПРОВЕРКЕ: ссылки и уровни Джарвиса проверены живьём. Кнопка «Принять вызов» НЕ проверена живьём — на проде нет ждущих батлов, а для проверки нужен ВТОРОЙ аккаунт (свой батл принять нельзя). Реферальная выдача бонусов тоже не проверена концом-в-конец: нужен новый пользователь через Telegram. Механика activateReferral/payFromTreasury существовала до меня, я только пробрасываю referrer тем же путём, что и ref_.
+
+### Исправление
+
+ВОЙНЫ, разбор Кенана 01.08. Четыре РАЗНЫЕ причины одной жалобы «боец не видит свой бой»: 1) game:current не выбирал isPrivate/sourceType/deadlineAt/acceptedByAll — formatSession подставлял isPrivate=false, фронт отсеивал военную партию фильтром вкладки «Приватные». Правило на будущее: если формат читает поле, оно ОБЯЗАНО быть в select запроса — иначе тихо приходит null. 2) Уведомления не было: warMatchmaking слал только socket-событие (видит лишь тот, кто уже в приложении). Добавлено личное сообщение бота с кнопкой «За доску» → startapp=match_<id>. 3) ГЛУБОКИЕ ССЫЛКИ НЕ РАБОТАЛИ НИ У КОГО, кто уже открывал приложение: разбор start_param стоял ВНУТРИ ветки первого входа, а при сохранённом токене useAuth выходил раньше (return после authApi.me()). Плюс __pendingSessionId писался в window с комментарием «приложение подхватит» — потребителя не существовало. Вынесла разбор до всех ветвлений + applyPendingDeepLink на обоих путях, потребителя добавила в useSocket. 4) Три ссылки во фронте вели на НЕСУЩЕСТВУЮЩЕГО ChessCoinBot (настоящий — chessgamecoin_bot, проверено getMe), а объявления в канале использовали ?start= (открывает чат бота) вместо ?startapp= (открывает приложение). Сборка ссылок вынесена в frontend/src/lib/deepLink.ts.  Приглашение теперь несёт реферал и комнату: refmatch_<пригласивший>_<партия>. Карточка боя войны: флаги сторон, кнопка «За доску» вместо «Отменить» (назначенный бой не отменяют).  УРОВНИ ДЖАРВИСА: список был открыт, запрет сидел в бэкенде (session.ts: botLevel > jarvisLevel+1 → throw). Снят. Проверено живьём: аккаунт jarvisLevel=1 запустил партию на 3-м уровне — раньше сервер отвечал ошибкой.  Заведён страж «Ссылка на партию открывает доску» (случаев 43). Регрессия 42/42.
+
+### Сделано
+
+Награда за урок переведена на трудность блока (Кенан выбрал из трёх вариантов): азбука 2 тыс., маты 3 тыс., приёмы 5 тыс., окончания 7 тыс. Сумма в колонке lessons.reward, бэкенд и фронт читают её оттуда; формула 1000+1000*номер осталась запасной для номеров вне линейки. Весь путь 120 уроков = 630 тыс. вместо 7,3 млн.  Блок окончаний 81-120: пешечный, ладейный, слоновый эндшпиль, проходная пешка. Позиции Lichess по темам, прогнаны движком, повторов с линейкой нет. В линейке 120 уроков, текстов 1103, без перевода ноль.  ВИЗУАЛЬНЫЙ СТРАЖ — ЧЕТЫРЕ ПОЛОМКИ ПОДРЯД, ВСЕ МОИ: (1) compare смотрел на старые снимки; (2) approve утверждал старые; (3) ожидание искало только английское Loading, а интерфейс пишет «Загрузка»; (4) добавила ожидание «страница перестала меняться», но условие «не пусто» написала как now.length>3 по СЛУЖЕБНОЙ строке вида 0|1| — оно истинно всегда, цикл выходил на первом шаге. Итог: ждём устойчивости по длине ТЕКСТА страницы (>40) при совпадении двух замеров подряд. Три прогона 18/18.  УРОК: инструмент проверки надо проверять так же придирчиво, как продукт, и мерить стабильность НЕСКОЛЬКИМИ прогонами. Один зелёный прогон ничего не доказывает.  Материала в базе задач на комбинации осталось примерно на 60-70 уроков честного качества (mateIn2 82, attraction 52, discoveredCheck 34, sacrifice 21, clearance 20, mateIn3 20). До 300 нужна новая партия из Lichess.
+
+### Сделано
+
+Блок приёмов заведён: уроки 21-80, шесть тем по десять — незащищённая фигура, вилка, связка, сквозное нападение, открытое нападение, отвлечение. Позиции из Lichess по темам, отобраны от лёгких рейтингов к тяжёлым и прогнаны движком. Пояснение ОДНО НА ПРИЁМ (lessons.theme.<приём>.explain), название механическое. В линейке 80 уроков, текстов 1055, без перевода ноль.  ЖИВАЯ ПРОВЕРКА НАШЛА ТО, ЧЕГО НЕ ВИДНО В КОДЕ: экран урока собирал ключ текста из номера (lessons.item.N.explain), а у приёмов ключ общий на тему — уроки 21-80 открывались БЕЗ ОБЪЯСНЕНИЯ ВОВСЕ. Теперь берём ключи у самого урока (lesson.titleKey/explainKey). Урок: если бэкенд отдаёт ключ, фронт обязан его использовать, а не восстанавливать по шаблону.  ДЕФЕКТ 40 — МОЙ ПЕРВЫЙ ДИАГНОЗ БЫЛ НЕВЕРЕН. Печатала не война. Весь разрыв 1800 дал BOT_PIECE: награда за фигуру Джарвиса дописывалась игроку без списания с казны. Метод, который нашёл правду: SELECT type, sum(amount) FROM transactions WHERE createdAt > (открытие казны) GROUP BY 1 HAVING sum<>0 — у парных переводов сумма нулевая, у печати нет. Заодно найдены латентные: prizePerWin в казну страны (finish.ts), welcome-бонус, и комиссия войны в счётчик platformReserve вместо счёта. Все на payFromTreasury. Миграция 20260801_bot_piece_correction списала 1800. balanced:true впервые.  ВИЗУАЛЬНЫЙ СТРАЖ ВРАЛ ВТОРОЙ РАЗ. approve утверждал эталон по СТАРЫМ снимкам — не переснимал. После каждого деплоя эталоном становилась предыдущая версия экрана. Ровно та же ловушка, что с compare 31.07. Плюс мигание от анимаций, каруселей по таймеру и всплывашки. Теперь: approve сам снимает, перед снимком гасятся анимации, таймеры >=800мс не запускаются, [data-toasts] и [data-onboarding] скрыты. Два прогона подряд 18/18. УРОК: у любого инструмента-стража проверять, что он смотрит на СВЕЖЕЕ состояние, а не на кэш.  Регрессия 42/42, долгов нет.
+
+### Сделано
+
+Блок «первые маты» заведён: уроки 11-20 — мат ладьёй и королём, лестница двумя ладьями, ферзём и королём, по последней горизонтали, детский, спёртый конём, двумя слонами, ферзём издалека, эполетный, Анастасии. Проверялка теперь требует, чтобы последний ход был ДЕЙСТВИТЕЛЬНО матом — на этом поймала свою ошибку в уроке 20 (Анастасия без пешки g7 не мат, королю оставалось поле). Тексты на 4 языках, 983 строки, пустых нет.  ДИЗАЙН ОКНА УРОКА (Кенан 01.08 вечером, три замечания): 1) маленькая «← Уроки» непропорциональна — заменена постоянной нижней панелью из четырёх квадратных кнопок: Обучение, Тест, Следующий, Меню; ничего не перекрывает. 2) пояснение висело высоко, между ним и доской пустота — теперь заголовок, пояснение, доска и запись ходов один блок по центру. 3) стрелки «‹ ›» непривычны — заменены набором из разбора партий: в начало, шаг назад, воспроизведение (автолистание 950 мс), шаг вперёд, в конец, плюс строка ходов в шахматной записи с переходом по клику; в тесте та же строка показывает ходы игрока. Урок: привычный визуал не изобретать заново, брать стандартный для шахматных программ.  ДЕФЕКТ 40 (мой находка, решение за Кенаном): война печатает монеты из воздуха. finish.ts:284 начисляет prizePerWin (100) в казну страны-победителя без списания у кого-либо. Капитал разошёлся: обращение + казна = 100 000 001 800 при капитале 100 млрд, лишние 1800 = 18 побед × 100. По правилу Кенана касса победителя должна приходить из казны проигравшей страны — источник менять сама не стала, это экономика.  Страж урока врал на холодном старте: ждал фиксированные 2 секунды после пересборки фронта и писал «урок не загрузился». Теперь ждёт ответ по уроку до 20 с. Регрессия 41/41, долг один — капитал.
+
+### daily_digest
+
+=== Daily digest 2026-08-01 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (10 entries): You are summarising mesh activity for project 'chesscoin' over last 24h. Below are 10 dialog_history entries (truncated). Produce a 5-8 bullet summary: - key milestones (deploys, bugs fixed, new features) - counts (tasks done, failed, pairs added) - blockers / TODOs - decisions taken  Use Russian. Be concise. Format: '- bullet' lines.  RAW ENTRIES: [01:26] (session_auto imp=5) [claude auto] chesscoin: эта информация сомнительна:  💰 Экономика  📈 Фаза: 1 🏦 Эмиттировано: 2006200 ᚙ 🔒 Резерв: 99998075300 ᚙ 💎 Цена токена: $0.001  Комиссии (батлы):   💸 Собрано всего: 0 ᚙ  TON / Вы [01:25] (feature imp=8) Азбука обучения заведена целиком, уроки 1-10: пешка, слон, конь, ладья, ферзь, король, рокировка, взятие на проходе, превращение пешки, как бьёт пешка. Кенан утвердил образец (урок 3), дальше делала п [01:10] (fix imp=9) Отчёт экономики в админке врал — Кенан назвал цифры сомнительными и был прав. Проверила каждую: «эмиттировано 2 006 200» при обращении 9 102 399 (счётчик двигался только там где передавали флаг эмисси [00:21] (feature imp=9) Обучение: образец урока сделан и работает. Кенан описал урок как два этапа на ОДНОЙ доске: «Обучение» — доска сама проигрывает сценарий, ходы листаются вперёд-назад; «Тест» — та же позиция с начала, д [17:26] (decision imp=10) Экономика переведена на единый капитал (Кенан 31.07). Правило: все монеты из одного капитала 100 млрд, любое движение — перевод между счетами с двумя записями. services/treasury.ts: payFromTreasury (в [17:01] (decision imp
+
+### Сделано
+
+Азбука обучения заведена целиком, уроки 1-10: пешка, слон, конь, ладья, ферзь, король, рокировка, взятие на проходе, превращение пешки, как бьёт пешка. Кенан утвердил образец (урок 3), дальше делала по той же схеме. Принцип: на доске только то, что объясняется — лишние фигуры мешают увидеть приём. Все сценарии проверены движком перед вставкой; живьём проверены рокировка и превращение — самые каверзные ходы, оба проходятся. Кнопка «Пройди обучение и научись побеждать» добавлена в окно результата при ЛЮБОМ проигрыше — и Джарвису, и живому игроку. Попутно: подпись кнопки реванша была вшита по-английски «Rematch» в русском интерфейсе, переведена. Визуальный эталон переутверждён по слову Кенана (18 экранов): прежний снимался до того, как стали показываться подсказки первого входа. 959 строк текста на четырёх языках, пустых нет. Эталон 42 случая зелёный. ДАЛЬШЕ ПО ПЛАНУ LESSONS_SPEC.md: блок «первые маты» (уроки 11-30), потом приёмы, эндшпиль, комбинации, мастерство — из базы Lichess по темам с сортировкой по сложности; звания за блоки с премиями.
+
+### Исправление
+
+Отчёт экономики в админке врал — Кенан назвал цифры сомнительными и был прав. Проверила каждую: «эмиттировано 2 006 200» при обращении 9 102 399 (счётчик двигался только там где передавали флаг эмиссии); «резерв» расходился со счётом платформы на 17 млн; «цена токена $0.001» при реальной $0.0000141 — ошибка в 70 раз; «депозитов TON 0» читалось из старой таблицы tonTransaction куда давно не пишут. Отчёт переписан на реальные счета: капитал, обращение с долей, казна, признак сходимости, порог выдачи, курс монеты от живого курса TON. Строки про вывод убраны — вывода в проекте нет. ПРИЗНАК СХОДИМОСТИ СРАЗУ ПОЙМАЛ ОШИБКУ: капитал был больше 100 млрд на 2400. Причина — приз турнира выплачивался, но касса в строке турнира НЕ обнулялась: в 15 завершённых турнирах висело около 6 млн фантомных монет; плюс комиссия турнира уходила в счётчик platformReserve а не на счёт. Исправлено в обоих местах закрытия турнира: касса обнуляется, комиссия идёт на счёт платформы. Старые фантомные суммы убраны миграцией, капитал выровнен отдельной проводкой. Теперь balanced=True. УРОК 3 КЕНАН ПРИНЯЛ — схема образца утверждена, дальше наполнять азбуку по ней. ОТКРЫТО: визуальный эталон устарел (4 экрана: всплывающие подсказки первого входа и новые данные), нужно слово Кенана на переутверждение.
+
+### Сделано
+
+Обучение: образец урока сделан и работает. Кенан описал урок как два этапа на ОДНОЙ доске: «Обучение» — доска сама проигрывает сценарий, ходы листаются вперёд-назад; «Тест» — та же позиция с начала, доска ждёт, игрок повторяет ходы сам без подсказок, ответы соперника из сценария; прошёл — «Следующий урок» и «Вернуться в меню». Реализовано на /learn/:id, таблица lessons (номер, блок, ключи названия и пояснения, позиция, сценарий, награда), текста в таблице уроков нет — только ключи, поэтому урок сразу на 4 языках. Прогресс и награда переиспользуют lesson_progress. Заведены уроки 1-3 азбуки (пешка, слон, конь), сценарии проверены движком перед вставкой. Спецификация — docs/product/LESSONS_SPEC.md: линейка 200-300 уроков по блокам, звания за блоки, откуда брать материал. ЖИВАЯ ПРОВЕРКА НАШЛА ТРИ ПОЛОМКИ, которых чтение кода не показало: экран падал в Something went wrong пока урок грузится (new Chess("") на пустом fen); название показывалось как «Урок 3 · Урок 3» — ключ lessons.item.3.title через t.lessons.item[3] не достаётся, добавлен useText(key); доска принимала только перетаскивание, кликом тест было не пройти. ТАКЖЕ: кнопка «Следующая» в задачах чинена (эффект зависел только от адреса, а кнопка ведёт на тот же адрес — location.key); уровни Джарвиса: непройденные теперь ОТКРЫТЫ все, пройденные закрыты. Стражи 41 и 42 гоняют кнопку и урок живым браузером.
+
+## 2026-07-31
+
+### Решение
+
+Экономика переведена на единый капитал (Кенан 31.07). Правило: все монеты из одного капитала 100 млрд, любое движение — перевод между счетами с двумя записями. services/treasury.ts: payFromTreasury (выдача СО счёта платформы) и collectToTreasury (сбор НА него). ПЕРЕВЕДЕНЫ НА СЧЁТ ПЛАТФОРМЫ: победа над Джарвисом и монеты за фигуры, реферальные бонусы всех трёх уровней, награды за задания/задачи/обучение, приветственный бонус. СОБИРАЮТСЯ НА СЧЁТ: комиссия стола 10% с каждой партии (раньше двигала только счётчик platformReserve, а монеты исчезали из обращения), покупки в магазине, покупка попыток (правила баланс напрямую мимо общего пути). У ДЖАРВИСА ЗАКРЫТ СЧЁТ: на нём лежал 1 000 002 124 999 монет — в десять раз больше всего капитала, из этого мешка бот выдавал выигрыши мимо эмиссии. Обнулён закрывающей проводкой, баланс равен сумме транзакций. Флаг isEmission убран — монеты не печатаются; счётчики totalEmitted/platformReserve обновляет сам перевод. КРИПТА: покупатель платит напрямую на PLATFORM_TON_WALLET, платформа только принимает и никогда не отправляет. На проде: казна 99 981 038 413 + витрина 10 000 000 + игроки 8 961 587 = ровно 100 000 000 000. Эталон 40 случаев зелёный, 166 тестов. Коммиты a2f1c73 и следующий.
+
+### Решение
+
+Счёт платформы и постоянный ордер (Кенан 31.07). Заведён настоящий аккаунт-казна platform_treasury с открывающей проводкой TREASURY_OPENING: общий капитал 100 млрд минус обращение. На проде казна 99 981 038 413 + витрина 10 000 000 + игроки 8 961 587 = ровно 100 000 000 000, баланс казны равен сумме её транзакций. Добавлены типы проводок TREASURY_OPENING и TREASURY_SALE. ПОСТОЯННЫЙ ОРДЕР — это ОБЫЧНЫЙ SELL-ордер от казны по 10 TON за миллион (1 TON = 100 000 монет), намеренно без особых веток в горячем пути: покупка у платформы идёт тем же кодом, что и у игрока — та же проверка платежа в блокчейне, то же частичное исполнение, та же бухгалтерия; монеты замораживаются со счёта казны как у любого продавца. Cron раз в 5 минут держит витрину 10 млн, пополняя ниже 2 млн, пока казна не пуста. Кошелёк казны = PLATFORM_TON_WALLET, покупатель платит напрямую на него — платформа только принимает. МИНИМАЛЬНАЯ СДЕЛКА 1 TON = 100 000 монет, порог касается и целого ордера, и частичной покупки. НАЙДЕНО И НЕ ИСПРАВЛЕНО: у бота J.A.R.V.I.S на балансе 1 000 002 124 999 монет — в десять раз больше всего заявленного капитала в 100 млрд; требует решения Кенана. Стражи: капитал ровно 100 млрд, витрина жива, типы транзакций не исчезают (сделан пол вместо точного числа). Эталон 40 случаев зелёный.
+
+### Исправление
+
+Биржа и кошелёк, разбор жалоб Кенана 31.07. КОРЕНЬ ТРЁХ ЖАЛОБ ОДИН: /auth/me не возвращал tonWalletAddress вообще. Фронт определяет наличие кошелька по этому полю — поэтому после подключения баннер «подключи кошелёк» не пропадал, стакан не запрашивался (условие hasWallet), а создание ордера падало с TON_WALLET_REQUIRED. Поле добавлено, кеш /auth/me (30 сек) сбрасывается при подключении. Проверено e2e на проде: кошелёк виден сразу, ордер создался и появился в стакане. ПОДТВЕРЖДЕНИЕ КОШЕЛЬКА (правило Кенана): 1 TON платится ОДИН раз за АДРЕС, не за аккаунт; тот же адрес подключается бесплатно всегда, другой адрес — ещё 1 TON. Таблица ton_wallet_confirmations (userId, walletAddress), isWalletUnlocked проверяет подтверждение ТЕКУЩЕГО адреса. Раньше было дыряво: подключение шло через бесплатный /profile/ton-wallet, а проверка смотрела «была ли когда-либо оплата» — оплатив один кошелёк, можно было привязать любой другой и пользоваться даром. Три существующих кошелька перенесены как подтверждённые. ВЫВОД СРЕДСТВ УБРАН — его в проекте нет, кнопка и панель обещали несуществующее. КУРС: 100 000 монет = 1 TON вместо миллиона, число сведено в константу COINS_PER_TON. ЯЗЫК: вкладка TON была целиком написана по-английски в разметке, переведена. СТАКАН: добавлены объём «В продаже» и сумма в TON в каждой строке. ПОПУТНО НАЙДЕНО: после добавления az/tr выражение translations[lang] выводилось как any — TypeScript перестал ловить несуществующие ключи, опечатка давала пустое место вместо ошибки сборки; типизация восстановлена. ОТКРЫТО: 443 строки фронта всё ещё вшиты в код.
+
+### Решение
+
+Четыре языка интерфейса закрыты полностью. Кенан 31.07 поправил меня: речь про ВСЁ что видит клиент — подсказки, уведомления, пояснения; и главное требование — если строка есть на русском, она обязана быть на всех языках, никаких пустых. Таблица ui_texts заполнена: 881 строка × ru/en/az/tr, пустых ячеек ноль. Азербайджанский и турецкий добавлены в тип Lang и в переключатель в настройках (было 2 языка, стало 4 с флагами). Проверено живым запросом к API на проде: одни и те же ключи отдаются на четырёх языках, empty=0. УДАЛЕНО по прямому разрешению Кенана: шесть брошенных worktree в .claude/worktrees (1.3 ГБ, поиск по проекту цеплял из них старый код) и тестовый аккаунт tester_002 с архивом в archive_tester_*_20260731 — перед удалением проверено, что турнир Чемпион Сезона, который он держал, состоял только из служебных аккаунтов, настоящих игроков там не было. Бухгалтерия после удаления сходится в ноль. Эталон 38 случаев зелёный, визуальный 18/18. Резервная копия во все три места: GDrive, Telegram-группа, локальный диск с проверкой sha256. ОСТАТОК РАБОТЫ: 444 строки во фронте всё ещё написаны прямо в коде мимо словаря — они не переключаются на язык клиента; страж считает их число и не даёт расти.
+
+### Решение
+
+Языки интерфейса. Порядок задал Кенан: инвентаризация → реестр файлов → таблица текстов. ИНВЕНТАРИЗАЦИЯ: 405 файлов на проде, 418 в git, посторонних программ нет; но реестр по git не видел .claude/worktrees — шесть брошенных worktree прошлых сессий на 1.2 ГБ, опасны тем что поиск цепляет из них старый код; inventory.py научен их показывать, удаление ждёт слова Кенана. Пустых файлов три: два маркера python-пакета и мусорный backend/cd. РЕЕСТР: tools/registry_full.py — полный перечень по областям плюс раздел где во фронте лежат тексты. АУДИТ: tools/i18n_audit.py отделяет комментарии от видимых строк, нашёл 444 строки в 29 файлах мимо словаря — они остаются русскими при любом языке. ТАБЛИЦА: ui_texts (ключ, экран, место, вид, ru/en/az/tr), новый язык = колонка; перенесён весь встроенный словарь 851 ключ; API /api/v1/i18n/:lang с запасом нет перевода → английский → русский; useT читает базу поверх встроенного через прокси, обращение t.home.balance не изменилось. az и tr пока пустые — это остаток работы. ЗАДАНИЯ: четыре английских дубля с ENTER_CODE и autoComplete платили второй раз за то же действие, код разлетается по чатам — в архив; названия 15 оставшихся переехали в ui_texts, у рефералки и подписки русского не было вовсе. МОНЕТА: два самописных IcoCoin рисовали кружок со значком биткоина ₿ вместо золотого коня (HomePage, AttemptsModal) — заменены каноном, эмодзи из JarvisPlayModal убраны. БЭКАП: добавлено третье зеркало — /opt/chesscoin-backups на сервере плюс scripts/pull_backup.sh с проверкой sha256; прогон 31.07 прошёл во все три места. Эталон 38 случаев зелёный. Коммиты 3d28a79, 0359c1b.
+
+### Исправление
+
+Обучение и задачи не работали вообще (Кенан 31.07: играю чёрными, пишет ход белых, задание невыполнимо). ДВЕ ПРИЧИНЫ. (1) Конвенция ходов: фронт всегда проигрывал moves[0] за соперника по лichess-конвенции, а наши данные устроены наоборот — FEN это позиция где ходит ИГРОК, moves[0] его собственный ход. Доска правильно разворачивалась к игроку, тут же делала за него его же ход и передавала очередь сопернику; ни один ход не принимался. Бэкенд ждал ходы с нечётных индексов с костылём про одноходовые. Теперь всюду: moves[0] — ход игрока, валидация по чётным индексам. (2) Данные: прогон движком показал 18 нерешаемых задач из 30, остальные с неверными решениями — все 30 выдуманы вручную. Заменены на 1000 задач из открытой базы Lichess CC0, каждая проверена перед вставкой (позиция легальна, ходы играются, mateInN действительно мат); первый ход соперника применён при импорте, чтобы данные легли под нашу конвенцию. Прежние строки не удалены — перезаписаны, копия в archive_puzzles_20260731. ПОПУТНО: задача дня не менялась никогда (искалась любая строка с isDaily без проверки даты, ротация брала первую по алфавиту id) — теперь сутки и выбор по номеру дня; награда за подписку выдавалась на слово клиента — теперь getChatMember; три задания вели на 404 (x.com/chesscoin, youtube.com/@chesscoin, t.me/chesscoin_chat) и платили за клик — переведены в ARCHIVED. Доказательство e2e на проде: верное решение correct:true reward 10000, неверное отклонено. Эталон 35 случаев, 1000 задач без дефектов. Коммиты bec311f, 726f0ce, ac23bbb.
+
+### daily_digest
+
+=== Daily digest 2026-07-31 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (4 entries): You are summarising mesh activity for project 'chesscoin' over last 24h. Below are 4 dialog_history entries (truncated). Produce a 5-8 bullet summary: - key milestones (deploys, bugs fixed, new features) - counts (tasks done, failed, pairs added) - blockers / TODOs - decisions taken  Use Russian. Be concise. Format: '- bullet' lines.  RAW ENTRIES: [05:58] (session_auto imp=5) [claude auto] chesscoin: window.innerWidth - что это? [23:50] (decision imp=9) Кенан утвердил распределение призовых касс 31.07.2026, прежние проценты отменены. ТУРНИРЫ: касса = взносы + донаты (донат не-игрока тоже в кассе); 60/30/10 между первым, вторым и третьим местом НЕЗАВИ [22:42] (fix imp=8) Закрыты дефекты 26-29. (27) Фронт больше не выдумывает txHash из BOC: клиент настоящий хэш получить не может, бэкенд сам ищет платёж в блокчейне по паре отправитель-получатель+сумма+свежесть. (26) BUY [07:00] (daily_digest imp=8) daily chesscoin 20260730: 0done +0az-ru
+
+## 2026-07-30
+
+### Решение
+
+Кенан утвердил распределение призовых касс 31.07.2026, прежние проценты отменены. ТУРНИРЫ: касса = взносы + донаты (донат не-игрока тоже в кассе); 60/30/10 между первым, вторым и третьим местом НЕЗАВИСИМО от типа турнира; из каждой доли 10% комиссия стола, игроку 90%. Касса 100000 → на счёт 54000/27000/9000, комиссия 10000. Один игрок забирает всю кассу минус комиссию; мест меньше трёх — доли перенормируются. Инвариант: выплаты + комиссия = касса до последней монеты. Повод: за 10 завершённых турниров собрали 158000 взносов, выплатили 58000 — 100000 монет сгорели в строке турнира, чемпион недели получал 10% кассы. ВОЙНЫ: победившая по числу побед страна забирает казну проигравшей ЦЕЛИКОМ до нуля, своя остаётся при ней; захваченное делится строго кратно числу побед (одна победа = один эквивалент, доля = касса × победы ÷ сумма побед); вложил деньги но не сыграл — не получает ничего. Отменены min(казна) и схема 20/10/5% топ-тройке плюс 65% пропорционально. Комиссия стола 10% в войнах оставлена как была (утверждена 17.05), Кенан её 31.07 не отменял — вынесено на подтверждение. Объявление войны публикуется в канал: кто кому объявил, казна сторон, общая касса, правило дележа кратно победам, срок, вход после начала. Вход в идущую войну и в идущий турнир уже работал — проверено. Реализация services/prizes.ts, 11 тестов, всего 165 Jest зелёных, эталон 32 случая. Прод обновлён, коммит 08de746.
+
+### Исправление
+
+Закрыты дефекты 26-29. (27) Фронт больше не выдумывает txHash из BOC: клиент настоящий хэш получить не может, бэкенд сам ищет платёж в блокчейне по паре отправитель-получатель+сумма+свежесть. (26) BUY-ордер был неисполним по замыслу: TonConnect подписывает только текущим кошельком, поэтому одношаговый /fill означал, что продавец платит сам себе, а монеты уходили по непроверяемому хэшу. Переведён на два шага: /reserve (продавец соглашается, монеты замораживаются) и /settle (покупатель платит продавцу 99.5% и комиссию 0.5%, бэкенд находит ОБА платежа); резерв протухает за 30 минут по крону. (26б) Автоотмена ордеров старше 30 дней возвращала монеты создателю BUY-ордера, который их не замораживал — печатала монеты из воздуха. (28) recoverStuckGames раз в 5 минут доводит партии с терминальной позицией до правильного результата — раньше мат превращался в ничью. (29) LessonPage и useBreakpoint больше не читают window.innerWidth. GamePage не тронута: там это из утверждённого шаблона GAMEPAGE_TEMPLATE.tsx, нужно решение Кенана. Прод обновлён, миграция 20260731_p2p_reserved применена, эталон 30 случаев зелёный, 154 теста Jest. Две регрессии оказались дефектами моих же проверок (турнирные партии легально ждут 24ч; тестовый аккаунт tester_002 засеян мимо транзакций) — формулировки уточнены. Осталось: турниры по факту (выплата приза), войны (6 подзадач), магазин/B9.
+
+### daily_digest
+
+=== Daily digest 2026-07-30 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (1 entries): You are summarising mesh activity for project 'chesscoin' over last 24h. Below are 1 dialog_history entries (truncated). Produce a 5-8 bullet summary: - key milestones (deploys, bugs fixed, new features) - counts (tasks done, failed, pairs added) - blockers / TODOs - decisions taken  Use Russian. Be concise. Format: '- bullet' lines.  RAW ENTRIES: [05:39] (session_auto imp=5) [claude auto] chesscoin: Continue from where you left off.
+
+## 2026-07-29
+
+### daily_digest
+
+=== Daily digest 2026-07-29 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (1 entries): You are summarising mesh activity for project 'chesscoin' over last 24h. Below are 1 dialog_history entries (truncated). Produce a 5-8 bullet summary: - key milestones (deploys, bugs fixed, new features) - counts (tasks done, failed, pairs added) - blockers / TODOs - decisions taken  Use Russian. Be concise. Format: '- bullet' lines.  RAW ENTRIES: [07:00] (daily_digest imp=8) daily chesscoin 20260728: 0done +0az-ru
+
+## 2026-07-28
+
+### daily_digest
+
+=== Daily digest 2026-07-28 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (0 entries): No activity in last 24h.
+
+## 2026-07-27
+
+### daily_digest
+
+=== Daily digest 2026-07-27 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (1 entries): You are summarising mesh activity for project 'chesscoin' over last 24h. Below are 1 dialog_history entries (truncated). Produce a 5-8 bullet summary: - key milestones (deploys, bugs fixed, new features) - counts (tasks done, failed, pairs added) - blockers / TODOs - decisions taken  Use Russian. Be concise. Format: '- bullet' lines.  RAW ENTRIES: [07:00] (daily_digest imp=8) daily chesscoin 20260726: 0done +0az-ru
+
+## 2026-07-26
+
+### daily_digest
+
+=== Daily digest 2026-07-26 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (0 entries): No activity in last 24h.
+
+## 2026-07-25
+
+### daily_digest
+
+=== Daily digest 2026-07-25 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (0 entries): No activity in last 24h.
+
+## 2026-07-24
+
+### daily_digest
+
+=== Daily digest 2026-07-24 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (1 entries): You are summarising mesh activity for project 'chesscoin' over last 24h. Below are 1 dialog_history entries (truncated). Produce a 5-8 bullet summary: - key milestones (deploys, bugs fixed, new features) - counts (tasks done, failed, pairs added) - blockers / TODOs - decisions taken  Use Russian. Be concise. Format: '- bullet' lines.  RAW ENTRIES: [07:00] (daily_digest imp=8) daily chesscoin 20260723: 0done +0az-ru
+
+## 2026-07-23
+
+### daily_digest
+
+=== Daily digest 2026-07-23 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (1 entries): You are summarising mesh activity for project 'chesscoin' over last 24h. Below are 1 dialog_history entries (truncated). Produce a 5-8 bullet summary: - key milestones (deploys, bugs fixed, new features) - counts (tasks done, failed, pairs added) - blockers / TODOs - decisions taken  Use Russian. Be concise. Format: '- bullet' lines.  RAW ENTRIES: [07:00] (daily_digest imp=8) daily chesscoin 20260722: 0done +0az-ru
+
+## 2026-07-22
+
+### daily_digest
+
+=== Daily digest 2026-07-22 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (0 entries): No activity in last 24h.
+
+## 2026-07-21
+
+### daily_digest
+
+=== Daily digest 2026-07-21 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (1 entries): You are summarising mesh activity for project 'chesscoin' over last 24h. Below are 1 dialog_history entries (truncated). Produce a 5-8 bullet summary: - key milestones (deploys, bugs fixed, new features) - counts (tasks done, failed, pairs added) - blockers / TODOs - decisions taken  Use Russian. Be concise. Format: '- bullet' lines.  RAW ENTRIES: [07:00] (daily_digest imp=8) daily chesscoin 20260720: 0done +0az-ru
+
+## 2026-07-20
+
+### daily_digest
+
+=== Daily digest 2026-07-20 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (0 entries): No activity in last 24h.
+
+## 2026-07-19
+
+### daily_digest
+
+=== Daily digest 2026-07-19 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (1 entries): You are summarising mesh activity for project 'chesscoin' over last 24h. Below are 1 dialog_history entries (truncated). Produce a 5-8 bullet summary: - key milestones (deploys, bugs fixed, new features) - counts (tasks done, failed, pairs added) - blockers / TODOs - decisions taken  Use Russian. Be concise. Format: '- bullet' lines.  RAW ENTRIES: [07:00] (daily_digest imp=8) daily chesscoin 20260718: 0done +0az-ru
+
+## 2026-07-18
+
+### daily_digest
+
+=== Daily digest 2026-07-18 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (1 entries): You are summarising mesh activity for project 'chesscoin' over last 24h. Below are 1 dialog_history entries (truncated). Produce a 5-8 bullet summary: - key milestones (deploys, bugs fixed, new features) - counts (tasks done, failed, pairs added) - blockers / TODOs - decisions taken  Use Russian. Be concise. Format: '- bullet' lines.  RAW ENTRIES: [07:00] (daily_digest imp=8) daily chesscoin 20260717: 0done +0az-ru
+
+## 2026-07-17
+
+### daily_digest
+
+=== Daily digest 2026-07-17 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (0 entries): No activity in last 24h.
+
+## 2026-07-16
+
+### daily_digest
+
+=== Daily digest 2026-07-16 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (0 entries): No activity in last 24h.
+
+## 2026-07-15
+
+### daily_digest
+
+=== Daily digest 2026-07-15 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (1 entries): You are summarising mesh activity for project 'chesscoin' over last 24h. Below are 1 dialog_history entries (truncated). Produce a 5-8 bullet summary: - key milestones (deploys, bugs fixed, new features) - counts (tasks done, failed, pairs added) - blockers / TODOs - decisions taken  Use Russian. Be concise. Format: '- bullet' lines.  RAW ENTRIES: [07:00] (daily_digest imp=8) daily chesscoin 20260714: 0done +0az-ru
+
+## 2026-07-14
+
+### daily_digest
+
+=== Daily digest 2026-07-14 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (1 entries): You are summarising mesh activity for project 'chesscoin' over last 24h. Below are 1 dialog_history entries (truncated). Produce a 5-8 bullet summary: - key milestones (deploys, bugs fixed, new features) - counts (tasks done, failed, pairs added) - blockers / TODOs - decisions taken  Use Russian. Be concise. Format: '- bullet' lines.  RAW ENTRIES: [07:00] (daily_digest imp=8) daily chesscoin 20260713: 0done +0az-ru
+
+## 2026-07-13
+
+### daily_digest
+
+=== Daily digest 2026-07-13 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (0 entries): No activity in last 24h.
+
+## 2026-07-12
+
+### daily_digest
+
+=== Daily digest 2026-07-12 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (0 entries): No activity in last 24h.
+
+## 2026-07-11
+
+### daily_digest
+
+=== Daily digest 2026-07-11 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (0 entries): No activity in last 24h.
+
+## 2026-07-10
+
+### daily_digest
+
+=== Daily digest 2026-07-10 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (1 entries): - Завершено 0 задач, 0 пар добавлено, 0 ошибок за последние 24 часа.   - Новые функции или деплои не зафиксированы.   - Баги не исправлены, нет отмеченных ключевых достижений.   - Нет активных блокеров, но отсутствует прогресс в работе.   - Принято решение продолжить мониторинг без изменений в плане.
+
+## 2026-07-09
+
+### daily_digest
+
+=== Daily digest 2026-07-09 23:48 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (0 entries): No activity in last 24h.
+
+## 2026-07-03
+
+### daily_digest
+
+=== Daily digest 2026-07-03 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (1 entries): - Завершено 0 задач, 0 пар добавлено, 0 ошибок за последние 24 часа.   - Новые функции или деплои не зафиксированы.   - Баги не обнаружены или не отмечены.   - Принято решение продолжить мониторинг без изменений в работе.   - Основной блокер: отсутствие активности в команде (ни одного выполненного задания).   - TODO: стимулировать участие в задачах, проверить статус инфраструктуры.
+
+## 2026-07-02
+
+### daily_digest
+
+=== Daily digest 2026-07-02 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (0 entries): No activity in last 24h.
+
+## 2026-07-01
+
+### daily_digest
+
+=== Daily digest 2026-07-01 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (1 entries): - Запущен ежедневный дайджест по проекту chesscoin (07:00).   - Выполнено 0 задач, 0 пар добавлено, 0 ошибок зафиксировано.   - Нет новых функций или деплоев за последние 24 часа.   - Блокеров нет, но активность минимальна — требуется повышение вовлечённости.   - Принято решение продолжить мониторинг без изменений в процессе.
+
+## 2026-06-30
+
+### daily_digest
+
+=== Daily digest 2026-06-30 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (0 entries): No activity in last 24h.
+
+## 2026-06-29
+
+### daily_digest
+
+=== Daily digest 2026-06-29 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (1 entries): - Завершено 0 задач, 0 пар добавлено, 0 ошибок за последние 24 часа.   - Новые функции или деплои не зафиксированы.   - Баги не обнаружены или не отмечены.   - Нет текущих блокеров или незавершённых задач.   - Принято решение продолжить мониторинг без изменений в плане.
+
+## 2026-06-28
+
+### daily_digest
+
+=== Daily digest 2026-06-28 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (0 entries): No activity in last 24h.
+
+## 2026-06-27
+
+### daily_digest
+
+=== Daily digest 2026-06-27 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (1 entries): - Запущен ежедневный дайджест по проекту chesscoin (07:00).   - Нет новых деплоев, фиксов или новых функций за последние 24 часа.   - Выполнено: 0 задач, 0 неудачных попыток, 0 новых пар.   - Блокеры: отсутствие активности в работе — нет обновлений по задачам.   - Принято решение: продолжить мониторинг без изменений до следующего дайджеста.
+
+## 2026-06-26
+
+### daily_digest
+
+=== Daily digest 2026-06-26 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (0 entries): No activity in last 24h.
+
+## 2026-06-25
+
+### daily_digest
+
+=== Daily digest 2026-06-25 07:00 UTC for project 'chesscoin' ===  📊 Mesh metrics:   workers_active=0   tasks_done_24h=0   tasks_failed_24h=0   tasks_pending=0   corpus_pairs_total=0   corpus_pairs_az_ru=0   llm_tokens_today=0  📝 Activity summary (1 entries): - Запущен ежедневный дайджест по проекту chesscoin (07:00).   - Нет новых деплоев, багов или фич за последние 24 часа.   - Выполнено: 0 задач, 0 неудачных попыток, 0 новых пар.   - Блокеры: отсутствие активности в работе; ожидание входа команды.   - Принято решение: продолжить мониторинг без изменений до следующего цикла.

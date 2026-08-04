@@ -84,3 +84,7 @@ bot_inbox/
 
 # управляющий контур: кеш python
 project_management/tools/__pycache__/
+
+# Граф знаний проекта: пересобирается командой, в git не хранится (6 МБ).
+# Как обновить — project_management/rules/10_KNOWLEDGE_GRAPH.md
+graphify-out/
