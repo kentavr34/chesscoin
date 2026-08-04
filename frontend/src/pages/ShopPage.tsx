@@ -9,7 +9,8 @@ import { fmtBalance } from '@/utils/format';
 import type { ShopItem, ItemType } from '@/types';
 import { setActiveTheme, getActiveTheme, THEMES } from '@/lib/theme';
 import type { ThemeKey } from '@/lib/theme';
-import { useT } from '@/i18n/useT';
+import { useT, useText } from '@/i18n/useT';
+import { useI18nStore } from '@/i18n/useI18nStore';
 import { ExchangeTab } from './ExchangeTab';
 import { ItemCard, AvatarItemCard, RARITY_COLOR, ShopCardStyles } from '@/components/shop/ShopItemCards';
 import { CoinIcon } from '@/components/ui/CoinIcon';
@@ -419,6 +420,10 @@ export const ShopPage: React.FC = () => {
   ];
   const shopInfo = useInfoPopup('shop', shopSlides);
   const [confirmPurchase, ConfirmPurchaseDialog] = useConfirm();
+  // Названия товаров и подпись «Цена» на языке интерфейса — диалог покупки
+  // был на английском («Buy … ?», «Price», «Buy»).
+  const dict = useI18nStore((st) => st.dict);
+  const priceLabel = useText('shop.priceLabel', 'Цена');
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -452,7 +457,13 @@ export const ShopPage: React.FC = () => {
   }, [tab, visualSubType]);
 
   const handleThemePurchase = async (item: ShopItem) => {
-    if (!await confirmPurchase({ title: `Buy "${item.name}"?`, message: `Price: ${fmtBalance(item.priceCoins)}`, okLabel: 'Buy' })) return;
+    // Диалог покупки был на английском: «Buy … ?», «Price», «Buy».
+    const shownName = dict[`shop.item.${item.id}.name`] ?? item.name;
+    if (!await confirmPurchase({
+      title: `${t.shop.buy} «${shownName}»?`,
+      message: `${priceLabel}: ${fmtBalance(item.priceCoins)}`,
+      okLabel: t.shop.buy,
+    })) return;
     setActionId(item.id);
     try {
       const res = await shopApi.purchase(item.id);
@@ -489,7 +500,13 @@ export const ShopPage: React.FC = () => {
   useEffect(() => { loadItems(); }, [loadItems]);
 
   const handlePurchase = async (item: ShopItem) => {
-    if (!await confirmPurchase({ title: `Buy "${item.name}"?`, message: `Price: ${fmtBalance(item.priceCoins)}`, okLabel: 'Buy' })) return;
+    // Диалог покупки был на английском: «Buy … ?», «Price», «Buy».
+    const shownName = dict[`shop.item.${item.id}.name`] ?? item.name;
+    if (!await confirmPurchase({
+      title: `${t.shop.buy} «${shownName}»?`,
+      message: `${priceLabel}: ${fmtBalance(item.priceCoins)}`,
+      okLabel: t.shop.buy,
+    })) return;
     setActionId(item.id);
     try {
       const res = await shopApi.purchase(item.id);

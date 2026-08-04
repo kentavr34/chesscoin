@@ -3,7 +3,7 @@
 // Выделено из ShopPage.tsx (R3: декомпозиция)
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useRef, useEffect } from 'react';
-import { useT } from '@/i18n/useT';
+import { useT, useText } from '@/i18n/useT';
 import { fmtBalance } from '@/utils/format';
 import type { ShopItem } from '@/types';
 import { IcoBolt, IcoGamepad, IcoMedal, IcoUsers } from '@/components/icons/UiIcons';
@@ -205,6 +205,10 @@ interface ItemCardProps {
 }
 
 export const ItemCard: React.FC<ItemCardProps> = ({ item, loading, highlighted, comingSoon, onPurchase, onEquip }) => {
+  // Показываем название на языке интерфейса, а английское оставляем как
+  // запасное и как КЛЮЧ поиска настроек — по нему ищутся цвета доски,
+  // фильтры фигур и превью (Кенан 03.08.2026: «ни одного чужеродного слова»).
+  const shownName = useText(`shop.item.${item.id}.name`, item.name);
   const t = useT();
   const cardRef = useRef<HTMLDivElement>(null);
   const rarityColor = RARITY_COLOR[item.rarity] ?? 'var(--color-text-secondary, #8B92A8)';
@@ -263,7 +267,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({ item, loading, highlighted, 
         {renderPreview()}
       </div>
       <div>
-        <div style={{ fontSize: 12, fontWeight: 700, color: '#EAE2CC', lineHeight: 1.3 }}>{item.name}</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: '#EAE2CC', lineHeight: 1.3 }}>{shownName}</div>
         <div style={{ fontSize: 10, color: rarityColor, marginTop: 2, fontWeight: 600 }}>{(t.shop.rarity as Record<string,string>)[item.rarity] ?? item.rarity}</div>
       </div>
       {item.equipped ? (
@@ -288,6 +292,8 @@ interface AvatarItemCardProps {
 }
 
 export const AvatarItemCard: React.FC<AvatarItemCardProps> = ({ item, loading, highlighted, onPurchase, onEquip, onUnequip }) => {
+  // Название на языке интерфейса; английское — запасное.
+  const shownName = useText(`shop.item.${item.id}.name`, item.name);
   const t = useT();
   const cardRef = useRef<HTMLDivElement>(null);
   const rarityColor = RARITY_COLOR[item.rarity] ?? 'var(--color-text-secondary, #8B92A8)';
@@ -315,7 +321,7 @@ export const AvatarItemCard: React.FC<AvatarItemCardProps> = ({ item, loading, h
         </div>
       </div>
       <div>
-        <div style={{ fontSize: 12, fontWeight: 700, color: '#EAE2CC', lineHeight: 1.3 }}>{item.name}</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: '#EAE2CC', lineHeight: 1.3 }}>{shownName}</div>
         <div style={{ fontSize: 10, color: rarityColor, marginTop: 2, fontWeight: 600 }}>
           {(t.shop.rarity as Record<string,string>)[item.rarity] ?? item.rarity}
         </div>
