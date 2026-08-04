@@ -1001,6 +1001,7 @@ enum ItemType {
   CAPTURE_EFFECT     // V3: эффект взятия фигуры
   SPECIAL_MOVE       // V3: анимация спецхода/дебюта
   FONT               // кастомизируемый шрифт (D10)
+  SOUND              // набор звуков ходов и взятий (Кенан 03.08.2026)
 }
 
 enum ItemCategory {

@@ -149,7 +149,7 @@ const gradOf = (c: string[]) =>
   `linear-gradient(135deg, ${c.map((col, i) => `${col} ${Math.round((i / (c.length - 1)) * 100)}%`).join(', ')})`;
 
 // Универсальное превью эффекта/темы: градиент-плитка + глянец + мотив.
-const EffectPreview: React.FC<{ name: string; rarity: string; motif?: 'bolt' | 'medal' | 'palette' }> = ({ name, rarity, motif = 'palette' }) => {
+const EffectPreview: React.FC<{ name: string; rarity: string; motif?: 'bolt' | 'medal' | 'palette' | 'sound' }> = ({ name, rarity, motif = 'palette' }) => {
   const th = effectThemeFor(name);
   const ring = RARITY_COLOR[rarity] ?? '#8B92A8';
   return (
@@ -157,6 +157,15 @@ const EffectPreview: React.FC<{ name: string; rarity: string; motif?: 'bolt' | '
       <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 34% 26%, rgba(255,255,255,0.32), transparent 58%)' }} />
       {motif === 'bolt'  && <span style={{ color: th.accent, opacity: 0.92, filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.4))' }}><IcoBolt size={40} /></span>}
       {motif === 'medal' && <span style={{ color: th.accent, opacity: 0.92, filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.4))' }}><IcoMedal size={40} /></span>}
+      {motif === 'sound' && (
+        <span style={{ color: th.accent, opacity: 0.92, filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.4))' }}>
+          <svg width="40" height="40" viewBox="0 0 20 20" fill="none">
+            <path d="M4 8h2.5L10 5v10L6.5 12H4V8z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
+            <path d="M13 7.5a3.5 3.5 0 010 5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+            <path d="M15 5.5a6 6 0 010 9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" opacity=".6"/>
+          </svg>
+        </span>
+      )}
       {motif === 'palette' && (
         <div style={{ position: 'absolute', bottom: 8, display: 'flex', gap: 5 }}>
           {th.colors.slice(0, 4).map((c, i) => (
@@ -231,6 +240,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({ item, loading, highlighted, 
     if (item.type === 'CAPTURE_EFFECT') return <EffectPreview name={item.name} rarity={item.rarity} motif="bolt" />;
     if (item.type === 'WIN_ANIMATION')  return <EffectPreview name={item.name} rarity={item.rarity} motif="medal" />;
     if (item.type === 'THEME')          return <EffectPreview name={item.name} rarity={item.rarity} motif="palette" />;
+    if (item.type === 'SOUND')          return <EffectPreview name={item.name} rarity={item.rarity} motif="sound" />;
     if (item.type === 'FONT') {
       const fontMapping: Record<string, string> = {
         'Inter': "'Inter', sans-serif",

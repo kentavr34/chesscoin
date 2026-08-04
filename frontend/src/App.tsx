@@ -65,6 +65,17 @@ const AppInner: React.FC = () => {
     }
   }, [user?.equippedItems?.FONT?.name]);
 
+  // Надетый звуковой набор кладём в localStorage: библиотека звука читает его
+  // оттуда, потому что напрямую импортировать стор нельзя — круговой импорт
+  // (Кенан 03.08.2026: звук — такой же товар, как доска и фигуры).
+  React.useEffect(() => {
+    const setName = user?.equippedItems?.SOUND?.name;
+    try {
+      if (setName) localStorage.setItem('chesscoin-sound-set', setName);
+      else localStorage.removeItem('chesscoin-sound-set');
+    } catch {}
+  }, [user?.equippedItems?.SOUND?.name]);
+
   React.useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);

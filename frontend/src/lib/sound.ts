@@ -38,6 +38,48 @@ function isSoundEnabled(): boolean {
   }
 }
 
+
+/**
+ * Звуковые наборы из магазина (Кенан 03.08.2026: звук — такой же товар, как
+ * доска или фигуры). Раньше звуки были одинаковыми у всех.
+ *
+ * Набор не подменяет звуки целиком, а задаёт характер: высоту, форму волны и
+ * громкость. Так один и тот же «ход» звучит деревянным стуком, хрустальным
+ * звоном или восьмибитным писком.
+ *
+ * Имя набора кладёт в localStorage App.tsx при загрузке пользователя —
+ * напрямую читать стор нельзя, будет круговой импорт.
+ */
+export interface SoundProfile {
+  pitch: number;      // множитель частоты
+  gain: number;       // множитель громкости
+  tone: OscillatorType;
+  noise: number;      // множитель шумовой составляющей
+}
+
+const SOUND_PROFILES: Record<string, SoundProfile> = {
+  'Classic Sound':     { pitch: 1,    gain: 1,    tone: 'triangle', noise: 1    },
+  'Wooden Sound':      { pitch: 0.7,  gain: 1.1,  tone: 'sine',     noise: 1.3  },
+  'Crystal Sound':     { pitch: 1.6,  gain: 0.9,  tone: 'sine',     noise: 0.35 },
+  'Retro 8-bit Sound': { pitch: 1.25, gain: 0.85, tone: 'square',   noise: 0.5  },
+  'Thunder Sound':     { pitch: 0.55, gain: 1.35, tone: 'sawtooth', noise: 1.6  },
+};
+
+function profile(): SoundProfile {
+  try {
+    const name = localStorage.getItem('chesscoin-sound-set');
+    if (name) {
+      const exact = SOUND_PROFILES[name];
+      if (exact) return exact;
+      const wanted = name.trim().toLowerCase();
+      for (const key of Object.keys(SOUND_PROFILES)) {
+        if (key.toLowerCase() === wanted) return SOUND_PROFILES[key]!;
+      }
+    }
+  } catch {}
+  return SOUND_PROFILES['Classic Sound']!;
+}
+
 type OscType = OscillatorType;
 
 interface ToneOpts {
@@ -50,7 +92,13 @@ interface ToneOpts {
 }
 
 function playTone(opts: ToneOpts): void {
-  const { freq, type = 'sine', gainStart = 0.3, gainEnd = 0, duration = 0.12, startTime = 0 } = opts;
+  const p = profile();
+  const { freq: baseFreq, type: baseType = 'sine', gainStart: baseGain = 0.3,
+          gainEnd = 0, duration = 0.12, startTime = 0 } = opts;
+  // Набор задаёт характер: высоту, форму волны и громкость.
+  const freq = baseFreq * p.pitch;
+  const type = p.tone === 'triangle' ? baseType : p.tone;
+  const gainStart = Math.min(baseGain * p.gain, 0.9);
   const c = getCtx();
   const osc = c.createOscillator();
   const gain = c.createGain();
@@ -72,6 +120,7 @@ function playTone(opts: ToneOpts): void {
 }
 
 function playNoise(gainLevel = 0.15, duration = 0.05, startTime = 0): void {
+  gainLevel = Math.min(gainLevel * profile().noise, 0.9);
   const c = getCtx();
   const bufSize = c.sampleRate * duration;
   const buf = c.createBuffer(1, bufSize, c.sampleRate);

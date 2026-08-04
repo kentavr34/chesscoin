@@ -25,7 +25,9 @@ const TAB_TYPE: Partial<Record<Tab, ItemType | ItemType[]>> = {
   avatars:  'PREMIUM_AVATAR',
   frames:   'AVATAR_FRAME',
   visual:   'BOARD_SKIN',
-  effects:  'MOVE_ANIMATION',             // анимации ходов (WIN_ANIMATION/CAPTURE_EFFECT в разработке)
+  // Звуковые наборы живут рядом с анимациями: и то и другое — то, что
+  // происходит при ходе (Кенан 03.08.2026).
+  effects:  ['MOVE_ANIMATION', 'SOUND'],
   themes:   'THEME',
 };
 
