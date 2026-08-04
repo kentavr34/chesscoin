@@ -28,7 +28,12 @@ function makePieceUrl(setPath: string, fileName: string): string {
 // ── Цвета подсветки (L1: CSS variables) ────────────────────────────────────────
 const SELECTED_BG  = 'var(--chess-selected-bg, rgba(123, 97, 255, 0.45))'; // purple-dark with 45% opacity
 const MOVE_BG      = 'var(--chess-move-bg, radial-gradient(circle, rgba(123, 97, 255, 0.55) 22%, transparent 22%))'; // purple-dark radial
-const CAPTURE_BG   = 'var(--chess-capture-bg, radial-gradient(circle, rgba(255, 77, 106, 0.5) 100%, transparent 100%))'; // red radial
+// Взятие — кольцо вокруг фигуры, а не заливка клетки: так принято в шахматных
+// программах, фигуру под боем видно, а не закрашено (B9, Кенан 30.07.2026).
+const CAPTURE_BG   = 'var(--chess-capture-bg, radial-gradient(circle, transparent 56%, rgba(255, 77, 106, 0.6) 58%, rgba(255, 77, 106, 0.6) 74%, transparent 76%))';
+// Шах — король светится красным и мягко пульсирует. Раньше шах был только
+// звуком: на доске не было видно ничего.
+const CHECK_BG     = 'var(--chess-check-bg, radial-gradient(circle, rgba(255, 60, 60, 0.75) 12%, rgba(255, 60, 60, 0.35) 46%, transparent 72%))';
 const LAST_MOVE_BG = 'var(--chess-last-move-bg, rgba(245, 200, 66, 0.18))'; // accent with 18% opacity
 
 // ── Props ─────────────────────────────────────────────────────────────────────
@@ -199,6 +204,24 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
     setOptionSqs(sqs);
   };
 
+  // Клетка короля, стоящего под шахом. Считаем из текущей позиции: сообщать
+  // о шахе только звуком мало — на доске должно быть видно, кому шах.
+  const checkSqs: Record<string, React.CSSProperties> = (() => {
+    try {
+      const c = new Chess(localFen);
+      if (!c.inCheck()) return {};
+      const turn = c.turn();
+      for (const row of c.board()) {
+        for (const cell of row) {
+          if (cell && cell.type === 'k' && cell.color === turn) {
+            return { [cell.square]: { background: CHECK_BG, animation: 'cc-check-pulse 1.1s ease-in-out infinite' } };
+          }
+        }
+      }
+    } catch {}
+    return {};
+  })();
+
   // Подсветка последнего хода
   const lastMoveSqs: Record<string, React.CSSProperties> = {};
   if (lastMove) {
@@ -206,7 +229,9 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
     lastMoveSqs[lastMove.to]   = { background: LAST_MOVE_BG };
   }
 
-  const mergedSqs = { ...lastMoveSqs, ...optionSqs };
+  // Порядок важен: шах поверх последнего хода, но под выбранными вариантами —
+  // когда игрок сам ищет спасение от шаха, ему нужнее видеть ходы.
+  const mergedSqs = { ...lastMoveSqs, ...checkSqs, ...optionSqs };
 
   // ── Обработчик клика по клетке (основное управление — тап) ──────────────────
   const handleSquareClick = useCallback((sq: Square, piece?: RCBPiece) => {
@@ -350,6 +375,10 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
 
   return (
     <>
+      <style>{`@keyframes cc-check-pulse {
+        0%, 100% { filter: brightness(1); }
+        50%      { filter: brightness(1.45); }
+      }`}</style>
       <div style={{
         width: '100%',
         borderRadius: 12,
