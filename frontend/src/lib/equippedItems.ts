@@ -64,6 +64,10 @@ export const BOARD_SKIN_COLORS: Record<string, BoardSkin> = {
 export const PIECE_SKIN_FILTER: Record<string, string> = {
   "Standard":            "none",
   "Gold Pieces":         "sepia(1) saturate(4) hue-rotate(5deg) brightness(1.1)",
+  // В магазине этот стиль называется «Golden pieces», а не «Gold Pieces» —
+  // одним регистром тут не обойтись, слово другое.
+  "Golden Pieces":       "sepia(1) saturate(4) hue-rotate(5deg) brightness(1.1)",
+  "Legend Gold":         "sepia(1) saturate(5) hue-rotate(2deg) brightness(1.15) contrast(1.05)",
   "Crystal Pieces":      "brightness(1.3) saturate(0.3) hue-rotate(180deg)",
   "Silver Pieces":       "grayscale(1) brightness(1.4) contrast(1.1)",
   "Bronze Pieces":       "sepia(0.8) saturate(2) brightness(0.9)",
@@ -78,6 +82,8 @@ export const AVATAR_FRAME_STYLE: Record<string, {
   border: string; boxShadow: string;
 }> = {
   "Gold Frame":           { border: "2px solid #F5C842", boxShadow: "0 0 0 2px rgba(245,200,66,0.4), 0 0 16px rgba(245,200,66,0.3)" },
+  // В магазине рамка называется «Golden Frame».
+  "Golden Frame":         { border: "2px solid #F5C842", boxShadow: "0 0 0 2px rgba(245,200,66,0.4), 0 0 16px rgba(245,200,66,0.3)" },
   "Diamond Frame":        { border: "2px solid #00D4FF", boxShadow: "0 0 0 2px rgba(0,212,255,0.5), 0 0 20px rgba(0,212,255,0.4)" },
   "Fire Frame":           { border: "2px solid #FF6B35", boxShadow: "0 0 0 2px rgba(255,107,53,0.5), 0 0 20px rgba(255,107,53,0.4)" },
   "Legendary Frame ♟":   { border: "2px solid #E040FB", boxShadow: "0 0 0 3px rgba(224,64,251,0.5), 0 0 30px rgba(224,64,251,0.5)" },
@@ -89,13 +95,34 @@ export const AVATAR_FRAME_STYLE: Record<string, {
   "Champion Frame":       { border: "3px solid #FFD700", boxShadow: "0 0 0 3px rgba(255,215,0,0.6), 0 0 30px rgba(255,215,0,0.5), 0 0 60px rgba(255,215,0,0.2)" },
 };
 
+
+/**
+ * Поиск настройки по названию предмета.
+ *
+ * Названия в магазине заводились людьми и не совпадают с ключами по регистру:
+ * в базе «Silver pieces», в таблице «Silver Pieces». Точное сравнение молча
+ * не находило совпадения, и купленный стиль фигур просто ничего не менял —
+ * девять из десяти (проверено 03.08.2026). Поэтому сначала точное совпадение,
+ * потом без учёта регистра.
+ */
+function pick<T>(table: Record<string, T>, name?: string | null): T | undefined {
+  if (!name) return undefined;
+  const exact = table[name];
+  if (exact !== undefined) return exact;
+  const wanted = name.trim().toLowerCase();
+  for (const key of Object.keys(table)) {
+    if (key.trim().toLowerCase() === wanted) return table[key];
+  }
+  return undefined;
+}
+
 /** Hook: get board style from equipped BOARD_SKIN */
 export function useEquippedBoardColors(): BoardSkin {
   const user = useUserStore((s) => s.user);
   const skin = user?.equippedItems?.BOARD_SKIN;
   // Default — Premium Oak (дубовый паркет для Premium Dark темы)
   if (!skin) return BOARD_SKIN_COLORS["Premium Oak"]!;
-  return BOARD_SKIN_COLORS[skin.name] ?? BOARD_SKIN_COLORS["Premium Oak"]!;
+  return pick(BOARD_SKIN_COLORS, skin.name) ?? BOARD_SKIN_COLORS["Premium Oak"]!;
 }
 
 /** Hook: get CSS filter for pieces from equipped PIECE_SKIN */
@@ -103,7 +130,7 @@ export function useEquippedPieceFilter(): string {
   const user = useUserStore((s) => s.user);
   const skin = user?.equippedItems?.PIECE_SKIN;
   if (!skin) return "drop-shadow(0 1px 3px rgba(0,0,0,0.3))";
-  const customFilter = PIECE_SKIN_FILTER[skin.name];
+  const customFilter = pick(PIECE_SKIN_FILTER, skin.name);
   if (!customFilter || customFilter === "none") {
     return "drop-shadow(0 1px 3px rgba(0,0,0,0.3))";
   }
@@ -115,7 +142,7 @@ export function useEquippedAvatarFrame(): { border: string; boxShadow: string } 
   const user = useUserStore((s) => s.user);
   const frame = user?.equippedItems?.AVATAR_FRAME;
   if (!frame) return null;
-  return AVATAR_FRAME_STYLE[frame.name] ?? null;
+  return pick(AVATAR_FRAME_STYLE, frame.name) ?? null;
 }
 
 // ── Move animations ────────────────────────────────────────────────────────────
@@ -155,7 +182,7 @@ export function useEquippedPieceSet(): { path: string; isEmoji: boolean } {
   const user = useUserStore((s) => s.user);
   const set = user?.equippedItems?.PIECE_SET;
   if (!set) return { path: "pieces", isEmoji: false };
-  const path = PIECE_SET_PATH[set.name] ?? "pieces";
+  const path = pick(PIECE_SET_PATH, set.name) ?? "pieces";
   return { path, isEmoji: path === "emoji" };
 }
 
@@ -164,7 +191,7 @@ export function useEquippedMoveAnimation(): { duration: number; className: strin
   const user = useUserStore((s) => s.user);
   const anim = user?.equippedItems?.MOVE_ANIMATION;
   if (!anim) return { duration: 150, className: 'piece-slide' };
-  return MOVE_ANIMATION_CONFIG[anim.name] ?? { duration: 150, className: 'piece-slide' };
+  return pick(MOVE_ANIMATION_CONFIG, anim.name) ?? { duration: 150, className: 'piece-slide' };
 }
 
 // ── Win animations (WIN_ANIMATION) ──────────────────────────────────────────
