@@ -164,6 +164,31 @@ export function useEquippedAvatarFrame(): { border: string; boxShadow: string } 
   return pick(AVATAR_FRAME_STYLE, frame.name) ?? null;
 }
 
+
+/**
+ * Формы клеток (B9, Кенан 30.07.2026: «формы ячеек как отдельное покупаемое
+ * измерение»). Цвета доски, цвета фигур и формы фигур уже продавались, форм
+ * клеток не было вовсе.
+ *
+ * Форма задаётся стилем самой клетки, поэтому работает с любым цветом доски:
+ * купил ромбы — они станут ромбами и на мраморе, и на неоне.
+ */
+export const CELL_SHAPE_STYLE: Record<string, Record<string, string>> = {
+  'Square Cells':     {},
+  'Rounded Cells':    { borderRadius: '18%' },
+  'Circle Cells':     { borderRadius: '50%', transform: 'scale(.92)' },
+  'Diamond Cells':    { clipPath: 'polygon(50% 4%, 96% 50%, 50% 96%, 4% 50%)' },
+  'Cut Corner Cells': { clipPath: 'polygon(22% 0, 100% 0, 100% 78%, 78% 100%, 0 100%, 0 22%)' },
+};
+
+/** Стиль формы клетки по названию надетого предмета. */
+export function useEquippedCellShape(): Record<string, string> {
+  const user = useUserStore((s) => s.user);
+  const shape = user?.equippedItems?.CELL_SHAPE;
+  if (!shape) return {};
+  return pick(CELL_SHAPE_STYLE, shape.name) ?? {};
+}
+
 // ── Move animations ────────────────────────────────────────────────────────────
 export const MOVE_ANIMATION_CONFIG: Record<string, { duration: number; className: string }> = {
   // MOVE_ANIMATION items

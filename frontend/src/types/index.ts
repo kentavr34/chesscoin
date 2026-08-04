@@ -66,6 +66,7 @@ export interface User extends UserPublic {
     SPECIAL_MOVE?:    { id: string; name: string; imageUrl?: string | null }; // V3
     FONT?:            { id: string; name: string; imageUrl?: string | null }; // D10
     SOUND?:           { id: string; name: string; imageUrl?: string | null }; // набор звуков
+    CELL_SHAPE?:      { id: string; name: string; imageUrl?: string | null }; // форма клеток
   };
   nextRestoreSeconds?: number; // R1: for attempts timer
   jarvisLevel?: number;        // R1: Jarvis level progress
@@ -202,7 +203,7 @@ export interface Transaction {
   payload?: Record<string, unknown> | null;
 }
 
-export type ItemType = 'AVATAR_FRAME' | 'BOARD_SKIN' | 'PIECE_SKIN' | 'PIECE_SET' | 'MOVE_ANIMATION' | 'THEME' | 'PREMIUM_AVATAR' | 'WIN_ANIMATION' | 'CAPTURE_EFFECT' | 'SPECIAL_MOVE' | 'FONT' | 'SOUND';
+export type ItemType = 'AVATAR_FRAME' | 'BOARD_SKIN' | 'PIECE_SKIN' | 'PIECE_SET' | 'MOVE_ANIMATION' | 'THEME' | 'PREMIUM_AVATAR' | 'WIN_ANIMATION' | 'CAPTURE_EFFECT' | 'SPECIAL_MOVE' | 'FONT' | 'SOUND' | 'CELL_SHAPE';
 export type ItemRarity = 'COMMON' | 'RARE' | 'EPIC' | 'LEGENDARY';
 
 export interface ShopItem {

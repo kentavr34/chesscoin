@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { PromotionModal } from '@/components/ui/PromotionModal'; // V1
 import { haptic } from '@/lib/haptic';
-import { useEquippedBoardColors, useEquippedPieceFilter, useEquippedMoveAnimation, useEquippedPieceSet, EMOJI_PIECES } from '@/lib/equippedItems';
+import { useEquippedBoardColors, useEquippedPieceFilter, useEquippedMoveAnimation, useEquippedPieceSet, useEquippedCellShape, EMOJI_PIECES } from '@/lib/equippedItems';
 import { sound } from '@/lib/sound';
 import { Chessboard } from 'react-chessboard';
 import { Chess, Square, PieceSymbol } from 'chess.js';
@@ -88,6 +88,8 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
     : pieceFilter;
   const moveAnim     = useEquippedMoveAnimation();
   const pieceSet     = useEquippedPieceSet();
+  // Форма клеток — отдельная покупка, работает поверх любого цвета доски.
+  const cellShape    = useEquippedCellShape();
 
   // Динамические фигуры — меняются при смене набора
   const CUSTOM_PIECES = useMemo(() => {
@@ -370,10 +372,12 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
           customLightSquareStyle={{
             background: effectiveBoardColors.light,
             ...(effectiveBoardColors.border ? { outline: effectiveBoardColors.border, outlineOffset: '-1px' } : {}),
+            ...cellShape,
           }}
           customDarkSquareStyle={{
             background: effectiveBoardColors.dark,
             ...(effectiveBoardColors.border ? { outline: effectiveBoardColors.border, outlineOffset: '-1px' } : {}),
+            ...cellShape,
           }}
           customSquareStyles={mergedSqs}
           animationDuration={moveAnim.duration}

@@ -409,7 +409,7 @@ export const ShopPage: React.FC = () => {
   const initTab = (location.state as Record<string,unknown>)?.tab as Tab ?? 'avatars';
   const highlightItemId: string | null = ((location.state as Record<string,unknown>)?.highlightItemId as string) ?? null;
   const [tab, setTab] = useState<Tab>(initTab);
-  const [visualSubType, setVisualSubType] = useState<'BOARD_SKIN'|'PIECE_SKIN'|'PIECE_SET'|'MOVE_ANIMATION'|'FONT'>('BOARD_SKIN');
+  const [visualSubType, setVisualSubType] = useState<'BOARD_SKIN'|'PIECE_SKIN'|'PIECE_SET'|'CELL_SHAPE'|'MOVE_ANIMATION'|'FONT'>('BOARD_SKIN');
   const [items, setItems] = useState<ShopItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [actionId, setActionId] = useState<string | null>(null);
@@ -428,6 +428,7 @@ export const ShopPage: React.FC = () => {
   const priceLabel = useText('shop.priceLabel', 'Цена');
   const effectsTitle = useText('shop.effects.title', 'Ход и звук');
   const effectsSubtitle = useText('shop.effects.subtitle', 'Анимации ходов и звуковые наборы');
+  const cellsLabel = useText('shop.visualTabs.cells', 'Клетки');
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -682,6 +683,8 @@ export const ShopPage: React.FC = () => {
             ['BOARD_SKIN',     t.shop.visualTabs.boards],
             ['PIECE_SKIN',     t.shop.visualTabs.pieces],
             ['PIECE_SET',      t.shop.visualTabs.sets],
+            // Форма клеток — отдельное измерение (B9, Кенан 30.07.2026).
+            ['CELL_SHAPE',     cellsLabel],
             ['MOVE_ANIMATION', t.shop.visualTabs.animations],
             ['FONT',           t.shop.visualTabs.fonts],
           ] as const).map(([type, label]) => {
