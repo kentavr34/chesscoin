@@ -328,6 +328,10 @@ model Item {
 
   type        ItemType
   category    ItemCategory
+  // Неизменяемый код для связи с настройками во фронте. Название — текст для
+  // людей: его переводят, правят, дополняют. Связывать по нему логику нельзя —
+  // так девять стилей фигур молча не применялись (Кенан 05.08.2026).
+  code        String?
   name        String
   description String?
   imageUrl    String?

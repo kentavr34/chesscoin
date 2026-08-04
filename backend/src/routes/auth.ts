@@ -236,7 +236,9 @@ const formatUser = (user: any, isCommander = false, stats?: { wins: number; loss
     isCommander,
   } : null,
   equippedItems: user.inventory.reduce((acc: Record<string, unknown>, ui: any) => {
-    acc[ui.item.type] = { id: ui.item.id, name: ui.item.name, imageUrl: ui.item.imageUrl };
+    // code — неизменяемый ключ настроек; name остаётся для показа и как
+    // запасной ключ для старых записей без кода (Кенан 05.08.2026).
+    acc[ui.item.type] = { id: ui.item.id, code: ui.item.code, name: ui.item.name, imageUrl: ui.item.imageUrl };
     return acc;
   }, {}),
   // PR-3 (Кенан 2026-05-18): currentTitles — активные титулы в текущем

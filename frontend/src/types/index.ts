@@ -17,7 +17,7 @@ export interface UserPublic {
   avatarGradient?: string | null;
   elo: number;
   league: League;
-  equippedItems?: Record<string, { id: string; name: string; imageUrl?: string | null }>;
+  equippedItems?: Record<string, { id: string; code?: string | null; name: string; imageUrl?: string | null }>;
   isMonthlyChampion?: boolean;
   country?: string | null;
 }
@@ -54,19 +54,19 @@ export interface User extends UserPublic {
   hasSeenWarsIntro?: boolean;
   activeTheme?: string;
   equippedItems?: {
-    AVATAR_FRAME?:    { id: string; name: string; imageUrl?: string | null };
-    BOARD_SKIN?:      { id: string; name: string; imageUrl?: string | null };
-    PIECE_SKIN?:      { id: string; name: string; imageUrl?: string | null };
-    MOVE_ANIMATION?:  { id: string; name: string; imageUrl?: string | null };
-    THEME?:           { id: string; name: string; imageUrl?: string | null };
-    PREMIUM_AVATAR?:  { id: string; name: string; imageUrl?: string | null }; // R1
-    PIECE_SET?:       { id: string; name: string; imageUrl?: string | null };
-    WIN_ANIMATION?:   { id: string; name: string; imageUrl?: string | null }; // V3
-    CAPTURE_EFFECT?:  { id: string; name: string; imageUrl?: string | null }; // V3
-    SPECIAL_MOVE?:    { id: string; name: string; imageUrl?: string | null }; // V3
-    FONT?:            { id: string; name: string; imageUrl?: string | null }; // D10
-    SOUND?:           { id: string; name: string; imageUrl?: string | null }; // набор звуков
-    CELL_SHAPE?:      { id: string; name: string; imageUrl?: string | null }; // форма клеток
+    AVATAR_FRAME?:    { id: string; code?: string | null; name: string; imageUrl?: string | null };
+    BOARD_SKIN?:      { id: string; code?: string | null; name: string; imageUrl?: string | null };
+    PIECE_SKIN?:      { id: string; code?: string | null; name: string; imageUrl?: string | null };
+    MOVE_ANIMATION?:  { id: string; code?: string | null; name: string; imageUrl?: string | null };
+    THEME?:           { id: string; code?: string | null; name: string; imageUrl?: string | null };
+    PREMIUM_AVATAR?:  { id: string; code?: string | null; name: string; imageUrl?: string | null }; // R1
+    PIECE_SET?:       { id: string; code?: string | null; name: string; imageUrl?: string | null };
+    WIN_ANIMATION?:   { id: string; code?: string | null; name: string; imageUrl?: string | null }; // V3
+    CAPTURE_EFFECT?:  { id: string; code?: string | null; name: string; imageUrl?: string | null }; // V3
+    SPECIAL_MOVE?:    { id: string; code?: string | null; name: string; imageUrl?: string | null }; // V3
+    FONT?:            { id: string; code?: string | null; name: string; imageUrl?: string | null }; // D10
+    SOUND?:           { id: string; code?: string | null; name: string; imageUrl?: string | null }; // набор звуков
+    CELL_SHAPE?:      { id: string; code?: string | null; name: string; imageUrl?: string | null }; // форма клеток
   };
   nextRestoreSeconds?: number; // R1: for attempts timer
   jarvisLevel?: number;        // R1: Jarvis level progress

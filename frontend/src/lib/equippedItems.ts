@@ -87,7 +87,25 @@ export const PIECE_SKIN_FILTER: Record<string, string> = {
  * девять из десяти (проверено 03.08.2026). Поэтому сначала точное совпадение,
  * потом без учёта регистра.
  */
-function pick<T>(table: Record<string, T>, name?: string | null): T | undefined {
+/** Код из названия по тому же правилу, что и в базе: миграция 20260805_item_codes. */
+const slug = (x: string) =>
+  x.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+
+function pick<T>(table: Record<string, T>, name?: string | null, code?: string | null): T | undefined {
+  // КОД — основной путь: он неизменен, не переводится и не зависит от регистра.
+  // Ключи таблиц — человеческие названия, поэтому сводим их к коду тем же
+  // правилом, что и база. Раньше искали только по названию, и расхождение в
+  // одну заглавную букву («Silver pieces» против «Silver Pieces») молча
+  // отключало купленный стиль: девять из десяти не работали (Кенан 05.08.2026).
+  if (code) {
+    const direct = table[code];
+    if (direct !== undefined) return direct;
+    const wantedCode = slug(code);
+    for (const key of Object.keys(table)) {
+      if (slug(key) === wantedCode) return table[key];
+    }
+  }
+  // Название — запасной путь для записей, у которых кода ещё нет.
   if (!name) return undefined;
   const exact = table[name];
   if (exact !== undefined) return exact;
@@ -129,8 +147,8 @@ export const AVATAR_FRAME_STYLE: Record<string, {
 };
 
 /** Стиль рамки по названию — с тем же поиском, что и остальная косметика. */
-export function frameStyleFor(name?: string | null) {
-  return pick(AVATAR_FRAME_STYLE, name) ?? null;
+export function frameStyleFor(name?: string | null, code?: string | null) {
+  return pick(AVATAR_FRAME_STYLE, name, code) ?? null;
 }
 
 
@@ -141,7 +159,7 @@ export function useEquippedBoardColors(): BoardSkin {
   const skin = user?.equippedItems?.BOARD_SKIN;
   // Default — Premium Oak (дубовый паркет для Premium Dark темы)
   if (!skin) return BOARD_SKIN_COLORS["Premium Oak"]!;
-  return pick(BOARD_SKIN_COLORS, skin.name) ?? BOARD_SKIN_COLORS["Premium Oak"]!;
+  return pick(BOARD_SKIN_COLORS, skin.name, skin.code) ?? BOARD_SKIN_COLORS["Premium Oak"]!;
 }
 
 /** Hook: get CSS filter for pieces from equipped PIECE_SKIN */
@@ -149,7 +167,7 @@ export function useEquippedPieceFilter(): string {
   const user = useUserStore((s) => s.user);
   const skin = user?.equippedItems?.PIECE_SKIN;
   if (!skin) return "drop-shadow(0 1px 3px rgba(0,0,0,0.3))";
-  const customFilter = pick(PIECE_SKIN_FILTER, skin.name);
+  const customFilter = pick(PIECE_SKIN_FILTER, skin.name, skin.code);
   if (!customFilter || customFilter === "none") {
     return "drop-shadow(0 1px 3px rgba(0,0,0,0.3))";
   }
@@ -186,7 +204,7 @@ export function useEquippedCellShape(): Record<string, string> {
   const user = useUserStore((s) => s.user);
   const shape = user?.equippedItems?.CELL_SHAPE;
   if (!shape) return {};
-  return pick(CELL_SHAPE_STYLE, shape.name) ?? {};
+  return pick(CELL_SHAPE_STYLE, shape.name, shape.code) ?? {};
 }
 
 // ── Move animations ────────────────────────────────────────────────────────────
@@ -226,7 +244,7 @@ export function useEquippedPieceSet(): { path: string; isEmoji: boolean } {
   const user = useUserStore((s) => s.user);
   const set = user?.equippedItems?.PIECE_SET;
   if (!set) return { path: "pieces", isEmoji: false };
-  const path = pick(PIECE_SET_PATH, set.name) ?? "pieces";
+  const path = pick(PIECE_SET_PATH, set.name, set.code) ?? "pieces";
   return { path, isEmoji: path === "emoji" };
 }
 
@@ -235,7 +253,7 @@ export function useEquippedMoveAnimation(): { duration: number; className: strin
   const user = useUserStore((s) => s.user);
   const anim = user?.equippedItems?.MOVE_ANIMATION;
   if (!anim) return { duration: 150, className: 'piece-slide' };
-  return pick(MOVE_ANIMATION_CONFIG, anim.name) ?? { duration: 150, className: 'piece-slide' };
+  return pick(MOVE_ANIMATION_CONFIG, anim.name, anim.code) ?? { duration: 150, className: 'piece-slide' };
 }
 
 // ── Win animations (WIN_ANIMATION) ──────────────────────────────────────────

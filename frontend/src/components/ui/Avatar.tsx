@@ -43,7 +43,7 @@ export const Avatar: React.FC<AvatarProps> = React.memo(({ user, size = 'm', gol
   // Через frameStyleFor, а не по точному ключу: в магазине рамка называется
   // «Golden Frame», а в таблице ключ был «Gold Frame» — прямой поиск её не
   // находил, и купленная рамка не показывалась (03.08.2026).
-  const frameStyle = frameStyleFor(user?.equippedItems?.AVATAR_FRAME?.name);
+  const frameStyle = frameStyleFor(user?.equippedItems?.AVATAR_FRAME?.name, user?.equippedItems?.AVATAR_FRAME?.code);
   const { w, h, fs } = SIZES[size];
   const bg = getGradient(user?.id, user?.avatarGradient);
 
