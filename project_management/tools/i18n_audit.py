@@ -98,11 +98,30 @@ def is_english_phrase(text):
     return bool(LAT_PHRASE.match(text))
 
 
+# Запасное значение в useText('ключ', 'строка') переводом НЕ является:
+# ключ лежит в таблице текстов на всех языках, а эта строка показывается,
+# только если словарь не загрузился. Считать её непереведённой — врать себе
+# (03.08.2026: из-за этого счётчик рос на каждый правильно заведённый текст).
+USETEXT_FALLBACK = re.compile(r"""useText\(\s*[`'"][^`'"]+[`'"]\s*,\s*'[^']*'""")
+
+
+OBJECT_KEY = re.compile(r"""^\s*(?:'[^']*'|"[^"]*")\s*:""")
+
+
 def scan_file(path, rel):
     text = io.open(path, encoding='utf-8', errors='replace').read()
     code = strip_comments(text)
+    # Вырезаем запасные значения useText, оставляя сам вызов на месте.
+    code = USETEXT_FALLBACK.sub(lambda m: m.group(0).split(',')[0] + ", ''", code)
     findings = []
     for lineno, line in enumerate(code.split('\n'), 1):
+        # Ключ таблицы соответствий — не текст для показа. Строки вида
+        #     'Golden pieces': 'sepia(1)...',
+        # это то, ПО ЧЕМУ ищут настройку, а не то, что читает игрок. Раньше
+        # счётчик считал их непереведёнными, и каждый новый стиль фигур или
+        # звуковой набор «ухудшал» перевод (03.08.2026).
+        if OBJECT_KEY.match(line):
+            continue
         hits = []
         for m in STRING_LIT.finditer(line):
             body = m.group(2).strip()
