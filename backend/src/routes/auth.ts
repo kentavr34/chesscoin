@@ -134,7 +134,7 @@ router.get("/me", authMiddleware, async (req: Request, res: Response) => {
           where: { isEquipped: true },
           select: {
             isEquipped: true,
-            item: { select: { id: true, type: true, name: true, imageUrl: true } },
+            item: { select: { id: true, type: true, code: true, name: true, imageUrl: true } },
           },
         },
         countryMember: {
