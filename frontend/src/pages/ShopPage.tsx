@@ -426,6 +426,8 @@ export const ShopPage: React.FC = () => {
   // был на английском («Buy … ?», «Price», «Buy»).
   const dict = useI18nStore((st) => st.dict);
   const priceLabel = useText('shop.priceLabel', 'Цена');
+  const effectsTitle = useText('shop.effects.title', 'Ход и звук');
+  const effectsSubtitle = useText('shop.effects.subtitle', 'Анимации ходов и звуковые наборы');
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -668,8 +670,8 @@ export const ShopPage: React.FC = () => {
       {/* Effects tab header */}
       {tab === 'effects' && (
         <div style={{ margin: '0 18px 10px', padding: '12px 14px', ...S.card, background: 'linear-gradient(135deg,rgba(155,133,255,.1),rgba(100,80,220,.06))', border: '.5px solid rgba(155,133,255,.22)' }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#EAE2CC', marginBottom: 3, display: 'inline-flex', alignItems: 'center', gap: 5 }}><IcoBolt size={13} color="#9B85FF" /> Move Animations</div>
-          <div style={{ fontSize: 11, color: '#7A7875' }}>Animate your pieces · Trails · Effects</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#EAE2CC', marginBottom: 3, display: 'inline-flex', alignItems: 'center', gap: 5 }}><IcoBolt size={13} color="#9B85FF" /> {effectsTitle}</div>
+          <div style={{ fontSize: 11, color: '#7A7875' }}>{effectsSubtitle}</div>
         </div>
       )}
 
