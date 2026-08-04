@@ -241,7 +241,10 @@ export const ProfilePage: React.FC = () => {
               } : undefined;
               return (
                 <div style={{ position: 'relative', cursor: clickable ? 'pointer' : 'default' }} onClick={handle}>
-                  <Avatar user={profile} size="xl" gold />
+                  {/* Золотое кольцо по умолчанию — только когда рамка НЕ куплена:
+                      иначе оно перебивает купленное свечение (Кенан 30.07: рамку
+                      не видно, поэтому её не покупают). */}
+                  <Avatar user={profile} size="xl" gold={!frame} />
                   {clickable && (
                     <div style={{ position: 'absolute', bottom: -2, right: -2, width: 22, height: 22, borderRadius: '50%', background: 'rgba(123,97,255,0.9)', border: '1.5px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title={t.profile.buyInShop}>
                       <IcoShop size={11} />
@@ -265,7 +268,7 @@ export const ProfilePage: React.FC = () => {
               } : undefined;
               return (
                 <div style={{ position: 'relative', cursor: clickable ? 'pointer' : 'default' }} onClick={handle}>
-                  <Avatar user={profile as UserPublic} size="xl" gold />
+                  <Avatar user={profile as UserPublic} size="xl" gold={!frame} />
                   {clickable && (
                     <div style={{
                       position: 'absolute', bottom: -2, right: -2,
