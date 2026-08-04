@@ -1,7 +1,7 @@
 import React from 'react';
 import type { UserPublic } from '@/types';
 import { initials } from '@/utils/format';
-import { AVATAR_FRAME_STYLE } from '@/lib/equippedItems';
+import { frameStyleFor } from '@/lib/equippedItems';
 
 interface AvatarProps {
   user?: UserPublic | null;
@@ -40,9 +40,10 @@ export const Avatar: React.FC<AvatarProps> = React.memo(({ user, size = 'm', gol
     setHasError(false);
   }, [user?.avatar, user?.equippedItems?.PREMIUM_AVATAR?.imageUrl]);
 
-  const frameStyle = user?.equippedItems?.AVATAR_FRAME
-    ? AVATAR_FRAME_STYLE[(user as import("@/types").User).equippedItems?.AVATAR_FRAME?.name ?? ''] ?? null
-    : null;
+  // Через frameStyleFor, а не по точному ключу: в магазине рамка называется
+  // «Golden Frame», а в таблице ключ был «Gold Frame» — прямой поиск её не
+  // находил, и купленная рамка не показывалась (03.08.2026).
+  const frameStyle = frameStyleFor(user?.equippedItems?.AVATAR_FRAME?.name);
   const { w, h, fs } = SIZES[size];
   const bg = getGradient(user?.id, user?.avatarGradient);
 

@@ -78,24 +78,6 @@ export const PIECE_SKIN_FILTER: Record<string, string> = {
 };
 
 // Avatar frame colors for AVATAR_FRAME
-export const AVATAR_FRAME_STYLE: Record<string, {
-  border: string; boxShadow: string;
-}> = {
-  "Gold Frame":           { border: "2px solid #F5C842", boxShadow: "0 0 0 2px rgba(245,200,66,0.4), 0 0 16px rgba(245,200,66,0.3)" },
-  // В магазине рамка называется «Golden Frame».
-  "Golden Frame":         { border: "2px solid #F5C842", boxShadow: "0 0 0 2px rgba(245,200,66,0.4), 0 0 16px rgba(245,200,66,0.3)" },
-  "Diamond Frame":        { border: "2px solid #00D4FF", boxShadow: "0 0 0 2px rgba(0,212,255,0.5), 0 0 20px rgba(0,212,255,0.4)" },
-  "Fire Frame":           { border: "2px solid #FF6B35", boxShadow: "0 0 0 2px rgba(255,107,53,0.5), 0 0 20px rgba(255,107,53,0.4)" },
-  "Legendary Frame ♟":   { border: "2px solid #E040FB", boxShadow: "0 0 0 3px rgba(224,64,251,0.5), 0 0 30px rgba(224,64,251,0.5)" },
-  "Silver Frame":         { border: "2px solid #C0C0C0", boxShadow: "0 0 0 2px rgba(192,192,192,0.4), 0 0 12px rgba(192,192,192,0.3)" },
-  "Platinum Frame":       { border: "2px solid #E5E4E2", boxShadow: "0 0 0 2px rgba(229,228,226,0.5), 0 0 18px rgba(229,228,226,0.4)" },
-  "Neon Frame":           { border: "2px solid #00FF9D", boxShadow: "0 0 0 2px rgba(0,255,157,0.5), 0 0 20px rgba(0,255,157,0.4)" },
-  "Crystal Frame":        { border: "2px solid #64C8FF", boxShadow: "0 0 0 2px rgba(100,200,255,0.5), 0 0 20px rgba(100,200,255,0.35)" },
-  "Commander Frame":      { border: "2px solid #FF4D6A", boxShadow: "0 0 0 2px rgba(255,77,106,0.5), 0 0 20px rgba(255,77,106,0.4)" },
-  "Champion Frame":       { border: "3px solid #FFD700", boxShadow: "0 0 0 3px rgba(255,215,0,0.6), 0 0 30px rgba(255,215,0,0.5), 0 0 60px rgba(255,215,0,0.2)" },
-};
-
-
 /**
  * Поиск настройки по названию предмета.
  *
@@ -115,6 +97,43 @@ function pick<T>(table: Record<string, T>, name?: string | null): T | undefined 
   }
   return undefined;
 }
+
+/**
+ * Рамки аватара — свечение, а не обводка.
+ *
+ * Кенан 30.07.2026: «рамка вокруг аватара практически не видна, поэтому
+ * покупать её незачем. Нужна не тонкая линия, а свечение градиентом ~3 мм:
+ * свет рассеивается наружу». Поэтому каждая рамка — три слоя тени: плотное
+ * кольцо у края, мягкое свечение и широкий ореол вторым цветом. Два цвета
+ * дают ощущение градиента, а не однотонной подсветки.
+ */
+const glow = (ring: string, mid: string, halo: string) => ({
+  border: `2px solid ${ring}`,
+  boxShadow: `0 0 0 3px ${mid}, 0 0 12px 4px ${mid}, 0 0 26px 11px ${halo}`,
+});
+
+export const AVATAR_FRAME_STYLE: Record<string, {
+  border: string; boxShadow: string;
+}> = {
+  "Gold Frame":         glow("#F5C842", "rgba(245,200,66,.45)", "rgba(255,170,20,.28)"),
+  "Golden Frame":       glow("#F5C842", "rgba(245,200,66,.45)", "rgba(255,170,20,.28)"),
+  "Diamond Frame":      glow("#00D4FF", "rgba(0,212,255,.45)", "rgba(120,240,255,.3)"),
+  "Fire Frame":         glow("#FF6B35", "rgba(255,107,53,.5)", "rgba(255,40,0,.3)"),
+  "Legendary Frame ♟":  glow("#E040FB", "rgba(224,64,251,.5)", "rgba(120,60,255,.34)"),
+  "Silver Frame":       glow("#C0C0C0", "rgba(192,192,192,.4)", "rgba(230,230,255,.24)"),
+  "Platinum Frame":     glow("#E5E4E2", "rgba(229,228,226,.45)", "rgba(180,210,230,.26)"),
+  "Neon Frame":         glow("#00FF9D", "rgba(0,255,157,.45)", "rgba(0,200,255,.3)"),
+  "Crystal Frame":      glow("#64C8FF", "rgba(100,200,255,.45)", "rgba(180,140,255,.28)"),
+  "Commander Frame":    glow("#FF4D6A", "rgba(255,77,106,.5)", "rgba(255,20,80,.3)"),
+  "Champion Frame":     glow("#FFD700", "rgba(255,215,0,.55)", "rgba(255,120,0,.34)"),
+};
+
+/** Стиль рамки по названию — с тем же поиском, что и остальная косметика. */
+export function frameStyleFor(name?: string | null) {
+  return pick(AVATAR_FRAME_STYLE, name) ?? null;
+}
+
+
 
 /** Hook: get board style from equipped BOARD_SKIN */
 export function useEquippedBoardColors(): BoardSkin {
