@@ -55,9 +55,10 @@ for (const path of PAGES) {
     await page.goto(`${APP_URL}${path}`, { waitUntil: 'networkidle', timeout: 20000 });
     await page.waitForFunction(
       () => !/Loading|Загрузка|Yüklənir|Yükleniyor/i.test(document.body.innerText || ''),
-      { timeout: 25000 },
+      { timeout: 40000 },
     ).catch(() => {});
-    await page.waitForTimeout(2500);
+    // Турниры тянут расписание и таблицы — им нужно заметно больше времени.
+    await page.waitForTimeout(path === '/tournaments' ? 8000 : 2500);
 
     const text = await page.evaluate(() => document.body.innerText || '');
 

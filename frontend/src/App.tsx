@@ -14,6 +14,7 @@ import { useT } from '@/i18n/useT';
 import type { Lang } from '@/i18n/translations';
 import { applyThemeToCss, getActiveTheme, THEMES } from '@/lib/theme';
 import { CoinIcon } from '@/components/ui/CoinIcon';
+import { IcoPawn } from '@/components/icons/UiIcons';
 
 // Q3: lazy loading — каждая страница загружается отдельным чанком
 import { lazy, Suspense } from 'react';
@@ -124,7 +125,7 @@ const AppInner: React.FC = () => {
         onDecline={handleDecline}
       />
     )}
-    <Suspense fallback={<div style={{ position: 'fixed', inset: 0, background: '#0B0D11', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div style={{ color: '#F5C842', fontFamily: 'Unbounded,sans-serif', fontSize: 14 }}>♟ Loading...</div></div>}>
+    <Suspense fallback={<div style={{ position: 'fixed', inset: 0, background: '#0B0D11', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div style={{ color: '#F5C842', fontFamily: 'Unbounded,sans-serif', fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}><IcoPawn size={16} color="#F5C842" /> Loading...</div></div>}>
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/battles" element={<BattlesPage />} />

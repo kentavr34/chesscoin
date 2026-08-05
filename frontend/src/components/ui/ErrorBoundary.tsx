@@ -78,7 +78,7 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode }
             cursor: 'pointer', fontFamily: 'inherit',
           }}
         >
-          ♟ Reload
+          Reload
         </button>
       </div>
     );
