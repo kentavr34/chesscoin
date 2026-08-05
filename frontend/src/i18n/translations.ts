@@ -701,6 +701,9 @@ export const translations = {
       coinsReceived: 'Coins received',
       coinsFrozenNote: (ton: string) => `Coins are frozen. The buyer will send ${ton} TON to your wallet — then the deal closes. No payment within 30 minutes and the coins come back.`,
       creditedToBalance: 'credited to balance',
+      changeAndVolume: (pct: string, vol: string) => `${pct}% 24h · Volume: ${vol} TON`,
+      buy: 'Buy',
+      sell: 'Sell',
     },
     errorBoundary: {
       title: 'Something went wrong',
@@ -1468,6 +1471,9 @@ export const translations = {
       coinsReceived: 'Монеты получены',
       coinsFrozenNote: (ton: string) => `Монеты заморожены. Покупатель оплатит ${ton} TON на твой кошелёк — тогда сделка закроется. Не оплатит за 30 минут — монеты вернутся.`,
       creditedToBalance: 'зачислено на баланс',
+      changeAndVolume: (pct, vol) => `${pct}% 24ч · Объём: ${vol} TON`,
+      buy: 'Купить',
+      sell: 'Продать',
     },
     errorBoundary: {
       title: 'Что-то пошло не так',

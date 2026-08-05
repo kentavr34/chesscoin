@@ -149,7 +149,7 @@ const LockedScreen: React.FC<{ user: User | null; connecting: boolean; onConnect
       <div style={{ fontSize: 12, color: '#9A9490', lineHeight: 1.6, marginBottom: 20 }}>
           {t.exchange.connectWalletNeed}<br />
           {t.exchange.confirmAddressNote} <b style={{ color: '#F0C85A' }}>{t.exchange.confirmOnce}</b>.
-          Тот же кошелёк дальше подключается бесплатно.
+          {t.exchange.sameWalletFree}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12, color: '#9A9490', marginBottom: 20, textAlign: 'left' }}>
           {[t.exchange.sellDirect, t.exchange.buyAtMarket, t.exchange.platformFee].map(line => (
@@ -802,7 +802,7 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
               </div>
             )}
             <div style={{ fontSize: 11, color: up ? '#3DBA7A' : '#FF5B5B', marginTop: 2 }}>
-              {priceData?.currentPrice ? `${up ? '+' : ''}${priceData.change24h.toFixed(2)}% 24ч · Объём: ${priceData.volume24h.toFixed(2)} TON` : t.exchange.noTradesYet}
+              {priceData?.currentPrice ? t.exchange.changeAndVolume(`${up ? '+' : ''}${priceData.change24h.toFixed(2)}`, priceData.volume24h.toFixed(2)) : t.exchange.noTradesYet}
             </div>
           </div>
           {/* Period switcher */}
@@ -840,10 +840,10 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
       {/* ── Action buttons (биржевые цвета: купить=зелёный, продать=красный) ── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, margin: '0 18px 12px' }}>
         <button onClick={() => setShowCreateBuy(true)} style={{ padding: '15px', background: 'linear-gradient(180deg,#0ECB81,#0BA873)', color: '#fff', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 14px rgba(14,203,129,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, letterSpacing: '.02em' }}>
-          <IcoArrowDown size={16} /> Купить
+          <IcoArrowDown size={16} /> {t.exchange.buy}
         </button>
         <button onClick={() => setShowCreate(true)} style={{ padding: '15px', background: 'linear-gradient(180deg,#F6465D,#D63A4F)', color: '#fff', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 14px rgba(246,70,93,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, letterSpacing: '.02em' }}>
-          <IcoArrowUp size={16} /> Продать
+          <IcoArrowUp size={16} /> {t.exchange.sell}
         </button>
       </div>
 

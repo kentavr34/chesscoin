@@ -6,7 +6,7 @@ const b = await chromium.launch();
 const ctx = await b.newContext({ viewport: { width: 420, height: 900 }, deviceScaleFactor: 2 });
 await ctx.addInitScript((t) => {
   localStorage.setItem('accessToken', t);
-  const L = '__ЯЗЫК__';
+  const L = 'az';
   if (L !== 'ru') localStorage.setItem('chesscoin-settings', JSON.stringify({ state: { lang: L }, version: 0 }));
   window.Telegram = { WebApp: {
     initData: '', initDataUnsafe: {}, ready() {}, expand() {}, close() {},
