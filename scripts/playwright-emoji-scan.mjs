@@ -31,7 +31,7 @@ const ctx = await browser.newContext({
   deviceScaleFactor: 2,
 });
 await ctx.addInitScript((token) => {
-  localStorage.setItem('auth_token', token);
+  localStorage.setItem('accessToken', token);
   window.Telegram = {
     WebApp: {
       initData: '', initDataUnsafe: {}, ready() {}, expand() {}, close() {},
@@ -39,14 +39,16 @@ await ctx.addInitScript((token) => {
       MainButton: { show() {}, hide() {}, setText() {}, onClick() {} },
       BackButton: { show() {}, hide() {}, onClick() {} },
       HapticFeedback: { impactOccurred() {}, notificationOccurred() {}, selectionChanged() {} },
-      CloudStorage: { getItem: (k, cb) => cb(null, '1'), setItem: (k, v, cb) => cb && cb(null, true) },
+      CloudStorage: { getItem: (k, cb) => cb(null, '1'), getItems: (ks, cb) => cb && cb(null, Object.fromEntries((ks||[]).map(k=>[k,'1']))), setItem: (k, v, cb) => cb && cb(null, true), removeItem: (k,cb)=>cb&&cb(null,true), getKeys: (cb)=>cb&&cb(null,[]) },
       openTelegramLink() {}, openLink() {}, showPopup() {}, showAlert() {},
     },
   };
 }, TOKEN);
 
+await ctx.route('**/telegram-web-app.js*', (r) => r.abort());
 const page = await ctx.newPage();
 let всего = 0;
+let сбоев = 0;
 
 for (const path of PAGES) {
   try {
@@ -58,6 +60,17 @@ for (const path of PAGES) {
     await page.waitForTimeout(2500);
 
     const text = await page.evaluate(() => document.body.innerText || '');
+
+    // Экран мог не открыться: без авторизации приложение показывает заглушку
+    // «Откройте через Telegram бот». Эмодзи там нет — и проверка рапортовала
+    // «чисто», глядя не на приложение (05.08.2026, первый прогон соврал все
+    // 14 экранов подряд). Пустая или чужая страница — это СБОЙ, не успех.
+    if (/Откройте приложение через Telegram|Open the app through/i.test(text) || text.length < 40) {
+      сбоев += 1;
+      console.log(`НЕ ОТКРЫЛСЯ ${path.padEnd(16)} «${text.slice(0, 60).replace(/\n/g, ' | ')}»`);
+      continue;
+    }
+
     const найдено = [...text.matchAll(EMOJI)]
       .map((m) => m[0])
       .filter((e) => !FLAG.test(e));
@@ -80,5 +93,6 @@ for (const path of PAGES) {
 }
 
 console.log(`\nВСЕГО ЭМОДЗИ НА ЖИВЫХ ЭКРАНАХ: ${всего}`);
+if (сбоев) console.log(`НЕ ОТКРЫЛОСЬ ЭКРАНОВ: ${сбоев} — результату верить нельзя`);
 await browser.close();
-process.exit(всего === 0 ? 0 : 1);
+process.exit(всего === 0 && сбоев === 0 ? 0 : 1);

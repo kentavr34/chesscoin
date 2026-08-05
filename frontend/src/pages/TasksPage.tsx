@@ -7,7 +7,7 @@ import type { PuzzleItem } from '@/api';
 import { fmtBalance } from '@/utils/format';
 import type { Task } from '@/types';
 import { useT } from '@/i18n/useT';
-import { IcoBolt, IcoPuzzle, IcoUsers, IcoCheck, IcoGift } from '@/components/icons/UiIcons';
+import { IcoBolt, IcoPuzzle, IcoUsers, IcoCheck, IcoGift, IcoPawn } from '@/components/icons/UiIcons';
 
 const CategoryIcon: React.FC<{ cat: string; size?: number; color?: string }> = ({ cat, size = 18, color = 'currentColor' }) => {
   if (cat === 'DAILY') return <IcoBolt size={size} color={color} />;
@@ -128,7 +128,7 @@ export const TasksPage: React.FC = () => {
 
   return (
     <>
-    {tasksInfo.show && <InfoPopup infoKey="tasks" slides={[{ icon: '', title: tp.infoTitle, desc: tp.infoDesc }, { icon: '', title: tp.infoRefTitle, desc: tp.infoRefDesc }]} onClose={tasksInfo.close} />}
+    {tasksInfo.show && <InfoPopup infoKey="tasks" slides={[{ icon: 'target', title: tp.infoTitle, desc: tp.infoDesc }, { icon: 'users', title: tp.infoRefTitle, desc: tp.infoRefDesc }]} onClose={tasksInfo.close} />}
     <PageLayout title={t.tasks.title} centered>
       {/* Progress */}
       <div style={progressStrip}>
@@ -175,7 +175,7 @@ export const TasksPage: React.FC = () => {
               border: dailyPuzzle.completed ? '.5px solid rgba(61,186,122,.3)' : '.5px solid rgba(155,109,255,.25)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
             }}>
-              {dailyPuzzle.completed ? <IcoCheck size={22} color="#3DBA7A" /> : <span style={{ color: '#9B85FF' }}>♟</span>}
+              {dailyPuzzle.completed ? <IcoCheck size={22} color="#3DBA7A" /> : <IcoPawn size={22} color="#9B85FF" />}
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: '#EAE2CC' }}>
