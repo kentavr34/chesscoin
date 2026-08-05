@@ -110,7 +110,27 @@ const hasMenu = await menuBtn.count() > 0;
 console.log('после теста:', finalText.slice(0, 160));
 console.log('пройден:', done, '| кнопка «следующий»:', hasNext, '| кнопка «в меню»:', hasMenu);
 
-if (done && hasMenu && missing.length === 0 && stepped === scenario.moves.length) console.log('LESSON_FLOW_OK');
+// Экран может написать «Урок пройден», пока сервер этот урок отвергает.
+// 05.08.2026 так и было: в коде стоял потолок «уровень не выше 100», уроки
+// 101–300 возвращали «Invalid level» — а страж рапортовал успех, потому что
+// смотрел только на надпись. Спрашиваем сервер: знает ли он этот урок и
+// назначена ли за него награда.
+let серверЗнает = false;
+try {
+  const r = await page.evaluate(async (lvl) => {
+    const t = localStorage.getItem('accessToken');
+    const res = await fetch(`/api/v1/lessons/${lvl}`, { headers: { Authorization: `Bearer ${t}` } });
+    if (!res.ok) return { ok: false, code: res.status };
+    const j = await res.json();
+    return { ok: true, reward: j?.lesson?.reward ?? null };
+  }, LESSON_ID);
+  серверЗнает = r.ok && r.reward !== null && r.reward !== '0';
+  console.log('сервер об уроке:', JSON.stringify(r));
+} catch (e) {
+  console.log('сервер об уроке: не спросили —', String(e).slice(0, 60));
+}
+
+if (done && hasMenu && серверЗнает && missing.length === 0 && stepped === scenario.moves.length) console.log('LESSON_FLOW_OK');
 else console.log('LESSON_FLOW_BROKEN');
 
 await browser.close();

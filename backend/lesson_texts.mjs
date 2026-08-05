@@ -8,6 +8,24 @@
 // почему это работает, в конце — на что смотреть в своей партии. Без «данный
 // приём заключается в том, что».
 export const БЛОКИ = {
+  arabian: {
+    name: { ru: 'Арабский мат', en: 'Arabian mate', az: 'Ərəb matı', tr: 'Arap matı' },
+    explain: {
+      ru: 'Ладья и конь ставят мат королю в углу: конь отнимает поля, ладья бьёт по последней линии, и уйти некуда. Рисунку тысяча лет, отсюда и имя. Узнав его один раз, вы будете видеть его в своих партиях.',
+      en: 'Rook and knight mate a king in the corner: the knight takes the escape squares, the rook strikes along the back line, and there is nowhere to go. The pattern is a thousand years old — hence the name. Learn it once and you will start seeing it in your own games.',
+      az: 'Top və at küncdəki şaha mat edir: at xanaları alır, top son xətt üzrə vurur və qaçmağa yer qalmır. Şəklin min ili var, adı da buradandır. Bir dəfə tanısanız, öz partiyalarınızda görməyə başlayacaqsınız.',
+      tr: 'Kale ve at köşedeki şahı mat eder: at kaçış karelerini alır, kale son hattan vurur ve gidecek yer kalmaz. Desen bin yıllıktır, adı da buradan gelir. Bir kez tanıyınca kendi oyunlarınızda görmeye başlarsınız.',
+    },
+  },
+  anastasia: {
+    name: { ru: 'Мат Анастасии', en: 'Anastasia mate', az: 'Anastasiya matı', tr: 'Anastasia matı' },
+    explain: {
+      ru: 'Конь встаёт рядом с королём и отнимает у него поля, а ладья входит по вертикали сбоку — король зажат между своей пешкой и краем доски. Часто перед этим жертвуют ферзя, чтобы вскрыть нужную линию.',
+      en: 'The knight settles next to the king and takes its squares, while the rook comes in on the file from the side — the king is squeezed between its own pawn and the edge. Often a queen is sacrificed first to open the file needed.',
+      az: 'At şahın yanında dayanıb xanalarını alır, top isə yandan şaquli üzrə girir — şah öz piyadası ilə lövhənin kənarı arasında sıxılır. Tez-tez lazımi xətti açmaq üçün əvvəlcə vəzir qurban verilir.',
+      tr: 'At şahın yanına yerleşip karelerini alır, kale ise yandan dikey hattan girer — şah kendi piyonu ile tahtanın kenarı arasında sıkışır. Gereken hattı açmak için önce çoğu zaman vezir feda edilir.',
+    },
+  },
   attraction: {
     name: { ru: 'Завлечение', en: 'Attraction', az: 'Cəlbetmə', tr: 'Çekme' },
     explain: {

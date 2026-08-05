@@ -253,18 +253,21 @@ tasksRouter.get("/puzzles/daily", authMiddleware, async (req: Request, res: Resp
 });
 
 // ─── Sprint 5 (Floor 2: Learning) — последовательные уроки ─────────────────
-// Награда — за трудность блока, а не за номер урока (Кенан 01.08.2026).
-// Прежняя формула 1000 + 1000 * level разгонялась вместе с линейкой: урок
-// 120 платил бы 121 000, а весь путь — 7,3 млн на игрока. Теперь сумма
-// лежит в самом уроке: азбука 2 тыс., маты 3 тыс., приёмы 5 тыс.,
-// эндшпиль 7 тыс. Формула осталась только для номеров вне линейки —
-// там урок берётся случайной задачей и своей строки не имеет.
-const fallbackReward = (level: number) => BigInt(1000 + 1000 * level);
-const lessonReward = async (level: number): Promise<bigint> => {
+// Награда — за трудность блока, а не за номер урока (Кенан 01.08.2026,
+// уточнено 05.08.2026: «начинать с лёгкого и идти к сложному… сложные маты —
+// 15, даже 20 тысяч»). Сумма лежит в самой строке урока и растёт по лестнице:
+// азбука 1 тыс. → первые маты 2 тыс. → приёмы 3 тыс. → эндшпиль 5 тыс. →
+// комбинации, атака и маты в 2–3 хода от 7 до 20 тыс. Весь путь из 300 уроков
+// стоит казне около 2,5 млн на игрока.
+//
+// Формулы «1000 + 1000 × номер» больше НЕТ. Она печатала деньги: после
+// последнего урока счётчик уровня продолжал расти, и уровень 301 заплатил бы
+// 302 000, а 302 — уже 303 000, без предела. Урока нет в линейке — награды нет.
+const lessonReward = async (level: number): Promise<bigint | null> => {
   const lesson = await prisma.lesson.findUnique({
     where: { id: level }, select: { reward: true },
   }).catch(() => null);
-  return lesson?.reward ?? fallbackReward(level);
+  return lesson?.reward ?? null;
 };
 
 // GET /api/v1/tasks/lessons/progress
@@ -284,7 +287,8 @@ tasksRouter.get("/lessons/progress", authMiddleware, async (req: Request, res: R
       currentLevel,
       completedLevels,
       completedAt: row?.completedAt ?? [],
-      nextReward: (await lessonReward(currentLevel)).toString(),
+      // Линейка кончилась — следующей награды нет, а не «ноль монет».
+      nextReward: (await lessonReward(currentLevel))?.toString() ?? null,
     });
   } catch (err) {
     logger.error("[tasks/lessons/progress]", err);
@@ -297,7 +301,7 @@ tasksRouter.post("/lessons/:level/complete", authMiddleware, async (req: Request
   try {
     const userId = req.user!.id;
     const level = Number(req.params.level);
-    if (!Number.isFinite(level) || level < 1 || level > 100) {
+    if (!Number.isFinite(level) || level < 1) {
       return res.status(400).json({ error: "Invalid level" });
     }
 
@@ -309,7 +313,13 @@ tasksRouter.post("/lessons/:level/complete", authMiddleware, async (req: Request
       return res.status(400).json({ error: `Текущий уровень: ${current}, нельзя завершить ${level}` });
     }
 
+    // Границу линейки задаёт сама таблица уроков. Урока нет — засчитывать
+    // нечего: иначе после последнего урока уровень рос бы дальше и платил
+    // за пустоту.
     const reward = await lessonReward(level);
+    if (reward === null) {
+      return res.status(400).json({ error: "LESSON_NOT_FOUND" });
+    }
     const now = new Date();
 
     // upsert progress

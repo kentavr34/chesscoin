@@ -53,7 +53,10 @@ for await (const line of rl) {
   if (Number(c[6]) < СЫГРАНО) continue;
 
   const themes = c[7].split(' ');
-  const нужные = themes.filter((t) => кандидаты.has(t));
+  // Проверять движком задачу, у темы которой запас уже набран, — чистая трата:
+  // база большая, и на популярных темах (mateIn2, sacrifice) это сотни тысяч
+  // лишних разборов. Берём только те строки, которым ещё есть куда лечь.
+  const нужные = themes.filter((t) => кандидаты.has(t) && кандидаты.get(t).length < ЗАПАС);
   if (!нужные.length) continue;
 
   const uci = c[2].split(' ');
