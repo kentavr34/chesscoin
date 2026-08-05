@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { fmtBalance } from '@/utils/format';
 import { useT } from '@/i18n/useT';
+import { IcoRobot } from '@/components/icons/UiIcons';
 
 export interface JarvisLevel {
   level: number;
@@ -79,7 +80,7 @@ export const JarvisModal: React.FC<JarvisModalProps> = ({ currentJarvisLevel, on
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--jarvis-header-margin-bottom)', flexShrink: 0 }}>
           <div>
             <div style={{ fontSize: 'var(--jarvis-title-size)', fontWeight: 800, color: 'var(--color-text-primary, #F0F2F8)', letterSpacing: '-.02em' }}>
-              🤖 J.A.R.V.I.S
+              <IcoRobot size={15} color="#9B85FF" /> J.A.R.V.I.S
             </div>
             <div style={{ fontSize: 'var(--jarvis-subtitle-size)', color: 'var(--color-text-secondary, #8B92A8)', marginTop: 3 }}>
               {t.jarvis.subtitle}

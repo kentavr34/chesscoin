@@ -181,7 +181,7 @@ export const GameSetupModal: React.FC<GameSetupModalProps> = ({ selectedLevel, o
                     {c === 'random' ? '?' : c === 'white' ? '♔' : '♚'}
                   </span>
                   <span style={{ fontSize: '9px', fontWeight: 'var(--font-weight-bold)' }}>
-                    {c === 'random' ? t.gameSetup.random.replace('🎲 ','') : c === 'white' ? t.gameSetup.white.replace('☀️ ','') : t.gameSetup.black.replace('🌙 ','')}
+                    {c === 'random' ? t.gameSetup.random : c === 'white' ? t.gameSetup.white : t.gameSetup.black}
                   </span>
                 </button>
               ))}

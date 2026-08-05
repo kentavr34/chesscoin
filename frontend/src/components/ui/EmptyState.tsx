@@ -14,7 +14,7 @@ interface Props {
   children?: React.ReactNode;  // для CTA-кнопки
 }
 
-export const EmptyState: React.FC<Props> = ({ icon = '🗒', title, desc, accent = '#9B6DFF', children }) => (
+export const EmptyState: React.FC<Props> = ({ icon = null, title, desc, accent = '#9B6DFF', children }) => (
   <div style={{
     textAlign: 'center',
     padding: '40px 24px 32px',

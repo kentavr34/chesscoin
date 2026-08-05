@@ -458,3 +458,12 @@ export const IcoDiceShop: React.FC<Props> = ({ size = 14, color = 'currentColor'
     <circle cx="12.5" cy="12.5" r="1.2" fill={color}/>
   </>
 ));
+
+// Пешка — для слайдов-подсказок вместо эмодзи ♟ (Кенан 05.08.2026).
+export const IcoPawn: React.FC<Props> = ({ size = 14, color = 'currentColor' }) => baseSvg(size, '0 0 20 20', (
+  <>
+    <circle cx="10" cy="5.4" r="2.6" stroke={color} strokeWidth="1.4"/>
+    <path d="M7.2 9.2h5.6l-.8 4.2H8l-.8-4.2z" stroke={color} strokeWidth="1.4" strokeLinejoin="round"/>
+    <path d="M5.6 16.4c.6-1.8 2.2-3 4.4-3s3.8 1.2 4.4 3H5.6z" stroke={color} strokeWidth="1.4" strokeLinejoin="round"/>
+  </>
+));

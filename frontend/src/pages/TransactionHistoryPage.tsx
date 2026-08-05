@@ -5,6 +5,7 @@ import { fmtBalance, fmtDate } from '@/utils/format';
 import type { Transaction } from '@/types';
 import { useT } from '@/i18n/useT';
 import { useSettingsStore } from '@/store/useSettingsStore';
+import { IcoList } from '@/components/icons/UiIcons';
 
 function formatTxType(type: string, t: any): string {
   const types = t.txHistory.types as Record<string, string>;
@@ -247,7 +248,7 @@ export const TransactionHistoryPage: React.FC = () => {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 28, marginBottom: 4,
           }}>
-            📋
+            <IcoList size={22} color="#7A7875" />
           </div>
           <div style={{ fontSize: '.9rem', fontWeight: 700, color: '#7A7875' }}>
             {t.txHistory.noTx}

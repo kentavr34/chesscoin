@@ -201,7 +201,13 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
                 borderRadius: 12, padding: '12px 14px',
                 display: 'flex', alignItems: 'center', gap: 10,
               }}>
-                <span style={{ fontSize: 20 }}>🕐</span>
+                <span style={{ display: 'flex', color: '#82CFFF' }}>
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <circle cx="10" cy="11" r="6.5" stroke="currentColor" strokeWidth="1.6"/>
+                    <path d="M10 7.5v4l2.5 1.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                    <path d="M8 2.5h4M10 2.5v2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                  </svg>
+                </span>
                 <div>
                   <div style={{ fontSize: '.72rem', fontWeight: 700, color: '#82CFFF', marginBottom: 2 }}>
                     Следующая попытка через

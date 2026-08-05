@@ -85,7 +85,7 @@ export const MoveAnnouncer: React.FC<MoveAnnouncerProps> = ({ announcement, onDo
             ? 'var(--move-announcer-special-color, #F5C842)'
             : 'var(--move-announcer-tactics-color, #FF4D6A)',
         }}>
-          {announcement.type === 'opening' ? '📖 Opening' : announcement.type === 'special' ? '⭐ Special' : '⚡ Tactics'}
+          {announcement.type === 'opening' ? 'Opening' : announcement.type === 'special' ? '⭐ Special' : '⚡ Tactics'}
         </div>
       </div>
     </div>

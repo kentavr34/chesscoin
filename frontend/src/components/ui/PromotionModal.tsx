@@ -10,6 +10,7 @@ import { useEquippedPieceSet, useEquippedPieceFilter } from '@/lib/equippedItems
 import { useT } from '@/i18n/useT';
 import { sound } from '@/lib/sound';
 import { haptic } from '@/lib/haptic';
+import { IcoCrown } from '@/components/icons/UiIcons';
 
 interface PromotionModalProps {
   color: 'white' | 'black';
@@ -117,7 +118,7 @@ export const PromotionModal: React.FC<PromotionModalProps> = ({ color, onSelect 
             <div style={titleStyle}>{t.promotion.title}</div>
             <div style={subtitleStyle}>{t.promotion.subtitle}</div>
           </div>
-          <span style={crownEmoji}>👑</span>
+          <span style={crownEmoji}><IcoCrown size={16} color="#F0C85A" /></span>
         </div>
 
         {/* Фигуры */}

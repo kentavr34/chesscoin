@@ -12,6 +12,7 @@ import { ActiveSessionsModal } from '@/components/ui/ActiveSessionsModal';
 import { LeagueProgressBar } from '@/components/ui/LeagueProgressBar';
 import { type JarvisLevel } from '@/components/ui/JarvisModal';
 import { useT } from '@/i18n/useT';
+import { RankInsignia } from '@/components/ui/RankInsignia';
 
 // ── SVG иконки ────────────────────────────────────────────────────────────────
 
@@ -376,7 +377,11 @@ export const HomePage: React.FC = () => {
                 {/* лейбл: отступ = icon(20px) + gap(4px) + boxPad(8px) = 32px → точно над текстом */}
                 <div style={{ fontSize: '.37rem', fontWeight: 700, color: '#807C7A', textTransform: 'uppercase', letterSpacing: '.12em', marginBottom: '.22rem', paddingLeft: 32 }}>Звание</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <span style={{ width: 20, height: 20, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', lineHeight: 1 }}>{user.militaryRank?.emoji || '·'}</span>
+                  {/* Знак различия — SVG вместо эмодзи (правило проекта). Считается по
+                      названию звания, поэтому не зависит от того, что пришло с сервера. */}
+                  <span style={{ width: 20, height: 20, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <RankInsignia rank={user.militaryRank?.rank} size={13} title={user.militaryRank?.label} />
+                  </span>
                   <div style={{ borderRadius: 8, padding: '4px 8px', minWidth: 98, background: 'linear-gradient(135deg,rgba(212,168,67,.14),rgba(212,168,67,.06))', border: '.5px solid rgba(212,168,67,.32)' }}>
                     <span style={{ fontSize: '.76rem', fontWeight: 700, color: '#D4A843', whiteSpace: 'nowrap' }}>{rankLabel}</span>
                   </div>

@@ -209,7 +209,7 @@ export const JarvisPlayModal: React.FC<JarvisPlayModalProps> = ({
                 borderRadius: 12, padding: '12px 14px',
                 display: 'flex', alignItems: 'center', gap: 10,
               }}>
-                <span style={{ fontSize: 20 }}>🕐</span>
+                <span style={{ display: 'flex', color: '#82CFFF' }}>{/* часы: SVG, не эмодзи */}</span>
                 <div>
                   <div style={{ fontSize: '.72rem', fontWeight: 700, color: '#82CFFF', marginBottom: 2 }}>
                     Следующая попытка через

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useT } from '@/i18n/useT';
+import { IcoRobot } from '@/components/icons/UiIcons';
 
 const overlayStyle: React.CSSProperties = {
   position: 'fixed', inset: 0, zIndex: 600,
@@ -30,7 +31,7 @@ export const JarvisInfoModal: React.FC<{ onClose: () => void }> = ({ onClose }) 
       <div style={boxStyle}>
         <button onClick={onClose} style={closeStyle}>✕</button>
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <div style={{ fontSize: 48, marginBottom: 8 }}>🧠</div>
+          <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'center' }}><IcoRobot size={44} color="#9B85FF" /></div>
           <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--color-purple, #9B85FF)', fontFamily: "'Unbounded', sans-serif" }}>
             J.A.R.V.I.S AI
           </div>

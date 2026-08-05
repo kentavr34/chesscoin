@@ -250,7 +250,6 @@ export interface MilitaryRankInfo {
   rank: MilitaryRankType;
   name?: string;
   label: string;
-  emoji: string;
   minMembers: number;
   activationBonus?: string;
   l1Percent?: number;

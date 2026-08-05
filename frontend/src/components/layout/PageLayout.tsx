@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BottomNav } from './BottomNav';
 import { useT } from '@/i18n/useT';
+import { IcoSwords, IcoGlobe, IcoTrophy, IcoTon, IcoLock, IcoCrown, IcoPawn } from '@/components/icons/UiIcons';
 
 // ── InfoPopup ─────────────────────────────────────────────────────────────────
 // Показывается при первом входе на страницу (один раз, затем сохраняется флаг)
@@ -82,7 +83,7 @@ export const InfoPopup: React.FC<InfoPopupProps> = ({ slides, onClose }) => {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           marginBottom: 20, fontSize: 32, lineHeight: 1,
         }}>
-          {slide.icon}
+          <SlideIcon name={slide.icon} />
         </div>
 
         {/* Title */}
@@ -234,6 +235,33 @@ interface PageLayoutProps {
   onBack?: () => void;  // кастомная кнопка назад
   noHeader?: boolean;  // скрыть шапку полностью
 }
+
+
+/**
+ * Иконка слайда-подсказки по имени.
+ *
+ * Раньше в словаре лежал эмодзи и рисовался как текст. Правило проекта —
+ * в интерфейсе только SVG (Кенан 05.08.2026: «давай» на разбор графа,
+ * нашедшего 207 эмодзи в живом интерфейсе). Имя устойчиво и не зависит от
+ * языка, поэтому один и тот же слайд на всех четырёх языках берёт одну
+ * иконку.
+ */
+const SLIDE_ICONS: Record<string, React.FC<{ size?: number; color?: string }>> = {
+  swords: IcoSwords,
+  globe:  IcoGlobe,
+  trophy: IcoTrophy,
+  ton:    IcoTon,
+  lock:   IcoLock,
+  crown:  IcoCrown,
+  pawn:   IcoPawn,
+};
+
+const SlideIcon: React.FC<{ name?: React.ReactNode }> = ({ name }) => {
+  const Ico = typeof name === 'string' ? SLIDE_ICONS[name] : undefined;
+  if (Ico) return <Ico size={32} color="#F5C842" />;
+  // Незнакомое имя — показываем как есть: лучше странный значок, чем пустой круг.
+  return <>{name}</>;
+};
 
 export const PageLayout: React.FC<PageLayoutProps> = ({
   children, title, logo, backTo, rightAction, leftAction, noScroll, centered = true, onBack, noHeader,
