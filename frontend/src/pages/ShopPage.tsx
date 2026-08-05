@@ -612,31 +612,11 @@ export const ShopPage: React.FC = () => {
         </div>
       )}
 
-      {/* Кнопка ведёт на биржу, а не в отдельное окно кошелька. Кенан
-          03.08.2026: «не два механизма — подключение кошелька и биржа должны
-          быть одной страницей». Подключение теперь живёт наверху биржи и
-          после привязки ужимается в полоску. */}
-      <div style={{ margin: '0 18px 14px' }}>
-        <button
-          onClick={() => setTab('exchange')}
-          style={{
-            width: '100%', padding: '13px 16px',
-            background: 'linear-gradient(135deg,rgba(0,101,160,.6),rgba(0,152,234,.35))',
-            border: '.5px solid rgba(0,152,234,.4)',
-            borderRadius: 14, cursor: 'pointer', fontFamily: 'inherit',
-            display: 'flex', alignItems: 'center', gap: 12,
-            boxShadow: '0 4px 20px rgba(0,152,234,.15)',
-            transition: 'all .15s',
-          }}
-        >
-          <span style={{ color: '#5BC8F5', display: 'flex' }}><IcoTon size={24} /></span>
-          <div style={{ textAlign: 'left', flex: 1 }}>
-            <div style={{ fontSize: 14, fontWeight: 800, color: '#5BC8F5' }}>{t.shop.tonTab.connectWallet.replace(/^[^\w]+/, '')}</div>
-            <div style={{ fontSize: 11, color: 'rgba(91,200,245,.7)', marginTop: 1 }}>{t.shop.tonTab.benefits[0].text}</div>
-          </div>
-          <span style={{ color: 'rgba(91,200,245,.6)', fontSize: 18 }}>→</span>
-        </button>
-      </div>
+      {/* Отдельной кнопки «TON кошелёк» здесь больше нет. Она вела ровно
+          туда же, куда вкладка «Биржа», и при уже подключённом кошельке
+          продолжала звать подключаться — Кенан 05.08.2026: «внутри магазина
+          осталась кнопка биржа… после привязки не сворачивается в одну тонкую
+          полоску». Вход один — вкладка; кошелёк живёт наверху биржи. */}
 
       {/* Tab bar — 2 rows × 3 */}
       <div style={{ margin: '0 18px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
