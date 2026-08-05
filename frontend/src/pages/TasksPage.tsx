@@ -67,7 +67,9 @@ export const TasksPage: React.FC = () => {
   const { user, setUser } = useUserStore();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const tasksInfo = useInfoPopup('tasks', [{ icon: '', title: tp.infoTitle, desc: tp.infoDesc }, { icon: '', title: tp.infoRefTitle, desc: tp.infoRefDesc }]);
+  // Иконки слайдов задаются ИМЕНЕМ — картинку рисует SlideIcon.
+  // Раньше здесь стоял эмодзи; после его снятия слайды остались без значка.
+  const tasksInfo = useInfoPopup('tasks', [{ icon: 'target', title: tp.infoTitle, desc: tp.infoDesc }, { icon: 'users', title: tp.infoRefTitle, desc: tp.infoRefDesc }]);
   const [claiming, setClaiming] = useState<string | null>(null);
   const [dailyPuzzle, setDailyPuzzle] = useState<PuzzleItem | null>(null);
   const [puzzleLoading, setPuzzleLoading] = useState(true);
