@@ -183,8 +183,12 @@ export const useSocket = () => {
         if (data.type === 'tournament:match') {
           // T2: Турнирный матч — красивый toast с кнопкой перехода в игру
           const opponentName = data.opponentName ?? '';
-          const text = `Tournament match! Round ${data.round ?? 1} · vs ${opponentName}`;
-          showActionToast(text, '⚔️ Play', () => navigate('/battles'));
+          const tm = translations[useSettingsStore.getState().lang].notifications;
+          showActionToast(
+            tm.tournamentMatchFull(String(data.round ?? 1), opponentName),
+            tm.playBtn,
+            () => navigate('/battles'),
+          );
           // Уведомляем TournamentsPage о новом матче
           window.dispatchEvent(new CustomEvent('chesscoin:tournament:match', { detail: data }));
           try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch {}
@@ -213,10 +217,9 @@ export const useSocket = () => {
           const role = data.role ?? '';
           const coins = Number(BigInt(data.amountCoins ?? '0')).toLocaleString();
           const ton   = data.totalTon?.toFixed(4) ?? '0';
-          const msg   = role === 'seller'
-            ? `Order executed! Sold ${coins} for ${ton} TON`
-            : `Bought ${coins} for ${ton} TON — credited to balance`;
-          showActionToast(msg, 'Exchange', () => navigate('/shop'));
+          const te = translations[useSettingsStore.getState().lang].notifications;
+          const msg = role === 'seller' ? te.orderSold(coins, ton) : te.orderBought(coins, ton);
+          showActionToast(msg, te.exchangeBtn, () => navigate('/shop'));
           try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch {}
         }
       };

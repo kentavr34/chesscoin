@@ -14,8 +14,9 @@ APP = 'https://chesscoin.app'
 
 secret = sh('grep "^SCREENSHOT_SECRET=" /opt/chesscoin/.env | cut -d= -f2-').strip()
 if not secret:
-    print('NO_SECRET')
-    sys.exit(0)
+    print('СТРАЖ НЕ СРАБОТАЛ: секрет скриншотера не прочитался с прода — '
+          'это отказ проверки, а не поломка продукта')
+    sys.exit(2)
 with urllib.request.urlopen('%s/api/v1/screenshotter/token?secret=%s' % (APP, secret), timeout=20) as r:
     token = json.load(r).get('token', '')
 

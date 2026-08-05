@@ -8,6 +8,7 @@ import io
 import os
 import sys
 import subprocess
+import time
 
 try:
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
@@ -23,14 +24,28 @@ SSH = ['ssh', '-i', KEY, '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=15',
        '-o', 'StrictHostKeyChecking=no', PROD]
 
 
-def sh(cmd, timeout=90):
-    """Выполнить команду на проде, вернуть stdout (строкой)."""
-    try:
-        r = subprocess.run(SSH + [cmd], capture_output=True, encoding='utf-8',
-                           errors='replace', timeout=timeout)
-        return (r.stdout or '').strip()
-    except Exception as e:
-        return 'ОШИБКА SSH: %s' % str(e)[:80]
+def sh(cmd, timeout=90, retries=2):
+    """Выполнить команду на проде, вернуть stdout (строкой).
+
+    Повтор при пустом ответе — не косметика. Регрессия гоняет проверки
+    подряд, сервер ограничивает число одновременных SSH-сессий, и одна
+    из них молча возвращала пустоту. Страж читал пустой SCREENSHOT_SECRET,
+    печатал NO_SECRET — и регрессия объявляла сломанной РАБОЧУЮ ссылку на
+    партию (05.08.2026). Пустой ответ на успешной команде подозрителен.
+    """
+    последняя = ''
+    for попытка in range(retries + 1):
+        try:
+            r = subprocess.run(SSH + [cmd], capture_output=True, encoding='utf-8',
+                               errors='replace', timeout=timeout)
+            out = (r.stdout or '').strip()
+            if out or r.returncode != 0:
+                return out
+            последняя = out
+        except Exception as e:
+            последняя = 'ОШИБКА SSH: %s' % str(e)[:80]
+        time.sleep(1.5 * (попытка + 1))
+    return последняя
 
 
 def q(sql, game_db=False, timeout=90):

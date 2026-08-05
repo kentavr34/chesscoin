@@ -16,8 +16,9 @@ APP = 'https://chesscoin.app'
 
 secret = sh('grep "^SCREENSHOT_SECRET=" /opt/chesscoin/.env | cut -d= -f2-').strip()
 if not secret:
-    print('NO_SECRET — SCREENSHOT_SECRET не найден на проде')
-    sys.exit(0)
+    print('СТРАЖ НЕ СРАБОТАЛ: секрет скриншотера не прочитался с прода — '
+          'это отказ проверки, а не поломка продукта')
+    sys.exit(2)
 
 import json
 import urllib.request

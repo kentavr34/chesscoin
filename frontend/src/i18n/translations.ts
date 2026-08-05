@@ -629,6 +629,11 @@ export const translations = {
       warChallenge: (country) => `Country ${country} challenged you to a duel! Go to Battles to accept.`,
       tournamentMatch: (opponent) => `Tournament match! Play against ${opponent}. Go to Battles.`,
       goToBattles: 'Go to Battles →',
+      tournamentMatchFull: (round: string, opponent: string) => `Tournament match! Round ${round} · vs ${opponent}`,
+      playBtn: 'Play',
+      orderSold: (coins: string, ton: string) => `Order executed! Sold ${coins} for ${ton} TON`,
+      orderBought: (coins: string, ton: string) => `Bought ${coins} for ${ton} TON — credited to balance`,
+      exchangeBtn: 'Exchange',
     },
     txHistory: {
       title: 'Transaction History',
@@ -1309,6 +1314,11 @@ export const translations = {
       warChallenge: (country) => `Вас вызвала на дуэль страна ${country}! Переходите в Батлы для принятия.`,
       tournamentMatch: (opponent) => `Матч турнира! Играй против ${opponent}. Переходи в Батлы.`,
       goToBattles: 'Перейти в Батлы →',
+      tournamentMatchFull: (round, opponent) => `Турнирный матч! Круг ${round} · против ${opponent}`,
+      playBtn: 'Играть',
+      orderSold: (coins, ton) => `Ордер исполнен! Продано ${coins} за ${ton} TON`,
+      orderBought: (coins, ton) => `Куплено ${coins} за ${ton} TON — зачислено на баланс`,
+      exchangeBtn: 'Биржа',
     },
     txHistory: {
       title: 'История транзакций',

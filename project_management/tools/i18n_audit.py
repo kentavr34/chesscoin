@@ -107,12 +107,19 @@ USETEXT_FALLBACK = re.compile(r"""useText\(\s*[`'"][^`'"]+[`'"]\s*,\s*'[^']*'"""
 
 OBJECT_KEY = re.compile(r"""^\s*(?:'[^']*'|"[^"]*")\s*:""")
 
+# Имя иконки в слайде — не текст для показа: SlideIcon рисует по нему картинку,
+# на экран это слово не попадает. Раньше там стоял эмодзи, и перевод его не
+# касался; после замены на имена счётчик стал считать их непереведёнными
+# (05.08.2026).
+ICON_NAME = re.compile(r"""icon:\s*'[a-z][a-z0-9_]*'""")
+
 
 def scan_file(path, rel):
     text = io.open(path, encoding='utf-8', errors='replace').read()
     code = strip_comments(text)
     # Вырезаем запасные значения useText, оставляя сам вызов на месте.
     code = USETEXT_FALLBACK.sub(lambda m: m.group(0).split(',')[0] + ", ''", code)
+    code = ICON_NAME.sub("icon: ''", code)
     findings = []
     for lineno, line in enumerate(code.split('\n'), 1):
         # Ключ таблицы соответствий — не текст для показа. Строки вида
