@@ -327,7 +327,7 @@ export const translations = {
       allCoinsToWinners: 'All coins go to tournament winners!',
       awesome: 'Awesome!',
       countryRequired: 'Join a country in Wars section first',
-      tournamentMatch: (opponent: string) => `🏆 Tournament match! Opponent: ${opponent}`,
+      tournamentMatch: (opponent: string) => `Tournament match! Opponent: ${opponent}`,
       infoSlides: [
         { icon: 'trophy', title: 'ChessCoin Tournaments', desc: 'Join tournaments, compete with other players and win coins. The system automatically assigns opponents to you.' },
         { icon: 'globe', title: 'Country Champion', desc: 'You need to join a country (Wars section) to participate. The winner becomes the Country Champion and receives a profile badge.' },
@@ -362,9 +362,9 @@ export const translations = {
         // Вывода средств в проекте нет — только купля-продажа между игроками
         // (Кенан 31.07.2026). Тексты про вывод убраны, чтобы не обещать лишнего.
         benefits: [
-          { ico: '🪙', text: 'Buy coins for TON', sub: '1 TON = 100,000' },
-          { ico: '💸', text: 'Sell coins for TON', sub: '0.5% fee, wallet to wallet' },
-          { ico: '🔒', text: 'Free wallet connection', sub: 'No upfront payment' },
+          { text: 'Buy coins for TON', sub: '1 TON = 100,000' },
+          { text: 'Sell coins for TON', sub: '0.5% fee, wallet to wallet' },
+          { text: 'Free wallet connection', sub: 'No upfront payment' },
         ],
         introText: 'Connect a TON wallet to buy and sell coins for real crypto',
         unlockPrompt: 'Confirm this wallet — 1 TON, once per address',
@@ -385,9 +385,9 @@ export const translations = {
     tasks: { title: 'Tasks', complete: 'Complete', completed: 'Done', noTasks: 'No tasks available' },
     profile: {
       infoSlides: [
-        { icon: '', title: 'Your Profile', desc: 'Your stats, badges and game history. ELO shows your level — the higher, the stronger opponents.' },
-        { icon: '', title: 'Military Rank', desc: 'Rank grows with referrals. Higher rank — bigger percentage from friends’ wins.' },
-        { icon: '', title: 'Leagues & Rewards', desc: 'Earn coins to climb leagues: Bronze → Silver → Gold → Diamond → Champion.' },
+        { icon: 'stats', title: 'Your Profile', desc: 'Your stats, badges and game history. ELO shows your level — the higher, the stronger opponents.' },
+        { icon: 'medal', title: 'Military Rank', desc: 'Rank grows with referrals. Higher rank — bigger percentage from friends’ wins.' },
+        { icon: 'trophy', title: 'Leagues & Rewards', desc: 'Earn coins to climb leagues: Bronze → Silver → Gold → Diamond → Champion.' },
       ],
       balance: 'Balance', shop: 'Shop', referrals: 'Referrals →',
       monthlyChampion: 'Monthly Champion',
@@ -627,7 +627,7 @@ export const translations = {
     },
     notifications: {
       warChallenge: (country) => `⚔️ Country ${country} challenged you to a duel! Go to Battles to accept.`,
-      tournamentMatch: (opponent) => `🏆 Tournament match! Play against ${opponent}. Go to Battles.`,
+      tournamentMatch: (opponent) => `Tournament match! Play against ${opponent}. Go to Battles.`,
       goToBattles: 'Go to Battles →',
     },
     txHistory: {
@@ -1007,7 +1007,7 @@ export const translations = {
       allCoinsToWinners: 'Все монеты достаются победителям!',
       awesome: 'Потрясающе!',
       countryRequired: 'Сначала вступите в страну в разделе Войны',
-      tournamentMatch: (opponent: string) => `🏆 Турнирный матч! Соперник: ${opponent}`,
+      tournamentMatch: (opponent: string) => `Турнирный матч! Соперник: ${opponent}`,
       infoSlides: [
         { icon: 'trophy', title: 'Турниры ChessCoin', desc: 'Вступайте в турниры, соревнуйтесь с другими игроками и выигрывайте монеты. Система автоматически назначает соперников.' },
         { icon: 'globe', title: 'Чемпион страны', desc: 'Нужно вступить в страну (раздел Войны) для участия. Победитель становится Чемпионом страны и получает значок.' },
@@ -1040,9 +1040,9 @@ export const translations = {
       tonTab: {
         connectWallet: 'Подключить TON кошелёк', connecting: 'Подключение...',
         benefits: [
-          { ico: '🪙', text: 'Купи монеты за TON', sub: '1 TON = 100 000' },
-          { ico: '💸', text: 'Продай монеты за TON', sub: 'Комиссия 0.5%, кошелёк в кошелёк' },
-          { ico: '🔒', text: 'Бесплатное подключение кошелька', sub: 'Без предоплаты' },
+          { text: 'Купи монеты за TON', sub: '1 TON = 100 000' },
+          { text: 'Продай монеты за TON', sub: 'Комиссия 0.5%, кошелёк в кошелёк' },
+          { text: 'Бесплатное подключение кошелька', sub: 'Без предоплаты' },
         ],
         introText: 'Подключи TON-кошелёк, чтобы покупать и продавать монеты за настоящую крипту',
         unlockPrompt: 'Подтверди кошелёк — 1 TON, один раз за адрес',
@@ -1064,9 +1064,9 @@ export const translations = {
     tasks: { title: 'Задания', complete: 'Выполнить', completed: 'Готово', noTasks: 'Нет заданий' },
     profile: {
       infoSlides: [
-        { icon: '', title: 'Твой профиль', desc: 'Статистика, значки и история партий. ELO показывает твой уровень: чем выше, тем сильнее соперники.' },
-        { icon: '', title: 'Воинское звание', desc: 'Звание растёт с числом рефералов. Выше звание — больше процент с выигрышей друзей.' },
-        { icon: '', title: 'Лиги и награды', desc: 'Зарабатывай монеты и поднимайся по лигам: Бронза → Серебро → Золото → Алмаз → Чемпион.' },
+        { icon: 'stats', title: 'Твой профиль', desc: 'Статистика, значки и история партий. ELO показывает твой уровень: чем выше, тем сильнее соперники.' },
+        { icon: 'medal', title: 'Воинское звание', desc: 'Звание растёт с числом рефералов. Выше звание — больше процент с выигрышей друзей.' },
+        { icon: 'trophy', title: 'Лиги и награды', desc: 'Зарабатывай монеты и поднимайся по лигам: Бронза → Серебро → Золото → Алмаз → Чемпион.' },
       ],
       balance: 'Баланс', shop: 'Магазин', referrals: 'Рефералы →',
       monthlyChampion: 'Чемпион месяца',
@@ -1291,7 +1291,7 @@ export const translations = {
       checkingBlockchain: 'Проверяем блокчейн...',
       credited: (amount: string) => `${amount} зачислены на баланс`,
       transferred: (amount: string) => `${amount} переданы покупателю`,
-      sellFor: (ton: string) => `📤 Продать за ${ton} TON`,
+      sellFor: (ton: string) => `Продать за ${ton} TON`,
       buyerPaying: 'Покупатель переводит TON...',
       minCoins: 'Минимум 1 000',
       minPrice: (min: number) => `Минимальная цена ${min} TON/1M`,
@@ -1307,7 +1307,7 @@ export const translations = {
     },
     notifications: {
       warChallenge: (country) => `⚔️ Вас вызвала на дуэль страна ${country}! Переходите в Батлы для принятия.`,
-      tournamentMatch: (opponent) => `🏆 Матч турнира! Играй против ${opponent}. Переходи в Батлы.`,
+      tournamentMatch: (opponent) => `Матч турнира! Играй против ${opponent}. Переходи в Батлы.`,
       goToBattles: 'Перейти в Батлы →',
     },
     txHistory: {

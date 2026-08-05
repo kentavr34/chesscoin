@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BottomNav } from './BottomNav';
 import { useT } from '@/i18n/useT';
-import { IcoSwords, IcoGlobe, IcoTrophy, IcoTon, IcoLock, IcoCrown, IcoPawn } from '@/components/icons/UiIcons';
+import { IcoSwords, IcoGlobe, IcoTrophy, IcoTon, IcoLock, IcoCrown, IcoPawn,
+         IcoStats, IcoMedal, IcoUsers } from '@/components/icons/UiIcons';
 
 // ── InfoPopup ─────────────────────────────────────────────────────────────────
 // Показывается при первом входе на страницу (один раз, затем сохраняется флаг)
@@ -254,6 +255,9 @@ const SLIDE_ICONS: Record<string, React.FC<{ size?: number; color?: string }>> =
   lock:   IcoLock,
   crown:  IcoCrown,
   pawn:   IcoPawn,
+  stats:  IcoStats,
+  medal:  IcoMedal,
+  users:  IcoUsers,
 };
 
 const SlideIcon: React.FC<{ name?: React.ReactNode }> = ({ name }) => {
