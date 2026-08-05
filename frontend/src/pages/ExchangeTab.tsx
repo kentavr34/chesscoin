@@ -16,7 +16,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { exchangeApi, tonApi, P2POrder, BuyP2POrder, PriceCandle } from '@/api';
 import { fmtBalance } from '@/utils/format';
 import type { User } from '@/types';
-import { sendTonPayment, connectWallet, disconnectWallet } from '@/lib/tonconnect';
+import { sendTonPayment, connectWallet, disconnectWallet, sendVerificationPayment } from '@/lib/tonconnect';
 import { createChart, IChartApi, ColorType, LineStyle, type Time } from 'lightweight-charts';
 import { useT } from '@/i18n/useT';
 import { IcoArrowDown, IcoArrowUp } from '@/components/icons/UiIcons';
@@ -684,10 +684,15 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
 
   const up = (priceData?.change24h ?? 0) >= 0;
 
-  // Подключение кошелька прямо из биржи (Кенан 2026-06-13): кнопка была
-  // «мёртвой» (показывала тост «подключите выше»). Теперь сама открывает
-  // TonConnect и СОХРАНЯЕТ адрес через /profile/ton-wallet — бесплатно,
-  // без 1-TON платежа (демо-режим). После refresh биржа разблокируется.
+  // Подключение кошелька прямо из биржи.
+  //
+  // Здесь стоял укороченный путь: открыть TonConnect и сохранить адрес.
+  // Сервер при этом требует подтверждения — новый адрес возвращает 402
+  // WALLET_NOT_CONFIRMED (правило Кенана 31.07.2026: 1 TON один раз за адрес,
+  // дальше тот же кошелёк бесплатно). Ответ 402 никто не обрабатывал: игрок
+  // получал тост с ошибкой и упирался в стену — НОВЫЙ КОШЕЛЁК ПОДКЛЮЧИТЬ БЫЛО
+  // НЕЛЬЗЯ ВООБЩЕ. Полный путь жил в панели магазина, которую не открывали.
+  // Переносим его сюда целиком (Кенан 05.08.2026).
   const [connecting, setConnecting] = useState(false);
   const handleConnect = async () => {
     if (connecting) return;
@@ -697,7 +702,17 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
       const wallet = await connectWallet();
       const addr = wallet.account?.address;
       if (!addr) throw new Error(t.exchange.walletAddrFail);
-      await tonApi.connectWallet(addr);
+      try {
+        await tonApi.connectWallet(addr);
+      } catch (err: unknown) {
+        const emsg = err instanceof Error ? err.message : String(err);
+        if (!emsg.includes('WALLET_NOT_CONFIRMED')) throw err;
+        // Адрес новый — просим разовое подтверждение и проводим его.
+        showToast(t.shop.tonTab.unlockPrompt);
+        const boc = await sendVerificationPayment(user?.id ?? '');
+        showToast(t.exchange.verifying);
+        await tonApi.verifyWallet(addr, boc);
+      }
       showToast(t.exchange.walletConnectedToast);
       onUserRefresh();
     } catch (e: unknown) {
