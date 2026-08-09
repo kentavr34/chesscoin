@@ -342,7 +342,16 @@ export const HomePage: React.FC = () => {
                   background: 'linear-gradient(145deg,#221908,#2E2210)',
                   overflow: 'hidden',
                 }}>
-                  <IcoAvatar src={user.avatar ?? undefined} initial={initial} />
+                  {/* Профиль открывается отсюда: в нижнем меню его больше нет —
+                      там шесть кнопок, седьмая стала бы неразличимой
+                      (Кенан 09.08.2026). */}
+                  <div
+                    onClick={() => navigate('/profile')}
+                    title={t.nav.profile}
+                    style={{ width: '100%', height: '100%', cursor: 'pointer' }}
+                  >
+                    <IcoAvatar src={user.avatar ?? undefined} initial={initial} />
+                  </div>
                 </div>
               </div>
             </div>

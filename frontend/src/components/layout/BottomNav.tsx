@@ -1,8 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useT } from '@/i18n/useT';
-import { tasksApi } from '@/api';
-import { fmtBalance } from '@/utils/format';
 
 // SVG иконки для нижней навигации
 const NavIcoPlay = ({ active }: { active: boolean }) => (
@@ -50,100 +48,45 @@ const NavIcoProfile = ({ active }: { active: boolean }) => (
   </svg>
 );
 
-/** Пешка на полосе обучения — тот же почерк, что и у иконок ряда. */
-const NavIcoLearn = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-    <circle cx="12" cy="6" r="2.6" stroke="#0B0D11" strokeWidth="1.6"/>
-    <path d="M9.4 10.2h5.2l-1 2.4h-3.2l-1-2.4z" stroke="#0B0D11" strokeWidth="1.4" strokeLinejoin="round"/>
-    <path d="M10.4 12.6c0 2.2-.7 3.9-1.6 5.2h6.4c-.9-1.3-1.6-3-1.6-5.2" stroke="#0B0D11" strokeWidth="1.4" strokeLinejoin="round"/>
-    <rect x="6.6" y="17.8" width="10.8" height="2.4" rx="1.2" stroke="#0B0D11" strokeWidth="1.5"/>
+/** Обучение — пешка: с неё начинают учиться. */
+const NavIcoLearn = ({ active }: { active: boolean }) => (
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+    <circle cx="12" cy="6" r="2.6" stroke={active ? '#D4A843' : '#5A6070'} strokeWidth="1.5"/>
+    <path d="M9.4 10.2h5.2l-1 2.4h-3.2l-1-2.4z" stroke={active ? '#D4A843' : '#5A6070'} strokeWidth="1.3" strokeLinejoin="round"/>
+    <path d="M10.4 12.6c0 2.2-.7 3.9-1.6 5.2h6.4c-.9-1.3-1.6-3-1.6-5.2" stroke={active ? '#D4A843' : '#5A6070'} strokeWidth="1.3" strokeLinejoin="round"/>
+    <rect x="6.6" y="17.8" width="10.8" height="2.4" rx="1.2" stroke={active ? '#F0C85A' : '#5A6070'} strokeWidth="1.4"/>
   </svg>
 );
 
-/**
- * Полоса обучения НАД рядом значков.
- *
- * Кенан 09.08.2026: «переход на обучение сфокусировать, чтобы внимание
- * пользователя прикрепить… ту нижнюю полосу поднять, поставить над четырьмя
- * квадратными значками, чтобы она прямо бросалась в глаза».
- *
- * Повод: 300 уроков построено, а начали их двое из ста одного. В нижнем меню
- * обучения не было вовсе — попасть туда можно было только после проигрыша,
- * со страницы заданий или по прямой ссылке. Шестым мелким значком в ряду
- * оно бы снова потерялось, поэтому это широкая полоса с прогрессом и
- * наградой за следующий урок: не ссылка, а приглашение.
- */
-const LearnStrip: React.FC<{ onOpen: () => void }> = ({ onOpen }) => {
-  const t = useT();
-  const [прогресс, setПрогресс] = useState<{ уровень: number; награда: string } | null>(null);
-
-  useEffect(() => {
-    let живо = true;
-    tasksApi.lessonsProgress()
-      .then((r) => {
-        if (живо) setПрогресс({ уровень: r.currentLevel, награда: r.nextReward ?? '' });
-      })
-      .catch(() => { /* без прогресса полоса всё равно зовёт учиться */ });
-    return () => { живо = false; };
-  }, []);
-
-  const подпись = прогресс
-    ? t.nav.learnProgress(прогресс.уровень, LESSONS_TOTAL)
-    : t.nav.learnSubtitle;
-
-  return (
-    <button
-      onClick={onOpen}
-      style={{
-        display: 'flex', alignItems: 'center', gap: 10,
-        width: '100%', margin: '0 0 10px', padding: '9px 14px',
-        border: 'none', borderRadius: 14, cursor: 'pointer',
-        fontFamily: 'inherit', textAlign: 'left',
-        background: 'linear-gradient(100deg,#F0C85A,#D4A843)',
-        boxShadow: '0 3px 14px rgba(212,168,67,.32)',
-      }}
-    >
-      <NavIcoLearn />
-      <span style={{ flex: 1, minWidth: 0 }}>
-        <span style={{
-          display: 'block', fontSize: 13, fontWeight: 900, color: '#0B0D11',
-          letterSpacing: '-.01em', lineHeight: 1.2,
-        }}>{t.nav.learn}</span>
-        <span style={{
-          display: 'block', fontSize: 10.5, fontWeight: 700,
-          color: 'rgba(11,13,17,.72)', marginTop: 1,
-          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-        }}>{подпись}</span>
-      </span>
-      {прогресс?.награда && (
-        <span style={{
-          flexShrink: 0, fontSize: 11, fontWeight: 900, color: '#0B0D11',
-          fontFamily: "'JetBrains Mono',monospace",
-        }}>+{fmtBalance(прогресс.награда)}</span>
-      )}
-      <span style={{ flexShrink: 0, color: 'rgba(11,13,17,.6)', fontSize: 16, lineHeight: 1 }}>›</span>
-    </button>
-  );
-};
-
-/** Сколько всего уроков в линейке — для подписи «урок N из 300». */
-const LESSONS_TOTAL = 300;
+/** Задания — список с отметками. */
+const NavIcoTasks = ({ active }: { active: boolean }) => (
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+    <rect x="4" y="3.5" width="16" height="17" rx="2.5" stroke={active ? '#D4A843' : '#5A6070'} strokeWidth="1.4"/>
+    <path d="M7.5 8.5l1.6 1.6 3-3.2" stroke={active ? '#F0C85A' : '#5A6070'} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M7.5 14.5l1.6 1.6 3-3.2" stroke={active ? '#F0C85A' : '#5A6070'} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M14.5 9h2.5M14.5 15h2.5" stroke={active ? '#D4A843' : '#5A6070'} strokeWidth="1.4" strokeLinecap="round"/>
+  </svg>
+);
 
 export const BottomNav: React.FC = () => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const t = useT();
 
-  // На самих экранах обучения полоса не нужна — игрок уже там.
-  const наОбучении = pathname.startsWith('/lessons') || pathname.startsWith('/learn')
-                  || pathname.startsWith('/lesson');
-
+  // Шесть кнопок (Кенан 09.08.2026). Обучение и задания РАЗВЕДЕНЫ: раньше
+  // уроки жили внутри страницы заданий, и попасть в них можно было только
+  // через неё — 300 уроков начали двое из ста одного.
+  //
+  // Профиль ушёл из ряда на аватар главной: семь кнопок на телефоне
+  // становятся неразличимыми, а свой профиль до сих пор открывался ТОЛЬКО
+  // отсюда, поэтому просто убрать его было нельзя.
   const TABS = [
     { path: '/',            Icon: NavIcoPlay,       label: t.nav.play        },
     { path: '/battles',     Icon: NavIcoBattle,     label: t.nav.battles     },
-    { path: '/wars',        Icon: NavIcoWars,       label: t.nav.wars        },
     { path: '/tournaments', Icon: NavIcoTournament, label: t.nav.tournaments },
-    { path: '/profile',     Icon: NavIcoProfile,    label: t.nav.profile     },
+    { path: '/wars',        Icon: NavIcoWars,       label: t.nav.wars        },
+    { path: '/lessons',     Icon: NavIcoLearn,      label: t.nav.learn       },
+    { path: '/tasks',       Icon: NavIcoTasks,      label: t.nav.tasks       },
   ];
 
   return (
@@ -155,9 +98,8 @@ export const BottomNav: React.FC = () => {
       border: '1px solid var(--border)',
       borderBottom: 'none',
       display: 'flex', flexDirection: 'column',
-      padding: '10px 10px 0', zIndex: 'var(--z-nav)',
+      padding: '12px 4px 0', zIndex: 'var(--z-nav)',
     }}>
-      {!наОбучении && <LearnStrip onOpen={() => navigate('/lessons')} />}
       <div style={{ display: 'flex', alignItems: 'flex-start', width: '100%' }}>
       {TABS.map((tab) => {
         const active = tab.path === '/' ? pathname === '/' : pathname.startsWith(tab.path);
@@ -167,7 +109,7 @@ export const BottomNav: React.FC = () => {
             onClick={() => navigate(tab.path)}
             style={{
               flex: 1, display: 'flex', flexDirection: 'column',
-              alignItems: 'center', gap: 3, padding: '6px 4px',
+              alignItems: 'center', gap: 3, padding: '6px 1px',
               cursor: 'pointer', borderRadius: 10, position: 'relative',
               transition: 'opacity .15s',
             }}
@@ -186,7 +128,7 @@ export const BottomNav: React.FC = () => {
               <tab.Icon active={active} />
             </span>
             <span style={{
-              fontSize: 10, fontWeight: 700,
+              fontSize: 9, fontWeight: 700,
               color: active ? 'var(--accent)' : 'var(--text-muted)',
               letterSpacing: '.05em', marginTop: 4,
               transition: 'color .2s',

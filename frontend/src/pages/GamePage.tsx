@@ -185,7 +185,9 @@ const Confetti: React.FC = () => {
 };
 
 // ── Браво-фейерверк ───────────────────────────────────────────────────────────
-const BravoAnimation: React.FC<{ name: string }> = ({ name }) => (
+const BravoAnimation: React.FC<{ name: string }> = ({ name }) => {
+  const t = useT();
+  return (
   <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 220 }}>
     <Confetti />
     <div style={{
@@ -197,10 +199,11 @@ const BravoAnimation: React.FC<{ name: string }> = ({ name }) => (
       animation: 'result-pop .35s cubic-bezier(.2,.9,.3,1.05) both',
     }}>
       <div style={{ fontSize: '1rem', fontWeight: 900, color: '#F0C85A', letterSpacing: '.02em' }}>{name}</div>
-      <div style={{ fontSize: '.7rem', color: '#9A9490', marginTop: 4, fontWeight: 700, letterSpacing: '.08em' }}>БРАВО!</div>
+      <div style={{ fontSize: '.7rem', color: '#9A9490', marginTop: 4, fontWeight: 700, letterSpacing: '.08em' }}>{t.game.bravo}</div>
     </div>
   </div>
 );
+};
 
 // ── конка цвета фигур прямо на доске ────────────────────────────────────────
 const BoardKingIcon: React.FC<{ isWhite: boolean; size?: number }> = ({ isWhite, size = 22 }) => (
@@ -442,11 +445,13 @@ const IcoStarBtn = ({ filled }: { filled: boolean }) => (
 // ── Результирующий bottom sheet ────────────────────────────────────────────────
 type ResultType = 'win' | 'lose' | 'draw';
 
-const RESULT_CFG: Record<ResultType, { accent: string; title: string }> = {
-  win:  { accent: '#5DEDA0', title: 'Победа!' },
-  lose: { accent: '#CC6060', title: 'Поражение' },
-  draw: { accent: '#82CFFF', title: 'Ничья' },
-};
+// Заголовок берём в момент показа: на уровне модуля словаря ещё нет,
+// да и язык игрок может сменить не перезагружая приложение.
+const RESULT_CFG = (t: ReturnType<typeof useT>): Record<ResultType, { accent: string; title: string }> => ({
+  win:  { accent: '#5DEDA0', title: t.game.youWin },
+  lose: { accent: '#CC6060', title: t.game.youLose },
+  draw: { accent: '#82CFFF', title: t.game.draw },
+});
 
 interface SheetProps {
   type: ResultType;
@@ -487,7 +492,7 @@ const ResultSheet: React.FC<SheetProps> = ({ type, winAmount, pieceCoins, onRema
   const t = useT();
   const navigateResult = useNavigate();
   const learnLabel = useText('gameResult.learn', 'Обучение');
-  const cfg = RESULT_CFG[type];
+  const cfg = RESULT_CFG(t)[type];
   const isWin  = type === 'win';
   const isDraw = type === 'draw';
   const coinsDisplay = isWin ? (winAmount ?? pieceCoins) : null;
@@ -713,6 +718,7 @@ const GameDialog: React.FC<DialogProps> = ({
 
 // ── Основной компонент ─────────────────────────────────────────────────────────
 export function GamePage() {
+  const t = useT();
   const navigate = useNavigate();
   const [leaveConfirm, LeaveConfirmDialog] = useConfirm();
   const gameOverRefForLeave = useRef(false);
@@ -722,10 +728,10 @@ export function GamePage() {
   const handleLeavePage = useCallback(async (to: string = '/') => {
     if (gameOverRefForLeave.current) { navigate(to); return; }
     const ok = await leaveConfirm({
-      title: 'Покинуть партию?',
-      message: 'Партия ещё идёт. Если уйдёте — будет засчитано поражение и ставка сгорит.',
-      okLabel: 'Покинуть',
-      cancelLabel: 'Остаться',
+      title: t.game.leaveTitle,
+      message: t.game.leaveBody,
+      okLabel: t.game.leave,
+      cancelLabel: t.game.stay,
       danger: true,
     });
     if (ok) navigate(to);
@@ -866,7 +872,7 @@ export function GamePage() {
             setIsSaved(false);
           } else {
             window.dispatchEvent(new CustomEvent('chesscoin:toast', {
-              detail: { text: res?.error ?? 'Ошибка создания реванша', type: 'error' }
+              detail: { text: res?.error ?? t.game.rematchError, type: 'error' }
             }));
           }
         }
@@ -1019,7 +1025,7 @@ export function GamePage() {
   const oppSide  = session?.sides.find(s => s.id !== session?.mySideId);
 
   const myColor: 'white' | 'black' = mySide?.isWhite ? 'white' : 'black';
-  const myName    = mySide?.player?.firstName ?? 'Вы';
+  const myName    = mySide?.player?.firstName ?? t.game.you;
   const myAvatar  = mySide?.player?.avatar;
   const myElo     = mySide?.player?.elo;
   const myCountry = mySide?.player?.country;
@@ -1046,7 +1052,7 @@ export function GamePage() {
   const myCoins  = myCaptured.reduce((s, p) => s + (PIECE_COINS[p] ?? 0), 0);
   const oppCoins = oppCaptured.reduce((s, p) => s + (PIECE_COINS[p] ?? 0), 0);
 
-  // Spectator: показываем обоих реальных игроков (не "Вы")
+  // Spectator: показываем обоих реальных игроков (не t.game.you)
   const specWhiteSide = isSpectator ? session.sides.find(s => s.isWhite) ?? session.sides[0] : null;
   const specBlackSide = isSpectator ? session.sides.find(s => !s.isWhite) ?? (session.sides[1] ?? session.sides[0]) : null;
   // Spectator: чей ход определяем по currentSideId, а не по isMyTurn (у зрителей isMyTurn всегда false)
@@ -1078,7 +1084,7 @@ export function GamePage() {
           currentFenRef.current = prevFen;
           // Audit-fix 2026-06-10: ход отклонён сервером — юзер должен это
           // видеть, а не гадать почему фигура «вернулась».
-          const err = typeof res?.error === 'string' ? res.error : 'Ход отклонён сервером';
+          const err = typeof res?.error === 'string' ? res.error : t.game.moveRejected;
           window.dispatchEvent(new CustomEvent('chesscoin:toast', { detail: { text: err, type: 'error' } }));
         }
       }
@@ -1102,7 +1108,7 @@ export function GamePage() {
     } else {
       getSocket().emit('game:offer_draw', { sessionId });
       window.dispatchEvent(new CustomEvent('chesscoin:toast', {
-        detail: { text: 'Предложение ничьи отправлено', type: 'info' }
+        detail: { text: t.game.drawOfferSent, type: 'info' }
       }));
     }
   }, [sessionId, gameOver, drawOfferedByMe, drawOfferedByOpp]);
@@ -1112,7 +1118,7 @@ export function GamePage() {
   useEffect(() => {
     if (prevDrawOffMeRef.current && !drawOfferedByMe && !gameOver) {
       window.dispatchEvent(new CustomEvent('chesscoin:toast', {
-        detail: { text: 'Соперник отклонил предложение ничьи', type: 'info' }
+        detail: { text: t.game.drawDeclined, type: 'info' }
       }));
     }
     prevDrawOffMeRef.current = drawOfferedByMe;
@@ -1142,7 +1148,7 @@ export function GamePage() {
 
   const handleBravo = useCallback(() => {
     const sock = getSocket();
-    const spectatorName = user?.firstName ?? 'Зритель';
+    const spectatorName = user?.firstName ?? t.game.spectator;
     sock.emit('battle:bravo', { sessionId, name: spectatorName });
     // Локальная анимация (сервер отдаст обратно всем через battle:bravo broadcast)
     setBravoQueue(q => [...q, spectatorName]);
@@ -1171,8 +1177,8 @@ export function GamePage() {
         <style>{`@keyframes gp-spin { to { transform: rotate(360deg) } }`}</style>
         <div style={{ textAlign: 'center' }}>
           <div style={{ width: 32, height: 32, borderRadius: '50%', border: '2.5px solid rgba(74,158,255,.18)', borderTopColor: '#4A9EFF', animation: 'gp-spin 1s linear infinite', margin: '0 auto 14px' }} />
-          <div style={{ fontSize: '.72rem', color: '#3A4050', fontWeight: 700 }}>Загрузка партии...</div>
-          <button onClick={() => handleLeavePage('/')} style={{ marginTop: 20, padding: '7px 18px', borderRadius: 10, background: 'rgba(255,255,255,.06)', border: '.5px solid rgba(255,255,255,.1)', color: '#4A5060', fontSize: '.7rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>← Назад</button>
+          <div style={{ fontSize: '.72rem', color: '#3A4050', fontWeight: 700 }}>{t.game.loadingGame}</div>
+          <button onClick={() => handleLeavePage('/')} style={{ marginTop: 20, padding: '7px 18px', borderRadius: 10, background: 'rgba(255,255,255,.06)', border: '.5px solid rgba(255,255,255,.1)', color: '#4A5060', fontSize: '.7rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{t.game.back}</button>
         </div>
       </div>
     );
@@ -1204,7 +1210,7 @@ export function GamePage() {
               getSocket().emit('game:join', { code }, (res: any) => {
                 if (!res?.ok) {
                   window.dispatchEvent(new CustomEvent('chesscoin:toast', {
-                    detail: { text: res?.error ?? 'Не удалось войти в батл', type: 'error' },
+                    detail: { text: res?.error ?? t.game.joinFailed, type: 'error' },
                   }));
                 }
                 // Успех приходит обновлением сессии по сокету — экран тот же,
@@ -1236,10 +1242,10 @@ export function GamePage() {
           }
           iconBg="rgba(130,207,255,.09)"
           iconBorder="rgba(130,207,255,.25)"
-          title="Предложение ничьи"
-          subtitle="Соперник предлагает сыграть вничью"
-          primaryLabel="Принять"
-          secondaryLabel="Отклонить"
+          title={t.game.drawOffer}
+          subtitle={t.game.drawOfferBody}
+          primaryLabel={t.game.accept}
+          secondaryLabel={t.game.decline}
           onPrimary={handleDrawOffer}
           onSecondary={handleDeclineDraw}
         />
@@ -1258,7 +1264,7 @@ export function GamePage() {
             // PR-3 hotfix Кенан 2026-05-19: явные fallback'и если backend не
             // отдал player.firstName/elo (например session с одной стороной
             // или старый формат). Раньше показывалось «...» + 0:00.
-            name={specBlackSide.player?.firstName ?? (specBlackSide.isBot ? 'J.A.R.V.I.S' : 'Соперник')}
+            name={specBlackSide.player?.firstName ?? (specBlackSide.isBot ? 'J.A.R.V.I.S' : t.game.opponent)}
             elo={specBlackSide.player?.elo}
             avatar={specBlackSide.player?.avatar}
             isBot={!!specBlackSide.isBot}
@@ -1335,16 +1341,16 @@ export function GamePage() {
             minWidth: 90, textAlign: 'center',
           }}>
             {gameOver
-              ? 'Партия завершена'
+              ? t.game.gameOver
               : isSpectator
-                ? (isWhiteTurnNow ? 'Ход белых' : 'Ход чёрных')
-                : (isMyTurn ? 'Ваш ход' : 'Думает...')}
+                ? (isWhiteTurnNow ? t.game.whiteToMove : t.game.blackToMove)
+                : (isMyTurn ? t.game.yourMove : t.game.thinking)}
           </div>
 
           {/* RIGHT: КАССА (без «→ выплата») */}
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, fontWeight: 800, justifySelf: 'end' }}>
             <CoinIcon size={14} />
-            <span style={{ color: '#D4A843', fontWeight: 700, fontSize: 11, textTransform: 'uppercase' as const, letterSpacing: '.05em' }}>касса</span>
+            <span style={{ color: '#D4A843', fontWeight: 700, fontSize: 11, textTransform: 'uppercase' as const, letterSpacing: '.05em' }}>{t.game.pot}</span>
             <span style={{ color: '#F0C85A' }}>{fmtBalance(bank.toString())}</span>
           </div>
         </div>
@@ -1358,7 +1364,7 @@ export function GamePage() {
           {!isPublicBattle && !isMyTurn && !gameOver && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
               <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#4DDA8A', animation: 'gp-pulse 1.4s infinite', boxShadow: '0 0 7px #4DDA8A' }} />
-              <span style={{ fontSize: '.79rem', fontWeight: 800, color: '#4DDA8A', letterSpacing: '.02em' }}>Думает...</span>
+              <span style={{ fontSize: '.79rem', fontWeight: 800, color: '#4DDA8A', letterSpacing: '.02em' }}>{t.game.thinking}</span>
             </div>
           )}
         </div>
@@ -1390,7 +1396,7 @@ export function GamePage() {
           {isMyTurn && !gameOver && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4DDA8A', animation: 'gp-pulse 1.4s infinite', boxShadow: '0 0 9px #4DDA8A' }} />
-              <span style={{ fontSize: '.85rem', fontWeight: 800, color: '#4DDA8A', letterSpacing: '.03em' }}>Ваш ход</span>
+              <span style={{ fontSize: '.85rem', fontWeight: 800, color: '#4DDA8A', letterSpacing: '.03em' }}>{t.game.yourMove}</span>
             </div>
           )}
         </div>
@@ -1404,7 +1410,7 @@ export function GamePage() {
         {isSpectator && specWhiteSide ? (
           <PlayerPanel
             // PR-3 hotfix Кенан 2026-05-19: fallback'и как для верхней панели.
-            name={specWhiteSide.player?.firstName ?? (specWhiteSide.isBot ? 'J.A.R.V.I.S' : 'Игрок')}
+            name={specWhiteSide.player?.firstName ?? (specWhiteSide.isBot ? 'J.A.R.V.I.S' : t.game.player)}
             elo={specWhiteSide.player?.elo}
             avatar={specWhiteSide.player?.avatar}
             isBot={!!specWhiteSide.isBot}
@@ -1452,7 +1458,7 @@ export function GamePage() {
           }}
         >
           <IcoHome />
-          <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Главная</span>
+          <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>{t.game.home}</span>
         </button>
 
         {/* Слот 2: Сохранить (всегда) */}
@@ -1472,7 +1478,7 @@ export function GamePage() {
         >
           <IcoStarBtn filled={isSaved} />
           <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>
-            {isSaved ? 'Сохранено' : 'Сохранить'}
+            {isSaved ? t.game.saved : t.game.save}
           </span>
         </button>
 
@@ -1487,7 +1493,7 @@ export function GamePage() {
             }}
           >
             <IcoBook size={18} color="#D4A843" />
-            <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Партия</span>
+            <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>{t.game.gameTab}</span>
           </button>
         ) : isSpectator ? (
           isPublicBattle ? (
@@ -1505,7 +1511,7 @@ export function GamePage() {
               }}
             >
               <CoinIcon size={20} />
-              <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Донаты</span>
+              <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>{t.game.donates}</span>
             </button>
           ) : (
             <div style={{
@@ -1516,7 +1522,7 @@ export function GamePage() {
                 <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" strokeWidth="1.6"/>
                 <path d="M7 11V7a5 5 0 0110 0v4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
               </svg>
-              <span style={{ fontSize: '.62rem', fontWeight: 700 }}>Закрыто</span>
+              <span style={{ fontSize: '.62rem', fontWeight: 700 }}>{t.game.closed}</span>
             </div>
           )
         ) : (
@@ -1537,7 +1543,7 @@ export function GamePage() {
           >
             <IcoHandshake />
             <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>
-              {drawOfferedByOpp ? 'Принять' : drawOfferedByMe ? 'Ждём...' : 'Ничья'}
+              {drawOfferedByOpp ? t.game.accept : drawOfferedByMe ? t.game.waiting : t.game.draw}
             </span>
           </button>
         )}
@@ -1566,7 +1572,7 @@ export function GamePage() {
               } catch {}
               try { navigator.clipboard.writeText(inviteUrl); } catch {}
             }}
-            title="Поделиться партией"
+            title={t.game.shareGameTitle}
             style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
               gap: 5,
@@ -1580,7 +1586,7 @@ export function GamePage() {
               <path d="M9 11l8-8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
               <path d="M16 11v5a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-            <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Поделиться</span>
+            <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>{t.game.share}</span>
           </button>
         ) : (
           <button
@@ -1597,7 +1603,7 @@ export function GamePage() {
             }}
           >
             <IcoFlag />
-            <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>Сдаться</span>
+            <span style={{ fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em' }}>{t.game.resign}</span>
           </button>
         )}
 
@@ -1679,11 +1685,11 @@ export function GamePage() {
           }
           iconBg="rgba(204,96,96,.09)"
           iconBorder="rgba(204,96,96,.28)"
-          title="Сдаться?"
-          subtitle="Партия будет засчитана как поражение"
-          primaryLabel="Сдаться"
+          title={t.game.resignTitle}
+          subtitle={t.game.resignBody}
+          primaryLabel={t.game.resign}
           primaryDanger
-          secondaryLabel="Отмена"
+          secondaryLabel={t.game.cancel}
           onPrimary={handleResignConfirm}
           onSecondary={() => setShowResignDialog(false)}
         />
