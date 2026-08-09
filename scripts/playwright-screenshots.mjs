@@ -147,6 +147,11 @@ for (const pg of PAGES) {
     await page.addStyleTag({ content:
       '*,*::before,*::after{animation:none!important;transition:none!important;' +
       'animation-duration:0s!important;transition-duration:0s!important}' +
+      // Часть блоков появляется анимацией и до неё лежит с opacity:0. Гася
+      // анимации, мы гасили и их: на снимке главной ПЛИТКИ РЕЖИМОВ не было
+      // вовсе — пустая чернота под заголовком, и страж этого не замечал,
+      // потому что эталон снят с той же слепотой (найдено 09.08.2026).
+      '.hp-blocks,.hp-quests-wrap,.hp-shell{opacity:1!important;transform:none!important}' +
       '[data-toasts]{display:none!important}' +
       // Подсказка-приветствие показывается по ответу CloudStorage и успевала
       // отрисоваться то до снимка, то после: 12_wars расходился на 12% через
