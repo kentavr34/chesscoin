@@ -580,6 +580,55 @@ export const HomePage: React.FC = () => {
             <div style={{ fontSize: '.58rem', lineHeight: 1.35, color: 'rgba(74,158,255,.82)' }}>Уровень {jarvisLevel} · {jarvisName}</div>
           </div>
 
+          {/* ОБУЧЕНИЕ. Кенан 09.08.2026: «эту полоску заданий убрать, вместо
+              неё поставить две кнопки — одну на обучение отдельно, другую на
+              задание». Повод: 300 уроков построено, а начали их двое из ста
+              одного — вход был спрятан внутри страницы заданий. */}
+          <div
+            className="hp-blk learn"
+            style={{
+              borderRadius: 16, padding: '.72rem .65rem .78rem',
+              cursor: 'pointer',
+              position: 'relative', overflow: 'hidden',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
+              background: 'linear-gradient(150deg,#1A1206,#241A08)',
+              border: '.5px solid rgba(240,200,90,.28)',
+              transform: blkScale('learn'),
+            }}
+            onPointerDown={() => setPressedBlk('learn')}
+            onPointerUp={() => { setPressedBlk(null); navigate('/lessons'); }}
+            onPointerLeave={() => setPressedBlk(null)}
+          >
+            <div style={{ marginBottom: '.55rem' }}>
+              <IcoLearnBig size={52} />
+            </div>
+            <div style={{ fontSize: '.86rem', fontWeight: 900, letterSpacing: '.01em', marginBottom: '.12rem', color: '#F5D98A' }}>{t.home.learnTile}</div>
+            <div style={{ fontSize: '.58rem', lineHeight: 1.35, color: 'rgba(240,200,90,.82)' }}>{t.home.learnTileSub}</div>
+          </div>
+
+          {/* ЗАДАНИЯ */}
+          <div
+            className="hp-blk quests"
+            style={{
+              borderRadius: 16, padding: '.72rem .65rem .78rem',
+              cursor: 'pointer',
+              position: 'relative', overflow: 'hidden',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
+              background: 'linear-gradient(150deg,#141018,#1C1428)',
+              border: '.5px solid rgba(155,109,255,.28)',
+              transform: blkScale('quests'),
+            }}
+            onPointerDown={() => setPressedBlk('quests')}
+            onPointerUp={() => { setPressedBlk(null); navigate('/tasks'); }}
+            onPointerLeave={() => setPressedBlk(null)}
+          >
+            <div style={{ marginBottom: '.55rem' }}>
+              <IcoQuestsBig size={52} />
+            </div>
+            <div style={{ fontSize: '.86rem', fontWeight: 900, letterSpacing: '.01em', marginBottom: '.12rem', color: '#C8B4FF' }}>{t.home.tasksTile}</div>
+            <div style={{ fontSize: '.58rem', lineHeight: 1.35, color: 'rgba(155,109,255,.82)' }}>{t.home.tasksTileSub}</div>
+          </div>
+
           {/* БАТЛЫ */}
           <div
             className="hp-blk batly"
@@ -648,56 +697,6 @@ export const HomePage: React.FC = () => {
             </div>
             <div style={{ fontSize: '.86rem', fontWeight: 900, letterSpacing: '.01em', marginBottom: '.12rem', color: '#8FEBB8' }}>Войны</div>
             <div style={{ fontSize: '.58rem', lineHeight: 1.35, color: 'rgba(61,186,122,.82)' }}>Страны · Сезон</div>
-          </div>
-
-
-          {/* ОБУЧЕНИЕ. Кенан 09.08.2026: «эту полоску заданий убрать, вместо
-              неё поставить две кнопки — одну на обучение отдельно, другую на
-              задание». Повод: 300 уроков построено, а начали их двое из ста
-              одного — вход был спрятан внутри страницы заданий. */}
-          <div
-            className="hp-blk learn"
-            style={{
-              borderRadius: 16, padding: '.72rem .65rem .78rem',
-              cursor: 'pointer',
-              position: 'relative', overflow: 'hidden',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
-              background: 'linear-gradient(150deg,#1A1206,#241A08)',
-              border: '.5px solid rgba(240,200,90,.28)',
-              transform: blkScale('learn'),
-            }}
-            onPointerDown={() => setPressedBlk('learn')}
-            onPointerUp={() => { setPressedBlk(null); navigate('/lessons'); }}
-            onPointerLeave={() => setPressedBlk(null)}
-          >
-            <div style={{ marginBottom: '.55rem' }}>
-              <IcoLearnBig size={52} />
-            </div>
-            <div style={{ fontSize: '.86rem', fontWeight: 900, letterSpacing: '.01em', marginBottom: '.12rem', color: '#F5D98A' }}>{t.home.learnTile}</div>
-            <div style={{ fontSize: '.58rem', lineHeight: 1.35, color: 'rgba(240,200,90,.82)' }}>{t.home.learnTileSub}</div>
-          </div>
-
-          {/* ЗАДАНИЯ */}
-          <div
-            className="hp-blk quests"
-            style={{
-              borderRadius: 16, padding: '.72rem .65rem .78rem',
-              cursor: 'pointer',
-              position: 'relative', overflow: 'hidden',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
-              background: 'linear-gradient(150deg,#141018,#1C1428)',
-              border: '.5px solid rgba(155,109,255,.28)',
-              transform: blkScale('quests'),
-            }}
-            onPointerDown={() => setPressedBlk('quests')}
-            onPointerUp={() => { setPressedBlk(null); navigate('/tasks'); }}
-            onPointerLeave={() => setPressedBlk(null)}
-          >
-            <div style={{ marginBottom: '.55rem' }}>
-              <IcoQuestsBig size={52} />
-            </div>
-            <div style={{ fontSize: '.86rem', fontWeight: 900, letterSpacing: '.01em', marginBottom: '.12rem', color: '#C8B4FF' }}>{t.home.tasksTile}</div>
-            <div style={{ fontSize: '.58rem', lineHeight: 1.35, color: 'rgba(155,109,255,.82)' }}>{t.home.tasksTileSub}</div>
           </div>
 
         </div>

@@ -59,9 +59,23 @@ export const LessonsHubPage: React.FC = () => {
 
   // Линейка не должна упираться в число из кода: уроков со сценарием уже
   // больше полусотни, и обрезать список по MAX_LEVELS значило бы спрятать их.
-  const levels = Array.from({ length: Math.max(MAX_LEVELS, lessonsCount) }, (_, i) => i + 1);
+  // Лесенка идёт СНИЗУ ВВЕРХ: пройденные уроки внизу, непройденные выше,
+  // текущий — посередине экрана (Кенан 09.08.2026: «человек продвигается
+  // снизу вверх»). Поэтому список разворачиваем: наверху самый дальний урок.
+  const levels = Array.from({ length: Math.max(MAX_LEVELS, lessonsCount) }, (_, i) => i + 1).reverse();
   const rewardOf = (level: number) =>
     lessons.find(l => l.id === level)?.reward ?? String(fallbackReward(level));
+
+  // Открываем страницу так, чтобы текущий уровень оказался по центру:
+  // сверху видно, куда идти, снизу — что уже пройдено.
+  const текущийРяд = React.useRef<HTMLDivElement | null>(null);
+  React.useEffect(() => {
+    if (loading) return;
+    const t = setTimeout(() => {
+      текущийРяд.current?.scrollIntoView({ block: 'center', behavior: 'auto' });
+    }, 60);
+    return () => clearTimeout(t);
+  }, [loading, current]);
 
   return (
     <PageLayout title={t.lessons?.title ?? 'Уроки'} centered>
@@ -99,14 +113,17 @@ export const LessonsHubPage: React.FC = () => {
             const isCurrent = level === current;
             const isLocked = level > current;
             const lesson = lessons.find(l => l.id === level);
-            const prevBlock = lessons.find(l => l.id === level - 1)?.block;
+            // Список перевёрнут, поэтому «сосед сверху» — это урок с БОЛЬШИМ
+            // номером. Заголовок блока ставим там, где блок начинается сверху.
+            const aboveBlock = lessons.find(l => l.id === level + 1)?.block;
             const rows: React.ReactNode[] = [];
-            if (lesson && lesson.block !== prevBlock) {
+            if (lesson && lesson.block !== aboveBlock) {
               rows.push(<BlockHeading key={`b${level}`} blockKey={lesson.block} />);
             }
             rows.push(
               <div
                 key={level}
+                ref={isCurrent ? текущийРяд : undefined}
                 onClick={() => {
                   // Урок с готовым сценарием открываем на своём экране: показ,
                   // затем тест. Для номеров, которых ещё нет в линейке,
