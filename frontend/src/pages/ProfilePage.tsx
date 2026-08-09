@@ -116,7 +116,7 @@ export const ProfilePage: React.FC = () => {
         // юзера на главную, что выглядело как «клик открыл свой профиль»
         // (HomePage с собственным аватаром визуально похожа на профиль).
         // Показываем явную ошибку с кнопкой «назад».
-        const msg = (e instanceof Error ? e.message : String(e)) || 'Профиль недоступен';
+        const msg = (e instanceof Error ? e.message : String(e)) || t.profile.unavailable;
         setViewedProfileError(msg);
       });
   }, [viewedUserId, isOwnProfile]);
@@ -161,10 +161,10 @@ export const ProfilePage: React.FC = () => {
   if (!isOwnProfile && !viewedProfile) {
     if (viewedProfileError) {
       return (
-        <PageLayout title="Профиль" backTo="/" centered>
+        <PageLayout title={t.profile.title} backTo="/" centered>
           <div style={{ padding: 48, textAlign: 'center' }}>
             <div style={{ fontSize: '.95rem', color: '#FF8080', fontWeight: 700, marginBottom: 12 }}>
-              Профиль недоступен
+              {t.profile.unavailable}
             </div>
             <div style={{ fontSize: '.78rem', color: '#7A7875', marginBottom: 24 }}>
               {viewedProfileError}
@@ -173,7 +173,7 @@ export const ProfilePage: React.FC = () => {
               padding: '10px 20px', borderRadius: 12,
               background: 'rgba(74,158,255,.08)', border: '.5px solid rgba(74,158,255,.3)',
               color: '#82CFFF', fontSize: '.82rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-            }}>← Назад</button>
+            }}>{t.profile.back}</button>
           </div>
         </PageLayout>
       );
@@ -375,7 +375,7 @@ export const ProfilePage: React.FC = () => {
               onClick={() => navigate('/transactions')}
               style={{ fontSize: 12, fontWeight: 700, color: '#82CFFF', cursor: 'pointer', padding: '6px 10px', background: 'rgba(74,158,255,.08)', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, whiteSpace: 'nowrap' }}
             >
-              {t.profile.txHistory ?? 'История'} ›
+              {t.profile.txHistory ?? t.profile.history} ›
             </div>
           )}
         </div>
@@ -558,7 +558,7 @@ export const ProfilePage: React.FC = () => {
               <input
                 value={filterName}
                 onChange={(e) => setFilterName(e.target.value)}
-                placeholder="Имя героя…"
+                placeholder={t.profile.heroName}
                 style={{ flex: '1 1 140px', minWidth: 0, padding: '8px 10px', background: 'rgba(255,255,255,0.04)', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, color: '#EAE2CC', fontSize: 12, fontFamily: 'inherit', outline: 'none' }}
               />
               <select
@@ -566,21 +566,21 @@ export const ProfilePage: React.FC = () => {
                 onChange={(e) => setFilterType(e.target.value as any)}
                 style={{ padding: '8px 8px', background: 'rgba(255,255,255,0.04)', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, color: '#EAE2CC', fontSize: 12, fontFamily: 'inherit', outline: 'none' }}
               >
-                <option value="ALL">Все типы</option>
+                <option value="ALL">{t.profile.filterAllTypes}</option>
                 <option value="BOT">vs JARVIS</option>
                 <option value="BATTLE">Баттл</option>
-                <option value="WAR">Война</option>
-                <option value="TOURNAMENT">Турнир</option>
+                <option value="WAR">{t.profile.filterWar}</option>
+                <option value="TOURNAMENT">{t.profile.filterTourney}</option>
               </select>
               <select
                 value={filterDate}
                 onChange={(e) => setFilterDate(e.target.value as any)}
                 style={{ padding: '8px 8px', background: 'rgba(255,255,255,0.04)', border: '.5px solid rgba(74,158,255,.2)', borderRadius: 10, color: '#EAE2CC', fontSize: 12, fontFamily: 'inherit', outline: 'none' }}
               >
-                <option value="ALL">Все даты</option>
-                <option value="TODAY">Сегодня</option>
-                <option value="WEEK">Неделя</option>
-                <option value="MONTH">Месяц</option>
+                <option value="ALL">{t.profile.filterAllDates}</option>
+                <option value="TODAY">{t.profile.filterToday}</option>
+                <option value="WEEK">{t.profile.filterWeek}</option>
+                <option value="MONTH">{t.profile.filterMonth}</option>
               </select>
             </div>
 
@@ -773,25 +773,25 @@ export const ProfilePage: React.FC = () => {
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: '.8rem', fontWeight: 700, color: '#EAE2CC' }}>
                         {
-                          tx.type === 'BATTLE_WIN'         ? 'Battle win'         :
+                          tx.type === 'BATTLE_WIN'         ? t.profile.txBattleWin         :
                           tx.type === 'BOT_WIN'            ? 'Bot win'            :
-                          tx.type === 'TOURNAMENT_WIN'     ? 'Tournament win'     :
-                          tx.type === 'COUNTRY_WAR_WIN'    ? 'War win'            :
-                          tx.type === 'TASK_REWARD'        ? 'Task reward'        :
-                          tx.type === 'REFERRAL_BONUS'     ? 'Referral bonus'     :
-                          tx.type === 'REFERRAL_INCOME'    ? 'Referral income'    :
-                          tx.type === 'WELCOME_BONUS'      ? 'Welcome bonus'      :
-                          tx.type === 'BATTLE_BET'         ? 'Battle bet'         :
-                          tx.type === 'TOURNAMENT_ENTRY'   ? 'Tournament entry'   :
-                          tx.type === 'ITEM_PURCHASE'      ? 'Shop purchase'      :
+                          tx.type === 'TOURNAMENT_WIN'     ? t.profile.txTournamentWin     :
+                          tx.type === 'COUNTRY_WAR_WIN'    ? t.profile.txWarWin            :
+                          tx.type === 'TASK_REWARD'        ? t.profile.txTaskReward        :
+                          tx.type === 'REFERRAL_BONUS'     ? t.profile.txReferralBonus     :
+                          tx.type === 'REFERRAL_INCOME'    ? t.profile.txReferralIncome    :
+                          tx.type === 'WELCOME_BONUS'      ? t.profile.txWelcomeBonus      :
+                          tx.type === 'BATTLE_BET'         ? t.profile.txBattleBet         :
+                          tx.type === 'TOURNAMENT_ENTRY'   ? t.profile.txTournamentEntry   :
+                          tx.type === 'ITEM_PURCHASE'      ? t.profile.txShopPurchase      :
                           tx.type === 'TON_DEPOSIT'        ? 'TON deposit'        :
                           tx.type === 'WALLET_UNLOCK'      ? 'Wallet unlock'      :
                           tx.type === 'WITHDRAWAL'         ? 'TON withdrawal'     :
-                          tx.type === 'EXCHANGE_SELL'      ? 'Exchange sell'       :
-                          tx.type === 'EXCHANGE_BUY'       ? 'Exchange buy'       :
-                          tx.type === 'EXCHANGE_FREEZE'    ? 'Order freeze'       :
-                          tx.type === 'EXCHANGE_UNFREEZE'  ? 'Order cancel'       :
-                          tx.type === 'EXCHANGE_FEE'       ? 'Exchange fee'       :
+                          tx.type === 'EXCHANGE_SELL'      ? t.profile.txExchangeSell       :
+                          tx.type === 'EXCHANGE_BUY'       ? t.profile.txExchangeBuy       :
+                          tx.type === 'EXCHANGE_FREEZE'    ? t.profile.txOrderFreeze       :
+                          tx.type === 'EXCHANGE_UNFREEZE'  ? t.profile.txOrderCancel       :
+                          tx.type === 'EXCHANGE_FEE'       ? t.profile.txExchangeFee       :
                           tx.type === 'REFUND'             ? 'Refund'             :
                           tx.type
                         }
@@ -886,7 +886,7 @@ export const ProfilePage: React.FC = () => {
           {/* Турнирные бейджи */}
           {(profile?.tournamentBadges?.length ?? 0) > 0 && (
             <>
-              <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem', display: 'flex', alignItems: 'center', gap: 6 }}><IcoTrophy size={11} /> Tournament wins</div>
+              <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem', display: 'flex', alignItems: 'center', gap: 6 }}><IcoTrophy size={11} /> {t.profile.achTournamentWins}</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 18px' }}>
                 {(profile?.tournamentBadges as TournamentBadge[] | undefined)?.slice().reverse().map((badge, i: number) => {
                   const placeLabel = badge.place === 1 ? '1' : badge.place === 2 ? '2' : '3';
@@ -920,10 +920,10 @@ export const ProfilePage: React.FC = () => {
           {/* Игровые достижения */}
           {(() => {
             const ACHS: { id: string; Icon: React.FC<{ size?: number; color?: string }>; name: string; desc: string }[] = [
-              { id: 'first_blood',   Icon: IcoSwords,    name: 'First Blood',    desc: 'First game' },
+              { id: 'first_blood',   Icon: IcoSwords,    name: t.profile.achFirstBlood,    desc: t.profile.achFirstGame },
               { id: 'winner_10',     Icon: IcoTrophy,    name: t.profile.achievementWinner10,  desc: t.profile.achievementWinner10Desc },
               { id: 'winner_100',    Icon: IcoCrown,     name: t.profile.achievementWinner100, desc: t.profile.achievementWinner100Desc },
-              { id: 'jarvis_hunter', Icon: IcoRobot,     name: 'J.A.R.V.I.S Hunter', desc: 'Max level' },
+              { id: 'jarvis_hunter', Icon: IcoRobot,     name: 'J.A.R.V.I.S Hunter', desc: t.profile.achMaxLevel },
               { id: 'recruiter',     Icon: IcoUsers,     name: t.profile.achievementRecruiter,  desc: t.profile.achievementRecruiterDesc },
               { id: 'millionaire',   Icon: CoinIcon,     name: t.profile.achievementMillionaire, desc: t.profile.achievementMillionaireDesc },
               { id: 'patriot',       Icon: IcoGlobe,     name: t.profile.achievementPatriot,    desc: t.profile.achievementPatriotDesc },
@@ -931,15 +931,15 @@ export const ProfilePage: React.FC = () => {
               { id: 'streak_7',      Icon: IcoMedal,     name: t.profile.achievementStreak7,    desc: t.profile.achievementStreak7Desc },
               { id: 'streak_30',     Icon: IcoTon,       name: t.profile.achievementStreak30,   desc: t.profile.achievementStreak30Desc },
               // PR-3 (Кенан 2026-05-18): новые типы.
-              { id: 'tournament_winner_week',  Icon: IcoTrophy, name: 'Чемпион Недели',  desc: 'Победа в недельном турнире' },
-              { id: 'tournament_winner_month', Icon: IcoTrophy, name: 'Чемпион Месяца',  desc: 'Победа в месячном турнире' },
-              { id: 'tournament_winner_year',  Icon: IcoTrophy, name: 'Чемпион Года',    desc: 'Победа в годовом/мировом турнире' },
-              { id: 'commander',               Icon: IcoCrown,  name: 'Главнокомандующий', desc: 'Стать командиром страны' },
-              { id: 'war_victor',              Icon: IcoSwords, name: 'Победитель Войны',  desc: 'Страна победила в войне' },
-              { id: 'war_ace',                 Icon: IcoSwords, name: 'Ас Войны',          desc: '10+ побед в одной войне' },
-              { id: 'referral_bronze',         Icon: IcoUsers,  name: 'Бронзовый вербовщик', desc: '5 рефералов' },
-              { id: 'referral_silver',         Icon: IcoUsers,  name: 'Серебряный вербовщик', desc: '25 рефералов' },
-              { id: 'referral_gold',           Icon: IcoUsers,  name: 'Золотой вербовщик',   desc: '100 рефералов' },
+              { id: 'tournament_winner_week',  Icon: IcoTrophy, name: t.profile.achWeekChamp,  desc: t.profile.achWeekChampDesc },
+              { id: 'tournament_winner_month', Icon: IcoTrophy, name: t.profile.achMonthChamp,  desc: t.profile.achMonthChampDesc },
+              { id: 'tournament_winner_year',  Icon: IcoTrophy, name: t.profile.achYearChamp,    desc: t.profile.achYearChampDesc },
+              { id: 'commander',               Icon: IcoCrown,  name: t.profile.achCommander, desc: t.profile.achCommanderDesc },
+              { id: 'war_victor',              Icon: IcoSwords, name: t.profile.achWarWinner,  desc: t.profile.achWarWinnerDesc },
+              { id: 'war_ace',                 Icon: IcoSwords, name: t.profile.achWarAce,          desc: t.profile.achWarAceDesc },
+              { id: 'referral_bronze',         Icon: IcoUsers,  name: t.profile.achBronzeRecruiter, desc: t.profile.achBronzeDesc },
+              { id: 'referral_silver',         Icon: IcoUsers,  name: t.profile.achSilverRecruiter, desc: t.profile.achSilverDesc },
+              { id: 'referral_gold',           Icon: IcoUsers,  name: t.profile.achGoldRecruiter,   desc: t.profile.achGoldDesc },
             ];
             const earned: Record<string, string> = {};
             (profile?.achievements ?? []).forEach((a: { id: string; date: string }) => { earned[a.id] = a.date; });
@@ -1063,7 +1063,7 @@ export const ProfilePage: React.FC = () => {
               {/* Вибрация (хаптик) */}
               <div style={{ padding: '12px 14px', background: 'rgba(255,255,255,.03)', border: '.5px solid rgba(255,255,255,.07)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
-                  <div style={{ fontSize: '.8rem', fontWeight: 700, color: '#EAE2CC' }}>Вибрация</div>
+                  <div style={{ fontSize: '.8rem', fontWeight: 700, color: '#EAE2CC' }}>{t.profile.vibration}</div>
                   <div style={{ fontSize: '.62rem', color: '#7A7875', marginTop: 3 }}>Haptic feedback при ходах</div>
                 </div>
                 <button
