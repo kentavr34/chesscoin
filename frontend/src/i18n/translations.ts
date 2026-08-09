@@ -91,6 +91,8 @@ export const translations = {
         { icon: 'trophy', title: 'Winner takes 90%', desc: 'The winner gets 90% of the total pot. 10% goes to the platform.' },
         { icon: 'lock', title: 'Public & Private', desc: 'Public battles — anyone can join. Private — share a link with a friend.' },
       ],
+      historyTitle: 'Battle history',
+      quickTitle: 'Quick match',
     },
     game: {
       waiting: 'Waiting for opponent...', waitingForOpponent: 'Waiting for opponent',
@@ -861,6 +863,8 @@ export const translations = {
         { icon: 'trophy', title: 'Победитель берёт 90%', desc: 'Победитель получает 90% суммарного банка. 10% — комиссия платформы.' },
         { icon: 'lock', title: 'Публичный и Приватный', desc: 'Публичный — любой может войти. Приватный — отправь ссылку другу.' },
       ],
+      historyTitle: 'История батлов',
+      quickTitle: 'Быстрый бой',
     },
     game: {
       waiting: 'Ожидание соперника...', waitingForOpponent: 'Ожидание соперника',

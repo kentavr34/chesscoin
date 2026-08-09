@@ -60,7 +60,6 @@ export const BattlesPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const [showQuick, setShowQuick] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
   const [showAttempts, setShowAttempts] = useState(false);
   // Audit-fix 2026-06-12: guard от двойного клика JOIN — два быстрых тапа
   // отправляли два game:join (риск двойной ставки/SESSION_FULL гонки).
@@ -149,17 +148,33 @@ export const BattlesPage: React.FC = () => {
     fontSize: 14, fontWeight: 700,
   };
 
+  // Слева две кнопки: история батлов и быстрый бой.
+  //
+  // Быстрый бой был построен целиком — окно с выбором времени и ставки на
+  // фронте, обработчик `matchmaking:quick` на сервере (по просьбе Кенана
+  // 22.04.2026: «система автоматического формирования публичных батлов»), —
+  // но ОТКРЫТЬ его было нечем: showQuick нигде не включался. Готовая работа
+  // не доходила до игрока. Кнопка возвращена (Кенан 09.08.2026: «чини мины»).
   const leftAction = (
-    <button
-      onClick={() => navigate('/battles/history')}
-      title="История батлов"
-      style={goldCircleBtn}
-    >
-      <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-        <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.8"/>
-        <path d="M10 5.5v5l3 2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    </button>
+    <div style={{ display: 'flex', gap: 6 }}>
+      <button
+        onClick={() => navigate('/battles/history')}
+        title={t.battles.historyTitle}
+        style={goldCircleBtn}
+      >
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+          <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.8"/>
+          <path d="M10 5.5v5l3 2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+      <button
+        onClick={() => setShowQuick(true)}
+        title={t.battles.quickTitle}
+        style={goldCircleBtn}
+      >
+        <IcoBolt size={14} />
+      </button>
+    </div>
   );
 
   const rightAction = (
