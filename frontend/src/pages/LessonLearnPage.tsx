@@ -74,6 +74,8 @@ export const LessonLearnPage: React.FC = () => {
   // Тест: сколько ходов сценария игрок уже воспроизвёл.
   const [played, setPlayed] = useState(0);
   const [wrong, setWrong] = useState(false);
+  // Текст отказа сервера: если урок не засчитан, игрок обязан это увидеть.
+  const [неЗасчитан, setНеЗасчитан] = useState<string | null>(null);
   const [reward, setReward] = useState<string | null>(null);
 
   // Ключи текстов берём у самого урока, а не собираем из номера: в блоке
@@ -189,9 +191,20 @@ export const LessonLearnPage: React.FC = () => {
       setPhase('done');
       haptic.win?.() ?? haptic.impact('heavy');
       // Урок засчитывается там же, где и раньше: единый прогресс и награда.
+      //
+      // Отказ сервера БОЛЬШЕ НЕ ГЛУШИМ. Здесь стоял пустой catch с пометкой
+      // «уже пройден — не ошибка», и он прятал ВСЁ, включая «нельзя завершить
+      // урок N, текущий M». Кенан 09.08.2026: «прошёл несколько уровней,
+      // вернулся — а я всё ещё на том же уровне». Экран показывал победу,
+      // сервер записи не делал, и человек терял пройденное.
       tasksApi.completeLesson(lesson.id)
-        .then(r => setReward(r.reward ?? null))
-        .catch(() => {}); // уже пройден — не ошибка, показывать нечего
+        .then((r) => { setReward(r.reward ?? null); setНеЗасчитан(null); })
+        .catch((e: unknown) => {
+          const текст = e instanceof Error ? e.message : String(e);
+          // «Уже пройден» — действительно не ошибка, о ней молчим.
+          if (/уже|already/i.test(текст)) return;
+          setНеЗасчитан(текст);
+        });
     }
     return true;
   }, [mode, lesson, phase, moves, played]);
@@ -274,6 +287,12 @@ export const LessonLearnPage: React.FC = () => {
               <span style={S.rewardRow}>
                 <CoinIcon size={13} /> +{fmtBalance(reward)}
               </span>
+            )}
+            {неЗасчитан && (
+              <span style={{
+                display: 'block', marginTop: 6, fontSize: 11, lineHeight: 1.4,
+                color: '#FF8A8A', fontWeight: 700,
+              }}>{неЗасчитан}</span>
             )}
           </span>
         ) : wrong ? (

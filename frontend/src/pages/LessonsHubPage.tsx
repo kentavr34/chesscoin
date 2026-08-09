@@ -129,6 +129,11 @@ export const LessonsHubPage: React.FC = () => {
                   // затем тест. Для номеров, которых ещё нет в линейке,
                   // остаётся прежний путь со случайной задачей.
                   if (isCompleted) return;
+                  // Заблокированный урок открывать нельзя: сервер засчитывает
+                  // строго по порядку, и открытый «вперёд» урок игрок проходил
+                  // впустую — экран показывал победу, запись не делалась
+                  // (Кенан 09.08.2026). Замок в списке был, а клик работал.
+                  if (isLocked) return;
                   if (level <= lessonsCount) navigate(`/learn/${level}`);
                   else if (isCurrent) {
                     const difficulty = level < 10 ? 'easy' : level < 25 ? 'medium' : 'hard';
