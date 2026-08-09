@@ -68,7 +68,7 @@ export const tonApi = {
   disconnectWallet: () =>
     api.delete<{ success: boolean }>('/profile/ton-wallet'),
   rate: () =>
-    api.get<{ tonUsdt: number; coinsPerTon: number; coinsPerUsdt: number; feePercent: number }>('/profile/ton/rate'),
+    api.get<{ tonUsdt: number; coinsPerTon: number; coinsPerUsdt: number; feePercent: number; platformWallet: string | null }>('/profile/ton/rate'),
   buy: (amountTon: number) =>
     api.post<{ success: boolean; coinsReceived: number; fee: number }>('/profile/ton/buy', { amountTon }),
   // Верификация платежа: walletAddress + boc из TonConnect

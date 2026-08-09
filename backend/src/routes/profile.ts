@@ -626,7 +626,15 @@ router.get("/ton/rate", authMiddleware, async (_req: Request, res: Response) => 
     } catch {}
     const coinsPerTon = COINS_PER_TON;
     const coinsPerUsdt = Math.round(coinsPerTon / tonUsdt);
-    res.json({ tonUsdt, coinsPerTon, coinsPerUsdt, feePercent: 0.5 });
+    // Кошелёк платформы отдаём вместе с курсом. Фронт брал его из значения,
+    // зашитого в код: VITE_PLATFORM_TON_WALLET на проде не задан. Сегодня оба
+    // адреса совпадают, но стоит сменить кошелёк в .env — и комиссия пойдёт
+    // на старый адрес, сервер её не найдёт, и НИ ОДНА покупка не пройдёт
+    // (FEE_NOT_CONFIRMED). Источник правды один — сервер (Кенан 09.08.2026).
+    res.json({
+      tonUsdt, coinsPerTon, coinsPerUsdt, feePercent: 0.5,
+      platformWallet: config.ton.platformWallet ?? null,
+    });
   } catch (err: unknown) {
     res.status(500).json({ error: (err instanceof Error ? err.message : String(err)) });
   }

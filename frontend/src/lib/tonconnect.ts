@@ -17,7 +17,31 @@ let _tc: TonConnectUI | null = null;
 
 // Адрес кошелька ПЛАТФОРМЫ — куда приходит 1 TON за верификацию
 // ВАЖНО: заменить на реальный адрес перед деплоем
-export const PLATFORM_WALLET = import.meta.env.VITE_PLATFORM_TON_WALLET ?? 'UQDZNHJrTBJ9asNgL15bf-8Ud4Rleku-oP6TSlbg6EWXfq7y';
+// Кошелёк платформы — куда идёт комиссия 0,5%.
+//
+// Раньше он брался только отсюда: переменная сборки, а если её нет — адрес,
+// зашитый в код. На проде переменная НЕ ЗАДАНА, то есть работал запасной
+// адрес. Сегодня он совпадает с серверным, но при смене кошелька в .env
+// комиссия ушла бы на старый адрес, сервер её не нашёл бы — и ни одна
+// покупка не прошла бы (FEE_NOT_CONFIRMED). Кенан 09.08.2026.
+//
+// Теперь адрес спрашивается у сервера (GET /profile/ton/rate) и запоминается
+// на время сеанса. Зашитое значение остаётся последней подстраховкой, если
+// сервер недоступен.
+const ЗАПАСНОЙ_КОШЕЛЁК = 'UQDZNHJrTBJ9asNgL15bf-8Ud4Rleku-oP6TSlbg6EWXfq7y';
+let кошелёкПлатформы: string | null = null;
+
+/** Запомнить адрес, пришедший с сервера. Вызывается там, где берут курс. */
+export function setPlatformWallet(адрес: string | null | undefined): void {
+  if (адрес && адрес.length > 20) кошелёкПлатформы = адрес;
+}
+
+/** Адрес для комиссии: серверный, если известен, иначе запасной. */
+export function getPlatformWallet(): string {
+  return кошелёкПлатформы ?? import.meta.env.VITE_PLATFORM_TON_WALLET ?? ЗАПАСНОЙ_КОШЕЛЁК;
+}
+
+export const PLATFORM_WALLET = ЗАПАСНОЙ_КОШЕЛЁК;
 
 // Манифест приложения (TonConnect требует публичный URL)
 const MANIFEST_URL = import.meta.env.VITE_APP_URL
@@ -84,7 +108,7 @@ export async function sendVerificationPayment(userId: string): Promise<string> {
     validUntil: Math.floor(Date.now() / 1000) + 600, // 10 минут
     messages: [
       {
-        address: PLATFORM_WALLET,
+        address: getPlatformWallet(),
         amount: amountNano,
         // Комментарий — бэкенд ищет userId в комментарии для верификации
         payload: btoa(`chesscoin:verify:${userId}`),
@@ -153,7 +177,7 @@ export async function sendTonPayment(params: TonPaymentParams): Promise<TonPayme
       },
       // 0.5% → платформа
       {
-        address: PLATFORM_WALLET,
+        address: getPlatformWallet(),
         amount:  feeNano,
         payload: payload ?? btoa('chesscoin:fee'),
       },

@@ -16,7 +16,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { exchangeApi, tonApi, P2POrder, BuyP2POrder, PriceCandle } from '@/api';
 import { fmtBalance } from '@/utils/format';
 import type { User } from '@/types';
-import { sendTonPayment, connectWallet, disconnectWallet, sendVerificationPayment } from '@/lib/tonconnect';
+import { sendTonPayment, connectWallet, disconnectWallet, sendVerificationPayment,
+         setPlatformWallet } from '@/lib/tonconnect';
 import { createChart, IChartApi, ColorType, LineStyle, type Time } from 'lightweight-charts';
 import { useT } from '@/i18n/useT';
 import { IcoArrowDown, IcoArrowUp } from '@/components/icons/UiIcons';
@@ -670,6 +671,15 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
   }, [lbPeriod]);
 
   useEffect(() => { loadLeaderboard(); }, [loadLeaderboard]);
+
+  // Адрес для комиссии берём у сервера, а не из значения, зашитого в код.
+  // Иначе при смене кошелька в .env комиссия уходила бы на старый адрес,
+  // сервер её не находил бы и ни одна покупка не проходила (Кенан 09.08.2026).
+  useEffect(() => {
+    tonApi.rate()
+      .then((r) => setPlatformWallet(r.platformWallet))
+      .catch(() => { /* останется запасной адрес */ });
+  }, []);
 
   const handleCancelOrder = async (orderId: string) => {
     try {
