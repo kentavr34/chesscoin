@@ -123,10 +123,23 @@ print('   файлов изменено: %d' % len(files))
 for f in files[:8]:
     print('     · %s' % f)
 
-# ── 7. РЕГИСТРАЦИЯ ВХОДА ────────────────────────────────────────────────
+# ── 7. СИНХРОНИЗАЦИЯ ЗНАНИЙ ─────────────────────────────────────────────
+# Кенан 09.08.2026: граф отставал от разговоров — решения выгружены до 04.08,
+# карта собрана 05.08. Теперь догоняем на каждом входе: выгрузка решений из
+# ЦНС и пересборка графа по коду. Обе операции без модели, стоят секунд.
+print('\n▶ 7. ПАМЯТЬ ДОГОНЯЕТ РАЗГОВОРЫ')
+_sync = subprocess.run(
+    [sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'sync_graph.py'), '--quiet'],
+    capture_output=True, encoding='utf-8', errors='replace', timeout=900)
+_вывод = (_sync.stdout or '').strip()
+print('   %s' % (_вывод if _вывод else 'всё уже было свежим'))
+if _sync.returncode != 0 and not _вывод:
+    print('   ⚠️ синхронизация вернула код %s' % _sync.returncode)
+
+# ── 8. РЕГИСТРАЦИЯ ВХОДА ────────────────────────────────────────────────
 sid = one("insert into chesscoin_pm.session_log (agent, purpose) values ('claude','%s') returning id"
           % esc(TOPIC or 'сессия'))
-print('\n▶ 7. ВХОД ЗАРЕГИСТРИРОВАН: session_log id=%s' % sid)
+print('\n▶ 8. ВХОД ЗАРЕГИСТРИРОВАН: session_log id=%s' % sid)
 
 print('\n' + '=' * 74)
 print('Планировать изменения можно только после этого вывода.')
