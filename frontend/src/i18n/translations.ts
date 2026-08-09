@@ -12,7 +12,12 @@ export const translations = {
   en: {
     splash: { connecting: 'Connecting...', authorizing: 'Authorizing...', loading: 'Loading...' },
     auth: { openViaBot: 'Open the app via Telegram bot', openBot: 'Open Bot' },
-    nav: { play: 'Play', battles: 'Battles', wars: 'Wars', tournaments: 'Tournaments', profile: 'Profile' },
+    nav: {
+      play: 'Play', battles: 'Battles', wars: 'Wars', tournaments: 'Tournaments', profile: 'Profile',
+      learn: 'Learn chess',
+      learnSubtitle: 'Start with the basics — 300 lessons',
+      learnProgress: (n: number, total: number) => `Lesson ${n} of ${total}`,
+    },
     common: {
       back: 'Back', close: 'Close', confirm: 'Confirm', cancel: 'Cancel',
       error: 'Error', success: 'Success', loading: 'Loading...', save: 'Save',
@@ -784,7 +789,12 @@ export const translations = {
   ru: {
     splash: { connecting: 'Подключение...', authorizing: 'Авторизация...', loading: 'Загрузка...' },
     auth: { openViaBot: 'Откройте приложение через Telegram бот', openBot: 'Открыть бота' },
-    nav: { play: 'Играть', battles: 'Батлы', wars: 'Войны', tournaments: 'Турниры', profile: 'Профиль' },
+    nav: {
+      play: 'Играть', battles: 'Батлы', wars: 'Войны', tournaments: 'Турниры', profile: 'Профиль',
+      learn: 'Учись играть',
+      learnSubtitle: 'Начни с азов — 300 уроков',
+      learnProgress: (n, total) => `Урок ${n} из ${total}`,
+    },
     common: {
       back: 'Назад', close: 'Закрыть', confirm: 'Подтвердить', cancel: 'Отмена',
       error: 'Ошибка', success: 'Успешно', loading: 'Загрузка...', save: 'Сохранить',
