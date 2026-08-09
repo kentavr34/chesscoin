@@ -48,45 +48,17 @@ const NavIcoProfile = ({ active }: { active: boolean }) => (
   </svg>
 );
 
-/** Обучение — пешка: с неё начинают учиться. */
-const NavIcoLearn = ({ active }: { active: boolean }) => (
-  <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-    <circle cx="12" cy="6" r="2.6" stroke={active ? '#D4A843' : '#5A6070'} strokeWidth="1.5"/>
-    <path d="M9.4 10.2h5.2l-1 2.4h-3.2l-1-2.4z" stroke={active ? '#D4A843' : '#5A6070'} strokeWidth="1.3" strokeLinejoin="round"/>
-    <path d="M10.4 12.6c0 2.2-.7 3.9-1.6 5.2h6.4c-.9-1.3-1.6-3-1.6-5.2" stroke={active ? '#D4A843' : '#5A6070'} strokeWidth="1.3" strokeLinejoin="round"/>
-    <rect x="6.6" y="17.8" width="10.8" height="2.4" rx="1.2" stroke={active ? '#F0C85A' : '#5A6070'} strokeWidth="1.4"/>
-  </svg>
-);
-
-/** Задания — список с отметками. */
-const NavIcoTasks = ({ active }: { active: boolean }) => (
-  <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-    <rect x="4" y="3.5" width="16" height="17" rx="2.5" stroke={active ? '#D4A843' : '#5A6070'} strokeWidth="1.4"/>
-    <path d="M7.5 8.5l1.6 1.6 3-3.2" stroke={active ? '#F0C85A' : '#5A6070'} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M7.5 14.5l1.6 1.6 3-3.2" stroke={active ? '#F0C85A' : '#5A6070'} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M14.5 9h2.5M14.5 15h2.5" stroke={active ? '#D4A843' : '#5A6070'} strokeWidth="1.4" strokeLinecap="round"/>
-  </svg>
-);
-
 export const BottomNav: React.FC = () => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const t = useT();
 
-  // Шесть кнопок (Кенан 09.08.2026). Обучение и задания РАЗВЕДЕНЫ: раньше
-  // уроки жили внутри страницы заданий, и попасть в них можно было только
-  // через неё — 300 уроков начали двое из ста одного.
-  //
-  // Профиль ушёл из ряда на аватар главной: семь кнопок на телефоне
-  // становятся неразличимыми, а свой профиль до сих пор открывался ТОЛЬКО
-  // отсюда, поэтому просто убрать его было нельзя.
   const TABS = [
     { path: '/',            Icon: NavIcoPlay,       label: t.nav.play        },
     { path: '/battles',     Icon: NavIcoBattle,     label: t.nav.battles     },
-    { path: '/tournaments', Icon: NavIcoTournament, label: t.nav.tournaments },
     { path: '/wars',        Icon: NavIcoWars,       label: t.nav.wars        },
-    { path: '/lessons',     Icon: NavIcoLearn,      label: t.nav.learn       },
-    { path: '/tasks',       Icon: NavIcoTasks,      label: t.nav.tasks       },
+    { path: '/tournaments', Icon: NavIcoTournament, label: t.nav.tournaments },
+    { path: '/profile',     Icon: NavIcoProfile,    label: t.nav.profile     },
   ];
 
   return (
@@ -97,10 +69,9 @@ export const BottomNav: React.FC = () => {
       borderRadius: '24px 24px 0 0', // Rounded top borders like native mobile
       border: '1px solid var(--border)',
       borderBottom: 'none',
-      display: 'flex', flexDirection: 'column',
-      padding: '12px 4px 0', zIndex: 'var(--z-nav)',
+      display: 'flex', alignItems: 'flex-start',
+      padding: '12px 6px 0', zIndex: 'var(--z-nav)',
     }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', width: '100%' }}>
       {TABS.map((tab) => {
         const active = tab.path === '/' ? pathname === '/' : pathname.startsWith(tab.path);
         return (
@@ -109,7 +80,7 @@ export const BottomNav: React.FC = () => {
             onClick={() => navigate(tab.path)}
             style={{
               flex: 1, display: 'flex', flexDirection: 'column',
-              alignItems: 'center', gap: 3, padding: '6px 1px',
+              alignItems: 'center', gap: 3, padding: '6px 4px',
               cursor: 'pointer', borderRadius: 10, position: 'relative',
               transition: 'opacity .15s',
             }}
@@ -128,7 +99,7 @@ export const BottomNav: React.FC = () => {
               <tab.Icon active={active} />
             </span>
             <span style={{
-              fontSize: 9, fontWeight: 700,
+              fontSize: 10, fontWeight: 700,
               color: active ? 'var(--accent)' : 'var(--text-muted)',
               letterSpacing: '.05em', marginTop: 4,
               transition: 'color .2s',
@@ -139,7 +110,6 @@ export const BottomNav: React.FC = () => {
           </div>
         );
       })}
-      </div>
     </nav>
   );
 };

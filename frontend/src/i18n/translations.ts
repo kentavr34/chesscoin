@@ -14,8 +14,6 @@ export const translations = {
     auth: { openViaBot: 'Open the app via Telegram bot', openBot: 'Open Bot' },
     nav: {
       play: 'Play', battles: 'Battles', wars: 'Wars', tournaments: 'Tournaments', profile: 'Profile',
-      learn: 'Learn',
-      tasks: 'Tasks',
     },
     common: {
       back: 'Back', close: 'Close', confirm: 'Confirm', cancel: 'Cancel',
@@ -63,6 +61,10 @@ export const translations = {
       attemptsPerDay: '3 attempts per day', attemptRestore: '+1 attempt every 8 hours',
       jarvisLabel: 'JARVIS', rankLabel: 'RANK', battlesLabel: 'Battles',
       sectionBattles: 'Battles', sectionTournaments: 'Tournaments', sectionWars: 'Wars',
+      learnTile: 'Learn',
+      learnTileSub: '300 lessons · from the basics',
+      tasksTile: 'Tasks',
+      tasksTileSub: 'Daily · rewards',
     },
     battles: {
       title: 'Battles', tabPublic: 'Public', tabPrivate: 'Private', tabWaiting: 'Challenges',
@@ -883,8 +885,6 @@ export const translations = {
     auth: { openViaBot: 'Откройте приложение через Telegram бот', openBot: 'Открыть бота' },
     nav: {
       play: 'Играть', battles: 'Батлы', wars: 'Войны', tournaments: 'Турниры', profile: 'Профиль',
-      learn: 'Обучение',
-      tasks: 'Задания',
     },
     common: {
       back: 'Назад', close: 'Закрыть', confirm: 'Подтвердить', cancel: 'Отмена',
@@ -932,6 +932,10 @@ export const translations = {
       attemptsPerDay: '3 попытки в день', attemptRestore: '+1 попытка каждые 8 часов',
       jarvisLabel: 'ДЖАРВИС', rankLabel: 'ЗВАНИЕ', battlesLabel: 'Батлы',
       sectionBattles: 'Батлы', sectionTournaments: 'Турниры', sectionWars: 'Войны',
+      learnTile: 'Обучение',
+      learnTileSub: '300 уроков · с азов',
+      tasksTile: 'Задания',
+      tasksTileSub: 'Ежедневные · награды',
     },
     battles: {
       title: 'Батлы', tabPublic: 'Публичные', tabPrivate: 'Приватные',

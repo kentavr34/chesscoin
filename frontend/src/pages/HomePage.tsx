@@ -55,6 +55,28 @@ const IcoTrophy = ({ size = 28 }: { size?: number }) => (
   </svg>
 );
 
+/** Обучение — пешка на подставке и раскрытая книга под ней. */
+const IcoLearnBig = ({ size = 28 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 28 28" fill="none">
+    <circle cx="14" cy="6.5" r="3" stroke="#F0C85A" strokeWidth="1.5"/>
+    <path d="M11 11h6l-1.2 2.8h-3.6L11 11z" stroke="#F0C85A" strokeWidth="1.3" strokeLinejoin="round"/>
+    <path d="M12.2 13.8c0 2-.7 3.5-1.6 4.7h6.8c-.9-1.2-1.6-2.7-1.6-4.7" stroke="#F0C85A" strokeWidth="1.3" strokeLinejoin="round"/>
+    <path d="M4 20.5c3-1.2 6-1.2 10 0 4-1.2 7-1.2 10 0v3c-3-1.2-6-1.2-10 0-4-1.2-7-1.2-10 0v-3z" stroke="#F5D98A" strokeWidth="1.3" strokeLinejoin="round"/>
+    <path d="M14 20.5v3" stroke="#F5D98A" strokeWidth="1.1"/>
+  </svg>
+);
+
+/** Задания — список с галочками и звезда награды. */
+const IcoQuestsBig = ({ size = 28 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 28 28" fill="none">
+    <rect x="4.5" y="3.5" width="16" height="21" rx="2.5" stroke="#9B6DFF" strokeWidth="1.4"/>
+    <path d="M8 9.5l1.6 1.6 3.2-3.4" stroke="#C8B4FF" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M8 16.5l1.6 1.6 3.2-3.4" stroke="#C8B4FF" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M15 9h3M15 16h3" stroke="#9B6DFF" strokeWidth="1.3" strokeLinecap="round"/>
+    <path d="M21.5 17.5l1.2 2.5 2.8.3-2.1 1.9.6 2.7-2.5-1.4-2.5 1.4.6-2.7-2.1-1.9 2.8-.3 1.2-2.5z" fill="#F0C85A" stroke="#F0C85A" strokeWidth=".8" strokeLinejoin="round"/>
+  </svg>
+);
+
 const IcoWars = ({ size = 28 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 28 28" fill="none">
     <circle cx="14" cy="14" r="9.5" stroke="#3DBA7A" strokeWidth="1.4"/>
@@ -628,60 +650,58 @@ export const HomePage: React.FC = () => {
             <div style={{ fontSize: '.58rem', lineHeight: 1.35, color: 'rgba(61,186,122,.82)' }}>Страны · Сезон</div>
           </div>
 
-        </div>
 
-        {/* ── LABEL ── */}
-        <div style={{ fontSize: '.58rem', fontWeight: 700, color: '#7A7875', textTransform: 'uppercase', letterSpacing: '.14em', padding: '.9rem .85rem .45rem' }}>
-          Текущие задания
-        </div>
-
-        {/* ══ КВЕСТЫ ══ */}
-        <div
-          className="hp-quests hp-quests-wrap"
-          onClick={() => navigate('/tasks')}
-          style={{
-            margin: '0 .85rem 0',
-            background: 'linear-gradient(135deg,#141018,#0F0E18)',
-            border: '.5px solid rgba(155,109,255,.22)',
-            borderRadius: 16, overflow: 'hidden', position: 'relative',
-            cursor: 'pointer',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '.7rem', padding: '.6rem .85rem .65rem' }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, background: 'rgba(155,109,255,.12)', border: '.5px solid rgba(155,109,255,.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                <rect x="3" y="4" width="14" height="12" rx="2" stroke="#9B6DFF" strokeWidth="1.3"/>
-                <path d="M6 8h8M6 11h5" stroke="#9B6DFF" strokeWidth="1.2" strokeLinecap="round"/>
-                <circle cx="15" cy="15" r="4" fill="#141018" stroke="#9B6DFF" strokeWidth="1"/>
-                <path d="M13.5 15l1 1 2-1.5" stroke="#9B6DFF" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+          {/* ОБУЧЕНИЕ. Кенан 09.08.2026: «эту полоску заданий убрать, вместо
+              неё поставить две кнопки — одну на обучение отдельно, другую на
+              задание». Повод: 300 уроков построено, а начали их двое из ста
+              одного — вход был спрятан внутри страницы заданий. */}
+          <div
+            className="hp-blk learn"
+            style={{
+              borderRadius: 16, padding: '.72rem .65rem .78rem',
+              cursor: 'pointer',
+              position: 'relative', overflow: 'hidden',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
+              background: 'linear-gradient(150deg,#1A1206,#241A08)',
+              border: '.5px solid rgba(240,200,90,.28)',
+              transform: blkScale('learn'),
+            }}
+            onPointerDown={() => setPressedBlk('learn')}
+            onPointerUp={() => { setPressedBlk(null); navigate('/lessons'); }}
+            onPointerLeave={() => setPressedBlk(null)}
+          >
+            <div style={{ marginBottom: '.55rem' }}>
+              <IcoLearnBig size={52} />
             </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: '.82rem', fontWeight: 800, color: '#C8C0E0', letterSpacing: '.02em', marginBottom: '.22rem' }}>
-                Ежедневные задания
-              </div>
-              <div style={{ display: 'flex', gap: '.55rem', flexWrap: 'wrap' }}>
-                {[
-                  { label: 'Сыграй 3 партии', active: true },
-                  { label: 'Победи в батле', active: false },
-                  { label: 'Реши задачу', active: false },
-                ].map(q => (
-                  <div key={q.label} style={{ display: 'flex', alignItems: 'center', gap: '.28rem' }}>
-                    <div style={{
-                      width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
-                      background: q.active ? '#9B6DFF' : 'rgba(155,109,255,.5)',
-                      boxShadow: q.active ? '0 0 5px #9B6DFF' : 'none',
-                    }} />
-                    <span style={{ fontSize: '.7rem', fontWeight: 600, whiteSpace: 'nowrap', color: q.active ? '#A890D0' : '#9A90B8' }}>
-                      {q.label}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div style={{ fontSize: '1.1rem', color: 'rgba(155,109,255,.7)', flexShrink: 0 }}>›</div>
+            <div style={{ fontSize: '.86rem', fontWeight: 900, letterSpacing: '.01em', marginBottom: '.12rem', color: '#F5D98A' }}>{t.home.learnTile}</div>
+            <div style={{ fontSize: '.58rem', lineHeight: 1.35, color: 'rgba(240,200,90,.82)' }}>{t.home.learnTileSub}</div>
           </div>
+
+          {/* ЗАДАНИЯ */}
+          <div
+            className="hp-blk quests"
+            style={{
+              borderRadius: 16, padding: '.72rem .65rem .78rem',
+              cursor: 'pointer',
+              position: 'relative', overflow: 'hidden',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
+              background: 'linear-gradient(150deg,#141018,#1C1428)',
+              border: '.5px solid rgba(155,109,255,.28)',
+              transform: blkScale('quests'),
+            }}
+            onPointerDown={() => setPressedBlk('quests')}
+            onPointerUp={() => { setPressedBlk(null); navigate('/tasks'); }}
+            onPointerLeave={() => setPressedBlk(null)}
+          >
+            <div style={{ marginBottom: '.55rem' }}>
+              <IcoQuestsBig size={52} />
+            </div>
+            <div style={{ fontSize: '.86rem', fontWeight: 900, letterSpacing: '.01em', marginBottom: '.12rem', color: '#C8B4FF' }}>{t.home.tasksTile}</div>
+            <div style={{ fontSize: '.58rem', lineHeight: 1.35, color: 'rgba(155,109,255,.82)' }}>{t.home.tasksTileSub}</div>
+          </div>
+
         </div>
+
 
       </div>
     </PageLayout>
