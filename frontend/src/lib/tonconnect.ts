@@ -11,6 +11,7 @@
  */
 
 import type { TonConnectUI, ConnectedWallet, SendTransactionRequest } from '@tonconnect/ui';
+import { BOT_USERNAME } from './deepLink';
 
 // Ленивая инициализация — TonConnect грузится один раз
 let _tc: TonConnectUI | null = null;
@@ -56,6 +57,15 @@ export async function getTonConnect(): Promise<TonConnectUI> {
     manifestUrl: MANIFEST_URL,
     // В Telegram WebApp — без кнопки, управляем сами
     buttonRootId: undefined,
+    // КУДА ВЕРНУТЬСЯ ИЗ КОШЕЛЬКА. Без этого адреса Telegram-кошелёк, подтвердив
+    // подключение, оставляет человека у себя: наше приложение ответа не получает,
+    // адрес не сохраняется, и со стороны это выглядит как «кнопка не работает».
+    // Кенан 18.08.2026: «отсоединение и присоединение кошелька не работает» —
+    // в логах сервера за сутки НИ ОДНОГО запроса к /profile/ton-wallet, то есть
+    // до нас дело действительно не доходило.
+    actionsConfiguration: {
+      twaReturnUrl: `https://t.me/${BOT_USERNAME}`,
+    },
   });
 
   return _tc;
@@ -65,7 +75,12 @@ export async function getTonConnect(): Promise<TonConnectUI> {
 export async function connectWallet(): Promise<ConnectedWallet> {
   const tc = await getTonConnect();
 
-  // Если уже подключён — возвращаем
+  // Сеанс восстанавливается асинхронно: сразу после создания объекта
+  // tc.connected ещё не отражает действительность. Дожидаемся.
+  await (tc as unknown as { connectionRestored: Promise<boolean> }).connectionRestored
+    .catch(() => false);
+
+  // Уже подключён — отдаём как есть.
   if (tc.connected && tc.wallet) {
     return tc.wallet as ConnectedWallet;
   }
@@ -199,5 +214,9 @@ export async function sendTonPayment(params: TonPaymentParams): Promise<TonPayme
 /** Отключить кошелёк */
 export async function disconnectWallet(): Promise<void> {
   const tc = await getTonConnect();
-  await tc.disconnect();
+  // Без ожидания рвать нечего: сеанс мог ещё не восстановиться, и disconnect
+  // молча уходил в пустоту — а следом подключение видело «уже подключён».
+  await (tc as unknown as { connectionRestored: Promise<boolean> }).connectionRestored
+    .catch(() => false);
+  if (tc.connected) await tc.disconnect();
 }

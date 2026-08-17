@@ -727,7 +727,13 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
       onUserRefresh();
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : t.exchange.connectError;
-      if (!/Timeout|reject|cancel/i.test(msg)) showToast(msg);
+      // Молчим ТОЛЬКО когда человек сам закрыл окно кошелька. Раньше сюда
+      // попадал и «Timeout: wallet not connected», и любая ошибка со словом
+      // reject — игрок не видел вообще ничего и решал, что кнопка мёртвая
+      // (Кенан 18.08.2026: «присоединение кошелька не работает»).
+      const самОтменил = /user\s*reject|cancell?ed by user|UserReject/i.test(msg);
+      if (!самОтменил) showToast(msg);
+      if (msg) console.warn('[кошелёк] подключение не удалось:', msg);
     } finally {
       setConnecting(false);
     }
