@@ -65,6 +65,13 @@ export async function getTonConnect(): Promise<TonConnectUI> {
     // до нас дело действительно не доходило.
     actionsConfiguration: {
       twaReturnUrl: `https://t.me/${BOT_USERNAME}`,
+      // Запасной путь возврата, если приложение открыли не из Telegram.
+      // Официально: в среде Mini App предпочтение отдаётся twaReturnUrl,
+      // иначе берётся returnStrategy (ton-connect/sdk, packages/ui/README).
+      returnStrategy: 'back',
+      // На part устройств переход в кошелёк пропускался, и человек оставался
+      // на пустом экране, не понимая, что делать. Ведём в кошелёк всегда.
+      skipRedirectToWallet: 'never',
     },
   });
 
@@ -131,7 +138,14 @@ export async function sendVerificationPayment(userId: string): Promise<string> {
     ],
   };
 
-  const result = await tc.sendTransaction(tx);
+  // Показываем свои окна и уведомления кошелька на каждом шаге: без них
+  // отказ выглядел как «ничего не произошло». Обратный адрес выставляем
+  // прямо перед платежом — на случай, если приложение перезапускалось.
+  tc.uiOptions = { twaReturnUrl: `https://t.me/${BOT_USERNAME}` } as never;
+  const result = await tc.sendTransaction(tx, {
+    modals: ['before', 'success', 'error'],
+    notifications: ['before', 'success', 'error'],
+  } as never);
   // result.boc — base64 BOC (Bag of Cells) — идентификатор транзакции
   return result.boc;
 }

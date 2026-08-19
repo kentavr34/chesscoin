@@ -805,6 +805,10 @@ export const translations = {
       changeAndVolume: (pct: string, vol: string) => `${pct}% 24h · Volume: ${vol} TON`,
       buy: 'Buy',
       sell: 'Sell',
+      noPayment: 'No 1 TON payment — the wallet was not connected.',
+      paymentNotFound: 'The 1 TON payment has not appeared on the blockchain. The wallet was not connected — try again in a few minutes.',
+      connectCancelled: 'Connection cancelled — the wallet was not connected.',
+      checkingPayment: (n: number, всего: number) => `Checking the payment… ${n} of ${всего}`,
     },
     errorBoundary: {
       title: 'Something went wrong',
@@ -1676,6 +1680,10 @@ export const translations = {
       changeAndVolume: (pct, vol) => `${pct}% 24ч · Объём: ${vol} TON`,
       buy: 'Купить',
       sell: 'Продать',
+      noPayment: 'Нет оплаты 1 TON — кошелёк не подключён.',
+      paymentNotFound: 'Оплата 1 TON не появилась в блокчейне. Кошелёк не подключён — попробуйте через несколько минут.',
+      connectCancelled: 'Подключение отменено — кошелёк не подключён.',
+      checkingPayment: (n, всего) => `Проверяем оплату… ${n} из ${всего}`,
     },
     errorBoundary: {
       title: 'Что-то пошло не так',

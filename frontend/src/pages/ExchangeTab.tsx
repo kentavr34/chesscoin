@@ -704,36 +704,92 @@ export const ExchangeTab: React.FC<ExchangeTabProps> = ({ user, showToast, onUse
   // НЕЛЬЗЯ ВООБЩЕ. Полный путь жил в панели магазина, которую не открывали.
   // Переносим его сюда целиком (Кенан 05.08.2026).
   const [connecting, setConnecting] = useState(false);
+
+  /**
+   * Подключение кошелька: адрес сохраняется ТОЛЬКО после оплаты 1 TON.
+   *
+   * Кенан 19.08.2026: «без получения 1 TON должно возвращать в игру без
+   * подключения, с уведомлением — нет 1 TON оплаты».
+   *
+   * Две вещи, из-за которых процесс был неисправен:
+   *
+   * 1. ПРОВЕРКА ШЛА СРАЗУ. Платёж доходит до блокчейна за десятки секунд,
+   *    а мы спрашивали сервер немедленно и получали «платёж не найден».
+   *    Человек платил — и всё равно видел отказ. Теперь ждём и переспрашиваем.
+   *
+   * 2. ОТКАЗ ОСТАВЛЯЛ ПОЛОВИНУ. Сеанс TonConnect оставался подключённым,
+   *    хотя на сервере адреса нет: экран показывал одно, сервер знал другое.
+   *    Теперь при любой неудаче сеанс рвётся — возвращаемся в игру чистыми.
+   */
   const handleConnect = async () => {
     if (connecting) return;
     setConnecting(true);
+
+    /** Откат: рвём сеанс кошелька, чтобы экран и сервер не разошлись. */
+    const откатить = async (сообщение: string) => {
+      try { await disconnectWallet(); } catch { /* уже отключён */ }
+      showToast(сообщение);
+      onUserRefresh();
+    };
+
     try {
       showToast(t.exchange.openingWallet);
       const wallet = await connectWallet();
       const addr = wallet.account?.address;
       if (!addr) throw new Error(t.exchange.walletAddrFail);
+
       try {
         await tonApi.connectWallet(addr);
       } catch (err: unknown) {
         const emsg = err instanceof Error ? err.message : String(err);
         if (!emsg.includes('WALLET_NOT_CONFIRMED')) throw err;
-        // Адрес новый — просим разовое подтверждение и проводим его.
-        showToast(t.shop.tonTab.unlockPrompt);
-        const boc = await sendVerificationPayment(user?.id ?? '');
-        showToast(t.exchange.verifying);
-        await tonApi.verifyWallet(addr, boc);
+
+        // ── Адрес новый: просим разовую оплату 1 TON ──────────────────────
+        let boc: string;
+        try {
+          showToast(t.shop.tonTab.unlockPrompt);
+          boc = await sendVerificationPayment(user?.id ?? '');
+        } catch (payErr: unknown) {
+          // Не заплатил, закрыл кошелёк, вышло время — во всех случаях
+          // подключения НЕ происходит, и человек должен это ПРОЧИТАТЬ.
+          console.warn('[кошелёк] оплата не прошла:',
+            payErr instanceof Error ? payErr.message : payErr);
+          await откатить(t.exchange.noPayment);
+          return;
+        }
+
+        // ── Платёж отправлен: ждём, пока он появится в блокчейне ──────────
+        const ПОПЫТОК = 8;          // ~90 секунд суммарно
+        const ПАУЗА_МС = 12_000;
+        let подтверждён = false;
+        for (let i = 1; i <= ПОПЫТОК && !подтверждён; i++) {
+          showToast(t.exchange.checkingPayment(i, ПОПЫТОК));
+          try {
+            await tonApi.verifyWallet(addr, boc);
+            подтверждён = true;
+          } catch (vErr: unknown) {
+            const vmsg = vErr instanceof Error ? vErr.message : String(vErr);
+            // «Ещё не видно» — ждём дальше. Любая другая беда — наружу.
+            const ещёНеВидно = /not confirmed|не найден|Try again/i.test(vmsg);
+            if (!ещёНеВидно) throw vErr;
+            if (i < ПОПЫТОК) await new Promise((r) => setTimeout(r, ПАУЗА_МС));
+          }
+        }
+        if (!подтверждён) {
+          await откатить(t.exchange.paymentNotFound);
+          return;
+        }
       }
+
       showToast(t.exchange.walletConnectedToast);
       onUserRefresh();
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : t.exchange.connectError;
-      // Молчим ТОЛЬКО когда человек сам закрыл окно кошелька. Раньше сюда
-      // попадал и «Timeout: wallet not connected», и любая ошибка со словом
-      // reject — игрок не видел вообще ничего и решал, что кнопка мёртвая
-      // (Кенан 18.08.2026: «присоединение кошелька не работает»).
+      console.warn('[кошелёк] подключение не удалось:', msg);
+      // Человек сам закрыл окно выбора кошелька — это не ошибка, но и
+      // подключения нет: возвращаем чистое состояние молча.
       const самОтменил = /user\s*reject|cancell?ed by user|UserReject/i.test(msg);
-      if (!самОтменил) showToast(msg);
-      if (msg) console.warn('[кошелёк] подключение не удалось:', msg);
+      await откатить(самОтменил ? t.exchange.connectCancelled : msg);
     } finally {
       setConnecting(false);
     }
